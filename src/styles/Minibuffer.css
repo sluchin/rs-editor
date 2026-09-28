@@ -1,0 +1,12 @@
+.minibuffer {
+  flex: 0 0 auto;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  user-select: none;
+}

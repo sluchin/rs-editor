@@ -1,0 +1,14 @@
+.mode-line {
+  flex: 0 0 auto;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  background: #d3d3d3;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  white-space: pre;
+  border-top: 1px solid #999999;
+  user-select: none;
+}

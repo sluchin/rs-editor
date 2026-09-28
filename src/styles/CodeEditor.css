@@ -1,0 +1,17 @@
+.code-editor-textarea {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  border: none;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
