@@ -14,7 +14,7 @@ function App() {
     try {
       const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
         code: evalCode,
-      })
+      }) as { result: string; error: string | null }
 
       if (result.error) {
         setError(result.error)

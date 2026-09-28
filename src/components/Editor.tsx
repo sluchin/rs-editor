@@ -16,6 +16,7 @@ export default function Editor({ value, onChange, onRun }: EditorProps) {
         </button>
       </div>
       <textarea
+        autoFocus
         className="editor-textarea"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -24,7 +25,7 @@ export default function Editor({ value, onChange, onRun }: EditorProps) {
             onRun()
           }
         }}
-        spellCheck="false"
+        spellCheck={false}
       />
     </div>
   )
