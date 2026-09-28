@@ -1,0 +1,55 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  font-family: 'Fira Code', monospace;
+}
+
+.app-header {
+  background: #252526;
+  padding: 1rem;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #569cd6;
+}
+
+.app-container {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.editor-panel,
+.repl-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.editor-panel h2,
+.repl-panel h2 {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+  font-size: 1rem;
+  color: #d4d4d4;
+}
+
+.editor-panel > div,
+.repl-panel > div {
+  flex: 1;
+  overflow: auto;
+}
