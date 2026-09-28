@@ -11,7 +11,8 @@
       "Bash(git commit -m 'Translate README to Japanese and add CLAUDE.md guide *)",
       "Bash(git commit -m 'Change license from MIT to GPL v3.0 *)",
       "Bash(git commit -m 'Fix Tauri 2 API import path and suppress dead_code warnings *)",
-      "Bash(git commit -m 'Improve textarea input handling and UI *)"
+      "Bash(git commit -m 'Improve textarea input handling and UI *)",
+      "Bash(git commit -m 'Add troubleshooting section to README and debug logging *)"
     ]
   }
 }
