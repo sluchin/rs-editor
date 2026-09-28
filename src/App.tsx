@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api'
 import Editor from './components/Editor'
 import REPL from './components/REPL'
 import './App.css'
