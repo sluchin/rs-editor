@@ -123,4 +123,4 @@ Tauri のコマンドシステムを使用して React から `eval_scheme` 関�
 
 ## ライセンス
 
-MIT
+GPL v3.0 - 詳細は [LICENSE](./LICENSE) ファイルを参照してください。
