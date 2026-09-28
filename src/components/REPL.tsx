@@ -58,12 +58,15 @@ export default function REPL({ output, error, history, onEval }: REPLProps) {
       <div className="repl-history">
         <h3>History</h3>
         <div className="history-list">
-          {history.slice(-10).reverse().map((item, idx) => (
-            <div key={idx} className="history-item">
-              <div className="history-code">{item.code}</div>
-              <div className="history-result">{item.result}</div>
-            </div>
-          ))}
+          {history
+            .slice(-10)
+            .reverse()
+            .map((item, idx) => (
+              <div key={idx} className="history-item">
+                <div className="history-code">{item.code}</div>
+                <div className="history-result">{item.result}</div>
+              </div>
+            ))}
         </div>
       </div>
       <div className="repl-input">

@@ -54,3 +54,58 @@ impl PartialEq for Value {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn displays_integer_numbers_without_decimal_point() {
+        assert_eq!(Value::Number(42.0).to_string(), "42");
+    }
+
+    #[test]
+    fn displays_fractional_numbers() {
+        assert_eq!(Value::Number(3.5).to_string(), "3.5");
+    }
+
+    #[test]
+    fn displays_booleans() {
+        assert_eq!(Value::Boolean(true).to_string(), "#t");
+        assert_eq!(Value::Boolean(false).to_string(), "#f");
+    }
+
+    #[test]
+    fn displays_strings_with_quotes() {
+        assert_eq!(Value::String("hi".to_string()).to_string(), "\"hi\"");
+    }
+
+    #[test]
+    fn displays_lists_with_spaces() {
+        let list = Value::List(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0),
+        ]);
+        assert_eq!(list.to_string(), "(1 2 3)");
+    }
+
+    #[test]
+    fn displays_nested_lists() {
+        let list = Value::List(vec![
+            Value::Symbol("a".to_string()),
+            Value::List(vec![Value::Number(1.0), Value::Number(2.0)]),
+        ]);
+        assert_eq!(list.to_string(), "(a (1 2))");
+    }
+
+    #[test]
+    fn equality_holds_across_variants() {
+        assert_eq!(Value::Number(1.0), Value::Number(1.0));
+        assert_ne!(Value::Number(1.0), Value::Boolean(true));
+        assert_eq!(
+            Value::List(vec![Value::Number(1.0)]),
+            Value::List(vec![Value::Number(1.0)])
+        );
+    }
+}
