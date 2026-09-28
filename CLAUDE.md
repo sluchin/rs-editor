@@ -12,16 +12,25 @@ A Tauri + React + Rust Scheme language editor with a built-in interpreter and RE
 ## Key Files
 
 ### Frontend
-- `src/App.tsx` - Main app component, state management
-- `src/components/Editor.tsx` - Code editor with keyboard shortcuts
-- `src/components/REPL.tsx` - Output display and interactive REPL
-- `vite.config.ts` - Vite configuration
+- `src/App.tsx` - Main app component, state management, minibuffer/file-op logic
+- `src/components/CodeEditor.tsx` - Plain textarea buffer + C-x prefix key handling
+- `src/components/MenuBar.tsx` - Emacs-style menu bar (static)
+- `src/components/ModeLine.tsx` - Emacs-style mode line
+- `src/components/Minibuffer.tsx` - Message display / interactive prompt input
+- `src/components/REPL.tsx` - Output display and interactive REPL (currently unused in App.tsx)
+- `src/lib/fileOps.ts` - Wrappers around the Tauri file-system commands
+- `src/lib/prefixKeymap.ts` - C-x C-f / C-x C-s prefix key detection
+- `src/lib/schemeTokenizer.ts`, `src/lib/bracketMatch.ts`, `src/lib/emacsKeymap.ts`,
+  `src/lib/bracketAutoClose.ts` - Syntax highlighting / bracket matching / Emacs
+  keybinding logic, implemented but not yet wired into `CodeEditor` (deferred feature)
+- `vite.config.ts` - Vite configuration (also holds the Vitest `test` config)
 
-### Backend (Scheme Interpreter)
-- `src-tauri/src/main.rs` - Tauri app setup and `eval_scheme` command
-- `src-tauri/src/scheme/parser.rs` - Scheme expression parser
-- `src-tauri/src/scheme/evaluator.rs` - Expression evaluator
-- `src-tauri/src/scheme/value.rs` - Value type definitions
+### Backend (Scheme Interpreter + file I/O)
+- `src-tauri/src/main.rs` - Tauri app setup, `eval_scheme` and file I/O commands
+  (`read_file_content`, `write_file_content`, `path_exists`, `home_dir`)
+- `src-tauri/src/scheme/parser.rs` - Scheme expression parser (+ unit tests)
+- `src-tauri/src/scheme/evaluator.rs` - Expression evaluator (+ unit tests)
+- `src-tauri/src/scheme/value.rs` - Value type definitions (+ unit tests)
 - `src-tauri/tauri.conf.json` - Tauri app configuration
 
 ## Development Workflow
@@ -29,7 +38,12 @@ A Tauri + React + Rust Scheme language editor with a built-in interpreter and RE
 1. **Start dev server**: `npm run tauri:dev`
 2. **Edit React files** in `src/` - changes hot-reload automatically
 3. **Edit Rust files** in `src-tauri/src/` - app reloads on save
-4. **Test in the UI** - manually test features
+4. **Run tests**: `npm run test` (Vitest for `src/`, `cargo test` for `src-tauri/`)
+5. **Lint**: `npm run lint` (ESLint + `cargo clippy -D warnings`)
+6. **Format**: `npm run format` (Prettier + `cargo fmt`), or `npm run format:check` to verify only
+7. **Run everything CI checks**: `npm run check` (format:check + lint + test)
+
+CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push/PR to `main`.
 
 ## Adding Features
 
