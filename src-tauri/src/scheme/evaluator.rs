@@ -3,6 +3,7 @@ use crate::scheme::value::Value;
 use std::sync::Mutex;
 
 pub struct Evaluator {
+    #[allow(dead_code)]
     vars: Mutex<std::collections::HashMap<String, Value>>,
 }
 
