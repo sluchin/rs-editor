@@ -1,12 +1,5 @@
 export type TokenType =
-  | 'paren'
-  | 'keyword'
-  | 'string'
-  | 'comment'
-  | 'number'
-  | 'boolean'
-  | 'symbol'
-  | 'whitespace'
+  'paren' | 'keyword' | 'string' | 'comment' | 'number' | 'boolean' | 'symbol' | 'whitespace'
 
 export interface Token {
   type: TokenType
@@ -17,13 +10,41 @@ export interface Token {
 }
 
 const KEYWORDS = new Set([
-  'define', 'lambda', 'if', 'cond', 'case', 'else',
-  'let', 'let*', 'letrec', 'letrec*', 'let-values',
-  'begin', 'set!', 'quote', 'quasiquote', 'unquote', 'unquote-splicing',
-  'and', 'or', 'not', 'when', 'unless', 'do',
-  'define-syntax', 'let-syntax', 'letrec-syntax', 'syntax-rules',
-  'define-record-type', 'delay', 'force', 'dynamic-wind',
-  'call/cc', 'call-with-current-continuation', 'values', 'call-with-values',
+  'define',
+  'lambda',
+  'if',
+  'cond',
+  'case',
+  'else',
+  'let',
+  'let*',
+  'letrec',
+  'letrec*',
+  'let-values',
+  'begin',
+  'set!',
+  'quote',
+  'quasiquote',
+  'unquote',
+  'unquote-splicing',
+  'and',
+  'or',
+  'not',
+  'when',
+  'unless',
+  'do',
+  'define-syntax',
+  'let-syntax',
+  'letrec-syntax',
+  'syntax-rules',
+  'define-record-type',
+  'delay',
+  'force',
+  'dynamic-wind',
+  'call/cc',
+  'call-with-current-continuation',
+  'values',
+  'call-with-values',
 ])
 
 function isSymbolChar(c: string): boolean {
