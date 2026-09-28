@@ -7,11 +7,6 @@ mod scheme;
 use scheme::evaluator::Evaluator;
 
 #[derive(Serialize, Deserialize)]
-struct EvalRequest {
-    code: String,
-}
-
-#[derive(Serialize, Deserialize)]
 struct EvalResponse {
     result: String,
     error: Option<String>,
