@@ -10,10 +10,12 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "prelint": "vite build",
     "lint": "eslint src && cd src-tauri && cargo clippy --all-targets -- -D warnings",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" && cd src-tauri && cargo fmt",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" && cd src-tauri && cargo fmt --check",
+    "pretest": "vite build",
     "test": "vitest run && cd src-tauri && cargo test",
     "test:watch": "vitest",
     "check": "npm run format:check && npm run lint && npm run test"
