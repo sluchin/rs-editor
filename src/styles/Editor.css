@@ -19,15 +19,23 @@
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 0.9rem;
   transition: background 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .btn-run:hover {
   background: #64b5f6;
 }
 
+.btn-run:active {
+  background: #4a8bc2;
+}
+
 .editor-textarea {
   flex: 1;
+  min-height: 200px;
   padding: 1rem;
   background: #1e1e1e;
   color: #d4d4d4;
@@ -37,6 +45,9 @@
   line-height: 1.6;
   resize: none;
   outline: none;
+  font-family: 'Fira Code', monospace;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .editor-textarea:focus {

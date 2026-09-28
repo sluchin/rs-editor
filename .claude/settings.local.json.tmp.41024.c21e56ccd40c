@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo init *)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(cargo check *)",
+      "Bash(python3)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial Tauri+React Scheme editor setup *)",
+      "Bash(git commit -m 'Translate README to Japanese and add CLAUDE.md guide *)",
+      "Bash(git commit -m 'Change license from MIT to GPL v3.0 *)",
+      "Bash(git commit -m 'Fix Tauri 2 API import path and suppress dead_code warnings *)",
+      "Bash(git commit -m 'Improve textarea input handling and UI *)"
+    ]
+  }
+}
