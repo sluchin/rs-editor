@@ -31,7 +31,10 @@ impl Parser {
             Some('(') => self.parse_list(),
             Some('"') => self.parse_string(),
             Some('#') => self.parse_boolean(),
-            Some(c) if c.is_numeric() || (c == '-' && self.peek().map_or(false, |ch| ch.is_numeric())) => {
+            Some(c)
+                if c.is_numeric()
+                    || (c == '-' && self.peek().is_some_and(|ch| ch.is_numeric())) =>
+            {
                 self.parse_number()
             }
             Some(c) if c.is_alphabetic() || "+-*/<>=!?".contains(c) => self.parse_symbol(),
@@ -107,7 +110,7 @@ impl Parser {
             self.pos += 1;
         }
 
-        while self.current().map_or(false, |c| c.is_numeric() || c == '.') {
+        while self.current().is_some_and(|c| c.is_numeric() || c == '.') {
             self.pos += 1;
         }
 
@@ -120,9 +123,10 @@ impl Parser {
 
     fn parse_symbol(&mut self) -> Result<Value, String> {
         let start = self.pos;
-        while self.current().map_or(false, |c| {
-            c.is_alphanumeric() || "+-*/<>=!?_-".contains(c)
-        }) {
+        while self
+            .current()
+            .is_some_and(|c| c.is_alphanumeric() || "+-*/<>=!?_-".contains(c))
+        {
             self.pos += 1;
         }
 
@@ -147,7 +151,10 @@ impl Parser {
     }
 
     fn skip_whitespace(&mut self) {
-        while self.current().map_or(false, |c| c.is_whitespace() || c == ';') {
+        while self
+            .current()
+            .is_some_and(|c| c.is_whitespace() || c == ';')
+        {
             if self.current() == Some(';') {
                 while self.current() != Some('\n') && self.current().is_some() {
                     self.pos += 1;
@@ -165,5 +172,99 @@ impl Parser {
         } else {
             Err(format!("Expected '{}'", expected))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_one(input: &str) -> Value {
+        Parser::new(input)
+            .parse()
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap()
+    }
+
+    #[test]
+    fn parses_integers() {
+        assert_eq!(parse_one("42"), Value::Number(42.0));
+    }
+
+    #[test]
+    fn parses_negative_numbers() {
+        assert_eq!(parse_one("-3.5"), Value::Number(-3.5));
+    }
+
+    #[test]
+    fn parses_symbols() {
+        assert_eq!(parse_one("foo-bar?"), Value::Symbol("foo-bar?".to_string()));
+    }
+
+    #[test]
+    fn parses_booleans() {
+        assert_eq!(parse_one("#t"), Value::Boolean(true));
+        assert_eq!(parse_one("#f"), Value::Boolean(false));
+    }
+
+    #[test]
+    fn parses_strings_with_escapes() {
+        assert_eq!(
+            parse_one(r#""hello\nworld""#),
+            Value::String("hello\nworld".to_string())
+        );
+    }
+
+    #[test]
+    fn parses_nested_lists() {
+        let value = parse_one("(+ 1 (* 2 3))");
+        match value {
+            Value::List(items) => {
+                assert_eq!(items.len(), 3);
+                assert_eq!(items[0], Value::Symbol("+".to_string()));
+                assert_eq!(items[1], Value::Number(1.0));
+                assert_eq!(
+                    items[2],
+                    Value::List(vec![
+                        Value::Symbol("*".to_string()),
+                        Value::Number(2.0),
+                        Value::Number(3.0),
+                    ])
+                );
+            }
+            _ => panic!("expected a list"),
+        }
+    }
+
+    #[test]
+    fn parses_empty_list() {
+        assert_eq!(parse_one("()"), Value::List(vec![]));
+    }
+
+    #[test]
+    fn skips_comments() {
+        let values = Parser::new("; a comment\n(+ 1 1)").parse().unwrap();
+        assert_eq!(values.len(), 1);
+    }
+
+    #[test]
+    fn parses_multiple_top_level_forms() {
+        let values = Parser::new("1 2 3").parse().unwrap();
+        assert_eq!(
+            values,
+            vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)]
+        );
+    }
+
+    #[test]
+    fn errors_on_unclosed_list() {
+        assert!(Parser::new("(+ 1 2").parse().is_err());
+    }
+
+    #[test]
+    fn errors_on_invalid_boolean() {
+        assert!(Parser::new("#x").parse().is_err());
     }
 }
