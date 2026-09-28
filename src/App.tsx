@@ -1,57 +1,30 @@
 import { useState } from 'react'
-import { invoke } from '@tauri-apps/api'
-import Editor from './components/Editor'
-import REPL from './components/REPL'
+import MenuBar from './components/MenuBar'
+import CodeEditor, { CursorInfo } from './components/CodeEditor'
+import ModeLine from './components/ModeLine'
+import Minibuffer from './components/Minibuffer'
 import './App.css'
 
+const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with C-x C-f and enter text in its buffer.
+`
+
 function App() {
-  const [code, setCode] = useState('(+ 1 2 3)')
-  const [output, setOutput] = useState('')
-  const [error, setError] = useState('')
-  const [history, setHistory] = useState<{ code: string; result: string }[]>([])
-
-  const handleEval = async (evalCode: string) => {
-    try {
-      const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
-        code: evalCode,
-      }) as { result: string; error: string | null }
-
-      if (result.error) {
-        setError(result.error)
-        setOutput('')
-      } else {
-        setOutput(result.result)
-        setError('')
-        setHistory([...history, { code: evalCode, result: result.result }])
-      }
-    } catch (err) {
-      setError(String(err))
-    }
-  }
+  const [code, setCode] = useState(INITIAL_TEXT)
+  const [modified, setModified] = useState(false)
+  const [cursor, setCursor] = useState<CursorInfo>({ line: 1, column: 1, offset: 0 })
 
   const handleEditorChange = (value: string) => {
     setCode(value)
-  }
-
-  const handleRun = () => {
-    handleEval(code)
+    setModified(true)
   }
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Scheme Editor</h1>
-      </header>
-      <div className="app-container">
-        <div className="editor-panel">
-          <h2>Editor</h2>
-          <Editor value={code} onChange={handleEditorChange} onRun={handleRun} />
-        </div>
-        <div className="repl-panel">
-          <h2>Output</h2>
-          <REPL output={output} error={error} history={history} onEval={handleEval} />
-        </div>
-      </div>
+      <MenuBar />
+      <CodeEditor value={code} onChange={handleEditorChange} onCursorChange={setCursor} />
+      <ModeLine bufferName="*scratch*" modified={modified} cursor={cursor} mode="Lisp Interaction" />
+      <Minibuffer />
     </div>
   )
 }
