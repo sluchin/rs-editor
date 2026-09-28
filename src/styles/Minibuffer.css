@@ -10,3 +10,20 @@
   font-size: 14px;
   user-select: none;
 }
+
+.minibuffer-prompt {
+  white-space: pre;
+  user-select: none;
+}
+
+.minibuffer-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  padding: 0;
+  margin: 0;
+}

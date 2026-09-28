@@ -12,7 +12,7 @@ export default function ModeLine({ bufferName, modified, cursor, mode = 'Scheme'
   const status = modified ? '**' : '--'
   return (
     <div className="mode-line">
-      -:{status}-  {bufferName}      All L{cursor.line}     ({mode})
+      -:{status}- {bufferName} All L{cursor.line} ({mode})
     </div>
   )
 }

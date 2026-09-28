@@ -77,6 +77,33 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `src-tauri/target/release/` に出力されます。
 
+### 開発ワークフロー（Lint / Format / Test）
+
+```bash
+# コードの静的解析（ESLint + cargo clippy）
+npm run lint
+
+# ESLint の自動修正
+npm run lint:fix
+
+# コード整形（Prettier + cargo fmt）
+npm run format
+
+# 整形済みかどうかチェックのみ（変更しない）
+npm run format:check
+
+# テストを実行（Vitest + cargo test）
+npm run test
+
+# テストをウォッチモードで実行（フロントエンドのみ）
+npm run test:watch
+
+# format:check → lint → test をまとめて実行
+npm run check
+```
+
+`npm run check` は GitHub Actions の CI (`.github/workflows/ci.yml`) でも実行され、`main` ブランチへの push・PR ごとに自動でフォーマット・lint・テストが確認されます。
+
 ## 使用例
 
 ### 基本的な算術演算

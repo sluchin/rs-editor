@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, KeyboardEvent } from 'react'
+import { usePrefixKeymap } from '../lib/prefixKeymap'
 import '../styles/CodeEditor.css'
 
 export interface CursorInfo {
@@ -11,6 +12,9 @@ interface CodeEditorProps {
   value: string
   onChange: (value: string) => void
   onCursorChange?: (info: CursorInfo) => void
+  onFindFile: () => void
+  onSaveBuffer: () => void
+  disabled?: boolean
 }
 
 function cursorInfoFromOffset(text: string, offset: number): CursorInfo {
@@ -23,9 +27,18 @@ function cursorInfoFromOffset(text: string, offset: number): CursorInfo {
   }
 }
 
-export default function CodeEditor({ value, onChange, onCursorChange }: CodeEditorProps) {
+export default function CodeEditor({
+  value,
+  onChange,
+  onCursorChange,
+  onFindFile,
+  onSaveBuffer,
+  disabled,
+}: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [cursorPos, setCursorPos] = useState(0)
+
+  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer })
 
   const updateCursorFromEl = () => {
     const el = textareaRef.current
@@ -37,6 +50,10 @@ export default function CodeEditor({ value, onChange, onCursorChange }: CodeEdit
     onCursorChange?.(cursorInfoFromOffset(value, cursorPos))
   }, [value, cursorPos, onCursorChange])
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    prefixKeyDown(e)
+  }
+
   return (
     <textarea
       ref={textareaRef}
@@ -46,8 +63,10 @@ export default function CodeEditor({ value, onChange, onCursorChange }: CodeEdit
         onChange(e.target.value)
         setCursorPos(e.target.selectionStart)
       }}
+      onKeyDown={handleKeyDown}
       onKeyUp={updateCursorFromEl}
       onClick={updateCursorFromEl}
+      readOnly={disabled}
       spellCheck={false}
       autoFocus
     />
