@@ -25,6 +25,11 @@ interface CodeEditorProps {
   onCursorChange?: (info: CursorInfo) => void
   onFindFile: () => void
   onSaveBuffer: () => void
+  onIsearchForward: () => void
+  onIsearchBackward: () => void
+  onExecuteCommand: () => void
+  onQuit: () => void
+  highlightRange?: { start: number; end: number } | null
   disabled?: boolean
 }
 
@@ -78,12 +83,18 @@ export default function CodeEditor({
   onCursorChange,
   onFindFile,
   onSaveBuffer,
+  onIsearchForward,
+  onIsearchBackward,
+  onExecuteCommand,
+  onQuit,
+  highlightRange,
   disabled,
 }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const highlightRef = useRef<HTMLPreElement>(null)
   const [cursorPos, setCursorPos] = useState(0)
   const pendingCursorRef = useRef<number | null>(null)
+  const highlightRangeRef = useRef<{ start: number; end: number } | null>(null)
 
   const applyProgrammaticChange = (newValue: string, pos: number) => {
     pendingCursorRef.current = pos
@@ -96,6 +107,10 @@ export default function CodeEditor({
     textareaRef,
     value,
     onChange: applyProgrammaticChange,
+    onIsearchForward,
+    onIsearchBackward,
+    onExecuteCommand,
+    onQuit,
   })
 
   const tokens = useMemo(() => tokenize(value), [value])
@@ -117,6 +132,18 @@ export default function CodeEditor({
     textareaRef.current?.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current)
     pendingCursorRef.current = null
   }, [value, cursorPos])
+
+  useLayoutEffect(() => {
+    if (!highlightRange) return
+    textareaRef.current?.setSelectionRange(highlightRange.start, highlightRange.end)
+    highlightRangeRef.current = highlightRange
+  }, [highlightRange])
+
+  useEffect(() => {
+    if (highlightRangeRef.current) {
+      setCursorPos(highlightRangeRef.current.end)
+    }
+  }, [highlightRange])
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (prefixKeyDown(e)) return

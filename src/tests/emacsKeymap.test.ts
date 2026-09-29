@@ -88,7 +88,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: text,
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -115,7 +114,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: text,
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -141,7 +139,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello world',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -167,7 +164,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello world',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -222,7 +218,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: text,
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -248,7 +243,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello world',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -340,6 +334,68 @@ describe('useEmacsKeymap', () => {
 
       expect(event.preventDefault).not.toHaveBeenCalled()
       expect(onChange).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('isearch and extended commands', () => {
+    it('C-s calls onIsearchForward', () => {
+      const onChange = vi.fn()
+      const onIsearchForward = vi.fn()
+      const textareaRef = createTextareaRef('hello', 0, 0)
+      const { result } = renderHook(() =>
+        useEmacsKeymap({ textareaRef, value: 'hello', onChange, onIsearchForward }),
+      )
+
+      const event = { key: 's', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      result.current.handleKeyDown(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(onIsearchForward).toHaveBeenCalled()
+    })
+
+    it('C-r calls onIsearchBackward', () => {
+      const onChange = vi.fn()
+      const onIsearchBackward = vi.fn()
+      const textareaRef = createTextareaRef('hello', 5, 5)
+      const { result } = renderHook(() =>
+        useEmacsKeymap({ textareaRef, value: 'hello', onChange, onIsearchBackward }),
+      )
+
+      const event = { key: 'r', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      result.current.handleKeyDown(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(onIsearchBackward).toHaveBeenCalled()
+    })
+
+    it('M-x calls onExecuteCommand', () => {
+      const onChange = vi.fn()
+      const onExecuteCommand = vi.fn()
+      const textareaRef = createTextareaRef('hello', 0, 0)
+      const { result } = renderHook(() =>
+        useEmacsKeymap({ textareaRef, value: 'hello', onChange, onExecuteCommand }),
+      )
+
+      const event = { key: 'x', ctrlKey: false, altKey: true, preventDefault: vi.fn() } as any
+      result.current.handleKeyDown(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(onExecuteCommand).toHaveBeenCalled()
+    })
+
+    it('C-g calls onQuit', () => {
+      const onChange = vi.fn()
+      const onQuit = vi.fn()
+      const textareaRef = createTextareaRef('hello', 0, 0)
+      const { result } = renderHook(() =>
+        useEmacsKeymap({ textareaRef, value: 'hello', onChange, onQuit }),
+      )
+
+      const event = { key: 'g', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      result.current.handleKeyDown(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(onQuit).toHaveBeenCalled()
     })
   })
 })

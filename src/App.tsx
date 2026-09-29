@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import MenuBar from './components/MenuBar'
 import CodeEditor, { CursorInfo } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, { MinibufferState } from './components/Minibuffer'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
+import { findNextMatch } from './lib/isearch'
 import './App.css'
 
 const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
 ;; To create a file, visit it with C-x C-f and enter text in its buffer.
 `
 
-type PendingAction = 'find-file' | 'write-file' | null
+type PendingAction = 'find-file' | 'write-file' | 'execute-command' | null
+
+interface Command {
+  name: string
+  run: () => void | Promise<void>
+}
 
 function bufferNameFromPath(path: string | null): string {
   if (!path) return '*scratch*'
@@ -29,6 +36,7 @@ function App() {
     mode: 'message',
     text: '',
   })
+  const [highlightRange, setHighlightRange] = useState<{ start: number; end: number } | null>(null)
 
   useEffect(() => {
     getHomeDir()
@@ -61,12 +69,108 @@ function App() {
     }
   }
 
-  const handleMinibufferInputChange = (value: string) => {
-    setMinibufferState((prev) => (prev.mode === 'input' ? { ...prev, input: value } : prev))
+  const handleSaveBuffersKillTerminal = async () => {
+    if (filePath) {
+      await handleSaveBuffer()
+      await getCurrentWindow().close()
+    } else {
+      handleSaveBuffer()
+    }
   }
+
+  const handleIsearchForward = () => {
+    setHighlightRange(null)
+    setMinibufferState({
+      mode: 'isearch',
+      direction: 'forward',
+      query: '',
+      originalCursor: cursor.offset,
+      matchStart: null,
+      matchEnd: null,
+    })
+  }
+
+  const handleIsearchBackward = () => {
+    setHighlightRange(null)
+    setMinibufferState({
+      mode: 'isearch',
+      direction: 'backward',
+      query: '',
+      originalCursor: cursor.offset,
+      matchStart: null,
+      matchEnd: null,
+    })
+  }
+
+  const handleIsearchRepeat = (direction: 'forward' | 'backward') => {
+    const current = minibufferState
+    if (current.mode !== 'isearch') return
+
+    if (direction === 'backward' && current.matchStart !== null && current.matchStart <= 0) {
+      setMinibufferState({ ...current, matchStart: null, matchEnd: null })
+      return
+    }
+
+    const fromPos =
+      current.matchStart === null
+        ? current.originalCursor
+        : direction === 'forward'
+          ? current.matchStart + 1
+          : current.matchStart - 1
+
+    const match = findNextMatch(code, current.query, fromPos, direction)
+
+    if (match) {
+      setHighlightRange(match)
+      setMinibufferState({
+        ...current,
+        matchStart: match.start,
+        matchEnd: match.end,
+      })
+    } else {
+      setMinibufferState({ ...current, matchStart: null, matchEnd: null })
+    }
+  }
+
+  const handleExecuteCommand = () => {
+    setPendingAction('execute-command')
+    setMinibufferState({ mode: 'input', prompt: 'M-x ', input: '' })
+  }
+
+  const handleQuit = () => {
+    setMinibufferState({ mode: 'message', text: 'Quit' })
+  }
+
+  const handleMinibufferInputChange = (value: string) => {
+    const current = minibufferState
+    if (current.mode === 'input') {
+      setMinibufferState({ ...current, input: value })
+    } else if (current.mode === 'isearch') {
+      const match = findNextMatch(code, value, current.originalCursor, current.direction)
+      if (match) {
+        setHighlightRange(match)
+        setMinibufferState({
+          ...current,
+          query: value,
+          matchStart: match.start,
+          matchEnd: match.end,
+        })
+      } else {
+        setHighlightRange(null)
+        setMinibufferState({ ...current, query: value, matchStart: null, matchEnd: null })
+      }
+    }
+  }
+
+  const commands: Command[] = [
+    { name: 'find-file', run: handleFindFile },
+    { name: 'save-buffer', run: handleSaveBuffer },
+    { name: 'save-buffers-kill-terminal', run: handleSaveBuffersKillTerminal },
+  ]
 
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
+    const currentState = minibufferState
     setPendingAction(null)
 
     if (action === 'find-file') {
@@ -96,12 +200,29 @@ function App() {
       } catch (err) {
         setMinibufferState({ mode: 'message', text: `Error: ${err}` })
       }
+    } else if (action === 'execute-command') {
+      const cmd = commands.find((c) => c.name === value.trim())
+      if (cmd) {
+        await cmd.run()
+      } else {
+        setMinibufferState({ mode: 'message', text: `Undefined command: ${value}` })
+      }
+    } else if (currentState.mode === 'isearch') {
+      setHighlightRange(null)
+      setMinibufferState({ mode: 'message', text: '' })
     }
   }
 
   const handleMinibufferCancel = () => {
+    const current = minibufferState
     setPendingAction(null)
-    setMinibufferState({ mode: 'message', text: 'Quit' })
+
+    if (current.mode === 'isearch') {
+      setHighlightRange({ start: current.originalCursor, end: current.originalCursor })
+      setMinibufferState({ mode: 'message', text: 'Quit' })
+    } else {
+      setMinibufferState({ mode: 'message', text: 'Quit' })
+    }
   }
 
   return (
@@ -113,7 +234,12 @@ function App() {
         onCursorChange={setCursor}
         onFindFile={handleFindFile}
         onSaveBuffer={handleSaveBuffer}
-        disabled={minibufferState.mode === 'input'}
+        onIsearchForward={handleIsearchForward}
+        onIsearchBackward={handleIsearchBackward}
+        onExecuteCommand={handleExecuteCommand}
+        onQuit={handleQuit}
+        highlightRange={highlightRange}
+        disabled={minibufferState.mode !== 'message'}
       />
       <ModeLine
         bufferName={bufferNameFromPath(filePath)}
@@ -126,6 +252,7 @@ function App() {
         onInputChange={handleMinibufferInputChange}
         onSubmit={handleMinibufferSubmit}
         onCancel={handleMinibufferCancel}
+        onIsearchRepeat={handleIsearchRepeat}
       />
     </div>
   )
