@@ -1,10 +1,17 @@
 import { RefObject, KeyboardEvent, useRef } from 'react'
+import { forwardSexp, backwardSexp, killSexp } from './bracketMatch'
 
 interface EmacsKeymapOptions {
   textareaRef: RefObject<HTMLTextAreaElement>
   value: string
   onChange: (value: string, cursorPos: number) => void
-  onSave?: () => void
+  onIsearchForward?: () => void
+  onIsearchBackward?: () => void
+  onExecuteCommand?: () => void
+  onQuit?: () => void
+  onUndo?: () => void
+  onPushUndo?: (currentCode: string, currentCursorPos: number) => void
+  onEvalExpression?: () => void
 }
 
 function lineBounds(text: string, pos: number): { start: number; end: number } {
@@ -28,10 +35,21 @@ function wordBackward(text: string, pos: number): number {
   return i
 }
 
-export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKeymapOptions) {
-  const killRing = useRef('')
+export function useEmacsKeymap({
+  textareaRef,
+  value,
+  onChange,
+  onIsearchForward,
+  onIsearchBackward,
+  onExecuteCommand,
+  onQuit,
+  onUndo,
+  onPushUndo,
+  onEvalExpression,
+}: EmacsKeymapOptions) {
+  const killRing = useRef<string[]>([])
+  const killRingIndex = useRef(0)
   const markPos = useRef<number | null>(null)
-  const awaitingPrefixX = useRef(false)
 
   const setCursor = (pos: number, extendSelection = false) => {
     const el = textareaRef.current
@@ -51,21 +69,6 @@ export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKe
     const selEnd = el.selectionEnd
     const ctrl = e.ctrlKey
     const meta = e.altKey // Meta/Alt used for M- bindings
-
-    // C-x C-s : save
-    if (ctrl && e.key === 'x') {
-      awaitingPrefixX.current = true
-      e.preventDefault()
-      return
-    }
-    if (awaitingPrefixX.current) {
-      awaitingPrefixX.current = false
-      if (ctrl && e.key === 's') {
-        e.preventDefault()
-        onSave?.()
-        return
-      }
-    }
 
     if (ctrl && !meta) {
       switch (e.key) {
@@ -119,30 +122,80 @@ export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKe
         case 'k': {
           // kill-line
           e.preventDefault()
+          onPushUndo?.(value, pos)
           const { end } = lineBounds(value, pos)
           const killEnd = pos === end ? Math.min(value.length, end + 1) : end
-          killRing.current = value.slice(pos, killEnd)
+          const killed = value.slice(pos, killEnd)
+          killRing.current.unshift(killed)
+          if (killRing.current.length > 50) killRing.current.pop()
+          killRingIndex.current = 0
           onChange(value.slice(0, pos) + value.slice(killEnd), pos)
           return
         }
         case 'y': {
           // yank
           e.preventDefault()
-          const text = killRing.current
+          const text = killRing.current[killRingIndex.current] || ''
           onChange(value.slice(0, pos) + text + value.slice(selEnd), pos + text.length)
           return
         }
         case 'w': {
           // kill-region
           e.preventDefault()
+          onPushUndo?.(value, pos)
           if (pos !== selEnd) {
             const [from, to] = pos < selEnd ? [pos, selEnd] : [selEnd, pos]
-            killRing.current = value.slice(from, to)
+            const killed = value.slice(from, to)
+            killRing.current.unshift(killed)
+            if (killRing.current.length > 50) killRing.current.pop()
+            killRingIndex.current = 0
             onChange(value.slice(0, from) + value.slice(to), from)
           }
           markPos.current = null
           return
         }
+        case '/': {
+          // undo
+          e.preventDefault()
+          onPushUndo?.(value, pos)
+          onUndo?.()
+          return
+        }
+        case 't': {
+          // transpose-chars
+          e.preventDefault()
+          if (value.length < 2) return
+          let start = pos - 1
+          let end = pos
+          if (pos === 0) {
+            start = 0
+            end = 2
+          } else if (pos === value.length) {
+            start = value.length - 2
+            end = value.length
+          }
+          if (start >= 0 && end <= value.length) {
+            const char1 = value[start]
+            const char2 = value[end - 1]
+            const newValue =
+              value.slice(0, start) +
+              char2 +
+              value.slice(start + 1, end - 1) +
+              char1 +
+              value.slice(end)
+            onPushUndo?.(value, pos)
+            onChange(newValue, Math.min(pos + 1, newValue.length))
+          }
+          return
+        }
+        case 's': // isearch-forward
+          e.preventDefault()
+          onIsearchForward?.()
+          return
+        case 'r': // isearch-backward
+          e.preventDefault()
+          onIsearchBackward?.()
+          return
         case ' ': // set-mark
           e.preventDefault()
           markPos.current = pos
@@ -150,12 +203,45 @@ export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKe
         case 'g': // keyboard-quit
           e.preventDefault()
           markPos.current = null
+          onQuit?.()
           return
+      }
+    }
+
+    if (ctrl && meta) {
+      switch (e.key) {
+        case 'f': {
+          // forward-sexp
+          e.preventDefault()
+          setCursor(forwardSexp(value, pos))
+          return
+        }
+        case 'b': {
+          // backward-sexp
+          e.preventDefault()
+          setCursor(backwardSexp(value, pos))
+          return
+        }
+        case 'k': {
+          // kill-sexp
+          e.preventDefault()
+          onPushUndo?.(value, pos)
+          const [newText, newPos] = killSexp(value, pos)
+          killRing.current.unshift(value.slice(pos, pos + (value.length - newText.length)))
+          if (killRing.current.length > 50) killRing.current.pop()
+          killRingIndex.current = 0
+          onChange(newText, newPos)
+          return
+        }
       }
     }
 
     if (meta && !ctrl) {
       switch (e.key) {
+        case 'x': // execute-extended-command
+          e.preventDefault()
+          onExecuteCommand?.()
+          return
         case 'f': // forward-word
           e.preventDefault()
           setCursor(wordForward(value, pos))
@@ -168,10 +254,39 @@ export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKe
           e.preventDefault()
           if (pos !== selEnd) {
             const [from, to] = pos < selEnd ? [pos, selEnd] : [selEnd, pos]
-            killRing.current = value.slice(from, to)
+            killRing.current.unshift(value.slice(from, to))
+            if (killRing.current.length > 50) killRing.current.pop()
+            killRingIndex.current = 0
           }
           markPos.current = null
           return
+        case 'y': {
+          // yank-pop
+          e.preventDefault()
+          if (killRing.current.length === 0) return
+          killRingIndex.current = (killRingIndex.current + 1) % killRing.current.length
+          const text = killRing.current[killRingIndex.current]
+          onChange(value.slice(0, pos) + text + value.slice(selEnd), pos + text.length)
+          return
+        }
+        case '<': {
+          // buffer-start
+          e.preventDefault()
+          setCursor(0)
+          return
+        }
+        case '>': {
+          // buffer-end
+          e.preventDefault()
+          setCursor(value.length)
+          return
+        }
+        case ':': {
+          // eval-expression
+          e.preventDefault()
+          onEvalExpression?.()
+          return
+        }
       }
     }
   }
