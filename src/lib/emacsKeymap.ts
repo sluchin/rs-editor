@@ -4,7 +4,6 @@ interface EmacsKeymapOptions {
   textareaRef: RefObject<HTMLTextAreaElement>
   value: string
   onChange: (value: string, cursorPos: number) => void
-  onSave?: () => void
 }
 
 function lineBounds(text: string, pos: number): { start: number; end: number } {
@@ -28,10 +27,9 @@ function wordBackward(text: string, pos: number): number {
   return i
 }
 
-export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKeymapOptions) {
+export function useEmacsKeymap({ textareaRef, value, onChange }: EmacsKeymapOptions) {
   const killRing = useRef('')
   const markPos = useRef<number | null>(null)
-  const awaitingPrefixX = useRef(false)
 
   const setCursor = (pos: number, extendSelection = false) => {
     const el = textareaRef.current
@@ -51,21 +49,6 @@ export function useEmacsKeymap({ textareaRef, value, onChange, onSave }: EmacsKe
     const selEnd = el.selectionEnd
     const ctrl = e.ctrlKey
     const meta = e.altKey // Meta/Alt used for M- bindings
-
-    // C-x C-s : save
-    if (ctrl && e.key === 'x') {
-      awaitingPrefixX.current = true
-      e.preventDefault()
-      return
-    }
-    if (awaitingPrefixX.current) {
-      awaitingPrefixX.current = false
-      if (ctrl && e.key === 's') {
-        e.preventDefault()
-        onSave?.()
-        return
-      }
-    }
 
     if (ctrl && !meta) {
       switch (e.key) {

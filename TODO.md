@@ -23,19 +23,19 @@
 
 ## Phase 1: 既存キーマップの統合と配線
 
-- [ ] `prefixKeymap.ts` と `emacsKeymap.ts` の `C-x` プレフィックス処理が重複しているため統合する。
+- [x] `prefixKeymap.ts` と `emacsKeymap.ts` の `C-x` プレフィックス処理が重複しているため統合する。
       方針: `emacsKeymap.ts` を「単一キー・M- キーバインド」専用にし、`C-x` 系プレフィックスは
       `prefixKeymap.ts` に一本化する（`onFindFile` / `onSaveBuffer` に加えて、Phase 4 で追加する
       `C-x b` / `C-x k` / `C-x 2` などもここに集約）。
-- [ ] `CodeEditor.tsx` に `useEmacsKeymap` を接続し、`onKeyDown` で
+- [x] `CodeEditor.tsx` に `useEmacsKeymap` を接続し、`onKeyDown` で
       `prefixKeyDown(e) || bracketAutoCloseKeyDown(e) || emacsKeyDown(e)` の優先順位で処理する。
       （プレフィックスキー処理 → 括弧自動補完 → Emacs カーソル/編集コマンド、の順で `preventDefault` の競合を避ける）
-- [ ] `useBracketAutoClose` を `CodeEditor.tsx` に接続する。
-- [ ] `App.tsx` の `handleEditorChange` は `(value: string) => void` だが、`useEmacsKeymap` /
+- [x] `useBracketAutoClose` を `CodeEditor.tsx` に接続する。
+- [x] `App.tsx` の `handleEditorChange` は `(value: string) => void` だが、`useEmacsKeymap` /
       `useBracketAutoClose` はカーソル位置も一緒に返す `(value, cursorPos) => void` を要求しているため、
       `CodeEditor` 側でカーソル位置を `setSelectionRange` してから `onChange` を呼ぶよう調整する
       （React の再レンダー後に `selectionStart` が飛ばないよう `useLayoutEffect` 等で反映）。
-- [ ] 上記3ファイルの単体テストを追加・拡充する（`bracketMatch.test.ts` / `schemeTokenizer.test.ts` に倣う）。
+- [x] 上記3ファイルの単体テストを追加・拡充する（`bracketMatch.test.ts` / `schemeTokenizer.test.ts` に倣う）。
 
 ## Phase 2: シンタックスハイライト
 
