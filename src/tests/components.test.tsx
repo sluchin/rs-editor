@@ -14,7 +14,16 @@ describe('CodeEditor Component', () => {
   it('renders textarea with initial value', () => {
     // 初期値を持つテキストエリアがレンダリングされることを確認.
     const { container } = render(
-      <CodeEditor value="(+ 1 2)" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value="(+ 1 2)"
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -26,7 +35,16 @@ describe('CodeEditor Component', () => {
     // テキストが変更されると onChange が呼ばれることを確認.
     const onChange = vi.fn()
     const { container } = render(
-      <CodeEditor value="" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value=""
+        onChange={onChange}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -45,6 +63,10 @@ describe('CodeEditor Component', () => {
         onFindFile={vi.fn()}
         onSaveBuffer={vi.fn()}
         onCursorChange={onCursorChange}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
       />,
     )
 
@@ -65,6 +87,10 @@ describe('CodeEditor Component', () => {
         onChange={vi.fn()}
         onFindFile={vi.fn()}
         onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
         disabled={true}
       />,
     )
@@ -77,7 +103,16 @@ describe('CodeEditor Component', () => {
     // C-x C-f キーシーケンスで onFindFile が呼ばれることを確認.
     const onFindFile = vi.fn()
     const { container } = render(
-      <CodeEditor value="" onChange={vi.fn()} onFindFile={onFindFile} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value=""
+        onChange={vi.fn()}
+        onFindFile={onFindFile}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -94,7 +129,16 @@ describe('CodeEditor Component', () => {
     // C-x C-s キーシーケンスで onSaveBuffer が呼ばれることを確認.
     const onSaveBuffer = vi.fn()
     const { container } = render(
-      <CodeEditor value="" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={onSaveBuffer} />,
+      <CodeEditor
+        value=""
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={onSaveBuffer}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -116,6 +160,10 @@ describe('CodeEditor Component', () => {
         onChange={onChange}
         onFindFile={vi.fn()}
         onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
       />,
     )
 
@@ -130,7 +178,16 @@ describe('CodeEditor Component', () => {
     // C-f でカーソルだけ動かし onChange は呼ばれないことを確認.
     const onChange = vi.fn()
     const { container } = render(
-      <CodeEditor value="hello" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value="hello"
+        onChange={onChange}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -149,6 +206,10 @@ describe('CodeEditor Component', () => {
         onChange={vi.fn()}
         onFindFile={vi.fn()}
         onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
       />,
     )
     const keyword = container.querySelector('.token-keyword')
@@ -160,7 +221,16 @@ describe('CodeEditor Component', () => {
   it('highlights the matching bracket pair adjacent to the cursor', () => {
     // カーソルに隣接する括弧とその対応括弧がハイライトされることを確認.
     const { container } = render(
-      <CodeEditor value="(+ 1 2)" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value="(+ 1 2)"
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
     textarea.setSelectionRange(0, 0)
@@ -175,7 +245,16 @@ describe('CodeEditor Component', () => {
   it('marks an unmatched closing paren as an error', () => {
     // 対応の取れていない ) がエラー表示されることを確認.
     const { container } = render(
-      <CodeEditor value=")" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+      <CodeEditor
+        value=")"
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+      />,
     )
     expect(container.querySelector('.token-paren-unmatched')?.textContent).toBe(')')
   })
@@ -188,6 +267,10 @@ describe('CodeEditor Component', () => {
         onChange={vi.fn()}
         onFindFile={vi.fn()}
         onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
       />,
     )
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
@@ -197,6 +280,27 @@ describe('CodeEditor Component', () => {
     fireEvent.scroll(textarea)
 
     expect(pre.scrollTop).toBe(50)
+  })
+
+  it('applies highlightRange to textarea selection', () => {
+    // highlightRange prop が textarea の selection に反映されることを確認.
+    const { container } = render(
+      <CodeEditor
+        value="hello world"
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+        onIsearchForward={vi.fn()}
+        onIsearchBackward={vi.fn()}
+        onExecuteCommand={vi.fn()}
+        onQuit={vi.fn()}
+        highlightRange={{ start: 0, end: 5 }}
+      />,
+    )
+
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    expect(textarea.selectionStart).toBe(0)
+    expect(textarea.selectionEnd).toBe(5)
   })
 })
 
@@ -296,6 +400,116 @@ describe('Minibuffer Component', () => {
     fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
 
     expect(onCancel).toHaveBeenCalled()
+  })
+
+  it('renders isearch mode with forward prompt', () => {
+    // isearch フォワードモードでプロンプトが表示されることを確認.
+    const state: MinibufferState = {
+      mode: 'isearch',
+      direction: 'forward',
+      query: 'test',
+      originalCursor: 0,
+      matchStart: 5,
+      matchEnd: 9,
+    }
+    const { container } = render(
+      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+    )
+
+    const prompt = container.querySelector('.minibuffer-prompt')
+    expect(prompt?.textContent).toBe('I-search: ')
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('test')
+  })
+
+  it('renders isearch mode with backward prompt', () => {
+    // isearch バックワードモードでプロンプトが表示されることを確認.
+    const state: MinibufferState = {
+      mode: 'isearch',
+      direction: 'backward',
+      query: 'test',
+      originalCursor: 20,
+      matchStart: 15,
+      matchEnd: 19,
+    }
+    const { container } = render(
+      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+    )
+
+    const prompt = container.querySelector('.minibuffer-prompt')
+    expect(prompt?.textContent).toBe('I-search backward: ')
+  })
+
+  it('displays Failing prefix when isearch has no match', () => {
+    // isearch でマッチが無いときに Failing プレフィックスが表示されることを確認.
+    const state: MinibufferState = {
+      mode: 'isearch',
+      direction: 'forward',
+      query: 'xyz',
+      originalCursor: 0,
+      matchStart: null,
+      matchEnd: null,
+    }
+    const { container } = render(
+      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+    )
+
+    const prompt = container.querySelector('.minibuffer-prompt')
+    expect(prompt?.textContent).toBe('Failing I-search: ')
+  })
+
+  it('calls onIsearchRepeat with forward direction on C-s during isearch', () => {
+    // isearch 中に C-s が押されると onIsearchRepeat が呼ばれることを確認.
+    const onIsearchRepeat = vi.fn()
+    const state: MinibufferState = {
+      mode: 'isearch',
+      direction: 'forward',
+      query: 'test',
+      originalCursor: 0,
+      matchStart: 5,
+      matchEnd: 9,
+    }
+    const { container } = render(
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onIsearchRepeat={onIsearchRepeat}
+      />,
+    )
+
+    const input = container.querySelector('input') as HTMLInputElement
+    fireEvent.keyDown(input, { key: 's', ctrlKey: true })
+
+    expect(onIsearchRepeat).toHaveBeenCalledWith('forward')
+  })
+
+  it('calls onIsearchRepeat with backward direction on C-r during isearch', () => {
+    // isearch 中に C-r が押されると onIsearchRepeat が呼ばれることを確認.
+    const onIsearchRepeat = vi.fn()
+    const state: MinibufferState = {
+      mode: 'isearch',
+      direction: 'forward',
+      query: 'test',
+      originalCursor: 20,
+      matchStart: 5,
+      matchEnd: 9,
+    }
+    const { container } = render(
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onIsearchRepeat={onIsearchRepeat}
+      />,
+    )
+
+    const input = container.querySelector('input') as HTMLInputElement
+    fireEvent.keyDown(input, { key: 'r', ctrlKey: true })
+
+    expect(onIsearchRepeat).toHaveBeenCalledWith('backward')
   })
 })
 
