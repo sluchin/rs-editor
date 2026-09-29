@@ -4,6 +4,10 @@ interface EmacsKeymapOptions {
   textareaRef: RefObject<HTMLTextAreaElement>
   value: string
   onChange: (value: string, cursorPos: number) => void
+  onIsearchForward?: () => void
+  onIsearchBackward?: () => void
+  onExecuteCommand?: () => void
+  onQuit?: () => void
 }
 
 function lineBounds(text: string, pos: number): { start: number; end: number } {
@@ -27,7 +31,15 @@ function wordBackward(text: string, pos: number): number {
   return i
 }
 
-export function useEmacsKeymap({ textareaRef, value, onChange }: EmacsKeymapOptions) {
+export function useEmacsKeymap({
+  textareaRef,
+  value,
+  onChange,
+  onIsearchForward,
+  onIsearchBackward,
+  onExecuteCommand,
+  onQuit,
+}: EmacsKeymapOptions) {
   const killRing = useRef('')
   const markPos = useRef<number | null>(null)
 
@@ -126,6 +138,14 @@ export function useEmacsKeymap({ textareaRef, value, onChange }: EmacsKeymapOpti
           markPos.current = null
           return
         }
+        case 's': // isearch-forward
+          e.preventDefault()
+          onIsearchForward?.()
+          return
+        case 'r': // isearch-backward
+          e.preventDefault()
+          onIsearchBackward?.()
+          return
         case ' ': // set-mark
           e.preventDefault()
           markPos.current = pos
@@ -133,12 +153,17 @@ export function useEmacsKeymap({ textareaRef, value, onChange }: EmacsKeymapOpti
         case 'g': // keyboard-quit
           e.preventDefault()
           markPos.current = null
+          onQuit?.()
           return
       }
     }
 
     if (meta && !ctrl) {
       switch (e.key) {
+        case 'x': // execute-extended-command
+          e.preventDefault()
+          onExecuteCommand?.()
+          return
         case 'f': // forward-word
           e.preventDefault()
           setCursor(wordForward(value, pos))
