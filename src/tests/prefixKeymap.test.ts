@@ -2,14 +2,19 @@ import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { usePrefixKeymap } from '../lib/prefixKeymap'
 
+/**
+ * usePrefixKeymap フック のテストスイート.
+ * C-x C-f (ファイルを開く) と C-x C-s (保存) のキーシーケンスをテストします.
+ */
 describe('usePrefixKeymap', () => {
   it('calls onFindFile on C-x C-f', () => {
+    // C-x C-f キーシーケンスで onFindFile が呼ばれることを確認.
     const onFindFile = vi.fn()
     const onSaveBuffer = vi.fn()
     const { result } = renderHook(() => usePrefixKeymap({ onFindFile, onSaveBuffer }))
     const { handleKeyDown } = result.current
 
-    // First press C-x
+    // まず C-x を押す.
     const ctrlXEvent = {
       key: 'x',
       ctrlKey: true,
@@ -21,7 +26,7 @@ describe('usePrefixKeymap', () => {
     handleKeyDown(ctrlXEvent)
     expect(ctrlXEvent.preventDefault).toHaveBeenCalled()
 
-    // Then press C-f
+    // 次に C-f を押す.
     const ctrlFEvent = {
       key: 'f',
       ctrlKey: true,
@@ -37,12 +42,13 @@ describe('usePrefixKeymap', () => {
   })
 
   it('calls onSaveBuffer on C-x C-s', () => {
+    // C-x C-s キーシーケンスで onSaveBuffer が呼ばれることを確認.
     const onFindFile = vi.fn()
     const onSaveBuffer = vi.fn()
     const { result } = renderHook(() => usePrefixKeymap({ onFindFile, onSaveBuffer }))
     const { handleKeyDown } = result.current
 
-    // First press C-x
+    // まず C-x を押す.
     const ctrlXEvent = {
       key: 'x',
       ctrlKey: true,
@@ -53,7 +59,7 @@ describe('usePrefixKeymap', () => {
 
     handleKeyDown(ctrlXEvent)
 
-    // Then press C-s
+    // 次に C-s を押す.
     const ctrlSEvent = {
       key: 's',
       ctrlKey: true,
@@ -69,12 +75,13 @@ describe('usePrefixKeymap', () => {
   })
 
   it('ignores other keys after C-x', () => {
+    // C-x の後に他のキーが押された場合は何も呼ばれないことを確認.
     const onFindFile = vi.fn()
     const onSaveBuffer = vi.fn()
     const { result } = renderHook(() => usePrefixKeymap({ onFindFile, onSaveBuffer }))
     const { handleKeyDown } = result.current
 
-    // First press C-x
+    // まず C-x を押す.
     const ctrlXEvent = {
       key: 'x',
       ctrlKey: true,
@@ -85,7 +92,7 @@ describe('usePrefixKeymap', () => {
 
     handleKeyDown(ctrlXEvent)
 
-    // Then press some random key
+    // その後、ランダムなキーを押す.
     const randomEvent = {
       key: 'a',
       ctrlKey: false,
@@ -100,6 +107,7 @@ describe('usePrefixKeymap', () => {
   })
 
   it('returns false for regular keys', () => {
+    // 通常のキーの場合は false を返すことを確認.
     const { result } = renderHook(() =>
       usePrefixKeymap({
         onFindFile: vi.fn(),
