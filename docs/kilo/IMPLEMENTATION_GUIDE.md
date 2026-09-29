@@ -1,10 +1,10 @@
 # Kilo - 実装ガイド
 
-このドキュメントは, Kilo エディタを学習し, 同様のエディタを実装するための実践的なガイドです.
+このドキュメントは、Kilo エディタを学習し、同様のエディタを実装するための実践的なガイドです。
 
 ## 段階的な実装戦略
 
-### フェーズ 1: 基本的なターミナル制御 (ステップ 1-10)
+### フェーズ 1：基本的なターミナル制御 (ステップ 1-10)
 
 #### 1. ターミナルの Raw モード設定
 ```c
@@ -46,12 +46,12 @@ int main() {
 #### 3. 画面クリアと ANSI シーケンス
 ```c
 void refreshScreen() {
-    write(STDOUT_FILENO, "\x1b[2J", 4);      // 画面クリア.
-    write(STDOUT_FILENO, "\x1b[H", 3);       // カーソルをホームに.
+    write(STDOUT_FILENO, "\x1b[2J", 4);      // 画面クリア。
+    write(STDOUT_FILENO, "\x1b[H", 3);       // カーソルをホームに。
 }
 ```
 
-### フェーズ 2: テキスト編集 (ステップ 11-30)
+### フェーズ 2：テキスト編集 (ステップ 11-30)
 
 #### 1. 行データ構造
 ```c
@@ -101,7 +101,7 @@ void insertChar(int c) {
 }
 ```
 
-### フェーズ 3: ファイル I/O (ステップ 31-45)
+### フェーズ 3：ファイル I/O (ステップ 31-45)
 
 #### 1. ファイルの読み込み
 ```c
@@ -138,7 +138,7 @@ char *rowsToString(int *buflen) {
     int j;
     
     for (j = 0; j < E.numrows; j++)
-        totlen += E.row[j].size + 1;  // +1 改行用.
+        totlen += E.row[j].size + 1;  // +1 改行用。
     
     *buflen = totlen;
     char *buf = malloc(totlen);
@@ -160,7 +160,7 @@ void saveFile() {
     int len;
     char *buf = rowsToString(&len);
     
-    // 一時ファイルに書き込み.
+    // 一時ファイルに書き込み。
     int fd = open(E.filename, O_RDWR | O_CREAT, 0644);
     if (fd != -1) {
         if (ftruncate(fd, len) != -1) {
@@ -178,7 +178,7 @@ void saveFile() {
 }
 ```
 
-### フェーズ 4: 検索とハイライト (ステップ 46-60)
+### フェーズ 4：検索とハイライト (ステップ 46-60)
 
 #### 1. 基本的な検索
 ```c
@@ -186,13 +186,13 @@ void searchFile() {
     char *query = (char *)malloc(256);
     if (!query) return;
     
-    // ユーザーが検索文字列を入力.
+    // ユーザーが検索文字列を入力。
     if (readInput(query, 256) == -1 || !query[0]) {
         free(query);
         return;
     }
     
-    // 全行をスキャン.
+    // 全行をスキャン。
     for (int i = 0; i < E.numrows; i++) {
         erow *row = &E.row[i];
         char *match = strstr(row->chars, query);
@@ -223,15 +223,15 @@ void updateSyntax(erow *row) {
     for (int i = 0; i < row->size; i++) {
         char c = row->chars[i];
         
-        // コメント処理.
+        // コメント処理。
         if (!strncmp(&row->chars[i], scs, strlen(scs))) {
             memset(&row->hl[i], HL_COMMENT, row->size - i);
             break;
         }
         
-        // 文字列処理.
+        // 文字列処理。
         if (c == '"' || c == '\'') {
-            // 文字列の終わりまで HL_STRING でマーク.
+            // 文字列の終わりまで HL_STRING でマーク。
             row->hl[i] = HL_STRING;
             i++;
             while (i < row->size && row->chars[i] != c) {
@@ -244,7 +244,7 @@ void updateSyntax(erow *row) {
 }
 ```
 
-### フェーズ 5: 高度な機能 (ステップ 61-75)
+### フェーズ 5：高度な機能 (ステップ 61-75)
 
 #### 1. Undo/Redo スタック
 ```c
@@ -271,9 +271,9 @@ void pushUndo(char *before, char *after) {
 void undo() {
     if (undo_ptr < 0) return;
     
-    // 状態を復元.
+    // 状態を復元。
     UndoRecord *rec = &undo_stack[undo_ptr];
-    // ... restore from rec->before ...
+    // … restore from rec->before …
     
     undo_ptr--;
 }
@@ -282,7 +282,7 @@ void undo() {
 #### 2. マルチラインコメント処理
 ```c
 void updateSyntax(erow *row) {
-    // マルチラインコメント状態を追跡.
+    // マルチラインコメント状態を追跡。
     int in_comment = (row->idx > 0) ? E.row[row->idx - 1].hlopen : 0;
     
     for (int i = 0; i < row->size; i++) {
@@ -296,7 +296,7 @@ void updateSyntax(erow *row) {
             continue;
         }
         
-        // マルチラインコメント開始.
+        // マルチラインコメント開始。
         if (!strncmp(&row->chars[i], mcs, mcs_len)) {
             in_comment = 1;
             memset(&row->hl[i], HL_MLCOMMENT, mcs_len);
@@ -312,17 +312,17 @@ void updateSyntax(erow *row) {
 ## ベストプラクティス
 
 ### 1. メモリ管理
-- **realloc の安全性**: `realloc()` の戻り値をチェック.
+- **realloc の安全性**：`realloc()` の戻り値をチェック。
   ```c
   char *new = realloc(ptr, size);
   if (!new) {
       perror("realloc");
-      return;  // 元のポインタは変更しない.
+      return;  // 元のポインタは変更しない。
   }
   ptr = new;
   ```
 
-- **リークの防止**: 終了時にすべてのメモリを解放.
+- **リークの防止**：終了時にすべてのメモリを解放。
   ```c
   void cleanup() {
       for (int i = 0; i < E.numrows; i++) {
@@ -334,7 +334,7 @@ void updateSyntax(erow *row) {
   ```
 
 ### 2. エラーハンドリング
-- **関数の失敗をチェック**:
+- **関数の失敗をチェック**：
   ```c
   FILE *fp = fopen(filename, "r");
   if (!fp) {
@@ -343,38 +343,38 @@ void updateSyntax(erow *row) {
   }
   ```
 
-- **ファイルディスクリプタのクローズ忘れを防ぐ**:
+- **ファイルディスクリプタのクローズ忘れを防ぐ**：
   ```c
   int fd = open(filename, O_RDWR);
   if (fd != -1) {
-      // 処理.
+      // 処理。
       close(fd);
   }
   ```
 
 ### 3. スクリーン更新の最適化
-- **全画面クリアを避ける**: 変更行のみ再描画.
+- **全画面クリアを避ける**：変更行のみ再描画。
   ```c
   void refreshScreen() {
-      // カーソルを隠す.
+      // カーソルを隠す。
       fputs("\x1b[?25l", stdout);
       
-      // 変更行のみ描画.
+      // 変更行のみ描画。
       for (int y = 0; y < E.screenrows; y++) {
-          // 変更フラグをチェック.
+          // 変更フラグをチェック。
           if (row_modified[y]) {
               drawRow(y);
           }
       }
       
-      // カーソルを表示.
+      // カーソルを表示。
       fputs("\x1b[?25h", stdout);
       fflush(stdout);
   }
   ```
 
 ### 4. パフォーマンス改善
-- **バッファリング**: write() 呼び出しの回数を最小化.
+- **バッファリング**：write() 呼び出しの回数を最小化。
   ```c
   char buf[1024];
   char *p = buf;
@@ -386,13 +386,13 @@ void updateSyntax(erow *row) {
   write(STDOUT_FILENO, buf, p - buf);
   ```
 
-- **遅延更新**: 画面の変更をまとめて更新.
+- **遅延更新**：画面の変更をまとめて更新。
   ```c
-  int dirty = 0;  // 変更フラグ.
+  int dirty = 0;  // 変更フラグ。
   
   void markDirty() { dirty = 1; }
   
-  // メインループ.
+  // メインループ。
   if (dirty) {
       refreshScreen();
       dirty = 0;
@@ -400,20 +400,20 @@ void updateSyntax(erow *row) {
   ```
 
 ### 5. コード構造化
-- **関数の責任分離**: 各関数は 1 つの役割を持つ.
+- **関数の責任分離**：各関数は 1 つの役割を持つ。
   ```c
-  // 悪い例.
+  // 悪い例。
   void processKey() {
-      // キー処理, ファイルI/O, 画面更新...多すぎる.
+      // キー処理、ファイルI/O、画面更新…多すぎる。
   }
   
-  // 良い例.
+  // 良い例。
   void handleKey(int key) { /* キー処理のみ */ }
   void saveIfNeeded() { /* ファイル保存のみ */ }
   void refreshScreen() { /* 画面更新のみ */ }
   ```
 
-- **構造体の活用**:
+- **構造体の活用**：
   ```c
   struct EditorState {
       int cx, cy;
@@ -429,10 +429,10 @@ void updateSyntax(erow *row) {
 
 ### ユニットテスト例
 ```c
-// テストするのは難しい (GUI アプリケーションのため),
-// しかし一部のロジックはテスト可能.
+// テストするのは難しい (GUI アプリケーションのため)、
+// しかし一部のロジックはテスト可能。
 
-// テスト: 行の挿入.
+// テスト：行の挿入。
 void test_insertRow() {
     EditorConfig test_E = {0};
     E = test_E;
@@ -441,12 +441,12 @@ void test_insertRow() {
     assert(E.numrows == 1);
     assert(strncmp(E.row[0].chars, "Hello", 5) == 0);
     
-    // クリーンアップ.
+    // クリーンアップ。
     free(E.row[0].chars);
     free(E.row);
 }
 
-// テスト: 行の削除.
+// テスト：行の削除。
 void test_deleteRow() {
     EditorConfig test_E = {0};
     E = test_E;
@@ -461,36 +461,36 @@ void test_deleteRow() {
 ```
 
 ### 統合テスト
-- **手動テスト**: エディタの実装段階でコマンドラインから動作確認.
-- **スクリーンショット比較**: 出力の正確性を検証.
+- **手動テスト**：エディタの実装段階でコマンドラインから動作確認。
+- **スクリーンショット比較**：出力の正確性を検証。
 
 ## デバッグのコツ
 
 ### GDB での調査
 ```bash
-# GDB を起動.
+# GDB を起動。
 gdb ./kilo
 
-# ブレークポイント設定.
+# ブレークポイント設定。
 (gdb) break editorRefreshScreen
 
-# 実行.
+# 実行。
 (gdb) run myfile.txt
 
-# ステップ実行.
+# ステップ実行。
 (gdb) next
 
-# 変数を表示.
+# 変数を表示。
 (gdb) print E.cx
 (gdb) print E.cy
 
-# ウォッチポイント.
+# ウォッチポイント。
 (gdb) watch E.dirty
 ```
 
 ### ログ出力
 ```c
-// debug.log にログを出力.
+// debug.log にログを出力。
 FILE *debug_log = fopen("/tmp/kilo_debug.log", "a");
 fprintf(debug_log, "cx=%d, cy=%d, key=%d\n", E.cx, E.cy, key);
 fclose(debug_log);
@@ -516,21 +516,21 @@ test: kilo
 ## 次のステップ
 
 ### さらに学ぶべき機能
-1. **複数バッファ**: 複数のファイルを同時に編集.
-2. **マクロ**: キーシーケンスをマクロとして記録・再生.
-3. **プラグインシステム**: 拡張可能なアーキテクチャ.
-4. **高度な検索**: 正規表現による検索・置換.
-5. **折り返しと折りたたみ**: 長い行の処理.
+1. **複数バッファ**：複数のファイルを同時に編集。
+2. **マクロ**：キーシーケンスをマクロとして記録・再生。
+3. **プラグインシステム**：拡張可能なアーキテクチャ。
+4. **高度な検索**：正規表現による検索・置換。
+5. **折り返しと折りたたみ**：長い行の処理。
 
 ### 参考実装
-- Vim: モダンで機能豊富.
-- Emacs: 超拡張可能.
-- nano: シンプルで初心者向け.
+- Vim：モダンで機能豊富。
+- Emacs：超拡張可能。
+- nano：シンプルで初心者向け。
 
 ## まとめ
 
-Kilo の実装を学ぶことで, テキストエディタの基本原理を理解できます. 次のステップは:
-1. Kilo を完全に理解する.
-2. 独自の機能を追加する.
-3. 別の言語で実装してみる (Rust, Python など).
-4. より高度なテキストエディタを構築する.
+Kilo の実装を学ぶことで、テキストエディタの基本原理を理解できます。次のステップは：
+1. Kilo を完全に理解する。
+2. 独自の機能を追加する。
+3. 別の言語で実装してみる (Rust、Python など)。
+4. より高度なテキストエディタを構築する。
