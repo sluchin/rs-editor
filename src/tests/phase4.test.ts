@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { forwardSexp, backwardSexp, killSexp } from '../lib/bracketMatch'
 
 describe('Phase 4: Edit Command Enhancements', () => {
