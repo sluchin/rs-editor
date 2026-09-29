@@ -140,6 +140,64 @@ describe('CodeEditor Component', () => {
     expect(onChange).not.toHaveBeenCalled()
     expect(textarea.selectionStart).toBe(1)
   })
+
+  it('highlights tokens by type', () => {
+    // トークン型ごとに色付けされることを確認.
+    const { container } = render(
+      <CodeEditor
+        value="(define x 1)"
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+      />,
+    )
+    const keyword = container.querySelector('.token-keyword')
+    expect(keyword?.textContent).toBe('define')
+    expect(container.querySelectorAll('.token-paren')).toHaveLength(2)
+    expect(container.querySelector('.token-number')?.textContent).toBe('1')
+  })
+
+  it('highlights the matching bracket pair adjacent to the cursor', () => {
+    // カーソルに隣接する括弧とその対応括弧がハイライトされることを確認.
+    const { container } = render(
+      <CodeEditor value="(+ 1 2)" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+    )
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    textarea.setSelectionRange(0, 0)
+    fireEvent.click(textarea)
+
+    const matched = container.querySelectorAll('.token-paren-matched')
+    expect(matched).toHaveLength(2)
+    expect(matched[0].textContent).toBe('(')
+    expect(matched[1].textContent).toBe(')')
+  })
+
+  it('marks an unmatched closing paren as an error', () => {
+    // 対応の取れていない ) がエラー表示されることを確認.
+    const { container } = render(
+      <CodeEditor value=")" onChange={vi.fn()} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
+    )
+    expect(container.querySelector('.token-paren-unmatched')?.textContent).toBe(')')
+  })
+
+  it('syncs scroll position from the textarea to the highlight layer', () => {
+    // スクロール位置が textarea から highlight layer に同期されることを確認.
+    const { container } = render(
+      <CodeEditor
+        value={'line\n'.repeat(200)}
+        onChange={vi.fn()}
+        onFindFile={vi.fn()}
+        onSaveBuffer={vi.fn()}
+      />,
+    )
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
+    const pre = container.querySelector('.code-editor-highlight') as HTMLElement
+
+    textarea.scrollTop = 50
+    fireEvent.scroll(textarea)
+
+    expect(pre.scrollTop).toBe(50)
+  })
 })
 
 /**
