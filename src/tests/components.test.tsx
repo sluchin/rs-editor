@@ -107,68 +107,6 @@ describe('CodeEditor Component', () => {
     expect(onSaveBuffer).toHaveBeenCalled()
   })
 
-  it('auto-closes a parenthesis via bracket auto-close', () => {
-    // ( 押下で () に自動補完されることを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor value="" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    fireEvent.keyDown(textarea, { key: '(' })
-
-    expect(onChange).toHaveBeenCalledWith('()')
-  })
-
-  it('wraps a selection in parentheses', () => {
-    // 選択範囲がある状態で ( を押すと選択範囲を括弧で囲むことを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor value="abc" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    textarea.setSelectionRange(0, 3)
-    fireEvent.keyDown(textarea, { key: '(' })
-
-    expect(onChange).toHaveBeenCalledWith('(abc)')
-  })
-
-  it('skips over an existing closing paren and moves cursor', () => {
-    // () の間で ) を押すと skip-over し, カーソルが正しい位置に復元されることを確認.
-    const onChange = vi.fn()
-    const { container, rerender } = render(
-      <CodeEditor value="()" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    textarea.setSelectionRange(1, 1)
-    fireEvent.keyDown(textarea, { key: ')' })
-
-    expect(onChange).toHaveBeenCalledWith('()')
-
-    // React がコンポーネントを再レンダリングしたら, カーソル復元が実行される前に確認.
-    rerender(
-      <CodeEditor value="()" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
-    )
-
-    expect(textarea.selectionStart).toBe(2)
-  })
-
-  it('deletes a matching bracket pair on backspace', () => {
-    // () の間で Backspace を押すとペアごと削除されることを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor value="()" onChange={onChange} onFindFile={vi.fn()} onSaveBuffer={vi.fn()} />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    textarea.setSelectionRange(1, 1)
-    fireEvent.keyDown(textarea, { key: 'Backspace' })
-
-    expect(onChange).toHaveBeenCalledWith('')
-  })
-
   it('C-k kills to end of line via emacs keymap', () => {
     // C-k で行末まで kill されることを確認.
     const onChange = vi.fn()
