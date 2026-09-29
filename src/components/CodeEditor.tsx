@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useLayoutEffect, KeyboardEvent } from 'react'
 import { usePrefixKeymap } from '../lib/prefixKeymap'
-import { useBracketAutoClose } from '../lib/bracketAutoClose'
 import { useEmacsKeymap } from '../lib/emacsKeymap'
 import '../styles/CodeEditor.css'
 
@@ -48,11 +47,6 @@ export default function CodeEditor({
   }
 
   const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer })
-  const { handleKeyDown: bracketKeyDown } = useBracketAutoClose({
-    textareaRef,
-    value,
-    onChange: applyProgrammaticChange,
-  })
   const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
     textareaRef,
     value,
@@ -77,7 +71,6 @@ export default function CodeEditor({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (prefixKeyDown(e)) return
-    if (bracketKeyDown(e)) return
     emacsKeyDown(e)
   }
 
