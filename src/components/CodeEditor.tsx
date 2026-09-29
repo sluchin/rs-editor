@@ -34,6 +34,7 @@ interface CodeEditorProps {
   onPushUndo?: (currentCode: string, currentCursorPos: number) => void
   onSwitchBuffer?: () => void
   onKillBuffer?: () => void
+  onListBuffers?: () => void
   highlightRange?: { start: number; end: number } | null
   disabled?: boolean
 }
@@ -97,6 +98,7 @@ export default function CodeEditor({
   onPushUndo,
   onSwitchBuffer,
   onKillBuffer,
+  onListBuffers,
   highlightRange,
   disabled,
 }: CodeEditorProps) {
@@ -118,6 +120,7 @@ export default function CodeEditor({
     onRedo,
     onSwitchBuffer,
     onKillBuffer,
+    onListBuffers,
   })
   const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
     textareaRef,
