@@ -2,7 +2,18 @@ import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useBracketAutoClose } from '../lib/bracketAutoClose'
 
+/**
+ * useBracketAutoClose フック のテストスイート.
+ * 括弧と引用符の自動閉鎖機能をテストします.
+ */
 describe('useBracketAutoClose', () => {
+  /**
+   * テスト用のテキストエリア参照を作成します.
+   * @param text - テキストエリアの内容.
+   * @param selectionStart - 選択開始位置.
+   * @param selectionEnd - 選択終了位置.
+   * @returns テキストエリア参照オブジェクト.
+   */
   const createTextareaRef = (text: string, selectionStart: number, selectionEnd: number) => {
     const ref = {
       current: {
@@ -16,6 +27,7 @@ describe('useBracketAutoClose', () => {
   }
 
   it('auto-closes opening paren', () => {
+    // 開き括弧を入力すると, 閉じ括弧が自動的に追加されることを確認.
     const textareaRef = createTextareaRef('', 0, 0)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '', onChange }))
@@ -36,6 +48,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('auto-closes opening quote', () => {
+    // 開き引用符を入力すると, 閉じ引用符が自動的に追加されることを確認.
     const textareaRef = createTextareaRef('', 0, 0)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '', onChange }))
@@ -55,6 +68,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('wraps selection with brackets', () => {
+    // 選択されたテキストを括弧で囲むことを確認.
     const textareaRef = createTextareaRef('hello', 0, 5)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: 'hello', onChange }))
@@ -68,11 +82,12 @@ describe('useBracketAutoClose', () => {
     } as any
 
     result.current.handleKeyDown(event)
-    // After wrapping, cursor should be after the selected text, before the closing paren
+    // ラップ後, カーソルは選択されたテキストの後に配置されます.
     expect(onChange).toHaveBeenCalledWith('(hello)', 6)
   })
 
   it('skips over existing closing paren', () => {
+    // 既に閉じ括弧が存在する場合, その上をスキップして移動することを確認.
     const textareaRef = createTextareaRef('()', 1, 1)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '()', onChange }))
@@ -92,6 +107,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('deletes both parens on backspace in empty pair', () => {
+    // 空の括弧ペア内でバックスペースを押すと, 両方削除されることを確認.
     const textareaRef = createTextareaRef('()', 1, 1)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '()', onChange }))
@@ -111,6 +127,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('ignores auto-close when ctrl key is pressed', () => {
+    // Ctrl キーが押されている場合, 自動閉鎖が無視されることを確認.
     const textareaRef = createTextareaRef('', 0, 0)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '', onChange }))
@@ -130,6 +147,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('ignores auto-close when alt key is pressed', () => {
+    // Alt キーが押されている場合, 自動閉鎖が無視されることを確認.
     const textareaRef = createTextareaRef('', 0, 0)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '', onChange }))
@@ -149,6 +167,7 @@ describe('useBracketAutoClose', () => {
   })
 
   it('returns false for regular keys', () => {
+    // 通常のキーの場合は false を返すことを確認.
     const textareaRef = createTextareaRef('', 0, 0)
     const onChange = vi.fn()
     const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: '', onChange }))

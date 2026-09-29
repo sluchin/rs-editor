@@ -6,8 +6,13 @@ import MenuBar from '../components/MenuBar'
 import ModeLine from '../components/ModeLine'
 import REPL from '../components/REPL'
 
+/**
+ * CodeEditor コンポーネント のテストスイート.
+ * コード入力エリアの機能をテストします.
+ */
 describe('CodeEditor Component', () => {
   it('renders textarea with initial value', () => {
+    // 初期値を持つテキストエリアがレンダリングされることを確認.
     const { container } = render(
       <CodeEditor
         value="(+ 1 2)"
@@ -23,6 +28,7 @@ describe('CodeEditor Component', () => {
   })
 
   it('calls onChange when text is modified', () => {
+    // テキストが変更されると onChange が呼ばれることを確認.
     const onChange = vi.fn()
     const { container } = render(
       <CodeEditor
@@ -40,6 +46,7 @@ describe('CodeEditor Component', () => {
   })
 
   it('calls onCursorChange with cursor position info', () => {
+    // カーソル位置情報が更新されると onCursorChange が呼ばれることを確認.
     const onCursorChange = vi.fn()
     const { container } = render(
       <CodeEditor
@@ -52,7 +59,7 @@ describe('CodeEditor Component', () => {
     )
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    // Simulate cursor at position 6 (start of second line)
+    // カーソルを2行目の開始位置 (位置6) に移動.
     fireEvent.click(textarea)
     textarea.setSelectionRange(6, 6)
     fireEvent.click(textarea)
@@ -61,6 +68,7 @@ describe('CodeEditor Component', () => {
   })
 
   it('disables textarea when disabled prop is true', () => {
+    // disabled プロップが true のとき, テキストエリアが無効化されることを確認.
     const { container } = render(
       <CodeEditor
         value="text"
@@ -76,6 +84,7 @@ describe('CodeEditor Component', () => {
   })
 
   it('handles C-x C-f key sequence', () => {
+    // C-x C-f キーシーケンスで onFindFile が呼ばれることを確認.
     const onFindFile = vi.fn()
     const { container } = render(
       <CodeEditor
@@ -88,15 +97,16 @@ describe('CodeEditor Component', () => {
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
 
-    // Simulate C-x
+    // C-x を押す.
     fireEvent.keyDown(textarea, { key: 'x', ctrlKey: true })
-    // Simulate C-f
+    // C-f を押す.
     fireEvent.keyDown(textarea, { key: 'f', ctrlKey: true })
 
     expect(onFindFile).toHaveBeenCalled()
   })
 
   it('handles C-x C-s key sequence', () => {
+    // C-x C-s キーシーケンスで onSaveBuffer が呼ばれることを確認.
     const onSaveBuffer = vi.fn()
     const { container } = render(
       <CodeEditor
@@ -109,17 +119,22 @@ describe('CodeEditor Component', () => {
 
     const textarea = container.querySelector('textarea') as HTMLTextAreaElement
 
-    // Simulate C-x
+    // C-x を押す.
     fireEvent.keyDown(textarea, { key: 'x', ctrlKey: true })
-    // Simulate C-s
+    // C-s を押す.
     fireEvent.keyDown(textarea, { key: 's', ctrlKey: true })
 
     expect(onSaveBuffer).toHaveBeenCalled()
   })
 })
 
+/**
+ * Minibuffer コンポーネント のテストスイート.
+ * メッセージ表示と入力プロンプトをテストします.
+ */
 describe('Minibuffer Component', () => {
   it('displays message when in message mode', () => {
+    // メッセージモードでメッセージが表示されることを確認.
     const state: MinibufferState = { mode: 'message', text: 'Test message' }
     render(
       <Minibuffer
@@ -134,6 +149,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('displays default message when text is empty', () => {
+    // テキストが空のときデフォルトメッセージが表示されることを確認.
     const state: MinibufferState = { mode: 'message', text: '' }
     render(
       <Minibuffer
@@ -148,6 +164,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('displays input field when in input mode', () => {
+    // 入力モードで入力フィールドが表示されることを確認.
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: '' }
     const { container } = render(
       <Minibuffer
@@ -164,6 +181,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('calls onInputChange when input changes', () => {
+    // 入力値が変更されると onInputChange が呼ばれることを確認.
     const onInputChange = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: '' }
     const { container } = render(
@@ -182,6 +200,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('calls onSubmit on Enter key', () => {
+    // Enter キーが押されると onSubmit が呼ばれることを確認.
     const onSubmit = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
@@ -200,6 +219,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('calls onCancel on Escape key', () => {
+    // Escape キーが押されると onCancel が呼ばれることを確認.
     const onCancel = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
@@ -218,6 +238,7 @@ describe('Minibuffer Component', () => {
   })
 
   it('calls onCancel on C-g', () => {
+    // C-g が押されると onCancel が呼ばれることを確認.
     const onCancel = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
@@ -236,8 +257,13 @@ describe('Minibuffer Component', () => {
   })
 })
 
+/**
+ * ModeLine コンポーネント のテストスイート.
+ * 行番号とファイル名を表示するモードラインをテストします.
+ */
 describe('ModeLine Component', () => {
   it('renders with cursor info', () => {
+    // カーソル情報を含めてレンダリングされることを確認.
     const cursorInfo: CursorInfo = { line: 5, column: 10, offset: 42 }
     const { container } = render(
       <ModeLine bufferName="test.scm" modified={false} cursor={cursorInfo} />
@@ -247,6 +273,7 @@ describe('ModeLine Component', () => {
   })
 
   it('displays filename when provided', () => {
+    // ファイル名が表示されることを確認.
     const cursorInfo: CursorInfo = { line: 1, column: 1, offset: 0 }
     const { container } = render(
       <ModeLine bufferName="test.scm" modified={false} cursor={cursorInfo} />
@@ -256,6 +283,7 @@ describe('ModeLine Component', () => {
   })
 
   it('displays modified indicator', () => {
+    // 変更されたことを示すインジケーター (**) が表示されることを確認.
     const cursorInfo: CursorInfo = { line: 1, column: 1, offset: 0 }
     const { container } = render(
       <ModeLine bufferName="test.scm" modified={true} cursor={cursorInfo} />
@@ -265,8 +293,13 @@ describe('ModeLine Component', () => {
   })
 })
 
+/**
+ * MenuBar コンポーネント のテストスイート.
+ * メニュー項目の表示をテストします.
+ */
 describe('MenuBar Component', () => {
   it('renders menu options', () => {
+    // メニュー項目が表示されることを確認.
     render(<MenuBar />)
 
     expect(screen.getByText('File')).toBeTruthy()
@@ -275,8 +308,13 @@ describe('MenuBar Component', () => {
   })
 })
 
+/**
+ * REPL コンポーネント のテストスイート.
+ * Scheme REPL の入出力をテストします.
+ */
 describe('REPL Component', () => {
   it('renders with initial empty output', () => {
+    // 初期状態でレディメッセージが表示されることを確認.
     render(
       <REPL
         output=""
@@ -286,11 +324,11 @@ describe('REPL Component', () => {
       />,
     )
 
-    // REPL should render without errors
     expect(screen.getByText('Ready')).toBeTruthy()
   })
 
   it('displays output history', () => {
+    // 評価履歴が表示されることを確認.
     const history = [
       { code: '(+ 1 2)', result: '3' },
       { code: '(* 3 4)', result: '12' },
@@ -310,6 +348,7 @@ describe('REPL Component', () => {
   })
 
   it('calls onEval when input is submitted', () => {
+    // 入力を送信すると onEval が呼ばれることを確認.
     const onEval = vi.fn()
     const { container } = render(
       <REPL
@@ -328,6 +367,7 @@ describe('REPL Component', () => {
   })
 
   it('displays error message when error occurs', () => {
+    // エラーが発生したときエラーメッセージが表示されることを確認.
     render(
       <REPL
         output=""

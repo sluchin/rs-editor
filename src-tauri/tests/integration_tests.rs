@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-// Test file operations setup
+// ファイル操作に関連したテスト.
 #[cfg(test)]
 mod file_operations_tests {
     use std::fs;
@@ -10,50 +10,53 @@ mod file_operations_tests {
 
     #[test]
     fn test_create_and_read_file() {
+        // ファイルを作成して読み込めることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.scm");
 
-        // Write content to file
+        // ファイルにコンテンツを書く.
         let mut file = fs::File::create(&file_path).unwrap();
         file.write_all(b"(+ 1 2)").unwrap();
 
-        // Read the file back
+        // ファイルを読み込む.
         let content = fs::read_to_string(&file_path).unwrap();
         assert_eq!(content, "(+ 1 2)");
     }
 
     #[test]
     fn test_write_file_overwrites_existing() {
+        // ファイルの上書きが機能することを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.scm");
 
-        // Write initial content
+        // 初期コンテンツを書く.
         fs::write(&file_path, "(+ 1 2)").unwrap();
 
-        // Overwrite with new content
+        // 新しいコンテンツで上書き.
         fs::write(&file_path, "(* 3 4)").unwrap();
 
-        // Verify content changed
+        // コンテンツが変更されたことを確認.
         let content = fs::read_to_string(&file_path).unwrap();
         assert_eq!(content, "(* 3 4)");
     }
 
     #[test]
     fn test_append_to_file() {
+        // ファイルに追記できることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test.scm");
 
-        // Create file with initial content
+        // 初期コンテンツでファイルを作成.
         fs::write(&file_path, "(+ 1 2)").unwrap();
 
-        // Append more content
+        // さらにコンテンツを追記.
         let mut file = fs::OpenOptions::new()
             .append(true)
             .open(&file_path)
             .unwrap();
         file.write_all(b"\n(* 3 4)").unwrap();
 
-        // Verify both lines exist
+        // 両方の行が存在することを確認.
         let content = fs::read_to_string(&file_path).unwrap();
         assert!(content.contains("(+ 1 2)"));
         assert!(content.contains("(* 3 4)"));
@@ -61,12 +64,14 @@ mod file_operations_tests {
 
     #[test]
     fn test_read_nonexistent_file_fails() {
+        // 存在しないファイルを読むとエラーになることを確認.
         let result = fs::read_to_string("/nonexistent/path/to/file.scm");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_file_with_special_characters() {
+        // 特殊文字を含むコンテンツが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test_special.scm");
 
@@ -79,6 +84,7 @@ mod file_operations_tests {
 
     #[test]
     fn test_empty_file() {
+        // 空のファイルが正しく作成・読み込みできることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("empty.scm");
 
@@ -90,6 +96,7 @@ mod file_operations_tests {
 
     #[test]
     fn test_large_file() {
+        // 大きなファイルが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("large.scm");
 
@@ -106,6 +113,7 @@ mod file_operations_tests {
 
     #[test]
     fn test_unicode_content() {
+        // Unicode を含むコンテンツが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("unicode.scm");
 
@@ -117,33 +125,35 @@ mod file_operations_tests {
     }
 }
 
+// パーサーと評価器の統合テスト.
 #[cfg(test)]
 mod parser_evaluator_integration {
-    // These tests verify that the parser and evaluator work together correctly
-    // when we can import them in the future
+    // これらのテストは, パーサーと評価器が一緒に機能することを検証します.
+    // 将来的にモジュールをインポートできるようになったときに, 実装する予定です.
 
     #[test]
     fn test_basic_arithmetic_pipeline() {
-        // This would test: parse "(+ 1 2)" -> evaluate -> get "3"
-        // Placeholder for when we can import the actual modules
+        // "(+ 1 2)" をパースして評価すると "3" を得ることをテストする予定.
+        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
         assert_eq!(1 + 2, 3);
     }
 
     #[test]
     fn test_nested_expressions_pipeline() {
-        // This would test: parse "(+ 1 (* 2 3))" -> evaluate -> get "7"
-        // Placeholder for when we can import the actual modules
+        // "(+ 1 (* 2 3))" をパースして評価すると "7" を得ることをテストする予定.
+        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
         assert_eq!(1 + (2 * 3), 7);
     }
 
     #[test]
     fn test_multiple_expressions_pipeline() {
-        // This would test parsing and evaluating multiple top-level forms
-        // Placeholder for when we can import the actual modules
+        // 複数の最上位フォームをパースして評価することをテストする予定.
+        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
         assert!(true);
     }
 }
 
+// エラー処理に関連したテスト.
 #[cfg(test)]
 mod error_handling_tests {
     use std::fs;
@@ -151,20 +161,21 @@ mod error_handling_tests {
 
     #[test]
     fn test_handle_malformed_scheme_gracefully() {
-        // Parser should reject malformed input
-        // This is verified in the parser module tests
+        // 不正な入力がパーサーで拒否されることを確認.
+        // このテストはパーサーモジュールのテストに統合されています.
         assert!(true);
     }
 
     #[test]
     fn test_handle_division_by_zero() {
-        // Evaluator should handle division by zero
-        // This is verified in the evaluator module tests
+        // ゼロで除算するとエラーになることを確認.
+        // このテストは評価器モジュールのテストに統合されています.
         assert!(true);
     }
 
     #[test]
     fn test_handle_missing_file_gracefully() {
+        // 存在しないファイルを読もうとするとエラーになることを確認.
         let result = fs::read_to_string("/definitely/does/not/exist.scm");
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -173,7 +184,7 @@ mod error_handling_tests {
 
     #[test]
     fn test_handle_permission_errors() {
-        // On Unix systems, we can create a file and make it unreadable
+        // Unix システムでは, ファイルを読み取り不可にするとエラーになることを確認.
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -186,12 +197,13 @@ mod error_handling_tests {
             let result = fs::read_to_string(&file_path);
             assert!(result.is_err());
 
-            // Restore permissions for cleanup
+            // クリーンアップ用に権限を復元.
             fs::set_permissions(&file_path, fs::Permissions::from_mode(0o644)).ok();
         }
     }
 }
 
+// 並行処理に関連したテスト.
 #[cfg(test)]
 mod concurrent_operations_tests {
     use std::fs;
@@ -200,6 +212,7 @@ mod concurrent_operations_tests {
 
     #[test]
     fn test_concurrent_reads() {
+        // 複数のスレッドから同時にファイルを読めることを確認.
         let temp_dir = Arc::new(TempDir::new().unwrap());
         let file_path = temp_dir.path().join("concurrent.scm");
 
@@ -224,6 +237,7 @@ mod concurrent_operations_tests {
 
     #[test]
     fn test_sequential_write_read() {
+        // 複数回の書き込みと読み込みが順序通りに実行されることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("sequential.scm");
 
@@ -237,6 +251,7 @@ mod concurrent_operations_tests {
     }
 }
 
+// エッジケースに関連したテスト.
 #[cfg(test)]
 mod edge_case_tests {
     use std::fs;
@@ -244,6 +259,7 @@ mod edge_case_tests {
 
     #[test]
     fn test_file_with_only_whitespace() {
+        // ホワイトスペースのみを含むファイルが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("whitespace.scm");
 
@@ -255,6 +271,7 @@ mod edge_case_tests {
 
     #[test]
     fn test_file_with_only_comments() {
+        // コメントのみを含むファイルが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("comments.scm");
 
@@ -267,6 +284,7 @@ mod edge_case_tests {
 
     #[test]
     fn test_file_with_long_line() {
+        // 長い行を持つファイルが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("longline.scm");
 
@@ -279,10 +297,10 @@ mod edge_case_tests {
 
     #[test]
     fn test_file_with_mixed_line_endings() {
+        // Unix と Windows の改行が混在したファイルが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("mixed_endings.scm");
 
-        // Create content with both Unix and Windows line endings
         let content = "(+ 1 2)\r\n(* 3 4)\n(- 5 6)";
         fs::write(&file_path, content).unwrap();
 
@@ -292,6 +310,7 @@ mod edge_case_tests {
 
     #[test]
     fn test_file_path_with_special_chars() {
+        // 特殊文字を含むファイルパスが正しく扱われることを確認.
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("test-file_v2.scm");
 
