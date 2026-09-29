@@ -11,6 +11,7 @@ interface EmacsKeymapOptions {
   onQuit?: () => void
   onUndo?: () => void
   onPushUndo?: (currentCode: string, currentCursorPos: number) => void
+  onEvalExpression?: () => void
 }
 
 function lineBounds(text: string, pos: number): { start: number; end: number } {
@@ -44,6 +45,7 @@ export function useEmacsKeymap({
   onQuit,
   onUndo,
   onPushUndo,
+  onEvalExpression,
 }: EmacsKeymapOptions) {
   const killRing = useRef<string[]>([])
   const killRingIndex = useRef(0)
@@ -277,6 +279,12 @@ export function useEmacsKeymap({
           // buffer-end
           e.preventDefault()
           setCursor(value.length)
+          return
+        }
+        case ':': {
+          // eval-expression
+          e.preventDefault()
+          onEvalExpression?.()
           return
         }
       }

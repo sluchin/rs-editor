@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import MenuBar from './components/MenuBar'
 import CodeEditor, { CursorInfo } from './components/CodeEditor'
@@ -7,6 +8,7 @@ import Minibuffer, { MinibufferState } from './components/Minibuffer'
 import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
 import { findNextMatch } from './lib/isearch'
+import { backwardSexp, forwardSexp } from './lib/bracketMatch'
 import './App.css'
 
 const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
@@ -22,7 +24,13 @@ export interface Buffer {
 }
 
 type PendingAction =
-  'find-file' | 'write-file' | 'execute-command' | 'switch-buffer' | 'kill-buffer' | null
+  | 'find-file'
+  | 'write-file'
+  | 'execute-command'
+  | 'switch-buffer'
+  | 'kill-buffer'
+  | 'eval-expression'
+  | null
 
 interface Command {
   name: string
@@ -203,6 +211,39 @@ function App() {
     setShowBufferList(true)
   }
 
+  const handleEvalLastSexp = async () => {
+    // カーソル直前のS式の範囲を特定
+    const cursorPos = cursor.offset
+    const startPos = backwardSexp(currentBuffer.content, cursorPos)
+    const endPos = forwardSexp(currentBuffer.content, startPos)
+
+    if (startPos === endPos) {
+      setMinibufferState({ mode: 'message', text: 'No S-expression found before cursor' })
+      return
+    }
+
+    const sexp = currentBuffer.content.slice(startPos, endPos)
+
+    try {
+      const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
+        code: sexp,
+      })
+
+      if (result.error) {
+        setMinibufferState({ mode: 'message', text: `Error: ${result.error}` })
+      } else {
+        setMinibufferState({ mode: 'message', text: result.result })
+      }
+    } catch (err) {
+      setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
+    }
+  }
+
+  const handleEvalExpression = () => {
+    setPendingAction('eval-expression')
+    setMinibufferState({ mode: 'input', prompt: 'Eval: ', input: '' })
+  }
+
   const handleSaveBuffersKillTerminal = async () => {
     if (currentBuffer.filePath) {
       await handleSaveBuffer()
@@ -354,6 +395,20 @@ function App() {
       } else {
         setMinibufferState({ mode: 'message', text: `Undefined command: ${value}` })
       }
+    } else if (action === 'eval-expression') {
+      try {
+        const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
+          code: value,
+        })
+
+        if (result.error) {
+          setMinibufferState({ mode: 'message', text: `Error: ${result.error}` })
+        } else {
+          setMinibufferState({ mode: 'message', text: result.result })
+        }
+      } catch (err) {
+        setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
+      }
     } else if (currentState.mode === 'isearch') {
       setHighlightRange(null)
       setMinibufferState({ mode: 'message', text: '' })
@@ -391,6 +446,8 @@ function App() {
         onSwitchBuffer={handleSwitchBuffer}
         onKillBuffer={handleKillBuffer}
         onListBuffers={handleListBuffers}
+        onEvalLastSexp={handleEvalLastSexp}
+        onEvalExpression={handleEvalExpression}
         highlightRange={highlightRange}
         disabled={minibufferState.mode !== 'message' || showBufferList}
       />
