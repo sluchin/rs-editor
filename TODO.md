@@ -92,10 +92,10 @@
 
 ## Phase 7: モードライン / 仕上げ
 
-- [ ] `ModeLine.tsx` に現在の mark 状態（リージョン選択中かどうか）、isearch 状態などを表示する。
+- [x] `ModeLine.tsx` に現在の mark 状態（リージョン選択中かどうか）、isearch 状態などを表示する。
 - [ ] `C-h k` (describe-key) 相当の簡易ヘルプ（実装済みキーバインド一覧をミニバッファかダイアログで表示）。
-- [ ] キーバインドの一覧をドキュメント化し `README.md` に追記する。
-- [ ] 各フェーズの hook ごとに Vitest でのテストを追加し、`npm run check` を通すこと。
+- [x] キーバインドの一覧をドキュメント化し `README.md` に追記する。
+- [x] 各フェーズの hook ごとに Vitest でのテストを追加し、`npm run check` を通すこと。
 
 ---
 
