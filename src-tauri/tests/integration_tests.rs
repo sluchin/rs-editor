@@ -117,7 +117,8 @@ mod file_operations_tests {
         let temp_dir = TempDir::new().unwrap();
         let file_path = temp_dir.path().join("unicode.scm");
 
-        let content = "(define greeting \"你好世界\")  ; Hello World in Chinese\n(define emoji \"🎉🚀\")";
+        let content =
+            "(define greeting \"你好世界\")  ; Hello World in Chinese\n(define emoji \"🎉🚀\")";
         fs::write(&file_path, content).unwrap();
 
         let read_back = fs::read_to_string(&file_path).unwrap();

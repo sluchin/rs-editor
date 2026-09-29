@@ -38,7 +38,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -64,7 +63,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -198,7 +196,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -281,7 +278,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -306,7 +302,6 @@ describe('useEmacsKeymap', () => {
           textareaRef,
           value: 'hello',
           onChange,
-          onSave: vi.fn(),
         }),
       )
 
@@ -334,45 +329,17 @@ describe('useEmacsKeymap', () => {
     })
   })
 
-  describe('save command', () => {
-    // 保存コマンドをテストします.
-
-    it('C-x C-s calls onSave', () => {
-      // C-x C-s で onSave が呼ばれることを確認.
-      const onSave = vi.fn()
+  describe('C-x handling', () => {
+    it('does not intercept C-x (ownership moved to prefixKeymap)', () => {
       const onChange = vi.fn()
       const textareaRef = createTextareaRef('hello', 0, 0)
-      const { result } = renderHook(() =>
-        useEmacsKeymap({
-          textareaRef,
-          value: 'hello',
-          onChange,
-          onSave,
-        }),
-      )
+      const { result } = renderHook(() => useEmacsKeymap({ textareaRef, value: 'hello', onChange }))
 
-      // まず C-x を押す.
-      const ctrlXEvent = {
-        key: 'x',
-        ctrlKey: true,
-        altKey: false,
-        preventDefault: vi.fn(),
-      } as any
+      const event = { key: 'x', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      result.current.handleKeyDown(event)
 
-      result.current.handleKeyDown(ctrlXEvent)
-
-      // 次に C-s を押す.
-      const ctrlSEvent = {
-        key: 's',
-        ctrlKey: true,
-        altKey: false,
-        preventDefault: vi.fn(),
-      } as any
-
-      result.current.handleKeyDown(ctrlSEvent)
-
-      expect(ctrlSEvent.preventDefault).toHaveBeenCalled()
-      expect(onSave).toHaveBeenCalled()
+      expect(event.preventDefault).not.toHaveBeenCalled()
+      expect(onChange).not.toHaveBeenCalled()
     })
   })
 })

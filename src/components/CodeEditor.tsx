@@ -1,5 +1,7 @@
-import { useRef, useState, useEffect, KeyboardEvent } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, KeyboardEvent } from 'react'
 import { usePrefixKeymap } from '../lib/prefixKeymap'
+import { useBracketAutoClose } from '../lib/bracketAutoClose'
+import { useEmacsKeymap } from '../lib/emacsKeymap'
 import '../styles/CodeEditor.css'
 
 export interface CursorInfo {
@@ -37,8 +39,25 @@ export default function CodeEditor({
 }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [cursorPos, setCursorPos] = useState(0)
+  const pendingCursorRef = useRef<number | null>(null)
+
+  const applyProgrammaticChange = (newValue: string, pos: number) => {
+    pendingCursorRef.current = pos
+    onChange(newValue)
+    setCursorPos(pos)
+  }
 
   const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer })
+  const { handleKeyDown: bracketKeyDown } = useBracketAutoClose({
+    textareaRef,
+    value,
+    onChange: applyProgrammaticChange,
+  })
+  const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
+    textareaRef,
+    value,
+    onChange: applyProgrammaticChange,
+  })
 
   const updateCursorFromEl = () => {
     const el = textareaRef.current
@@ -50,8 +69,16 @@ export default function CodeEditor({
     onCursorChange?.(cursorInfoFromOffset(value, cursorPos))
   }, [value, cursorPos, onCursorChange])
 
+  useLayoutEffect(() => {
+    if (pendingCursorRef.current === null) return
+    textareaRef.current?.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current)
+    pendingCursorRef.current = null
+  }, [value, cursorPos])
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    prefixKeyDown(e)
+    if (prefixKeyDown(e)) return
+    if (bracketKeyDown(e)) return
+    emacsKeyDown(e)
   }
 
   return (

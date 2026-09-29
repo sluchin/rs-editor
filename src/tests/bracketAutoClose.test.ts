@@ -71,7 +71,9 @@ describe('useBracketAutoClose', () => {
     // 選択されたテキストを括弧で囲むことを確認.
     const textareaRef = createTextareaRef('hello', 0, 5)
     const onChange = vi.fn()
-    const { result } = renderHook(() => useBracketAutoClose({ textareaRef, value: 'hello', onChange }))
+    const { result } = renderHook(() =>
+      useBracketAutoClose({ textareaRef, value: 'hello', onChange }),
+    )
 
     const event = {
       key: '(',
