@@ -9,41 +9,14 @@ A Tauri + React + Rust Scheme language editor with a built-in interpreter and RE
 - **Build**: Cargo + npm
 - **Development**: Hot reload for both frontend and Rust backend
 
-## Key Files
-
-### Frontend
-- `src/App.tsx` - Main app component, state management, minibuffer/file-op logic
-- `src/components/CodeEditor.tsx` - Plain textarea buffer + C-x prefix key handling
-- `src/components/MenuBar.tsx` - Emacs-style menu bar (static)
-- `src/components/ModeLine.tsx` - Emacs-style mode line
-- `src/components/Minibuffer.tsx` - Message display / interactive prompt input
-- `src/components/REPL.tsx` - Output display and interactive REPL (currently unused in App.tsx)
-- `src/lib/fileOps.ts` - Wrappers around the Tauri file-system commands
-- `src/lib/prefixKeymap.ts` - C-x C-f / C-x C-s prefix key detection
-- `src/lib/schemeTokenizer.ts`, `src/lib/bracketMatch.ts`, `src/lib/emacsKeymap.ts`,
-  `src/lib/bracketAutoClose.ts` - Syntax highlighting / bracket matching / Emacs
-  keybinding logic, implemented but not yet wired into `CodeEditor` (deferred feature)
-- `vite.config.ts` - Vite configuration (also holds the Vitest `test` config)
-
-### Backend (Scheme Interpreter + file I/O)
-- `src-tauri/src/main.rs` - Tauri app setup, `eval_scheme` and file I/O commands
-  (`read_file_content`, `write_file_content`, `path_exists`, `home_dir`)
-- `src-tauri/src/scheme/parser.rs` - Scheme expression parser (+ unit tests)
-- `src-tauri/src/scheme/evaluator.rs` - Expression evaluator (+ unit tests)
-- `src-tauri/src/scheme/value.rs` - Value type definitions (+ unit tests)
-- `src-tauri/tauri.conf.json` - Tauri app configuration
+## Key Architecture
+Frontend (React components in `src/`) manages the editor UI with minibuffer, file operations, and code display. Backend (Rust in `src-tauri/`) handles the Scheme interpreter, parser, evaluator, and file I/O. Utility modules in `src/lib/` provide keymapping, syntax highlighting, and bracket matching logic (not yet integrated).
 
 ## Development Workflow
-
-1. **Start dev server**: `npm run tauri:dev`
-2. **Edit React files** in `src/` - changes hot-reload automatically
-3. **Edit Rust files** in `src-tauri/src/` - app reloads on save
-4. **Run tests**: `npm run test` (Vitest for `src/`, `cargo test` for `src-tauri/`)
-5. **Lint**: `npm run lint` (ESLint + `cargo clippy -D warnings`)
-6. **Format**: `npm run format` (Prettier + `cargo fmt`), or `npm run format:check` to verify only
-7. **Run everything CI checks**: `npm run check` (format:check + lint + test)
-
-CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push/PR to `main`.
+- **Start dev server**: `npm run tauri:dev` — frontend and Rust both reload on changes
+- **Tests**: `npm run test` (Vitest for `src/`) and `cargo test` (for `src-tauri/`)
+- **Format + lint**: `npm run check` (runs format:check, lint, and test — the CI gate)
+- CI runs the same on every push/PR to `main`
 
 ## Adding Features
 
@@ -105,3 +78,9 @@ src-tauri/target/release/rseditor  # or .exe on Windows, .app on macOS
 - Rust code changes require app reload (happens automatically)
 - Check console for errors: Ctrl+Shift+I in Tauri app
 - Rust compilation can be slow on first build
+
+## Commit Guidelines
+
+- Write commit messages in English
+- Message body should start with a dash/hyphen (e.g., `- Fix bug in parser`)
+- Do not include `Co-Authored-By` or Claude attribution lines in commit messages
