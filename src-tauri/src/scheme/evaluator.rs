@@ -2,7 +2,9 @@ use crate::scheme::parser::Parser;
 use crate::scheme::value::{new_env, BuiltinFn, Env, Lambda, Value};
 use std::sync::Arc;
 
+/// 評価の再帰の深さの上限. 超えるとエラーにする.
 const MAX_DEPTH: usize = 10_000;
+/// 評価用スレッドのスタックサイズ.
 const STACK_SIZE: usize = 256 * 1024 * 1024;
 
 /// 評価中の状態 (標準出力バッファと再帰の深さ).
@@ -11,6 +13,7 @@ pub struct Interp {
     depth: usize,
 }
 
+/// グローバル環境を保持する評価器. 定義は `eval` 呼び出しをまたいで残る.
 pub struct Evaluator {
     global: Env,
 }
@@ -22,6 +25,7 @@ impl Evaluator {
         Evaluator { global }
     }
 
+    /// ソース文字列をすべて評価し, 各式の出力と結果を改行区切りで返す.
     pub fn eval(&self, code: &str) -> Result<String, String> {
         let mut parser = Parser::new(code);
         let values = parser.parse()?;
@@ -43,6 +47,7 @@ impl Evaluator {
     }
 }
 
+/// トップレベルの式を順に評価する. `display` の出力は式の結果より先に並べる.
 fn run(values: Vec<Value>, global: Env) -> Result<String, String> {
     let mut interp = Interp {
         out: String::new(),
@@ -62,6 +67,7 @@ fn run(values: Vec<Value>, global: Env) -> Result<String, String> {
     Ok(results.join("\n"))
 }
 
+/// 変数を現在のフレームから親へ辿って探す.
 fn env_get(env: &Env, name: &str) -> Option<Value> {
     let mut cur = env.clone();
     loop {
@@ -76,6 +82,7 @@ fn env_get(env: &Env, name: &str) -> Option<Value> {
     }
 }
 
+/// 既存の束縛を更新する (`set!` 用). 未束縛ならエラー.
 fn env_set(env: &Env, name: &str, value: Value) -> Result<(), String> {
     let mut cur = env.clone();
     loop {
@@ -91,6 +98,7 @@ fn env_set(env: &Env, name: &str, value: Value) -> Result<(), String> {
     }
 }
 
+/// 現在のフレームに束縛を追加または上書きする (`define` 用).
 fn env_define(env: &Env, name: &str, value: Value) {
     env.lock().unwrap().vars.insert(name.to_string(), value);
 }
@@ -128,6 +136,7 @@ fn parse_params(params: &Value) -> Result<(Vec<String>, Option<String>), String>
     }
 }
 
+/// 手続き (クロージャ) を生成する. 定義時の環境を捕捉する.
 fn make_lambda(
     name: Option<String>,
     params: &Value,
@@ -148,6 +157,7 @@ fn make_lambda(
 }
 
 impl Interp {
+    /// 式を評価する. 再帰の深さを数え, 上限を超えたらエラーにする.
     pub fn eval(&mut self, expr: Value, env: Env) -> Result<Value, String> {
         self.depth += 1;
         if self.depth > MAX_DEPTH {
@@ -168,6 +178,7 @@ impl Interp {
         Ok(last.clone())
     }
 
+    /// 式評価の本体. 末尾位置の式は再帰せず `loop` で継続し, 末尾呼び出し最適化を行う.
     fn eval_inner(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
         loop {
             let items = match &expr {
@@ -262,7 +273,7 @@ impl Interp {
                         if args.len() < 2 {
                             return Err(format!("{} expects bindings and a body", op));
                         }
-                        // 名前付き let
+                        // 名前付き let: ループ名を束縛した手続きを作り, 初期値で呼び出す.
                         if op == "let" {
                             if let Value::Symbol(loop_name) = &args[0] {
                                 if args.len() < 3 {
@@ -430,7 +441,7 @@ impl Interp {
                 }
             }
 
-            // 手続き呼び出し
+            // 特殊形式でなければ手続き呼び出し: 演算子と引数を評価して適用する.
             let f = self.eval(items[0].clone(), env.clone())?;
             let mut vals = Vec::with_capacity(args.len());
             for a in args {
@@ -485,6 +496,7 @@ impl Interp {
     }
 }
 
+/// `((name init) ...)` 形式の束縛リストを名前と初期化式に分解する.
 fn parse_bindings(bindings: &Value) -> Result<(Vec<String>, Vec<Value>), String> {
     let Value::List(list) = bindings else {
         return Err("Invalid bindings".to_string());
@@ -504,7 +516,9 @@ fn parse_bindings(bindings: &Value) -> Result<(Vec<String>, Vec<Value>), String>
 }
 
 // ---- 組み込み関数 ----
+// 新しい組み込み関数は `register_builtins` に `reg` で追加する.
 
+/// 数値を取り出す. 数値でなければ手続き名付きのエラーにする.
 fn num(name: &str, v: &Value) -> Result<f64, String> {
     match v {
         Value::Number(n) => Ok(*n),
@@ -543,11 +557,13 @@ fn string_arg<'a>(name: &str, v: &'a Value) -> Result<&'a str, String> {
     }
 }
 
+/// 隣り合う引数すべてが比較関数を満たすか判定する (`(< 1 2 3)` など).
 fn compare(name: &str, args: &[Value], cmp: fn(f64, f64) -> bool) -> Result<Value, String> {
     let ns = nums(name, args)?;
     Ok(Value::Boolean(ns.windows(2).all(|w| cmp(w[0], w[1]))))
 }
 
+/// 組み込み関数をグローバル環境に登録する.
 fn register_builtins(env: &Env) {
     let reg = |name: &str, f: BuiltinFn| {
         env_define(env, name, Value::Function(name.to_string(), f));
@@ -591,6 +607,7 @@ fn register_builtins(env: &Env) {
 
     reg("quotient", |_, a| int_op("quotient", &a, |x, y| x / y));
     reg("remainder", |_, a| int_op("remainder", &a, |x, y| x % y));
+    // modulo は除数と同じ符号の結果を返す (remainder とは負数で異なる).
     reg("modulo", |_, a| {
         int_op("modulo", &a, |x, y| {
             x.rem_euclid(y) + if y < 0 && x.rem_euclid(y) != 0 { y } else { 0 }
@@ -813,11 +830,13 @@ fn register_builtins(env: &Env) {
     });
 }
 
+/// 引数 1 つの型述語を共通化するヘルパ.
 fn pred(name: &str, args: &[Value], f: fn(&Value) -> bool) -> Result<Value, String> {
     arity(name, args, 1)?;
     Ok(Value::Boolean(f(&args[0])))
 }
 
+/// 整数 2 引数の演算 (quotient, remainder, modulo) の共通処理. 0 除算はエラー.
 fn int_op(name: &str, args: &[Value], f: fn(i64, i64) -> i64) -> Result<Value, String> {
     arity(name, args, 2)?;
     let (x, y) = (num(name, &args[0])?, num(name, &args[1])?);

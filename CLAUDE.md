@@ -22,7 +22,7 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 
 ### Scheme 組み込み関数の追加
 `src-tauri/src/scheme/evaluator.rs` を編集:
-1. `eval_builtin()` 関数内に新しい match 分岐を追加
+1. `register_builtins()` 内に `reg("名前", |interp, args| ...)` を追加（特殊形式は `eval_inner()` の match に追加）
 2. `Value` 型のパターンマッチングを使用してロジックを実装
 3. `Value` 結果またはエラー文字列を返す
 

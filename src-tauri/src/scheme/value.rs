@@ -9,6 +9,7 @@ pub struct Frame {
     pub parent: Option<Env>,
 }
 
+/// 共有・可変な環境. クロージャが環境を保持するため `Arc<Mutex<_>>` を使う.
 pub type Env = Arc<Mutex<Frame>>;
 
 pub fn new_env(parent: Option<Env>) -> Env {
@@ -18,6 +19,7 @@ pub fn new_env(parent: Option<Env>) -> Env {
     }))
 }
 
+/// Rust で実装された組み込み関数. 出力バッファ等にアクセスするため `Interp` を受け取る.
 pub type BuiltinFn = fn(&mut Interp, Vec<Value>) -> Result<Value, String>;
 
 /// ユーザ定義の手続き (クロージャ).
@@ -29,6 +31,7 @@ pub struct Lambda {
     pub env: Env,
 }
 
+/// Scheme の値. リストは `Vec` で表現するためドット対は扱えない.
 #[derive(Clone)]
 pub enum Value {
     Nil,
