@@ -66,47 +66,40 @@
 (list)                    ; => ()
 ```
 
-## 実装予定の関数（TODO）
+## 比較演算
 
-以下の関数は CLAUDE.md の TODO リストで実装予定です：
+`(= a b ...)`, `(< a b ...)`, `(> a b ...)`, `(<= a b ...)`, `(>= a b ...)` — 隣り合う引数すべてが条件を満たすと `#t`。
 
-### 比較演算子
-- `(> num1 num2 ...)`
-- `(< num1 num2 ...)`
-- `(= num1 num2 ...)`
-- `(>= num1 num2 ...)`
-- `(<= num1 num2 ...)`
+## その他の数値関数
 
-### 制御フロー
-- `(if condition then-expr else-expr)`
-- `(cond (test1 expr1) (test2 expr2) ...)`
-- `(case expr (key1 expr1) (key2 expr2) ...)`
+`quotient`, `remainder`, `modulo`, `abs`, `min`, `max`, `zero?`, `even?`, `odd?`
 
-### 変数バインディング
-- `(define name value)`
-- `(let ((var1 val1) (var2 val2)) body)`
-- `(let* ((var1 val1) (var2 val2)) body)`
-- `(letrec ((var1 val1) (var2 val2)) body)`
+## 論理・等価
 
-### ラムダ / 関数定義
-- `(lambda (args) body)`
-- `(define-syntax name transformer)`
+`not`, `eq?`, `eqv?`, `equal?`（いずれも値の構造的な等価比較）
 
-### 基本的なリスト操作
-- `(car lst)` - リストの先頭要素を返す
-- `(cdr lst)` - リストの残りを返す
-- `(cons elem lst)` - 要素をリストの先頭に追加
-- `(append lst1 lst2 ...)` - リストを結合
-- `(length lst)` - リストの要素数を返す
-- `(map func lst)` - リストの各要素に関数を適用
+## 型述語
 
-### 型チェック
-- `(integer? expr)`
-- `(number? expr)`
-- `(string? expr)`
-- `(symbol? expr)`
-- `(list? expr)`
-- `(boolean? expr)`
+`number?`, `integer?`, `string?`, `symbol?`, `boolean?`, `list?`, `pair?`, `null?`, `procedure?`
+
+## リスト操作（追加分）
+
+`car`, `cdr`, `cons`（第 2 引数はリスト）, `append`, `length`, `reverse`, `list-ref`,
+`map`, `for-each`, `filter`, `fold`（`(fold f init lst)`、`f` は `(elem acc)`）, `reduce`, `apply`
+
+## 文字列・入出力
+
+`string-append`, `string-length`, `number->string`, `display`（引用符なしで出力）, `newline`
+
+## 特殊形式
+
+`quote`（`'x`）, `if`, `cond`（`else`）, `case`, `and`, `or`, `when`, `unless`,
+`define`（`(define (f . args) ...)` 形式を含む）, `set!`, `lambda`, `begin`,
+`let`, `let*`, `letrec`, 名前付き `let`。クロージャと末尾呼び出し最適化に対応。
+
+## 未実装
+
+`define-syntax`, quasiquote, `do`, ドット対, 文字型, ベクタなど。一覧は `CLAUDE.md` の TODO を参照。
 
 ## 型システム
 
@@ -116,14 +109,9 @@ rs-editor の Scheme インタプリタがサポートしている型：
 - **String**: ダブルクォートで囲まれたテキスト
 - **Symbol**: クォートなしの識別子
 - **Boolean**: `#t` (true) / `#f` (false)
-- **List**: S式形式のリスト `(elem1 elem2 ...)`
+- **List**: S式形式のリスト `(elem1 elem2 ...)`（ドット対は未対応）
+- **Procedure**: 組み込み関数とクロージャ
 
 ## 今後の拡張予定
 
 詳細は `CLAUDE.md` の TODO と `TODO.md` のフェーズ分けを参照してください。
-
-次のステップ：
-1. 比較演算子と制御フロー（`if`, `cond`）の実装
-2. 変数バインディングと定義（`define`, `let`）
-3. より高度なリスト操作
-4. ラムダ式とクロージャのサポート

@@ -50,11 +50,20 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 - ✅ ダークテーマ UI
 
 ### TODO
-- [ ] define-syntax, quasiquote, do
-- [ ] ドット対（改良リスト）、文字型、ベクタ
-- [ ] エディタ内のコメント表示
-- [ ] 構文ハイライト（Monaco Editor の検討）
-- [ ] 行番号付きのより良いエラーメッセージ
+インタプリタ（`src-tauri/src/scheme/`）の未実装項目:
+- [ ] マクロ: define-syntax / syntax-rules
+- [ ] 準クォート: quasiquote（`` ` ``）, unquote（`,`）, unquote-splicing（`,@`）
+- [ ] 制御構文: do, delay / force, call/cc, dynamic-wind, let-values, case-lambda
+- [ ] データ型: ドット対（改良リスト, `set-car!` / `set-cdr!`）、文字型（`#\a`）、ベクタ、ハッシュテーブル
+- [ ] 数値: 整数と実数の区別（現状はすべて f64）、sqrt, expt, floor, round, exp など数学関数、`string->number`
+- [ ] リスト関数: member, assoc, assq, list-tail, cadr 系, last, iota, sort, delete, 複数リストを取る map / for-each
+- [ ] 文字列関数: substring, string=?, string<?, string-upcase, string->symbol, string->list など
+- [ ] エラー処理: error, assert, guard / with-exception-handler
+- [ ] 入出力: write, read, ファイルの load、`display` を逐次 REPL に流す（現状は評価完了後にまとめて返す）
+- [ ] 行番号付きのより良いエラーメッセージ（パーサ・評価器とも位置情報なし）
+- [ ] `src-tauri/tests/evaluator_edge_cases.rs` が評価器を呼ばないプレースホルダのままなので、`Evaluator` を使うテストに置き換える
+
+エディタ側の未実装項目は `TODO.md` を参照。
 
 ## ビルドと配布
 
