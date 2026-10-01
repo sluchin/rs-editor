@@ -21,7 +21,7 @@ describe('useEmacsKeymap', () => {
         selectionStart,
         selectionEnd,
         setSelectionRange: vi.fn(),
-      } as any,
+      } as unknown as HTMLTextAreaElement,
     }
     return ref
   }
@@ -46,7 +46,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -71,7 +71,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -96,7 +96,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -122,7 +122,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -147,7 +147,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: false,
         altKey: true,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -172,7 +172,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: false,
         altKey: true,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -200,7 +200,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -226,7 +226,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -251,7 +251,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -280,7 +280,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(event)
 
@@ -305,7 +305,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(markEvent)
 
@@ -315,7 +315,7 @@ describe('useEmacsKeymap', () => {
         ctrlKey: true,
         altKey: false,
         preventDefault: vi.fn(),
-      } as any
+      } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
       result.current.handleKeyDown(quitEvent)
 
@@ -329,7 +329,7 @@ describe('useEmacsKeymap', () => {
       const textareaRef = createTextareaRef('hello', 0, 0)
       const { result } = renderHook(() => useEmacsKeymap({ textareaRef, value: 'hello', onChange }))
 
-      const event = { key: 'x', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      const event = { key: 'x', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>
       result.current.handleKeyDown(event)
 
       expect(event.preventDefault).not.toHaveBeenCalled()
@@ -346,7 +346,7 @@ describe('useEmacsKeymap', () => {
         useEmacsKeymap({ textareaRef, value: 'hello', onChange, onIsearchForward }),
       )
 
-      const event = { key: 's', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      const event = { key: 's', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>
       result.current.handleKeyDown(event)
 
       expect(event.preventDefault).toHaveBeenCalled()
@@ -361,7 +361,7 @@ describe('useEmacsKeymap', () => {
         useEmacsKeymap({ textareaRef, value: 'hello', onChange, onIsearchBackward }),
       )
 
-      const event = { key: 'r', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      const event = { key: 'r', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>
       result.current.handleKeyDown(event)
 
       expect(event.preventDefault).toHaveBeenCalled()
@@ -376,7 +376,7 @@ describe('useEmacsKeymap', () => {
         useEmacsKeymap({ textareaRef, value: 'hello', onChange, onExecuteCommand }),
       )
 
-      const event = { key: 'x', ctrlKey: false, altKey: true, preventDefault: vi.fn() } as any
+      const event = { key: 'x', ctrlKey: false, altKey: true, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>
       result.current.handleKeyDown(event)
 
       expect(event.preventDefault).toHaveBeenCalled()
@@ -391,7 +391,7 @@ describe('useEmacsKeymap', () => {
         useEmacsKeymap({ textareaRef, value: 'hello', onChange, onQuit }),
       )
 
-      const event = { key: 'g', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as any
+      const event = { key: 'g', ctrlKey: true, altKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent<HTMLTextAreaElement>
       result.current.handleKeyDown(event)
 
       expect(event.preventDefault).toHaveBeenCalled()

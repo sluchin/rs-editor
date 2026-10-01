@@ -1,75 +1,28 @@
 .code-editor-container {
-  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.code-editor-highlight,
 .code-editor-textarea {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 4px 8px;
   border: none;
   font-family: 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
   box-sizing: border-box;
-}
-
-.code-editor-highlight {
-  overflow: hidden;
+  outline: none;
   background: #ffffff;
   color: #000000;
-  pointer-events: none;
-}
-
-.code-editor-textarea {
-  overflow: auto;
   resize: none;
-  outline: none;
-  background: transparent;
-  color: transparent;
-  caret-color: #000000;
 }
 
 .code-editor-textarea::selection {
   background: rgba(38, 110, 199, 0.35);
-}
-
-.token-keyword {
-  color: #0000ff;
-}
-
-.token-string {
-  color: #a31515;
-}
-
-.token-comment {
-  color: #008000;
-  font-style: italic;
-}
-
-.token-number {
-  color: #098658;
-}
-
-.token-boolean {
-  color: #800080;
-}
-
-.token-paren-matched {
-  background: rgba(0, 120, 215, 0.25);
-  border-radius: 2px;
-}
-
-.token-paren-unmatched {
-  background: rgba(255, 0, 0, 0.25);
-  border-radius: 2px;
 }

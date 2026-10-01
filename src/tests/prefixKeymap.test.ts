@@ -21,7 +21,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(ctrlXEvent)
     expect(ctrlXEvent.preventDefault).toHaveBeenCalled()
@@ -33,7 +33,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(ctrlFEvent)
     expect(ctrlFEvent.preventDefault).toHaveBeenCalled()
@@ -55,7 +55,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(ctrlXEvent)
 
@@ -66,7 +66,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(ctrlSEvent)
     expect(ctrlSEvent.preventDefault).toHaveBeenCalled()
@@ -88,7 +88,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(ctrlXEvent)
 
@@ -99,7 +99,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     handleKeyDown(randomEvent)
     expect(onFindFile).not.toHaveBeenCalled()
@@ -122,7 +122,7 @@ describe('usePrefixKeymap', () => {
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(),
-    } as any
+    } as unknown as KeyboardEvent<HTMLTextAreaElement>
 
     const keyResult = handleKeyDown(event)
     expect(keyResult).toBe(false)
