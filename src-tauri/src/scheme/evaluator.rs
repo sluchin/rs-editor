@@ -549,7 +549,7 @@ fn compare(name: &str, args: &[Value], cmp: fn(f64, f64) -> bool) -> Result<Valu
 }
 
 fn register_builtins(env: &Env) {
-    let mut reg = |name: &str, f: BuiltinFn| {
+    let reg = |name: &str, f: BuiltinFn| {
         env_define(env, name, Value::Function(name.to_string(), f));
     };
 
