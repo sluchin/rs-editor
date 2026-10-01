@@ -79,30 +79,43 @@ npm run tauri:build
 
 ### 開発ワークフロー（Lint / Format / Test）
 
+**ローカル開発（TypeScript のみ）:**
 ```bash
-# コードの静的解析（ESLint + cargo clippy）
+# TypeScript 静的解析（ESLint）
 npm run lint
+
+# Vitest でテスト実行
+npm run test
+
+# テストをウォッチモードで実行
+npm run test:watch
 
 # ESLint の自動修正
 npm run lint:fix
 
-# コード整形（Prettier + cargo fmt）
+# コード整形（Prettier）
 npm run format
 
-# 整形済みかどうかチェックのみ（変更しない）
+# 整形済みかどうかチェック
 npm run format:check
+```
 
-# テストを実行（Vitest + cargo test）
-npm run test
+**Rust も含めて完全にチェック（CI 相当）:**
+```bash
+# TypeScript + Rust の static analysis（ESLint + cargo clippy）
+npm run lint:all
 
-# テストをウォッチモードで実行（フロントエンドのみ）
-npm run test:watch
+# TypeScript + Rust テスト
+npm run test:all
 
-# format:check → lint → test をまとめて実行
+# format:check → lint:all → test:all をまとめて実行
 npm run check
 ```
 
-`npm run check` は GitHub Actions の CI (`.github/workflows/ci.yml`) でも実行され、`main` ブランチへの push・PR ごとに自動でフォーマット・lint・テストが確認されます。
+**注:** 
+- `npm run lint` はローカル環境で実行可能（TypeScript のみ）
+- `npm run lint:all` と `npm run test:all` は Rust のビルド環境が必要
+- GitHub Actions の CI (`.github/workflows/ci.yml`) は `npm run check` を実行し、`main` ブランチへの push・PR ごとに全てのチェックが自動実行されます
 
 ## 使用例
 
