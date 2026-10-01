@@ -29,6 +29,14 @@ impl Parser {
         self.skip_whitespace();
         match self.current() {
             Some('(') => self.parse_list(),
+            Some('\'') => {
+                self.pos += 1;
+                let quoted = self.parse_value()?;
+                Ok(Value::List(vec![
+                    Value::Symbol("quote".to_string()),
+                    quoted,
+                ]))
+            }
             Some('"') => self.parse_string(),
             Some('#') => self.parse_boolean(),
             Some(c)
@@ -37,7 +45,7 @@ impl Parser {
             {
                 self.parse_number()
             }
-            Some(c) if c.is_alphabetic() || "+-*/<>=!?".contains(c) => self.parse_symbol(),
+            Some(c) if Self::is_symbol_char(c) => self.parse_symbol(),
             Some(c) => Err(format!("Unexpected character: {}", c)),
             None => Err("Unexpected end of input".to_string()),
         }
@@ -123,15 +131,16 @@ impl Parser {
 
     fn parse_symbol(&mut self) -> Result<Value, String> {
         let start = self.pos;
-        while self
-            .current()
-            .is_some_and(|c| c.is_alphanumeric() || "+-*/<>=!?_-".contains(c))
-        {
+        while self.current().is_some_and(Self::is_symbol_char) {
             self.pos += 1;
         }
 
         let symbol: String = self.input[start..self.pos].iter().collect();
         Ok(Value::Symbol(symbol))
+    }
+
+    fn is_symbol_char(c: char) -> bool {
+        !c.is_whitespace() && !"()\"';".contains(c)
     }
 
     fn current(&self) -> Option<char> {
@@ -201,6 +210,27 @@ mod tests {
     #[test]
     fn parses_symbols() {
         assert_eq!(parse_one("foo-bar?"), Value::Symbol("foo-bar?".to_string()));
+    }
+
+    #[test]
+    fn parses_quote_shorthand() {
+        assert_eq!(
+            parse_one("'a"),
+            Value::List(vec![
+                Value::Symbol("quote".to_string()),
+                Value::Symbol("a".to_string())
+            ])
+        );
+    }
+
+    #[test]
+    fn parses_symbols_with_extra_punctuation() {
+        assert_eq!(parse_one("set!"), Value::Symbol("set!".to_string()));
+        assert_eq!(parse_one("<="), Value::Symbol("<=".to_string()));
+        assert_eq!(
+            parse_one("list->string"),
+            Value::Symbol("list->string".to_string())
+        );
     }
 
     #[test]

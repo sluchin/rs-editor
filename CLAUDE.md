@@ -41,21 +41,18 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 ## 現在の実装状況
 
 ### 実装済み
-- ✅ パーサ: リスト、シンボル、数値、文字列、ブール値
-- ✅ 基本算術演算: +, -, *, /
-- ✅ リスト操作: quote, list
+- ✅ パーサ: リスト、シンボル、数値、文字列、ブール値、クォート（`'x`）、コメント
+- ✅ 評価器: 環境（レキシカルスコープ）、クロージャ、末尾呼び出し最適化
+- ✅ 特殊形式: quote, if, cond, case, and, or, when, unless, define, set!, lambda, begin, let, let*, letrec, 名前付き let
+- ✅ 組み込み関数: 算術・比較、リスト操作（car, cdr, cons, append, length, reverse, list-ref, map, for-each, filter, fold, reduce, apply）、型述語、文字列、display/newline
 - ✅ REPL と履歴機能（最後の 10 項目）
 - ✅ エラーハンドリングと表示
 - ✅ ダークテーマ UI
 
 ### TODO
-- [ ] 追加演算子: >, <, = など
-- [ ] 制御フロー: if, cond, case
-- [ ] 変数バインディング: define, let, let*, letrec
-- [ ] ラムダ: lambda, define-syntax
-- [ ] リスト操作: car, cdr, cons, append, length, map
-- [ ] 型チェック: integer?, string? など
-- [ ] エディタ内のコメント（既にパースされているが）
+- [ ] define-syntax, quasiquote, do
+- [ ] ドット対（改良リスト）、文字型、ベクタ
+- [ ] エディタ内のコメント表示
 - [ ] 構文ハイライト（Monaco Editor の検討）
 - [ ] 行番号付きのより良いエラーメッセージ
 

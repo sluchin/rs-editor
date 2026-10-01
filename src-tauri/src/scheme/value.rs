@@ -1,24 +1,80 @@
+use crate::scheme::evaluator::Interp;
+use std::collections::HashMap;
 use std::fmt;
+use std::sync::{Arc, Mutex};
 
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
+/// 環境フレーム. 親フレームへの参照を持つ.
+pub struct Frame {
+    pub vars: HashMap<String, Value>,
+    pub parent: Option<Env>,
+}
+
+pub type Env = Arc<Mutex<Frame>>;
+
+pub fn new_env(parent: Option<Env>) -> Env {
+    Arc::new(Mutex::new(Frame {
+        vars: HashMap::new(),
+        parent,
+    }))
+}
+
+pub type BuiltinFn = fn(&mut Interp, Vec<Value>) -> Result<Value, String>;
+
+/// ユーザ定義の手続き (クロージャ).
+pub struct Lambda {
+    pub name: Option<String>,
+    pub params: Vec<String>,
+    pub rest: Option<String>,
+    pub body: Vec<Value>,
+    pub env: Env,
+}
+
+#[derive(Clone)]
 pub enum Value {
     Nil,
+    /// 値を返さない式 (define など). REPL には表示されない.
+    Void,
     Boolean(bool),
     Number(f64),
     Symbol(String),
     String(String),
     List(Vec<Value>),
-    Function(String),
+    Function(String, BuiltinFn),
+    Lambda(Arc<Lambda>),
+}
+
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Value {
+    pub fn is_true(&self) -> bool {
+        !matches!(self, Value::Boolean(false))
+    }
+
+    /// `display` 用の文字列表現 (文字列に引用符を付けない).
+    pub fn display_string(&self) -> String {
+        match self {
+            Value::String(s) => s.clone(),
+            Value::List(items) => {
+                let parts: Vec<String> = items.iter().map(|v| v.display_string()).collect();
+                format!("({})", parts.join(" "))
+            }
+            v => v.to_string(),
+        }
+    }
 }
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Nil => write!(f, "nil"),
+            Value::Void => Ok(()),
             Value::Boolean(b) => write!(f, "{}", if *b { "#t" } else { "#f" }),
             Value::Number(n) => {
-                if n.fract() == 0.0 {
+                if n.fract() == 0.0 && n.abs() < 1e15 {
                     write!(f, "{}", *n as i64)
                 } else {
                     write!(f, "{}", n)
@@ -36,7 +92,11 @@ impl fmt::Display for Value {
                 }
                 write!(f, ")")
             }
-            Value::Function(name) => write!(f, "#<procedure:{}>", name),
+            Value::Function(name, _) => write!(f, "#<procedure:{}>", name),
+            Value::Lambda(l) => match &l.name {
+                Some(n) => write!(f, "#<procedure:{}>", n),
+                None => write!(f, "#<procedure>"),
+            },
         }
     }
 }
@@ -50,6 +110,9 @@ impl PartialEq for Value {
             (Value::Symbol(a), Value::Symbol(b)) => a == b,
             (Value::String(a), Value::String(b)) => a == b,
             (Value::List(a), Value::List(b)) => a == b,
+            (Value::Void, Value::Void) => true,
+            (Value::Function(a, _), Value::Function(b, _)) => a == b,
+            (Value::Lambda(a), Value::Lambda(b)) => Arc::ptr_eq(a, b),
             _ => false,
         }
     }
