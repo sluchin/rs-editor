@@ -63,6 +63,20 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 - [ ] 行番号付きのより良いエラーメッセージ（パーサ・評価器とも位置情報なし）
 - [ ] `src-tauri/tests/evaluator_edge_cases.rs` が評価器を呼ばないプレースホルダのままなので、`Evaluator` を使うテストに置き換える
 
+R7RS-small 準拠に向けた項目（現状は R7RS の小さなサブセットで、準拠していない。上記の個別項目も含め、多くは再設計を伴う）:
+- [ ] 値表現をペア（cons セル）ベースに変更する（ドット対、O(1) の `cons`、`set-car!` / `set-cdr!`、`eq?` の同一性判定の前提）
+- [ ] 数値塔: 正確数 / 不正確数、有理数（`1/3`）、`exact` / `inexact`、`exact->inexact` など
+- [ ] `eq?` / `eqv?` / `equal?` の区別（現状はすべて構造的比較）
+- [ ] 特殊形式をシンボル名で判定している点を改め、再束縛やマクロ展開と矛盾しないようにする
+- [ ] 構文: `syntax-rules`, `case-lambda`, `parameterize`, `define-record-type`, `cond` / `case` の `=>`, トップレベルの `begin` による `define` 展開
+- [ ] ライブラリ: `import` / `define-library`
+- [ ] 継続・多値: `call/cc`, `dynamic-wind`, `values` / `call-with-values`
+- [ ] 例外: `raise`, `raise-continuable`, `error`, `with-exception-handler`, `guard`
+- [ ] 字句: `#true` / `#false`, `#\` 文字, `#(` ベクタ, `|sym|`, `#;` データコメント, `#| |#` ブロックコメント, `1e3` / `#x10` / `1/2` などの数値リテラル, 文字列の `\x41;` などのエスケープ
+- [ ] 入出力ポート: `current-output-port`, 文字列ポート, `write` / `write-string` / `read` と、`write` と `display` の出力の区別
+- [ ] 再帰の深さ上限（現在 10000）に頼らない評価（継続や明示的なスタックの導入と合わせて検討）
+- [ ] 適合性テスト（R7RS の例を使ったテストスイート）を追加し、準拠状況を `FUNCTIONS.md` に記載する
+
 エディタ側の未実装項目は `TODO.md` を参照。
 
 ## ビルドと配布
