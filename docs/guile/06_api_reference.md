@@ -4,609 +4,633 @@
 > 
 > このドキュメントはGNU Free Documentation Licenseの下で公開されています。
 
-このセクションでは、Guile が提供する主要な API（Application Programming Interface）について説明します。C プログラムから Guile を使用する際の関数・型定義が含まれます。
+このセクションでは、Guile が提供する包括的な API（Application Programming Interface）について詳細に説明します。C プログラムから Guile を使用する際の関数・型定義が含まれます。
 
 ## 6.1 Guile API の概要
 
 ### 概要
 
-Guile API は、以下の目的で設計されています：
+Guile API は、C プログラムが Scheme インタプリタと相互作用するための統一的なインターフェースです。Scheme 値の操作、関数呼び出し、データ型変換、メモリ管理などをサポートします。
 
-- Scheme コード内での値の操作
-- C コードから Scheme 関数の呼び出し
-- Scheme から C 関数へのアクセス
-- メモリ管理とガベージコレクション
+### API の構成
 
-### 主要な構成要素
+Guile API は以下のレイヤーで構成されています：
 
-#### 初期化とブート
+- **低レベル API**: SCM 型と基本的な型変換
+- **プロシージャ呼び出し**: Scheme 関数の呼び出し
+- **型システム**: データ型の表現と変換
+- **メモリ管理**: ガベージコレクション
+- **モジュールシステム**: コードの整理と再利用
+
+### 主要な機能
 
 ```c
+/* ヘッダファイルのインクルード */
 #include <libguile.h>
 
-/* Guile 環境を初期化 */
-scm_boot_guile(argc, argv, inner_main, NULL);
-scm_init_guile();
-```
+/* 初期化 */
+scm_boot_guile(argc, argv, main_func, NULL);
 
-#### SCM データ型
+/* 値の作成と変換 */
+SCM scm_val = scm_from_int(42);
+int c_val = scm_to_int(scm_val);
 
-すべての Scheme 値は `SCM` 型で表現：
+/* 関数呼び出し */
+SCM result = scm_call_1(proc, arg);
 
-```c
-SCM value;                /* Scheme の値 */
-int c_int = scm_to_int(value);     /* 型変換 */
-SCM scm_int = scm_from_int(42);    /* 逆変換 */
-```
-
-#### ガベージコレクション
-
-```c
-scm_gc_protect_object(object);      /* GC から保護 */
-scm_gc_unprotect_object(object);    /* 保護解除 */
+/* GC 保護 */
+scm_gc_protect_object(important_obj);
 ```
 
 ## 6.2 非推奨機能
 
 ### 概要
 
-Guile は古い API の後方互換性のため、一部の関数を非推奨としています。新しいコードでは非推奨関数の使用を避けるべきです。
+Guile は古い API との後方互換性を提供しながら、新しい API への移行を推奨しています。
 
-### 非推奨から新機能への移行
+### 非推奨マクロと置き換え関数
 
-| 非推奨関数 | 新関数 | 注記 |
-|-----------|--------|------|
-| `SCM_INUMP(x)` | `scm_is_integer(x)` | 型チェック |
-| `SCM_INUM(x)` | `scm_to_int(x)` | 値取得 |
-| `SCM_MAKINUM(i)` | `scm_from_int(i)` | 値作成 |
+非推奨のマクロは SCM 値の内部表現に直接アクセスしていました：
 
-## 6.3 SCM 型と値表現
+| 非推奨 | 新API | 説明 |
+|--------|-------|------|
+| `SCM_INUMP(x)` | `scm_is_integer(x)` | 整数型チェック |
+| `SCM_INUM(x)` | `scm_to_int(x)` | 整数値取得 |
+| `SCM_MAKINUM(i)` | `scm_from_int(i)` | 整数値作成 |
+| `SCM_STRINGP(x)` | `scm_is_string(x)` | 文字列型チェック |
+| `SCM_STRING_CHARS(x)` | `scm_to_locale_string(x)` | 文字列取得 |
+
+### 新 API への移行例
+
+```c
+/* 非推奨: */
+if (SCM_INUMP(x)) {
+  int val = SCM_INUM(x);
+}
+
+/* 新API: */
+if (scm_is_integer(x)) {
+  int val = scm_to_int(x);
+}
+```
+
+## 6.3 SCM 型
 
 ### 概要
 
-すべての Scheme 値は `SCM` 型で表現されます。SCM は不透明な値で、型情報をエンコード化しています。
+SCM は Guile における全 Scheme 値の表現型です。SCM は不透明なポインタ型で、内部的に型情報とデータをエンコードしています。
 
-### SCM 型の基本
+### SCM 型の特性
 
 ```c
-#include <libguile.h>
+/* SCM は単純なデータ型 */
+typedef unsigned long SCM;
 
-/* SCM 値の作成と変換 */
-SCM x = scm_from_int(42);           /* 整数 42 を作成 */
-int i = scm_to_int(x);              /* SCM から int に変換 */
+/* あらゆる Scheme 値は SCM で表現される */
+SCM boolean = scm_from_bool(1);      /* #t */
+SCM integer = scm_from_int(42);      /* 42 */
+SCM string = scm_from_locale_string("hello");  /* "hello" */
+SCM list = scm_list_2(integer, string);  /* (42 "hello") */
 
-/* 型チェック */
-if (scm_is_integer(x)) {
-  printf("x is an integer\n");
+/* 型情報の埋め込み */
+if (scm_is_integer(value)) {
+  /* value は整数型 */
 }
-
-/* NULL 値（アンバインド）*/
-SCM unbound = SCM_UNBOUND;
 ```
 
-### C から Scheme への値変換
+### 特殊な SCM 値
 
 ```c
-/* 整数 */
-SCM scm_int = scm_from_int(42);
-SCM scm_long = scm_from_long(1000000L);
+/* 未定義値 */
+SCM undefined = SCM_UNBOUND;
 
-/* 浮動小数点数 */
-SCM scm_double = scm_from_double(3.14);
+/* false 値（違いに注意） */
+SCM false = SCM_BOOL_F;
+SCM eol = SCM_EOL;
 
-/* 文字列 */
-SCM scm_str = scm_from_locale_string("hello");
-
-/* ブール値 */
-SCM scm_true = scm_from_bool(1);
-SCM scm_false = scm_from_bool(0);
-
-/* シンボル */
-SCM scm_sym = scm_from_locale_symbol("my-symbol");
-```
-
-### Scheme から C への値変換
-
-```c
-/* 整数取得 */
-int i = scm_to_int(scm_value);
-long l = scm_to_long(scm_value);
-
-/* 浮動小数点数取得 */
-double d = scm_to_double(scm_value);
-
-/* 文字列取得 */
-char *str = scm_to_locale_string(scm_value);
-free(str);  /* 自分で解放する必要あり */
-
-/* ブール値チェック */
-int is_true = scm_is_true(scm_value);
+/* その他の重要な値 */
+SCM true = SCM_BOOL_T;
 ```
 
 ## 6.4 Guile の初期化
 
 ### 概要
 
-Guile を使用する前に、適切に初期化する必要があります。
+Guile を C プログラムに組み込む場合、初期化手順が重要です。
 
 ### 初期化関数
 
+#### scm_boot_guile
+
+メイン関数から Guile 環境を初期化する標準的な方法：
+
 ```c
-/* メイン関数内から Guile を初期化 */
 static void *
 inner_main(void *data)
 {
-  /* ここで Guile を使用 */
+  /* Guile が初期化された状態でここが実行される */
   SCM result = scm_c_eval_string("(+ 2 3)");
   printf("Result: %d\n", scm_to_int(result));
-  return NULL;
+  
+  return NULL;  /* inner_main の戻り値 */
 }
 
 int
 main(int argc, char *argv[])
 {
-  /* Guile 環境を初期化（argc と argv を渡す）*/
+  /* Guile 環境を初期化して inner_main を実行 */
   scm_boot_guile(argc, argv, inner_main, NULL);
   return 0;
 }
 ```
 
-### スレッド化された使用
+#### scm_init_guile
+
+スレッド化環境またはライブラリコンテキストで初期化：
 
 ```c
-/* マルチスレッド対応初期化 */
+/* ライブラリコンテキストでの初期化 */
 scm_init_guile();
 
-/* スレッド内で Guile を使用 */
-void *
-thread_proc(void *data)
-{
-  scm_c_eval_string("(display \"From thread\\n\")");
-  return NULL;
-}
+/* 初期化後、Guile を使用可能 */
+SCM value = scm_c_eval_string("(define x 42)");
 ```
 
-### 環境変数の影響
+### 初期化時の引数処理
 
 ```c
-/* 環境変数で初期化をカスタマイズ */
-setenv("GUILE_LOAD_PATH", "/custom/path", 1);
-scm_boot_guile(argc, argv, inner_main, NULL);
+/* プログラム引数を Guile に渡す */
+int
+main(int argc, char *argv[])
+{
+  scm_boot_guile(argc, argv, inner_main, NULL);
+  return 0;
+}
+
+/* inner_main 内から引数にアクセス */
+static void *
+inner_main(void *data)
+{
+  SCM args = scm_program_arguments();
+  /* args は (program-name arg1 arg2 ...) のリスト */
+  return NULL;
+}
 ```
 
 ## 6.5 スナーフィングマクロ
 
 ### 概要
 
-C コードから Scheme 手続きを自動生成するマクロ。
+スナーフィングは、C から定義された関数を自動的に Scheme の手続きとして登録するツール。
 
 ### SCM_DEFINE マクロ
 
 ```c
 #include <libguile.h>
 
-/* Scheme から呼び出し可能な C 関数 */
+/* C 関数をスナーフィングで定義 */
 SCM_DEFINE(my_double, "my-double", 1, 0, 0,
            (SCM x),
-           "引数を 2 倍にする")
+           "引数を 2 倍にする関数\n\n"
+           "Args:\n"
+           "  x - 整数\n"
+           "Returns: x * 2")
 {
   return scm_from_int(2 * scm_to_int(x));
 }
 
-/* 初期化時に以下を呼び出す */
-#include "my_module.x"  /* スナーフィング生成コード */
-```
-
-### ドキュメント文字列
-
-```c
-SCM_DEFINE(process_data, "process-data", 2, 1, 0,
-           (SCM input, SCM mode, SCM options),
-           "データを処理する\n\n"
-           "引数:\n"
-           "  input - 処理対象のデータ\n"
-           "  mode - 処理モード（'fast または 'slow）\n"
-           "  options - オプション（省略可能）\n"
-           "戻り値: 処理結果")
+/* 初期化関数 */
+void
+init_my_module(void)
 {
-  /* 実装 */
-  return input;
+  #include "my_module.x"  /* スナーフィング生成ファイル */
 }
 ```
 
-## 6.6 基本データ型
+### スナーフィング処理
 
-### 概要
+スナーフィングプロセスは以下を行います：
 
-Guile で提供される基本的なデータ型とその操作方法。
+1. C ソース内の `SCM_DEFINE` を検索
+2. Scheme の手続き定義を生成
+3. メタデータ（ドキュメント、アリティ）を含める
+4. `.x` ファイルに出力
 
-### ブール値
+使用方法：
+
+```bash
+guile-tools snarf my_module.c > my_module.x
+gcc -c -I. my_module.c
+```
+
+## 6.6 データ型
+
+### 6.6.1 ブール値
 
 ```c
 /* C での操作 */
-SCM scm_true = scm_from_bool(1);   /* #t */
-SCM scm_false = scm_from_bool(0);  /* #f */
+SCM true = scm_from_bool(1);
+SCM false = scm_from_bool(0);
 
-int is_true = scm_is_true(scm_value);
-int is_false = scm_is_false(scm_value);
+int is_true = scm_is_true(value);     /* #t に類する */
+int is_false = scm_is_false(value);   /* #f のみ */
 
-/* SCM_BOOL_T、SCM_BOOL_F マクロ */
-SCM result = SCM_BOOL_T;
+/* マクロ定義 */
+#define SCM_BOOL_T  /* #t */
+#define SCM_BOOL_F  /* #f */
 ```
 
 ```scheme
 ; Scheme での操作
-#t              ; 真
-#f              ; 偽
-(boolean? #t)   ; => #t
-(not #f)        ; => #t
+#t                  ; 真
+#f                  ; 偽
+(boolean? #t)       ; => #t
+(not #f)            ; => #t
+(if #f 1 2)         ; => 2（#f は偽として扱われる）
 ```
 
-### 数値データ型
+### 6.6.2 数値データ型
 
-#### 整数
+#### 数値タワー
+
+Scheme は多層的な数値型をサポート：
+
+```
+複素数
+├ 実数
+  ├ 有理数
+    └ 整数
+```
+
+#### 整数操作
 
 ```c
-/* C での操作 */
+/* C での整数操作 */
 SCM scm_int = scm_from_int(42);
 SCM scm_long = scm_from_long(1000000L);
+SCM scm_uint = scm_from_uint(42U);
+
 int i = scm_to_int(scm_int);
+long l = scm_to_long(scm_long);
+
+/* 任意精度整数 */
+SCM big_int = scm_c_eval_string("999999999999999999");
 ```
 
 ```scheme
-; Scheme での操作
-42              ; 整数リテラル
-(integer? 42)   ; => #t
-(+ 1 2)         ; => 3
-(* 5 6)         ; => 30
-(quotient 17 5) ; => 3
-(remainder 17 5); => 2
+; Scheme での整数
+42                  ; 整数リテラル
+#b101010            ; 2進表記（42）
+#o52                ; 8進表記（42）
+#x2a                ; 16進表記（42）
+
+(integer? 42)       ; => #t
+(odd? 5)            ; => #t
+(even? 4)           ; => #t
+(prime? 17)         ; => #t
 ```
 
-#### 浮動小数点数
+#### 実数と有理数
 
 ```scheme
-3.14                    ; 実数
-(real? 3.14)            ; => #t
-(+ 1.5 2.5)             ; => 4.0
-(sqrt 16.0)             ; => 4.0
-(sin 0.0)               ; => 0.0
-```
+; 実数（浮動小数点数）
+3.14                ; 実数リテラル
+1.5e2               ; 指数表記（150.0）
+(real? 3.14)        ; => #t
+(inexact? 3.14)     ; => #t（浮動小数点数は非正確）
 
-#### 有理数
-
-```scheme
-(rational? 1/3)         ; => #t
-(+ 1/2 1/3)             ; => 5/6
-(denominator 5/6)       ; => 6
-(numerator 5/6)         ; => 5
+; 有理数（正確な分数）
+1/2                 ; 有理数
+(rational? 1/3)     ; => #t
+(exact? 1/3)        ; => #t
+(+ 1/2 1/3)         ; => 5/6
+(denominator 5/6)   ; => 6
 ```
 
 #### 複素数
 
 ```scheme
-3+4i                    ; 複素数
-(complex? 3+4i)         ; => #t
-(real-part 3+4i)        ; => 3
-(imag-part 3+4i)        ; => 4
+3+4i                ; 複素数リテラル
+(complex? 3+4i)     ; => #t
+(real-part 3+4i)    ; => 3
+(imag-part 3+4i)    ; => 4
+(magnitude 3+4i)    ; => 5.0
+(angle 3+4i)        ; => 角度（ラジアン）
 ```
 
-#### 正確数と非正確数
+#### 数値演算
 
 ```scheme
-; 正確数（計算精度を保証）
-(exact? 1/3)            ; => #t
-(exact->inexact 1/3)    ; => 0.333333...
+; 基本演算
+(+ 1 2 3)           ; => 6
+(- 10 3)            ; => 7
+(* 2 3 4)           ; => 24
+(/ 10 3)            ; => 10/3（正確）
+(quotient 17 5)     ; => 3
+(remainder 17 5)    ; => 2
+(modulo 17 5)       ; => 2
 
-; 非正確数（浮動小数点数）
-(inexact? 0.5)          ; => #t
-(inexact->exact 0.5)    ; => 1/2
+; 数学関数
+(sqrt 16)           ; => 4
+(expt 2 3)          ; => 8
+(sin 0)             ; => 0.0
+(cos 0)             ; => 1.0
+(log 1)             ; => 0.0
+(exp 1)             ; => e
+(ceiling 3.2)       ; => 4
+(floor 3.9)         ; => 3
+(round 3.5)         ; => 4
+(truncate 3.9)      ; => 3
 ```
 
-### 文字と文字列
-
-#### 文字
+### 6.6.3 文字
 
 ```c
-/* C での操作 */
+/* C での文字操作 */
 SCM scm_char = scm_c_make_char('a');
 char c = scm_to_char(scm_char);
+
+/* 大文字・小文字変換 */
+SCM upper = scm_char_upcase(scm_char);
+SCM lower = scm_char_downcase(scm_char);
 ```
 
 ```scheme
-; Scheme での操作
-#\a             ; 文字 'a'
-#\space         ; スペース文字
-#\newline       ; 改行
-(char? #\a)     ; => #t
-(char->integer #\A)  ; => 65
-(char-upcase #\a)    ; => #\A
+; Scheme での文字
+#\a                 ; 文字 'a'
+#\A                 ; 大文字 'A'
+#\space             ; スペース
+#\newline           ; 改行
+#\null              ; ヌル文字
+#\tab               ; タブ
+#\alarm             ; ベル
+#\backspace         ; バックスペース
+#\delete            ; DEL 文字
+
+(char? #\a)         ; => #t
+(char=? #\a #\a)    ; => #t
+(char<? #\a #\b)    ; => #t
+(char-upcase #\a)   ; => #\A
+(char-downcase #\A) ; => #\a
+(char->integer #\A) ; => 65
+(integer->char 65)  ; => #\A
 ```
 
-#### 文字列
+### 6.6.4 文字集合
+
+文字集合は複数の文字をコンパクトに管理するデータ構造：
+
+```scheme
+(use-modules (srfi srfi-14))
+
+; 文字集合の作成
+(char-set #\a #\b #\c)         ; 具体的な文字
+(char-set-union cs1 cs2)        ; 共和
+(char-set-intersection cs1 cs2) ; 交差
+(char-set-complement cs)        ; 補集合
+
+; 標準的な文字集合
+char-set:lower-case             ; a-z
+char-set:upper-case             ; A-Z
+char-set:digit                  ; 0-9
+char-set:whitespace             ; 空白文字
+char-set:punctuation            ; 句読点
+```
+
+### 6.6.5 文字列
+
+#### 文字列の作成と操作
 
 ```c
-/* C での操作 */
+/* C での文字列操作 */
 SCM scm_str = scm_from_locale_string("hello");
-char *str = scm_to_locale_string(scm_str);
-/* scm_to_locale_string から取得したメモリは
-   scm_gc_free で解放 */
+char *c_str = scm_to_locale_string(scm_str);
+free(c_str);  /* 必ず解放 */
+
 size_t len = scm_c_string_length(scm_str);
 ```
 
 ```scheme
-; Scheme での操作
+; Scheme での文字列操作
 "hello"                         ; 文字列リテラル
 (string? "hello")               ; => #t
-(string-append "hello" " " "world")  ; => "hello world"
 (string-length "hello")         ; => 5
 (string-ref "hello" 0)          ; => #\h
+(string-set! str 0 #\H)         ; 文字を変更
 (substring "hello" 1 4)         ; => "ell"
+(string-append "hello" " " "world")  ; => "hello world"
+
+; 文字列変換
 (string-upcase "hello")         ; => "HELLO"
+(string-downcase "HELLO")       ; => "hello"
+(string-capitalize "hello world")  ; => "Hello world"
+
+; 文字列検索
+(string-contains "hello" "ll")  ; => 2（位置）
+(string-index "hello" #\l)      ; => 2
+(string-rindex "hello" #\l)     ; => 3
+
+; 文字列分割と結合
+(string-split "a,b,c" #\,)      ; => ("a" "b" "c")
+(string-join '("a" "b" "c") ",")  ; => "a,b,c"
 ```
 
-### シンボル
+### 6.6.6 シンボル
 
 ```c
-/* C での操作 */
-SCM scm_sym = scm_from_locale_symbol("my-symbol");
-char *sym_name = scm_symbol_to_string(scm_sym);
+/* C でのシンボル操作 */
+SCM sym = scm_from_locale_symbol("my-symbol");
+char *name = scm_symbol_to_string(sym);
 ```
 
 ```scheme
-; Scheme での操作
-'foo                    ; シンボル
-(symbol? 'foo)          ; => #t
-(symbol->string 'foo)   ; => "foo"
+; Scheme でのシンボル
+'foo                ; シンボル foo
+(symbol? 'foo)      ; => #t
+(symbol->string 'foo)  ; => "foo"
 (string->symbol "bar")  ; => bar
-(gensym "x")            ; => x1（ユニークなシンボル）
+
+; ユニークなシンボル
+(gensym)            ; => g1（毎回異なる）
+(gensym "x")        ; => x2
 ```
 
-### キーワード
-
-```scheme
-#:key                   ; キーワード
-(keyword? #:name)       ; => #t
-(keyword->symbol #:foo) ; => foo
-```
-
-### ペアとリスト
+### 6.6.7 ペアとリスト
 
 ```c
-/* C での操作 */
+/* C でのペア操作 */
 SCM pair = scm_cons(scm_from_int(1), scm_from_int(2));
-SCM car_val = scm_car(pair);
-SCM cdr_val = scm_cdr(pair);
+SCM car_val = scm_car(pair);      /* 1 */
+SCM cdr_val = scm_cdr(pair);      /* 2 */
 
+/* リスト操作 */
 SCM list = scm_list_3(
   scm_from_int(1),
   scm_from_int(2),
   scm_from_int(3));
-size_t len = scm_to_size_t(scm_length(list));
 ```
 
 ```scheme
-; Scheme での操作
-(cons 1 2)              ; => (1 . 2)
-(list 1 2 3)            ; => (1 2 3)
+; Scheme でのペアとリスト
+(cons 1 2)              ; => (1 . 2)   ペア
+(list 1 2 3)            ; => (1 2 3)   リスト
 (car '(1 2 3))          ; => 1
 (cdr '(1 2 3))          ; => (2 3)
 (cadr '(1 2 3))         ; => 2
+(caddr '(1 2 3))        ; => 3
+
+; リスト操作
 (null? '())             ; => #t
+(length '(1 2 3))       ; => 3
 (append '(1 2) '(3 4))  ; => (1 2 3 4)
 (reverse '(1 2 3))      ; => (3 2 1)
-(length '(1 2 3))       ; => 3
+(member 2 '(1 2 3))     ; => (2 3)
+(nth 1 '(a b c))        ; => b
+(take '(1 2 3 4) 2)     ; => (1 2)
+(drop '(1 2 3 4) 2)     ; => (3 4)
 ```
 
-### ベクトル
+### 6.6.8 ベクトル
 
 ```c
-/* C での操作 */
-SCM vec = scm_make_vector(scm_from_int(3), 
-                          scm_from_int(0));
+/* C でのベクトル操作 */
+SCM vec = scm_make_vector(scm_from_int(3), SCM_UNSPECIFIED);
 scm_c_vector_set_x(vec, 0, scm_from_int(10));
 SCM val = scm_c_vector_ref(vec, 0);
 size_t len = scm_c_vector_length(vec);
 ```
 
 ```scheme
-; Scheme での操作
+; Scheme でのベクトル
 #(1 2 3)                      ; ベクトルリテラル
 (vector? #(1 2 3))            ; => #t
-(make-vector 5 0)             ; 5 要素、初期値 0
+(make-vector 5 0)             ; 5 要素のベクトル
 (vector-length #(1 2 3))      ; => 3
 (vector-ref #(1 2 3) 0)       ; => 1
 (vector-set! #(1 2 3) 0 10)   ; 0 番目を 10 に設定
+(vector->list #(1 2 3))       ; => (1 2 3)
+(list->vector '(1 2 3))       ; => #(1 2 3)
 ```
 
-### バイトベクトル
+### 6.6.9 バイトベクトル
 
 ```scheme
-#u8(1 2 3 4 5)               ; バイトベクトル
-(bytevector? #u8(1 2 3))     ; => #t
-(bytevector-length #u8(1 2)) ; => 2
+; バイトベクトル（SRFI-4）
+#u8(1 2 3 4 5)                  ; u8vector（0-255）
+#s8(1 -2 3 -4)                  ; s8vector（-128-127）
+#u16(256 512)                   ; u16vector
+#f64(1.5 2.5 3.5)               ; f64vector（浮動小数点数）
+
+(bytevector? #u8(1 2 3))        ; => #t
+(bytevector-length #u8(1 2))    ; => 2
 (bytevector-u8-ref #u8(1 2) 0)  ; => 1
-(bytevector-u8-set! bv 0 255)   ; バイト設定
-```
-
-### 配列
-
-```scheme
-; 多次元配列
-(define arr (make-array 0 3 4))
-(array-set! arr 42 0 0)
-(array-ref arr 0 0)          ; => 42
+(bytevector-u8-set! bv 0 255)   ; 値を設定
 ```
 
 ## 6.7 手続き（プロシージャ）
 
 ### 概要
 
-手続きは Scheme の中心的な概念で、複数の方法で定義・呼び出しが可能です。
+手続きは Scheme の最も基本的な概念で、計算を実行するユニット。
 
-### Lambda: 基本的な手続き作成
+### C から手続きの呼び出し
 
 ```c
-/* C での手続き呼び出し */
-SCM proc = scm_c_eval_string("(lambda (x y) (+ x y))");
-SCM arg1 = scm_from_int(2);
-SCM arg2 = scm_from_int(3);
+/* 引数なし */
+SCM result = scm_call_0(proc);
+
+/* 1 引数 */
+SCM result = scm_call_1(proc, arg1);
+
+/* 2 引数 */
 SCM result = scm_call_2(proc, arg1, arg2);
+
+/* 3 引数 */
+SCM result = scm_call_3(proc, arg1, arg2, arg3);
+
+/* 可変引数 */
+SCM args = scm_list_2(arg1, arg2);
+SCM result = scm_apply_0(proc, args);
 ```
 
 ```scheme
 ; Scheme での手続き定義
-(lambda (x y) (+ x y))
+(lambda (x y) (+ x y))          ; 無名手続き
+((lambda (x) (* x 2)) 5)        ; => 10
 
-; 複数の引数
-((lambda (a b c) (+ a b c)) 1 2 3)  ; => 6
+; 名前付き手続き
+(define (square x) (* x x))
+(square 5)                       ; => 25
 
-; ネストされた手続き
-((lambda (x) (lambda (y) (+ x y))) 5 3)  ; => 8
-```
-
-### プリミティブ手続き
-
-Guile が提供する組み込み手続き：
-
-```scheme
-+, -, *, /          ; 算術演算
-car, cdr, cons      ; リスト操作
-display, write      ; 出力
-read                ; 入力
-map, apply, fold    ; 高階関数
-```
-
-### 手続きの呼び出し
-
-```c
-/* 可変引数での呼び出し */
-SCM proc = scm_c_eval_string("+");
-SCM args = scm_list_3(
-  scm_from_int(1),
-  scm_from_int(2),
-  scm_from_int(3));
-SCM result = scm_apply(proc, args, SCM_EOL);
-```
-
-```scheme
-; 手続きの呼び出し
-(+ 1 2)                 ; => 3
-(apply + '(1 2 3))      ; => 6
-(map (lambda (x) (* x 2)) '(1 2 3))  ; => (2 4 6)
-```
-
-### オプション引数と キーワード引数
-
-```scheme
-; #:optional を使用
-(define (greet name #:optional (greeting "Hello"))
-  (string-append greeting " " name))
-
-(greet "Alice")              ; => "Hello Alice"
-(greet "Bob" #:greeting "Hi"); => "Hi Bob"
-
-; #:key を使用
-(define (make-server #:key (host "localhost") (port 8080))
-  (list host port))
-
-(make-server)
-(make-server #:host "example.com")
-(make-server #:port 9000)
-```
-
-### Case-lambda
-
-異なる引数数に対応する手続き：
-
-```scheme
-(define length-flexible
-  (case-lambda
-    ((x) (length x))
-    ((x y) (+ (length x) (length y)))
-    ((x y z) (+ (length x) (length y) (length z)))))
-
-(length-flexible '(1 2 3))          ; => 3
-(length-flexible '(a) '(b c))       ; => 3
-```
-
-### 高階関数
-
-```scheme
-; 関数を返す高階関数
-(define (make-adder n)
-  (lambda (x) (+ x n)))
-
-(define add5 (make-adder 5))
-(add5 10)                   ; => 15
-
-; 関数を引数に取る高階関数
+; 高階手続き
 (define (apply-twice f x)
   (f (f x)))
-
 (apply-twice (lambda (x) (* 2 x)) 3)  ; => 12
+
+; map と apply
+(map (lambda (x) (* x 2)) '(1 2 3))  ; => (2 4 6)
+(apply + '(1 2 3))              ; => 6
+```
+
+### 高階関数とクロージャ
+
+```scheme
+; クロージャ：環境をキャプチャ
+(define (make-counter)
+  (let ((count 0))
+    (lambda ()
+      (set! count (+ count 1))
+      count)))
+
+(define counter (make-counter))
+(counter)                       ; => 1
+(counter)                       ; => 2
+
+; 関数の部分適用
+(define add (lambda (x y) (+ x y)))
+(define add5 (lambda (x) (add x 5)))
+(add5 10)                       ; => 15
 ```
 
 ## 6.8 マクロ
 
 ### 概要
 
-マクロはコード変換のための強力な機能です。
-
-### マクロの定義
-
-```c
-/* C から定義した Scheme マクロ */
-scm_c_eval_string(
-  "(define-syntax when\n"
-  "  (syntax-rules ()\n"
-  "    ((when test body ...)\n"
-  "     (if test (begin body ...)))))\n");
-```
+マクロはコード変換のための強力な機能。Scheme は多様なマクロシステムをサポート。
 
 ### Syntax-rules マクロ
 
-パターンマッチング方式のマクロ：
+パターンマッチング方式の基本的なマクロ：
 
 ```scheme
-; if-not マクロ（if の否定版）
-(define-syntax if-not
+(define-syntax when
   (syntax-rules ()
-    ((if-not test then-expr else-expr)
-     (if (not test) then-expr else-expr))))
+    ((when test body ...)
+     (if test (begin body ...)))))
 
-(if-not #f "yes" "no")  ; => "yes"
-
-; unless マクロ
-(define-syntax unless
-  (syntax-rules ()
-    ((unless test body ...)
-     (if (not test) (begin body ...)))))
-
-(unless (> 1 2)
-  (display "1 is not greater than 2")
+(when (> x 5)
+  (display "x is large")
   (newline))
 ```
 
 ### Syntax-case マクロ
 
-より複雑なマクロの定義：
+より詳細な制御が必要な場合：
 
 ```scheme
-(define-syntax my-cond
+(define-syntax my-let
   (lambda (x)
     (syntax-case x ()
-      ((my-cond (test . body) ...)
-       #'(cond (test . body) ...)))))
+      ((my-let ((var expr) ...) body ...)
+       #'((lambda (var ...) body ...) expr ...)))))
+
+(my-let ((x 1) (y 2))
+  (+ x y))                      ; => 3
 ```
 
-## 6.9 変数とスコープ
+## 6.9 変数バインディング
 
-### 概要
-
-変数定義とスコープ管理。
-
-### トップレベル変数定義
+### トップレベル定義
 
 ```c
 /* C から定義 */
@@ -615,10 +639,10 @@ SCM x = scm_c_eval_string("x");
 ```
 
 ```scheme
-; Scheme で定義
+; トップレベル変数
 (define x 10)
 (define y 20)
-(define (square x) (* x x))
+(set! x 50)                     ; 変更
 ```
 
 ### 局所変数バインディング
@@ -626,50 +650,22 @@ SCM x = scm_c_eval_string("x");
 ```scheme
 ; let：並列バインディング
 (let ((x 1) (y 2))
-  (+ x y))                   ; => 3
+  (+ x y))                      ; => 3
 
-; let*：順序付きバインディング
+; let*：順序依存バインディング
 (let* ((x 5)
        (y (* x 2)))
-  (+ x y))                   ; => 15
+  (+ x y))                      ; => 15
 
-; letrec：相互再帰用
-(letrec ((is-even? (lambda (n)
-                     (if (= n 0) #t
-                         (is-odd? (- n 1)))))
-         (is-odd? (lambda (n)
-                    (if (= n 0) #f
-                        (is-even? (- n 1))))))
-  (is-even? 4))              ; => #t
-```
-
-### グローバル変数の変更
-
-```scheme
-; set! で変更
-(define counter 0)
-(set! counter 1)
-
-; ハッシュテーブルでのキー値変更
-(hash-set! table 'name "new-value")
+; letrec：相互再帰
+(letrec ((even? (lambda (n)
+                  (if (= n 0) #t (odd? (- n 1)))))
+         (odd? (lambda (n)
+                 (if (= n 0) #f (even? (- n 1))))))
+  (even? 4))                    ; => #t
 ```
 
 ## 6.10 制御フロー
-
-### 概要
-
-プログラム実行の流れを制御する構文。
-
-### シーケンシング
-
-```scheme
-; begin で複数の式を順番に実行
-(begin
-  (display "First")
-  (newline)
-  (display "Second")
-  (newline))
-```
 
 ### 条件分岐
 
@@ -677,20 +673,19 @@ SCM x = scm_c_eval_string("x");
 ; if 式
 (if (> x 0) "positive" "non-positive")
 
-; cond：複数条件
-(cond
-  ((< x 0) "negative")
-  ((= x 0) "zero")
-  (else "positive"))
+; cond 式
+(cond ((< x 0) "negative")
+      ((= x 0) "zero")
+      (else "positive"))
 
-; case：値による分岐
+; case 式
 (case (car lst)
   ((+ -) "arithmetic")
-  ((* /) "multiplication/division")
+  ((* /) "multiplication")
   (else "unknown"))
 ```
 
-### 反復とループ
+### ループと反復
 
 ```scheme
 ; do ループ
@@ -699,9 +694,12 @@ SCM x = scm_c_eval_string("x");
   (display i)
   (newline))
 
-; for-each：副作用のための反復
-(for-each (lambda (x) (display x))
+; for-each
+(for-each (lambda (x) (display x) (newline))
           '(1 2 3 4 5))
+
+; map
+(map (lambda (x) (* x 2)) '(1 2 3))  ; => (2 4 6)
 ```
 
 ### 例外処理
@@ -710,39 +708,45 @@ SCM x = scm_c_eval_string("x");
 ; catch で例外をキャッチ
 (catch 'my-error
   (lambda ()
-    (throw 'my-error "Something went wrong"))
+    (throw 'my-error "error occurred"))
   (lambda (key msg)
     (display "Caught: ")
     (display msg)))
 
 ; with-exception-handler
 (with-exception-handler
-  (lambda (exn)
-    (display "Error: ")
-    (display (exception:message exn)))
+  (lambda (ex)
+    (display "Error occurred"))
   (lambda ()
-    (error "An error occurred")))
+    (error "something went wrong")))
 ```
 
-## 6.11 入出力
+## 6.11 入出力（I/O）
 
-### 概要
+### ポート操作
 
-ファイルとストリームの操作。
-
-### ポート
+```c
+/* C でのポート操作 */
+SCM input = scm_open_file(scm_from_locale_string("input.txt"),
+                          scm_from_locale_string("r"));
+SCM output = scm_open_file(scm_from_locale_string("output.txt"),
+                           scm_from_locale_string("w"));
+scm_close_port(input);
+scm_close_port(output);
+```
 
 ```scheme
-; 標準ポート
-(current-input-port)       ; 標準入力
-(current-output-port)      ; 標準出力
-(current-error-port)       ; エラー出力
+; Scheme でのポート操作
+(current-input-port)            ; 標準入力
+(current-output-port)           ; 標準出力
+(current-error-port)            ; エラー出力
 
-; ファイルポートの開閉
-(with-input-from-file "input.txt"
+; ファイル操作
+(open-input-file "input.txt")
+(open-output-file "output.txt")
+(with-input-from-file "data.txt"
   (lambda ()
     (read-line)))
-
 (with-output-to-file "output.txt"
   (lambda ()
     (display "Hello, file!")))
@@ -752,133 +756,183 @@ SCM x = scm_c_eval_string("x");
 
 ```scheme
 ; 出力
-(display "Hello")          ; 出力
-(write '(1 2 3))           ; S式を出力
-(format #t "~a ~d~n" "Number:" 42)
+(display "Hello")               ; 人間向け
+(write '(1 2 3))                ; マシン向け
+(format #t "~a = ~d~n" "x" 42)  ; フォーマット出力
+(newline)                       ; 改行
 
 ; 入力
-(read)                     ; S式を読み込み
-(read-line)                ; 1 行を文字列で読み込み
-(get-char)                 ; 1 文字を読み込み
+(read)                          ; S式を読み込み
+(read-line)                     ; 行を読み込み
+(get-char)                      ; 1 文字読み込み
+(peek-char)                     ; 1 文字先読み
 ```
 
-### バイナリ入出力
+### format 関数
 
 ```scheme
-; バイナリモードでのファイル操作
-(call-with-input-file "data.bin"
-  (lambda (port)
-    (get-bytevector-all port)))
+; format の例
+(format #t "Number: ~d~n" 42)           ; => Number: 42
+(format #t "String: ~s~n" "hello")      ; => String: "hello"
+(format #t "Hex: ~x~n" 255)             ; => Hex: ff
+(format #t "Padded: ~5d~n" 42)          ; => Padded:    42
+(format #f "~a + ~a = ~a" 2 3 5)        ; => "2 + 3 = 5"
 ```
 
-## 6.12 高度なトピック
-
-### 正規表現
+## 6.12 正規表現
 
 ```scheme
 (use-modules (ice-9 regex))
 
-(string-match "^[0-9]+$" "12345")    ; マッチ
-(string-match "^[a-z]+$" "hello")    ; マッチ
+; 基本的なマッチング
+(string-match "^[0-9]+$" "12345")       ; マッチ
+(string-match "^[0-9]+$" "abc")         ; #f（不一致）
 
-; マッチ結果から部分文字列を抽出
-(let ((match (string-match "(\\w+)@(\\w+)" "user@host")))
-  (match:substring match 1))  ; => "user"
+; マッチ結果から抽出
+(let ((m (string-match "(\\w+)@(\\w+)" "user@host")))
+  (match:substring m 1))                ; => "user"
+
+; 置換
+(regexp-substitute #f
+  (string-match "(.+)@(.+)" "user@host")
+  'pre 2 "@" 1 'post)                   ; => "host@user"
 ```
 
-### Scheme コードの読み込みと評価
+## 6.13 Scheme コードの評価
+
+### 動的評価
 
 ```c
-/* C からのコード実行 */
+/* C からコードを評価 */
 SCM result = scm_c_eval_string("(+ 2 3)");
 int val = scm_to_int(result);
 ```
 
 ```scheme
-; Scheme 内でのコード実行
-(eval (read port) (interaction-environment))
+; eval で S式を評価
+(eval '(+ 1 2) (interaction-environment))  ; => 3
 
-(eval '(+ 1 2) (null-environment 5))  ; => 3
+; eval-string でコード文字列を評価
+(use-modules (ice-9 eval-string))
+(eval-string "(+ 1 2)")                 ; => 3
+
+; compile でコンパイル
+(compile '(+ 1 2))                      ; コンパイル結果
 ```
 
-### メモリ管理とガベージコレクション
+## 6.14 メモリ管理とガベージコレクション
+
+### GC 保護
 
 ```c
-/* GC からの保護 */
-static SCM my_important_object;
+/* グローバル変数を GC から保護 */
+static SCM important_object;
 
 void
 init_module(void)
 {
-  my_important_object = scm_from_int(42);
-  scm_gc_protect_object(my_important_object);
+  important_object = scm_from_int(42);
+  scm_gc_protect_object(important_object);
 }
 
 /* 後で保護を解除 */
-scm_gc_unprotect_object(my_important_object);
+scm_gc_unprotect_object(important_object);
 ```
 
-## 6.13 モジュールシステム
+### 弱参照
+
+```scheme
+; 弱参照：GC の対象になる可能性がある参照
+(make-weak-vector size init)
+(weak-vector-ref wvec i default)
+```
+
+## 6.15 モジュールシステム
 
 ### モジュール使用
 
 ```c
-/* C からモジュールを使用 */
+/* C からモジュール操作 */
 scm_c_eval_string("(use-modules (srfi srfi-1))");
-SCM result = scm_c_eval_string("(map (lambda (x) (* x 2)) '(1 2 3))");
 ```
 
 ```scheme
-; Scheme でモジュール使用
-(use-modules (srfi srfi-1))          ; SRFI-1 をロード
-(use-modules (ice-9 regex))          ; 正規表現ライブラリ
-(use-modules (my-module utils))      ; カスタムモジュール
+; モジュール使用
+(use-modules (srfi srfi-1))             ; SRFI-1
+(use-modules (ice-9 regex))             ; 正規表現
+(use-modules (my-project utils))        ; カスタムモジュール
 ```
 
-### モジュール作成と管理
+### モジュール作成
 
 ```scheme
-; モジュールの定義
 (define-module (my-project utils)
   #:use-module (srfi srfi-1)
-  #:export (double triple process-list))
+  #:export (double triple process))
 
 (define (double x) (* x 2))
 (define (triple x) (* x 3))
-(define (internal-func x) x)  ; エクスポートされない
-
-(define (process-list lst)
-  (map double lst))
+(define (process lst) (map double lst))
 ```
 
-### モジュール内での再エクスポート
+## 6.16 読み込みと評価
+
+### コード読み込み
 
 ```scheme
-(define-module (my-project extended)
-  #:use-module (my-project utils)
-  #:export-syntax (my-macro)
-  #:re-export (double triple))
+; Scheme ファイルをロード
+(load "my-file.scm")
 
-(define-syntax my-macro
-  (syntax-rules ()
-    ((my-macro x) (double x))))
+; モジュールのロード
+(load-extension "libmy" "init_my")
+(use-modules (my-lib utils))
 ```
 
-## 6.14 外部関数インターフェース（FFI）
-
-### C ライブラリの直接呼び出し
+## 6.17 外部関数インターフェース（FFI）
 
 ```scheme
 (use-modules (system foreign))
 
-; C の strlen 関数をラップ
+; C ライブラリの関数をラップ
 (define libc (dynamic-link "libc.so.6"))
-(define strlen
+(define strlen-proc
   (pointer->procedure size_t
     (dynamic-func "strlen" libc)
     (list '*)))
 
-(strlen (string->pointer "hello"))   ; => 5
+(strlen-proc (string->pointer "hello"))  ; => 5
+```
+
+## 6.18 スレッドと並行処理
+
+```scheme
+(use-modules (ice-9 threads))
+
+; スレッド作成
+(define t (make-thread (lambda () (display "Thread\n"))))
+(thread-join! t)
+
+; ミューテックス
+(define mutex (make-mutex))
+(with-mutex mutex (display "Protected"))
+
+; 条件変数
+(define cond-var (make-condition-variable))
+(condition-variable-wait! cond-var mutex)
+```
+
+## 6.19 デバッグ
+
+### トレース
+
+```scheme
+; 関数をトレース
+(trace square)
+(square 5)                              ; 呼び出しと戻り値を表示
+(untrace square)
+
+; ブレークポイント
+(break)                                 ; デバッガーに入る
 ```
 
 ---
