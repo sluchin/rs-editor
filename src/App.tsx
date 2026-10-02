@@ -456,6 +456,8 @@ function App() {
         modified={currentBuffer.modified}
         cursor={cursor}
         mode="Lisp Interaction"
+        bufferCount={buffers.length}
+        currentBufferIndex={buffers.findIndex((b) => b.id === currentBufferId) + 1}
       />
       <Minibuffer
         state={minibufferState}
