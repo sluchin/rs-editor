@@ -743,4 +743,4 @@ Cygwinでは、`read()`がタイムアウトすると、本来返されるべき
 
 次の章では、さらに低レベルの端末入出力処理を行い、それを使って画面に描画し、ユーザーがカーソルを移動できるようにします。
 
-[ページの先頭](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#)
+[ページの先頭](02_entering_raw_mode.md)

@@ -2779,8 +2779,7 @@
 
 これらすべてが通過した場合、強調表示するキーワードが見つかります。`memset()` を使用してキーワード全体を一度に強調表示し、`kw2` の値に応じて `HL_KEYWORD1` または `HL_KEYWORD2` で強調表示します。次に、キーワードの長さだけ `i` をインクリメントして、キーワード全体を消費します。その後、内部ループに入っているため、外部ループを `continue` する前に内部ループを抜ける必要があるため、`continue` ではなく `break` します。そのため、`for` ループの後、終了値 `NULL` に到達したかどうかを確認してループが抜けたかどうかをチェックし、抜けた場合は `continue` します。
 
-[印刷不可能な文字](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#nonprintable-characters)
-------------------------------------------------------------------------------------------------------- ----------------
+## 印刷不可能な文字
 
 複数行コメントのハイライト表示に取り組む前に、`editorUpdateSyntax()` から少し離れてみましょう。
 
@@ -4050,6 +4049,6 @@ Ctrl+A、Ctrl+Bなどを押して、これらの制御文字を文字列やコ�
 
 ## 完了しました
 
-これでテキストエディタは完成です。[付録](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html)には、エディタを拡張する際に役立つ機能のアイデアがいくつか掲載されています。
+これでテキストエディタは完成です。[付録](08_appendices.md)には、エディタを拡張する際に役立つ機能のアイデアがいくつか掲載されています。
 
-[ページの先頭](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#)
+[ページの先頭](07_syntax_highlighting.md)

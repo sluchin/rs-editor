@@ -48,7 +48,7 @@
 
 エラーが発生したと思われるが、エラー箇所や発生時期がわからない場合は、お使いのコンピューターで、現在実行中の手順に対応する `kilo.c` のバージョンとチュートリアルの `kilo.c` のバージョンの差分を比較してください。[kilo-src](https://github.com/snaptoken/kilo-src) リポジトリには、チュートリアルの各手順に対応する `kilo.c` ソースコードが含まれています。
 
-これを行うには `git` が必要です。`git` をインストールするには（[第 1 章](https://viewsourcecode.org/snaptoken/kilo/01.setup.html) を完了していることを前提として）：**Ubuntu/Windows 上の Bash** では、`sudo apt-get install git` を実行します。**Cygwin** では、インストーラーを再度実行し、インストールするパッケージとして `git` を選択します。**macOS** では、コマンドライン ツールをインストールした際に `git` もインストールされているはずです。
+これを行うには `git` が必要です。`git` をインストールするには（[第 1 章](01_setup.md) を完了していることを前提として）：**Ubuntu/Windows 上の Bash** では、`sudo apt-get install git` を実行します。**Cygwin** では、インストーラーを再度実行し、インストールするパッケージとして `git` を選択します。**macOS** では、コマンドライン ツールをインストールした際に `git` もインストールされているはずです。
 
 `git` をインストールしたら、`git clone https://github.com/snaptoken/kilo-src` を実行して [kilo-src](https://github.com/snaptoken/kilo-src) リポジトリをクローンします。`cd kilo-src` を使用してリポジトリに移動します。リポジトリには、各ステップに対応する [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) があり、ステップ名がリポジトリ内のそのステップのコミットを指しています。したがって、`icanon` という名前のステップのソースコードを取得するには、`git checkout icanon` を実行します。これで、`kilo.c` ファイルにはそのステップのコードが含まれるようになります。`git diff --no-index -b ../path/to/your/kilo.c kilo.c` のようなコマンドを実行することで、自分の `kilo.c` とこの `kilo.c` を比較できます。これにより、リポジトリにあるものと同じになるように `kilo.c` に加える必要のある変更点が表示されます。`-b` オプションは空白文字を無視するため、チュートリアルとは異なるインデントスタイルを使用しても問題ありません。
 

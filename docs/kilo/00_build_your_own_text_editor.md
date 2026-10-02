@@ -8,19 +8,19 @@
 
 手順ごとに、時には詳細に説明します。文章はざっと目を通したり、読み飛ばしたりしても構いません。なぜなら、このチュートリアルの要点は、**テキストエディタをゼロから構築する**ことだからです。途中で学ぶことはすべておまけで、コードの変更を入力して結果を観察するだけでも、学ぶことはたくさんあります。
 
-チュートリアル自体に関する詳細情報（行き詰まった場合の対処法やヘルプの入手先など）については、[付録](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html)を参照してください。
+チュートリアル自体に関する詳細情報（行き詰まった場合の対処法やヘルプの入手先など）については、[付録](08_appendices.md)を参照してください。
 
-準備ができたら、[第 1 章](https://viewsourcecode.org/snaptoken/kilo/01.setup.html) に進んでください。
+準備ができたら、[第 1 章](01_setup.md) に進んでください。
 
 ## 目次
 
-1. [セットアップ](https://viewsourcecode.org/snaptoken/kilo/01.setup.html)
-2. [生モードへの移行](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html)
-3. [生の入出力](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html)
-4. [テキストビューア](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html)
-5. [テキストエディタ](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html)
-6. [検索](https://viewsourcecode.org/snaptoken/kilo/06.search.html)
-7. [構文ハイライト](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html)
-8. [付録](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html)
+1. [セットアップ](01_setup.md)
+2. [生モードへの移行](02_entering_raw_mode.md)
+3. [生の入出力](03_raw_input_and_output.md)
+4. [テキストビューア](04_a_text_viewer.md)
+5. [テキストエディタ](05_a_text_editor.md)
+6. [検索](06_search.md)
+7. [構文ハイライト](07_syntax_highlighting.md)
+8. [付録](08_appendices.md)
 
 [snaptokenチュートリアルに戻る](https://viewsourcecode.org/snaptoken)
