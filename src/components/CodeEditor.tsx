@@ -35,6 +35,8 @@ interface CodeEditorProps {
   onSwitchBuffer?: () => void
   onKillBuffer?: () => void
   onListBuffers?: () => void
+  onEvalLastSexp?: () => void
+  onEvalExpression?: () => void
   highlightRange?: { start: number; end: number } | null
   disabled?: boolean
 }
@@ -99,6 +101,8 @@ export default function CodeEditor({
   onSwitchBuffer,
   onKillBuffer,
   onListBuffers,
+  onEvalLastSexp,
+  onEvalExpression,
   highlightRange,
   disabled,
 }: CodeEditorProps) {
@@ -121,6 +125,7 @@ export default function CodeEditor({
     onSwitchBuffer,
     onKillBuffer,
     onListBuffers,
+    onEvalLastSexp,
   })
   const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
     textareaRef,
@@ -132,6 +137,7 @@ export default function CodeEditor({
     onQuit,
     onUndo,
     onPushUndo,
+    onEvalExpression,
   })
 
   const tokens = useMemo(() => tokenize(value), [value])
