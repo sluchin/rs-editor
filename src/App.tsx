@@ -12,11 +12,24 @@ const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp
 ;; To create a file, visit it with C-x C-f and enter text in its buffer.
 `
 
-type PendingAction = 'find-file' | 'write-file' | 'execute-command' | null
+export interface Buffer {
+  id: string
+  name: string
+  filePath: string | null
+  content: string
+  modified: boolean
+}
+
+type PendingAction =
+  'find-file' | 'write-file' | 'execute-command' | 'switch-buffer' | 'kill-buffer' | null
 
 interface Command {
   name: string
   run: () => void | Promise<void>
+}
+
+function generateBufferId(): string {
+  return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
 function bufferNameFromPath(path: string | null): string {
@@ -25,11 +38,20 @@ function bufferNameFromPath(path: string | null): string {
   return parts[parts.length - 1] || path
 }
 
+function createScratchBuffer(): Buffer {
+  return {
+    id: generateBufferId(),
+    name: '*scratch*',
+    filePath: null,
+    content: INITIAL_TEXT,
+    modified: false,
+  }
+}
+
 function App() {
-  const [code, setCode] = useState(INITIAL_TEXT)
-  const [modified, setModified] = useState(false)
+  const [buffers, setBuffers] = useState<Buffer[]>([createScratchBuffer()])
+  const [currentBufferId, setCurrentBufferId] = useState(buffers[0].id)
   const [cursor, setCursor] = useState<CursorInfo>({ line: 1, column: 1, offset: 0 })
-  const [filePath, setFilePath] = useState<string | null>(null)
   const [homeDir, setHomeDir] = useState('/')
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [minibufferState, setMinibufferState] = useState<MinibufferState>({
@@ -40,6 +62,57 @@ function App() {
   const [undoStack, setUndoStack] = useState<{ text: string; cursorPos: number }[]>([])
   const [redoStack, setRedoStack] = useState<{ text: string; cursorPos: number }[]>([])
 
+  const currentBuffer = buffers.find((b) => b.id === currentBufferId) || buffers[0]
+
+  // Helper functions for buffer management
+  const updateCurrentBuffer = (updates: Partial<Buffer>) => {
+    setBuffers((prev) => prev.map((b) => (b.id === currentBufferId ? { ...b, ...updates } : b)))
+  }
+
+  const createNewBuffer = (name: string, filePath: string | null = null, content: string = '') => {
+    const newBuffer: Buffer = {
+      id: generateBufferId(),
+      name,
+      filePath,
+      content,
+      modified: content !== '',
+    }
+    setBuffers((prev) => [...prev, newBuffer])
+    setCurrentBufferId(newBuffer.id)
+    return newBuffer
+  }
+
+  const switchToBuffer = (bufferId: string) => {
+    setCurrentBufferId(bufferId)
+  }
+
+  const killBuffer = (bufferId: string) => {
+    const bufferToKill = buffers.find((b) => b.id === bufferId)
+    if (!bufferToKill) return false
+
+    if (bufferToKill.modified) {
+      setMinibufferState({
+        mode: 'message',
+        text: `Buffer "${bufferToKill.name}" is modified. Use C-x C-s to save first.`,
+      })
+      return false
+    }
+
+    const newBuffers = buffers.filter((b) => b.id !== bufferId)
+    if (newBuffers.length === 0) {
+      // Create a new scratch buffer if all are killed
+      const scratch = createScratchBuffer()
+      setBuffers([scratch])
+      setCurrentBufferId(scratch.id)
+    } else {
+      setBuffers(newBuffers)
+      if (currentBufferId === bufferId) {
+        setCurrentBufferId(newBuffers[0].id)
+      }
+    }
+    return true
+  }
+
   useEffect(() => {
     getHomeDir()
       .then((dir) => setHomeDir(dir.endsWith('/') ? dir : dir + '/'))
@@ -47,8 +120,7 @@ function App() {
   }, [])
 
   const handleEditorChange = (value: string) => {
-    setCode(value)
-    setModified(true)
+    updateCurrentBuffer({ content: value, modified: true })
     setRedoStack([])
   }
 
@@ -60,28 +132,26 @@ function App() {
   const handleUndo = () => {
     if (undoStack.length === 0) return
     const lastState = undoStack[undoStack.length - 1]
-    setRedoStack((prev) => [...prev, { text: code, cursorPos: cursor.offset }])
-    setCode(lastState.text)
+    setRedoStack((prev) => [...prev, { text: currentBuffer.content, cursorPos: cursor.offset }])
+    updateCurrentBuffer({ content: lastState.text, modified: true })
     setCursor({
       line: 1,
       column: 1,
       offset: Math.min(lastState.cursorPos, lastState.text.length),
     })
-    setModified(true)
     setUndoStack((prev) => prev.slice(0, -1))
   }
 
   const handleRedo = () => {
     if (redoStack.length === 0) return
     const nextState = redoStack[redoStack.length - 1]
-    setUndoStack((prev) => [...prev, { text: code, cursorPos: cursor.offset }])
-    setCode(nextState.text)
+    setUndoStack((prev) => [...prev, { text: currentBuffer.content, cursorPos: cursor.offset }])
+    updateCurrentBuffer({ content: nextState.text, modified: true })
     setCursor({
       line: 1,
       column: 1,
       offset: Math.min(nextState.cursorPos, nextState.text.length),
     })
-    setModified(true)
     setRedoStack((prev) => prev.slice(0, -1))
   }
 
@@ -91,11 +161,11 @@ function App() {
   }
 
   const handleSaveBuffer = async () => {
-    if (filePath) {
+    if (currentBuffer.filePath) {
       try {
-        await writeFile(filePath, code)
-        setModified(false)
-        setMinibufferState({ mode: 'message', text: `Wrote ${filePath}` })
+        await writeFile(currentBuffer.filePath, currentBuffer.content)
+        updateCurrentBuffer({ modified: false })
+        setMinibufferState({ mode: 'message', text: `Wrote ${currentBuffer.filePath}` })
       } catch (err) {
         setMinibufferState({ mode: 'message', text: `Error: ${err}` })
       }
@@ -105,8 +175,30 @@ function App() {
     }
   }
 
+  const handleSwitchBuffer = () => {
+    const bufferNames = buffers.map((b) => b.name).join(', ')
+    setPendingAction('switch-buffer')
+    setMinibufferState({
+      mode: 'input',
+      prompt: `Switch to buffer (${bufferNames}): `,
+      input: '',
+    })
+  }
+
+  const handleKillBuffer = () => {
+    if (currentBuffer.modified) {
+      setPendingAction('kill-buffer')
+      setMinibufferState({
+        mode: 'message',
+        text: `Buffer "${currentBuffer.name}" is modified. Use C-x C-s to save.`,
+      })
+    } else {
+      killBuffer(currentBuffer.id)
+    }
+  }
+
   const handleSaveBuffersKillTerminal = async () => {
-    if (filePath) {
+    if (currentBuffer.filePath) {
       await handleSaveBuffer()
       await getCurrentWindow().close()
     } else {
@@ -182,7 +274,12 @@ function App() {
     if (current.mode === 'input') {
       setMinibufferState({ ...current, input: value })
     } else if (current.mode === 'isearch') {
-      const match = findNextMatch(code, value, current.originalCursor, current.direction)
+      const match = findNextMatch(
+        currentBuffer.content,
+        value,
+        current.originalCursor,
+        current.direction,
+      )
       if (match) {
         setHighlightRange(match)
         setMinibufferState({
@@ -214,14 +311,12 @@ function App() {
         const exists = await pathExists(value)
         if (exists) {
           const content = await readFile(value)
-          setCode(content)
-          setFilePath(value)
-          setModified(false)
+          const bufferName = bufferNameFromPath(value)
+          createNewBuffer(bufferName, value, content)
           setMinibufferState({ mode: 'message', text: '' })
         } else {
-          setCode('')
-          setFilePath(value)
-          setModified(false)
+          const bufferName = bufferNameFromPath(value)
+          createNewBuffer(bufferName, value, '')
           setMinibufferState({ mode: 'message', text: '(New file)' })
         }
       } catch (err) {
@@ -229,13 +324,23 @@ function App() {
       }
     } else if (action === 'write-file') {
       try {
-        await writeFile(value, code)
-        setFilePath(value)
-        setModified(false)
+        await writeFile(value, currentBuffer.content)
+        updateCurrentBuffer({ filePath: value, modified: false })
         setMinibufferState({ mode: 'message', text: `Wrote ${value}` })
       } catch (err) {
         setMinibufferState({ mode: 'message', text: `Error: ${err}` })
       }
+    } else if (action === 'switch-buffer') {
+      const targetBuffer = buffers.find((b) => b.name === value.trim())
+      if (targetBuffer) {
+        switchToBuffer(targetBuffer.id)
+        setMinibufferState({ mode: 'message', text: '' })
+      } else {
+        setMinibufferState({ mode: 'message', text: `No buffer named "${value}"` })
+      }
+    } else if (action === 'kill-buffer') {
+      killBuffer(currentBuffer.id)
+      setMinibufferState({ mode: 'message', text: '' })
     } else if (action === 'execute-command') {
       const cmd = commands.find((c) => c.name === value.trim())
       if (cmd) {
@@ -265,7 +370,7 @@ function App() {
     <div className="app">
       <MenuBar />
       <CodeEditor
-        value={code}
+        value={currentBuffer.content}
         onChange={handleEditorChange}
         onCursorChange={setCursor}
         onFindFile={handleFindFile}
@@ -277,12 +382,14 @@ function App() {
         onUndo={handleUndo}
         onRedo={handleRedo}
         onPushUndo={handlePushUndo}
+        onSwitchBuffer={handleSwitchBuffer}
+        onKillBuffer={handleKillBuffer}
         highlightRange={highlightRange}
         disabled={minibufferState.mode !== 'message'}
       />
       <ModeLine
-        bufferName={bufferNameFromPath(filePath)}
-        modified={modified}
+        bufferName={currentBuffer.name}
+        modified={currentBuffer.modified}
         cursor={cursor}
         mode="Lisp Interaction"
       />

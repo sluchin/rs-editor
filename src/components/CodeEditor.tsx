@@ -32,6 +32,8 @@ interface CodeEditorProps {
   onUndo?: () => void
   onRedo?: () => void
   onPushUndo?: (currentCode: string, currentCursorPos: number) => void
+  onSwitchBuffer?: () => void
+  onKillBuffer?: () => void
   highlightRange?: { start: number; end: number } | null
   disabled?: boolean
 }
@@ -93,6 +95,8 @@ export default function CodeEditor({
   onUndo,
   onRedo,
   onPushUndo,
+  onSwitchBuffer,
+  onKillBuffer,
   highlightRange,
   disabled,
 }: CodeEditorProps) {
@@ -108,7 +112,13 @@ export default function CodeEditor({
     setCursorPos(pos)
   }
 
-  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer, onRedo })
+  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({
+    onFindFile,
+    onSaveBuffer,
+    onRedo,
+    onSwitchBuffer,
+    onKillBuffer,
+  })
   const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
     textareaRef,
     value,
