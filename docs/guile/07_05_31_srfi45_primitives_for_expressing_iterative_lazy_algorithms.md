@@ -1,0 +1,76 @@
+#### 7.5.31 SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d45-_002d-Primitives-for-Expressing-Iterative-Lazy-Algorithms)
+
+このサブセクションは、André van Tonder によって書かれた [SRFI-45 の仕様](http://srfi.schemers.org/srfi-45/srfi-45.html) に基づいています。
+
+Schemeでは、従来、遅延評価は`delay`と`force`を用いてシミュレートされてきました。しかし、これらのプリミティブは、反復的な遅延アルゴリズムの大きなクラスを表現するには十分な力を持っていません。実際、Schemeコミュニティでは、delayとforceを用いて記述された典型的な反復遅延アルゴリズムは、しばしば無制限のメモリを必要とするということが通説となっています。
+
+この SRFI は、{`lazy`、`delay`、`force`} という 3 つの操作を提供します。これにより、プログラマは、適切に末尾再帰である場合に、空間制限を維持しながら、遅延アルゴリズムを簡潔に表現できます。これらのプリミティブを使用するための一般的な手順が提供されています。効率が重要な場合に、即時実行可能なプロミスを構築するための追加の手順 `eager` も提供されています。
+
+このSRFIは`delay`と`force`を再定義していますが、その拡張は保守的です。つまり、部分集合{`delay`, `force`}のセマンティクスは、単独では（つまり、プログラムが`lazy`を使用しない限り）R5RSのセマンティクスと一致します。言い換えれば、R5RSのdelayとforceの定義を使用しているプログラムは、それらの定義がSRFI-45のdelayとforceの定義に置き換えられても、動作しなくなることはありません。
+
+Guileはまた、公式のSRFI-45には含まれていない「promise?」をエクスポートリストに追加します。
+
+Scheme 手順: **promise?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-promise_003f-1)
+
+objがSRFI-45プロミスであればtrueを返し、そうでなければfalseを返します。
+
+Scheme構文: **delay**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delay-1)
+
+任意の型 a の式を受け取り、型 `(Promise a)` の Promise を返します。この Promise は、将来のある時点で (`force` プロシージャによって) 式を評価し、結果の値を返すように要求される可能性があります。
+
+Scheme構文: **lazy**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy)
+
+型 `(Promise a)` の式を受け取り、型 `(Promise a)` のプロミスを返します。このプロミスは、将来のある時点で (`force` プロシージャによって) 式を評価し、結果として得られるプロミスを提供するように要求される可能性があります。
+
+Scheme手順: **force**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-force-1)
+
+型 `(Promise a)` の引数を受け取り、型 a の値を返します。返される値は次のとおりです。プロミスに対して型 a の値が計算されている場合は、その値が返されます。そうでない場合は、まずプロミスが評価され、次に取得したプロミスまたは値によって上書きされ、その後、プロミスに対して再度強制が (繰り返し) 適用されます。
+
+Scheme手順: **eager**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager)
+
+型 a の引数を受け取り、型 `(Promise a)` の値を返します。`delay` とは異なり、引数は即座に評価されます。意味的には、`(eager expression)` と書くことは、次のように書くことと同じです。
+
+(let ((値式)) (遅延値))。
+
+しかし、前者はサンクの不要な作成と評価を必要としないため、より効率的です。また、等価性もあります。
+
+(遅延式) [\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) ([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy) ([eager](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager) 式))
+
+以下の還元規則は、これらのプリミティブについて推論する際に役立つ可能性があります。ただし、これらは上記で指定したメモ化とメモリ使用のセマンティクスを表現するものではありません。
+
+(強制 (遅延式)) \-> 式
+(force ([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy) expression)) \-> (force expression)
+(force ([eager](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager) value)) \-> value
+
+#### 正しい使用法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Correct-usage)
+
+ここでは、プリミティブ {`lazy`、`delay`、`force`} を使用して Scheme で遅延アルゴリズムを表現するための一般的な手順を示します。この変換は例で説明するのが最適です。ストリームフィルタアルゴリズムを、仮想的な遅延言語で表現すると次のようになります。
+
+(define ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? s)
+(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) s) '()
+(let ((h ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) s))
+(t ([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) s)))
+(もし(p? h)の場合)
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) h ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t))
+([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t)))))
+
+このアルゴリズムは、Schemeでは次のように表現できます。
+
+(define ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? s)
+([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy)
+(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) (force s)) (delay '())
+(let ((h ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) (force s)))
+(t ([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) (force s))))
+(もし(p? h)の場合)
+(delay ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) h ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t)))
+([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t))))))
+
+言い換えれば、私たちは
+
+* すべてのコンストラクタ (例: `'()`、`cons`) を `delay` でラップします。
+* デコンストラクタの引数に `force` を適用する (例: `car`、`cdr`、`null?`)。
+* プロシージャ本体を `(lazy ...)` で囲みます。
+
+* * *
+
+次へ: [SRFI-55 - 必須機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d55)、前: [SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d45)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

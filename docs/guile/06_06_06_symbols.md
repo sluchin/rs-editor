@@ -1,372 +1,385 @@
-# 6.6.6 シンボル
+#### 6.6.6 シンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols-1)
 
-> **原文**: [Guile Reference Manual - Symbols](https://www.gnu.org/software/guile/manual/html_node/Symbols.html)
->
-> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
+Schemeにおけるシンボルは、離散データの項目として、アリリストやハッシュテーブルのルックアップキーとして、そして変数参照を表すために、主に3つの方法で広く使用されています。
 
-Scheme のシンボルは、3つの方法で広く使われています。離散的なデータの項目として、連想リストやハッシュテーブルの検索キーとして、そして変数の参照を表すためにです。
+シンボルは文字列と同様に、文字の並びによって定義されます。この文字の並びはシンボルの名前と呼ばれます。通常の場合、つまりシンボルの名前にScheme構文の他の要素と混同される可能性のある文字が含まれていない場合、シンボルは、引用符やその他の特殊な構文を使用せずに、名前を構成する文字の並びを記述することでSchemeプログラムに書き込まれます。たとえば、「multiply-by-2」という名前のシンボルは、次のように記述されます。
 
-シンボルは、文字の並びによって定義されるという点で文字列に似ています。その文字の並びはシンボルの**名前**として知られています。通常の場合――つまり、シンボルの名前に Scheme の構文の他の要素と混同される可能性のある文字が含まれていない場合――シンボルは Scheme プログラムの中で、引用符やその他の特別な構文を付けずに、名前を構成する文字の並びを書くことで書かれます。たとえば、名前が「multiply-by-2」であるシンボルは、単に次のように書かれます。
+2倍する
 
-```scheme
-multiply-by-2
-```
+これは、「multiply-by-2」という内容の文字列とはどのように異なるかに注目してください。文字列は、次のように二重引用符で囲まれて記述されます。
 
-これが、内容が「multiply-by-2」である文字列とどのように異なるかに注目してください。文字列は次のように二重引用符を付けて書かれます。
+「2倍する」
 
-```scheme
-"multiply-by-2"
-```
+記号は、その書き方以外にも、文字列とは2つの重要な点で異なっている。
 
-書き方を超えて見ると、シンボルは2つの重要な点で文字列と異なります。
+まず重要な違いは、一意性です。プログラム内で同じ文字列を2つの異なる場所から読み込んだ場合、結果として得られるのは、内容がたまたま同じであるものの、_異なる_文字列オブジェクトです。一方、プログラム内で同じシンボルを2つの異なる場所から読み込んだ場合、結果として得られるのはどちらの場合も同じシンボルオブジェクトです。
 
-最初の重要な違いは一意性です。同じに見える文字列がプログラムの2つの異なる場所から2回読み込まれると、その結果は、内容がたまたま同じである2つの異なる文字列オブジェクトになります。一方、同じに見えるシンボルがプログラムの2つの異なる場所から2回読み込まれると、その結果は2回とも同じシンボルオブジェクトになります。
+2つの読み取ったシンボルが与えられた場合、`eq?` を使用してそれらが同じかどうか（つまり、同じ名前を持っているかどうか）をテストできます。`eq?` は Scheme で最も効率的な比較演算子であり、このように 2 つのシンボルを比較するのは、たとえば 2 つの数値を比較するのと同じくらい高速です。一方、2 つの文字列が与えられた場合、文字列の内容が同じかどうかを判断するには、`equal?` または `string=?` を使用する必要があります。これらははるかに低速な比較演算子です。
 
-読み込まれた2つのシンボルが与えられれば、`eq?` を使ってそれらが同じであるかどうか（つまり同じ名前を持つかどうか）をテストできます。`eq?` は Scheme で最も効率的な比較演算子であり、このように2つのシンボルを比較するのは、たとえば2つの数を比較するのと同じくらい高速です。一方、2つの文字列が与えられた場合、それらの文字列が同じ内容を持つかどうかを判断するには、はるかに遅い比較演算子である `equal?` または `string=?` を使わなければなりません。
-
-```scheme
-(define sym1 (quote hello))
-(define sym2 (quote hello))
-(eq? sym1 sym2) ⇒ #t
+(define sym1 ([quote](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-quote-1) hello))
+(define sym2 ([quote](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-quote-1) hello))
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) sym1 sym2) ⇒ #t
 
 (define str1 "hello")
 (define str2 "hello")
-(eq? str1 str2) ⇒ #f
-(equal? str1 str2) ⇒ #t
-```
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) str1 str2) ⇒ #f
+([equal?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-equal_003f) str1 str2) ⇒ #t
 
-2番目の重要な違いは、シンボルは文字列と異なり、自己評価的ではないということです。上の例で `(quote …)` が必要なのはこのためです。`(quote hello)` は "hello" という名前のシンボル自体に評価されますが、クォートされていない `hello` は "hello" という名前のシンボルとして読み込まれ、変数参照として評価されます…これについては後述します（「変数を表すシンボル」を参照）。
+2つ目の重要な違いは、シンボルは文字列とは異なり、自己評価されないということです。そのため、上記の例では `(quote …)` が必要になります。`(quote hello)` は「hello」という名前のシンボル自体に評価されますが、引用符のない `hello` は「hello」という名前のシンボルとして _読み取られ_、変数参照として評価されます。これについては後述します ([変数を表すシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol- Variables) を参照)。
 
-- 離散的なデータとしてのシンボル
-- 検索キーとしてのシンボル
-- 変数を表すシンボル
-- シンボルに関連する操作
-- シンボルの拡張読み取り構文
-- インターンされていないシンボル
+* [離散データとしてのシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Data)
+* [シンボルをルックアップキーとして使用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Keys)
+* [変数を表す記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Variables)
+* [シンボルに関連する操作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Primitives)
+* [シンボルの拡張読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Read-Syntax)
+* [非インターニングシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Uninterned)
 
-## 6.6.6.1 離散的なデータとしてのシンボル
+* * *
 
-数とシンボルは、どちらも `eq?` による比較に適しているという点で似ています。しかし、シンボルの名前はそのシンボルが表す概念を直接記述するために使えるので、シンボルは数よりも記述的です。
+次へ: [記号をルックアップキーとして使用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Keys)、上: [記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-たとえば、コンピュータプログラムでいくつかの色を表現する必要があると想像してください。数を使うと、数と色の間の何らかの対応付けを恣意的に選び、その対応付けを一貫して使うよう注意しなければなりません。
+#### 6.6.6.1 離散データとしてのシンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols-as-Discrete-Data)
 
-```scheme
-;; 1=red, 2=green, 3=purple
+数字と記号は、どちらも「eq?」という比較方法に適しているという点で似ている。しかし、記号は数字よりも説明力に優れている。なぜなら、記号の名前は、その記号が表す概念を直接説明するために使用できるからである。
 
-(if (eq? (color-of vehicle) 1)
-    ...)
-```
+例えば、コンピュータプログラムで色を表現する必要があると想像してみてください。数値を使う場合、数値と色の間の対応関係を任意に選択し、その対応関係を常に一貫して使用するように注意しなければなりません。
 
-定数を定義することで、対応付けをより明示的にし、コードを読みやすくすることができます。
+1=赤、2=緑、3=紫
+(if ([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) (color-of vehicle) 1)
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-```scheme
-(define red 1)
-(define green 2)
-(define purple 3)
+定数を定義することで、マッピングをより明確にし、コードの可読性を高めることができます。
 
-(if (eq? (color-of vehicle) red)
-    ...)
-```
+(赤1を定義する)
+（グリーン2を定義する）
+（紫3を定義する）
 
-しかし最も単純で明確なアプローチは、数をまったく使わず、名前が参照する色を指定するシンボルを使うことです。
+(if ([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) (color-of vehicle) red)
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-```scheme
-(if (eq? (color-of vehicle) 'red)
-    ...)
-```
+しかし、最もシンプルで分かりやすい方法は、数字を一切使わず、色を指定する記号を使うことです。
 
-数に対するシンボルの記述的な利点は、記述したい概念の集合が大きくなるにつれて増していきます。車のオブジェクトが、次のようなものを持っているか使っているかなど、他のプロパティも持てるとしましょう。
+(if ([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) (color-of vehicle) 'red)
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-- オートマチックまたはマニュアルのトランスミッション
-- 有鉛または無鉛の燃料
-- パワーステアリング（またはそうでない）
+記号が数値よりも記述上の利点を持つのは、記述したい概念の集合が大きくなるにつれて増える。例えば、車というオブジェクトには、以下のような他の特性もあるとしよう。
 
-すると、車の組み合わされたプロパティの集合は、シンボルのリストとして自然に表現して操作できます。
+* オートマチックまたはマニュアルトランスミッション
+* 有鉛または無鉛燃料
+* パワーステアリング（またはパワーステアリングなし）。
 
-```scheme
-(properties-of vehicle1)
+すると、車の複合的な特性セットは、記号のリストとして自然に表現および操作できるようになる。
+
+（車両1の特性）
 ⇒
-(red manual unleaded power-steering)
+（赤色、マニュアル、無鉛ガソリン、パワーステアリング）
 
-(if (memq 'power-steering (properties-of vehicle1))
-    (display "Unfit people can drive this vehicle.\n")
-    (display "You'll need strong arms to drive this vehicle!\n"))
+(if ([memq](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-memq) 'power-steering (properties-of vehicle1))
+([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "運転に適さない人でもこの車両を運転できます。\n")
+([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "この乗り物を運転するには、強い腕力が必要です！\n"))
 ⊣
-Unfit people can drive this vehicle.
-```
+運転に適さない人でもこの車両を運転できます。
 
-ここで頼りにしているシンボルの基本的な性質は、プログラムのある部分に出現する `'red` が、プログラムの別の部分に出現する `'red` と区別できないシンボルであるということを思い出してください。これは、シンボルを `eq?` で有用に比較できることを意味します。同時に、シンボルは自然に記述的な名前を持っています。この効率性と記述力の組み合わせにより、シンボルは離散的なデータとして使うのに理想的です。
+ここで私たちが依拠しているシンボルの基本的な特性は、プログラムのある部分における「red」というシンボルは、プログラムの別の部分における「red」というシンボルと区別できないということです。つまり、シンボルは「eq?」を使って効果的に比較できます。同時に、シンボルには自然に分かりやすい名前が付けられます。この効率性と説明力の組み合わせにより、シンボルは離散データとして使用するのに理想的です。
 
-## 6.6.6.2 検索キーとしてのシンボル
+* * *
 
-その効率性と記述力を考えると、連想リストやハッシュテーブルのキーとしてシンボルを使うのは自然なことです。
+次へ: [変数を表す記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Variables)、前: [離散データとしての記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Data)、上: [記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-これを説明するために、前の小節の車のプロパティの例の、より構造化された表現を考えてみましょう。すべてのプロパティを平坦なリストに混ぜ合わせる代わりに、次のような連想リストを使うことができます。
+#### 6.6.6.2 ルックアップキーとしてのシンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols-as-Lookup-Keys)
 
-```scheme
+その効率性と記述力から、記号を連想リストやハッシュテーブルのキーとして使用するのは自然なことである。
+
+これを説明するために、前の小節で挙げた車のプロパティの例を、より構造化された形で表現してみましょう。すべてのプロパティをフラットなリストにまとめて記述するのではなく、次のような連想リストを使用できます。
+
 (define car1-properties '((color . red)
-                          (transmission . manual)
-                          (fuel . unleaded)
-                          (steering . power-assisted)))
-```
+（トランスミッション：マニュアル）
+（燃料：無鉛ガソリン）
+（パワーステアリング）
 
-この構造が平坦なリストよりもいかに明示的で拡張可能であるかに注目してください。たとえば、`manual` が、たとえば車の窓やロックではなく、トランスミッションを指していることが明確になります。また、さらなるプロパティが、あいまいになることなく、可能な値の中で同じシンボルを使うこともできます。
+この構造は、フラットなリストよりも明確で拡張性が高いことに注目してください。例えば、「manual」は車の窓やロックではなく、トランスミッションを指していることが明確に分かります。また、プロパティ間で同じ記号を値として使用しても、曖昧さが生じません。
 
-```scheme
 (define car1-properties '((color . red)
-                          (transmission . manual)
-                          (fuel . unleaded)
-                          (steering . power-assisted)
-                          (seat-color . red)
-                          (locking . manual)))
-```
+（トランスミッション：マニュアル）
+（燃料：無鉛ガソリン）
+（パワーステアリング）
+（シートカラー：赤）
+（ロック・手動）
 
-このような表現を使えば、効率的な `assq-XXX` 系の手続き（「連想リスト」を参照）を使って、個々の情報を取り出したり変更したりするのは簡単です。
+このような表現を用いることで、効率的な`assq-XXX`ファミリーの手続き（[連想リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists)を参照）を使用して、個々の情報を抽出または変更することが容易になります。
 
-```scheme
-(assq-ref car1-properties 'fuel) ⇒ unleaded
-(assq-ref car1-properties 'transmission) ⇒ manual
+([assq-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dref) car1-properties 'fuel) ⇒ 無鉛ガソリン
+([assq-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dref) car1-properties 'transmission) ⇒ manual
 
-(assq-set! car1-properties 'seat-color 'black)
+([assq-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dset_0021) car1-properties 'seat-color 'black)
 ⇒
-((color . red)
- (transmission . manual)
- (fuel . unleaded)
- (steering . power-assisted)
- (seat-color . black)
- (locking . manual)))
-```
+((色.赤)
+（トランスミッション：マニュアル）
+（燃料：無鉛ガソリン）
+（パワーステアリング）
+（シートカラー：黒）
+（ロック・手動）
 
-ハッシュテーブルにもキーがあり、ハッシュテーブルでのシンボルの使用にも、連想リストの場合とまったく同じ議論が当てはまります。シンボルをキーとするエントリをハッシュテーブルのどこに追加するかを決めるために Guile が使うハッシュ値は、`symbol-hash` 手続きを呼び出すことで得られます。
+ハッシュテーブルにもキーがあり、ハッシュテーブルにおけるシンボルの使用には、連想リストの場合とまったく同じ引数が適用されます。Guile がシンボルをキーとするエントリをハッシュテーブルに追加する場所を決定するために使用するハッシュ値は、`symbol-hash` プロシージャを呼び出すことで取得できます。
 
-**Scheme 手続き: `symbol-hash symbol`**<br>**C 関数: `scm_symbol_hash (symbol)`**
-: `symbol` のハッシュ値を返します。
+スキーム手順: **symbol-hash** シンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dhash)
 
-ハッシュテーブル一般についての情報と、連想リストではなくハッシュテーブルを使うことを選ぶ理由については、「ハッシュテーブル」を参照してください。
+C 関数: **scm\_symbol\_hash** (symbol) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsymbol_005fhash)
 
-## 6.6.6.3 変数を表すシンボル
+シンボルのハッシュ値を返します。
 
-Scheme プログラムの中のクォートされていないシンボルが評価されると、それは変数参照として解釈され、評価の結果は適切な変数の値になります。
+ハッシュテーブル全般に関する情報、および連想リストではなくハッシュテーブルを使用する理由については、[ハッシュテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hash-Tables)を参照してください。
 
-たとえば、式 `(string-length "abcd")` が読み込まれて評価されると、文字の並び `string-length` は名前が "string-length" であるシンボルとして読み込まれます。このシンボルは、値が文字列の長さの計算を実装する手続きである変数に関連付けられています。したがって、`string-length` シンボルの評価はその手続きになります。
+* * *
 
-クォートされていないシンボルとそれが参照する変数との結び付きの詳細は、別の場所で説明されています。シンボルと変数の間の関連付けがどのように作成されるかについては「定義と変数の束縛」を、それらの関連付けが Guile のモジュールシステムによってどのように影響を受けるかについては「モジュール」を参照してください。
+次へ: [シンボルに関連する操作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Primitives)、前: [ルックアップキーとしてのシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Keys)、上: [シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-## 6.6.6.4 シンボルに関連する操作
+#### 6.6.6.3 変数を表す記号 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols-as-Denoting-Variables)
 
-任意の Scheme 値が与えられたとき、`symbol?` プリミティブを使ってそれがシンボルかどうかを判断できます。
+Schemeプログラムにおいて引用符で囲まれていないシンボルが評価される場合、それは変数参照として解釈され、評価結果は該当する変数の値となります。
 
-**Scheme 手続き: `symbol? obj`**<br>**C 関数: `scm_symbol_p (obj)`**
-: `obj` がシンボルであれば `#t` を、そうでなければ `#f` を返します。
+例えば、式 `(string-length "abcd")` が読み込まれて評価される場合、文字シーケンス `string-length` は、名前が "string-length" のシンボルとして読み込まれます。このシンボルは、文字列の長さを計算するプロシージャの値を持つ変数に関連付けられています。したがって、`string-length` シンボルの評価結果は、そのプロシージャになります。
 
-**C 関数: `int scm_is_symbol (SCM val)`**
-: `scm_is_true (scm_symbol_p (val))` と同等です。
+引用符で囲まれていないシンボルと、それが参照する変数との間の関係の詳細については、別の箇所で説明されています。シンボルと変数の関連付けがどのように作成されるかについては、[定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs) を、Guile のモジュール システムによってこれらの関連付けがどのように影響を受けるかについては、[モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) を参照してください。
 
-シンボルを持っていることが分かったら、`symbol->string` を呼び出すことでその名前を文字列として得ることができます。Guile は、大文字と小文字の区別に関して、`symbol->string` の詳細においてデフォルトで R5RS とは異なることに注意してください。
+* * *
 
-**Scheme 手続き: `symbol->string s`**<br>**C 関数: `scm_symbol_to_string (s)`**
-: シンボル `s` の名前を文字列として返します。デフォルトでは、Guile はシンボルを大文字と小文字を区別して読み込むので、返される文字列は、`s` を作成させた文字の並びと同じ大文字小文字の変化を持ちます。
+次へ: [シンボルの拡張読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Read-Syntax)、前: [変数を表すシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Variables)、上: [シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-  Guile がシンボルを大文字と小文字を区別せずに読み込むように（R5RS で規定されているとおりに）設定されており、`s` がリテラル式（『The Revised^5 Report on Scheme』の「Literal expressions」を参照）の一部として、または `read` や `string-ci->symbol` 手続きの呼び出しによって生まれた場合、Guile はシンボルオブジェクトを作成する前にシンボルの名前のアルファベット文字を小文字に変換するので、ここで返される文字列は小文字になります。
+#### 6.6.6.4 シンボルに関連する操作 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Operations-Related-to-Symbols)
 
-  `s` が `string->symbol` によって作成された場合、返される文字列の文字の大文字小文字は、`s` が作成された時点での Guile の大文字小文字の区別の設定にかかわらず、`string->symbol` に渡された文字列のものと同じになります。
+Schemeの値が与えられた場合、`symbol?`プリミティブを使用して、それがシンボルであるかどうかを判定できます。
 
-  この手続きが返す文字列に `string-set!` のような変更手続きを適用するのはエラーです。
+Scheme Procedure: **symbol?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_003f)
 
-ほとんどのシンボルはコードの中にリテラルとして書くことで作成されます。しかし、次の手続きを使ってプログラム的にシンボルを作成することも可能です。
+C 関数: **scm\_symbol\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsymbol_005fp)
 
-**Scheme 手続き: `symbol char…`**
-: 与えられた文字の引数から作られた、新しく割り当てられたシンボルを返します。
+objがシンボルの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-  ```scheme
-  (symbol #\x #\y #\z) ⇒ xyz
-  ```
+C 関数: `int` **scm\_is\_symbol** `(SCM 値)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005fsymbol)
 
-**Scheme 手続き: `list->symbol lst`**
-: 文字のリストから作られた、新しく割り当てられたシンボルを返します。
+`scm_is_true (scm_symbol_p (val))` と同等です。
 
-  ```scheme
-  (list->symbol '(#\a #\b #\c)) ⇒ abc
-  ```
+シンボルが特定できたら、`symbol->string` を呼び出すことで、そのシンボル名を文字列として取得できます。なお、Guile は、`symbol->string` の大文字小文字の区別に関して、デフォルトでは R5RS と異なる点にご注意ください。
 
-**Scheme 手続き: `symbol-append arg …`**
-: 与えられたシンボル `arg ...` を連結したものを文字とする、新しく割り当てられたシンボルを返します。
+Scheme手順: **symbol->string** s [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring)
 
-  ```scheme
-  (let ((h 'hello))
-    (symbol-append h 'world))
-  ⇒ helloworld
-  ```
+C 関数: **scm\_symbol\_to\_string** (s) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsymbol_005fto_005fstring)
 
-**Scheme 手続き: `string->symbol string`**<br>**C 関数: `scm_string_to_symbol (string)`**
-: 名前が `string` であるシンボルを返します。この手続きは、特殊文字や標準でない大文字小文字の文字を含む名前を持つシンボルを作成できますが、Scheme の一部の実装ではそのようなシンボルはそれ自身として読み込むことができないため、そのようなシンボルを作成するのは通常良い考えではありません。
+シンボル s の名前を文字列として返します。デフォルトでは、Guile はシンボルを大文字と小文字を区別して読み込むため、返される文字列は、s が作成された原因となった文字シーケンスと同じ大文字小文字のバリエーションを持ちます。
 
-**Scheme 手続き: `string-ci->symbol str`**<br>**C 関数: `scm_string_ci_to_symbol (str)`**
-: 名前が `str` であるシンボルを返します。Guile が現在シンボルを大文字と小文字を区別せずに読み込んでいる場合、返されるシンボルが検索または作成される前に、`str` は小文字に変換されます。
+Guile が (R5RS で指定されているように) シンボルを大文字小文字を区別せずに読み込むように設定されている場合、s がリテラル式の一部として (「The Revised^5 Report on Scheme」の [Literal expressions](https://doc.guix.gnu.org/r5rs/latest/en/r5rs.html#Literal-expressions) または `read` または `string-ci->symbol` プロシージャの呼び出しによって生成される場合、Guile はシンボル オブジェクトを作成する前にシンボル名に含まれるアルファベット文字を小文字に変換するため、ここで返される文字列は小文字になります。
 
-次の例は、シンボルの大文字と小文字の区別に関する Guile の詳細な動作を示しています。
+s が `string->symbol` によって作成された場合、返される文字列の文字の大文字/小文字は、s が作成された時点での Guile の大文字/小文字の区別設定に関係なく、`string->symbol` に渡された文字列の文字の大文字/小文字と同じになります。
 
-```scheme
-(read-enable 'case-insensitive)   ; R5RS compliant behavior
+このプロシージャによって返される文字列に対して、`string-set!`のような変更プロシージャを適用することはエラーです。
 
-(symbol->string 'flying-fish)    ⇒ "flying-fish"
-(symbol->string 'Martin)         ⇒ "martin"
-(symbol->string
-   (string->symbol "Malvina"))   ⇒ "Malvina"
+ほとんどのシンボルは、コードに文字通り記述することによって作成されます。しかし、以下の手順を使用してプログラム的にシンボルを作成することも可能です。
 
-(eq? 'mISSISSIppi 'mississippi)  ⇒ #t
-(string->symbol "mISSISSIppi")   ⇒ mISSISSIppi
-(eq? 'bitBlt (string->symbol "bitBlt")) ⇒ #f
-(eq? 'LolliPop
-  (string->symbol (symbol->string 'LolliPop))) ⇒ #t
-(string=? "K. Harper, M.D."
-  (symbol->string
-    (string->symbol "K. Harper, M.D."))) ⇒ #t
+Scheme手順: **symbol** char… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol)
 
-(read-disable 'case-insensitive)   ; Guile default behavior
+指定された文字引数から作成された、新たに割り当てられたシンボルを返します。
 
-(symbol->string 'flying-fish)    ⇒ "flying-fish"
-(symbol->string 'Martin)         ⇒ "Martin"
-(symbol->string
-   (string->symbol "Malvina"))   ⇒ "Malvina"
+(記号 #\\x #\\y #\\z) ⇒ xyz
 
-(eq? 'mISSISSIppi 'mississippi)  ⇒ #f
-(string->symbol "mISSISSIppi")   ⇒ mISSISSIppi
-(eq? 'bitBlt (string->symbol "bitBlt")) ⇒ #t
-(eq? 'LolliPop
-  (string->symbol (symbol->string 'LolliPop))) ⇒ #t
-(string=? "K. Harper, M.D."
-  (symbol->string
-    (string->symbol "K. Harper, M.D."))) ⇒ #t
-```
+Scheme手順: **list->symbol** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002d_003esymbol)
 
-C からは、現在のロケールのエンコーディングの C 文字列から Scheme のシンボルを構築する、より低レベルの関数があります。
+文字リストから作成された、新たに割り当てられたシンボルを返します。
 
-C からそれ以上のことをしたい場合は、`scm_symbol_to_string` と `scm_string_to_symbol` を使ってシンボルと文字列の間で変換し、文字列を操作するべきです。
+(リスト->シンボル '(#\\a #\\b #\\c)) ⇒ abc
 
-**C 関数: `SCM scm_from_latin1_symbol (const char *name)`**<br>**C 関数: `SCM scm_from_utf8_symbol (const char *name)`**
-: ヌル終端された C の文字列 `name` によって名前が指定される Scheme のシンボルを構築して返します。これらは、C の文字列がソースコードにハードコードされている場合に適しています。
+スキームプロシージャ: **symbol-append** arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dappend)
 
-**C 関数: `SCM scm_from_locale_symbol (const char *name)`**<br>**C 関数: `SCM scm_from_locale_symboln (const char *name, size_t len)`**
-: `name` によって名前が指定される Scheme のシンボルを構築して返します。`scm_from_locale_symbol` では `name` はヌル終端されていなければなりません。`scm_from_locale_symboln` では、`name` の長さは `len` によって明示的に指定されます。
+指定されたシンボル、arg の連結で構成される文字を持つ、新しく割り当てられたシンボルを返します。
 
-  現在のロケールが、文字列と文字の定数に使われる実行文字集合のものと一致する保証はないため、`name` が C の文字列定数である場合にはこれらの関数を使うべきではないことに注意してください。最近のほとんどの C コンパイラはデフォルトで UTF-8 を使うので、そのような場合には `scm_from_utf8_symbol` を推奨します。
+(let ((h 'hello))
+(symbol-append h 'world))
+⇒ハローワールド
 
-**C 関数: `SCM scm_take_locale_symbol (char *str)`**<br>**C 関数: `SCM scm_take_locale_symboln (char *str, size_t len)`**
-: それぞれ `scm_from_locale_symbol` および `scm_from_locale_symboln` と同様ですが、最終的に `str` を `free` で解放することも行います。したがって、Scheme の文字列を作成した直後にいずれにせよ `str` を解放する場合に、この関数を使うことができます。特定の場合には、Guile は `str` をその内部表現として直接使うことができます。
+Scheme手順: **string->symbol** string [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol)
 
-シンボルのサイズも C から得ることができます。
+C 関数: **scm\_string\_to\_symbol** (string) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstring_005fto_005fsymbol)
 
-**C 関数: `size_t scm_c_symbol_length (SCM sym)`**
-: `sym` の文字数を返します。
+名前が文字列であるシンボルを返します。この手続きでは、特殊文字や非標準の文字を含む名前のシンボルを作成できますが、Scheme の実装によっては、そのようなシンボルをそのまま読み取ることができない場合があるため、通常はそのようなシンボルを作成することはお勧めできません。
 
-最後に、一部のアプリケーション、特に新しい Scheme コードを動的に生成するものは、生成されたコードで使うためのシンボルを生成する必要があります。`gensym` プリミティブはこの必要を満たします。
+Scheme手順: **string-ci->symbol** str [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dci_002d_003esymbol)
 
-**Scheme 手続き: `gensym [prefix]`**<br>**C 関数: `scm_gensym (prefix)`**
-: 接頭辞とカウンタの値から構築された名前を持つ新しいシンボルを作成します。文字列 `prefix` はオプション引数として指定できます。デフォルトの接頭辞は「` g`」です。カウンタは呼び出しごとに1ずつ増やされます。カウンタをリセットする手段は用意されていません。
+C 関数: **scm\_string\_ci\_to\_symbol** (str) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstring_005fci_005fto_005fsymbol)
 
-`gensym` によって生成されるシンボルは、その名前が空白で始まるため、おそらく一意です。そうでなければ、そのようなシンボルはプログラマがわざわざそうしない限り生成できないからです。代わりにインターンされていないシンボル（「インターンされていないシンボル」を参照）を使えば一意性を保証できますが、それらは有用な形で書き出して読み戻すことができません。
+名前がstrであるシンボルを返します。Guileが現在シンボルを大文字小文字を区別せずに読み込んでいる場合、返されるシンボルが検索または作成される前にstrは小文字に変換されます。
 
-## 6.6.6.5 シンボルの拡張読み取り構文
+以下の例は、Guileにおける記号の大文字小文字の区別に関する詳細な動作を示しています。
 
-シンボルの読み取り構文は、文字、数字、拡張アルファベット文字の並びであり、数を始めることのできない文字で始まります。さらに、特別なケースとして `+`、`-`、`...` は、数が `+`、`-`、`.` で始まることがあるにもかかわらず、シンボルとして読み込まれます。
+([read-enable](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002denable) 'case-insensitive) ; R5RS準拠の動作
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'flying-fish) ⇒ "flying-fish"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'Martin) ⇒ "martin"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring)
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "Malvina")) ⇒ "Malvina"
 
-拡張アルファベット文字は、識別子の中で文字（letter）であるかのように使うことができます。拡張アルファベット文字の集合は次のとおりです。
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'mISSISSIppi 'mississippi) ⇒ #t
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "mISSISSIppi") ⇒ mISSISSIppi
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'bitBlt ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "bitBlt")) ⇒ #f
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'LolliPop
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([symbol- >string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'LolliPop))) ⇒ #t
+([string=?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003d_003f) "K. Harper, MD"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring)
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "K. Harper, MD"))) ⇒ #t
 
-```
-! $ % & * + - . / : < = > ? @ ^ _ ~
-```
+([read-disable](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002ddisable) 'case-insensitive) ; Guile のデフォルトの動作
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'flying-fish) ⇒ "flying-fish"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'Martin) ⇒ "Martin"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring)
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "Malvina")) ⇒ "Malvina"
 
-上で定義された標準の読み取り構文（これは R5RS から取られています。『The Revised^5 Report on Scheme』の「Formal syntax」を参照）に加えて、Guile は、空白文字、改行、括弧などの珍しい文字を含めることができる、拡張されたシンボルの読み取り構文を提供しています。（何らかの理由で）上で言及されていない文字を含むシンボルを書く必要がある場合は、次のようにして書くことができます。
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'mISSISSIppi 'mississippi) ⇒ #f
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "mISSISSIppi") ⇒ mISSISSIppi
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'bitBlt ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "bitBlt")) ⇒ #t
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) 'LolliPop
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring) 'LolliPop))) ⇒ #t
+([string=?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003d_003f) "K. Harper, MD"
+([symbol->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003estring)
+([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "K. Harper, MD"))) ⇒ #t
 
-- シンボルを文字 `#{` で始め、
-- シンボルの文字を書き、
-- シンボルを文字 `}#` で終えます。
+C言語には、現在のロケールエンコーディングのC文字列からSchemeシンボルを構築する低レベル関数が存在する。
 
-この形式の読み取り構文のいくつかの例を示します。最初のシンボルは空白文字を含むため、2番目は改行を含むため、最後は数のように見えるため、拡張構文を使う必要があります。
+C言語でより多くのことを行いたい場合は、`scm_symbol_to_string`と`scm_string_to_symbol`を使用してシンボルと文字列を相互に変換し、文字列を操作する必要があります。
 
-```scheme
+C 関数: `SCM` **scm\_from\_latin1\_symbol** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flatin1_005fsymbol)
+
+C 関数: `SCM` **scm\_from\_utf8\_symbol** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005futf8_005fsymbol)
+
+ヌル終端されたC文字列名で指定された名前を持つSchemeシンボルを構築して返します。これは、C文字列がソースコードにハードコーディングされている場合に適しています。
+
+C 関数: `SCM` **scm\_from\_locale\_symbol** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flocale_005fsymbol)
+
+C 関数: `SCM` **scm\_from\_locale\_symboln** `(const char *name, size_t len)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flocale_005fsymboln)
+
+指定された名前を持つ Scheme シンボルを構築して返します。`scm_from_locale_symbol` の場合、name はヌル終端されている必要があります。`scm_from_locale_symboln` の場合、name の長さは len で明示的に指定されます。
+
+これらの関数は、name が C 文字列定数である場合は使用しないでください。現在のロケールが、文字列定数や文字定数に使用される実行文字セットと一致する保証がないためです。最新の C コンパイラのほとんどはデフォルトで UTF-8 を使用するため、そのような場合は `scm_from_utf8_symbol` の使用をお勧めします。
+
+C 関数: `SCM` **scm\_take\_locale\_symbol** `(char *str)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ftake_005flocale_005fsymbol)
+
+C 関数: `SCM` **scm\_take\_locale\_symboln** `(char *str, size_t len)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ftake_005flocale_005fsymboln)
+
+`scm_from_locale_symbol` や `scm_from_locale_symboln` と同様ですが、最終的には `free` で str を解放します。したがって、Scheme 文字列を作成した直後に str を解放する場合に、この関数を使用できます。場合によっては、Guile は str を内部表現として直接使用できます。
+
+シンボルのサイズはC言語からも取得できます。
+
+C 関数: `size_t` **scm\_c\_symbol\_length** `(SCM sym)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fsymbol_005flength)
+
+sym の文字数を返します。
+
+最後に、特に動的に新しいSchemeコードを生成するアプリケーションでは、生成されたコードで使用するシンボルを生成する必要があります。`gensym`プリミティブはこのニーズを満たします。
+
+Scheme手順: **gensym** \[prefix\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-gensym)
+
+C 関数: **scm\_gensym** (プレフィックス) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fgensym)
+
+接頭辞とカウンタ値から構成される名前を持つ新しいシンボルを作成します。文字列接頭辞はオプションの引数として指定できます。デフォルトの接頭辞は「g」です。カウンタは呼び出しごとに1ずつ増加します。カウンタをリセットする機能はありません。
+
+`gensym` で生成されるシンボルは、名前がスペースで始まるため、一意である可能性が高いです。プログラマーが意図的にそうしない限り、このようなシンボルを生成することはできません。一意性を保証するには、代わりにインターン化されていないシンボルを使用します ([インターン化されていないシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Uninterned) を参照)。ただし、インターン化されていないシンボルは、出力して読み戻すのに適していません。
+
+* * *
+
+次へ: [非インターニングシンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Uninterned)、前: [シンボルに関連する操作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Primitives)、上: [シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.6.5 シンボルの拡張読み取り構文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extended-Read-Syntax-for-Symbols)
+
+記号の読み取り構文は、数字、数字、および拡張アルファベット文字のシーケンスであり、数字の先頭には使用できない文字で始まります。さらに、数字が「+」、「-」、「.」で始まる場合でも、「+」、「-」、「...」などの特殊なケースは記号として読み取られます。
+
+拡張アルファベット文字は、識別子内で文字と同様に使用できます。拡張アルファベット文字のセットは次のとおりです。
+
+! $ % & \* + - . / : < = > ? @ ^ \_ ~
+
+上記で定義した標準の読み取り構文（R5RS（『The Revised^5 Report on Scheme』の[Formal syntax](https://doc.guix.gnu.org/r5rs/latest/en/r5rs.html#Formal-syntax)を参照）から取得）に加えて、Guileは、スペース文字、改行、括弧などの特殊な文字を含めることができる拡張シンボル読み取り構文を提供します。何らかの理由で、上記に記載されていない文字を含むシンボルを記述する必要がある場合は、次のように記述できます。
+
+* 記号を文字 `#{` で開始します。
+* 記号の文字を書き、
+* 記号を文字 `}#` で終了します。
+
+以下に、この形式の読み取り構文の例をいくつか示します。最初の記号はスペース文字が含まれているため拡張構文を使用する必要があり、2番目の記号は改行文字が含まれているため、そして最後の記号は数字のように見えるため拡張構文を使用する必要があります。
+
 #{foo bar}#
 
-#{what
-ever}#
+＃{何
+これまで}＃
 
 #{4242}#
-```
 
-Guile はシンボルのこの拡張読み取り構文を提供していますが、移植性がなく、あまり読みやすくないため、広く使うことは推奨されません。
+Guileはシンボルに対してこのような拡張された読み取り構文を提供していますが、移植性が低く、読みやすさもあまり良くないため、広く使用することは推奨されません。
 
-あるいは、`r7rs-symbols` 読み取りオプション（「Scheme コードの読み込み」を参照）を有効にすると、二重引用符の代わりに縦棒で区切る点を除いて、文字列に使われるのと同じ記法を使って任意のシンボルを書くことができます。
+あるいは、`r7rs-symbols` 読み取りオプションを有効にすると（[スキームコードの読み取り](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Read)を参照）、二重引用符の代わりに縦棒で区切られる点を除いて、文字列に使用されるのと同じ表記法を使用して任意のシンボルを記述できます。
 
-```scheme
-|foo bar|
-|\x3BB; is a greek lambda|
-|\| is a vertical bar|
-```
+|フーバー|
+|\\x3BB; はギリシャ文字のラムダです|
+|\\| は縦棒です|
 
-`r7rs-symbols` 表示オプション（「Scheme 値の書き出し」を参照）もあることに注意してください。この記法の使用を有効にするには、次の式の一方または両方を評価します。
+`r7rs-symbols` という出力オプションもあることに注意してください（[スキーム値の書き込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Write)を参照）。この表記法を使用するには、次の式のいずれか、または両方を評価します。
 
-```scheme
-(read-enable  'r7rs-symbols)
+(読み取り有効化 'r7rs-symbols')
 (print-enable 'r7rs-symbols)
-```
 
-## 6.6.6.6 インターンされていないシンボル
+* * *
 
-シンボルを有用なものにしているのは、それらが自動的に一意に保たれることです。異なるオブジェクトでありながら同じ名前を持つ2つのシンボルは存在しません。しかし、もちろん例外のない規則はありません。これまで論じてきた通常のシンボルに加えて、少し異なる振る舞いをする特別な**インターンされていない**（uninterned）シンボルを作成することもできます。
+前へ: [シンボルの拡張読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Read-Syntax)、上へ: [シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-それらの何が異なるのか、そしてなぜ有用なのかを理解するために、通常のシンボルが実際にどのように一意に保たれているかを見てみましょう。
+#### 6.6.6.6 非インターニングシンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Uninterned-Symbols)
 
-Guile が特定の名前を持つシンボルを見つけたいときはいつでも、たとえば `read` の間や `string->symbol` を実行するときに、まずすべての既存のシンボルの表を調べて、与えられた名前を持つシンボルがすでに存在するかどうかを調べます。存在する場合、Guile は単にそのシンボルを返します。存在しない場合、その名前を持つ新しいシンボルが作成され、後で見つけられるように表に登録されます。
+シンボルが便利なのは、自動的に一意性が保たれるからです。異なるオブジェクトでありながら同じ名前を持つシンボルは存在しません。もちろん、例外のない規則はありません。これまで説明してきた通常のシンボルに加えて、少し異なる動作をする特別な_非インターニング_シンボルを作成することもできます。
 
-ときには、「新鮮」であることが保証されたシンボル、つまり以前に存在しなかったシンボルを作成したいことがあるかもしれません。また、将来、他の誰もが意図せずにあなたのシンボルに出くわすことがないことを何らかの方法で保証したいかもしれません。シンボルのこれらの性質は、マクロ展開の間にコードを生成するときにしばしば必要になります。新しい一時変数を導入するとき、それらが他の人のコードの変数と衝突しないことを保証したいのです。
+それらが何が違うのか、そしてなぜ有用なのかを理解するために、通常の記号がどのようにして独自性を保っているのかを見ていきましょう。
 
-これを手配する最も簡単な方法は、新しいシンボルを作成するが、すべてのシンボルのグローバルな表には登録しないことです。そうすれば、誰も偶然にあなたのシンボルにアクセスすることはありません。表にないシンボルは**インターンされていない**と呼ばれます。もちろん、表にあるシンボルは**インターンされている**（interned）と呼ばれます。
+Guileは、例えば`read`時や`string->symbol`の実行時など、特定の名前を持つシンボルを検索したい場合、まず既存のシンボル一覧表を調べて、指定された名前のシンボルが既に存在するかどうかを確認します。既に存在する場合は、そのシンボルを返します。存在しない場合は、指定された名前の新しいシンボルが作成され、後で検索できるように一覧表に追加されます。
 
-新しいインターンされていないシンボルは、関数 `make-symbol` で作成します。シンボルがインターンされているかどうかは、`symbol-interned?` でテストできます。
+場合によっては、以前には存在しなかった、つまり「新規」のシンボルを作成したい場合があります。また、将来、他の誰かが意図せずそのシンボルに遭遇しないようにしたい場合もあるでしょう。このようなシンボルの特性は、マクロ展開時にコードを生成する際によく必要になります。新しい一時変数を導入する際には、他の人のコード内の変数と競合しないようにする必要があります。
 
-インターンされていないシンボルは、シンボルの名前がシンボルオブジェクトを一意に識別するという規則を破ります。このため、それらはインターンされたシンボルのように書き出して読み戻すことができません。現在、Guile はインターンされていないシンボルの読み込みをサポートしていません。この理由から、関数 `gensym` はインターンされていないシンボルを返さないことに注意してください。
+これを実現する最も簡単な方法は、新しいシンボルを作成するものの、それをすべてのシンボルのグローバルテーブルに登録しないことです。そうすれば、誰も偶然にあなたのシンボルにアクセスすることはできません。テーブルに登録されていないシンボルは「未登録」と呼ばれ、もちろん、テーブルに登録されているシンボルは「登録済み」と呼ばれます。
 
-**Scheme 手続き: `make-symbol name`**<br>**C 関数: `scm_make_symbol (name)`**
-: 名前 `name` を持つ新しいインターンされていないシンボルを返します。返されるシンボルは一意であることが保証されており、将来の `string->symbol` の呼び出しがそれを返すことはありません。
+`make-symbol`関数を使用すると、インターン化されていない新しいシンボルを作成できます。`symbol-interned?`を使用すると、シンボルがインターン化されているかどうかをテストできます。
 
-**Scheme 手続き: `symbol-interned? symbol`**<br>**C 関数: `scm_symbol_interned_p (symbol)`**
-: `symbol` がインターンされていれば `#t` を、そうでなければ `#f` を返します。
+非インターンシンボルは、シンボル名がシンボルオブジェクトを一意に識別するというルールに違反します。そのため、インターンシンボルのように書き出して読み込むことはできません。現在、Guileは非インターンシンボルの読み込みをサポートしていません。このため、関数`gensym`は非インターンシンボルを返さないことに注意してください。
 
-例:
+Scheme 手順: **make-symbol** name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dsymbol)
 
-```scheme
-(define foo-1 (string->symbol "foo"))
-(define foo-2 (string->symbol "foo"))
-(define foo-3 (make-symbol "foo"))
-(define foo-4 (make-symbol "foo"))
+C 関数: **scm\_make\_symbol** (名前) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fsymbol)
 
-(eq? foo-1 foo-2)
+名前が name の新しい非インターン化シンボルを返します。返されるシンボルは一意であることが保証されており、以降の `string->symbol` の呼び出しでは同じシンボルは返されません。
+
+Scheme 手順: **symbol-interned?** シンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dinterned_003f)
+
+C 関数: **scm\_symbol\_interned\_p** (シンボル) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsymbol_005finterned_005fp)
+
+シンボルがインターンされている場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+例えば：
+
+(define foo-1 ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "foo"))
+(define foo-2 ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) "foo"))
+(define foo-3 ([make-symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- make_002dsymbol) "foo"))
+(define foo-4 ([make-symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dsymbol) "foo"))
+
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) foo-1 foo-2)
 ⇒ #t
-; 同じ名前を持つ2つのインターンされたシンボルは同じオブジェクトだが、
-
-(eq? foo-1 foo-3)
+同じ名前の2つのインターンシンボルは同じオブジェクトです。
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) foo-1 foo-3)
 ⇒ #f
-; 同じ名前で make-symbol を呼び出すと別のオブジェクトが返される。
-
-(eq? foo-3 foo-4)
+; しかし、同じ名前でmake-symbolを呼び出すと、
+; 別個のオブジェクト。
+([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) foo-3 foo-4)
 ⇒ #f
-; make-symbol の呼び出しは、同じ名前であっても常に新しいオブジェクトを返す。
-
-foo-3
+; make-symbol の呼び出しは、たとえ
+同じ名前。
+フー3
 ⇒ #<uninterned-symbol foo 8085290>
-; インターンされていないシンボルはインターンされたシンボルとは異なる形で表示されるが、
-
-(symbol? foo-3)
+; 非収容シンボルは収容シンボルとは異なる印刷をします。
+([symbol?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_003f) foo-3)
 ⇒ #t
-; それでもシンボルであり、
-
-(symbol-interned? foo-3)
+しかし、それらは依然として象徴であり、
+([symbol-interned?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dinterned_003f) foo-3)
 ⇒ #f
-; ただインターンされていないだけである。
-```
+ただ、収容所には入れられなかっただけだ。
 
----
+* * *
 
-> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
-> 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
+次へ: [ペア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pairs)、前: [シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

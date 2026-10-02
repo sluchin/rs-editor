@@ -1,429 +1,430 @@
-# 3 Hello Scheme!
+3 Hello Scheme! [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021-1)
+--------------------------------------------------------------------------------------------
 
-> **原文**: [Guile Reference Manual - Hello Scheme!](https://www.gnu.org/software/guile/manual/html_node/Hello-Scheme_0021.html)
->
-> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
+本章では、Scheme言語の優雅さと強力さを支える基本概念を紹介します。
 
-この章では、Scheme 言語の優雅さと力を支える基本的な概念を紹介します。
+Schemeに関する基礎知識をお持ちの読者は、この章を飛ばしても構いません。しかし、Schemeを初めて学ぶ読者のために、データ、手続き、式、クロージャに関する以下の説明は、以降の章で前提とされる最低限のScheme理解を提供することを目的としています。
 
-すでに Scheme の背景知識を持っている読者は、この章を気軽に読み飛ばしてかまいません。しかし、この言語に初めて触れる読者のために、以下のデータ、手続き、式、クロージャに関する議論は、後続の章で多かれ少なかれ前提とされる最低限の Scheme の理解を提供するように構成されています。
+この入門資料のスタイルは、R5RSの簡潔で正確な記述と、既存のSchemeチュートリアルの解説的な記述の中間を目指しています。ウェブ上の有用なSchemeリソースへのリンクについては、[参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)をご覧ください。
 
-この入門的な内容のスタイルは、R5RS の簡潔な正確さと、既存の Scheme チュートリアルの饒舌さとの、ちょうど中間あたりを目指しています。ウェブ上の有用な Scheme の情報源へのポインタについては、「さらなる読み物」を参照してください。
+* [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data)
+* [プロシージャの表現と使用法](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)
+* [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)
+* [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)
+* [参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)
 
-- データ型、値、変数
-- 手続きの表現と使用
-- 式と評価
-- クロージャの概念
-- さらなる読み物
+* * *
 
-## 3.1 データ型、値、変数
+次へ: [手続きの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-この節では、データ型と値の表現、Scheme が潜在型付け（latently typed）言語であることの意味、そして変数の役割について論じます。最後に、新しい変数を定義するための Scheme の構文と、既存の変数の値を変更するための構文を紹介します。
+### 3.1 データ型、値、変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types_002c-Values-and-Variables)
 
-- 潜在型付け
-- 値と変数
-- 変数の定義と設定
+このセクションでは、データ型と値の表現、Schemeが潜在型言語であることの意味、そして変数の役割について説明します。最後に、新しい変数を定義するためのSchemeの構文と、既存の変数の値を変更するための構文を紹介します。
 
-### 3.1.1 潜在型付け
+* [潜在型付け](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing)
+* [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)
+* [変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)
 
-**潜在型付け**（latent typing）という用語は、Scheme のように、一般にプログラムのソースコードを見ただけでは、特定の変数や特定の式の結果にどのような型のデータが関連付けられるかを判断できないコンピュータ言語を表すのに使われます。
+* * *
 
-もちろん、コードから式の型が分かる場合もあります。プログラムの中に変数 `x` を数値 1 に設定する行があれば、その行が実行された直後には（そしてマルチスレッドが存在しない場合には）、`x` が数値 1 を持っていることを確信できます。あるいは、2つの文字列を連結するように設計された手続きを書いた場合、アプリケーションの残りの部分は常にこの手続きを2つの文字列パラメータで呼び出す可能性が高く、もし両方が文字列ではないパラメータで呼び出されたなら、その手続きは何らかの形でおかしくなる可能性がかなり高いでしょう。
+次へ: [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)、上: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-それでも重要な点は、Scheme には手続きのパラメータが常に文字列であることや、`x` が常に数値を保持することを要求するものは何もなく、そのような制約が常に守られるべきだとプログラム内で宣言する方法もないということです。同様に、手続きの戻り値の期待される型を宣言する方法もありません。
+#### 3.1.1 潜在型付け [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing-1)
 
-その代わりに、変数や式の型は――一般には――実行時にのみ分かります。ある時点で値が期待される型を持っていることを確認する必要がある場合、Scheme はそのために呼び出せる実行時の手続きを提供しています。しかし同様に、同じ手続きの2つの別々の呼び出しが異なる型の引数を指定し、異なる型の値を返すことも、まったく正当でありえます。
+「潜在型付け」という用語は、Schemeなどのコンピュータ言語を説明する際に使用されます。これらの言語では、一般的に、プログラムのソースコードを見ただけでは、特定の変数や特定の式の結果に関連付けられるデータの型を判断することはできません。
 
-次の小節では、Scheme プログラムがデータ型、値、変数を使用する方法について、これが実際に何を意味するのかを説明します。
+もちろん、コードから式の型を判断できる場合もあります。プログラムに変数 `x` を数値 1 に設定する行がある場合、その行の実行直後（複数のスレッドが存在しない場合）には `x` の値が 1 になることが確実です。また、2 つの文字列を連結するように設計されたプロシージャを作成した場合、アプリケーションの他の部分では常に 2 つの文字列パラメータでこのプロシージャが呼び出される可能性が高く、両方とも文字列ではないパラメータで呼び出された場合は、何らかの形でプロシージャが誤動作する可能性が高いでしょう。
 
-### 3.1.2 値と変数
+しかしながら、重要なのは、Schemeには手続きのパラメータが常に文字列であることや、`x`が常に数値であることを要求する規定はなく、プログラム内でそのような制約を常に遵守するように宣言する方法もないということです。同様に、手続きの戻り値の期待される型を宣言する方法もありません。
 
-Scheme は、データを表現するために使用できる多くのデータ型を提供しています。プリミティブ型には、文字、文字列、数値、手続きが含まれます。プリミティブな値や複合的な値のグループをまとめて格納できる複合型には、リスト、ペア、ベクタ、多次元配列が含まれます。さらに、Guile ではアプリケーションが、組み込みの標準 Scheme 型と同じ地位を持つ独自のデータ型を定義できます。
+その代わりに、変数や式の型は、一般的には実行時にのみ判明します。値が期待される型であるかどうかを何らかの時点で確認する必要がある場合は、Scheme が提供する実行時プロシージャを使用して確認できます。しかし同様に、同じプロシージャを 2 回呼び出す際に、引数の型や戻り値の型が異なることも全く問題ありません。
 
-Scheme プログラムが実行されると、あらゆる型の値が生まれては消えていきます。値が変数に格納されることもありますが、より一般的には、ある計算の結果から次の計算のパラメータの一つへと、途切れることなく渡されていきます。
+次の小節では、これが実際にSchemeプログラムがデータ型、値、変数を使用する方法にどのような意味を持つのかを説明します。
 
-例を考えてみましょう。インタプリタがプログラムのソースコードからリテラル文字列を読み込むことで、文字列値が作成されます。次に、文字列の長さを計算した結果として数値が作成されます。計算された長さを2倍にすることで、2つ目の数値が作成されます。最後に、プログラムは2つの要素――2倍にした長さと元の文字列そのもの――を持つリストを作成し、このリストをプログラムの変数に格納します。
+* * *
 
-ここに関わるすべての値――実際には Scheme のすべての値――は、自分の型を携えています。言い換えれば、すべての値は実行時に、自分がどのような種類の値であるかを「知って」います。数値、文字列、リスト、何であれ。
+次へ: [変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)、前: [潜在型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing)、上: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-一方、変数には固定された型がありません。変数――たとえば `x`――は単に、任意の種類の Scheme 値を格納できる場所――箱――の名前にすぎません。そのため、プログラム内の同じ変数が、ある瞬間には数値を保持し、次には手続きのリストを、そして後には文字列のペアを保持することもあります。変数の「型」とは――その考え自体に意味がある限りにおいて――単に、その変数が特定の瞬間にたまたま格納している値の型にすぎません。
+#### 3.1.2 値と変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables-1)
 
-### 3.1.3 変数の定義と設定
+Schemeには、データを表現するために使用できる多くのデータ型が用意されています。プリミティブ型には、文字、文字列、数値、プロシージャなどがあります。複合型は、プリミティブ型と複合型の値をまとめて格納できるもので、リスト、ペア、ベクトル、多次元配列などがあります。さらに、Guileでは、アプリケーションが独自のデータ型を定義することができ、それらはSchemeの標準組み込み型と同じステータスを持ちます。
 
-新しい変数を定義するには、次のように Scheme の `define` 構文を使用します。
+Schemeプログラムの実行中、あらゆる型の値が次々と出現したり消滅したりします。値は変数に格納されることもありますが、より一般的には、ある計算結果から次の計算の引数へとシームレスに受け渡されます。
 
-```scheme
-(define variable-name value)
-```
+例を挙げて考えてみましょう。まず、インタープリタがプログラムのソースコードからリテラル文字列を読み込むことで、文字列値が生成されます。次に、その文字列の長さを計算することで数値が生成されます。さらに、計算された長さを2倍にすることで、2つ目の数値が生成されます。最後に、プログラムは2倍の長さと元の文字列という2つの要素を持つリストを作成し、このリストをプログラム変数に格納します。
 
-これにより `variable-name` という新しい変数が作成され、その変数の初期値として `value` が格納されます。例を示します。
+ここで扱うすべての値、つまりSchemeにおけるすべての値は、その型を保持しています。言い換えれば、すべての値は実行時に、それがどのような種類の値であるかを「認識」しています。数値、文字列、リストなど、何でも構いません。
 
-```scheme
-;; 初期値として数値 1 を持つ変数 `x' を作る。
-(define x 1)
+一方、変数には固定された型はありません。変数（例えば`x`）は、単に場所（ボックス）の名前であり、そこにあらゆる種類のScheme値を格納できます。そのため、プログラム内の同じ変数は、ある時点では数値を、次の時点では手続きのリストを、さらに後には文字列のペアを格納している可能性があります。変数の「型」という概念が意味を持つとすれば、それは単に、その変数が特定の時点で格納している値の型にすぎません。
 
-;; 初期値として文字列値を持つ変数 `organization' を作る。
-(define organization "Free Software Foundation")
-```
+* * *
 
-（Scheme では、セミコロンは行末まで続くコメントの始まりを示します。したがって `;;` で始まる行はコメントです。）
+前へ: [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)、上へ: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-すでに存在する変数の値を変更するのも非常によく似ていますが、`define` の代わりに次のように Scheme の構文 `set!` を使用します。
+#### 3.1.3 変数の定義と設定 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-and-Setting-Variables)
 
-```scheme
-(set! variable-name new-value)
-```
+新しい変数を定義するには、Schemeの`define`構文を次のように使用します。
 
-変数には固定された型がないことを思い出してください。したがって `new-value` は、`variable-name` という名前の場所に以前格納されていたものとまったく異なる型を持っていてもかまいません。そのため、次の例はどちらも正しいものです。
+（変数名と値を定義する）
 
-```scheme
-;; `x' の値を 5 に変更する。
-(set! x 5)
+これは「変数名」という名前の新しい変数を作成し、その変数に初期値として値を格納します。例：
 
-;; `organization' の値を FSF の番地に変更する。
-(set! organization 545)
-```
+;; 初期数値 1 を持つ変数 `x' を作成します。
+(x 1 を定義)
 
-これらの例では、`value` と `new-value` はリテラルの数値または文字列値です。しかし一般には、`value` と `new-value` は任意の Scheme 式でかまいません。Scheme の式が取りうる形式についてはまだ扱っていませんが（「式と評価」を参照）、次の `set!` の例が何をするのかはおそらく推測できるでしょう…
+;; 初期文字列値を持つ変数 `organization` を作成します。
+（組織名「フリーソフトウェア財団」を定義する）
 
-```scheme
-(set! x (+ x 1))
-```
+（Schemeでは、セミコロンは行末まで続くコメントの開始を示します。したがって、`;;`で始まる行はコメントです。）
 
-（注意: これは `define` と `set!` の完全な説明ではありません。欠けている部分を埋める前に、Scheme の他のいくつかの側面を紹介する必要があるからです。しかし、すでに Scheme の構造に精通しているなら、以下の参照先に先回りして、それらの欠けている部分についてすぐに読みたいと思うかもしれません。
+既に存在する変数の値を変更する方法も非常に似ていますが、`define` が Scheme の構文 `set!` に置き換えられます。例：
 
-- 「Lambda の代替形式」: 新しい手続きを定義するときに使用できる `define` 構文の代替形式について読むことができます。
-- 「セッター付き手続き」: 複合データ構造の奥深くにある単一の値を変更するのに役立つ `set!` 構文の代替形式について読むことができます。）
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 変数名 新しい値)
 
-Scheme プログラムのトップレベル以外で `define` を使用することについては、「内部定義」を参照してください。既存の変数の値を変更するのに `set!` ではなく `define` を使うことがうまくいくのはどのような場合かについての議論も含まれています。
+変数には固定の型がないため、新しい値は、変数名で指定された場所に以前格納されていた値とは全く異なる型になる可能性があります。したがって、以下の2つの例はどちらも正しいと言えます。
 
-## 3.2 手続きの表現と使用
+;; `x` の値を 5 に変更します。
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x 5)
 
-この節では、Scheme の手続きを使用および作成するための基本を紹介します。手続きを単なる Scheme 値の一種として表現することについて論じ、手続き呼び出し式がどのように構成されるかを示します。次に、新しい手続きを作成するために `lambda` がどのように使われるかを説明し、最後に、明示的な `lambda` 式を書く代わりに使用できる `define` のさまざまな省略形式を紹介します。
+;; `organization` の値を FSF の番地に変更します。
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021)組織545)
 
-- 値としての手続き
-- 単純な手続き呼び出し
-- 新しい手続きの作成と使用
-- Lambda の代替形式
+これらの例では、value と new-value はリテラルな数値または文字列です。しかし一般に、value と new-value は任意の Scheme 式にすることができます。Scheme 式が取り得る形式についてはまだ説明していませんが ([式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) を参照)、次の `set!` の例が何をするかはおそらく推測できるでしょう。
 
-### 3.2.1 値としての手続き
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) x 1))
 
-Scheme の大きな単純化の一つは、手続きが単なる値の一種であり、手続きの値は、たとえば文字列やリストとまったく同じ方法で受け渡したり変数に格納したりできることです。`open-input-file` のような組み込みの標準 Scheme 手続きについて話すとき、実際に意味しているのは、`open-input-file` という名前の定義済みトップレベル変数が存在し、その値は `open-input-file` が行うべきだと R5RS が述べていることを実装する手続きである、ということです。
+（注：これは `define` と `set!` の完全な説明ではありません。不足している部分を補うには、Scheme の他の側面を紹介する必要があるためです。ただし、Scheme の構造に既に精通している場合は、次の参照に進んで不足している部分についてすぐに読むことができます。）
 
-これは、Emacs Lisp を含む Lisp の多くの方言とはかなり異なることに注意してください。それらの方言では、プログラムは同じ名前を2つのまったく別の意味で使うことができます。一方の意味は Lisp の関数を識別し、もう一方の意味は Lisp の変数を識別しますが、その変数の値は最初の意味に関連付けられた関数とは何の関係もなくてかまいません。これらの方言では、関数と変数は異なる名前空間（namespace）に住んでいると言われます。
+* [ラムダの代替](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives) では、新しいプロシージャを定義する際に使用できる `define` 構文の代替形式について説明しています。
+* [セッターを使用したプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters) を参照してください。これは、複合データ構造の奥深くにある単一の値を変更するのに役立つ、`set!` 構文の別の形式について説明しています。
+* Scheme プログラムでトップレベル以外で `define` を使用する方法については、[内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions) を参照してください。既存の変数の値を変更するために `set!` ではなく `define` を使用する場合の議論も含まれています。
 
-一方 Scheme では、すべての名前は単一の統一された名前空間に属し、これらの名前が識別する変数は、手続きの値を含め、任意の種類の Scheme 値を保持できます。
+* * *
 
-「値としての手続き」という考え方の一つの帰結は、もし Scheme の手続きの標準名がたまたま気に入らなければ、それを変更できるということです。
+次へ: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)、前: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-たとえば、`call-with-current-continuation` は非常に重要な標準 Scheme 手続きですが、名前もとても長いのです！ そこで、多くのプログラマは次の定義を使って、同じ手続きの値をより便利な名前 `call/cc` に割り当てています。
+### 3.2 プロシージャの表現と使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Representation-and-Use-of-Procedures)
 
-```scheme
+このセクションでは、Schemeプロシージャの使用と作成の基本について説明します。プロシージャをScheme値の一種として表現する方法、およびプロシージャ呼び出し式の構築方法について解説します。次に、`lambda`を使用して新しいプロシージャを作成する方法を説明し、最後に、明示的な`lambda`式を記述する代わりに使用できる`define`のさまざまな省略形を紹介します。
+
+* [プロシージャを値として扱う](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values)
+* [シンプルな手続き呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)
+* [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)
+* [Lambda の代替手段](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives)
+
+* * *
+
+次へ: [単純なプロシージャ呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)、上: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.2.1 プロシージャを値として扱う [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values-1)
+
+Schemeの大きな簡略化の一つは、プロシージャが単なる値の型の一つであり、プロシージャの値は文字列やリストなどと全く同じように受け渡しや変数への格納ができるという点です。`open-input-file`のような組み込みの標準Schemeプロシージャについて話す場合、実際には、`open-input-file`という事前定義されたトップレベル変数があり、その値はR5RSが`open-input-file`に実行させるべき処理を実装するプロシージャであることを意味します。
+
+これは、Emacs Lispを含む多くのLisp方言とは大きく異なる点に注意が必要です。Emacs Lispでは、プログラムが同じ名前を2つの全く異なる意味で使用できます。1つはLisp関数を識別し、もう1つはLisp変数を識別します。変数の値は、最初の意味に関連付けられた関数とは何の関係もありません。これらの方言では、関数と変数は異なる_名前空間_に存在すると言われています。
+
+一方、Schemeでは、すべての名前は単一の統一された名前空間に属し、これらの名前が識別する変数は、手続き値を含むあらゆる種類のScheme値を保持できます。
+
+「プロシージャを値として扱う」という考え方の結果の一つとして、Schemeプロシージャの標準名が気に入らない場合は、それを変更できるという点が挙げられます。
+
+例えば、`call-with-current-continuation` は非常に重要な標準 Scheme 手続きですが、名前が非常に長いです。そのため、多くのプログラマーは、同じ手続き値をより便利な名前 `call/cc` に割り当てるために、次の定義を使用します。
+
 (define call/cc call-with-current-continuation)
-```
 
-これがどのように機能するのかを正確に理解しましょう。この定義は新しい変数 `call/cc` を作成し、その値を変数 `call-with-current-continuation` の値に設定します。後者の値は、R5RS が「call-with-current-continuation」という名前の下で規定している動作を実装する手続きです。したがって `call/cc` も最終的にこの値を保持することになります。
+この仕組みを正確に理解しましょう。定義では、新しい変数 `call/cc` が作成され、その値が変数 `call-with-current-continuation` の値に設定されます。後者の値は、R5RS が「call- with-current-continuation」という名前で指定する動作を実装するプロシージャです。そのため、`call/cc` もこの値を保持することになります。
 
-これで `call/cc` が必要な手続きの値を保持したので、`call-with-current-continuation` をまったく別の目的に使うことを選んでもよいし、プログラム内で `call/cc` ではなく誤って `call-with-current-continuation` を手続きとして使った場合にエラーになるように、単にその値を変更してもかまいません。たとえば次のようにします。
+`call/cc` に必要なプロシージャ値が保持されたので、`call-with-current-continuation` をまったく別の目的で使用するか、あるいはその値を変更して、プログラム内で `call/cc` の代わりに誤って `call-with-current-continuation` をプロシージャとして使用した場合にエラーが発生するようにすることができます。例:
 
-```scheme
-(set! call-with-current-continuation "Not a procedure any more!")
-```
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) call-with-current-continuation "もはや手続きではありません!")
 
-あるいは、`call-with-current-continuation` をそのままにしておいてもかまいません。複数の変数が同じ手続きの値を保持することはまったく問題ありません。
+あるいは、`call-with-current-continuation` をそのままにしておいても構いません。複数の変数に同じプロシージャ値が保持されていても全く問題ありません。
 
-### 3.2.2 単純な手続き呼び出し
+* * *
 
-Scheme での手続き呼び出しは次のように書きます。
+次へ: [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)、前: [値としてのプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values)、上: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-(procedure [arg1 [arg2 ...]])
-```
+#### 3.2.2 シンプルなプロシージャ呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Procedure-Invocation)
 
-この式において、`procedure` は値が手続きである任意の Scheme 式でかまいません。しかし最も一般的には、`procedure` は単に、値が手続きである変数の名前です。
+Schemeにおけるプロシージャ呼び出しは、次のように記述されます。
 
-たとえば、`string-append` は、与えられたすべての引数（文字列であることが期待される）を連結するという動作を持つ標準 Scheme 手続きです。したがって、式
+([procedure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure) \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
 
-```scheme
-(string-append "/home" "/" "andrew")
-```
+この式において、procedureは値がプロシージャである任意のScheme式です。ただし、最も一般的なのは、値がプロシージャである変数の名前です。
 
-は、結果が文字列値 `"/home/andrew"` となる手続き呼び出しです。
+例えば、`string-append` は標準的な Scheme 手続きで、文字列として与えられる引数をすべて連結する動作をします。したがって、式は次のようになります。
 
-同様に、`string-length` は単一の文字列引数の長さを返す標準 Scheme 手続きなので、
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew")
 
-```scheme
-(string-length "abc")
-```
+これは、結果として文字列値「/home/andrew」が得られるプロシージャ呼び出しです。
 
-は、結果が数値 3 となる手続き呼び出しです。
+同様に、`string-length` は単一の文字列引数の長さを返す標準的な Scheme 手続きです。
 
-手続き呼び出しの各パラメータは、それ自体が任意の Scheme 式でかまいません。手続き呼び出しはそれ自体が式の一種なので、これら2つの例を組み合わせて
+([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) "abc")
 
-```scheme
-(string-length (string-append "/home" "/" "andrew"))
-```
+これは、結果として数値3となるプロシージャ呼び出しです。
 
-――結果が数値 12 となる手続き呼び出し――を得ることができます。
+プロシージャ呼び出しの各パラメータは、それ自体が任意の Scheme 式になり得ます。プロシージャ呼び出し自体が式の型であるため、これら 2 つの例を組み合わせると次のようになります。
 
-（2つの例を逆向きに組み合わせたらどうなるのか疑問に思うかもしれません。そうすると、構文的には正しい手続き呼び出し式を作ることができます。
+([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) ([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew"))
 
-```scheme
-(string-append "/home" (string-length "abc"))
-```
+—結果として数値12となる手続き呼び出し。
 
-しかし、この式を実行するとエラーが発生します。`(string-length "abc")` の結果は数値であり、`string-append` は数値を引数の一つとして受け付けるようには設計されていないからです。）
+（この2つの例を逆の順序で組み合わせるとどうなるのか疑問に思うかもしれません。そうすると、構文的に正しいプロシージャ呼び出し式を作成できます。）
 
-### 3.2.3 新しい手続きの作成と使用
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend ) "/home" ([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) "abc"))
 
-Scheme には多くの標準手続きがあり、Guile はそれらすべてを定義済みのトップレベル変数を介して提供しています。これらの標準手続きはすべて、このリファレンスマニュアルの後の章で文書化されています。
+しかし、この式を実行するとエラーが発生します。なぜなら、`(string-length "abc")` の結果は数値であり、`string-append` は引数として数値を受け入れるように設計されていないからです。
 
-しかし、そう遠くないうちに、自分のアプリケーションの機能の側面をカプセル化する新しい手続きを作りたくなるでしょう。そのためには、有名な `lambda` 構文を使用できます。
+* * *
 
-たとえば、次の Scheme 式の値は
+次へ: [ラムダの代替手段](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives)、前: [単純なプロシージャ呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)、上: [プロシージャの表現と使用法](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-(lambda (name address) body ...)
-```
+#### 3.2.3 新しいプロシージャの作成と使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-and-Using-a-New-Procedure)
 
-2つの引数 `name` と `address` を取る、新しく作成された手続きです。新しい手続きの動作は、手続き定義の本体（body）にある式と定義の並びによって決まります。（通常、body は何らかの方法で引数を使用します。そうでなければ、手続きに引数を渡す意味がありません。）呼び出されると、新しい手続きは本体の最後の式の値を返します。
+Schemeには多くの標準プロシージャがあり、Guileはそれらをすべて定義済みのトップレベル変数を通して提供します。これらの標準プロシージャはすべて、このリファレンスマニュアルの後半の章で説明されています。
 
-もう少し具体的にするために、2つの引数がどちらも文字列であり、この手続きの目的がこれらの引数を含む結合された文字列を作ることだと仮定しましょう。すると、完全な lambda 式は次のようになるでしょう。
+しかし、間もなく、アプリケーションの機能の一部をカプセル化する新しいプロシージャを作成したくなるでしょう。そのためには、有名なラムダ式構文を使用できます。
 
-```scheme
+例えば、次の Scheme 式の値は
+
+(lambda (name address) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+
+これは、`name` と `address` という 2 つの引数を取る、新しく作成されたプロシージャです。この新しいプロシージャの動作は、プロシージャ定義の本体にある式と定義の順序によって決まります。（通常、本体は何らかの方法で引数を使用します。そうでなければ、プロシージャに引数を渡す意味がありません。）この新しいプロシージャが呼び出されると、本体の最後の式の値を返します。
+
+より具体的に説明するために、2つの引数が両方とも文字列であり、この手順の目的がこれらの引数を含む結合文字列を作成することだと仮定しましょう。すると、完全なラムダ式は次のようになります。
+
 (lambda (name address)
-  (string-append "Name=" name ":Address=" address))
-```
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
 
-前の小節で、手続き呼び出し式の手続き部分は、値が手続きである任意の Scheme 式でかまわないと述べました。しかし、それはまさに lambda 式そのものです！ したがって、次のように手続き呼び出しの中で lambda 式を直接使うことができます。
+前の節で述べたように、プロシージャ呼び出し式のプロシージャ部分は、値がプロシージャである任意の Scheme 式にすることができます。しかし、ラムダ式はまさにそれです！したがって、次のようにラムダ式をプロシージャ呼び出しで直接使用できます。
 
-```scheme
 ((lambda (name address)
-   (string-append "Name=" name ":Address=" address))
- "FSF"
- "Cambridge")
-```
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
+「FSF」
+「ケンブリッジ」
 
-これは正しい手続き呼び出し式であり、その結果は次の文字列です。
+これは有効なプロシージャ呼び出し式であり、その結果は次の文字列です。
 
-```scheme
-"Name=FSF:Address=Cambridge"
-```
+"名前=FSF:住所=ケンブリッジ"
 
-しかし、より一般的なのは、手続きの値を変数に格納し――
+しかし、手続きの値を変数に格納する方が一般的です。
 
-```scheme
-(define make-combined-string
-  (lambda (name address)
-    (string-append "Name=" name ":Address=" address)))
-```
+(make-combined-string を定義)
+(lambda (name address)
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address)))
 
-――それから手続き呼び出しの中で変数名を使うことです。
+そして、プロシージャ呼び出しで変数名を使用するには：
 
-```scheme
 (make-combined-string "FSF" "Cambridge")
-```
 
-これはまったく同じ結果になります。
+結果は全く同じです。
 
-`lambda` を使って作成された手続きは、標準の組み込み Scheme 手続きとまったく同じ地位を持ち、まったく同じ方法で呼び出したり、受け渡したり、変数に格納したりできることに注意することが重要です。
+`lambda` を使用して作成されたプロシージャは、Scheme の標準組み込みプロシージャとまったく同じステータスを持ち、まったく同じ方法で呼び出し、受け渡し、変数に格納できることに注意することが重要です。
 
-### 3.2.4 Lambda の代替形式
+* * *
 
-Scheme プログラムでは、手続きを作成してそれを変数に格納したい場面が非常に多いため、まさにそれを行える `define` 構文の代替形式があります。
+前へ: [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)、上へ: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-次の形式の `define` 式は
+#### 3.2.4 ラムダの代替手段 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives-1)
 
-```scheme
-(define (name [arg1 [arg2 ...]])
-  body ...)
-```
+Scheme プログラムでは、プロシージャを作成してそれを変数に格納したいという要望が非常に一般的であるため、まさにそれを可能にする `define` 構文の別の形式が用意されています。
 
-次のより長い形式とまったく同等です。
+形式の `define` 式
 
-```scheme
-(define name
-  (lambda ([arg1 [arg2 ...]])
-    body ...))
-```
+(define (name \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
+本文 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-したがって、たとえば前の小節の `make-combined-string` の定義は、次のように書くこともできます。
+長い形式と完全に同等です
 
-```scheme
+(名前を定義する)
+(lambda (\[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
+本文 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+
+例えば、前の小節の`make-combined-string`の定義は、次のように記述することもできます。
+
 (define (make-combined-string name address)
-  (string-append "Name=" name ":Address=" address))
-```
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
 
-この種の手続き定義は、ちょうど期待される数の引数を必要とする手続きを作成します。lambda 式にはさらに2つの形式があり、可変個の引数を受け付けることができる手続きを作成します。
+この種のプロシージャ定義では、想定どおりの引数数を必要とするプロシージャが作成されます。ラムダ式にはさらに2つの形式があり、これらは可変個の引数を受け入れることができるプロシージャを作成します。
 
-```scheme
-(lambda (arg1 ... . args) body ...)
+(lambda (arg1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-(lambda args body ...)
-```
+(ラムダ引数本体 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-代替 `define` 構文の対応する形式は次のとおりです。
+代替の`define`構文に対応する形式は次のとおりです。
 
-```scheme
-(define (name arg1 ... . args) body ...)
+(define (name arg1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-(define (name . args) body ...)
-```
+(define (name . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-これらの形式がどのように機能するかの詳細については、「Lambda: 基本的な手続きの作成」を参照してください。
+これらのフォームの仕組みの詳細については、[ラムダ: 基本プロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)を参照してください。
 
-Guile 2.0 より前には、Guile は前述の拡張を任意の深さまで入れ子にできる `define` 構文の拡張を提供していました。これらはもはやデフォルトでは提供されず、代わりに「カリー化された定義」に移されました。
+Guile 2.0 より前は、Guile は `define` 構文に拡張機能を提供しており、以前の拡張機能を任意の深さまでネストすることができました。これらの拡張機能はデフォルトでは提供されなくなり、代わりに [カリー定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Curried-Definitions) に移動されました。
 
-（代替の `define` 形式は、特に Scheme 言語の初心者にとってはかなり紛らわしいと主張することもできるでしょう。これらは `lambda` の役割と、手続きが他の種類の値とまったく同じように変数に格納される値であるという事実の両方を隠してしまうからです。一方で、これらは非常に便利であり、また Scheme のもう一つの強力な機能――実行時に任意の構文変換を指定し、それを後続の読み込まれる入力に適用できる能力――の良い例でもあります。）
+（代替の`define`形式は、特にScheme言語の初心者にとってはやや紛らわしいと言えるかもしれない。なぜなら、それらは`lambda`の役割と、手続きが他の種類の値と同様に変数に格納される値であるという事実の両方を隠してしまうからである。一方で、それらは非常に便利であり、Schemeの強力な機能のもう1つ、つまり実行時に任意の構文変換を指定し、それを後続の読み込み入力に適用できるという機能の良い例でもある。）
 
-## 3.3 式と評価
+* * *
 
-ここまでで、新しい変数を作成して初期化する `define` 式のように何かを行う式に出会い、また、たとえば手続き呼び出し式の値のように、値を持つ式についても話してきました。
+次へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)、前: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-(string-append "/home" "/" "andrew")
-```
+### 3.3 式と評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Expressions-and-Evaluation)
 
-しかし、この手続き呼び出しのような式が何によってその「値」に還元されるのか、あるいはそのような式の処理が Scheme プログラム全体の実行とどのように関係するのかについては、まだ正確に述べていません。
+これまで、新しい変数を作成および初期化する `define` 式のように、何らかの処理を行う式について見てきました。また、プロシージャ呼び出し式の値のように、値を持つ式についても説明してきました。
 
-この節では、**評価**（evaluation）という考えを導入することで、式の値が何を意味するのかを明確にします。評価が持ちうる副作用について論じ、Scheme のさまざまな種類の式それぞれがどのように評価されるかを説明し、評価を探求するための仕組みとして Guile REPL の動作と使い方を説明します。この節の最後に、Scheme のよく使われる構文的な式をごく簡単にまとめます。
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew")
 
-- 式の評価とプログラムの実行
-- 末尾呼び出し
-- Guile REPL を使う
-- よく使われる構文のまとめ
+しかし、このような手続き呼び出しのような式がその「値」に還元される原因や、そのような式の処理がSchemeプログラム全体の実行とどのように関連しているかについては、まだ明確にしていません。
 
-### 3.3.1 式の評価とプログラムの実行
+このセクションでは、「評価」という概念を導入することで、式の値の意味を明確にします。評価がもたらす副作用について議論し、Schemeの様々な式がどのように評価されるかを説明し、評価を検証するためのメカニズムとしてのGuile REPLの動作と使用法について解説します。最後に、Schemeの一般的な構文式を簡潔にまとめます。
 
-Scheme では、式を実行する過程は**評価**として知られています。評価には2種類の結果があります。
+* [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating)
+* [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)
+* [Guile REPL の使用方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)
+* [共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)
 
-- 評価された式の**値**
-- 評価の**副作用**。これは、式を評価することによる効果のうち、値によって表されないもので構成されます。
+* * *
 
-これまでに出会った式のうち、`define` と `set!` の式は副作用――変数の作成または変更――を持ちますが、値は持ちません。`lambda` 式は値――新しく構築された手続き――を持ちますが、副作用は持ちません。そして手続き呼び出し式は、一般に、値か副作用、あるいはその両方を持ちます。
+次へ: [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-「値」と「副作用」が何を意味し、両者の違いが何であるかを、もっと直観的に定義したくなるかもしれません。しかし一般には、これは非常に困難です。またそれは不要でもあります。その代わりに、Scheme がプログラム全体をどのように実行するかを規定し、次に各種類の式について個別に評価の値と副作用を説明することで、Scheme プログラムの動作を十分に定義することができます。
+#### 3.3.1 式の評価とプログラムの実行 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Expressions-and-Executing-Programs)
 
-そこで、いくつかの定義を示します…[^2]
+Schemeでは、式を実行するプロセスを「評価」と呼びます。評価には2種類の結果があります。
 
-- Scheme プログラムは式の並びで構成されます。
-- Scheme インタプリタは、これらの式を順番に一つずつ評価することでプログラムを実行します。
-- 式は次のいずれかです。
-  - 数値 `2.3` や文字列 `"Hello world!"` のような、リテラルデータ
-  - 変数名
-  - 手続き呼び出し式
-  - Scheme の特別な構文的な式の一つ
+* 評価された式の_値_
+* 評価の_副作用_。これは、値によって表されない、式を評価することによって生じるあらゆる影響から構成されます。
 
-[^2]: これらの定義は近似的なものです。完全で詳細な真実については、『The Revised(5) Report on the Algorithmic Language Scheme』の「R5RS syntax」を参照してください。
+これまで見てきた式の中で、`define` 式と `set!` 式は変数の作成や変更といった副作用を持ちますが、値はありません。`lambda` 式は新しく構築されたプロシージャという値を持ちますが、副作用はありません。そして、プロシージャ呼び出し式は一般的に、値、副作用、またはその両方を持ちます。
 
-以下の小節では、これらの種類の式それぞれがどのように評価されるかを説明します。
+「値」と「副作用」の意味、そしてそれらの違いをより直感的に定義しようと試みたくなる気持ちは理解できます。しかし、一般的にこれは非常に困難です。また、そのような定義は不要です。Schemeプログラムの動作は、Schemeがプログラム全体をどのように実行するかを指定し、各式タイプの評価における値と副作用を個別に記述することで、十分に定義できます。
 
-- リテラルデータの評価
-- 変数参照の評価
-- 手続き呼び出し式の評価
-- 特別な構文的な式の評価
+そこで、いくつかの定義[2](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT2)…
 
-#### 3.3.1.1 リテラルデータの評価
+Schemeプログラムは、一連の式で構成されます。
+* Scheme インタープリタは、これらの式を順番に 1 つずつ評価することによってプログラムを実行します。
+* 式は
+* 数値「2.3」や文字列「"Hello world!"」などのリテラルデータ。
+* 変数名
+* プロシージャ呼び出し式
+* Schemeの特殊な構文表現の一つ。
 
-リテラルデータの式が評価されるとき、その式の値は単にその式が記述している値です。リテラルデータの式の評価には副作用がありません。
+以下の各項では、これらの表現形式がどのように評価されるかを説明します。
 
-したがって、たとえば次のようになります。
+* [リテラルデータの評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Literal)
+* [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)
+* [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)
+* [特殊な構文式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Special)
 
-- 式 `"abc"` の値は文字列値 `"abc"` です。
-- 式 `3+4i` の値は複素数 3 + 4i です。
-- 式 `#(1 2 3)` の値は、数値 1、2、3 を含む3要素のベクタです。
+* * *
 
-このようにリテラルとして表現できる任意のデータ型について、そのデータ型のリテラルデータ式の構文――言い換えれば、その型のリテラル値を示すためにコードに書く必要のあるもの――は、そのデータ型の**読み取り構文**（read syntax）として知られています。このマニュアルでは、そのような各データ型の読み取り構文を、そのデータ型を説明する節で規定しています。
+次へ: [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-読み取り構文を持たないデータ型もあります。たとえば手続きはリテラルデータとして表現することができず、`lambda` 式を使うか（「新しい手続きの作成と使用」を参照）、`define` の省略形式を使って暗黙的に（「Lambda の代替形式」を参照）作成しなければなりません。
+#### 3.3.1.1 リテラルデータの評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Literal-Data)
 
-#### 3.3.1.2 変数参照の評価
+リテラルデータ式が評価されると、その式の値は、式が記述する値そのものになります。リテラルデータ式の評価には副作用はありません。
 
-単に変数名だけで構成される式が評価されるとき、その式の値は名前の付いた変数の値です。変数参照式の評価には副作用がありません。
+例えば、
 
-したがって、
+* 式「"abc"」の値は文字列値「"abc"」です。
+* 式 `3+4i` の値は複素数 3 + 4i です
+* 式 `#(1 2 3)` の値は、数値 1、2、3 を含む 3 要素のベクトルです。
 
-```scheme
-(define key "Paul Evans")
-```
+このようにリテラルで表現できるデータ型については、そのデータ型のリテラルデータ式の構文、つまり、その型のリテラル値を表すためにコードに記述する必要がある構文を、そのデータ型の読み取り構文と呼びます。このマニュアルでは、各データ型の説明セクションで、それぞれの読み取り構文を規定しています。
 
-の後では、式 `key` の値は文字列値 `"Paul Evans"` です。その後 `key` が
+データ型によっては読み取り構文がないものがあります。たとえば、プロシージャはリテラルデータとして表現することはできません。プロシージャは、`lambda` 式を使用して作成する必要があります ([新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure) を参照)。または、`define` の省略形を使用して暗黙的に作成する必要があります ([ラムダの代替](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives) を参照)。
 
-```scheme
-(set! key 3.74)
-```
+* * *
 
-によって変更されれば、式 `key` の値は数値 3.74 になります。
+次へ: [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)、前: [リテラルデータの評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Literal)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-指定された名前を持つ変数が存在しない場合、変数参照式の評価はエラーを通知します。
+#### 3.3.1.2 変数参照の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-a-Variable-Reference)
 
-#### 3.3.1.3 手続き呼び出し式の評価
+変数名のみで構成される式を評価すると、その式の値は指定された変数の値になります。変数参照式の評価には副作用はありません。
 
-ここから評価は面白くなり始めます！ すでに述べたように、手続き呼び出し式は次の形式を持ちます。
+だから、その後
 
-```scheme
-(procedure [arg1 [arg2 ...]])
-```
+(キー「ポール・エヴァンス」を定義)
 
-ここで `procedure` は、評価されたときの値が手続きである式でなければなりません。
+式 `key` の値は文字列値 `"Paul Evans"` です。key が次のように変更された場合
 
-このような手続き呼び出し式の評価は、次のように進みます。
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) key 3.74)
 
-- 式 `procedure`、`arg1`、`arg2` などを個別に評価する。
-- `procedure` 式の値である手続きを、`arg1`、`arg2` などの評価から得られた値のリストをパラメータとして呼び出す。
+式「key」の値は数値3.74です。
 
-Scheme で定義された手続きの場合、「値のリストをパラメータとして手続きを呼び出す」とは、値を手続きの仮パラメータに束縛し、それから手続き定義の本体を構成する式の並びを評価することを意味します。手続き呼び出し式の値は、手続き本体で最後に評価された式の値です。手続きを呼び出すことの副作用は、手続き本体の式の一連の評価の副作用を組み合わせたものです。
+指定された名前の変数が存在しない場合、変数参照式の評価はエラーを示します。
 
-組み込み手続きの場合、手続きを呼び出したときの値と副作用は、その手続きのドキュメントで説明されるのが最善です。
+* * *
 
-手続き呼び出し式を評価することの完全な副作用は、手続き呼び出しの副作用だけでなく、それに先立つ式 `procedure`、`arg1`、`arg2` などの評価の副作用もすべて含むことに注意してください。
+次へ: [特殊構文式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Special)、前: [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-これを説明するために、手続き呼び出し式をもう一度見てみましょう。
+#### 3.3.1.3 プロシージャ呼び出し式の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-a-Procedure-Invocation-Expression)
 
-```scheme
-(string-length (string-append "/home" "/" "andrew"))
-```
+ここから評価が面白くなってきます！既に述べたように、プロシージャ呼び出し式は次の形式になります。
 
-最も外側の式では、`procedure` は `string-length` であり、`arg1` は `(string-append "/home" "/" "andrew")` です。
+([procedure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure) \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
 
-- 変数である `string-length` を評価すると、「string-length」に期待される動作を実装する手続きの値が得られます。
-- もう一つの手続き呼び出し式である `(string-append "/home" "/" "andrew")` を評価するということは、次の各々を評価することを意味します。
-  - `string-append`: 「string-append」に期待される動作を実装する手続きの値が得られます。
-  - `"/home"`: 文字列値 `"/home"` が得られます。
-  - `"/"`: 文字列値 `"/"` が得られます。
-  - `"andrew"`: 文字列値 `"andrew"` が得られます。
+ここで、procedureは、評価された値がプロシージャとなる式でなければならない。
 
-  そしてその後、この文字列値のリストを引数として手続きの値を呼び出します。結果の値は、すべての引数を連結した単一の文字列値、すなわち `"/home/andrew"` です。
+このようなプロシージャ呼び出し式の評価は、
 
-最も外側の式の評価において、インタプリタは `procedure` から得た手続きの値を、`arg1` から得た値を引数として呼び出すことができるようになります。結果の値は引数の文字列の長さである数値、すなわち 12 です。
+* 式 procedure、arg1、arg2 などを個別に評価する
+* プロシージャ式の値であるプロシージャを、arg1、arg2などの評価から得られた値のリストをパラメータとして呼び出します。
 
-#### 3.3.1.4 特別な構文的な式の評価
+Schemeで定義された手続きにおいて、「値のリストをパラメータとして手続きを呼び出す」とは、値を手続きの仮パラメータにバインドし、手続き定義の本体を構成する一連の式を評価することを意味します。手続き呼び出し式の値は、手続き本体内で最後に評価された式の値です。手続き呼び出しの副作用は、手続き本体内の一連の式の評価による副作用の組み合わせです。
 
-手続き呼び出し式が評価されるときは、手続きを呼び出す前に、手続きとすべての引数の式を評価しなければなりません。特別な構文的な式が特別なのは、引数を評価されていない形で操作でき、引数の式のいずれかまたはすべてを評価するかどうかを選択できるからです。
+組み込みプロシージャの場合、そのプロシージャを呼び出すことによる価値と副作用については、そのプロシージャのドキュメントに最もよく記載されています。
 
-なぜこれが必要なのでしょうか？ ユーザーにファイルを削除するかどうかを尋ね、ユーザーが yes と答えたらファイルを削除するプログラムの断片を考えてみましょう。
+プロシージャ呼び出し式を評価する際の完全な副作用は、プロシージャ呼び出しの副作用だけでなく、その前に行われた procedure、arg1、arg2 などの式の評価による副作用も含むことに注意してください。
 
-```scheme
-(if (string=? (read-answer "Should I delete this file?")
-              "yes")
-    (delete-file file))
-```
+これを説明するために、もう一度プロシージャ呼び出し式を見てみましょう。
 
-もしここで最も外側の `(if …)` 式が手続き呼び出し式だったとすると、実際にファイルを削除するという副作用を持つ式 `(delete-file file)` は、`if` 手続きが呼び出される前にすでに評価されてしまっているでしょう！ 明らかにこれでは役に立ちません――`if` 式の要点は、`if` 式の条件が「真」である場合にのみ帰結式が評価されることだからです。
+([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) ([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew"))
 
-したがって `if` は手続きではなく、特別な構文でなければなりません。すでに出会った他の特別な構文は `define`、`set!`、`lambda` です。`define` と `set!` が構文であるのは、`define` や `set!` 式の最初の引数として与えられる変数の値ではなく、変数名を知る必要があるからです。`lambda` が構文であるのは、手続き本体を定義する式をすぐには評価せず、代わりにそれらの式を組み込んだ手続きオブジェクトを作成し、将来その手続きが呼び出されたときに評価できるようにするからです。
+最も外側の式では、procedure は `string-length` で、arg1 は `(string-append "/home" "/" "andrew")` です。
 
-各特別な構文的な式を評価する規則は、特別な構文ごとに個別に規定されています。標準的な特別な構文のまとめについては、「よく使われる構文のまとめ」を参照してください。
+* 変数である `string-length` を評価すると、「string-length」の期待される動作を実装するプロシージャ値が得られます。
+* 別のプロシージャ呼び出し式である `(string-append "/home" "/" "andrew")` の評価は、
+    
+* `string-append`。これは、「string-append」の期待される動作を実装するプロシージャ値を返します。
+* `"/home"` は文字列値 `"/home"` を返します
+* `"/"` は文字列値 `"/"` を返します
+* `"andrew"` は、文字列値 `"andrew"` を返します。
+    
+そして、この文字列値のリストを引数としてプロシージャ値を呼び出します。結果として得られる値は、すべての引数を連結した単一の文字列値、つまり「/home/andrew」です。
+    
 
-### 3.3.2 末尾呼び出し
+最も外側の式を評価する際、インタプリタは、プロシージャから取得したプロシージャ値を、引数arg1から取得した値を引数として呼び出すことができます。結果として得られる値は、引数文字列の長さである12の数値です。
 
-Scheme は「真に末尾再帰的（properly tail recursive）」です。これは、特定の文脈からの末尾呼び出し（tail call）や再帰がスタック領域やその他の資源を消費しないため、任意に大きなデータや任意に長い計算に使用できることを意味します。たとえば次を考えてみましょう。
+* * *
 
-```scheme
+前へ: [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)、上へ: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.3.1.4 特殊構文式の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Special-Syntactic-Expressions)
+
+プロシージャ呼び出し式が評価される際には、プロシージャとすべての引数式が評価されてからでないとプロシージャは呼び出されません。特殊な構文式は、引数を未評価の形式で操作でき、引数式の一部またはすべてを評価するかどうかを選択できるため、特別なものとなっています。
+
+なぜこれが必要なのでしょうか？例えば、ユーザーにファイルを削除するかどうかを尋ね、ユーザーが「はい」と答えた場合にファイルを削除するプログラムを考えてみましょう。
+
+(if ([string=?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003d_003f) (read-answer "このファイルを削除すべきでしょうか？")
+"はい"）
+([delete-file](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_002dfile) ファイル))
+
+ここで一番外側の `(if …)` 式がプロシージャ呼び出し式だった場合、実際にファイルを削除する副作用を持つ式 `(delete-file file)` は、`if` プロシージャが呼び出される前に既に評価されてしまっています。これは明らかに役に立ちません。`if` 式の重要な点は、`if` 式の条件が「真」の場合にのみ、_後続の_式が評価されるということです。
+
+したがって、`if` は手続きではなく、特別な構文でなければなりません。すでに説明した他の特別な構文には、`define`、`set!`、`lambda` があります。`define` と `set!` は、`define` または `set!` 式の最初の引数として指定された変数 _name_ の値ではなく、その変数の値を知る必要があるため、構文です。`lambda` は、手続き本体を定義する式をすぐに評価するのではなく、これらの式を組み込んだ手続きオブジェクトを作成し、その手続きが呼び出されたときに後で評価できるようにするため、構文です。
+
+各特殊構文式を評価するための規則は、それぞれの特殊構文ごとに個別に規定されています。標準的な特殊構文の概要については、[共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)を参照してください。
+
+* * *
+
+次へ: [Guile REPL の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)、前: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.3.2 末尾呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-calls)
+
+Schemeは「適切に末尾再帰的」であり、特定のコンテキストからの末尾呼び出しや再帰はスタック領域やその他のリソースを消費しないため、任意のサイズのデータや任意の長さの計算に使用できます。たとえば、
+
 (define (foo n)
-  (display n)
-  (newline)
-  (foo (1+ n)))
+（nを表示）
+（改行）
+(foo (1+ n)))
 
 (foo 1)
 ⊣
@@ -431,417 +432,447 @@ Scheme は「真に末尾再帰的（properly tail recursive）」です。こ�
 2
 3
 ...
-```
 
-`foo` は与えられた `n` から始めて、数を無限に出力します。これは `n` を出力し、それから自分自身に再帰して `n+1` を出力し、というように実装されています。この再帰は末尾呼び出しであり、最後に行われる処理です。そして Scheme では、このような末尾呼び出しを無制限に行うことができます。
+`foo` は、指定された n から始めて無限に数値を出力します。これは、n を出力した後、自身を再帰的に呼び出して _n+1_ を出力するという方法で実装されています。この再帰は末尾呼び出しであり、最後に実行される処理です。Scheme では、このような末尾呼び出しは無制限に実行できます。
 
-あるいは値が返される場合として、リストの最後の要素を返す SRFI-1 の `last` 関数（「セレクタ」を参照）の一版を考えてみましょう。
+または、値が返される場合を考えてみましょう。SRFI-1 の `last` 関数のバージョン ([セレクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Selectors) を参照) はリストの最後の要素を返します。
 
-```scheme
 (define (my-last lst)
-  (if (null? (cdr lst))
-      (car lst)
-      (my-last (cdr lst))))
+(if (null? (cdr lst))
+(車リスト)
+(私の最後の (cdr lst))))
 
-(my-last '(1 2 3)) ⇒ 3
-```
+(私の最後の '(1 2 3)) ⇒ 3
 
-リストが2つ以上の要素を持つ場合、`my-last` は自分自身を `cdr` に適用します。この再帰は末尾呼び出しであり、その後にはコードがなく、戻り値はその呼び出しからの戻り値です。Scheme では、これを任意に長いリスト引数に対して使用できます。
+リストに複数の要素がある場合、`my-last` は `cdr` に適用されます。この再帰は末尾呼び出しであり、その後にコードは存在せず、戻り値はその呼び出しからの戻り値です。Scheme では、これは任意の長さのリスト引数に使用できます。
 
-真の末尾呼び出しは特定の文脈、すなわち次の特殊形式の位置からのみ利用できます。
+  
 
-- `and` ― 最後の式
-- `begin` ― 最後の式
-- `case` ― 各節の最後の式
-- `cond` ― 各節の最後の式。また `=>` 手続きの呼び出しは末尾呼び出し
-- `do` ― 最後の結果式
-- `if` ― 「真」と「偽」の分岐の式
-- `lambda` ― 本体の最後の式
-- `let`、`let*`、`letrec`、`let-syntax`、`letrec-syntax` ― 本体の最後の式
-- `or` ― 最後の式
+適切なテールコールは、特定の状況、すなわち以下の特殊なフォームポジションでのみ可能です。
 
-次のコア関数は末尾呼び出しを行います。
+* `and` — 最後の式
+* `begin` — 最後の式
+* `case` — 各節の最後の式
+* `cond` — 各節の最後の式であり、`=>` プロシージャの呼び出しは末尾呼び出しである。
+* `do` — 最後の結果式
+* `if` — 「true」と「false」のレッグ式
+* `lambda` — 本体内の最後の式
+* `let`、`let*`、`letrec`、`let-syntax`、`letrec-syntax` — 本体内の最後の式
+* `or` — 最後の式
 
-- `apply` ― 与えられた手続きへの末尾呼び出し
-- `call-with-current-continuation` ― 新しい継続を受け取る手続きへの末尾呼び出し
-- `call-with-values` ― 値を受け取る手続きへの末尾呼び出し
-- `eval` ― 形式を評価するための末尾呼び出し
-- `string-any`、`string-every` ― 最後の文字に対する述語への末尾呼び出し（その時点に達した場合）
+以下のコア関数は末尾呼び出しを行います。
 
-上記はコア関数と特殊形式だけです。他のモジュールでの末尾呼び出しは、関連するドキュメントで説明されています。たとえば SRFI-1 の `any` と `every`（「検索」を参照）などです。
+* `apply` — 指定されたプロシージャへの末尾呼び出し
+* `call-with-current-continuation` — 新しい継続を受け取るプロシージャへの末尾呼び出し
+* `call-with-values` — 値を受け取るプロシージャへの末尾呼び出し
+* `eval` — フォームを評価するための末尾呼び出し
+* `string-any`、`string-every` — 最後の文字に対して述語を実行する末尾呼び出し（その位置に達した場合）
 
-潜在的に末尾呼び出しになりうる場所はたくさんあることに気づくでしょう。たとえば `for-each` の中の最後の呼び出しなどです。しかし保証されているのは、明示的に説明されているものだけです。
+  
 
-### 3.3.3 Guile REPL を使う
+上記はコア機能と特殊形式のみです。他のモジュールにおける末尾呼び出しについては、関連するドキュメントで説明されています。例えば、SRFI-1の`any`と`every`（[Searching](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Searching)を参照）などです。
 
-特定のプログラムを実行するよう指定せずに Guile を起動すると、Guile は標準の Read Evaluate Print Loop（読み取り・評価・表示ループ）――略して REPL――に入ります。このモードでは、Guile はユーザーが入力した次の Scheme 式を読み込み、それを評価し、結果の値を表示することを繰り返します。
+末尾呼び出しになる可能性のある箇所は多数あることに注意してください。たとえば、`for-each` の最後の呼び出しなどですが、明示的に説明されている箇所のみが保証されます。
 
-REPL は、前の小節で説明した評価の動作を探求するのに便利な仕組みです。たとえば `string-append` と入力すると、REPL は `#<primitive-procedure string-append>` と応答し、変数 `string-append` とその変数に格納されている手続きの値との関係を示します。
+* * *
 
-このマニュアルでは、記法 ⇒ は「評価すると～になる」という意味で使われます。次の形式の例を見かけたら、
+次へ: [共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)、前: [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-expression
+#### 3.3.3 Guile REPL の使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-REPL)
+
+Guileを起動する際に、実行する特定のプログラムを指定しない場合、Guileは標準の読み込み・評価・印刷ループ（略して_REPL_）に入ります。このモードでは、Guileはユーザーが入力する次のScheme式を繰り返し読み込み、評価し、結果の値を表示します。
+
+REPLは、前のセクションで説明した評価動作を調べるのに便利な仕組みです。たとえば、`string-append`と入力すると、REPLは`#<primitive-procedure string-append>`と応答し、変数`string-append`と、その変数に格納されているプロシージャ値との関係を示します。
+
+このマニュアルでは、表記 ⇒ は「評価結果」を意味します。
+
+表現
 ⇒
-result
-```
+結果
 
-ぜひ REPL に `expression` を入力して、期待される `result` が得られることを確かめてみてください。
+REPLに式を入力して、期待どおりの結果が得られるかどうか、ご自身で試してみてください。
 
-### 3.3.4 よく使われる構文のまとめ
+* * *
 
-この小節では、最もよく使われる Scheme の構文的な式を列挙します。これは単に、よく使われる特別な構文を見かけたときに認識できるようにするためのものです。これらの各構文の完全な説明については、適切な参照先をたどってください。
+前へ: [Guile REPL の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)、上へ: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-- `lambda`（「Lambda: 基本的な手続きの作成」を参照）は、手続きオブジェクトを構築するために使われます。
-- `define`（「トップレベル変数の定義」を参照）は、新しい変数を作成してその初期値を設定するために使われます。
-- `set!`（「トップレベル変数の定義」を参照）は、既存の変数の値を変更するために使われます。
-- `let`、`let*`、`letrec`（「局所変数の束縛」を参照）は、一連の式を評価するための内側の字句的環境を作成します。その環境では、指定された局所変数の集合が、対応する式の集合の値に束縛されます。環境の入門については、「クロージャの概念」を参照してください。
-- `begin`（「順次実行と接合」を参照）は、一連の式を順番に実行し、最後の式の値を返します。これは最後の引数を返す手続きと同じではないことに注意してください。手続き呼び出し式の評価は、引数を順番に評価することを保証しないからです。
-- `if` と `cond`（「単純な条件付き評価」を参照）は、1つ以上の条件が「真」または「偽」に評価されるかどうかに応じて、引数の式の条件付き評価を提供します。
-- `case`（「単純な条件付き評価」を参照）は、変数が指定された値のグループの一つを持つかどうかに応じて、引数の式の条件付き評価を提供します。
-- `and`（「式の並びの条件付き評価」を参照）は、式がなくなるか、あるいはそのうちの一つが「偽」に評価されるまで、一連の式を順番に実行します。
-- `or`（「式の並びの条件付き評価」を参照）は、式がなくなるか、あるいはそのうちの一つが「真」に評価されるまで、一連の式を順番に実行します。
+#### 3.3.4 共通構文の概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Summary-of-Common-Syntax)
 
-## 3.4 クロージャの概念
+このサブセクションでは、Schemeで最もよく使われる構文式を一覧表示します。これは、よく使われる特殊構文を目にしたときにすぐに認識できるようにするためです。各構文の詳細な説明については、該当するリファレンスを参照してください。
 
-**クロージャ**（closure）の概念とは、lambda 式が、その lambda 式が現れる地点で字句的スコープ内にある変数の束縛を「捕捉する」という考えです。lambda 式によって作成された手続きは、捕捉した束縛を参照したり変更したりでき、それらの束縛の値は手続きの呼び出しの間も持続します。
+`lambda`（[Lambda: 基本的なプロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)を参照）は、プロシージャ オブジェクトを構築するために使用されます。
 
-この節では、この考えのさまざまな部分をより詳しく説明し、探求します。
+`define`（[トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)を参照）は、新しい変数を作成し、その初期値を設定するために使用されます。
 
-- 名前、場所、値、環境
-- 局所変数と環境
-- 環境の連鎖
-- 字句的スコープ
-- クロージャ
-- 例1: 通し番号生成器
-- 例2: 共有された永続的な変数
-- 例3: コールバックのクロージャ問題
-- 例4: オブジェクト指向
+`set!`（[トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)を参照）は、既存の変数の値を変更するために使用されます。
 
-### 3.4.1 名前、場所、値、環境
+`let`、`let*`、`letrec`（[ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）は、一連の式を評価するための内部レキシカル環境を作成します。この環境では、指定された一連のローカル変数が、対応する一連の式の値にバインドされます。環境の概要については、[クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)を参照してください。
 
-先に、Scheme プログラムにおける変数名は、任意の種類の Scheme 値を格納できる**場所**（location）に関連付けられていると述べました。（ちなみに、Lisp や Scheme の世界では「場所」の代わりに「vcell」という用語がよく使われます。）したがって、「変数を作成する」と言うときに意味していることの一部は、実際には、Scheme のプログラムコードで使われる名前すなわち識別子と、その名前が参照する変数の場所との間に関連付けを確立することです。その場所に格納されている値は変わることがありますが、ある名前が参照する場所は常に同じです。
+`begin`（[シーケンスとスプライシング](https://doc.guix.gnu.org/guile/latest/en/guile.html#begin)を参照）は、一連の式を順番に実行し、最後の式の値を返します。これは、最後の引数を返すプロシージャとは異なります。プロシージャ呼び出し式の評価では、引数が順番に評価されることが保証されないためです。
 
-これを説明するために、`define` 構文の操作を3つの部分に分解することができます。`define` は、
+`if` と `cond` ([単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals) を参照) は、1 つ以上の条件が「true」または「false」と評価されるかどうかに応じて、引数式の条件付き評価を提供します。
 
-- 新しい場所を作成し、
-- その場所と、`define` 式の最初の引数として指定された名前との間に関連付けを確立し、
-- `define` 式の2番目の引数を評価して得られた値を、その場所に格納します。
+`case`（[単純な条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals)を参照）は、変数が指定された値グループのいずれかを持っているかどうかに応じて、引数式の条件付き評価を提供します。
 
-名前と場所の関連付けの集まりは、**環境**（environment）と呼ばれます。プログラム内で `define` を使ってトップレベル変数を作成すると、その変数の名前と場所の関連付けが「トップレベル」環境に追加されます。「トップレベル」環境には、標準 Scheme が提供するすべての手続きの名前と場所の関連付けも含まれています。
+`and`（[式のシーケンスの条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)を参照）は、式がなくなるか、いずれかの式が「false」と評価されるまで、式のシーケンスを順番に実行します。
 
-トップレベル以外の環境を作成し、それらの環境の中に変数の束縛、すなわち名前と場所の関連付けを作成することも可能です。この能力はクロージャの概念の重要な要素です。次の小節では、それがどのように行われるかを示します。
+`or`（[式のシーケンスの条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)を参照）は、式がなくなるか、いずれかの式が「true」と評価されるまで、式のシーケンスを順番に実行します。
 
-### 3.4.2 局所変数と環境
+* * *
 
-`define` 構文を使ってトップレベル変数を作成する方法を見てきました（「変数の定義と設定」を参照）。しばしば、スコープがより限定された変数を、通常は手続き本体の一部として作成すると便利です。Scheme では、これは `let` 構文、あるいはその変形である `let*` と `letrec` のいずれかを使って行います。これらの構文はマニュアルの後の部分で完全に説明されています（「局所変数の束縛」を参照）。ここでの目的は、局所変数がどのように機能するかが分かる程度に、その使い方を説明することです。
+次へ: [参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)、前: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-たとえば次のコードは、局所変数 `s` を使って、3辺の長さが与えられた三角形の面積の計算を単純化しています。
+### 3.4 クロージャの概念 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Concept-of-Closure)
 
-```scheme
-(define a 5.3)
-(define b 4.7)
-(define c 2.8)
+クロージャの概念とは、ラムダ式が、そのラムダ式が出現する時点でレキシカルスコープ内にある変数バインディングを「キャプチャ」するという考え方です。ラムダ式によって作成されたプロシージャは、キャプチャされたバインディングを参照および変更することができ、これらのバインディングの値はプロシージャ呼び出し間で保持されます。
 
-(define area
-  (let ((s (/ (+ a b c) 2)))
-    (sqrt (* s (- s a) (- s b) (- s c)))))
-```
+このセクションでは、このアイデアのさまざまな要素について、より詳細に説明し、考察します。
 
-`let` 式の効果は、新しい環境を作成し、この環境の中で、名前 `s` と、`(/ (+ a b c) 2)` を評価して得られる初期値を持つ新しい場所との関連付けを作成することです。次に、`let` の本体にある式、すなわち `(sqrt (* s (- s a) (- s b) (- s c)))` が新しい環境の文脈で評価され、最後に評価された式の値が `let` 式全体の値となり、したがって変数 `area` の値となります。
+* [名前、場所、値、環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Environments)
+* [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)
+* [環境連鎖](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)
+* [語彙スコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)
+* [クローズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)
+* [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)
+* [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)
+* [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)
+* [例 4: オブジェクト指向](https://doc.guix.gnu.org/guile/latest/en/guile.html#OO-Closure)
 
-### 3.4.3 環境の連鎖
+* * *
 
-前の小節の例では、重要な点を一つ省略していました。その例の `let` 式の本体は、局所変数 `s` だけでなく、トップレベル変数 `a`、`b`、`c`、`sqrt` も参照しています。（`sqrt` は平方根を計算する標準 Scheme 手続きです。）`let` 式の本体が局所的な `let` 環境の文脈で評価されるのなら、評価はどのようにしてこれらのトップレベル変数の値にたどり着くのでしょうか？
+次へ: [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-答えは、`let` 式によって作成された局所環境は、それを含む環境――この場合はトップレベル環境――への参照を自動的に持っており、Scheme インタプリタは局所環境で変数の束縛が見つからなければ、それを含む環境で自動的に探すということです。より一般的には、トップレベル以外のすべての環境は、それを含む環境への参照を持っており、インタプリタは必要な識別子の変数束縛を見つけるか連鎖を使い果たすまで、環境の連鎖を――最も局所的なものからトップレベルまで――さかのぼって探し続けます。
+#### 3.4.1 名前、場所、値、および環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Names_002c-Locations_002c-Values-and-Environments)
 
-この説明は、同じ名前を持つ変数束縛が複数ある場合に何が起きるかも決定します。前の小節の例を続けて、次の式によって作成された既存のトップレベル変数 `s` もあったとしましょう。
+先に述べたように、Schemeプログラムにおける変数名は、あらゆる種類のScheme値を格納できる場所と関連付けられています。（ちなみに、LispやSchemeのコミュニティでは、「場所」の代替として「vcell」という用語がよく使われます。）したがって、「変数を作成する」とは、Schemeプログラムコードで使用される名前（識別子）と、その名前が参照する変数の場所との間に関連付けを確立することを意味します。その場所に格納される値は変化する可能性がありますが、特定の名前が参照する場所は常に同じです。
 
-```scheme
-(define s "Some beans, my lord!")
-```
+`define`構文の動作を3つの部分に分解することで、これを説明できます。`define`
 
-すると、トップレベル環境と局所的な `let` 環境の両方が、名前 `s` の束縛を含むことになります。`let` の本体内のコードを評価するとき、インタプリタはまず局所的な `let` 環境を探し、したがって `let` 構文によって作成された `s` の束縛を見つけます。この環境は、同じく `s` の束縛を持つトップレベル環境への参照を持っていますが、インタプリタはそこを探すところまでは行きません。`let` の本体の外のコードを評価するときは、インタプリタはトップレベル環境で変数名を探すので、名前 `s` はトップレベル変数を参照します。
+* 新しい場所を作成します
+* その場所と、`define`式の最初の引数として指定された名前との間に関連付けを確立します。
+* `define` 式の 2 番目の引数を評価して得られた値をその場所に格納します。
 
-`let` の本体の中では、局所環境における `s` の束縛は、トップレベル環境における `s` の束縛を**隠す**（shadow）と言います。
+名前と場所の関連付けの集合を「環境」と呼びます。プログラム内で `define` を使用してトップレベル変数を作成すると、その変数の名前と場所の関連付けが「トップレベル」環境に追加されます。「トップレベル」環境には、標準 Scheme が提供するすべてのプロシージャの名前と場所の関連付けも含まれます。
 
-### 3.4.4 字句的スコープ
+最上位の環境以外にも環境を作成し、それらの環境内で変数バインディング、つまり名前と場所の関連付けを作成することも可能です。この機能はクロージャの概念における重要な要素であり、次のサブセクションではその方法を示します。
 
-今説明してきた規則は、Scheme が「字句的スコープ（lexical scoping）」をどのように実装しているかの詳細です。この小節では少し寄り道をして、字句的スコープが一般に何を意味するのかを説明し、字句的でないスコープの例を示します。
+* * *
 
-一般に「字句的スコープ」とは、次のような考えです。
+次へ: [環境連鎖](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)、前: [名前、場所、値、環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Environments)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-- プログラム内の特定の場所にある識別子は、常に同じ変数の場所を参照する――ここで「常に」とは「それを含む式が実行されるたびに」という意味である。そして、
-- それが参照する変数の場所は、プログラム全体の実行の流れを考慮する必要なしに、その識別子が現れるソースコードの文脈を静的に調べることで決定できる。
+#### 3.4.2 ローカル変数と環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables-and-Environments)
 
-実際には、字句的スコープはほとんどのプログラミング言語において標準であり、おそらく直観的に「普通」と考えるものに対応しているでしょう。状況が他にどのようにありうるのか――しかも有用な形で――と不思議に思うかもしれません。そこで、別の種類のスコープが可能であることを示し、それを字句的スコープと比較するために、次の小節では字句的でないスコープの例を示し、その動作が対応する字句的スコープのコードとどのように異なるかを詳しく検討します。
+`define`構文を使用してトップレベル変数を作成する方法を見てきました（[変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)を参照）。通常、プロシージャ本体の一部として、スコープがより限定された変数を作成すると便利な場合がよくあります。Schemeでは、これは`let`構文、またはその修正形式である`let*`と`letrec`を使用して行います。これらの構文については、マニュアルの後半で詳しく説明します（[ローカル変数のバインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）。ここでは、ローカル変数がどのように機能するかがわかる程度に、これらの構文の使用方法を説明します。
 
-- 字句的でないスコープの例
+例えば、次のコードはローカル変数`s`を使用して、3辺の長さが与えられた三角形の面積の計算を簡略化しています。
 
-#### 3.4.4.1 字句的でないスコープの例
+（5.3を定義する）
+(b 4.7 を定義)
+(c 2.8 を定義)
 
-字句的でないスコープが存在し、有用でありうることを示すために、「動的スコープ」の言語である Emacs Lisp から次の例を示します。
+（領域を定義する）
+(let ((s ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) abc) 2)))
+([sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) s ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sa) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sb) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sc))))
 
-```elisp
+`let` 式の効果は、新しい環境を作成し、その環境内で、名前 `s` と新しい場所との関連付けを行うことです。新しい場所の初期値は、`(/ (+ abc) 2)` を評価することによって得られます。次に、`let` 本体内の式、すなわち `(sqrt (* s (- sa) (- sb) (- sc)))` が新しい環境のコンテキストで評価され、最後に評価された式の値が `let` 式全体の値となり、したがって変数 `area` の値となります。
+
+* * *
+
+次へ: [語彙スコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)、前: [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.4.3 環境連鎖 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Chaining)
+
+前の小節の例では、重要な点を省略しました。その例の `let` 式の本体は、ローカル変数 `s` だけでなく、トップレベル変数 `a`、`b`、`c`、`sqrt` も参照しています。（`sqrt` は、平方根を計算するための Scheme の標準手続きです。）`let` 式の本体が _local_ `let` 環境のコンテキストで評価される場合、評価によってこれらのトップレベル変数の値はどのように取得されるのでしょうか？
+
+答えは、`let` 式によって作成されるローカル環境は、自動的にその包含環境（この場合は最上位環境）への参照を持ち、Scheme インタープリタはローカル環境で変数バインディングが見つからない場合、自動的に包含環境で変数バインディングを探すということです。より一般的には、最上位環境を除くすべての環境は、その包含環境への参照を持ち、インタープリタは必要な識別子の変数バインディングが見つかるか、またはチェーンを使い果たすまで、最もローカルな環境から最上位環境まで、環境のチェーンを遡って検索し続けます。
+
+この記述は、同じ名前の変数が複数存在する場合に何が起こるかも規定しています。前の小節の例を続けて、式によって作成された既存のトップレベル変数 `s` があったと仮定します。
+
+（「豆をください、閣下！」と定義する）
+
+すると、トップレベル環境とローカルの `let` 環境の両方に、名前 `s` のバインディングが含まれることになります。`let` 本体内のコードを評価する際、インタープリタはまずローカルの `let` 環境を検索し、`let` 構文によって作成された `s` のバインディングを見つけます。この環境にはトップレベル環境への参照があり、トップレベル環境にも `s` のバインディングがありますが、インタープリタはそこまで検索しません。`let` 本体外のコードを評価する際、インタープリタはトップレベル環境で変数名を検索するため、名前 `s` はトップレベルの変数を参照します。
+
+`let` の本体内では、ローカル環境における `s` のバインディングは、トップレベル環境における `s` のバインディングを _シャドウ_ すると言われます。
+
+* * *
+
+次へ: [クロージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)、前: [環境チェイニング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.4.4 語彙スコープ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope-1)
+
+これまで説明してきたルールは、Schemeにおける「レキシカルスコープ」の実装方法の詳細です。この節では、レキシカルスコープが一般的に何を意味するのかを少し説明し、非レキシカルスコープの例を示します。
+
+「語彙範囲」とは、
+
+* プログラム内の特定の場所にある識別子は、常に同じ変数位置を参照します。ここで「常に」とは、「包含する式が実行されるたびに」という意味です。
+* その識別子が参照する変数の位置は、プログラム全体の実行の流れを考慮することなく、その識別子が現れるソースコードコンテキストを静的に調べることで特定できます。
+
+実際には、ほとんどのプログラミング言語では字句スコープが標準であり、おそらく皆さんが直感的に「普通」と考えるものに相当します。もしかしたら、それ以外の方法、あるいはそれ以外の有用な方法が一体どのように考えられるのか疑問に思うかもしれません。そこで、別の種類のスコープも可能であることを示し、字句スコープと比較するために、次の節では字句スコープ以外の例を示し、その動作が対応する字句スコープのコードとどのように異なるかを詳細に検討します。
+
+* [非レキシカルスコープの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scoping-Example)
+
+* * *
+
+上へ: [語彙範囲](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.4.4.1 非レキシカルスコープの例 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#An-Example-of-Non_002dLexical-Scoping)
+
+非語彙的スコープが存在し、有用であることを示すために、「動的スコープ」言語であるEmacs Lispから以下の例を示します。
+
 (defvar currency-abbreviation "USD")
 
 (defun currency-string (units hundredths)
-  (concat currency-abbreviation
-          (number-to-string units)
-          "."
-          (number-to-string hundredths)))
+(concat 通貨略語)
+（数値から文字列への変換単位）
+「。」
+（数値を文字列の100分の1に変換）
 
 (defun french-currency-string (units hundredths)
-  (let ((currency-abbreviation "FRF"))
-    (currency-string units hundredths)))
-```
+(let ((currency-abbreviation "FRF"))
+（通貨文字列の単位は100分の1）
 
-ここで注目すべき問題は、関数 `currency-string` の中の識別子 `currency-abbreviation` が何を参照するのか、です。Emacs Lisp における答えは、すべての変数束縛は単一のスタックに積まれ、`currency-abbreviation` はそのスタックの中で「currency-abbreviation」という名前を持つ最上位の束縛を参照する、というものです。`defvar` 形式によって作成された値 `"USD"` への束縛が意味を持つのは、`currency-string` を呼び出すコードのどれもが、その間に名前「currency-abbreviation」を再束縛しない場合だけです。
+ここで注目すべきは、`currency-string` 関数内で識別子 `currency-abbreviation` が何を指しているのか、という点です。Emacs Lisp では、すべての変数バインディングは単一のスタックに格納され、`currency-abbreviation` はそのスタックの最上位にある「currency-abbreviation」という名前のバインディングを指します。`defvar` 形式によって作成される値 `"USD"` へのバインディングは、`currency-string` を呼び出すコードがその間に「currency-abbreviation」という名前を再バインドしない場合にのみ有効です。
 
-2つ目の関数 `french-currency-string` は、まさにこの動作を利用して機能します。これは名前「currency-abbreviation」に対する新しい束縛を作成し、それが `defvar` 形式によって確立された束縛を上書きします。
+2番目の関数`french-currency-string`は、まさにこの動作を利用して機能します。この関数は、「currency-abbreviation」という名前に対して新しいバインディングを作成し、`defvar`形式で確立されたバインディングを上書きします。
 
-```elisp
-;; 注意！ これは Emacs Lisp の評価であり、Scheme ではありません！
-(french-currency-string 33 44)
+;; 注意! これは Emacs Lisp の評価であり、Scheme の評価ではありません!
+(フランス通貨文字列 33 44)
 ⇒
-"FRF33.44"
-```
+「FRF33.44」
 
-では、対応する字句的スコープの Scheme コードを見てみましょう。
+それでは、対応する、字句スコープのSchemeコードを見てみましょう。
 
-```scheme
-(define currency-abbreviation "USD")
+(通貨略語「USD」を定義する)
 
-(define (currency-string units hundredths)
-  (string-append currency-abbreviation
-                 (number->string units)
-                 "."
-                 (number->string hundredths)))
+(定義 (通貨文字列単位百分の一)
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) 通貨略語
+([数値->文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002d_003estring) 単位)
+「。」
+([number->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002d_003estring) 百分の一)))
 
 (define (french-currency-string units hundredths)
-  (let ((currency-abbreviation "FRF"))
-    (currency-string units hundredths)))
-```
+(let ((currency-abbreviation "FRF"))
+（通貨文字列の単位は100分の1）
 
-字句的スコープの規則によれば、`currency-string` の中の `currency-abbreviation` は、コード上のその地点で `currency-abbreviation` の束縛を持つ最も内側の環境にある変数の場所を参照します。それは、先行する `(define currency-abbreviation …)` 式によって作成された、トップレベル環境にある変数の場所です。
+字句スコープの規則によれば、`currency-string` 内の `currency-abbreviation` は、その時点でコード内の最も内側の環境にある変数位置を参照します。この変数位置は、`currency-abbreviation` のバインディングを持ち、先行する `(define currency-abbreviation …)` 式によって作成されたトップレベル環境内の変数位置です。
 
-したがって Scheme では、`french-currency-string` 手続きは意図したとおりに機能しません。それが「currency-abbreviation」に対して作成する変数束縛は、`let` 式の本体を形成するコードに対して純粋に局所的です。このコードは名前「currency-abbreviation」をまったく直接使用しないので、この束縛は無意味です。
+したがって、Scheme では、`french-currency-string` プロシージャは意図したとおりに動作しません。このプロシージャが作成する「currency-abbreviation」の変数バインディングは、`let` 式の本体を構成するコードにのみ限定されます。このコードは「currency-abbreviation」という名前を直接使用していないため、このバインディングは無意味です。
 
-```scheme
-(french-currency-string 33 44)
+(フランス通貨文字列 33 44)
 ⇒
-"USD33.44"
-```
+「33.44米ドル」
 
-ここで、Emacs Lisp の動作を Scheme でどのように実装できるかという疑問が生じます。一般に、これは設計上の問題であり、その答えは取り組んでいる問題に依存します。この場合の最善の答えは、`currency-string` を、オプションの3番目の引数を取れるように再設計することかもしれません。この3番目の引数は、与えられた場合、デフォルトを上書きする通貨の略号として解釈されます。
+これは、Emacs Lispの動作をSchemeでどのように実装できるかという疑問を提起します。一般的に、これは設計上の問題であり、その答えは解決しようとしている問題によって異なります。この場合、最適な答えは、`currency-string`を再設計して、オプションの3番目の引数を受け取るようにすることかもしれません。この3番目の引数が指定された場合、それはデフォルトの通貨略語を上書きする通貨略語として解釈されます。
 
-`currency-string` を変更せずに、ほぼ機能するように `french-currency-string` を変更することは可能ですが、その修正は不格好であり、`currency-abbreviation` 変数を誤った状態のままにしてしまう可能性のある割り込みの影響を受けやすいものです。
+`french-currency-string`を変更することで、`currency-string`を変更しなくてもほぼ正常に動作させることは可能ですが、この修正方法は洗練されておらず、割り込みによって`currency-abbreviation`変数が誤った状態になる可能性が高くなります。
 
-```scheme
 (define (french-currency-string units hundredths)
-  (set! currency-abbreviation "FRF")
-  (let ((result (currency-string units hundredths)))
-    (set! currency-abbreviation "USD")
-    result))
-```
+([セット!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 通貨略語 "FRF")
+(let ((result (currency-string units hundredths)))
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) currency-abbreviation "USD")
+結果））
 
-ここでの重要な点は、このコードが識別子 `currency-abbreviation` に対して局所的な束縛を一切作成しないため、この識別子のすべての出現がトップレベル変数を参照するということです。
+ここでの重要な点は、コードが識別子`currency-abbreviation`のローカルバインディングを作成しないため、この識別子のすべての出現箇所がトップレベルの変数を参照するということです。
 
-### 3.4.5 クロージャ
+* * *
 
-`lambda` を一切含まない `let` 式を考えてみましょう。
+次へ: [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)、前: [レキシカルスコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-(let ((s (/ (+ a b c) 2)))
-  (sqrt (* s (- s a) (- s b) (- s c))))
-```
+#### 3.4.5 クロージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure-1)
 
-Scheme インタプリタはこれを評価するとき、
+ラムダ式を含まない`let`式を考えてみましょう。
 
-- `let` に出会ったときに現在の環境であったものへの参照を持つ、新しい環境を作成し、
-- 新しい環境の中に `s` の変数束縛を、`(/ (+ a b c) 2)` によって与えられる値で作成し、
-- 新しい局所環境の文脈で `let` の本体の式を評価し、その値 V を記憶し、
-- 局所環境を忘れ、
-- 値 V を `let` 式の値として使い、それを含む環境の文脈で、`let` を含んでいた式の評価を続けます。
+(let ((s ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) abc) 2)))
+([sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) s ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sa) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sb) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sc)))
 
-`let` 式が評価された後、作成された局所環境は単に忘れられ、この環境の中で作成された束縛にアクセスする方法はもはやありません。同じコードが再び評価されると、同じ手順を再びたどり、最初のものとは何の関係もない2つ目の新しい局所環境を作成し、それからこれも忘れます。
+Scheme インタープリタがこれを評価すると、
 
-しかし、`let` の本体が `lambda` 式を含んでいる場合、局所環境は忘れられません。代わりに、それは `lambda` 式によって作成された手続きと関連付けられ、その手続きが呼び出されるたびに復元されます。詳しくは、これは次のように機能します。
+* `let` を検出した時点での環境への参照を持つ新しい環境を作成します。
+* 新しい環境で `s` の変数バインディングを作成し、その値は `(/ (+ abc) 2)` で与えられます。
+* `let` の本体内の式を新しいローカル環境のコンテキストで評価し、値 `V` を記憶します。
+* 地元の環境を忘れる
+* `let` を含む式を、その式の値として `V` を使用し、包含環境のコンテキストで評価し続けます。
 
-- Scheme インタプリタが手続きオブジェクトを作成するために `lambda` 式を評価するとき、現在の環境を手続き定義の一部として格納します。
-- そしてその手続きが呼び出されるたびに、インタプリタは手続き定義に格納されている環境を復元し、その環境の文脈で手続き本体を評価します。
+`let`式が評価されると、作成されたローカル環境は単純に破棄され、この環境で作成されたバインディングにアクセスする方法はなくなります。同じコードが再度評価された場合も、同じ手順が繰り返され、最初のローカル環境とは何の関係もない新しいローカル環境が作成され、その後、これも破棄されます。
 
-その結果、手続き本体は常に、その手続きが作成されたときに現在の環境であったものの文脈で評価されます。
+ただし、`let` の本体に `lambda` 式が含まれている場合、ローカル環境は _忘れられる_ことはありません。代わりに、ローカル環境は `lambda` 式によって作成されるプロシージャに関連付けられ、そのプロシージャが呼び出されるたびに復元されます。詳細には、これは次のように機能します。
 
-これが**クロージャ**の意味するところです。以降のいくつかの小節では、この概念の有用性を探る例を示します。
+* Scheme インタープリタが `lambda` 式を評価してプロシージャ オブジェクトを作成する際、現在の環境をプロシージャ定義の一部として保存します。
+* そして、そのプロシージャが呼び出されるたびに、インタプリタはプロシージャ定義に格納されている環境を復元し、その環境のコンテキスト内でプロシージャ本体を評価します。
 
-### 3.4.6 例1: 通し番号生成器
+その結果、プロシージャ本体は常に、プロシージャが作成された時点の環境のコンテキストで評価されることになる。
 
-この例では、クロージャを使って、局所変数のように手続きに対して私的でありながら、その値が手続きの呼び出しの間も持続する変数束縛を持つ手続きを作成します。
+これが「クロージャ」の意味するところです。次のいくつかの小節では、この概念の有用性を探る例を紹介します。
 
-```scheme
+* * *
+
+次へ: [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)、前: [クロージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 3.4.6 例 1: シリアル番号生成器 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-1_003a-A-Serial-Number-Generator)
+
+この例では、クロージャを使用して、ローカル変数のようにプロシージャ内でのみ有効な変数バインディングを持つプロシージャを作成します。ただし、その変数の値はプロシージャ呼び出し間で保持されます。
+
 (define (make-serial-number-generator)
-  (let ((current-serial-number 0))
-    (lambda ()
-      (set! current-serial-number (+ current-serial-number 1))
-      current-serial-number)))
+(let ((current-serial-number 0))
+(ラムダ()
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) current-serial-number ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) current-serial-number 1))
+現在のシリアル番号)))
 
-(define entry-sn-generator (make-serial-number-generator))
+(エントリSNジェネレーターの定義 (シリアル番号ジェネレーターの作成))
 
-(entry-sn-generator)
+(エントリSNジェネレーター)
 ⇒
 1
 
-(entry-sn-generator)
+(エントリSNジェネレーター)
 ⇒
 2
-```
 
-`make-serial-number-generator` が呼び出されると、初期値 0 を持つ `current-serial-number` の束縛を持つ局所環境を作成し、それからこの環境の中で手続きを作成します。局所環境は作成された手続きオブジェクトの中に格納されるため、作成された手続きが存在する間ずっと持続します。
+`make-serial-number-generator`が呼び出されると、初期値が0の`current-serial-number`のバインディングを持つローカル環境が作成され、その環境内でプロシージャが作成されます。ローカル環境は作成されたプロシージャオブジェクト内に保存されるため、作成されたプロシージャの存続期間中は保持されます。
 
-作成された手続きが呼び出されるたびに、それは捕捉された環境の中の `current-serial-number` 束縛の値をインクリメントし、それから現在の値を返します。
+作成されたプロシージャが呼び出されるたびに、キャプチャされた環境内の`current-serial-number`バインディングの値がインクリメントされ、その後、現在の値が返されます。
 
-`make-serial-number-generator` を再び呼び出して、最初のものとは独立した2つ目の通し番号生成器を作成できることに注意してください。`make-serial-number-generator` の新しい呼び出しはそれぞれ、新しい局所的な `let` 環境を作成し、この環境との関連付けを持つ新しい手続きオブジェクトを返します。
+`make-serial-number-generator` は、最初のシリアル番号ジェネレーターとは独立した 2 番目のシリアル番号ジェネレーターを作成するために、再度呼び出すことができることに注意してください。`make-serial-number-generator` を新たに呼び出すたびに、新しいローカル `let` 環境が作成され、この環境に関連付けられた新しいプロシージャー オブジェクトが返されます。
 
-### 3.4.7 例2: 共有された永続的な変数
+* * *
 
-この例では、クロージャを使って、`get-balance` と `deposit` という2つの手続きを作成します。どちらも同じ捕捉された局所環境を参照するため、両方ともその環境の中の `balance` 変数束縛にアクセスできます。この変数束縛の値は、どちらの手続きの呼び出しの間も持続します。
+次へ: [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)、前: [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-捕捉された `balance` 変数束縛は、これら2つの手続きに対して私的であることに注意してください。それは他のどのコードからも直接アクセスできません。`withdraw` 手続きで示されているように、`get-balance` または `deposit` を介して間接的にのみアクセスできます。
+#### 3.4.7 例 2: 共有永続変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-2_003a-A-Shared-Persistent-Variable )
 
-```scheme
+この例では、クロージャを使用して `get-balance` と `deposit` という 2 つのプロシージャを作成します。これらのプロシージャはどちらも同じキャプチャされたローカル環境を参照するため、どちらもその環境内の `balance` 変数バインディングにアクセスできます。この変数バインディングの値は、どちらのプロシージャを呼び出した場合でも保持されます。
+
+キャプチャされた変数 `balance` のバインディングは、これら 2 つのプロシージャ専用のプライベートなものであり、他のコードから直接アクセスすることはできません。`withdraw` プロシージャで示されているように、`get-balance` または `deposit` を介して間接的にのみアクセスできます。
+
 (define get-balance #f)
-(define deposit #f)
+(預金番号fを定義する)
 
 (let ((balance 0))
-  (set! get-balance
-        (lambda ()
-          balance))
-  (set! deposit
-        (lambda (amount)
-          (set! balance (+ balance amount))
-          balance)))
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) get-balance
+(ラムダ()
+バランス））
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) deposit
+(ラムダ(量)
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 残高 ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 残高金額))
+バランス）））
 
-(define (withdraw amount)
-  (deposit (- amount)))
+(定義 (引き出し金額)
+(入金 ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) 金額)))
 
-(get-balance)
+(残高取得)
 ⇒
 0
 
-(deposit 50)
+（デポジット50）
 ⇒
 50
 
-(withdraw 75)
+（75を撤回）
 ⇒
 -25
-```
 
-ここでの重要な詳細は、`get-balance` と `deposit` の変数は、トップレベルでそれらを `define` し、それから `let` の本体の中でその値を `set!` することで設定しなければならないということです。`let` の本体の中で `define` を使ってもうまくいきません。それでは局所的な `let` 環境の中に変数束縛が作成され、トップレベルからはアクセスできないからです。
+ここで重要なのは、`get-balance` と `deposit` 変数は、トップレベルで `define` して定義し、その後 `let` 本体内で `set!` して値を設定する必要があるということです。`let` 本体内で `define` を使用しても機能しません。これは、トップレベルからアクセスできないローカルの `let` 環境内に変数バインディングを作成するためです。
 
-### 3.4.8 例3: コールバックのクロージャ問題
+* * *
 
-ライブラリコードでよく使われるプログラミングモデルは、何らかの特定のイベントが発生したときにライブラリが呼び出すコールバック関数を、アプリケーションが登録できるようにするものです。アプリケーションが同じコールバック関数を使っていくつかの登録を行えると便利なことがよくあります。たとえば、いくつかの類似したライブラリイベントを同じアプリケーションコードで処理できる場合などです。しかしその場合、あるコールバック登録に関連付けられたコールバック関数の呼び出しを、別のコールバック登録に関連付けられたものと区別する必要が生じます。
+次へ: [例 4: オブジェクト指向](https://doc.guix.gnu.org/guile/latest/en/guile.html#OO-Closure)、前: [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-関数を動的に作成する能力を持たない言語では、この問題は通常、登録の呼び出しで `user_data` パラメータを渡し、このパラメータの値をコールバック関数のパラメータの一つとして含めることで解決されます。以下は、この解決策を使った C での宣言の例です。
+#### 3.4.8 例 3: コールバッククロージャ問題 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-3_003a-The-Callback-Closure-Problem)
 
-```c
+ライブラリコードでよく用いられるプログラミングモデルの一つは、アプリケーションが特定のイベント発生時にライブラリが呼び出すコールバック関数を登録できるようにすることです。複数の類似したライブラリイベントを同じアプリケーションコードで処理できる場合など、アプリケーションが同じコールバック関数を使用して複数の登録を行うことはしばしば有用ですが、その場合、一つのコールバック登録に関連付けられたコールバック関数呼び出しと、異なるコールバック登録に関連付けられたコールバック関数呼び出しを区別する必要が生じます。
+
+動的に関数を作成する機能を持たない言語では、この問題は通常、登録呼び出し時に `user_data` パラメータを渡し、そのパラメータの値をコールバック関数のパラメータの 1 つとして含めることで解決されます。以下は、この解決策を使用した C 言語での宣言例です。
+
 typedef void (event_handler_t) (int event_type,
-                                void *user_data);
+void \*user\_data);
 
 void register_callback (int event_type,
-                        event_handler_t *handler,
-                        void *user_data);
-```
+イベント_ハンドラー_t \*ハンドラー、
+void \*user\_data);
 
-Scheme では、ライブラリコードが各コールバック登録ごとに `user-data` を格納することを必要とせずに、クロージャを使って同じ機能を実現できます。
+Schemeでは、クロージャを使用することで、ライブラリコードが各コールバック登録ごとに`user-data`を保存する必要なく、同じ機能を実現できます。
 
-```scheme
-;; ライブラリ側:
-
+;; 図書館にて:
 (define (register-callback event-type handler-proc)
-  ...)
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
 
-;; アプリケーション側:
-
+;; アプリケーション内:
 (define (make-handler event-type user-data)
-  (lambda ()
-    ...
-    <event-type と user-data を参照するコード>
-    ...))
+(ラムダ()
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+<イベントタイプとユーザーデータを参照するコード>
+[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
 
-(register-callback event-type
-                   (make-handler event-type ...))
-```
+(register-callback イベントタイプ)
+(make-handler イベントタイプ [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
 
-ライブラリから見る限り、`handler-proc` は引数のない手続きであり、ライブラリがしなければならないのは、適切なイベントが発生したときにそれを呼び出すことだけです。しかしアプリケーションの観点からは、ハンドラ手続きはクロージャを使って、ハンドラのコードがイベントを正しく処理するために必要なすべての文脈――`event-type` と `user-data`――を含む環境を捕捉しています。
+ライブラリの観点から見ると、`handler-proc`は引数のないプロシージャであり、ライブラリは適切なイベントが発生したときにそれを呼び出すだけで済みます。しかし、アプリケーションの観点から見ると、ハンドラプロシージャはクロージャを使用して、ハンドラコードがイベントを正しく処理するために必要なすべてのコンテキスト（`event-type`と`user-data`）を含む環境をキャプチャしています。
 
-### 3.4.9 例4: オブジェクト指向
+* * *
 
-クロージャとは、永続的な変数束縛を含む環境を、手続きまたは関連する手続きの集合の定義の中に捕捉することです。これは、一部のオブジェクト指向言語における、関連するデータ変数の集合を、カプセル化されたデータを操作する「メソッド」の集合とともに「オブジェクト」の中にカプセル化するという考えにかなり似ています。次の例は、クロージャを使って Scheme でオブジェクト、メソッド、カプセル化の考えをエミュレートする方法を示しています。
+前へ: [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)、上へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-```scheme
-(define (make-account)
-  (let ((balance 0))
-    (define (get-balance)
-      balance)
-    (define (deposit amount)
-      (set! balance (+ balance amount))
-      balance)
-    (define (withdraw amount)
-      (deposit (- amount)))
+#### 3.4.9 例 4: オブジェクト指向 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-4_003a-Object-Orientation)
 
-    (lambda args
-      (apply
-        (case (car args)
-          ((get-balance) get-balance)
-          ((deposit) deposit)
-          ((withdraw) withdraw)
-          (else (error "Invalid method!")))
-        (cdr args)))))
-```
+クロージャとは、永続的な変数バインディングを含む環境を、プロシージャまたは関連するプロシージャ群の定義内にキャプチャすることです。これは、オブジェクト指向言語において、関連するデータ変数群を「オブジェクト」内にカプセル化し、カプセル化されたデータを操作する「メソッド」群を一緒にカプセル化するという考え方とよく似ています。以下の例は、クロージャを使用してSchemeでオブジェクト、メソッド、カプセル化の概念をエミュレートする方法を示しています。
 
-`make-account` を呼び出すたびに、例のコードの中の「`(lambda args`」で始まる式によって作成された、新しい手続きが作成されて返されます。
+(定義 (アカウント作成)
+(let ((balance 0))
+(define (get-balance)
+バランス）
+(定義 (預金額)
+([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 残高 ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 残高金額))
+バランス）
+(定義 (引き出し金額)
+(入金 ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) 金額)))
 
-```scheme
+(ラムダ引数)
+([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply)
+(case ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) args)
+((get-balance) get-balance)
+（（預金）預金）
+（（撤回）撤回する）
+(else ([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "無効なメソッドです!")))
+([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) args))))
+
+`make-account` を呼び出すたびに、サンプルコード内の「(lambda args)」で始まる式によって作成された新しいプロシージャが作成され、返されます。
+
 (define my-account (make-account))
 
-my-account
+私のアカウント
 ⇒
-#<procedure args>
-```
+#<プロシージャ引数>
 
-この手続きは、メソッド `get-balance`、`deposit`、`withdraw` を持つ口座オブジェクトとして機能します。口座にメソッドの一つを適用するには、必要なメソッドを示すシンボルを最初のパラメータとし、その後にそのメソッドが必要とする他のパラメータを続けて、手続きを呼び出します。
+このプロシージャは、`get-balance`、`deposit`、`withdraw`メソッドを持つアカウントオブジェクトとして機能します。アカウントにいずれかのメソッドを適用するには、最初のパラメータとして必要なメソッドを示すシンボルを指定し、その後にそのメソッドに必要なその他のパラメータを指定してプロシージャを呼び出します。
 
-```scheme
-(my-account 'get-balance)
+(マイアカウントの残高取得)
 ⇒
 0
 
-(my-account 'withdraw 5)
+(マイアカウント「5を引き出す」)
 ⇒
 -5
 
-(my-account 'deposit 396)
+(マイアカウント「入金396」)
 ⇒
 391
 
-(my-account 'get-balance)
+(マイアカウントの残高取得)
 ⇒
 391
-```
 
-この例では、現在の残高と、口座オブジェクトのメソッドの中核を実装するために使われる補助手続き `get-balance`、`deposit`、`withdraw` が、すべて口座オブジェクトの手続きを作成する `lambda` 式によって捕捉された私的な局所環境の中の変数束縛に格納されていることに注目してください。
+この例では、現在の残高と、アカウント オブジェクトのメソッドの中核を実装するために使用されるヘルパー プロシージャ `get-balance`、`deposit`、`withdraw` のすべてが、アカウント オブジェクト プロシージャを作成する `lambda` 式によってキャプチャされたプライベート ローカル 環境内の変数バインディングに格納されていることに注目してください。
 
-## 3.5 さらなる読み物
+* * *
 
-- ウェブサイト http://www.schemers.org/ は、Scheme に関するあらゆることの良い出発点です。
-- Dorai Sitaram によるオンラインの Scheme チュートリアル『Teach Yourself Scheme in Fixnum Days』が http://www.ccs.neu.edu/home/dorai/t-y-scheme/t-y-scheme.html にあります。継続についての良い説明が含まれています。
-- Hal Abelson、Jerry Sussman、Julie Sussman による、コンピュータサイエンスと Scheme への古典的入門書『Structure and Interpretation of Computer Programs』の全文が、現在 http://mitpress.mit.edu/sicp/sicp.html でオンラインで利用可能です。このサイトでは、この本に関連する教材や、この本で使われているすべてのソースコードも、読み込んで実行するのに適した形で提供されています。
+前へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)、上へ: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
----
+### 3.5 参考文献 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading-1)
 
-> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
-> 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
+* ウェブサイト [http://www.schemers.org/](http://www.schemers.org/) は、Scheme に関するあらゆることの出発点として最適です。
+* Dorai Sitaram 氏によるオンライン Scheme チュートリアル「Teach Yourself Scheme in Fixnum Days」、[http://www.ccs.neu.edu/home/dorai/ty-scheme/ty-scheme.html](http://www.ccs.neu.edu/home/dorai/ty-scheme/ty-scheme.html)。継続に関する分かりやすい説明が含まれています。
+ハル・アベルソン、ジェリー・サスマン、ジュリー・サスマンによるコンピュータ科学とSchemeの古典的な入門書である『Structure and Interpretation of Computer Programs』の全文が、[http://mitpress.mit.edu/sicp/sicp.html](http://mitpress.mit.edu/sicp/sicp.html)でオンラインで入手可能になりました。このサイトでは、本書に関連する教材や、本書で使用されているすべてのソースコードも、読み込みと実行に適した形式で提供されています。
+
+* * *
+
+次へ: [C言語プログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C)、前: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021)、上: [Guileリファレンスマニュアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[目次](https:/ /doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

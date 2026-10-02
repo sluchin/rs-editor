@@ -1,0 +1,299 @@
+### 6.13 正規表現 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html# Regular-Expressions-1)
+
+正規表現（またはregexp）とは、文字列のクラス全体を記述するパターンです。正規表現とその構文の詳細な説明は、このマニュアルの範囲外です。
+
+システムにPOSIX正規表現ライブラリが含まれていない場合、またはGuileをRxなどのサードパーティ製正規表現ライブラリとリンクしていない場合、これらの関数は利用できません。Guileのインストールに正規表現サポートが含まれているかどうかは、`(provided? 'regex)`がtrueを返すかどうかで確認できます。
+
+以下の正規表現および文字列マッチング機能は、`(ice-9 regex)`モジュールによって提供されます。これらの機能を使用する前に、`(use-modules (ice-9 regex))`を実行してこのモジュールをロードする必要があります。
+
+* [正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+* [マッチ構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Match-Structures)
+* [バックスラッシュエスケープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Backslash-Escapes )
+
+* * *
+
+次へ: [マッチ構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Match-Structures)、上: [正規表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regular-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.13.1 正規表現関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions-1)
+
+GuileはデフォルトでPOSIX拡張正規表現をサポートしています。つまり、文字「(」、「)」、「+」、「?」は特殊文字であり、リテラル文字に一致させたい場合はエスケープする必要があります。また、「\*」、「+」、「?」の「非貪欲」バリアントはサポートされていません。
+
+この正規表現インターフェースは、SchemeシェルであるSCSHの実装を参考に設計されています。SCSHの正規表現との上位互換性を維持することを意図しています。
+
+正規表現パターンや入力文字列では、ゼロバイト（`#\nul`）は使用できません。これは、基となるC言語の関数がゼロバイトを文字列の終端として扱うためです。ゼロバイトが存在する場合はエラーが発生します。
+
+内部的には、パターンと入力文字列は現在のロケールのエンコーディングに変換され、Cライブラリの正規表現ルーチンに渡されます（GNU Cライブラリリファレンスマニュアルの[正規表現](https://doc.guix.gnu.org/libc/latest/en/libc.html#Regular-Expressions)を参照）。返されるマッチ構造は、マルチバイトエンコーディングの場合でも、常に文字列内の文字を指し、個々のバイトを指しません。これにより、ロケールエンコーディングでマルチバイト表現を持つ文字でマッチングを実行する際に、マッチ構造が正しく機能することが保証されます。ただし、ロケールエンコーディングで表現できない文字を使用すると、予期しない結果が生じる可能性があることに注意してください。
+
+Scheme手順: **string-match** pattern str \[start\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch)
+
+文字列パターンを正規表現にコンパイルし、strと比較します。オプションの数値引数startは、strのマッチングを開始する位置を指定します。
+
+`string-match` は、正規表現によって何が一致したか（もし一致したなら）を記述する _match 構造体_ を返します。[Match Structures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Match-Structures) を参照してください。str が pattern に全く一致しない場合、`string-match` は `#f` を返します。
+
+一致例を2つ示します。最初の例では、パターンが一致文字列の4桁の数字と一致します。2番目の例では、パターンは何も一致しません。
+
+(文字列一致 "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002")
+⇒ #("blah2002" (4 . 8))
+
+(文字列一致 "\[A-Za-z\]" "123456")
+⇒ #f
+
+`string-match` が呼び出されるたびに、パターン引数を正規表現構造にコンパイルする必要があります。この処理はコストがかかるため、同じ正規表現が複数回使用される場合（例えば、ループ内など）は `string-match` の効率が低下します。パフォーマンスを向上させるには、正規表現を事前にコンパイルしておき、コンパイル済みの正規表現に対して文字列を照合する方法が有効です。
+
+Scheme Procedure: **make-regexp** pat flag… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dregexp)
+
+C 関数: **scm\_make\_regexp** (pat、flaglst) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fregexp)
+
+patで記述された正規表現をコンパイルし、コンパイルされた正規表現構造を返します。patが有効な正規表現を記述していない場合、`make-regexp`は`regular-expression-syntax`エラーをスローします。
+
+フラグ引数は、コンパイルされた正規表現の動作を変更します。以下の値を指定できます。
+
+変数: **regexp/icase** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002ficase)
+
+照合する際は、大文字と小文字は同じものとして扱います。
+
+変数: **regexp/newline** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnewline)
+
+対象文字列に改行文字が含まれている場合、'^' 演算子と '$' 演算子は、それぞれ改行文字の直後または直前にマッチするようにします。また、'.' 演算子と '\[^...\]' 演算子は、改行文字には決してマッチしません。このフラグの意図は、対象文字列を複数のテキスト行を含むバッファとして扱い、正規表現をそれらの行のうちの 1 つにマッチする可能性のあるパターンとして扱うことです。
+
+変数: **regexp/basic** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fbasic)
+
+デフォルトの拡張正規表現（「最新」）ではなく、基本正規表現（「旧式」）をコンパイルします。基本正規表現では、「|」、「+」、「?」は特殊文字として扱われず、「{...}」と「(...)」のメタ文字はバックスラッシュでエスケープする必要があります（[バックスラッシュエスケープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Backslash-Escapes)を参照）。基本正規表現と拡張正規表現には他にもいくつかの違いがありますが、これらが最も重要な違いです。
+
+変数: **regexp/extended** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fextended)
+
+基本正規表現ではなく、拡張正規表現をコンパイルします。これはデフォルトの動作であり、通常このフラグは必要ありません。`make-regexp` の呼び出しに `regexp/basic` フラグと `regexp/extended` フラグの両方が含まれている場合、最後に指定されたフラグが先に指定されたフラグを上書きします。
+
+Scheme Procedure: **regexp-exec** rx str \[start \[flags\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dexec)
+
+C 関数: **scm\_regexp\_exec** (rx, str, start, flags) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fregexp_005fexec)
+
+コンパイル済みの正規表現 rx を `str` と照合します。オプションの整数型の開始引数が指定されている場合は、文字列内のその位置から照合を開始します。照合結果を記述する照合構造体を返します。一致するものが見つからなかった場合は `#f` を返します。
+
+flags引数はマッチング動作を変更します。以下のフラグ値を指定できます。これらを組み合わせるには、`logior`（[ビット演算](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bitwise-Operations)を参照）を使用します。
+
+変数: **regexp/notbol** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnotbol)
+
+str の開始オフセットは行の先頭ではなく、演算子 '^' と一致しないことに注意してください。
+
+rx が上記の `regexp/newline` オプションで作成された場合、'^' は str 内の改行の後に引き続きマッチします。
+
+変数: **regexp/noteol** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnoteol)
+
+str の末尾は行末ではないため、演算子 '$' とは一致しないことに注意してください。
+
+rx が上記の `regexp/newline` オプションで作成された場合、'$' は str 内の改行の前にマッチします。
+
+;; 大文字に一致する正規表現
+(define r ([make-regexp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dregexp) "\[AZ\]\*"))
+
+;; 大文字小文字を区別せずに文字にマッチする正規表現
+(define ri ([make-regexp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dregexp) "\[AZ\]\*" [regexp/icase](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002ficase)))
+
+;; 正規表現rを使用してbobを検索します
+([match:substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asubstring) ([regexp-exec](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dexec) r "bob"))
+⇒ "" ; 一致するものなし
+;; 正規表現 ri を使用して bob を検索します
+([一致:部分文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asubstring) ([regexp-exec](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dexec) ri "ボブ"))
+⇒ "Bob" ; 大文字小文字を区別せずに一致
+
+スキームプロシージャ: **regexp?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_003f)
+
+C 関数: **scm\_regexp\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fregexp_005fp)
+
+objがコンパイル済みの正規表現の場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+  
+
+Scheme Procedure: **list-matches** regexp str \[flags\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dmatches)
+
+str 内の regexp の重複しないマッチ構造のリストを返します。regexp はパターン文字列またはコンパイル済みの正規表現のいずれかです。flags 引数は上記の `regexp-exec` と同様です。
+
+(map match:substring (list-matches "\[az\]+" "abc 42 def 78"))
+⇒ （"abc" "def")
+
+Scheme 手順: **fold-matches** regexp str init proc \[flags\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fold_002dmatches)
+
+str内のregexpの重複しないマッチにprocを適用して結果を作成します。regexpはパターン文字列またはコンパイル済みの正規表現のいずれかです。flags引数は上記の`regexp-exec`と同様です。
+
+proc は `(proc match prev)` という形式で呼び出されます。ここで、match はマッチ構造体、prev は proc からの前回の戻り値です。最初の呼び出しでは、prev は指定された初期化パラメータになります。`fold-matches` は proc からの最終値を返します。
+
+例えば、マッチ数を数えるには、
+
+(fold-matches "\[az\]\[0-9\]" "abc x1 def y2" 0
+(ラムダ (マッチ数)
+(1+カウント)))
+⇒ 2
+
+  
+
+正規表現は、ある文字列内のパターンを検索し、それを別の文字列の内容に置き換える際によく使用されます。以下の関数は、これを行うための便利な方法です。
+
+スキーム手順: **regexp-substitute** ポートマッチ項目 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dsubstitute)
+
+マッチ構造のマッチから選択した部分をポートに書き込みます。または、ポートが`#f`の場合は、それらの部分から文字列を作成して返します。
+
+各項目は記述する部分を指定しており、以下のいずれかになります。
+
+* 文字列。文字列引数はそのまま表示されます。
+* 整数。この数値に一致する部分文字列は「(`match:substring`)」と表記されます。0は一致全体を表します。
+* シンボル「pre」。正規表現のマッチに先行するマッチした文字列の部分が「match:prefix」として書き込まれます。
+* シンボル「post」。正規表現の一致に続く一致した文字列の部分が書き込まれます（`match:suffix`）。
+
+例えば、マッチを変更して前後のテキストを保持する、
+
+(regexp-substitute #f (string-match "\[0-9\]+" "number 25 is good")
+'前 "37" '後)
+⇒ 「37番は良い」
+
+または、「20020828」のようなYYYYMMDD形式の日付に一致させ、フィールドの順序を変更してハイフンで区切る。
+
+(日付正規表現を定義する)
+"(\[0-9\]\[0-9\]\[0-9\]\[0-9\])(\[0-9\]\[0-9\])(\[0-9\]\[0-9\])")
+(define s "日付 20020429 午前0時.")
+([regexp-substitute](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dsubstitute) #f ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) date-regex s)
+'pre 2 "-" 3 "-" 1 'post " (" 0 ")")
+⇒ 「日付 2002年4月29日 午前0時 (20020429)」
+
+Scheme Procedure: **regexp-substitute/global** port regexp target item… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dsubstitute_002fglobal)
+
+ターゲット内の正規表現に一致する部分のうち、選択した部分をポートに書き込みます。ポートが`#f`の場合は、それらの部分から文字列を作成して返します。regexpは文字列またはコンパイル済みの正規表現を指定できます。
+
+これは `regexp-substitute` に似ていますが、対象に対してグローバルな置換が可能です。各項目は `regexp-substitute` と同様に動作しますが、以下の点が異なります。
+
+* 関数。正規表現のマッチ構造を指定して `(item match)` として呼び出され、ポートに書き込む文字列を返します。
+* シンボル「post」。これは何も出力しませんが、代わりに`regexp-substitute/global`がターゲットの一致しない部分に対して再帰的に実行されるようにします。
+    
+対象に対してグローバル検索と置換を実行するには、これが必須です。これがないと、`regexp-substitute/global` は 1 つの一致と出力後に処理を終了します。
+    
+
+例えば、タブとスペースの連続をそれぞれ単一のハイフンにまとめるには、
+
+(regexp-substitute/global #f "\[ \\t\]+" "this is the text"
+'前 "-" '後)
+⇒ "this-is-the-text"
+
+または、各単語の文字を反転させる関数を使用する、
+
+(regexp-substitute/global #f "\[az\]+" "to do and not-do"
+'pre (lambda (m) (string-reverse (match:substring m))) 'post)
+⇒ "ot od dna ton-od"
+
+`post` 記号がない場合、正規表現の一致は 1 つだけになります。たとえば、以下は上記の `regexp-substitute` の日付の例ですが、別途 `string-match` を呼び出す必要はありません。
+
+(日付正規表現を定義する)
+"(\[0-9\]\[0-9\]\[0-9\]\[0-9\])(\[0-9\]\[0-9\])(\[0-9\]\[0-9\])")
+(define s "日付 20020429 午前0時.")
+([regexp-substitute/global](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dsubstitute_002fglobal) #f date-regex s
+'pre 2 "-" 3 "-" 1 'post " (" 0 ")")
+
+⇒ 「日付 2002年4月29日 午前0時 (20020429)」
+
+* * *
+
+次へ: [バックスラッシュエスケープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Backslash-Escapes)、前: [正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)、上: [正規表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regular-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.13.2 マッチ構造 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Match-Structures-1)
+
+_match structure_ は、`string-match` および `regexp-exec` によって返されるオブジェクトです。これは、文字列のどの部分が指定された正規表現に一致したか（一致した部分がある場合）を示します。Match Structure には、一致がチェックされた文字列への参照、正規表現の一致の開始位置と終了位置、および正規表現に括弧で囲まれた部分式が含まれている場合は、各部分一致の開始位置と終了位置が含まれます。
+
+以下に説明する各正規表現マッチ関数において、`match`引数は、`string-match`または`regexp-exec`の以前の呼び出しによって返されたマッチ構造体でなければなりません。これらの関数のほとんどは、正規表現とマッチした元のターゲット文字列に関する情報を返します。便宜上、その文字列をターゲットと呼びます。
+
+Scheme Procedure: **regexp-match?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dmatch_003f)
+
+objが前回の`regexp-exec`呼び出しで返されたマッチ構造である場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme Procedure: **match:substring** match \[n\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asubstring)
+
+サブ式番号 n に一致したターゲットの部分を返します。サブマッチ 0 (デフォルト) は正規表現全体の一致を表します。正規表現全体が一致したが、サブ式番号 n が一致しなかった場合は、`#f` を返します。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asubstring) s)
+⇒ 「2002」
+
+;; 文字列内のオフセット 6 から始まるマッチ
+([match:substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asubstring)
+([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah987654" 6))
+⇒ 「7654」
+
+スキーム手順: **match:start** match \[n\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003astart)
+
+サブマッチ番号nの開始位置を返します。
+
+次の例では、一致が文字インデックス4から始まるため、結果は4になります。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:start](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003astart) s)
+⇒ 4
+
+Scheme Procedure: **match:end** match \[n\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003aend)
+
+サブマッチ番号nの終了位置を返します。
+
+次の例では、一致する部分が4文字目から8文字目（つまり「2002」）の間であるため、結果は8になります。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:end](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003aend) s)
+⇒ 8
+
+スキーム手順: **match:prefix** マッチ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003aprefix)
+
+正規表現の一致箇所より前の、ターゲット文字列のうち一致しなかった部分を返します。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:prefix](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003aprefix) s)
+⇒ 「あー」
+
+Scheme Procedure: **match:suffix** match [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asuffix)
+
+正規表現に一致した部分以降で、一致しなかった部分を返します。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:suffix](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003asuffix) s)
+⇒ "foo"
+
+スキーム手順: **match:count** マッチ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003acount)
+
+マッチした正規表現から括弧で囲まれた部分式の数を返します。正規表現のマッチ自体が部分式としてカウントされ、マッチに失敗した部分式もカウントに含まれることに注意してください。
+
+Scheme Procedure: **match:string** match [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003astring)
+
+元のターゲット文字列を返します。
+
+(define s ([string-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dmatch) "\[0-9\]\[0-9\]\[0-9\]\[0-9\]" "blah2002foo"))
+([match:string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_003astring) s)
+⇒ "blah2002foo"
+
+* * *
+
+前へ: [マッチ構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Match-Structures)、上へ: [正規表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regular-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.13.3 バックスラッシュエスケープ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Backslash-Escapes-1)
+
+正規表現で「\*」や「$」などの文字に正確に一致させたい場合があります。たとえば、特定の文字列が Info ノードのメニュー項目を表しているかどうかを確認するには、「^\* \[^:\]\*::」のような正規表現と照合すると便利です。しかし、これは機能しません。アスタリスクはメタ文字であるため、文字列の先頭にある「\*」には一致しません。この場合、最初のアスタリスクを非マジック文字にする必要があります。
+
+メタ文字の前にバックスラッシュ文字「\\」を付けることで、これを実現できます。（これはメタ文字を「引用」するとも呼ばれ、「バックスラッシュエスケープ」として知られています。）Guile は正規表現でバックスラッシュを見ると、通常どのような特別な意味を持つかに関わらず、次のグリフを通常の文字とみなします。したがって、正規表現を「^\\\* \[^:\]\*::」に変更することで、上記の例を機能させることができます。「\\\*」シーケンスは、正規表現エンジンに、対象文字列内の単一のアスタリスクのみに一致するように指示します。
+
+バックスラッシュ自体がメタ文字であるため、バックスラッシュの前にバックスラッシュを付けることで、正規表現が対象文字列内のバックスラッシュに一致するように強制できます。たとえば、TeX プログラムで変数参照を検索するには、文字列 '\\let\\' の後に任意の数のアルファベット文字が続く箇所を検索したい場合があります。正規表現 '\\\\let\\\\\[A- Za-z\]\*' はこれを実現します。正規表現内の二重バックスラッシュはそれぞれ、対象文字列内の単一バックスラッシュに一致します。
+
+Scheme Procedure: **regexp-quote** str [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dquote)
+
+文字列strに含まれる各特殊文字をバックスラッシュで囲み、結果として得られる文字列を返します。
+
+**非常に重要:** Guile ソースコードでバックスラッシュエスケープを使用すると (Emacs Lisp や C と同様)、バックスラッシュ文字が Guile リーダーにとって特別な意味を持つため、注意が必要です。たとえば、Guile が Scheme コードを処理中に文字列の途中で文字シーケンス '\\n' を検出すると、その文字を改行文字に置き換えます。同様に、文字シーケンス '\\t' は水平タブに置き換えられます。これらの _エスケープシーケンス_ のいくつかは、コードが実行される前に Guile リーダーによって処理されます。認識されないエスケープシーケンスは無視されます。文字列に文字 '\\\*' が現れた場合、それは単一の文字 '\*' に変換されます。
+
+この翻訳は正規表現には明らかに不向きです。正規表現のメタ文字をエスケープするために、文字列にバックスラッシュを含めたいからです。したがって、Guile プログラムで文字列にバックスラッシュが保持されるようにするには、連続するバックスラッシュを 2 つ使用する必要があります。
+
+(define Info-menu-entry-pattern ([make-regexp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dregexp) "^\\\\\* \[^:\]\*"))
+
+この例の文字列は、コードが実行される前にGuileリーダーによって前処理されます。結果として得られる`make-regexp`への引数は、文字列「^\\\* \[^:\]\*」であり、これがまさに私たちが求めているものです。
+
+つまり、単一のバックスラッシュ文字に一致する正規表現を作成するには、ソースコード内の正規表現文字列に_4_個のバックスラッシュを含める必要があります。連続するバックスラッシュのペアは、Guile リーダーによって単一のバックスラッシュに変換され、結果として得られる二重バックスラッシュは、正規表現エンジンによって単一のバックスラッシュ文字に一致するものとして解釈されます。したがって、次のようになります。
+
+(define tex-variable-pattern ([make-regexp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dregexp) "\\\\\\\\let\\\\\\\\=\[A-Za-z\]\*"))
+
+この構文が扱いにくい理由は、歴史的な経緯にあります。正規表現パターンマッチングシステムとUnix文字列処理システムは、従来、上記で説明した特別な意味を持つバックスラッシュを使用してきました。POSIX正規表現仕様とANSI C規格は、いずれもこの意味を要求しています。どちらかの慣習を放棄しようとすると、他の種類の互換性の問題、場合によってはより深刻な問題が発生する可能性があります。したがって、Schemeリーダーを拡張して異なる引用規則を持つ文字列をサポートする（他の言語で実装すると、扱いにくく混乱を招く拡張となる）ことなく、この煩雑なエスケープ構文に従わざるを得ません。
+
+* * *
+
+次へ: [PEG 解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing)、前: [正規表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regular-Expressions)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

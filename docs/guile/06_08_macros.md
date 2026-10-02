@@ -1,0 +1,1044 @@
+### 6.8 マクロ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros-1)
+
+Lispプログラミングの真髄は、目の前の問題に適した言語を構築し、その言語で問題を解決するという反復的なプロセスにあります。新しい手続きを定義することもその一部ですが、Lispは有名なマクロによって構文を拡張することも可能です。
+
+マクロは構文上の拡張機能であり、マクロが含まれる式が評価される前に何らかの方法で変換されます。マクロ変換を目的とした式では、関連するマクロを指定する識別子が最初の要素として記述されなければなりません。例：
+
+([macro-name](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dname) macro-args [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+
+マクロ展開は、コードが解釈またはコンパイルされる前に実行される、評価の別のフェーズです。マクロは、プログラム上で実行されるプログラムであり、組み込み言語をコア Scheme[14](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT14)に変換します。
+
+* [マクロの定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Macros)
+* [構文規則マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Rules)
+* [`syntax-case` システムのサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Case)
+* [構文変換ヘルパー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Transformer-Helpers)
+* [Lispスタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros)
+* [識別子マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Identifier-Macros)
+* [構文パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Parameters)
+* [Eval-when](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-When)
+* [マクロ展開](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macro-Expansion)
+* [衛生とトップレベル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene-and-the-Top_002dLevel)
+* [内部マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Macros)
+
+* * *
+
+次へ: [構文規則マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Rules)、上へ: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.1 マクロの定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Macros-1)
+
+マクロとは、キーワードと構文変換器を結びつけるものです。`define-syntax` を説明するには変換器の形式について説明せずに済ませることは難しいため、以下のマクロ定義の例を考えてみましょう。
+
+(define-syntax の場合)
+(構文規則()
+（（条件式...）
+（条件付き）
+(開始 exp ...)))))
+
+（#t の場合）
+(「ヘイホー\n」と表示)
+(「さあ行こう\n」と表示)
+⊣ヘイホー
+⊣行こう
+
+この例では、`when` バインディングが `define-syntax` とバインドされています。構文変換については、[構文ルール マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Rules) および [`syntax-case` システムのサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Case) でより詳しく説明されています。
+
+構文: **define-syntax** キーワードトランスフォーマー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dsyntax)
+
+トランスフォーマーを評価して得られた構文トランスフォーマーにキーワードをバインドします。
+
+マクロが定義された後、Scheme ソースコード内のキーワードの以降のインスタンスは、transformer によって定義された構文トランスフォーマーを呼び出します。
+
+`let-syntax` を使用すると、ローカルな構文バインディングを確立することもできます。
+
+構文: **let構文** ((キーワード トランスフォーマー) …) exp1 exp2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002dsyntax)
+
+exp1 exp2 ... を展開しながら、各キーワードを対応するトランスフォーマーにバインドします。
+
+`let構文`のバインディングは、展開時にのみ存在します。
+
+(let構文((unless
+(構文規則()
+((条件式が満たされない限り...)
+(条件が満たされない場合)
+(開始 exp ...))))))
+（#t でない限り）
+(プリミティブ終了コード 1)
+「ロック、ロック、ロック」
+⇒ 「ロック、ロック、ロック」
+
+`define-syntax`形式は、定義が出現するあらゆる場所（トップレベルでもローカルでも）で有効です。ローカルの`define`が`letrec`のインスタンスに展開されるのと同様に、ローカルの`define-syntax`は`letrec-syntax`に展開されます。
+
+構文: **letrec-syntax** ((キーワード トランスフォーマー) …) exp1 exp2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec_002dsyntax)
+
+exp1 exp2 ... を展開しながら、各キーワードを対応するトランスフォーマーにバインドします。
+
+`letrec`と`let`の対比の精神に則り、transformerによって生成された展開は、同じletrec構文によって束縛されたキーワードを参照する場合があります。
+
+(letrec-syntax ((my-or
+(構文規則()
+（（私のまたは）
+#t)
+((私の経験)
+（例）
+((私のまたは経験の残り...)
+(let ((t exp))
+（もしt
+t
+（私の休息…）））））））
+（私のまたは#f「ロックアウェイビーチ」）
+⇒ 「ロックアウェイビーチ」
+
+* * *
+
+次へ: [`syntax-case` システムのサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Case)、前: [マクロの定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Macros)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.2 構文規則マクロ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax_002drules-Macros)
+
+`syntax-rules`マクロは、シンプルでパターン駆動型の構文変換ツールであり、Schemeにふさわしい美しさを備えています。
+
+構文: **構文規則** リテラル (パターン テンプレート) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002drules)
+
+パターン句とテンプレート句に規定された規則を用いて式を書き換える構文変換器を作成します。
+
+`syntax-rules`マクロは、リテラル（存在する場合）、パターン、およびパターンの数と同じ数のテンプレートという3つの部分で構成されます。
+
+構文展開ツールは、`syntax-rules` マクロの呼び出しを検出すると、式をパターンと順番に照合し、最初に一致したパターンのテンプレートを使用して式を書き換えます。一致するパターンがない場合は、構文エラーが通知されます。
+
+* [パターン](https://doc.guix.gnu.org/guile/latest/en/guile.html#Patterns)
+* [衛生管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene)
+* [略記法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shorthands)
+* [マクロの構文エラーの報告](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Syntax-Errors-in-Macros)
+* [カスタム省略記号識別子の指定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Specifying-a-Custom-Ellipsis-Identifier)
+* [詳細情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Information)
+
+#### 6.8.2.1 パターン [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Patterns)
+
+前のセクションでは、`(unless condition exp ...)`、`(my-or exp)`など、パターンの例をいくつか見てきました。パターンは、マッチさせる式と同じ構造になっています。`(let ((var val) ...) exp exp* ...)`のように、ネストされた構造を持つこともできます。大まかに言うと、パターンはリスト、不適切リスト、ベクトル、識別子、データムで構成されます。ユーザーは、省略記号（`...`）を使用して、パターンのシーケンスをマッチさせることができます。
+
+パターン内の識別子は、`syntax-rules`リテラルリストに存在する場合は「リテラル」、存在しない場合は「パターン変数」と呼ばれます。マクロ出力を作成する際、エキスパンダーはテンプレート内のパターン変数のインスタンスを、一致した部分式に置き換えます。
+
+(define-syntax kwote
+(構文規則()
+((kwote exp)
+(引用句))))
+(kwote (foo . bar))
+⇒ (foo . bar)
+
+不適切なパターンリストは、レスト引数と同様にマッチします。
+
+(define-syntax let1
+(構文規則()
+((\_ (var val) . exps)
+(let ((var val)) . exps))))
+
+しかし、この `let1` の定義はおそらく意図したものではないでしょう。末尾のパターン式は、`(let1 (foo 'bar) . baz)` のようなリスト以外のものにもマッチしてしまうからです。そのため、不適切なリストをパターンとして使用する代わりに、省略形パターンを使用する方が多くの場合適切です。テンプレート内のパターン変数のインスタンスの後には、省略記号を付ける必要があります。
+
+(define-syntax let1
+(構文規則()
+((\_ (var val) exp ...)
+(let ((var val)) exp ...))))
+
+この `let1` は、おそらくまだ私たちの望む動作をしません。なぜなら、本体が `(let1 (foo 'bar))` のように、ゼロ式のシーケンスにマッチするからです。この場合、少なくとも 1 つの本体式があることをアサートする必要があります。このための一般的な慣用表現は、省略されたパターン変数にアスタリスクを付けることにあります。
+
+(define-syntax let1
+(構文規則()
+((\_ (var val) exp exp\* ...)
+(let ((var val)) exp exp\* ...))))
+
+パターンのベクトルは、その内容がパターン（省略形や末尾パターンを含む）に一致するベクトルと一致する。
+
+(define-syntax letv
+(構文規則()
+((\_ #((var val) ...) exp exp\* ...)
+(let ((var val) ...) exp exp\* ...)))
+(letv #((foo 'bar)) foo)
+⇒バー
+
+リテラルは、式の中で特定のデータに一致させるために使用されます。例えば、`cond` 式で `=>` や `else` を使用する場合などです。
+
+(define-syntax cond1
+(構文規則 (=> else)
+((cond1 test => fun)
+(let ((exp test))
+(if exp (fun exp) #f)))
+((cond1 else exp exp\* ...)
+(開始 exp exp\* ...))
+((cond1 test exp exp\* ...)
+(if test (begin exp exp\* ...)))))
+
+(define (square x) (* xx))
+(条件1 10 => 正方形)
+⇒ 100
+(let ((=> #t))
+(条件1 10 => 平方))
+⇒ #<プロシージャ square (x)>
+
+リテラルは、入力式がリテラルと同じ名前の識別子であり、両方ともバインドされていない場合に、入力式と一致します[15](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT15)。
+
+リテラルは非バインドにすることもできますが、通常はインポート、エクスポート、名前変更を可能にするためにバインドされます。インポートとエクスポートの詳細については、[モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules)を参照してください。Guileには、R6RSおよびR7RSで規定されているいくつかの標準的な補助構文定義があります。
+
+Scheme構文: **else** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-else)
+
+Scheme構文: **\=>** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e)
+
+Scheme構文: **\_** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)
+
+Scheme構文: **...** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+
+補助構文定義。
+
+これらは、決して一致しないマクロで定義されます。例:
+
+(define-syntax else (syntax-rules ()))
+
+パターンがリスト、ベクトル、または識別子でない場合、それは `equal?` とともにリテラルとして一致します。
+
+(define-syntax define-matcher-macro
+(構文規則()
+((\_ 名前 lit)
+(define-syntax name
+(構文規則()
+((\_ lit) #t)
+((\_ else) #f))))))
+
+(define-matcher-macro is-literal-foo? "foo")
+
+(is-literal-foo? "foo")
+⇒ #t
+(is-literal-foo? "bar")
+⇒ #f
+(let ((foo "foo"))
+(is-literal-foo? foo))
+⇒ #f
+
+最後の例は、マッチングが実行時ではなく展開時に行われることを示している。
+
+構文規則マクロは常に `(macro . args)` として使用され、マクロは常にシンボルになります。同様に、`syntax-rules` パターンはリスト (適切なものも不適切なものも) である必要があり、そのリストの最初のパターンは識別子でなければなりません。ちなみに、これは任意の識別子でよく、マクロの名前である必要はありません。したがって、次の 3 つは同等です。
+
+(define-syntax の場合)
+(構文規則()
+（（ce のとき...）
+(c の場合 (e の開始 ...)))))
+
+(define-syntax の場合)
+(構文規則()
+((\_ ce ...)
+(c の場合 (e の開始 ...)))))
+
+(define-syntax の場合)
+(構文規則()
+（（全く別の何か…）
+(c の場合 (e の開始 ...)))))
+
+分かりやすくするために、最初の2つのバリアントのいずれかを使用してください。また、パターン変数は常にマクロ自体（例：`cond1`）に一致するため、テンプレート内では実際にはバインドされていないことに注意してください。
+
+#### 6.8.2.2 衛生管理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene)
+
+`syntax-rules` マクロには、参照の透明性を維持するという特別な特性があります。マクロ定義を読み込む際、そのマクロ内の自由バインディングはすべてマクロ定義を基準として解決されます。また、マクロのインスタンス化を読み込む際、その式内の自由バインディングはすべて式を基準として解決されます。
+
+この特性は「衛生」と呼ばれることもあり、コードの簡潔さを保つのに役立ちます。マクロ定義では、一時変数を自由に導入しても、意図せずマクロ展開にバインディングが混入してしまうことを心配する必要はありません。
+
+前のセクションで説明した`my-or`の定義を考えてみましょう。
+
+(define-syntax my-or
+(構文規則()
+（（私のまたは）
+#t)
+((私の経験)
+（例）
+((私のまたは経験の残り...)
+(let ((t exp))
+（もしt
+t
+（私の休息…））））））
+
+`(let ((t #t)) (my-or #ft))` を単純に展開すると次のようになります。
+
+(let ((t #t))
+(let ((t #f))
+(tttの場合)))
+⇒ #f
+
+これは明らかに私たちが望むものではありません。定義における「t」は、使用箇所における「t」とは何らかの点で異なっており、構文展開器が衛生的なマクロを展開する際に維持するのはまさにこの違いなのです。
+
+この議論は主に、参照透過性を保持しない従来のLispマクロ（[Lispスタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros)を参照）の文脈で関係があります。衛生管理はSchemeの表現力を高めます。
+
+#### 6.8.2.3 短縮形 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shorthands)
+
+多くの場合、単純な1節の`syntax-rules`マクロを書くことになります。この慣用表現には、`define-syntax-rule`という便利な省略形があります。
+
+構文: **define-syntax-rule** (キーワード . パターン) \[docstring\] テンプレート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dsyntax_002drule)
+
+キーワードを、1つの句を持つ新しい`syntax-rules`マクロとして定義します。
+
+この形式にすると、`when` の例は大幅に短くなります。
+
+(define-syntax-rule (when ce ...)
+(c の場合 (e の開始 ...)))
+
+#### 6.8.2.4 マクロの構文エラーの報告 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Syntax-Errors-in-Macros)
+
+構文: **構文エラー** メッセージ \[arg ...\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002derror)
+
+マクロ展開時にエラーを報告します。message は文字列リテラルである必要があり、オプションの arg オペランドは追加情報を提供する任意の式にすることができます。
+
+`syntax-error` は `syntax-rules` テンプレート内で使用することを想定しています。例:
+
+(define-syntax simple-let
+(構文規則()
+((\_ (head ... ((x . y) val) . tail)
+体1 体2 ...)
+(構文エラー)
+「識別子を期待していたが、代わりに」
+(x . y)))
+((\_ ((名前 値) ...) body1 body2 ...)
+((lambda (name ...) body1 body2 ...)
+val ...))))
+
+#### 6.8.2.5 カスタム省略記号識別子の指定 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Specifying-a-Custom-Ellipsis-Identifier )
+
+マクロ定義を生成するマクロを作成する場合、各レベルで異なる省略記号識別子を使用すると便利です。Guile では、SRFI-46 および R7RS で規定されているように、目的の省略記号識別子を `syntax-rules` の最初のオペランドとして指定できます。例:
+
+(define-syntax define-quotation-macs)
+(構文規則()
+((\_ (マクロ名ヘッドシンボル) ...)
+(開始 (define-syntax マクロ名)
+(構文規則 ::: ()
+((\_ x :::)
+(quote (head-symbol x :::)))))
+...))))
+(define-quotation-macros (quote-a a) (quote-b b) (quote-c c))
+(quote-a 1 2 3) ⇒ (a 1 2 3)
+
+#### 6.8.2.6 詳細情報 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Information)
+
+`syntax-rules`とそのパターン言語の正式な定義については、Revised(5) Report on the Algorithmic Language Schemeの[Macros](https://doc.guix.gnu.org/r5rs/latest/en/r5rs.html#Macros)を参照してください。
+
+`syntax-rules` マクロはシンプルで分かりやすいですが、いくつかの制限があります。エラーメッセージは表現力に乏しく、パターンは一致するかしないかのどちらかです。コード生成機能はテンプレート駆動型の展開に限られており、実際の作業を行うには多数のヘルパーマクロを定義する必要がある場合がよくあります。生成されたコードの字句コンテキストにバインディングを導入したい場合もありますが、`syntax-rules` ではこれは不可能です。また、識別子をプログラムで生成することもできません。
+
+これらの問題すべてに対する解決策は、その機能が必要な場合は `syntax-case` を使用することです。しかし、何らかの理由で `syntax-rules` を使用せざるを得ない場合は、Joe Marshall の [`syntax-rules` Primer for the Merely Eccentric](https://web.archive.org/web/20121111060531/%20https://d655165b-a-62cb3a1a-s- sites.googlegroups.com/site/evalapply/%20eccentric.txt?attachauth=ANoY7cqZJK0iAkVoFlTZqjKSFX1rW6pgA71to347P957URfJwmFRH%205Yyddp6gASBSaG38_9MfSlq59KN5Ozzja0WMVuHWi5a_bfGeJHv13bfhYbtwA8WcVHaL_xTA 5AvlLH%20__qHKE2UVPj2qrWYyrcBCx3ihmR8CWUfyo8D4GbdvFGkNon3owtrR_CL_wbPr7VGE_8Gq0aJp7tWGt%20tZSjip9 rySlqAO4aQ%3D%3D&attredirects=0).[16](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT16)
+
+* * *
+
+次へ: [構文変換ヘルパー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Transformer-Helpers)、前: [構文ルールマクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Rules)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.3 `syntax-case` システムのサポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Support-for-the-syntax_002dcase-System)
+
+`syntax-case`マクロは、Schemeに匹敵するほどの強力な手続き型構文変換ツールです。
+
+構文: **syntax-case** 構文リテラル (パターン \[guard\] exp) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dcase)
+
+構文オブジェクトの構文を、指定されたパターンと順番に照合します。パターンが一致した場合は、関連付けられた式を評価した結果を返します。
+
+以下の「when」の定義を比較してください。
+
+(define-syntax の場合)
+(構文規則()
+((\_ test ee\* ...)
+(if test (begin ee\* ...)))))
+
+(define-syntax の場合)
+(ラムダ (x)
+(構文ケース x ()
+((\_ test ee\* ...)
+#'(if test (begin ee\* ...))))))
+
+明らかに、`syntax-case` の定義は `syntax-rules` の定義と似ていますが、同時にいくつかの違いもあります。`syntax-case` の定義は `lambda` という引数を 1 つ取る関数で囲まれており、その引数が `syntax-case` の呼び出しに渡されます。また、マクロの「戻り値」には `#` という接頭辞が付きます。
+
+これらの違いはすべて、`syntax-case` が構文変換器自体を定義していないという事実から生じています。代わりに、`syntax-case` 式は、構文オブジェクトを分解し、出力として構文オブジェクトを再構築する方法を提供します。
+
+つまり、`lambda` ラッパーは単なる実装上の詳細であり、構文変換関数は構文を構文に変換する関数に過ぎないということです。マクロを「プログラムを書くプログラム」と既に説明していることを考えると、これは驚くべきことではありません。`syntax-case` は単にプログラムテキストを分解して組み立てる方法であり、有効な構文変換関数であるためには、プロシージャでラップされる必要があります。
+
+従来の Lisp マクロ ([Lisp スタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros) を参照) とは異なり、`syntax-case` マクロは、生の Scheme フォームではなく、構文オブジェクトを変換します。前のセクションで示した `my-or` の単純な展開を思い出してください。
+
+(let ((t #t))
+(私のまたは#ft)
+;; 素朴な展開:
+(let ((t #t))
+(let ((t #f))
+(tttの場合)))
+
+生の Scheme 形式には、`(if ttt)` 内の最初の 2 つの `t` インスタンスと 3 番目の `t` インスタンスを区別するのに十分な情報がありません。そのため、構文展開ツールは識別子をシンボルとして表現する代わりに、注釈付き構文オブジェクトとして表現し、参照の透明性を維持するために必要な情報をこれらの構文オブジェクトに付加します。
+
+構文: **構文** 形式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax)
+
+現在の語彙コンテキスト内でフォームをラップする構文オブジェクトを作成します。
+
+構文オブジェクトは通常、展開処理を容易にするために内部的に作成されますが、構文展開の外部で作成することも可能です。
+
+(構文 (foo bar baz))
+⇒ #<その構文の何らかの表現>
+
+しかし、`syntax-case`式から出力を作成する際には、構文オブジェクトを作成する方が一般的で便利です。
+
+(define-syntax add1
+(ラムダ (x)
+(構文ケース x ()
+((\_ exp)
+(構文 (+ exp 1))))))
+
+`syntax-case` 式はヘルパー関数内で使用したり、構文展開自体とは別の用途で使用したりできるため、必ずしも構文オブジェクトを返す必要はありません。ただし、構文変換プロシージャは構文オブジェクトを返す必要があるため、`syntax-case` のほとんどの使用例では最終的に構文オブジェクトが返されます。
+
+この場合、戻り値を生成する形式は `(syntax (+ exp 1))` でした。興味深いのは、`syntax` 式の中では、パターン変数が出現すると、それが結果として得られる構文オブジェクトに置き換えられ、元の式からの関連するメタデータ（語彙的同一性やソース位置など）がすべて引き継がれることです。
+
+実際、パターン変数は`syntax`形式内からのみ参照できます。構文展開ツールは、`add1`を定義する際に`exp`が`syntax`形式の外で参照されていることを発見した場合、エラーを発生させます。
+
+`syntax` はマクロを多用するコードで頻繁に出現するため、特別なリーダーマクロ `#'` が用意されています。`#'foo` はリーダーによって `(syntax foo)` に変換され、`'foo` は `(quote foo)` に変換されます。
+
+`syntax-case`で使用されるパターン言語は、都合の良いことに`syntax-rules`で使用される言語と同じです。このことを踏まえ、Guileは実際には`syntax-case`を用いて`syntax-rules`を定義しています。
+
+(define-syntax syntax-rules
+(ラムダ (x)
+(構文ケース x ()
+((\_ (k ...) ((キーワード . パターン) テンプレート) ...)
+#'(lambda (x)
+(構文ケース x (k ...)
+((dummy . pattern) #'template)
+...))))))
+
+以上です。
+
+* [なぜ `syntax-case` なのか？](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-syntax_002dcase_003f)
+* [構文ケースマクロ用のカスタム省略記号識別子](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Ellipsis-Identifiers-for-syntax_002dcase-Macros)
+* [構文オブジェクトもデータになり得る](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-objects-can-be-data-too)
+
+#### 6.8.3.1 なぜ `syntax-case` を使うのか？ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-syntax_002dcase_003f)
+
+これまで示してきた例は、`syntax-rules` を使っても同じように表現できたはずで、単に `syntax-case` の方が冗長であることを示しただけです。確かにそれは事実です。しかし、違いがあります。`syntax-case` は手続き型マクロを作成し、マクロ展開機能に Scheme の強力な機能をすべて提供します。これには多くの実用的な応用例があります。
+
+よくある要望は、識別子である場合にのみフォームを一致させたいというものです。`syntax -rules`では、データマッチングの形式を考慮すると、これは不可能です。しかし、`syntax-case`を使えば簡単です。
+
+Scheme手順: **identifier?** syntax-object [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-identifier_003f)
+
+構文オブジェクトが識別子の場合は`#t`を返し、それ以外の場合は`#f`を返します。
+
+;; 以前の add1 定義に依存しています
+(define-syntax add1!
+(ラムダ (x)
+(構文ケース x ()
+((\_ var) (識別子? #'var)
+#'(set! var (add1 var))))))
+
+(define foo 0)
+(add1! foo)
+フー ⇒ 1
+(add1! "not-an-identifier") ⇒ エラー
+
+`syntax-rules` の場合、`(add1! "not-an-identifier")` のエラーは「無効な `set!`」のようになります。`syntax-case` の場合、パターンに `(identifier? #'var)` という _guard 句_ を付加するため、「無効な `add1!`」のようになります。これは、マクロが複雑になるにつれて重要になります。`identifier?` を使用する必要があるのは、展開器にとって識別子は単なるシンボル以上のものだからです。
+
+ガード句の中でも、`#'var` を介して `syntax` 形式内で var パターン変数を参照していることに注意してください。
+
+もう一つよくある要望は、出力式の語彙的コンテキストにバインディングを導入することです。その一例として、`aif` のようないわゆる「照応マクロ」が挙げられます。照応マクロは、その本体内で、ある式を既知の識別子（多くの場合 `it`）にバインドします。例えば、`(aif (foo) (bar it))` では、`it` は `(foo)` の結果にバインドされます。
+
+まず最初に、うまくいかない解決策について触れておきましょう。
+
+;; 動作しません
+(define-syntax aif
+(ラムダ (x)
+(構文ケース x ()
+((_テストしてからそうでなければ)
+#'(テストさせてください)
+(もしそうなら、そうでなければ))))))
+
+これが機能しない理由は、デフォルトでは、エキスパンダーが参照透過性を維持するため、then 式と else 式は `it` のバインディングにアクセスできないためです。
+
+しかし、`datum->syntax` を介して明示的にバインディングを導入すれば、それが可能になります。
+
+スキーム手順: **データ->構文** テンプレート ID データ \[#:source=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-datum_002d_003esyntax)
+
+識別子 template-id に対応する字句コンテキスト内で、datum をラップする構文オブジェクトを作成します。template-id が false の場合、datum には字句コンテキスト情報は含まれません。
+
+構文オブジェクトには、関連付けられたソース位置があります。内部的には、これはファイル名、行、列の 3 要素ベクトルとして表現されます。通常、この位置は最終的に `read-syntax` によって提供されます。[コンパイラ向け Scheme コードの読み取り](https://doc.guix.gnu.org/guile/latest/en/guile.html#Annotated-Scheme-Read) を参照してください。
+
+ソースとして構文オブジェクトが渡された場合、結果として得られる構文オブジェクトのソース位置はソースの位置になります。それ以外の場合、ソースが3要素のソース位置ベクトルであれば、そのベクトルが結果として得られる構文オブジェクトのソース位置になります。ソースがソースプロパティのリストであれば、それらが解析され、結果として得られる構文オブジェクトのソース位置として設定されます。それ以外の場合、ソースがfalseであれば、ソースプロパティは`(source-properties datum)`から検索されます。[ソースプロパティ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties)を参照してください。
+
+補足として、構文オブジェクトからメタデータを削除して、生のSchemeデータを返すことも可能であることを述べておきます。
+
+スキーム手順: **syntax->datum** syntax-object [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002d_003edatum)
+
+構文オブジェクトからメタデータを削除し、その内容を生のSchemeデータとして返します。
+
+この場合、`it` を式全体のコンテキストに導入したいので、`(datum->syntax x 'it)` のような構文オブジェクトを作成できます。ここで `x` は、トランスフォーマープロシージャに渡される式全体です。
+
+もう一つ、効果のない解決策を紹介します。
+
+;; これも機能しません
+(define-syntax aif
+(ラムダ (x)
+(構文ケース x ()
+((_テストしてからそうでなければ)
+(let ((it (datum->syntax x 'it)))
+#'(テストさせてください)
+(もしそうなら、そうでなければ)))))))
+
+これがうまくいかない理由は、実際には2つの環境が作用しているためです。1つは`syntax-case`によって束縛されるパターン変数の環境、もう1つは通常のSchemeによって束縛される字句変数の環境です。外側のlet形式は字句変数の環境に束縛を確立しますが、内側のlet形式は構文形式の中にあり、そこではパターン変数のみが置換されます。ここで字句環境の一部をパターン変数環境に導入する必要がありますが、これは`syntax-case`自体を使って行うことができます。
+
+;; 機能するが、分かりにくい
+(define-syntax aif
+(ラムダ (x)
+(構文ケース x ()
+((_テストしてからそうでなければ)
+;; 生成された構文に対して構文ケースを呼び出す
+;; 構文オブジェクトを `syntax` に公開します
+(syntax-case (datum->syntax x 'it) ()
+（それ
+#'(テストさせてください)
+(もしそうなら、そうでなければ))))))))
+
+(aif (getuid) (display it) (display "none")) (newline)
+⊣ 500
+
+しかし、これを記述するもっと簡単な方法があります。`with-syntax` は多くの場合便利です。
+
+構文: **with-syntax** ((pat val) …) exp … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dsyntax)
+
+exp の語彙的コンテキスト内で、対応する値 val からパターン pat をバインドします。
+
+;; より良い
+(define-syntax aif
+(ラムダ (x)
+(構文ケース x ()
+((_テストしてからそうでなければ)
+(with-syntax ((it (datum->syntax x 'it)))
+#'(テストさせてください)
+(もしそうなら、そうでなければ)))))))
+
+ご想像のとおり、`with-syntax` は `syntax-case` に基づいて定義されます。しかし、`quasiquote` を使用してマクロ出力を構築することに慣れている古い Lisp マクロのハッカーにとっては、それでも違和感があるかもしれません。問題は、`with-syntax` が値の定義点と置換点を分離してしまうことです。
+
+したがって、`quasiquote` スタイルの方が理にかなっている場合、`syntax-case` は `quasisyntax`、および関連する `unsyntax` と `unsyntax-splicing` も定義しており、読者はそれぞれ `` #` ``、`#,`、および `#,@` と略記します。
+
+例えば、コンパイル時のタイムスタンプをソースファイルに挿入するマクロを定義するには、次のように記述します。
+
+(define-syntax display-compile-timestamp
+(ラムダ (x)
+(構文ケース x ()
+((\_)
+#\`(開始)
+(「コンパイル時のタイムスタンプは次のとおりです:」と表示)
+(表示番号、(現在時刻))
+(改行))))))
+
+`syntax-case` マクロについてさらに詳しく知りたい読者は、R. Kent Dybvig 著の優れた書籍『The Scheme Programming Language』（第 3 版または第 4 版）の構文に関する章を参照してください。Dybvig は `syntax-case` システムの主要な開発者です。この書籍は [http://scheme.com/tspl4/](http://scheme.com/tspl4/) でオンラインで入手できます。
+
+#### 6.8.3.2 構文ケース マクロのカスタム省略記号識別子 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Ellipsis-Identifiers-for-syntax_002dcase-Macros)
+
+マクロ定義を生成する手続き型マクロを作成する場合、各レベルで異なる省略記号識別子を使用すると便利です。Guile は、特殊形式 `with-ellipsis` を使用して手続き型マクロでこれをサポートしています。
+
+構文: **with-ellipsis** 省略記号 本文 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dellipsis)
+
+省略記号は識別子でなければなりません。body を特別な語彙環境で評価し、body 内のすべてのマクロパターンとテンプレートが、通常の 3 つのドット (`...`) の代わりに省略記号を省略記号識別子として使用するようにします。
+
+例えば：
+
+(define-syntax define-quotation-macs)
+(ラムダ (x)
+(構文ケース x ()
+((\_ (マクロ名ヘッドシンボル) ...)
+#'(begin (define-syntax macro-name
+(ラムダ (x)
+(省略記号付き :::
+(構文ケース x ()
+((\_ x :::)
+#'(quote (head-symbol x :::)))))))
+...)))))
+(define-quotation-macros (quote-a a) (quote-b b) (quote-c c))
+(quote-a 1 2 3) ⇒ (a 1 2 3)
+
+`with-ellipsis` が生成されたコードの周囲に含まれていない限り、`with-ellipsis` は生成されたコードの省略記号識別子に影響を与えないことに注意してください。
+
+#### 6.8.3.3 構文オブジェクトもデータになり得る [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-objects-can-be-data-too)
+
+一般的に、マクロ展開機能では、ソース項内のすべての構文オブジェクトを分解する必要があります。構文オブジェクトに付加されたソースおよびスコープ注釈は、マクロ展開機能が結果を計算する際に重要になりますが、通常は展開後の項に構文オブジェクト自体が表示されることはありません。ただし、マクロによっては、展開後の出力に構文オブジェクトを表示させたい場合があります。通常は、`quote` を使用して構文オブジェクトを値として導入しますが、展開機能は `quote` の部分式から構文オブジェクトを削除します。このようなまれなケースに対応するため、Guile には部分式を削除しない `quote-syntax` が用意されています。
+
+構文: **quote-syntax** 形式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-quote_002dsyntax)
+
+構文オブジェクト `form` を定数リテラルとして展開します。`quote` と同様ですが、`syntax->datum` は呼び出しません。
+
+* * *
+
+次へ: [Lisp スタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros)、前: [`syntax-case` システムのサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Case)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.4 構文変換ヘルパー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Transformer-Helpers-1)
+
+前述の通り、Guileの構文展開機能は構文オブジェクトを操作します。手続き型マクロは構文オブジェクトを消費し、また生成します。本節では、手続き型マクロがこのデータ型のオブジェクトを比較、生成、照会するために使用できる補助ヘルパーについて説明します。
+
+Scheme Procedure: **bound-identifier=?** ab [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bound_002didentifier_003d_003f)
+
+構文オブジェクト a と b が両方とも同じシンボル名を持つ識別子 (つまり、プロシージャ `syntax->datum` が両方に対して同じシンボルを返す) であり、かつ両方とも同じ衛生的なマクロ展開によって作成された場合に限り、`#t` を返します。これは、a が既に外側のスコープで何らかのバインディングを持ち、別のマクロが内側のスコープで b をバインディングする場合、a のバインディングがシャドウされることを意味します。b が外側のスコープでバインディングされ、a がそれをシャドウする場合も同様です。
+
+2 つの識別子のシンボル名が異なる場合、または異なる展開手順で作成された場合は、`#f` を返します。
+
+このテストは、`let`や`lambda`などの構文形式によって使用され、それらを使用するコードが同じ識別子を複数回バインドしようとしていないことを確認するために使用されます。
+
+スキーム手順: **free-identifier=?** ab [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-free_002didentifier_003d_003f)
+
+構文オブジェクト a と b が両方とも識別子であり、同じバインディングを参照している場合は、`#t` を返します。a も b もバインドされていない場合、両方が同じシンボル名を持っている場合は `#t` を返します。
+
+2 つの識別子のバインディングが異なる場合、一方がバインドされていてもう一方がバインドされていない場合、またはどちらもバインドされておらず、かつ 2 つのシンボル名が異なる場合は、`#f` を返します。
+
+このテストは、`cond`などの構文形式において、`else`のような補助キーワードの使用箇所を検出するために使用されます。また、高度な手続き型マクロにおいて、入力中の同じ外部識別子への参照を、出力では1つの参照に統合するためにも使用できます。
+
+実際には、バインディングのない識別子に適用されるフォールバックケースは、プログラマーが無視できる場合がほとんどです。補助キーワードは通常、ダミーマクロにバインドされるべきであり、正しいコンテキスト以外で使用されると必ず構文違反が発生します。また、バインドされていない識別子が展開されたコードに挿入された場合、いずれにしてもエラーが発生します。
+
+Scheme Procedure: **generate-temporaries** ls [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-generate_002dtemporaries)
+
+ls の長さと同じ長さの一時識別子のリストを返します。各一時識別子は、`bound-identifier=?` の意味で他のすべての識別子とは区別され、関連付けられた既存のバインディングはありません。
+
+Scheme手順: **syntax-source** x [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dsource)
+
+構文オブジェクト x に対応するソースプロパティを返します。詳細については、[ソースプロパティ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties) を参照してください。
+
+Guileは、別のモジュールでさらに実験的なインターフェースも提供しています。大型ハドロン衝突型加速器の場合と同様に、これらのインターフェースを追加することが素晴らしい結果をもたらすのか、それとも特異点の発生によってGuileが破壊される結果をもたらすのかは、上級マクロ学者にも不明です。2.0シリーズではこれらの機能を維持しますが、将来の安定版シリーズでは、通常よりも大幅に変更する権利を留保します。
+
+(use-modules (システム構文))
+
+Scheme手順: **syntax-module** id [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dmodule)
+
+ソースコードに識別子 id が含まれているモジュールの名前を返します。
+
+Scheme手順: **syntax-sourcev** stx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dsourcev)
+
+`syntax-source`と同様ですが、結果をよりコンパクトな`#(ファイル名 行 列)`形式で返します。この形式は、構文オブジェクトのソース位置の内部表現として使用されます。
+
+Scheme 手順: **syntax-local-binding** id \[#:resolve-syntax-parameters?=#t\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dlocal_002dbinding)
+
+構文オブジェクトである識別子 id を現在の字句環境内で解決し、バインディングタイプとバインディング値の 2 つの値を返します。バインディングタイプはシンボルであり、次のいずれかになります。
+
+`語彙的`
+
+語彙的に束縛された変数。値は、この束縛を識別する一意のトークン（`eq?` の意味での）です。
+
+`マクロ`
+
+構文変換関数（ローカルまたはグローバル）。値は変換関数のプロシージャです。
+
+`構文パラメータ`
+
+構文パラメータ ([構文パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Parameters)を参照)。デフォルトでは、`syntax-local-binding` が構文パラメータを解決するため、この値は返されません。構文パラメータに関心がある場合は、`#:resolve-syntax-parameters? #f` を渡してください。値は、`macro` と同様に、デフォルトのトランスフォーマー手順です。
+
+`パターン変数`
+
+`syntax-case` を介してバインドされるパターン変数。値は、エキスパンダー内部の不透明なオブジェクトです。
+
+省略記号
+
+`with-ellipsis` を介してバインドされた内部バインディング。値は、（アンチマーク付きの）ローカル省略記号識別子です。
+
+`displaced-lexical`
+
+スコープ外になったレキシカル変数。これは、不適切なプロシージャルマクロが構文オブジェクトを保存した後、それがバインドされていないコンテキストに導入しようとした場合に発生する可能性があります。値は `#f` です。
+
+`global`
+
+グローバルなバインディング。値はペアであり、先頭はシンボル、末尾はシンボルを解決するモジュールの名前です。
+
+`その他`
+
+`lambda` やその他のコアバインディングなど、他のバインディング。値は `#f` です。
+
+これは非常に低レベルの手順であり、用途は限られています。有用なケースの一つは、補助情報をマクロに関連付ける抽象化を構築する場合です。
+
+(define aux-property (make-object-property))
+(define-syntax-rule (with-aux aux value)
+(let ((trans value))
+(設定! (補助プロパティ トランス) 補助)
+翻訳))
+(define-syntax retrieve-aux
+(ラムダ (x)
+(構文ケース x ()
+((x id)
+(call-with-values (lambda () (syntax-local-binding #'id))
+(ラムダ式 (型 val)
+(with-syntax ((aux (datum->syntax #'here
+(そして (eq? type 'macro)
+(補助プロパティ値)))))
+#''aux)))))))
+(define-syntax foo
+(補助バー付き)
+(構文ルール () ((\_) 'foo))))
+(フー)
+⇒フー
+(retrieve-aux foo)
+⇒バー
+
+`syntax-local-binding`は構文変換関数の動的範囲内で呼び出す必要があります。それ以外の場所で呼び出すとエラーが発生します。
+
+Scheme 手順: **syntax-locally-bound-identifiers** id [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dlocally_002dbound_002didentifiers)
+
+識別子 id が作成された時点で、字句的に可視であった識別子のリストを、最も外側の識別子から最も内側の識別子の順に返します。
+
+この手順は、特殊な手続き型マクロで使用することを目的としており、マクロが参照できるバインドされた識別子のセットをマクロに提供するものです。
+
+技術的な実装の詳細として、`syntax-locally-bound-identifiers` によって返される識別子は、マクロへの入力として渡される構文オブジェクトと同様に、アンチマークが付けられます。これは、これらのバインディングが元のソースに存在しており、他の導入された識別子の場合のように衛生的に名前を変更する必要がないことをマクロ展開器に伝えるためです。マークの詳細については、R6RS のセクション 12.1 の衛生に関する説明を参照してください。
+
+(define (local-lexicals id)
+(フィルター (ラムダ (x)
+(eq? (syntax-local-binding x) 'lexical))
+(構文ローカルバインド識別子 id)))
+(構文定義語彙)
+(ラムダ (x)
+(構文ケース x ()
+((lexicals) #'(lexicals lexicals))
+（（語彙範囲））
+(with-syntax (((id ...) (local-lexicals #'scope)))
+#'(list (cons 'id id) ...))))))
+
+(let\* ((x 10) (x 20)) (lexicals))
+⇒ ((x . 10) (x . 20))
+
+* * *
+
+次へ: [識別子マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Identifier-Macros)、前: [構文変換ヘルパー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Transformer-Helpers)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.5 Lispスタイルのマクロ定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lisp_002dstyle-Macro-Definitions)
+
+Lisp でマクロを定義する従来の方法は、プロシージャ定義と非常によく似ています。主な違いは、マクロ定義の本体が変換後の式を記述するリストを返す必要があること、そして定義キーワードが異なるため、マクロ定義（プロシージャ定義ではない）としてマークされることです。Lisp では `defun` ではなく `defmacro`、Scheme では `define` ではなく `define-macro` を使用します。
+
+Guileは、`defmacro`と`define-macro`の両方を使用して、このスタイルのマクロ定義をサポートしています。両者の唯一の違いは、定義内でマクロ名と引数をどのようにグループ化するかです。
+
+(defmacro name (args [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+
+は、
+
+(define-macro (name args [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+
+その違いは、Lispの`defun`とSchemeの`define`の間の対応する違いに類似している。
+
+前のセクションの `syntax-case` を読んだ方は、Guile が実際には `syntax-case` に基づいて defmacros を実装し、`syntax->datum` と `datum->syntax` の呼び出しの間に式にトランスフォーマーを適用していることがお分かりいただけるでしょう。このことから、defmacros の問題点、つまり参照透過性が維持されないという問題にたどり着きます。`gensym` を多用することで、展開されたコードにバインディングを導入しないように注意することはできますが、マクロ自体の自由バインディングに対する参照透過性の欠如は回避できません。
+
+先ほどの`when`のような単純なマクロでさえ、正しく実装するのは難しい。
+
+(define-macro (when cond exp . rest)
+`(if ,cond
+(開始、exp.、休憩)))
+
+(#f (display "ミサイル発射中!\n")) のとき)
+⇒ #f
+
+(let ((if list))
+(when #f (display "ミサイル発射中！\n")))
+⊣ミサイル発射！
+⇒ (#f #<未指定>)
+
+Guileの見解では、defmacroはこれまで十分に活用されてきたものの、現代のマクロは`syntax-rules`または`syntax-case`を用いて記述すべきであると考えています。Guile自体の中にもdefmacroが使われている箇所は数多くありますが、今後段階的に廃止していく予定です。もちろん、`defmacro`や`define-macro`自体を廃止するわけではありません。これらを使用しているコードも数多く存在するからです。
+
+* * *
+
+次へ: [構文パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Parameters)、前: [Lisp スタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.6 識別子マクロ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Identifier-Macros-1)
+
+構文展開器が、最初の要素がマクロである形式を検出すると、形式全体がマクロの構文変換器に渡されます。これは次のようにイメージできます。
+
+(define-syntax foo foo-transformer)
+(foo arg...)
+;; によって展開されます
+(foo-transformer #'(foo arg...))
+
+一方、マクロがフォームの他の部分で参照されている場合は、構文変換ツールはフォーム全体ではなく、マクロ参照のみを引数として呼び出されます。
+
+(define-syntax foo foo-transformer)
+フー
+;; によって展開されます
+(foo-transformer #'foo)
+
+これにより、マクロを介して、識別子の参照をプログラムで置き換えることが可能になります。`syntax-rules` は、この変換をより簡単に実行するための構文を提供します。
+
+構文: **identifier-syntax** exp [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-identifier_002dsyntax)
+
+マクロの出現箇所を exp に置き換えるマクロトランスフォーマーを返します。
+
+例えば、固定数加算演算子である `fx+` を使用して記述された外部コードをインポートする場合で、Guile に `fx+` がない場合、次のようにして `fx+` を `+` に置き換えることができます。
+
+(define-syntax fx+ (identifier-syntax +))
+
+また、以下に示すように、`set!` 式の左辺にある識別子を認識するための特別なサポートも提供されています。
+
+(define-syntax foo foo-transformer)
+(セット! フー値)
+;; によって展開されます
+(foo-transformer #'(set! foo val))
+;; foo-transformer が「変数トランスフォーマー」である場合
+
+例にも示されているように、ほとんどのマクロは演算子の位置にある形式を区別するように記述されていないため、トランスフォーマープロシージャは明示的に「変数トランスフォーマー」としてマークする必要があります。
+
+Scheme Procedure: **make-variable-transformer** transformer [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dvariable_002dtransformer)
+
+トランスフォーマープロシージャを「変数トランスフォーマー」としてマークします。実際には、これは構文キーワードにバインドされている場合、`set!` の左辺にあるそのキーワードへの参照を検出する可能性があることを意味します。
+
+（バー10を定義する）
+(define-syntax bar-alias
+(make-variable-transformer
+(ラムダ (x)
+(構文ケース x (セット!)
+((set! var val) #'(set! bar val))
+((var arg ...) #'(bar arg ...))
+(var (識別子? #'var) #'bar))))
+
+bar-alias ⇒ 10
+(set! bar-alias 20)
+バー ⇒ 20
+（セット！30小節）
+bar-alias ⇒ 30
+
+識別子構文には、`set!` の場合も処理できるようにする拡張機能があります。
+
+構文: **識別子構文** (var exp1) ((set! var val) exp2) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-identifier_002dsyntax-1)
+
+変数変換を作成します。最初の句は、演算子またはオペランドの位置にある変数への参照に使用され、2番目の句は、代入式の左辺に変数が現れる場合に使用されます。
+
+例えば、前述の`bar-alias`の例は、次のようにより簡潔に表現できます。
+
+(define-syntax bar-alias
+（識別子構文）
+(var bar)
+((set! var val) (set! bar val))))
+
+これまでと同様に、`identifier-syntax` 形式のテンプレートは `#'` 構文形式で囲む必要はありません。
+
+* * *
+
+次へ: [Eval-when](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-When)、前: [Identifier Macros](https://doc.guix.gnu.org/guile/latest/en/guile.html#Identifier-Macros)、上: [Macros](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[Contents]( https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.7 構文パラメータ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Parameters-1)
+
+構文パラメータ[17](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT17)は、マクロ展開の動的範囲内でマクロ定義を再バインドするためのメカニズムです。これは、マクロが使用されるたびに不衛生なバインディングを導入する、最も一般的なタイプの不衛生なマクロに対する便利な解決策を提供します。例としては、`return`キーワードを持つ`lambda`形式や、特別な`self`バインディングを導入するクラスマクロなどがあります。
+
+構文パラメータを使用すると、毎回不衛生な方法でバインディングを導入する代わりに、キーワードに対して 1 つのバインディングを作成し、後でキーワードの意味を変更したい場合にそれを調整できます。新しいバインディングが導入されないため、衛生状態が維持されます。これは、実行時に使用する動的バインディング メカニズム ([parameters](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d39) を参照) と似ていますが、動的バインディングはマクロ展開時にのみ発生します。マクロ展開後のコードは、字句スコープのままです。
+
+構文: **define-syntax-parameter** キーワード トランスフォーマー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dsyntax_002dparameter)
+
+キーワードを、トランスフォーマーの評価によって得られた値にバインドします。トランスフォーマーは構文パラメータのデフォルト展開を提供し、`syntax-parameterize` が存在しない場合は、機能的に `define-syntax` と同等です。通常は、キーワードが別のマクロと組み合わせて使用されるべきであることを示す構文エラーをトランスフォーマーにスローさせるだけで十分です。例:
+
+(define-syntax-parameter return
+(ラムダ (stx)
+(構文違反 'return "ラムダ式の外で使用されている return^" stx)))
+
+構文: **syntax-parameterize** ((keyword transformer) …) exp … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002dparameterize)
+
+キーワード…を調整して、exp…形式の展開時に、そのトランスフォーマー…の評価によって得られた値を使用するようにします。各キーワードは構文パラメータにバインドされている必要があります。`syntax-parameterize`は、バインディングがシャドウイングされるのではなく調整される点で`let-syntax`と異なり、exp…の展開におけるキーワードの使用には新しいトランスフォーマーが使用されます。これは、`parameterize`が新しいバインディングを作成するのではなく、通常のパラメータの値を調整する方法と多少似ています。
+
+(define-syntax lambda^
+(構文規則()
+\[(lambda^ 引数リスト本体本体\* ...)
+(ラムダ引数リスト)
+（現在の継続を伴う呼び出し）
+(ラムダ (エスケープ)
+;; 本体では、呼び出しが 'return' キーワードを調整します
+;; 'return' はエスケープ呼び出しに置き換えられます
+;; 続き。
+(syntax-parameterize (\[return (syntax-rules ()
+\[(return vals (... ...))
+(エスケープ値 (... ...))\])\])
+体 体\* ...))))\]))
+
+;; これで、早期に値を返す関数を記述できます。ここでは、「product」は
+;; 0 要素が見つかった場合はすぐに戻ります。
+（製品を定義する）
+(ラムダ^ (リスト)
+(fold (lambda (no)
+(もし (ゼロ? n) の場合)
+（0を返す）
+（\* いいえ）））
+1
+リスト）））
+
+* * *
+
+次へ: [マクロ展開](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macro-Expansion)、前: [構文パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Parameters)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.8 Eval-when [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval_002dwhen)
+
+`syntax-case`マクロはSchemeのすべての機能を利用できるため、時間に関する問題が生じます。マクロが実行される際、プログラムのどの部分がマクロに利用可能になるのでしょうか？
+
+この質問に対するデフォルトの回答は、モジュールをインポートする場合（`define-module` または `use-modules` を使用）、そのモジュールは展開時と実行時の両方でロードされるということです。さらに、`define-syntax` によって作成されたコンパイル単位内のトップレベルの構文定義も、コンパイル単位（ファイル）に記述された順序で展開時に評価されます。
+
+しかし、構文定義が展開時に通常のプロシージャを呼び出す必要がある場合、そのプロシージャが展開時に利用可能であることを示す特別な宣言が必要になる可能性がある。
+
+例えば、次のコードは、コンパイルされたバイトコードにコンパイルタイムスタンプを埋め込もうとします。これは、日付を文字列リテラルとして展開するマクロを使用します。REPLでは動作しますが、バイトコンパイルできないため、ファイル内では動作しません。
+
+(use-modules (srfi srfi-19))
+(開始日を定義 (日付->文字列 (現在の日付)))
+(define-syntax \*compilation-date\*
+(ラムダ式 (構文)
+開始日））
+(*コンパイル日*を表示)
+（改行）
+
+REPLでは式が順番に一つずつ評価されるため、この方法は機能しますが、ファイルに格納した場合、式は一つずつ展開されますが、コンパイルされたファイルが読み込まれるまで評価されません。
+
+解決策は`eval-when`を使用することです。
+
+(use-modules (srfi srfi-19))
+(eval-when (expand load eval)
+(開始日を定義 (日付->文字列 (現在の日付))))
+(define-syntax \*compilation-date\*
+(ラムダ式 (構文)
+開始日））
+(*コンパイル日*を表示)
+（改行）
+
+構文: **eval-when** 条件式... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eval_002dwhen)
+
+与えられた条件下でexp...を評価します。有効な条件は次のとおりです。
+
+`expand`
+
+コンパイルの有無にかかわらず、マクロ展開中に評価する。
+
+`load`
+
+コンパイル済みコードの評価フェーズ中に評価します。たとえば、コンパイル済みモジュールをロードするときや、REPLでコンパイル済みコードを実行するときなどです。
+
+`eval`
+
+コンパイルされていないコードの評価フェーズ中に評価を実行します。
+
+`コンパイル`
+
+マクロ展開時に評価するが、コンパイル時のみとする。
+
+つまり、プリミティブ評価器を使用する場合、`expand` を含む `eval-when` 式はマクロ展開中に実行され、`eval` を含む式は評価フェーズ中に実行されます。
+
+コンパイラを使用する場合、`expand` または `compile` を含む `eval-when` 式はマクロ展開中に実行され、`load` を含む式は評価フェーズ中に実行されます。
+
+迷ったときは、上記の例のように、3つの条件 `(expand load eval)` を使用してください。`eval-when` を他の方法で使用すると、保証が無効になったり、猫が中毒を起こしたりする可能性があります。
+
+* * *
+
+次へ: [衛生とトップレベル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene-and-the-Top_002dLevel)、前: [Eval-when](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-When)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.9 マクロ展開 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macro-Expansion-1)
+
+通常、マクロは必要に応じてユーザーに代わって展開されます。マクロ展開は`eval`および`compile`の不可欠な部分です。ユーザーは`expand` REPLコマンドを使用してREPLプロンプトでマクロを展開することもできます。[コンパイルコマンド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compile-Commands)を参照してください。
+
+マクロは`macroexpand`を使ってプログラム的に展開することもできますが、その詳細は2つの理由から少し複雑になります。
+
+最初の問題は、マクロ展開の結果が Scheme ではなく、Guile の高水準中間言語である Tree-IL であることです。[Tree- IL](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tree_002dIL) を参照してください。「衛生的なマクロ」は、異なるが名前が同じ識別子を生成する可能性があるため、出力フォーマットは変数識別子と名前の区別を表現できる必要があります。詳細については、[Tree-IL](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tree_002dIL) を参照してください。最も簡単な方法は、マクロ展開の結果に対して `tree-il->scheme` を実行することです。
+
+(macroexpand '([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 2))
+⇒
+#<tree-il ([call](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call) (toplevel [+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b)) ([const](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const) 1) ([const](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const) 2))[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+
+([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([language](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-language) tree-il))
+(tree-il->scheme (macroexpand '([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 2)))
+⇒
+([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 2)
+
+2つ目の複雑な点は、`eval-when` に関するものです。例えば、マクロの定義をマクロ展開するとはどういうことでしょうか？
+
+(macroexpand '(define-syntax qux ([identifier-syntax](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-identifier_002dsyntax) 'bar)))
+⇒
+？
+
+答えは、誰がマクロを展開しているか、そしてその理由によって異なります。現在の環境でマクロを定義しますか？マクロ定義を残余化しますか？両方ですか？それともどちらもしませんか？デフォルトでは「eval」モードで展開されるため、`eval-when`句は、条件セットに`eval`（または`expand`）が含まれている場合にのみ実行されます。トップレベルのマクロは、トップレベルの環境で`eval`されます。
+
+このように、`(macroexpand foo)` は `(macroexpand foo 'e '(eval))` と同等です。2 番目の引数はモード (`'e` は「eval」) であり、3 番目の引数は eval-syntax-expanders-when パラメータです (このデフォルト設定では `eval` のみ)。
+
+しかし、マクロ定義をコンパイルする場合は、おそらくマクロ定義自体を具体化したいでしょう。その場合は、`macroexpand` の 2 番目の引数として `'c` を渡します。しかし、おそらくコンパイル時にもマクロ定義が存在するようにしたいので、esew パラメータとして `'(compile load eval)` を渡します。実際、`(compile foo #:to 'tree-il)` は `(macroexpand foo 'c '(compile load eval))` と完全に同等です。[The Scheme Compiler](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Scheme-Compiler) を参照してください。
+
+インターフェースがひどいことは承知しています。マクロ展開機能はモードに関してやや扱いにくいため、マクロ展開ツールを開発している場合を除き、直接呼び出すことは避けることをお勧めします。
+
+* * *
+
+次へ: [内部マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Macros)、前: [マクロ展開](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macro-Expansion)、上: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.10 衛生とトップレベル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene-and-the-Top_002dLevel-1)
+
+次のマクロを考えてみましょう。
+
+(define-syntax-rule (defconst name val)
+（始める
+(t 値を定義する)
+(define-syntax-rule (name) t)))
+
+それを使っていくつかのバインディングを作成する場合：
+
+(defconst foo 42)
+(defconst bar 37)
+
+拡張計画は概ね以下のようになるだろう。
+
+（始める
+(t 42 を定義)
+(define-syntax-rule (foo) t))
+（始める
+(t 37 を定義する)
+(define-syntax-rule (bar) t))
+
+2 つの `t` バインディングはマクロによって導入されたため、適切に導入されるべきであり、実際、それらは語彙的輪郭 (`let` またはその他の語彙的スコープ) 内で導入されています。`foo` 内の `t` 参照は、`bar` 内の参照とは異なります。
+
+トップレベルでは、事態はより複雑になります。Guile 2.2 より前は、トップレベルで `defconst` を使用しても、`t` の新しいバインディングは導入されませんでした。これは、Scheme 標準のずる賢い解釈と一致していました。つまり、トップレベルではすべての可能なバインディングが存在すると想定し、既存のバインディングのトップレベルの `define` が `set!` と同等であることを単に利用するだけだったのです。しかし、これは良い理由ではありません。
+
+解決策は、マクロによって導入されるすべてのバインディングに新しい名前を作成することです。これは、語彙的輪郭内のバインディングだけでなく、トップレベルで導入されるバインディングにも適用されます。
+
+しかし、導入されたトップレベル識別子にランダムな名前を付けるという明白な戦略は、個別のコンパイルで問題を引き起こします。一般性を失うことなく、モジュール `a` 内の `foo` の `defconst` が新しいトップレベル名 `t-1` を導入するとします。次に、`foo` を使用するモジュール `b` をコンパイルすると、モジュール `b` 内に `t-1` への参照が存在します。その後、何らかの理由で、たとえば単純な再コンパイルで、モジュール `a` が再び展開されると、導入された `t` に新しい名前、たとえば `t-2` が付けられます。モジュール `a` には `t-1` のバインディングがなくなったため、モジュール `b` は壊れてしまいます。
+
+導入されたトップレベル識別子が何らかの方法でモジュールから「脱出」した場合、それらはモジュールのバイナリインターフェース（ABI）の一部となります。エンジニアリングの観点から、ABIがランダムに変更されることを許容することは容認できません。（また、そのようなモジュールでは、Lesser GPLライセンスの再コンパイル条件を満たす上で実際的な問題も生じます。）このため、多くの人はトップレベルで識別子導入マクロを使用しないことを好み、代わりに、それらのマクロに導入された識別子の名前を引数の一部として渡すか、プログラムで構築して`datum->syntax`を使用します。しかし、このアプローチでは、使用する可能性のあるすべてのマクロの実装について全知である必要があり、またSchemeマクロの表現力も制限されます。
+
+この問題に対する完璧な解決策はありません。Guile はここでひどいことをしています。トップレベルの識別子を導入する際、Guile はその識別子に擬似的な新しい名前を付けます。この名前は、その名前が出現するソース式のハッシュに依存します。この場合、導入された定義は次のように展開されます。
+
+（始める
+(定義 t-1dc5e42de7c1050c 42)
+(define-syntax-rule (foo) t-1dc5e42de7c1050c))
+（始める
+(定義 t-10cb8ce9fdddd6e9 37)
+(define-syntax-rule (bar) t-10cb8ce9fdddd6e9))
+
+ただし、ハッシュは定義を導入する式のみに依存するため、次のことも成り立つことに注意してください。
+
+(defconst baz 42)
+⇒ （開始）
+(定義 t-1dc5e42de7c1050c 42)
+(define-syntax-rule (baz) t-1dc5e42de7c1050c))
+
+導入されたバインディングの名前が同じであることに注意してください。これは、ソース式 `(define t 42)` が同じだったためです。おそらくこの部分でエラーが発生することはないでしょうが、モジュールのインターフェースの構成要素を理解することは重要であり、そのインターフェースにはマクロによって導入された識別子が含まれる場合があります。
+
+* * *
+
+前へ: [衛生とトップレベル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hygiene-and-the-Top_002dLevel)、上へ: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.8.11 内部マクロ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Macros-1)
+
+Scheme 手順: **make-syntax-transformer** 名前 型 バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dsyntax_002dtransformer)
+
+構文変換オブジェクトを構築します。これは、Guile の構文ケースに関する低レベルなサポートの一部です。
+
+Scheme手順: **macro?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_003f)
+
+C 関数: **scm\_macro\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmacro_005fp)
+
+objが構文変換器の場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+マクロを第一級オブジェクトとして取得するのは少し難しいことに注意してください。単に名前を付ける（例えば `case` のように）と構文エラーが発生します。しかし、`module-ref` を使用すればこれらのオブジェクトを取得することは可能です。
+
+(マクロ? (モジュール参照 (現在のモジュール) 'case))
+⇒ #t
+
+Scheme手順: **マクロ型** m [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dtype)
+
+C 関数: **scm\_macro\_type** (m) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmacro_005ftype)
+
+`make-syntax-transformer`を使用してmが構築された際に指定された型を返します。
+
+Scheme Procedure: **macro-name** m [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dname)
+
+C 関数: **scm\_macro\_name** (m) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmacro_005fname)
+
+マクロmの名前を返します。
+
+Scheme 手順: **マクロバインディング** m [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dbinding)
+
+C 関数: **scm\_macro\_binding** (m) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmacro_005fbinding)
+
+マクロ m のバインディングを返します。
+
+スキーム手順: **macro-transformer** m [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dtransformer)
+
+C 関数: **scm\_macro\_transformer** (m) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmacro_005ftransformer)
+
+マクロ m のトランスフォーマーを返します。これによりプロシージャが返され、そのプロシージャについてはドキュメント文字列を参照できます。このセクションが文書化されているのはそのためです。実際には、`macro-binding` の結果の一部です。
+
+* * *
+
+次へ: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs)、前: [マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

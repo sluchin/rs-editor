@@ -1,0 +1,337 @@
+#### 7.2.2 ポートとファイルディスクリプタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors-1)
+
+慣例は一般的にscsh（Schemeシェル（scsh））（https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Scheme-shell-_0028scsh_0029）の慣例に従います。
+
+開いているファイルポートごとに、オペレーティングシステムのファイルディスクリプタが関連付けられています。ファイルディスクリプタは一般的にSchemeプログラムでは役に立ちませんが、外部コードやUnix環境とのインターフェースを行う際には必要となる場合があります。
+
+ファイルディスクリプタはポートから抽出でき、ファイルディスクリプタから新しいポートを作成することもできます。しかし、ファイルディスクリプタは単なる整数であり、ガベージコレクタはそれをポートへの参照として認識しません。ポートへの他のすべての参照が破棄された場合、ガベージコレクタはポートを解放する可能性が高く、その副作用としてファイルディスクリプタが時期尚早に閉じられる可能性があります。
+
+プログラマがこの問題を回避できるよう、各ポートには関連付けられた「公開カウント」があり、これを使用して基となるファイルディスクリプタが他の場所で何回格納されたかを追跡できます。ポートの公開カウントがゼロより大きい場合、ポートがガベージコレクションされてもファイルディスクリプタは閉じられません。したがって、プログラマは、ファイルディスクリプタが他の場所で必要になる場合に、公開カウントがゼロより大きくなるようにすることができます。
+
+ファイルディスクリプタが一度「インポート」されてポートになるという単純なケースでは、ポートがガベージコレクションされる際にファイルディスクリプタが閉じられても問題ありません。公開カウントを維持する必要はありません。同様に、ファイルディスクリプタを外部環境に「エクスポート」する場合も、ファイルディスクリプタが使用されている間、ポートが開いたまま（つまり、有効な Scheme バインディングによって指されている）であれば、公開カウントを設定する必要はありません。
+
+従来のUnixの動作に合わせるため、プログラムの起動時に3つのファイルディスクリプタ（0、1、2）が自動的にインポートされ、それぞれ現在の標準入力ポート、出力ポート、エラーポートの初期値に割り当てられます。それぞれの公開カウントは初期値として1に設定されているため、これらのポートへの参照を削除してもガベージコレクションは実行されません。`fdopen`または`fdes->ports`を使用して取得できます。
+
+Guile のポートはバッファリングできます。つまり、ファイルポートにバイトを書き込むと、まず内部バッファにデータが送られ、バッファがいっぱいになったとき (またはユーザーがポートで `force-output` を呼び出したとき) にのみ、データが実際にファイルディスクリプタに書き込まれます。同様に、入力時にも、バイトはファイルディスクリプタからブロック単位で読み込まれ、バッファに格納されます。`read-char` で文字を読み取ると、まずバッファにデータが送られ、必要に応じてバッファが満たされます。通常、読み取りバッファリングはほぼ透過的ですが、書き込みバッファリングでは、`force-output` を呼び出すのを忘れると、書き込みが予期せず遅延することがあります。ポートバッファの制御方法の詳細については、[バッファリング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Buffering) を参照してください。
+
+ただし、一部のプロシージャ（例：`recv!`）はポートを引数として受け取りますが、実際にはポートの基となるファイルディスクリプタを直接操作します。`peek-char`および`unread-char`を実装するバッファを含め、ポートバッファリングはすべて無視されます。
+
+スキーム手順: **port-revealed** ポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-port_002drevealed)
+
+C 関数: **scm\_port\_revealed** (ポート) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fport_005frevealed)
+
+ポートの公開カウントを返します。
+
+スキーム手順: **set-port-revealed!** port rcount [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dport_002drevealed_0021)
+
+C 関数: **scm\_set\_port\_revealed\_x** (port, rcount) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fport_005frevealed_005fx)
+
+ポートの公開カウントをrcountに設定します。戻り値は未指定です。
+
+Scheme Procedure: **fileno** port [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fileno)
+
+C 関数: **scm\_fileno** (ポート) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffileno)
+
+ポートの基となる整数ファイルディスクリプタを返します。表示されるファイルディスクリプタの数は変更されません。
+
+スキーム手順: **port->fdes** ポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-port_002d_003efdes)
+
+ポートの基となるファイルディスクリプタの整数値を返します。副作用として、表示されるポートのカウントが増加します。
+
+スキーム手順: **fdopen** fdes モード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fdopen)
+
+C 関数: **scm\_fdopen** (fdes、モード) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffdopen)
+
+ファイルディスクリプタ fdes に基づいて新しいポートを返します。モードは文字列 modes で指定します。ポートの公開カウントはゼロに初期化されます。modes 文字列は `open-file` で受け入れられるものと同じです ([open-file](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Ports) を参照)。
+
+スキーム手順: **fdes->ports** fdes [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fdes_002d_003eports)
+
+C 関数: **scm\_fdes\_to\_ports** (fdes) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffdes_005fto_005fports)
+
+基となるファイルディスクリプタとしてfdesを持つ既存のポートのリストを、表示されるポート数を変更せずに返します。
+
+スキーム手順: **fdes->inport** fdes [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fdes_002d_003einport)
+
+基となるファイルディスクリプタとして fdes を持つ既存の入力ポートが存在する場合はそれを返し、その公開カウントをインクリメントします。存在しない場合は、公開カウントが 1 の新しい入力ポートを返します。
+
+スキーム手順: **fdes->outport** fdes [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fdes_002d_003eoutport)
+
+基となるファイルディスクリプタとして fdes を持つ既存の出力ポートが存在する場合はそれを返し、その公開カウントをインクリメントします。存在しない場合は、公開カウントが 1 の新しい出力ポートを返します。
+
+スキーム手順: **primitive-move->fdes** port fdes [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-primitive_002dmove_002d_003efdes)
+
+C 関数: **scm\_primitive\_move\_to\_fdes** (port, fdes) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprimitive_005fmove_005fto_005ffdes)
+
+ポートの基となるファイルディスクリプタを、ポートの公開カウントを変更せずに整数値fdesに移動します。このディスクリプタを既に使用している他のポートは、自動的に新しいディスクリプタに移行され、公開カウントはゼロにリセットされます。戻り値は、ファイルディスクリプタが既に必要な値を持っていた場合は`#f`、移動された場合は`#t`です。
+
+スキーム手順: **move->fdes** port fdes [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-move_002d_003efdes)
+
+ポートの基となるファイルディスクリプタを整数値fdesに移動し、その公開カウントを1に設定します。このディスクリプタを既に使用している他のポートは、自動的に新しいディスクリプタに移行され、その公開カウントはゼロにリセットされます。戻り値は未定義です。
+
+スキーム手順: **release-port-handle** ポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-release_002dport_002dhandle)
+
+ポートの公開数を減らします。
+
+スキーム手順: **fsync** port\_or\_fd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fsync)
+
+C 関数: **scm\_fsync** (port\_or\_fd) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffsync)
+
+指定された出力ファイルディスクリプタの未書き込みデータをディスクにコピーします。port_or_fd がポートの場合、基となるファイルディスクリプタが fsync される前に、そのバッファがフラッシュされます。戻り値は未定義です。
+
+Scheme手順: **open**パスフラグ\[mode\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open)
+
+C 関数: **scm\_open** (path, flags, mode) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fopen)
+
+パスで指定されたファイルを読み書き用に開きます。 flags は、ファイルの開き方を指定する整数です。 mode は、umask ([プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)) を適用する前に、ファイルを作成する必要がある場合に、ファイルのパーミッション ビットを指定する整数です。 デフォルト値は 666 です (Unix 自体にはデフォルト値はありません)。
+
+フラグは`logior`を使用して変数を組み合わせることで構築できます。基本的なフラグは次のとおりです。
+
+変数: **O\_RDONLY** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fRDONLY)
+
+ファイルを読み取り専用で開きます。
+
+変数: **O\_WRONLY** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fWRONLY)
+
+ファイルを書き込み専用で開きます。
+
+変数: **O\_RDWR** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fRDWR)
+
+ファイルを読み書きモードで開く。
+
+変数: **O\_APPEND** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fAPPEND)
+
+ファイルを切り詰めるのではなく、追記する。
+
+変数: **O\_CREAT** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fCREAT)
+
+ファイルが存在しない場合は作成します。
+
+その他のフラグについては、GNU Cライブラリリファレンスマニュアルの[ファイルステータスフラグ](https://doc.guix.gnu.org/libc/latest/en/libc.html#File-Status-Flags)を参照してください。
+
+Scheme Procedure: **openat** dir path flags \[mode\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-openat)
+
+C 関数: **scm\_openat** (dir, path, flags, mode) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fopenat)
+
+`open` と同様ですが、ファイル名のパスをファイルポート dir で参照されるディレクトリからの相対パスで解決します。
+
+スキーム手順: **open-fdes** パス フラグ \[mode\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open_002dfdes)
+
+C 関数: **scm\_open\_fdes** (パス、フラグ、モード) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fopen_005ffdes)
+
+`open`に似ていますが、ポートではなくファイルディスクリプタを返します。
+
+スキーム手順: **open-fdes-at** dir パス フラグ \[mode\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open_002dfdes_002dat)
+
+C 関数: **scm\_open\_fdes\_at** (dir, path, flags, mode) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fopen_005ffdes_005fat)
+
+`openat`に似ていますが、ポートではなくファイルディスクリプタを返します。
+
+Scheme手順: **close** fd\_or\_port [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-close)
+
+C 関数: **scm\_close** (fd\_or\_port) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fclose)
+
+`close-port`（[close-port](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports)を参照）と同様ですが、ファイルディスクリプタにも適用できます。ファイルディスクリプタを閉じると、そのファイルディスクリプタを使用しているポートはすべて別のファイルディスクリプタに移動され、公開されたカウントがゼロに設定されます。
+
+スキーム手順: **close-fdes** fd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-close_002dfdes)
+
+C 関数: **scm\_close\_fdes** (fd) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fclose_005ffdes)
+
+`close` システムコールのシンプルなラッパーです。整数型のファイルディスクリプタ fd を閉じます。`close` とは異なり、ポートがファイルディスクリプタを使用している場合でも閉じられます。戻り値は未定義です。
+
+Scheme Procedure: **pipe** \[flags\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pipe-2)
+
+C 関数: **scm\_pipe** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpipe)
+
+新しく作成されたパイプを返します。パイプとは、ローカルマシン上でリンクされたポートのペアです。CAR は入力ポート、CDR は出力ポートです。出力ポートに書き込まれた（そしてフラッシュされた）データは、入力ポートから読み取ることができます。パイプは、新しくフォークされた子プロセスとの通信によく使用されます。出力ポートをフラッシュする必要は、`setvbuf` を使用してバッファリングを解除することで回避できます（[バッファリング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Buffering) を参照）。
+
+オプションとして、GNU/LinuxやGNU/Hurdなどの対応システムでは、フラグによって以下の定数のビットごとの論理和を指定できます。
+
+`O_CLOEXEC`
+
+返されたファイルディスクリプタを、実行時に閉じる対象としてマークする。
+
+`O_DIRECT`
+
+パケットモードで入出力を行うパイプを作成します。詳細は`man 2 pipe`を参照してください。
+
+`O_NONBLOCK`
+
+ファイルディスクリプタに`O_NONBLOCK`ステータスフラグ（非ブロッキング入出力）を設定します。
+
+この機能をサポートしていないシステムでは、ゼロ以外のフラグ値を渡すと、`system-error`例外が発生します。
+
+変数: **PIPE\_BUF** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PIPE_005fBUF)
+
+パイプへの最大 `PIPE_BUF` バイトの書き込みはアトミックです。つまり、書き込みが完了すると、データは瞬時に連続したブロックとしてパイプに書き込まれます (GNU C ライブラリ リファレンス マニュアルの [パイプ I/O のアトミック性](https://doc.guix.gnu.org/libc/latest/en/libc.html#Pipe-Atomicity) を参照)。
+
+入力ポートに書き込まれたデータ量が多すぎて、まだ読み込まれていない場合、出力ポートがブロックされる可能性があることに注意してください。通常、容量は`PIPE_BUF`バイトです。
+
+次のプロシージャ群は、newfd（整数）が指定されている場合は`dup2`システムコールを実行し、そうでない場合は`dup`システムコールを実行します。複製するファイルディスクリプタは、整数として指定することも、ポートに格納することもできます。返される値の型は、使用するプロシージャによって異なります。
+
+また、すべての手順において、`dup2`を実行すると、newfdを使用しているポートは別のファイルディスクリプタに移動され、そのポートのカウントがゼロに設定されるという副作用があります。
+
+スキーム手順: **dup->fdes** fd\_or\_port \[fd\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup_002d_003efdes)
+
+C 関数: **scm\_dup\_to\_fdes** (fd\_or\_port, fd) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdup_005fto_005ffdes)
+
+fd\_or\_port で指定されたオープンファイルを参照する新しい整数ファイルディスクリプタを返します。fd\_or\_port は、オープンファイルポートまたはファイルディスクリプタのいずれかである必要があります。
+
+スキーム手順: **dup->inport** port/fd \[newfd\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup_002d_003einport)
+
+新しいファイルディスクリプタを使用して、新しい入力ポートを返します。
+
+スキーム手順: **dup->outport** port/fd \[newfd\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup_002d_003eoutport)
+
+新しいファイルディスクリプタを使用して、新しい出力ポートを返します。
+
+Scheme Procedure: **dup** port/fd \[newfd\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup)
+
+port/fd がポートである場合は、指定されたポートと同じモードの新しいポートを返します。そうでない場合は、整数型のファイルディスクリプタを返します。
+
+Scheme Procedure: **dup->port** port/fd mode \[newfd\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup_002d_003eport)
+
+新しいファイルディスクリプタを使用して新しいポートを返します。mode はポートのモード文字列を指定します ([open-file](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Ports) を参照)。
+
+スキーム手順: **duplicate-port** ポートモード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-duplicate_002dport)
+
+基となるファイルディスクリプタの複製上に開かれた新しいポートを返します。モード文字列モードは[open-file](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Ports)と同様です。2つのポートはファイル位置とファイルステータスフラグを共有します。
+
+両方のポートが連続して使用され、元のポートまたは複製ポート、あるいはその両方がバッファリングされている場合、予期しない動作が発生する可能性があります。モード文字列に「0」を含めることで、バッファリングされていない複製ポートを取得できます。
+
+この手順は `(dup->port port modes)` と同等です。
+
+スキーム手順: **redirect-port** old\_port new\_port [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-redirect_002dport)
+
+C 関数: **scm\_redirect\_port** (old\_port, new\_port) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fredirect_005fport)
+
+この手順では、2つのポートを使用して、old_portからnew_portへ基となるファイルディスクリプタを複製します。new_portの現在のファイルディスクリプタは閉じられます。リダイレクト後、2つのポートはファイル位置とファイルステータスフラグを共有します。
+
+戻り値は指定されていません。
+
+両方のポートが連続して使用され、元のポートおよび/または複製されたポートがバッファリングされている場合、予期しない動作が発生する可能性があります。
+
+この処置は、他のポートや検出されたカウントに副作用を及ぼすことはありません。
+
+Scheme Procedure: **dup2** oldfd newfd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dup2)
+
+C 関数: **scm\_dup2** (oldfd, newfd) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdup2)
+
+`dup2` システムコールのシンプルなラッパーです。ファイルディスクリプタ oldfd をディスクリプタ番号 newfd にコピーし、newfd の以前の意味を置き換えます。oldfd と newfd はどちらも整数である必要があります。`dup->fdes` や `primitive-move->fdes` とは異なり、newfd を使用しているポートを移動しようとはしません。戻り値は未定義です。
+
+スキーム手順: **port-for-each** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-port_002dfor_002deach)
+
+C 関数: **scm\_port\_for\_each** (SCM プロシージャ) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fport_005ffor_005feach)
+
+C 関数: **scm\_c\_port\_for\_each** (void (\*proc)(void \*, SCM), void \*data) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fport_005ffor_005feach)
+
+Guileポートテーブル（FIXME: Guileポートテーブルとは何ですか？）内の各ポートに、順番にprocを適用します。戻り値は未指定です。より具体的には、`port-for-each`が呼び出された時点でシステムに存在するすべてのポートに、procが正確に1回適用されます。`port-for-each`の実行中にポートテーブルに変更を加えても、`port-for-each`に関しては影響はありません。
+
+C 関数 `scm_port_for_each` は `SCM` 値としてエンコードされた Scheme プロシージャを受け取り、`scm_c_port_for_each` は C 関数へのポインタを受け取り、任意のデータ クッキーを渡します。
+
+Scheme Procedure: **fcntl** port/fd cmd \[value\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fcntl)
+
+C 関数: **scm\_fcntl** (オブジェクト、コマンド、値) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffcntl)
+
+ポートまたはファイルディスクリプタ（port/fd）に対してコマンドを実行します。value引数は、後述する`SET`コマンドで使用される整数値です。
+
+cmd の値は次のとおりです。
+
+変数: **F\_DUPFD** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- F_005fDUPFD)
+
+上記の`dup->fdes`と同様に、ファイルディスクリプタを複製します。
+
+変数: **F\_GETFD** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETFD)
+
+変数: **F\_SETFD** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETFD)
+
+ファイルディスクリプタに関連付けられたフラグを取得または設定します。フラグは以下のみです。
+
+変数: **FD\_CLOEXEC** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-FD_005fCLOEXEC)
+
+「 exec で閉じる」とは、`exec` 呼び出し（成功した呼び出し）でファイルディスクリプタが閉じられることを意味します。たとえば、このフラグを設定するには、
+
+(fcntl port F\_SETFD FD\_CLOEXEC)
+
+あるいは、設定はするが、将来的に設定できる他のフラグは変更しない方が良い。
+
+(fcntl ポート F\_SETFD (logior FD\_CLOEXEC
+(fcntlポートF_GETFD)))
+
+変数: **F\_GETFL** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETFL)
+
+変数: **F\_SETFL** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETFL)
+
+開いているファイルに関連付けられたフラグを取得または設定します。これらのフラグは、上記の「open」で説明されている「O_RDONLY」などです。
+
+一般的な使用例としては、ネットワークソケットに`O_NONBLOCK`を設定することが挙げられます。以下のコードは、そのフラグを設定し、他のフラグは変更しません。
+
+(fcntl sock F\_SETFL (logior O\_NONBLOCK
+(fcntl sock F\_GETFL)))
+
+変数: **F\_GETOWN** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETOWN)
+
+変数: **F\_SETOWN** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETOWN)
+
+`SIGIO`シグナルの場合、ソケットの所有者のプロセスIDを取得または設定します。
+
+Scheme手順: **flock**ファイル操作 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-flock)
+
+C 関数: **scm\_flock** (ファイル、操作) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fflock)
+
+開いているファイルにアドバイザリロックを適用または解除します。操作は実行するアクションを指定します。
+
+変数: **LOCK\_SH** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fSH)
+
+共有ロック。複数のプロセスが、特定のファイルに対して同時に共有ロックを保持する場合があります。
+
+変数: **LOCK\_EX** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fEX)
+
+排他ロック。特定のファイルに対して、同時に排他ロックを保持できるプロセスは1つだけです。
+
+変数: **LOCK\_UN** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fUN)
+
+ファイルのロックを解除してください。
+
+変数: **LOCK\_NB** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fNB )
+
+ロック時にブロックしない。これは、`logior` を使用する他の操作のいずれかと組み合わせて使用されます（[ビット演算](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bitwise-Operations) を参照）。`flock` がブロックする場合は、`EWOULDBLOCK` エラーがスローされます（[POSIX インターフェイス規約](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conventions) を参照）。
+
+戻り値は指定されていません。file は、開いているファイルディスクリプタまたは開いているファイルディスクリプタポートのいずれかです。
+
+`flock`はNFS経由でファイルをロックしないことに注意してください。
+
+Scheme Procedure: **select** reads writes excepts \[secs \[usecs\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-select)
+
+C 関数: **scm\_select** (読み取り、書き込み、例外、秒、マイクロ秒) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fselect)
+
+この手順にはさまざまな用途があります。入力の提供、出力の受け入れ、ポートまたはファイルディスクリプタの集合における例外的な状況の発生を待つ場合、またはタイムアウトが発生するのを待つ場合などです。
+
+エラーが発生すると、このプロシージャは `system-error` 例外をスローします ([`system-error`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conventions) を参照)。なお、`select` は、保留中の割り込みなど、その他の理由で早期に終了する場合があります。割り込みの詳細については、[非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs) を参照してください。
+
+読み取り、書き込み、例外はリストまたはベクトルで指定でき、各要素はポートまたはファイルディスクリプタです。返される値は、指定された要件を満たす要素のみを含む、対応する3つのリストまたはベクトルのリストです。ポートバッファが入力を提供したり出力を受け入れたりする能力が考慮されます。入力リストまたはベクトルの順序は保持されません。
+
+オプション引数 secs と usecs はタイムアウト時間を指定します。secs は整数または実数として単独で指定することも、secs と usecs の両方を整数として指定することもできます。この場合、usecs はマイクロ秒単位の追加タイムアウトとなります。secs が省略されている場合、または `#f` の場合は、select は他の条件のいずれかが満たされるまで待機します。
+
+scsh 版の `select` は、以下の点で異なります。最初の 3 つの引数にはベクトルのみが受け入れられます。usecs 引数はサポートされていません。リストではなく、複数の値が返されます。入力ベクトル内の重複は、出力では 1 回のみ表示されます。追加の `select!` インターフェースが提供されます。
+
+ファイルディスクリプタレベルでの操作が必要となる場合もありますが、この操作の正当性はプログラム全体の一部としてのみ考慮されるべきです。例えば、`(string-set! x 34 #\y)` の効果は x にアクセスできるコード部分に限定されますが、`(close-fdes 34)` はプロセス全体の状態を変更します。特に、別のスレッドがファイルディスクリプタ 34 を使用している場合、そのスレッドの状態が破損する可能性があります。また、ファイルを開く別のスレッドがファイルディスクリプタ 34 を再利用してしまうと、破損が予期せぬ形で現れる可能性があります。
+
+しかし、ファイルディスクリプタを扱う場合、サイドテーブルなどにファイルディスクリプタに情報を関連付けたいと考えるのはよくあることです。このユースケースをサポートし、ファイルディスクリプタが閉じられたときにユーザーコードが関連付けを解除できるようにするために、Guileは_fdesファイナライザー_を提供しています。
+
+名前が示すとおり、fdes ファイナライザはファイナライザです。ガベージ コレクションに応じて実行される場合もあれば、`close-port`、`close-fdes` などの明示的な呼び出しに応じて実行される場合もあります。そのため、ファイナライザの多くの落とし穴を引き継いでいます。つまり、並行スレッドから呼び出される場合もあれば、まったく呼び出されない場合もあります。ファイナライザの詳細については、[外部オブジェクト メモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management) を参照してください。
+
+fdesファイナライザを使用するには、そのモジュールをインポートします。
+
+(use-modules (ice-9 fdes-finalizers))
+
+スキーム手順: **add-fdes-finalizer!** fdes ファイナライザー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dfdes_002dfinalizer_0021)
+
+Scheme 手順: **remove-fdes-finalizer!** fdes ファイナライザー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-remove_002dfdes_002dfinalizer_0021)
+
+fdes のファイナライザを追加または削除します。ファイナライザは、ファイルディスクリプタが閉じられるときに Guile によって呼び出されるプロシージャです。閉じられるファイルディスクリプタは、ファイナライザへの引数として渡されます。ファイナライザがファイルディスクリプタに複数回追加されている場合、それを削除するには、その回数分 `remove-fdes-finalizer!` を呼び出す必要があります。
+
+ファイルディスクリプタに追加されたファイナライザは、Guileによって不特定の順序で呼び出され、その戻り値は無視されます。
+
+* * *
+
+次へ: [ユーザー情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#User-Information)、前: [ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)、上: [POSIX システムコールとネットワーク](https://doc.guix.gnu.org/guile/latest/en/guile.html#POSIX) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

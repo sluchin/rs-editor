@@ -1,0 +1,396 @@
+#### 7.5.28 SRFI-41 - ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-_002d-Streams)
+
+このサブセクションは、Philip L. Bewig による [SRFI-41 の仕様](http://srfi.schemers.org/srfi-41/srfi-41.html) に基づいています。
+
+この SRFI は、ストリーム（遅延リストとも呼ばれる）を実装しています。ストリームは、必要に応じてのみ計算される要素を含むシーケンシャルなデータ構造です。ストリームは null であるか、またはその cdr にストリームを含むペアです。ストリームの要素はアクセスされたときにのみ計算されるため、ストリームは無限にすることができます。ストリーム要素の値は、計算されると、再度必要になった場合に備えてキャッシュされます。SRFI-41 は以下で使用できます。
+
+(use-modules (srfi srfi-41))
+
+* [SRFI-41 ストリームの基礎](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Fundamentals)
+* [SRFI-41 ストリームプリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Primitives)
+* [SRFI-41 ストリームライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Library)
+
+* * *
+
+次へ: [SRFI-41 ストリーム プリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Primitives)、上へ: [SRFI-41 - ストリーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 7.5.28.1 SRFI-41 ストリームの基礎 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Fundamentals-1)
+
+SRFI-41 ストリームは、相互に再帰的な 2 つの抽象データ型に基づいています。`stream` 抽象データ型のオブジェクトは、強制的に実行されると `stream-null` になるか、`stream-pair` 型のオブジェクトになるプロミスです。`stream-pair` 抽象データ型のオブジェクトには、`stream-car` と `stream-cdr` が含まれており、これらは `stream` でなければなりません。ストリームの本質的な特徴は、2 つのデータ型間の再帰的なプロミスを体系的に中断することです。
+
+`stream-pair` の `stream-car` に格納されるオブジェクトは、`stream-car` が初めてアクセスされたときに強制的に実行されるプロミスです。その値は、再度必要になった場合に備えてキャッシュされます。オブジェクトは任意の型を持つことができ、異なるストリーム要素は異なる型を持つことができます。`stream-car` が一度もアクセスされない場合、そこに格納されているオブジェクトは評価されません。同様に、`stream-cdr` はストリームを返すプロミスであり、要求があった場合にのみ強制的に実行されます。
+
+* * *
+
+次へ: [SRFI-41 ストリームライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Library )、前: [SRFI-41 ストリームの基礎](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Fundamentals)、上: [SRFI-41 - ストリーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+
+#### 7.5.28.2 SRFI-41 ストリーム プリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Primitives-1)
+
+このライブラリは、8 つの演算子を提供します。`stream-null` と `stream-pair` のコンストラクタ、ストリームと 2 種類のストリームの型述語、`stream-pair` の両方のフィールドへのアクセサ、およびストリームを返すプロシージャを作成するラムダです。
+
+スキーム変数: **stream-null** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dnull)
+
+強制的に実行されると、他のすべてのオブジェクトと区別できる単一のオブジェクトとなり、ヌルストリームを表す約束。`stream-null`は不変かつ一意です。
+
+Scheme構文: **stream-cons** object-expr stream-expr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dcons)
+
+強制的に実行されると、`stream-car` に object-expr が、`stream-cdr` に stream-expr が含まれる `stream-pair` となる、プロミスを含む新規割り当てストリームを作成します。`stream-cons` が呼び出されたとき、object-expr も stream-expr も評価されません。
+
+一度作成された`stream-pair`は変更できません。既存のstream-pairを変更する`stream-set-car!`や`stream-set-cdr!`といったコマンドは存在しません。リストのようにドット付きペアや不適切なストリームもありません。
+
+Scheme 手順: **stream?** オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_003f)
+
+オブジェクトがストリームの場合は true を返し、それ以外の場合は false を返します。オブジェクトがストリームの場合、そのプロミスは強制されません。`(stream? obj)` が true を返すと、`(stream-null? obj)` または `(stream-pair? obj)` のいずれかが true を返し、もう一方は false を返します。
+
+Scheme 手順: **stream-null?** オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dnull_003f)
+
+オブジェクトが識別されたヌルストリームである場合は true を返し、そうでない場合は false を返します。オブジェクトがストリームである場合、そのプロミスは強制的に実行されます。
+
+Scheme Procedure: **stream-pair?** オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dpair_003f)
+
+オブジェクトが `stream-cons` によって構築された `stream-pair` である場合は true を返し、そうでない場合は false を返します。オブジェクトがストリームである場合、そのプロミスは強制的に設定されます。
+
+スキーム手順: **stream-car** ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dcar)
+
+ストリームの `stream-car` に格納されているオブジェクトを返します。引数が `stream-pair` でない場合はエラーが通知されます。これにより、`stream-cons` に渡されたオブジェクト式がまだ評価されていない場合は評価されます。値は、再度必要になった場合に備えてキャッシュされます。
+
+スキーム手順: **stream-cdr** ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dcdr)
+
+`stream-cdr`に格納されているストリームを返します。引数が`stream-pair`でない場合はエラーが通知されます。
+
+Scheme構文: **stream-lambda** 形式式 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dlambda)
+
+プロシージャ本体を評価するプロミスを返すプロシージャを作成します。評価される最後の本体式はストリームを生成する必要があります。通常のラムダ式と同様に、仮引数は単一の変数名にすることができます。この場合、すべての仮引数は単一のリストにまとめられます。または、変数名のリストにすることもできます。変数名のリストは、引数がない場合は null、引数の数が正確な場合は proper、固定数の引数の後に 0 個以上の引数がリストにまとめられる場合は dot で囲むことができます。本体には少なくとも 1 つの式が含まれている必要があり、評価される式の前に内部定義を含めることができます。
+
+(define strm123
+(stream-cons 1
+(stream-cons 2
+(stream-cons 3
+ストリームヌル))))
+
+(stream-car strm123) ⇒ 1
+(stream-car (stream-cdr strm123) ⇒ 2
+
+（ストリームペア？）
+(stream-cdr
+(stream-cons (/ 1 0) stream-null))) ⇒ #f
+
+(ストリーム? (リスト 1 2 3)) ⇒ #f
+
+(イテレータを定義する)
+(stream-lambda (fx)
+(stream-cons x (iter f (fx)))))
+
+(define nats (iter (lambda (x) (+ x 1)) 0))
+
+(stream-car (stream-cdr nats)) ⇒ 1
+
+(ストリーム追加を定義)
+(stream-lambda (s1 s2)
+(ストリームコン)
+(+ (stream-car s1) (stream-car s2))
+(stream-add (stream-cdr s1)
+(stream-cdr s2)))))
+
+(define evens (stream-add nats nats))
+
+（ストリームカー偶数）⇒ 0
+(stream-car (stream-cdr evens)) ⇒ 2
+(stream-car (stream-cdr (stream-cdr evens))) ⇒ 4
+
+* * *
+
+前へ: [SRFI-41 ストリーム プリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Primitives)、上へ: [SRFI-41 - ストリーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 7.5.28.3 SRFI-41 ストリームライブラリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Library-1)
+
+Scheme構文: **define-stream** (name args …) body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dstream)
+
+ストリームを返すプロシージャを作成します。このプロシージャは、通常の `define` が出現する場所であればどこにでも出現でき、内部定義としても使用できます。また、独自の内部定義を含めることもできます。定義されたプロシージャは、`stream-lambda` と同じように引数を取ります。`define-stream` は `stream-lambda` のシンタックスシュガーです。`stream-let` も `stream-lambda` のシンタックスシュガーです。
+
+単一の入力ストリームのみを受け取る`stream-map`のシンプルなバージョンは、自身を再帰的に呼び出します。
+
+(定義ストリーム (ストリームマップ proc strm)
+(if (stream-null? strm)
+ストリームヌル
+(ストリームコン)
+(proc (stream-car strm))
+(stream-map proc (stream-cdr strm))))))
+
+Scheme Procedure: **list->stream** list [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002d_003estream)
+
+リストから要素を格納した、新しく割り当てられたストリームを返します。
+
+スキーム手順: **ポート→ストリーム** \[ポート\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-port_002d_003estream)
+
+指定されたポート上の文字を要素として含む、新しく割り当てられたストリームを返します。ポートが指定されていない場合は、現在の入力ポートがデフォルトで使用されます。返されるストリームは有限長であり、`stream-null`によって終了します。
+
+`port->stream` の用途の一つとしては、以下のようなものが考えられます。
+
+(define s ;間違い!
+(ファイルからの入力ファイル名付き)
+(lambda () (port->stream))))
+
+しかし、これは失敗します。なぜなら、`with-input-from-file` は即時読み込みを行うため、最初の文字が読み込まれる前に入力ポートを早期に閉じてしまうからです。ファイルをストリームに読み込むには、次のようにします。
+
+(define-stream (file->stream filename)
+(let ((p (open-input-file filename)))
+(stream-let loop ((c (read-char p)))
+(if (eof-object? c)
+(開始 (入力ポート p を閉じる)
+ストリームヌル)
+(stream-cons c
+(ループ (read-char p)))))))
+
+Scheme構文: **stream** オブジェクト式 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream)
+
+オブジェクトを順番に要素として含む、新しく割り当てられたストリームを作成します。オブジェクト式は、ストリームの作成時ではなく、アクセス時に評価されます。オブジェクトが指定されていない場合（例：(stream)）、nullストリームが返されます。`list->stream`も参照してください。
+
+(define strm123 (stream 1 2 3))
+
+; (/ 1 0) ストリーム作成時には評価されません
+(define s (stream 1 (/ 1 0) -1))
+
+Scheme Procedure: **stream->list** \[n\] stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002d_003elist)
+
+ストリーム内の最初の n 個の項目を含む、新しく割り当てられたリストを返します。ストリームの項目数が n 個未満の場合、ストリーム内のすべての項目が返されるリストに含まれます。n が指定されていない場合は、デフォルトで無限大になります。つまり、ストリームが有限でない限り、`stream->list` は何も返しません。
+
+(ストリーム→リスト 10)
+(stream-map (lambda (x) (\* xx))
+(stream-from 0)))
+⇒ (0 1 4 9 16 25 36 49 64 81)
+
+Scheme Procedure: **stream-append** stream … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dappend)
+
+入力ストリームに含まれる要素を入力順に要素として含む、新たに割り当てられたストリームを返します。入力ストリームのいずれかが無限の場合、後続の入力ストリームの要素は出力ストリームには含まれません。`stream-concat`も参照してください。
+
+Scheme Procedure: **stream-concat** stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dconcat)
+
+1つ以上のストリームで構成されるストリームを受け取り、入力ストリームのすべての要素を含む、新たに割り当てられたストリームを返します。入力ストリーム内のいずれかのストリームが無限である場合、入力ストリーム内の残りのストリームは出力ストリームには表示されません。`stream-append`も参照してください。
+
+Scheme手順: **stream-constant**オブジェクト… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dconstant)
+
+オブジェクトを要素として含む、新しく割り当てられたストリームを返します。このストリームは、オブジェクトを無限に繰り返して格納します。
+
+(ストリーム定数 1) ⇒ 1 1 1 ...
+(ストリーム定数 #t #f) ⇒ #t #f #t #f #t #f ...
+
+スキーム手順: **stream-drop** n ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002ddrop)
+
+入力ストリームの最初の n 個の要素の次の要素から始まるサフィックスを返します。出力ストリームは入力ストリームと構造を共有します。そのため、一方のストリームインスタンスで強制されたプロミスは、もう一方のストリームインスタンスでも強制されます。入力ストリームの要素数が n 個未満の場合、`stream-drop` は null ストリームを返します。`stream-take` も参照してください。
+
+スキーム手順: **stream-drop-while** pred stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002ddrop_002dwhile)
+
+入力ストリームのうち、`(pred x)` が false を返す最初の要素 x から始まるサフィックスを返します。出力ストリームは入力ストリームと同じ構造を持ちます。`stream-take-while` も参照してください。
+
+スキーム手順: **stream-filter** pred stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter)
+
+入力ストリームの要素 x のうち、述語 `pred` を満たす要素のみを含む、新しく割り当てられたストリームを返します。
+
+(ストリームフィルタがおかしい？ (ストリーム開始0))
+⇒ 1 3 5 7 9 ...
+
+Scheme Procedure: **stream-fold** proc base stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfold)
+
+バイナリプロシージャ proc を base と stream の最初の要素に適用して新しい base を計算し、次にそのプロシージャを新しい base と stream の次の要素に適用して次の base を計算し、これを繰り返して値を蓄積し、最終的にストリームの終わりに達したときに `stream-fold` の値として返します。stream は有限でなければならず、そうでない場合は `stream-fold` は無限ループに入ります。`stream-scan` も参照してください。これは `stream-fold` に似ていますが、無限ストリームに役立ちます。他の関数型言語に慣れている読者にとって、これは left-fold です。対応する right-fold はありません。right-fold は完全に評価された有限ストリームに依存しており、その場合はリストに変換しても構わないからです。
+
+Scheme Procedure: **stream-for-each** proc stream … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfor_002deach)
+
+副作用のために、入力ストリームの対応する要素に要素ごとにプロシージャを適用します。何も返しません。`stream-for-each` は、いずれかの入力ストリームがなくなるとすぐに停止します。
+
+スキーム手順: **stream-from** 最初の \[ステップ\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfrom)
+
+`first` を最初の要素として含む、新しく割り当てられたストリームを作成します。このストリームでは、後続の各要素が `step` だけ増加します。`step` が指定されていない場合は、デフォルトで 1 になります。`first` と `step` は任意の数値型を指定できます。`stream-from` は、`stream-of` 式のジェネレーターとしてよく使用されます。有限ストリームを作成する同様の手順については、`stream-range` も参照してください。
+
+Scheme プロシージャ: **stream-iterate** proc base [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002diterate)
+
+新規に割り当てられたストリームを作成し、その最初の要素に base を含め、各要素に順番に proc を適用して次の要素を決定します。`stream-unfold` および `stream-unfolds` も参照してください。
+
+スキーム手順: **stream-length** ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dlength)
+
+ストリーム内の要素数を返します。要素の評価は行いません。`stream-length` は有限ストリームでのみ使用できます。無限ストリームで使用すると無限ループに陥ります。
+
+Scheme構文: **stream-let** タグ ((var expr) …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dlet)
+
+各変数を対応する式の値にバインドするローカルスコープを作成します。さらに、タグを、バインドされた変数を引数として受け取り、本体を定義式として受け取るプロシージャにバインドし、タグを `stream-lambda` でバインドします。タグは本体内のスコープにあり、再帰的に呼び出すことができます。`stream-let` で定義された展開された式が評価されると、`stream-let` は、新しくバインドされた変数を含む環境で本体内の式を評価し、最後に評価された式の値を返します。この値はストリームを生成する必要があります。
+
+`stream-let` は、通常の `let` が通常の `lambda` に構文糖衣を提供するのと同様に、`stream-lambda` に構文糖衣を提供します。ただし、通常の `let` とは異なり、名前のない `stream-let` は意味をなさないため、タグは必須であり、省略できません。
+
+例えば、`stream-member` は、入力 strm の中で `stream-car` x が `(eql? obj x)` を満たす最初の `stream-pair` を返します。x が strm に存在しない場合は、null ストリームを返します。
+
+(define-stream (stream-member eql? obj strm)
+(ストリームレットループ ((strm strm))
+(cond ((stream-null? strm) strm)
+((eql? obj (ストリームカー strm)) strm)
+(else (loop (stream-cdr strm))))))
+
+Scheme Procedure: **stream-map** proc stream … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dmap)
+
+入力ストリームの対応する要素にプロシージャを要素ごとに適用し、それらのプロシージャ適用結果である要素を含む、新たに割り当てられたストリームを返します。出力ストリームの要素数は、最小長の入力ストリームと同じであり、無限になる場合もあります。
+
+Scheme構文: **stream-match** ストリーム句 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dmatch)
+
+ストリームのパターンマッチングを提供します。入力ストリームは、ストリームに評価される式です。節は `(パターン [フェンダー] 式)` の形式で、特定の形状のストリームに一致するパターン、パターンが一致する場合に成功する必要があるオプションのフェンダー、およびパターンが一致した場合に評価される式で構成されます。パターンには 4 つの種類があります。
+
+* () はヌルストリームに一致します。
+* (pat0 pat1 …) は、パターン要素の数と正確に等しい長さの有限ストリームに一致します。
+* (pat0 pat1 … `.` pat-rest) は無限ストリーム、またはリテラルドットの前のパターン要素の数以上の長さを持つ有限ストリームに一致します。
+* pat はストリーム全体に一致します。常に句のリストの最後に配置する必要があります。他の場所に配置してもエラーではありませんが、後続の句が一致することはありません。
+
+各パターン要素は以下のいずれかになります。
+
+* ストリーム要素に一致する識別子。さらに、ストリーム要素の値は、対応する句のフェンダーと式の範囲内にある、識別子で指定された変数にバインドされます。単一のパターン内の各識別子は一意である必要があります。
+* 任意のストリーム要素に一致するが、バインディングは作成されないリテラルアンダースコア（`_`）。
+
+パターンは左から右へ順番にテストされ、一致するパターンが見つかるまで続きます。フェンダーが存在する場合、一致が成功するためには、フェンダーが真の値に評価される必要があります。パターン変数は、対応するフェンダーと式にバインドされます。一致するパターンが見つかると、対応する式が評価され、一致の結果として返されます。入力ストリームに一致するパターンがない場合は、エラーが通知されます。
+
+`stream-match`は、nullストリームと非nullストリームを区別し、先頭と末尾をバインドするためによく使用されます。
+
+(define (len strm)
+(ストリームマッチ strm)
+(() 0)
+((head . tail) (+ 1 (len tail)))))
+
+フェンダーは、2 つのストリーム要素が同一でなければならない一般的なケースをテストできます。`else` パターンは、`cond` のようなキーワードではなく、ストリーム全体にバインドされた識別子です。
+
+(ストリームマッチ strm)
+((xy . \_) (等しい? xy) 'ok)
+（そうでなければエラー）
+
+より複雑な例では、2 つのネストされたマッチャーを使用して 2 つの異なるストリーム引数を照合します。`(stream-merge lt? . strms)` は、`lt?` 述語によって順序付けられた 2 つ以上のストリームを安定的にマージします。
+
+(define-stream (stream-merge lt? . strms)
+(define-stream (merge xx yy)
+(stream-match xx (() yy) ((x . xs)
+(stream-match yy (() xx) ((y . ys)
+(もし (lt? yx)
+(stream-cons y (merge xx ys))
+(stream-cons x (merge xs yy))))))))
+(stream-let loop ((strms strms))
+(条件 ((null? strms) ストリーム-null)
+((null? (cdr strms)) (car strms))
+(else (merge (car strms)
+(ストリームマージltを適用しますか?
+(cdr strms)))))))
+
+Scheme構文: **stream-of**式句 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dof)
+
+ループ式を用いてストリームを生成するストリーム内包表記の構文を提供します。結果は、expr によって返される型のオブジェクトのストリームになります。句には次の 4 つの種類があります。
+
+* (var `in` stream-expr) は、stream-expr の要素をストリームの開始位置から順番にループし、ストリームの各要素を順番に var にバインドします。`stream-from` と `stream-range` は、stream-expr のジェネレーターとしてよく使用されます。
+* (var `is` expr) var を expr の評価によって得られた値にバインドします。
+* (pred expr) は、述語 pred を満たす要素 x のみを出力ストリームに含めます。
+
+ストリーム内包表記で束縛される変数の範囲は、束縛節の右側の節（束縛節自体は含まない）と結果式です。
+
+ジェネレータが 2 つ以上存在する場合、ループは左から右にネストされているかのように処理されます。つまり、最も右にあるジェネレータが最も速く変化します。この結果、最初のジェネレータのみが無限になり、それ以降のジェネレータはすべて有限でなければなりません。ジェネレータが存在しない場合、ストリーム内包表記の結果は、結果式を含むストリームになります。したがって、'(stream-of 1)' は、要素 1 のみを含む有限ストリームを生成します。
+
+(ストリーム (\* xx)
+(x in (stream-range 0 10))
+（さえ？ x））
+⇒ 0 4 16 36 64
+
+(ストリーム (リスト ab)
+(a in (stream-range 1 4))
+(b in (stream-range 1 3)))
+⇒ (1 1) (1 2) (2 1) (2 2) (3 1) (3 2)
+
+(stream-of (list ij)
+(i in (stream-range 1 5))
+(j in (stream-range (+ i 1) 5)))
+⇒ (1 2) (1 3) (1 4) (2 3) (2 4) (3 4)
+
+スキーム手順: **stream-range** first past \[step\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002drange)
+
+`first` を最初の要素として含む、新しく割り当てられたストリームを作成し、後続の各要素を `step` だけインクリメントします。ストリームは有限であり、ストリームの要素ではない `past` より前に終了します。`step` が指定されていない場合、`first` が `past` より小さい場合はデフォルトで 1、それ以外の場合は -1 になります。`first`、`past`、および `step` は、任意の実数値型にすることができます。`stream-range` は、`stream-of` 式のジェネレーターとしてよく使用されます。無限ストリームを作成する同様の手順については、`stream-from` も参照してください。
+
+(ストリーム範囲 0 10) ⇒ 0 1 2 3 4 5 6 7 8 9
+(ストリーム範囲 0 10 2) ⇒ 0 2 4 6 8
+
+ストリームの連続する要素は、first に step を加えることで計算されるため、first、past、または step のいずれかが不正確な場合、出力ストリームの長さは `(ceiling (- (/ (- past first) step) 1)` と異なる場合があります。
+
+スキーム手順: **stream-ref** ストリーム n [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dref)
+
+ストリームのn番目の要素を返します（0から数えて）。nがストリームの長さ以上の場合、エラーが発生します。
+
+(定義 (事実 n)
+(ストリーム参照)
+(stream-scan \* 1 (stream-from 1))
+n))
+
+スキーム手順: **stream-reverse** ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dreverse)
+
+入力ストリームの要素を逆順で含む、新しく割り当てられたストリームを返します。`stream-reverse` は有限ストリームでのみ使用できます。無限ストリームで使用すると無限ループに陥ります。`stream-reverse` はストリームの要素の評価を強制しません。
+
+スキーム手順: **stream-scan** proc base stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dscan)
+
+入力ストリームの部分的な折り畳みを、新しく割り当てられた出力ストリームに蓄積します。出力ストリームは、ベースに`(stream-fold proc base (stream-take i stream))`を付加したもので、ストリームの最初の i 個の要素それぞれに対して実行されます。
+
+(ストリームスキャン + 0 (ストリーム開始 1))
+⇒（ストリーム 0 1 3 6 10 15 ...）
+
+(stream-scan \* 1 (stream-from 1))
+⇒ (ストリーム 1 1 2 6 24 120 ...)
+
+スキーム手順: **stream-take** n ストリーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dtake)
+
+入力ストリームの最初の n 個の要素を含む、新たに割り当てられたストリームを返します。入力ストリームの要素数が n 個未満の場合、出力ストリームの要素数も n 個未満になります。`stream-drop` も参照してください。
+
+スキーム手順: **stream-take-while** pred stream [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dtake_002dwhile)
+
+述語とストリームを受け取り、入力ストリームの最大接頭辞を構成する要素 x のうち、述語を満たす要素を含む、新たに割り当てられたストリームを返します。`stream-drop-while` も参照してください。
+
+スキーム手順: **stream-unfold** map pred gen base [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dunfold)
+
+基本的な再帰ストリームコンストラクタ。`stream-iterate` と同様に、`gen` を `base` の連続する値に繰り返し適用し、生成された各値に `map` を適用して、マップされた各値を出力ストリームに追加します。この処理は、`(pred? base)` が真値を返す限り続きます。`stream-iterate` および `stream-unfolds` も参照してください。
+
+以下の式は、有限ストリーム「0 1 4 9 16 25 36 49 64 81」を作成します。最初は基数が0で、10未満なので、mapは基数を2乗し、マップされた値が出力ストリームの最初の要素になります。次にgenは基数を1増やして1にします。これも10未満なので、mapは新しい基数を2乗し、1が出力ストリームの2番目の要素になります。このようにして基数が10になるまで処理が続き、predが再帰を停止し、stream-nullが出力ストリームを終了します。
+
+(ストリーム展開)
+(lambda (x) (expt x 2)) ; map
+(lambda (x) (< x 10)) ; 予測?
+(lambda (x) (+ x 1)) ; gen
+0) ; ベース
+
+Scheme手順: **stream-unfolds** proc seed [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dunfolds)
+
+ジェネレータプロシージャへの連続呼び出しによって生成された要素を含む、新たに割り当てられた n 個のストリームを返します。ジェネレータプロシージャは現在のシードを引数として受け取り、n+1 個の値を返します。
+
+(proc seed) ⇒ seed result\_0 … result\_n-1
+
+ここで、返されたシードはジェネレーターへの次の呼び出しへの入力シードであり、result\_i は i 番目の結果ストリームの次の要素を生成する方法を示します。
+
+* (値): 値は結果ストリームの次の車です。
+* `#f`: 結果ストリームに対して、ジェネレータープロシージャのこのイテレーションで値が生成されませんでした。
+* (): 結果ストリームの終了。
+
+特定の結果ストリームの次の要素を生成するには、proc を複数回呼び出す必要がある場合があります。`stream-iterate` および `stream-unfold` も参照してください。
+
+(定義 (ストリームパーティション pred? strm)
+（流れが展開する）
+(ラムダ (s)
+(if (stream-null? s)
+(値 s '() '())
+(let ((a (stream-car s))
+(d (stream-cdr s)))
+(もし (pred? a) ならば)
+(値 d (リスト a) #f)
+(値 d #f (リスト a))))))
+strm))
+
+(値付き呼び出し)
+(ラムダ()
+(ストリームパーティションがおかしい？)
+(ストリーム範囲 1 6)))
+(ラムダ (奇数 偶数)
+(リスト (ストリーム→リスト オッズ)
+(ストリーム→リストイベント))))
+⇒ ((1 3 5) (2 4))
+
+スキーム手順: **stream-zip** ストリーム … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dzip)
+
+入力ストリームの対応する要素をリスト（ストリームではなく）として格納した、新たに割り当てられたストリームを返します。入力ストリームのいずれかが有限である場合、出力ストリームの長さは最短の入力ストリームの長さになります。入力ストリームがすべて無限である場合は、出力ストリームの長さは無限になります。
+
+* * *
+
+次へ: [SRFI-43 - ベクトルライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d43)、前: [SRFI-41 - ストリーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

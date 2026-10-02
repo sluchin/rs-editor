@@ -1,0 +1,139 @@
+#### 6.6.16 SRFI-9 レコード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records-1)
+
+SRFI-9 は、新しいレコード型を定義し、述語、コンストラクタ、フィールドのゲッターおよびセッター関数を作成するための構文を標準化しています。Guile では、新しいレコード型を作成する際にこの方法が推奨されています ([レコードの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Record-Overview) を参照)。これは以下の環境で使用できます。
+
+(use-modules (srfi srfi-9))
+
+Scheme構文: **レコード型の定義** 型
+（コンストラクタフィールド名…）
+述語
+(フィールド名アクセサー \[修飾子\]) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002drecord_002dtype)
+
+  
+
+新しいレコード型を作成し、それを使用するための様々な`define`を定義します。この構文は最上位レベルでのみ使用可能で、他の形式の中にネストすることはできません。
+
+type は、コアの `make-record-type` からの戻り値に従って、レコードのタイプにバインドされます。type は、`record-type-name` に従って、レコードの名前も提供します。
+
+コンストラクタは、このタイプの新しいレコードを作成するために`(constructor fieldval …)`として呼び出される関数にバインドされています。引数はフィールドの初期値であり、各フィールドにつき1つの引数が、`define-record-type`フォームに表示されている順序で渡されます。
+
+フィールド名は、コアの `record-type-fields` などに従ってレコードフィールドの名前を提供し、後続のアクセサ/修飾子フォームで参照されます。
+
+predicate は、`(predicate obj)` として呼び出される関数にバインドされます。obj がこの型のレコードであるかどうかに応じて、`#t` または `#f` を返します。
+
+各アクセサは、レコードから対応するフィールドを取得するために呼び出される関数`(accessor record)`にバインドされています。同様に、各修飾子は、レコード内の対応するフィールドを設定するために呼び出される関数`(modifier record val)`にバインドされています。
+
+典型的な使用例を以下に示します。
+
+(レコードタイプを定義 <従業員>
+(従業員名、年齢、給与を表示)
+従業員？
+（従業員名）
+(年齢 従業員の年齢 セット 従業員の年齢!)
+(給与 従業員の給与 セット 従業員の給与!))
+
+これにより、名前、年齢、給与のフィールドを持つ新しい従業員データ型が作成されます。各フィールドにアクセサ関数が作成されますが、名前の修飾関数はありません（この例では、従業員オブジェクトが作成されたときにのみ確立されることを意図しています）。これらはすべて、たとえば次のように使用できます。
+
+<従業員> ⇒ #<レコードタイプ <従業員>>
+
+(define fred (make-employee "Fred" 45 20000.00))
+
+（従業員？フレッド）⇒ #t
+（従業員の年齢フレッド）⇒ 45
+(set-employee-salary! fred 25000.00) ;; 昇給
+
+`define-record-type`によって作成される関数は、通常のトップレベルの`define`です。必要に応じて再定義したり、`set!`したり、モジュールからエクスポートしたりできます。
+
+* [非トップレベルのレコード定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dtoplevel-Record-Definitions)
+* [カスタムプリンタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Printers)
+* [関数型「セッター」](https://doc.guix.gnu.org/guile/latest/en/guile.html#Functional-_0060_0060Setters_0027_0027)
+
+#### 非トップレベルのレコード定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dtoplevel-Record-Definitions)
+
+SRFI-9仕様では、`lambda`本体内やletブロック内など、トップレベル以外のコンテキストでのレコード定義を明示的に禁止しています。しかし、Guileの実装ではこの制限が適用されていません。
+
+#### カスタムプリンタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Printers)
+
+`set-record-type-printer!` を使用すると、レコードのデフォルトの印刷動作をカスタマイズできます。これは Guile の拡張機能であり、SRFI-9 の一部ではありません。`(srfi srfi-9 gnu)` モジュールに含まれています。
+
+Scheme構文: **set-record-type-printer!** type proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002drecord_002dtype_002dprinter_0021)
+
+ここで、type は `define-record-type` の最初の引数に対応し、proc は、出力するレコードと出力ポートの 2 つの引数を受け取るプロシージャです。
+
+この例では、従業員の名前が角括弧で囲まれて表示されます。たとえば、`[Fred]` のようになります。
+
+(set-record-type-printer! <従業員>
+(ラムダ (レコード ポート)
+(write-char #\\\[ port)
+(従業員名レコードの表示) ポート
+(write-char #\\\] port)))
+
+#### 関数型「セッター」[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Functional-_0060_0060Setters_0027_0027)
+
+関数型プログラミングのスタイルでコードを書く場合、レコードの内容を変更しないことが望ましい。そのため、既存のレコードに基づいて新しいレコードインスタンスを返す簡単な方法が非常に重要となる。
+
+`(srfi srfi-9 gnu)` モジュールは、既存のレコードインスタンスに基づいて、1 つ以上のフィールド値のみを変更した新しいレコードインスタンスを返す機能 (_関数セッター_) を SRFI-9 に拡張します。まず、`define-immutable-record-type` は `define-record-type` と同様に動作しますが、フィールドは不変であり、セッターは関数セッターとして定義されます。
+
+Scheme構文: **define-immutable-record-type** type
+（コンストラクタフィールド名…）
+述語
+(フィールド名アクセサー \[修飾子\]) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dimmutable_002drecord_002dtype )
+
+`define-record-type`のように、新しいレコード型として型を定義します。ただし、レコード型は_不変_（`struct-set!`を使用してもレコードを変更できない）となり、修飾子は関数セッターとして定義されます。関数セッターとは、指定されたフィールドが変更された新しいレコードインスタンスを返し、元のレコードは変更しない手続きです（以下の例を参照）。
+
+さらに、汎用マクロである`set-field`および`set-fields`は、任意のSRFI-9レコードに適用できます。
+
+Scheme構文: **set-field** レコード (フィールド サブフィールド ...) 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dfield)
+
+指定されたフィールドを除き、対応するレコードのフィールドと等しいフィールドを持つ、レコード型の新しいレコードを返します。
+
+field は、「設定」されるレコードのフィールドに対応するゲッターの名前でなければなりません。後続の subfields は、そのフィールド値内で設定するサブフィールドを指定するレコードゲッターでなければなりません（以下の例を参照）。
+
+Scheme構文: **set-fields** record ((field sub-fields ...) value) ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dfields)
+
+`set-field` と同様ですが、一度に複数のフィールドを設定できます。これにより、単一の `set-field` 呼び出しを複数回行うよりも効率的なコードになります。
+
+関数型セッターの使用例を示すために、次の2つのレコード型定義を想定してみましょう。
+
+(レコードタイプを定義 <アドレス>
+（住所：番地、市、国）
+住所？
+（番地 - 通り）
+（都市名-都市名）
+（国名住所-国名）
+
+(不変レコードタイプを定義 <person>
+（年齢、メールアドレス）
+人？
+（年齢 人-年齢 セット-人-年齢）
+(メールアドレス 個人メールアドレス セット 個人メールアドレス)
+(アドレス 個人アドレス セット 個人アドレス))
+
+まず、`<person>`レコード型定義では、名前付きの関数型セッターが導入されていることに注意してください。これらは次のように使用できます。
+
+(fsfアドレスを定義)
+（住所「フランクリン・ストリート」「ボストン」「アメリカ合衆国」）
+
+(rms を定義)
+(人物30 "rms@gnu.org" fsfアドレス)
+
+(そして (等しい? (set-person-age rms 60)
+(人物60 "rms@gnu.org" fsfアドレス)
+(= (人-年齢 rms) 30))
+⇒ #t
+
+ここでは、rmsがバインドされている元の`<person>`レコードは変更されません。
+
+さて、rmsの住所と築年数の両方を変更したいとしましょう。これは`set-fields`コマンドを使って実現できます。
+
+(set-fields rms
+（（年齢）60）
+((person-address address-street) "テンプルプレイス"))
+⇒ #<<人物> 年齢: 60 メールアドレス: "rms@gnu.org"
+住所: #<<address> 通り: "テンプルプレイス" 都市: "ボストン" 国: "アメリカ合衆国">>
+
+上記の変更により、rms の 2 つのフィールド（`address` フィールドの `street` フィールドを含む）が簡潔に変更されたことに注目してください。また、`set-fields` は `define-record-type` だけで定義された型に対しても同様に機能することにも注目してください。
+
+* * *
+
+次へ: [構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures)、前: [SRFI-9 レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

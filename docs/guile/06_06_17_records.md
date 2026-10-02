@@ -1,0 +1,67 @@
+#### 6.6.17 レコード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records-1)
+
+レコード型は、ユーザー定義のデータ型を表す第一級オブジェクトです。レコードは、レコード型のインスタンスです。
+
+なお、このインターフェースは日常的な使用には低レベルすぎる場合が多いことに注意してください。レコードのほとんどの用途には、SRFI-9 レコードの方が適しています。[SRFI-9 レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records) を参照してください。
+
+Scheme Procedure: **record?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_003f)
+
+objが任意の型のレコードである場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+`record?`は任意のScheme値に対して真となる可能性があることに注意してください。レコードが他のScheme型と重複しないという保証はありません。
+
+Scheme Procedure: **make-record-type** type-name field-names \[print\] \[#:parent=`#f`\] \[#:uid=`#f`\] \[#:extensible?=`#f`\] \[#:opaque?=`#f`\] \[#:allow-duplicate-field-names?=`#t`\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drecord_002dtype)
+
+新しいレコード型記述子を作成して返します。
+
+type-name は、型の名前を示す文字列です。現在、レコードの印刷表示と診断情報でのみ使用されます。field-names は、`(不変名)`、`(可変名)`、または name の形式の要素のリストです。ここで、name は、その型のレコードのフィールドの名前を示すシンボルです。allow-duplicate-field-names? が true でない限り、これらのシンボル間で重複は許可されません。
+
+(make-record-type "employee" '(name age salary))
+
+オプションの print 引数は、`display`、`write` などで使用される関数で、新しいタイプのレコードを出力するために使用されます。これは `(print record port)` と呼ばれ、レコードを調べてポートに書き込む必要があります。
+
+`#:parent` キーワードを渡すと、スーパークラスからレコード型を派生させることができます。派生レコード型は、親クラスのフィールドに加えて、`make-record-type` 呼び出しで宣言されたフィールドを持ちます。親クラスのインスタンスに対するレコード述語とフィールドアクセサーは、サブクラスのインスタンスに対しても機能します。
+
+レコードのサブタイピングを許可すると、わずかなオーバーヘッドが発生します。このオーバーヘッドを回避するには、`#:extensible? #f` を渡して拡張性を無効にします。デフォルトでは、Guile のレコード型は拡張できません。
+
+一般的に、`make-record-type` を呼び出すと、新しいレコード型が返されます。つまり、新しいレコード型が_生成_されます。しかし、レコード型がまだ定義されていない場合にのみ、レコード型を定義したい場合もあります。レコード型を_生成しない_定義を行うには、`#:uid` キーワードパラメータとしてシンボルを渡します。指定された uid を持つレコードが既に定義されている場合は、そのレコードが返されます。ただし、以前に定義された型の型名、フィールド、親レコード（存在する場合）などは、互換性がある必要があります。
+
+R6RS は「不透明」レコード型の概念を定義します。不透明なレコード型のインスタンスが与えられた場合、そのレコード型の実行時表現を取得することはできません。詳細については、[rnrs レコード手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#rnrs-records-procedural) を参照してください。Guile の R6RS レイヤーでは、この情報を記録するために `#:opaque?` フラグを使用します。デフォルト値は、親型が存在する場合、それが不透明であったかどうかによって決まります。
+
+フィールドはデフォルトでは変更可能です。つまり、`record-modifier` はレコードをその場で更新できるプロシージャを返します。代わりに `(不変名)` の形式でフィールドを指定すると、そのフィールドは不変としてマークされます。
+
+Scheme Procedure: **record-constructor** rtd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dconstructor)
+
+rtdで表される型の新しいメンバーを構築するためのプロシージャを返します。結果として得られるプロシージャは、レコード型のフィールド数と全く同じ数の引数を受け取ります。
+
+Scheme Procedure: **record-predicate** rtd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dpredicate)
+
+rtd で表される型への所属をテストするプロシージャを返します。返されるプロシージャは引数を 1 つだけ受け取り、引数が指定されたレコード型のメンバーであれば true を、そうでなければ false を返します。
+
+スキーム手順: **record-accessor** rtd field-name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002daccessor)
+
+rtd で表される型のメンバーの特定のフィールドの値を読み取るためのプロシージャを返します。返されるプロシージャは、適切な型のレコードである引数を 1 つだけ受け取ります。そして、そのレコード内のシンボル field-name で指定されたフィールドの現在の値を返します。
+
+field-nameがシンボルである場合、それはrtdで表される型を作成した`make-record-type`呼び出しにおけるfield-namesリストのメンバーでなければなりません。rtd内の複数のフィールドが同じ名前を持つ場合、`record-accessor`は最初のフィールドを返します。
+
+field-nameが整数の場合、それは`(record-type-fields rtd)`へのインデックスである必要があります。これにより、名前が重複するフィールドにもアクセスできるようになります。
+
+スキーム手順: **record-modifier** rtd field-name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dmodifier)
+
+rtd で表される型のメンバーの特定のフィールドに値を書き込むためのプロシージャを返します。返されるプロシージャは、適切な型のレコードと任意の Scheme 値という 2 つの引数を厳密に受け取ります。このプロシージャは、そのレコード内のシンボル field-name で指定されたフィールドを、指定された値を含むように変更します。修飾プロシージャの戻り値は未指定です。シンボル field-name は、`record-modifier` のように、フィールド名またはフィールド インデックスです。
+
+Scheme Procedure: **record-type-descriptor** record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dtype_002ddescriptor)
+
+指定されたレコードのタイプを表すレコードタイプ記述子を返します。つまり、たとえば、返された記述子を `record-predicate` に渡すと、結果として得られる述語は、指定されたレコードを渡されたときに真の値を返します。返された記述子が、指定されたレコードを作成したコンストラクタプロシージャを作成した呼び出しで `record-constructor` に渡された記述子と必ずしも一致するとは限らないことに注意してください。
+
+スキーム手順: **record-type-name** rtd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dtype_002dname)
+
+rtd で表される型に関連付けられた型名を返します。返される値は、rtd で表される型を作成した `make-record-type` の呼び出しで指定された型名引数と `eqv?` になります。
+
+スキーム手順: **record-type-fields** rtd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_002dtype_002dfields)
+
+rtd で表される型のメンバーのフィールド名を表すシンボルのリストを返します。返される値は、rtd で表される型を作成した `make-record-type` の呼び出しで指定された field-names 引数と `equal?` です。
+
+* * *
+
+次へ: [辞書型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dictionary-Types)、前: [レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
