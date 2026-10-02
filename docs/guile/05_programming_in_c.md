@@ -1,559 +1,1407 @@
-# 5. C でのプログラミング
+# 5 C でのプログラミング
 
-> **原文**: [Guile Reference Manual - Programming in C](https://www.gnu.org/software/guile/manual/guile.html#Programming-in-C)
-> 
-> このドキュメントはGNU Free Documentation Licenseの下で公開されています。
+> **原文**: [Guile Reference Manual - Programming in C](https://www.gnu.org/software/guile/manual/html_node/Programming-in-C.html)
+>
+> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
 
-このセクションでは、C または C++ プログラムに Guile を組み込み、Scheme スクリプト機能を追加する方法を説明します。
+マニュアルのこの部分では、C から Guile とやり取りする際に理解しておく必要のある一般的な概念を説明します。Scheme の潜在型付けが C の静的型付けにどのように埋め込まれているか、Guile のガベージコレクションが C コードからどのように利用可能になっているか、そして継続が C プログラムの制御フローにどのように影響するかを学びます。
 
-## 5.1 複数バージョンのインストール
+この知識があれば、Scheme から呼び出せる新しい関数を Guile に追加するのは簡単なはずです。新しいデータ型を追加することも可能で、それは外部オブジェクト（foreign object）を定義することで行います。
 
-### 概要
+この部分の「Guile プログラミングの概要」の節には、Guile を使ったプログラミングに関する一般的な考察と指針が含まれています。Guile を中心にプログラムを設計するさまざまな方法や、既存のプログラムに Guile を組み込む方法を探ります。
 
-Guile の複数バージョンを同時にシステムにインストールし、異なるプロジェクトで使い分けることができます。
+Guile のデータ表現がどのように実装されているかについての教育的でありながら詳細な説明については、「データ表現」を参照してください。C から Guile を使うためにそこで述べられている詳細を知る必要はありませんが、Guile 自体を変更したいときや、単にすべてがどのように行われているのかに興味があるときには役に立ちます。
 
-### インストール例
+Guile のアプリケーションプログラミングインターフェース（API）を構成する変数、関数などに関する詳細なリファレンス情報については、「API リファレンス」を参照してください。
 
-```bash
-# Guile 3.0 をインストール
-./configure --prefix=/opt/guile-3.0
-make install
+- 並行インストール
+- プログラムを Guile とリンクする
+- Guile をライブラリとリンクする
+- libguile を使用するための一般的な概念
+- 新しい外部オブジェクト型の定義
+- 関数のスナーフィング
+- Guile プログラミングの概要
+- Autoconf のサポート
 
-# Guile 2.2 をインストール（別プレフィックス）
-./configure --prefix=/opt/guile-2.2
-make install
+## 5.1 並行インストール
 
-# 使用時にパスを指定
-export PKG_CONFIG_PATH=/opt/guile-3.0/lib/pkgconfig:$PKG_CONFIG_PATH
+Guile は安定版シリーズの間、強力な API と ABI の安定性を保証しているため、ユーザーが Guile バージョン 2.2.3 に対してプログラムを書けば、それは将来のバージョン 2.2.7 とも互換性があります。この場合、2.2 が**実効バージョン**（effective version）であると言い、これはメジャーバージョンとマイナーバージョン、この場合は 2 と 2 で構成されます。
+
+ユーザーは、Guile の複数の実効バージョンを、各バージョンのヘッダ、ライブラリ、Scheme ファイルをそれぞれ独自のディレクトリの下に置いてインストールできます。これにより、ユーザーに必要な安定性の保証を提供しつつ、Guile の開発者が言語とその実装を進化させることも可能になります。
+
+しかし、並行インストールが可能であることには欠点もあります。ユーザーは Guile に対してビルドするとき、どのバージョンの Guile を要求すべきかを知る必要があるのです。Guile はこの問題を、インストール済みパッケージを名前で照会するツールである `pkg-config` ユーティリティによって読み込まれるファイルをインストールすることで解決しています。Guile はバージョンを `pkg-config` の名前にエンコードしているため、ユーザーは必要に応じて `guile-2.2` や `guile-3.0` を要求できます。
+
+たとえば実効バージョン 3.0 の場合、Guile のバージョン 3.0 にリンクするために必要なコンパイルフラグとリンクフラグを得るには、`pkg-config --cflags --libs guile-3.0` を実行します。通常は、プログラムの設定段階で `pkg-config` を実行し、得られた情報を `Makefile` で使用します。
+
+Guile の `pkg-config` ファイル `guile-3.0.pc` は、さらに有用な変数を定義しています。
+
+`sitedir`
+: Guile が Scheme のソースファイルとコンパイル済みファイルを探すデフォルトのディレクトリです（「%site-dir」を参照）。その値を確認するには `pkg-config guile-3.0 --variable=sitedir` を実行します。Autoconf からそれを使う方法の詳細については「GUILE_SITE_DIR」を参照してください。
+
+`extensiondir`
+: Guile が拡張――つまり追加機能を提供する共有ライブラリ（「外部拡張」を参照）――を探すデフォルトのディレクトリです。その値を確認するには `pkg-config guile-3.0 --variable=extensiondir` を実行します。
+
+`guile`<br>`guild`
+: `guile` コマンドと `guild` コマンドの絶対ファイル名です。[^4] その値を確認するには `pkg-config guile-3.0 --variable=guile` または `--variable=guild` を実行します。
+
+  これらの変数により、ユーザーは Guile を `--program-transform-name`、`--program-suffix`、`--program-prefix` で設定する際に指定される可能性のあるプログラム名の変換に対処できます（『GNU Autoconf Manual』の「Transformation Options」を参照）。
+
+詳細については `pkg-config` の man ページ、またはそのウェブサイト http://pkg-config.freedesktop.org/ を参照してください。`configure.ac` ファイル内から Guile を確認する方法の詳細については「Autoconf のサポート」を参照してください。
+
+[^4]: `guile` と `guild` の変数は Guile バージョン 2.0.12 から定義されています。
+
+## 5.2 プログラムを Guile とリンクする
+
+この節では、一般的な POSIX システムにおいてプログラムを Guile とリンクする仕組みを扱います。
+
+ヘッダファイル `<libguile.h>` は、Guile のすべての関数と定数の宣言を提供します。このマニュアルで説明されている識別子を使用するすべての C ソースファイルの先頭で、これを `#include` すべきです。ソースファイルをコンパイルしたら、それらを Guile のオブジェクトコードライブラリ `libguile` に対してリンクする必要があります。
+
+前の節で述べたように、`<libguile.h>` はヘッダのデフォルトの検索パスにはありません。次のコマンドラインは、それぞれ Guile 3.0 を使うプログラムをビルドするのに必要な C のコンパイルフラグとリンクフラグを与えます。
+
+```
+pkg-config guile-3.0 --cflags
+pkg-config guile-3.0 --libs
 ```
 
-### バージョンの確認
+- Guile の初期化関数
+- Guile のメインプログラムの例
+- Make で例をビルドする
+- Autoconf で例をビルドする
 
-```bash
-guile --version
-guile-3.0 --version
-guile-2.2 --version
-```
+### 5.2.1 Guile の初期化関数
 
-## 5.2 プログラムを Guile とリンク
+Guile を初期化するには、いくつかの関数のいずれかを使用できます。1つ目の `scm_with_guile` は、Guile を初期化する最も移植性の高い方法です。これは必要に応じて Guile を初期化し、それから指定した関数を呼び出します。複数のスレッドが `scm_with_guile` を同時に呼び出すことができ、また特定のスレッドで2回以上呼び出すこともできます。Guile のグローバルな状態は、ある `scm_with_guile` の呼び出しから次の呼び出しまで保持されます。Guile のガベージコレクタは各スレッドのスタックがどこにあるかを知る必要があるため、指定した関数は `scm_with_guile` の内部から呼び出されます。
 
-### 概要
+2つ目の関数 `scm_init_guile` は、現在のスレッドのために Guile を初期化します。これが戻ると、現在のスレッドで Guile API を使用できます。この関数はスタックの境界を知るために移植性のない魔法のような手段を用いるため、すべてのプラットフォームで利用できるわけではありません。
 
-C プログラムに Guile を組み込むための基本的な手順を説明します。
+Guile のよくある使い方の一つは、何らかの有用なタスクを実行する C 関数の集合を書き、それらを Scheme から呼び出せるようにして、プログラムを Guile とリンクすることです。これにより、`guile` とまったく同じような Scheme インタプリタでありながら、特定のアプリケーションのための追加の関数で拡張されたもの――特定目的のスクリプト言語――が得られます。
 
-### 基本的な手順
+この状況では、アプリケーションはおそらく、標準の Guile インタプリタと同じ方法でコマンドライン引数を処理すべきでしょう。これを簡単にするために、Guile は `scm_boot_guile` と `scm_shell` 関数を提供しています。
 
-1. Guile ライブラリをプロジェクトにリンク
-2. Guile のヘッダファイルをインクルード
-3. `scm_boot_guile()` で初期化
-4. Scheme コードを実行
+これらの関数の詳細については「Guile の初期化」を参照してください。
 
-### サンプル Guile メインプログラム
+### 5.2.2 Guile のメインプログラムの例
+
+以下は、完全な Guile インタプリタを生成する `main` 関数と `inner_main` 関数のソースコード `simple-guile.c` です。
 
 ```c
+/* simple-guile.c --- Start Guile from C.  */
+
 #include <libguile.h>
 
-static void *
-inner_main(void *data)
+static void
+inner_main (void *closure, int argc, char **argv)
 {
-  /* Scheme コードを実行 */
-  scm_c_eval_string("(display \"Hello, Guile!\n\")");
-  
-  /* Scheme 関数を呼び出し */
-  SCM result = scm_c_eval_string("(+ 2 3)");
-  printf("Result: %d\n", scm_to_int(result));
-  
-  return NULL;
+  /* preparation */
+  scm_shell (argc, argv);
+  /* after exit */
 }
 
 int
-main(int argc, char *argv[])
+main (int argc, char **argv)
 {
-  /* Guile 環境を初期化して inner_main を実行 */
-  scm_boot_guile(argc, argv, inner_main, NULL);
-  return 0;
+  scm_boot_guile (argc, argv, inner_main, 0);
+  return 0; /* never reached, see inner_main */
 }
 ```
 
-### ビルド方法（pkg-config 使用）
+`main` 関数は `scm_boot_guile` を呼び出して Guile を初期化し、それに `inner_main` を渡します。`scm_boot_guile` の準備ができると、それは `inner_main` を呼び出し、`inner_main` は `scm_shell` を呼び出して通常の方法でコマンドライン引数を処理します。
 
-```bash
-gcc `pkg-config --cflags guile-3.0` \
-    myprogram.c \
-    `pkg-config --libs guile-3.0` -o myprogram
-```
+### 5.2.3 Make で例をビルドする
 
-### ビルド方法（guile-config 使用）
-
-```bash
-gcc `guile-config compile` \
-    myprogram.c \
-    `guile-config link` -o myprogram
-```
-
-### Makefile の例
+以下は、例のプログラムをコンパイルするために使用できる `Makefile` です。必要なコンパイラフラグとリンカフラグを知るために `pkg-config` を使用しています。
 
 ```makefile
-GUILE_CFLAGS = $(shell pkg-config --cflags guile-3.0)
-GUILE_LIBS = $(shell pkg-config --libs guile-3.0)
+# Use GCC, if you have it installed.
+CC=gcc
 
-myprogram: myprogram.c
-	gcc $(GUILE_CFLAGS) -o myprogram myprogram.c $(GUILE_LIBS)
+# Tell the C compiler where to find <libguile.h>
+CFLAGS=`pkg-config --cflags guile-3.0`
 
-clean:
-	rm -f myprogram
+# Tell the linker what libraries to use and where to find them.
+LIBS=`pkg-config --libs guile-3.0`
+
+simple-guile: simple-guile.o
+        ${CC} simple-guile.o ${LIBS} -o simple-guile
+
+simple-guile.o: simple-guile.c
+        ${CC} -c ${CFLAGS} simple-guile.c
 ```
 
-### Autoconf でのビルド
+### 5.2.4 Autoconf で例をビルドする
 
-大規模なプロジェクトでは、Autoconf と Automake を使用：
+アプリケーションの移植性を高めるために GNU Autoconf パッケージを使用している場合、Autoconf は `Makefile` の多くの詳細を自動的に決定し、はるかに単純で移植性の高いものにしてくれます。Guile と一緒に Autoconf を使うことを推奨します。以下は、Guile を確認するために標準の `PKG_CHECK_MODULES` マクロを使用する、`simple-guile` 用の `configure.ac` ファイルです。Autoconf はこのファイルを処理して `configure` スクリプトにします。Autoconf は `autoreconf` ユーティリティを介して起動することを推奨します。
 
-```bash
-# configure.ac
-AC_INIT([myproject], [1.0])
+```
+AC_INIT(simple-guile.c)
+
+# Find a C compiler.
 AC_PROG_CC
-GUILE_PKG([3.0])
-AC_OUTPUT([Makefile])
 
-# Makefile.in
-all: myprogram
-myprogram: myprogram.c
-	$(CC) $(GUILE_CFLAGS) -o myprogram myprogram.c $(GUILE_LIBS)
+# Check for Guile
+PKG_CHECK_MODULES([GUILE], [guile-3.0])
+
+# Generate a Makefile, based on the results.
+AC_OUTPUT(Makefile)
 ```
 
-## 5.3 Guile とライブラリをリンク
+`configure` を生成するには `autoreconf -vif` を実行します。
 
-### 概要
+以下は `Makefile.in` のテンプレートで、`configure` スクリプトはこれからホストシステム用にカスタマイズされた `Makefile` を生成します。
 
-C で書かれた拡張機能は、Scheme から手続きとして呼び出せます。
+```makefile
+# The configure script fills in these values.
+CC=@CC@
+CFLAGS=@GUILE_CFLAGS@
+LIBS=@GUILE_LIBS@
 
-### Guile 拡張機能の実装
+simple-guile: simple-guile.o
+        ${CC} simple-guile.o ${LIBS} -o simple-guile
+simple-guile.o: simple-guile.c
+        ${CC} -c ${CFLAGS} simple-guile.c
+```
+
+開発者は Autoconf を使って `configure.ac` テンプレートから `configure` スクリプトを生成し、`configure` をアプリケーションと一緒に配布すべきです。ユーザーがアプリケーションをビルドする方法は次のとおりです。
+
+```
+$ ls
+Makefile.in     configure*      configure.ac    simple-guile.c
+$ ./configure
+checking for gcc... ccache gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables...
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether ccache gcc accepts -g... yes
+checking for ccache gcc option to accept ISO C89... none needed
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking for GUILE... yes
+configure: creating ./config.status
+config.status: creating Makefile
+$ make
+[...]
+$ ./simple-guile
+guile> (+ 1 2 3)
+6
+guile> (getpwnam "jimb")
+#("jimb" "83Z7d75W2tyJQ" 4008 10 "Jim Blandy" "/u/jimb"
+  "/usr/local/bin/bash")
+guile> (exit)
+$
+```
+
+## 5.3 Guile をライブラリとリンクする
+
+前の節では、組み込みの Guile インタプリタを利用するプログラムの書き方を簡単に説明しました。しかし、ときには、単に新しいプリミティブ手続きやデータ型を Scheme プログラマが利用できるようにしたいだけのこともあります。この場合、新しいバージョンの `guile` を書くのは不便であり、実際、新しい機能のユーザーの生活を不必要に困難にしてしまいます。
+
+たとえば、データベースにアクセスするための追加機能を持つ Guile の一バージョンである `guile-db` というプログラムがあるとしましょう。これらの機能を使う Scheme プログラムを書きたい人は、通常の `guile` プログラムの代わりに `guile-db` を使わなければなりません。さらに、グラフィカルユーザーインターフェースのための人気のある Gtk+ ツールキットへのアクセスで Guile を拡張する `guile-gtk` というプログラムもあるとしましょう。Scheme で GUI を書きたい人は `guile-gtk` を使わなければなりません。では、ユーザーがデータベースにアクセスできるように GUI を使う Scheme アプリケーションを書きたい場合はどうなるでしょうか？ データベースの機能と GUI の機能の両方を組み込んだ3つ目のプログラムを書かなければならないでしょう。これは容易ではないかもしれません（たとえば `guile-gtk` がかなり分かりにくいプログラムかもしれないからです）。そしてこの例をさらに推し進めると、このアプローチが実際には機能しえないことは容易に分かります。
+
+データベースの機能と GUI の機能の両方が、単に `guile` とリンクできるライブラリとして提供されていれば、はるかに良かったでしょう。Guile はまさにこれを簡単に行えるようにしており、可能な限り Guile への拡張をライブラリとして利用可能にすることを推奨します。
+
+新しいプリミティブ手続きとデータ型は通常の方法で書き、スタンドアロンのプログラムではなく共有ライブラリにリンクします。その共有ライブラリは Guile によって動的に読み込むことができます。
+
+- Guile 拡張の例
+
+### 5.3.1 Guile 拡張の例
+
+この節では、C ライブラリのベッセル関数を Scheme で利用可能にする方法を説明します。まず、関数の引数と戻り値を Scheme から C へ、そしてまた逆へと変換するための適切な接着コードを書く必要があります。さらに、それらを Guile のプリミティブの集合に追加する関数が必要です。これは単なる例なので、`j0` 関数についてのみ実装します。
+
+次のファイル `bessel.c` を考えてみましょう。
 
 ```c
+#include <math.h>
 #include <libguile.h>
 
-/* C の関数 */
 SCM
-my_double(SCM x)
+j0_wrapper (SCM x)
 {
-  /* SCM 値を C の int に変換 */
-  int c_x = scm_to_int(x);
-  
-  /* 計算を実行 */
-  int result = 2 * c_x;
-  
-  /* 結果を SCM 値に変換して返す */
-  return scm_from_int(result);
+  return scm_from_double (j0 (scm_to_double (x)));
 }
 
-/* モジュールの初期化 */
 void
-init_my_module(void)
+init_bessel ()
 {
-  /* Scheme 関数を定義
-     引数: ("double", 必須1個, オプション0個, VarArgs, C関数) */
-  scm_c_define_gsubr("double", 1, 0, 0, my_double);
+  scm_c_define_gsubr ("j0", 1, 0, 0, j0_wrapper);
 }
 ```
 
-### 拡張機能のビルド
+この C ソースファイルは共有ライブラリにコンパイルする必要があります。GNU/Linux での方法は次のとおりです。
 
-```bash
-# 共有ライブラリとしてコンパイル
-gcc -fPIC -shared `pkg-config --cflags guile-3.0` \
-    my_module.c -o libmymodule.so \
-    `pkg-config --libs guile-3.0`
+```
+gcc `pkg-config --cflags guile-3.0` \
+  -shared -o libguile-bessel.so -fPIC bessel.c
 ```
 
-### Scheme での使用
+共有ライブラリを移植性のある方法で作成するには、GNU Libtool の使用を推奨します（『GNU Libtool』の「Introduction」を参照）。
+
+共有ライブラリは、関数 `load-extension` を使って実行中の Guile プロセスに読み込むことができます。この関数は、読み込むライブラリの名前に加えて、ライブラリを初期化するために呼び出される、そのライブラリ内の関数の名前も期待します。この例では、`j0_wrapper` を `j0` という名前で Scheme プログラムから利用可能にする関数 `init_bessel` を呼び出すことにします。`load-extension` を呼び出すとき、`.so` のようなファイル名の拡張子は指定しないことに注意してください。ホストプラットフォームに適した拡張子が自動的に付けられます。
 
 ```scheme
-; 拡張機能をロード
-(load-extension "libmymodule" "init_my_module")
-
-; 定義された関数を使用
-(double 5)   ; => 10
-(double 21)  ; => 42
+(load-extension "libguile-bessel" "init_bessel")
+(j0 2)
+⇒ 0.223890779141236
 ```
 
-## 5.4 libguile 使用の一般的な概念
+これが機能するためには、もちろん `load-extension` が `libguile-bessel` を見つけられなければなりません。それはオペレーティングシステムにとって通常の場所を探し、さらに `LTDL_LIBRARY_PATH` 環境変数に列挙されたディレクトリも探します。
 
-### 概要
+共有ライブラリを介したこれらの Guile 拡張がモジュールシステムとどのように関係するかについては、「拡張をモジュールに入れる」を参照してください。
 
-libguile を使用する際の重要な概念を説明します。
+## 5.4 libguile を使用するための一般的な概念
 
-### SCM 型と値変換
+Guile Scheme インタプリタをプログラムやライブラリに組み込みたい場合は、それを `libguile` ライブラリに対してリンクする必要があります（「プログラムを Guile とリンクする」を参照）。これを行うと、C コードは、インタプリタを呼び出したり、C で書いた新しい関数を Scheme コードから呼び出せるようにしたりするなどのために使用できる、多くのデータ型と関数にアクセスできるようになります。
 
-```c
-/* 整数の変換 */
-SCM scm_int = scm_from_int(42);
-int c_int = scm_to_int(scm_int);
+Scheme はいくつかの重要な点で C と異なっており、Guile は Scheme の利点を C でも利用できるようにしようとしています。そのため、libguile は Scheme インタプリタに加えて、動的型、ガベージコレクション、継続、任意の大きさの数の算術、その他のものも提供しています。
 
-/* 文字列の変換 */
-SCM scm_str = scm_from_locale_string("hello");
-char *c_str = scm_to_locale_string(scm_str);
+2つの基本的な概念は、動的型とガベージコレクションです。libguile の残りの部分を使うためには、libguile がそれらを C プログラムにどのように提供しているかを理解する必要があります。また、継続によって引き起こされる Scheme のより一般的な制御フローにも対処する必要があります。非同期シグナルハンドラの実行とマルチスレッドは C コードにとってすでにおなじみのものですが、もちろん libguile と一緒に使う場合にはいくつかの追加の規則があります。
 
-/* ブール値の変換 */
-SCM scm_bool = scm_from_bool(1);
-int c_bool = scm_is_true(scm_bool);
+- 動的型
+- ガベージコレクション
+- 制御フロー
+- 非同期シグナル
+- マルチスレッド
 
-/* リストの操作 */
-SCM list = scm_list_1(scm_from_int(42));
-SCM car_val = scm_car(list);
-SCM cdr_val = scm_cdr(list);
-```
+### 5.4.1 動的型
 
-### ガベージコレクション
+Scheme は動的型付け言語です。これは、システムが一般に、与えられた式の型をコンパイル時に決定できないことを意味します。型は実行時になって初めて明らかになります。変数には固定された型がありません。変数はある時点ではペアを、次には整数を、そして後には1000要素のベクタを保持することがあります。その代わりに、変数ではなく値が固定された型を持ちます。
 
-Guile は自動ガベージコレクションを実装：
+`pair?` や `string?` のような標準 Scheme 関数を実装し、ガベージコレクションを提供するためには、すべての値の表現が、実行時にその型を正確に決定するのに十分な情報を含んでいなければなりません。多くの場合、Scheme システムはこの情報を、プログラムが不適切な型の値に操作を適用しようとしたかどうか（文字列の `car` を取るなど）を判断するためにも使用します。
 
-```c
-/* SCM_PROTECT_RELEASE を使用して GC 対象からの保護 */
-SCM my_global_var;
+変数、ペア、ベクタは任意の型の値を保持できるため、Scheme の実装は値に対して一様な表現を使用します――完全な値、または完全な値へのポインタのどちらかを、必要な型情報とともに保持できる十分な大きさを持つ単一の型です。
 
-void
-init_globals(void)
-{
-  my_global_var = scm_from_int(42);
-  scm_gc_protect_object(my_global_var);  /* GC から保護 */
-}
+Guile では、すべての Scheme 値のこの一様な表現は C の型 `SCM` です。これは不透明な型であり、そのサイズは通常 `void` へのポインタと同等です。そのため、`SCM` 値は効率的に受け渡すことができ、それ自体はかなり少ない記憶領域しか占有しません。
 
-void
-cleanup(void)
-{
-  scm_gc_unprotect_object(my_global_var);  /* 保護を解除 */
-}
-```
+最も重要な規則は次のとおりです。**`SCM` 値に直接アクセスしてはいけません。libguile で定義された関数やマクロに渡すだけにしてください。**
 
-### 制御フロー
+明らかな例として、`SCM` 変数は整数を含むことができますが、もちろん C の `+` 演算子で加算することによって2つの `SCM` 値の和を計算することはできません。libguile の関数 `scm_sum` を使わなければなりません。
 
-C と Scheme 間の制御フローの管理：
+あまり明らかではなく、したがって覚えておくことがより重要なのは、`SCM` 値の真偽を直接テストすることもできないということです。Scheme では値 `#f` は偽と見なされ、もちろん `SCM` 変数はその値を表現できます。しかし、`#f` の `SCM` 表現が C コードにとっても偽に見えるという保証はありません。`SCM` 値の真偽をテストするには、それぞれ `scm_is_true` または `scm_is_false` を使う必要があります。
+
+また、2つの `SCM` 値を直接比較して、それらが同一であるかどうか（つまり Scheme の用語で `eq?` であるかどうか）を調べることもできません。そのためには `scm_is_eq` を使う必要があります。
+
+唯一の例外は、C の `=` 演算子を使って `SCM` 値を `SCM` 変数に直接代入できることです。
+
+次の（作為的な）例は、正しい方法を示しています。これは2つの引数（`a` と `flag`）を取る関数を実装しており、`flag` が真であれば `a+1` を返し、そうでなければ `a` を変更せずに返します。
 
 ```c
-static void *
-inner_main(void *data)
+SCM
+my_incrementing_function (SCM a, SCM flag)
 {
-  /* Scheme コード実行 */
-  SCM proc = scm_c_eval_string(
-    "(lambda (x) (* x 2))");
-  
-  /* Scheme 関数を呼び出し */
-  SCM arg = scm_from_int(5);
-  SCM result = scm_call_1(proc, arg);
-  
-  printf("Result: %d\n", scm_to_int(result));
-  return NULL;
-}
+  SCM result;
 
-int
-main(int argc, char *argv[])
-{
-  scm_boot_guile(argc, argv, inner_main, NULL);
-  return 0;
+  if (scm_is_true (flag))
+    result = scm_sum (a, scm_from_int (1));
+  else
+    result = a;
+
+  return result;
 }
 ```
 
-### 非同期シグナルハンドリング
+しばしば、`SCM` 値と適切な C の値との間で変換する必要があります。たとえば、整数 1 を `a` に加えるために、それを `SCM` 表現に変換する必要がありました。libguile は、C から `SCM` へ、そして `SCM` から C へのこれらの変換を行う多くの関数を提供しています。
 
-Guile はシグナルを安全に処理：
+変換関数は共通の命名パターンに従っています。C の値から `SCM` 値を作るものは `scm_from_type (…)` という形式の名前を持ち、`SCM` 値を C の値に変換するものは `scm_to_type (…)` という形式を使います。
+
+しかし、できる限り値の変換は避けるのが最善です。計算の中で C の値と `SCM` 値を組み合わせなければならない場合は、逆の方法（`SCM` を C に変換して他の方法で計算する）よりも、C の値を `SCM` 値に変換して libguile の関数を使って計算するほうが良いことが多いです。
+
+簡単な例として、上記の `my_incrementing_function` の次のバージョンを考えてみましょう。
 
 ```c
-#include <signal.h>
-#include <libguile.h>
-
-static int should_exit = 0;
-
-void
-signal_handler(int signum)
+SCM
+my_other_incrementing_function (SCM a, SCM flag)
 {
-  should_exit = 1;
+  int result;
+
+  if (scm_is_true (flag))
+    result = scm_to_int (a) + 1;
+  else
+    result = scm_to_int (a);
+
+  return scm_from_int (result);
 }
+```
 
-static void *
-inner_main(void *data)
-{
-  signal(SIGINT, signal_handler);
-  
-  while (!should_exit) {
-    scm_c_eval_string("(process-event)");
+このバージョンは元のものよりもはるかに汎用性が低く、`int` に収まる値 `A` に対してしか機能しません。元の関数は、`long long` より大きい整数、浮動小数点数、複素数、サードパーティのライブラリによって Guile に追加された新しい数値型を含め、Guile が表現でき、`scm_sum` が理解できるすべての値に対して機能します。
+
+また、`SCM` を使った計算は必ずしも非効率ではありません。たとえば、小さな整数は `SCM` 値に直接エンコードされ、ヒープ上に追加のメモリを必要としません。詳細については「データ表現」を参照してください。
+
+いくつかの特別な `SCM` 値は、C の値から変換する必要なく C コードで利用できます。
+
+| Scheme の値 | C での表現 |
+|---|---|
+| `#f` | `SCM_BOOL_F` |
+| `#t` | `SCM_BOOL_T` |
+| `()` | `SCM_EOL` |
+
+`SCM` に加えて、Guile は関連する型 `scm_t_bits` も定義しています。これは、`SCM` 値に直接含まれるすべての情報を保持するのに十分なサイズの符号なし整数型です。`scm_t_bits` 型は、「データ表現」で説明されているすべてのビット操作を行うために Guile の内部で使用されていますが、低レベルのユーザーコードでもときどき目にすることがあるでしょう。
+
+### 5.4.2 ガベージコレクション
+
+上で説明したように、`SCM` 型はすべての Scheme 値を表現できます。一部の値は（小さな整数のように）完全に `SCM` 値に収まりますが、他の値は（文字列やベクタのように）ヒープ上の追加の記憶領域を必要とします。この追加の記憶領域は Guile によって自動的に管理されます。`SCM` 値がもはや使用されなくなったときに、それを明示的に解放する必要はありません。
+
+Guile が記憶領域を自動的に管理できるようにするためには、2つのことが保証されなければなりません。Scheme 値のためにこれまでに割り当てられたすべてのメモリブロックを知っていること、そしてまだ使用されているすべての Scheme 値を知っていることです。この知識があれば、Guile は割り当てられたものの、どの活動中の Scheme 値からも使用されていないすべてのブロックを定期的に解放できます。この活動は**ガベージコレクション**と呼ばれます。
+
+Guile のガベージコレクタは、グローバル変数、静的データセクション、関数の引数や C および Scheme のスタック上の局所変数、そしてマシンレジスタ内の値に由来する `SCM` オブジェクトへの参照を自動的に発見します。`SCM` 型のフィールドを含む C ヒープ内の他の任意のデータ構造にあるものなど、`SCM` オブジェクトへのその他の参照は、関数 `scm_gc_protect_object` または `scm_permanent_object` を呼び出すことでガベージコレクタから見えるようにできます。これらの値は全体として、ガベージコレクションの「ルート集合」を形成します。ルート集合のメンバーによって直接的または間接的に参照されているヒープ上の値はすべて保持され、それ以外のすべてのオブジェクトは回収の対象となります。
+
+Guile では、ガベージコレクションには2つの論理的なフェーズがあります。コレクタがすべての生きているオブジェクトの集合を発見する**マークフェーズ**と、コレクタが死んだオブジェクトに関連付けられた資源を回収する**スイープフェーズ**です。マークフェーズはプログラムを一時停止し、ルート集合から始めてすべての `SCM` オブジェクト参照をたどります。スイープフェーズは実際にはメインプログラムと並行して実行され、割り当てに必要になるたびにメモリを漸進的に回収します。
+
+マークフェーズでは、ガベージコレクタは Scheme のスタックとヒープを正確にたどります。Scheme のスタックとヒープは Guile によって管理されているため、Guile はそれらのデータ構造のどこに他のヒープオブジェクトへの参照がありうるかを正確に知ることができます。残念ながら、C スタックと静的データセグメント上のポインタについてはそうではありません。ヒープオブジェクトを指している可能性のある C のすべての変数について Guile に通知することをユーザーに要求する代わりに、Guile は C スタックと静的データセグメントを**保守的に**たどります。つまり、Guile は C スタック上のすべてのワードとすべての C グローバル変数を、Scheme ヒープへの潜在的な参照として扱うだけです。[^5] GC が管理するオブジェクトへのポインタのように見える値は、実際に参照であるかどうかにかかわらず、そのように扱われます。したがって、C スタックと静的データセグメントの走査は、実際の参照をすべて見つけることが保証されていますが、偶然に参照のように見えるだけのワードも見つけてしまうかもしれません。これらの「偽陽性」は、そうでなければ死んでいると見なされたはずの `SCM` オブジェクトを生かし続けてしまうかもしれません。これはメモリを浪費するかもしれませんが、オブジェクトを厳密に必要とされるより長く保持しておくことは無害です。これが、この手法が「保守的ガベージコレクション」と呼ばれる理由です。実際には、Scheme のスタックが C のスタックとは別になっていることから、静的な C のルート集合はほとんど常に有限で小さいため、浪費されるメモリは問題にならないようです。
+
+[^5]: Guile は C ヒープを参照のために走査しないことに注意してください。そのため、`malloc` で割り当てられたメモリセグメントからの `SCM` オブジェクトへの参照は、`SCM` オブジェクトを生かし続けるために何か別の手段を使わなければなりません。「ガベージコレクションに関連する関数」を参照してください。
+
+すべてのスレッドのスタックがこのようにして走査され、CPU のレジスタや、局所変数や関数パラメータが現れる可能性のある他のすべてのメモリ位置も、この走査に含まれます。
+
+保守的な走査の結果として、`SCM` 型の局所変数と関数パラメータを宣言するだけで、ガベージコレクタが対応するオブジェクトを解放しないことを確信できます。
+
+しかし、局所変数や関数パラメータが保護されるのは、それが実際にスタック上に（またはどこかのレジスタに）ある間だけです。最適化として、C コンパイラはその場所を他の値のために再利用するかもしれず、そうすると `SCM` オブジェクトはもはや保護されなくなります。通常、これはまさに正しい動作につながります。コンパイラは参照がもはや必要なくなったときにのみそれを上書きするので、オブジェクトは参照が消えたまさにその時に保護されなくなり、望みどおりになります。
+
+しかし、`SCM` オブジェクトが局所変数や関数パラメータからの参照よりも長く存在する必要がある状況もあります。これは、たとえば外部オブジェクトから何らかのポインタを取り出し、そのポインタを直接操作する場合に起こります。ポインタが取り出された後、`SCM` の外部オブジェクトへの参照は死んでいるかもしれませんが、ポインタ自体（とそれが指すメモリ）はまだ使用中であり、したがって外部オブジェクトは保護されなければなりません。コンパイラはこの関係を知らないので、`SCM` 参照を早すぎる段階で上書きしてしまうかもしれません。
+
+この問題を回避するために、`scm_remember_upto_here_1` とその仲間を使うことができます。これはコンパイラが参照を上書きしないようにします。「外部オブジェクトのメモリ管理」を参照してください。
+
+### 5.4.3 制御フロー
+
+Scheme は、局所的にも非局所的にも、C よりも一般的なプログラムフローの見方を持っています。
+
+局所的な制御フローを制御するには、goto、ループ、関数の呼び出しとそこからの復帰などが含まれます。非局所的な制御フローとは、プログラムが通常の呼び出しや復帰の操作を使わずに、関数の活性化の1つ以上のレベルをまたいでジャンプする状況を指します。
+
+C における局所的な制御フローのプリミティブな手段は、`if` と組み合わせた `goto` 文です。`for`、`while`、`do` で行われるループは、原理的には `goto` と `if` だけで書き直すことができます。Scheme では、局所的な制御フローのプリミティブな手段は（`if` と組み合わせた）関数呼び出しです。したがって、ループ内での何らかの計算の繰り返しは、最終的には自分自身を呼び出す関数、つまり再帰によって実装されます。
+
+このアプローチは理論的には非常に強力です。goto よりも再帰について形式的に推論するほうが容易だからです。しかし C では、再帰だけを使うことは実用的ではありません。スタックをすぐに使い果たしてしまうからです。しかし Scheme では実用的です。末尾位置に現れる関数呼び出しは、追加のスタック領域を一切使用しないからです（「末尾呼び出し」を参照）。
+
+関数呼び出しが末尾位置にあるとは、それが呼び出し側の関数が行う最後のことである場合です。呼び出された関数から返された値は、呼び出し側の関数からすぐに返されます。次の例では、`bar-1` の呼び出しは末尾位置にありますが、`bar-2` の呼び出しはそうではありません。（ただし、`foo-2` の中の `1-` の呼び出しは末尾位置にあります。）
+
+```scheme
+(define (foo-1 x)
+  (bar-1 (1- x)))
+
+(define (foo-2 x)
+  (1- (bar-2 x)))
+```
+
+したがって、末尾位置でのみ再帰するよう注意すれば、再帰は一定のスタック領域しか使用せず、goto で構成されたループと同じくらい良いものになります。
+
+Scheme は、ループを書くことを少し容易にする構文的な抽象（`do` と名前付き `let`）をいくつか提供しています。
+
+しかし、他の関数を末尾位置で呼び出せるのは Scheme の関数だけです。C の関数にはできません。これは、たとえば2つの関数が互いを再帰的に呼び出して共通のループを形成している場合に問題になります。次の（非現実的な）例は、非負整数 n が偶数か奇数かを判定する方法を示しています。
+
+```scheme
+(define (my-even? n)
+  (cond ((zero? n) #t)
+        (else (my-odd? (1- n)))))
+
+(define (my-odd? n)
+  (cond ((zero? n) #f)
+        (else (my-even? (1- n)))))
+```
+
+`my-even?` と `my-odd?` の呼び出しは末尾位置にあるため、これら2つの手続きは、スタックをオーバーフローさせることなく、任意に大きな整数に適用できます。（もちろん、それでも長い時間がかかります。）
+
+しかし、2つの手続きの一方または両方が C で書き直されると、その相方を末尾位置で呼び出すことはもはやできなくなります（C にはこの概念がないため）。プログラムのどの部分を Scheme で書き、どの部分を C で書くかを決める際には、この点を考慮に入れる必要があるかもしれません。
+
+関数の呼び出しとそこからの復帰に加えて、Scheme プログラムは関数から非局所的に脱出して、制御フローを直接外側のレベルに戻すこともできます。これは、一部の関数がまったく戻らない可能性があることを意味します。
+
+さらに、制御の外側のレベルにジャンプできるだけでなく、Scheme プログラムはすでに終了した関数の途中に戻ってジャンプすることもできます。これにより、一部の関数が2回以上戻る可能性があります。
+
+一般に、これらの非局所的なジャンプは、以前に `call-with-current-continuation` を使って捕捉された継続を呼び出すことによって行われます。Guile はまた、非局所的な脱出にのみ使用できる、少し制限された関数の集合 `catch` と `throw` も提供しています。この制限により、それらはより効率的になっています。たとえば、（関数 `error` による）エラー報告は `throw` を呼び出すことで実装されています。関数 `catch` と `throw` は例外のトピックに属します。
+
+Scheme の関数は C の関数を呼び出すことができ、その逆も可能であるため、C コードも Scheme のより一般的な制御フローを経験することがあります。C の関数がまったく戻らなかったり、2回以上戻ったりする可能性があるのです。C は非局所的な脱出のために `setjmp` と `longjmp` を提供していますが、それでも C コードにとっては珍しいことです。対照的に、Scheme では非局所的な脱出は非常に一般的であり、主にエラーを報告するために使われます。
+
+`libguile` の関数を使うときはいつでも、制御フローにおける非局所的なジャンプに備えておく必要があります。どの `libguile` 関数もエラーを通知したり、保留中のシグナルハンドラ（これは任意のことを行いうる）を実行したりする可能性があると想定するのが最善です。
+
+制御が非局所的に関数を離れるときに、後始末の処理を行う必要があることがよくあります。また、制御が非局所的に戻ってくるときに、何らかの準備の処理が必要になる場合もあります。たとえば、Scheme の関数 `with-output-to-port` は、`current-output-port` が `with-output-to-port` に渡されたポートを返すようにグローバルな状態を変更する必要があります。グローバルな出力ポートは、`with-output-to-port` が正常に戻ったとき、または非局所的に脱出されたときに、以前の値にリセットされる必要があります。同様に、制御が非局所的に入ってくるときには、ポートを再び設定する必要があります。
+
+Scheme コードは `dynamic-wind` 関数を使って、グローバルな状態の設定とリセットを手配できます。C コードは、対応する `scm_internal_dynamic_wind` 関数を使うか、適切な「dynwind アクション」とともに `scm_dynwind_begin`/`scm_dynwind_end` の組を使うことができます（「Dynamic Wind」を参照）。
+
+非局所的な制御フローに対処する代わりに、継続バリアを立てることでそれを防ぐこともできます。「継続バリア」を参照してください。たとえば関数 `scm_c_with_continuation_barrier` は、ちょうど1回だけ戻ることが保証されています。
+
+### 5.4.4 非同期シグナル
+
+POSIX シグナルのハンドラから libguile の関数を呼び出すことはできませんが、`SIGINT` のような POSIX シグナルに対して Scheme のハンドラを登録することはできます。これらのハンドラは、実際のシグナルの配送中には実行されません。代わりに、プログラム（より正確には、ハンドラが登録されたスレッド）が次の**安全点**（safe point）に到達したときに実行されます。
+
+libguile の関数自体には、そのような安全点が多数あります。したがって、libguile の関数を呼び出すときはいつでも、任意の動作に備えておかなければなりません。たとえば、`scm_cons` でさえ安全点を含むことがあり、スレッドに対してシグナルハンドラが保留中であれば、`scm_cons` を呼び出すとこのハンドラが実行され、何でも起こりえます。`scm_cons` は通常それ自体ではそのようなことをしませんが、非局所的な脱出さえ起こりえます。
+
+非同期シグナルハンドラの実行を許可したくない場合は、たとえば `scm_dynwind_block_asyncs` を使ってそれらを一時的にブロックできます。「非同期割り込み」を参照してください。
+
+Guile のシグナル処理は安全点に依存しているため、関数が十分な数の安全点を提供していることを確認する必要があります。通常は、通常の処理の過程で libguile の関数を呼び出すだけで十分です。しかし、スレッドが libguile の関数をまったく呼び出さないコード部分で長い時間を費やす可能性がある場合は、明示的な安全点を含めるとよいでしょう。これにより、たとえばユーザーが C-c でコードに割り込むことができるようになります。
+
+これはマクロ `SCM_TICK` で行えます。このマクロは構文的には文です。つまり、次のように使うことができます。
+
+```c
+while (1)
+  {
+    SCM_TICK;
+    do_some_work ();
   }
-  
-  return NULL;
-}
 ```
 
-### マルチスレッド対応
+安全点を頻繁に実行することは、マルチスレッドのプログラムではさらに重要です。「マルチスレッド」を参照してください。
 
-Guile はマルチスレッド環境をサポート：
+### 5.4.5 マルチスレッド
+
+Guile は、シングルスレッドのプログラムと同様に、マルチスレッドのプログラムでも使用できます。
+
+libguile の関数を使いたい各スレッドは、自分自身を **guile モード**にし、それからいくつかの規則に従わなければなりません。特定の状況でこれらの規則に従いたくない場合、スレッドは一時的に guile モードを離れることができます（ただし、もちろんその間は libguile の関数を使うことはできません）。
+
+スレッドは、`scm_with_guile`、`scm_boot_guile`、または `scm_init_guile` を呼び出すことで guile モードに入ります。これらの関数のリファレンスドキュメントで説明されているように、Guile はそのときスレッドのスタックの境界を知り、局所変数に格納されている `SCM` 値を保護できるようになります。スレッドが初めて自分自身を guile モードにすると、Scheme での表現を得て、たとえば `all-threads` によって一覧表示されるようになります。
+
+guile モードのスレッドは、何の問題も引き起こさずにブロックする（たとえば、ブロッキング I/O を行う）ことができます。[^6] ただし、ブロックする前に `scm_without_guile` で一時的に guile モードを離れると、GC の性能がわずかに向上します。いくつかの一般的なブロッキング操作に対しては、Guile は便利な関数を提供しています。たとえば、guile モードの間に pthread のミューテックスをロックしたい場合は、`scm_pthread_mutex_lock` を使うとよいでしょう。これは `pthread_mutex_lock` とまったく同じですが、ブロックしている間は guile モードを離れます。
+
+[^6]: Guile 1.8 では、guile モードでブロックしているスレッドはガベージコレクションの発生を妨げていました。そのため、スレッドはブロックする可能性があるときはいつでも guile モードを離れなければなりませんでした。Guile 2.x ではこれはもはや必要ありません。
+
+すべての libguile の関数は、複数のスレッドがそれらを同時に使用することに対して堅牢である（ことを意図されている）。これは、libguile の内部データ構造が、プロセスがクラッシュするような形で破損する危険性がないことを意味します。
+
+それでも、プログラムが無意味な結果を生成することはありえます。ハッシュテーブルを例に取ると、Guile は複数のスレッドから同時にそれらを使用でき、ハッシュテーブルは常に有効なハッシュテーブルのままであり、それにアクセスしても Guile がクラッシュしないことを保証しています。しかし、2つのスレッドから同時に挿入しても有用な結果が得られることは保証していません。挿入が1つだけ実際に行われるかもしれないし、1つも行われないかもしれないし、あるいはテーブルが一般にまったく任意の方法で変更されるかもしれません。（それでも有効なハッシュテーブルではありますが、期待していたものではないでしょう。）Guile は、有害な競合状態を検出した場合にエラーを通知することもあります。
+
+したがって、複数のスレッドが単一のハッシュテーブル、あるいは他の変更可能な Scheme オブジェクトを使いたい場合は、追加の同期を入れる必要があります。
+
+libguile で使用するための C コードを書くときは、それも堅牢にするよう努めるべきです。リストをベクタに変換する例が説明の助けになるでしょう。以下は正しいバージョンです。
 
 ```c
-#include <pthread.h>
-#include <libguile.h>
-
-void *
-thread_proc(void *data)
+SCM
+my_list_to_vector (SCM list)
 {
-  /* Guile をスレッド化 */
-  scm_init_guile();
-  
-  /* Scheme コードを実行 */
-  scm_c_eval_string("(display \"Hello from thread\n\")");
-  
-  return NULL;
-}
+  SCM vector = scm_make_vector (scm_length (list), SCM_UNDEFINED);
+  size_t len, i;
 
-int
-main(void)
-{
-  pthread_t thread;
-  pthread_create(&thread, NULL, thread_proc, NULL);
-  pthread_join(thread, NULL);
-  return 0;
+  len = scm_c_vector_length (vector);
+  i = 0;
+  while (i < len && scm_is_pair (list))
+    {
+      scm_c_vector_set_x (vector, i, scm_car (list));
+      list = scm_cdr (list);
+      i++;
+    }
+
+  return vector;
 }
 ```
+
+まず注目すべきことは、複数のスレッドから同時に `SCM` の場所に格納することは堅牢であることが保証されているということです。どの値が勝つかは分かりませんが、いずれにせよ有効な `SCM` 値になります。
+
+しかし、ループがリストを反復している間に、`list` によって参照されているリストが別のスレッドで変更されないという保証はありません。したがって、その要素をベクタにコピーしている間に、リストが長くなったり短くなったりする可能性があります。このため、ループはベクタを超えないこととリストを超えないことの両方を確認しなければなりません。そうしないと、インデックスが範囲外であれば `scm_c_vector_set_x` がエラーを発生させ、値がペアでなければ `scm_car` と `scm_cdr` がエラーを発生させるでしょう。
+
+変数がペアを含んでいることが分かれば、局所変数 `list` に対して `scm_car` と `scm_cdr` を使うのは安全です。ペアの内容は自発的に変わる可能性がありますが、それは常に有効なペアのままです（そしてもちろん、局所変数が自発的に別の Scheme オブジェクトを指すことはありません）。
+
+同様に、`scm_make_vector` が返すようなベクタは常に同じ長さのままであることが保証されているので、`scm_c_vector_length` を一度だけ使って結果を格納しておくのは安全です。（この例では、`vector` はいずれにせよ安全です。それは新しいオブジェクトであり、`my_list_to_vector` から返されるまで他のスレッドがそれを知ることはありえないからです。）
+
+もちろん、`list` が実際に別のスレッドで非同期に長くなったり短くなったりした場合、`my_list_to_vector` の動作は最適ではありません。しかしそれは堅牢です。常に有効なベクタを返します。そのベクタは期待より短いかもしれないし、最後の要素が未規定かもしれませんが、有効なベクタであり、プログラムがこれらのケースを除外したいのであれば、リストを非同期に変更することを避けなければなりません。
+
+以下は、同じく正しい別のバージョンです。
+
+```c
+SCM
+my_pedantic_list_to_vector (SCM list)
+{
+  SCM vector = scm_make_vector (scm_length (list), SCM_UNDEFINED);
+  size_t len, i;
+
+  len = scm_c_vector_length (vector);
+  i = 0;
+  while (i < len)
+    {
+      scm_c_vector_set_x (vector, i, scm_car (list));
+      list = scm_cdr (list);
+      i++;
+    }
+
+  return vector;
+}
+```
+
+このバージョンは、`scm_car` と `scm_cdr` のエラーチェックの動作に依存しています。リストが短くなったとき（つまり `list` がペアでないものを保持しているとき）、`scm_car` はエラーを投げます。これは、半分しか初期化されていないベクタを単に返すよりも好ましいかもしれません。
+
+さまざまな種類のベクタや配列に C からアクセスするための API は、スレッドの堅牢性について少し異なるアプローチを取っています。配列の要素を格納している生のメモリにアクセスするためには、生のメモリが必要な間、その配列を**予約**する必要があります。配列が予約されている間も、その要素は自発的に値を変える可能性がありますが、メモリ自体や配列のサイズなどの他のものは固定されたままであることが保証されています。現在予約されている配列のこれらのパラメータを変更するような操作はすべてエラーを通知します。これらのエラーを避けるために、プログラムはもちろん適切な同期の仕組みを用意すべきです。ご覧のとおり、Guile 自体はここでも堅牢性にのみ関心があり、正しさには関心がありません。適切な同期がなければ、プログラムはおそらく正しくないでしょうが、最悪の結果はエラーメッセージです。
+
+真のスレッド安全性は、多くの場合、コードのクリティカルセクションが特定の制限された方法で実行されることを必要とします。よくある要件は、そのコード部分がすでに実行されているときに2回目に入られないことです。そのセクションの間にミューテックスをロックすることで他のスレッドがその実行を開始しないことが保証され、async をブロックすることで現在のスレッドから非同期のコードがそのセクションに再び入らないことが保証され、Guile のミューテックスのエラーチェックにより、現在のスレッドが再帰的な関数呼び出しを介して誤ってクリティカルセクションに再入したときにエラーが通知されることが保証されます。
+
+Guile は、上で概説したようなクリティカルセクションをサポートするために2つの仕組みを提供しています。非常に単純なセクションに対してはマクロ `SCM_CRITICAL_SECTION_START` と `SCM_CRITICAL_SECTION_END` を使うか、dynwind コンテキストを `scm_dynwind_critical_section` の呼び出しと一緒に使うことができます。
+
+マクロは、非局所的な脱出を引き起こさないことが保証されているクリティカルセクションに対してのみ確実に機能します。また、現在のスレッドによる誤った再入も検出しません。したがって、おそらく libguile の関数や、複雑なことを行う可能性のある他の外部関数の呼び出しを含まないクリティカルセクションを区切るためにのみ使うべきでしょう。
+
+一方、関数 `scm_dynwind_critical_section` は dynwind コンテキストを必要とするため、非局所的な脱出を正しく扱います。また、各クリティカルセクションに別々のミューテックスを使うことで、誤った再入を検出できます。
 
 ## 5.5 新しい外部オブジェクト型の定義
 
-### 概要
+外部オブジェクト型の機能は、C や他の言語から Guile のシステムにオブジェクトや型を取り込むための Guile の仕組みです。たとえば C の `struct foo` 型がある場合、Scheme コードが `struct foo *` オブジェクトを扱えるようにする、対応する Guile の外部オブジェクト型を定義できます。
 
-C で定義したデータ構造を Scheme から使用できるように、外部オブジェクト型を定義します。
+新しい外部オブジェクト型を定義するには、プログラマはその型に関するいくつかの本質的な情報――名前は何か、フィールドはいくつあるか、そして（あれば）ファイナライザ――を Guile に提供し、Guile はそのために新しい型を割り当てます。外部オブジェクトには Scheme からも C からもアクセスできます。
 
-### 外部オブジェクト型の定義
+- 外部オブジェクト型の定義
+- 外部オブジェクトの作成
+- 外部オブジェクトの型チェック
+- 外部オブジェクトのメモリ管理
+- 外部オブジェクトと Scheme
+
+### 5.5.1 外部オブジェクト型の定義
+
+C から新しい外部オブジェクト型を作成するには、`scm_make_foreign_object_type` を呼び出します。これは新しい型を識別する `SCM` 型の値を返します。
+
+以下は、8ビットのグレースケール画像を表す新しい型を宣言する方法の例です。
 
 ```c
 #include <libguile.h>
 
-/* C のデータ構造 */
-typedef struct {
-  int x;
-  int y;
-} Point;
+struct image {
+  int width, height;
+  char *pixels;
 
-static scm_t_bits point_tag;
+  /* The name of this image */
+  SCM name;
 
-/* 生成関数 */
-SCM
-make_point(SCM x_scm, SCM y_scm)
-{
-  Point *point = malloc(sizeof(Point));
-  point->x = scm_to_int(x_scm);
-  point->y = scm_to_int(y_scm);
-  
-  SCM smob = scm_new_smob(point_tag, (scm_t_bits)point);
-  return smob;
-}
+  /* A function to call when this image is
+     modified, e.g., to update the screen,
+     or SCM_BOOL_F if no action necessary */
+  SCM update_func;
+};
 
-/* フィールドアクセス */
-SCM
-point_x(SCM point_smob)
-{
-  Point *point = (Point *)SCM_SMOB_DATA(point_smob);
-  return scm_from_int(point->x);
-}
+static SCM image_type;
 
-SCM
-point_y(SCM point_smob)
-{
-  Point *point = (Point *)SCM_SMOB_DATA(point_smob);
-  return scm_from_int(point->y);
-}
-
-/* メモリ解放 */
-size_t
-free_point(SCM point_smob)
-{
-  Point *point = (Point *)SCM_SMOB_DATA(point_smob);
-  free(point);
-  return 0;
-}
-
-/* モジュール初期化 */
 void
-init_point_module(void)
+init_image_type (void)
 {
-  point_tag = scm_make_smob_type("point", 0);
-  scm_set_smob_free(point_tag, free_point);
-  
-  scm_c_define_gsubr("make-point", 2, 0, 0, make_point);
-  scm_c_define_gsubr("point-x", 1, 0, 0, point_x);
-  scm_c_define_gsubr("point-y", 1, 0, 0, point_y);
+  SCM name, slots;
+  scm_t_struct_finalize finalizer;
+
+  name = scm_from_utf8_symbol ("image");
+  slots = scm_list_1 (scm_from_utf8_symbol ("data"));
+  finalizer = NULL;
+
+  image_type =
+    scm_make_foreign_object_type (name, slots, finalizer);
 }
 ```
 
-### Scheme での使用
+その結果は、新しい外部オブジェクト型を識別する、初期化された `image_type` の値です。次の節では、外部オブジェクトを作成する方法とそのスロットにアクセスする方法を説明します。
+
+### 5.5.2 外部オブジェクトの作成
+
+外部オブジェクトは、0個以上のデータの「スロット」を含みます。スロットは、ポインタ、`size_t` または `ssize_t` に収まる整数、あるいは `SCM` 値を保持できます。
+
+ある外部型のすべてのオブジェクトは、同じ数のスロットを持ちます。前の節の例では、`scm_make_foreign_object_type` に渡された `slots` リストの長さが1なので、`image` 型は1つのスロットを持ちます。（スロットに与えられる実際の名前は、C インターフェースのほとんどのユーザーにとっては重要ではありませんが、Scheme 側で外部オブジェクトを内省するために使うことができます。）
+
+外部オブジェクトを構築してその最初のスロットを初期化するには、`scm_make_foreign_object_1 (type, first_slot_value)` を呼び出します。0、1、2、3個のスロットを初期化するための、あるいは配列を介して n 個のスロットを初期化するための、同様の名前のコンストラクタがあります。詳細については「外部オブジェクト」を参照してください。明示的に初期化されなかったフィールドはすべて 0 に設定されます。
+
+インデックスでスロットの値を取得または設定するには、`scm_foreign_object_ref` と `scm_foreign_object_set_x` 関数を使用できます。これらの関数は値を `void *` ポインタとして受け取り、返します。スロットを符号付きまたは符号なしの整数として扱うための、`_signed_ref`、`_unsigned_set_x` などの対応する便利な手続きもあります。
+
+ポインタである外部オブジェクトのフィールドは、管理が難しいことがあります。可能であれば、外部オブジェクトによって参照されるすべてのメモリをガベージコレクタによって管理するのが最善です。そうすれば、GC はメモリが必要なときにアクセス可能であり、アクセス不可能になったときに解放されることを自動的に保証できます。プログラムにとってそうでない場合――たとえば、プログラムの他の、Guile を認識していない部分によって割り当てられたオブジェクトを Scheme に公開している場合――は、おそらくファイナライザを実装する必要があるでしょう。詳細については「外部オブジェクトのメモリ管理」を参照してください。
+
+前の節の例を続けて、グローバル変数 `image_type` が `scm_make_foreign_object_type` によって返された型を含んでいるとすると、「data」フィールドが新しく割り当てられた `struct image` へのポインタを含む外部オブジェクトを、次のように構築できます。
+
+```c
+SCM
+make_image (SCM name, SCM s_width, SCM s_height)
+{
+  struct image *image;
+  int width = scm_to_int (s_width);
+  int height = scm_to_int (s_height);
+
+  /* Allocate the `struct image'.  Because we
+     use scm_gc_malloc, this memory block will
+     be automatically reclaimed when it becomes
+     inaccessible, and its members will be traced
+     by the garbage collector.  */
+  image = (struct image *)
+    scm_gc_malloc (sizeof (struct image), "image");
+
+  image->width = width;
+  image->height = height;
+
+  /* Allocating the pixels with
+     scm_gc_malloc_pointerless means that the
+     pixels data is collectable by GC, but
+     that GC shouldn't spend time tracing its
+     contents for nested pointers because there
+     aren't any.  */
+  image->pixels =
+    scm_gc_malloc_pointerless (width * height, "image pixels");
+
+  image->name = name;
+  image->update_func = SCM_BOOL_F;
+
+  /* Now wrap the struct image* in a new foreign
+     object, and return that object.  */
+  return scm_make_foreign_object_1 (image_type, image);
+}
+```
+
+ピクセルバッファには `scm_gc_malloc_pointerless` を使って、ガベージコレクタにそれをポインタのために走査しないよう伝えています。`scm_gc_malloc`、`scm_make_foreign_object_1`、`scm_gc_malloc_pointerless` の呼び出しは、メモリ不足の状態では例外を発生させます。その場合、ガベージコレクタは以前に割り当てられたメモリを回収できます。
+
+### 5.5.3 外部オブジェクトの型チェック
+
+外部オブジェクトを操作する関数は、そのデータにアクセスする前に、渡された `SCM` 値が実際に正しい型であることを確認すべきです。これは `scm_assert_foreign_object_type` で行えます。
+
+たとえば、以下は画像オブジェクトを操作し、その引数の型を確認する簡単な関数です。
+
+```c
+SCM
+clear_image (SCM image_obj)
+{
+  int area;
+  struct image *image;
+
+  scm_assert_foreign_object_type (image_type, image_obj);
+
+  image = scm_foreign_object_ref (image_obj, 0);
+  area = image->width * image->height;
+  memset (image->pixels, 0, area);
+
+  /* Invoke the image's update function.  */
+  if (scm_is_true (image->update_func))
+    scm_call_0 (image->update_func);
+
+  return SCM_UNSPECIFIED;
+}
+```
+
+### 5.5.4 外部オブジェクトのメモリ管理
+
+外部オブジェクトが Scheme システムの思いやりある手に委ねられたら、それはガベージコレクションを生き延びる準備ができていなければなりません。上の例では、`scm_gc_` の割り当て関数を使ったため、外部オブジェクトに関連付けられたすべてのメモリはガベージコレクタによって管理されています。したがって、特別な注意を払う必要はありません。ガベージコレクタはそれらを自動的に走査し、使用されていないメモリを回収します。
+
+しかし、外部オブジェクトに関連付けられたデータが他の方法で管理されている場合――たとえば `malloc` されたメモリやファイル記述子など――は、外部オブジェクトが回収されたときにそれらの資源を解放するためのファイナライザ関数を指定することができます。
+
+「ガベージコレクション」で論じたように、Guile のガベージコレクタは必要に応じてアクセス不可能なメモリを回収します。この回収プロセスはメインプログラムと並行して実行されます。Guile がヒープを解析して、あるオブジェクトのメモリを回収できると判断すると、そのメモリは回収可能なオブジェクトの「フリーリスト」に置かれます。通常はそれで終わりです――そのオブジェクトはすぐに再利用できるようになります。しかし、一部のオブジェクトには「ファイナライザ」――外部の後始末の処理を行うために回収可能なオブジェクトに対して呼び出される関数――が関連付けられていることがあります。
+
+ファイナライザは扱いが難しいものであり、避けるのが最善です。予期しないときに呼び出されたり、まったく呼び出されなかったりすることがあります――たとえば、プロセスの終了時には呼び出されません。ファイナライザはガベージコレクタの仕事を助けません。実際、妨げになります。さらに、ファイナライザはガベージコレクタの内部的な計算を乱します。GC は、ある程度の割り当てが行われた後、必要だと考えたときにヒープを走査することを決めます。ファイナライズ可能なオブジェクトは、ほとんど常にガベージコレクタからは見えない量の割り当てを表しています。その結果、ファイナライズ可能なオブジェクトを持つシステムの実際の資源使用量が、GC が考えるべき量よりも多くなることがあります。
+
+これらの注意点はさておき、一部の外部オブジェクト型にはファイナライザが必要になるでしょう。たとえば、ファイル記述子をラップする外部オブジェクト型があったとすると――そしてこれを提案しているわけではありません、Guile にはすでにポートがあるので――次のように型を定義するかもしれません。
+
+```c
+static SCM file_type;
+
+static void
+finalize_file (SCM file)
+{
+  int fd = scm_foreign_object_signed_ref (file, 0);
+  if (fd >= 0)
+    {
+      scm_foreign_object_signed_set_x (file, 0, -1);
+      close (fd);
+    }
+}
+
+static void
+init_file_type (void)
+{
+  SCM name, slots;
+  scm_t_struct_finalize finalizer;
+
+  name = scm_from_utf8_symbol ("file");
+  slots = scm_list_1 (scm_from_utf8_symbol ("fd"));
+  finalizer = finalize_file;
+
+  image_type =
+    scm_make_foreign_object_type (name, slots, finalizer);
+}
+
+static SCM
+make_file (int fd)
+{
+  return scm_make_foreign_object_1 (file_type, (void *) fd);
+}
+```
+
+ファイナライザは、予期しない方法やタイミングで呼び出される可能性があることに注意してください。スレッドサポートなしでビルドされた Guile では、ファイナライザは「async」を介して呼び出され、実行中の Scheme コードと交互に実行されます。「非同期割り込み」を参照してください。ユーザーの Guile がスレッドのサポート付きでビルドされている場合、ユーザーが明示的に `scm_run_finalizers ()` を呼び出さない限り、ファイナライザはおそらく専用のファイナライズスレッドによって呼び出されます。
+
+いずれの場合も、ファイナライザはメインプログラムと並行して実行されるため、async 安全かつスレッド安全である必要があります。何らかの理由でこれが不可能な場合、おそらくそれ自体がスレッド安全でないアプリケーションに Guile を組み込んでいるためでしょうが、いくつかの選択肢があります。1つは、ファイナライザの代わりにガーディアンを使い、ファイナライズ可能なオブジェクトのためにガーディアンを汲み出すよう手配することです。詳細については「ガーディアン」を参照してください。もう1つの選択肢は、自動的なファイナライズを完全に無効にし、適切な時点で `scm_run_finalizers ()` を呼び出すよう手配することです。これらのインターフェースの詳細については「外部オブジェクト」を参照してください。
+
+ファイナライザはメモリを割り当てたり、GC が管理するメモリにアクセスしたりすることが許されており、一般に Guile のユーザーコードができることは何でもできます。これは Guile 1.8 ではそうではなく、ファイナライザははるかに制限されていました。特に、Guile 2.0 では、ファイナライザはオブジェクトを蘇生させることができます。しかし、ユーザーがこの可能性を利用することは推奨しません。蘇生したオブジェクトは、すでにファイナライズされた他のファイナライズ可能なオブジェクトを Scheme に再び公開してしまう可能性があるからです。これらのオブジェクトは再びファイナライズされることはありませんが、その特定の外部オブジェクト型のオブジェクトを扱うコードに対して、解放後使用（use-after-free）の問題を引き起こす可能性があります。この可能性を防ぐために、堅牢なファイナライズのルーチンは、上の `free_file` の例のように、外部オブジェクトから状態をクリアすべきです。
+
+最後の注意点が1つあります。外部オブジェクトのファイナライザは、外部オブジェクトの寿命に関連付けられており、そのフィールドの寿命には関連付けられていません。ファイナライズ可能な外部オブジェクトのフィールドにアクセスし、外部オブジェクト自体への参照を保持するよう手配しないと、そのフィールドを操作している間に外側の外部オブジェクトがファイナライズされてしまう可能性があります。
+
+たとえば、上の例のファイルからデータを読み込む手続きを考えてみましょう。
+
+```c
+SCM
+read_bytes (SCM file, SCM n)
+{
+  int fd;
+  SCM buf;
+  size_t len, pos;
+
+  scm_assert_foreign_object_type (file_type, file);
+
+  fd = scm_foreign_object_signed_ref (file, 0);
+  if (fd < 0)
+    scm_wrong_type_arg_msg ("read-bytes", SCM_ARG1,
+                            file, "open file");
+
+  len = scm_to_size_t (n);
+  SCM buf = scm_c_make_bytevector (scm_to_size_t (n));
+
+  pos = 0;
+  while (pos < len)
+    {
+      char *bytes = SCM_BYTEVECTOR_CONTENTS (buf);
+      ssize_t count = read (fd, bytes + pos, len - pos);
+      if (count < 0)
+        scm_syserror ("read-bytes");
+      if (count == 0)
+        break;
+      pos += count;
+    }
+
+  scm_remember_upto_here_1 (file);
+
+  return scm_values (scm_list_2 (buf, scm_from_size_t (pos)));
+}
+```
+
+前置きの後は `fd` の値だけが使われ、C コンパイラには `file` オブジェクトを保持しておく理由がありません。`scm_c_make_bytevector` がガベージコレクションを引き起こすと、`file` はスタック上にもどこにもなくなってファイナライズされる可能性があり、`read` は閉じられた（あるいはマルチスレッドのプログラムでは再利用された可能性のある）ファイル記述子から読み込むことになってしまいます。`scm_remember_upto_here_1` を使うと、すべてのデータアクセスの後に `file` への参照を作ることで、これを防ぎます。「ガベージコレクションに関連する関数」を参照してください。
+
+`scm_remember_upto_here_1` が必要なのはファイナライズ可能なオブジェクトに対してだけです。他の値のガベージコレクションはプログラムからは見えないからです――それは必要なときに起こり、観測できません。
+
+しかし、可能であれば、ファイナライズを必要としないようにプログラムを構築して、頭痛の種を避けてください。
+
+### 5.5.5 外部オブジェクトと Scheme
+
+外部オブジェクトとオブジェクト型を Scheme から作成し、外部オブジェクトのフィールドに Scheme からアクセスすることも可能です。たとえば、前の節のファイルの例は、次のように等価に表現できます。
 
 ```scheme
-(load-extension "libpoint" "init_point_module")
+(define-module (my-file)
+  #:use-module (system foreign-object)
+  #:use-module ((oop goops) #:select (make))
+  #:export (make-file))
 
-(define p (make-point 10 20))
-(point-x p)  ; => 10
-(point-y p)  ; => 20
+(define (finalize-file file)
+  (let ((fd (struct-ref file 0)))
+    (unless (< fd 0)
+      (struct-set! file 0 -1)
+      (close-fdes fd))))
+
+(define <file>
+  (make-foreign-object-type '<file> '(fd)
+                            #:finalizer finalize-file))
+
+(define (make-file fd)
+  (make <file> #:fd fd))
 ```
 
-## 5.6 関数スナーフィング
+ここで、`scm_make_foreign_object_type` に相当する `make-foreign-object-type` の結果が、構造体の vtable であることが分かります。詳細については「Vtable」を参照してください。実際には Guile の構造体である外部オブジェクトをインスタンス化するために、`make` を使います。（`make-struct/no-tail` を使うこともできましたが、実装の詳細として、ファイナライザは `make` によって呼び出される `initialize` メソッドの中で取り付けられます。）フィールドにアクセスするには、`struct-ref` と `struct-set!` を使います。「構造体の基本」を参照してください。
 
-### 概要
+型とともに、コンストラクタとフィールドのゲッタを定義する便利な構文 `define-foreign-object-type` があります。ファイルオブジェクト型に対する `define-foreign-object-type` の適切な呼び出しは次のようになるでしょう。
 
-Scheme と C 間の関数定義を自動化するツール。
+```scheme
+(use-modules (system foreign-object))
 
-### スナーフィングの使用
+(define-foreign-object-type <file>
+  make-file
+  (fd)
+  #:finalizer finalize-file)
+```
+
+これは、1つのフィールドを持つ `<file>` 型、`make-file` コンストラクタ、そして `fd` に束縛された `fd` フィールドのゲッタを定義します。
+
+上でほのめかしたように、外部オブジェクト型は vtable であるだけでなく、実際には GOOPS のクラスでもあります。Guile のオブジェクト指向プログラミングシステムの詳細については「GOOPS」を参照してください。したがって、GOOPS を使って表示と等価性のメソッドを定義できます。
+
+```scheme
+(use-modules (oop goops))
+
+(define-method (write (file <file>) port)
+  ;; Assuming existence of the `fd' getter
+  (format port "#<<file> ~a>" (fd file)))
+
+(define-method (equal? (a <file>) (b <file>))
+  (eqv? (fd a) (fd b)))
+```
+
+外部型をサブクラス化することさえできます。
+
+```scheme
+(define-class <named-file> (<file>)
+  (name #:init-keyword #:name #:init-value #f #:accessor name))
+```
+
+`make-file` が普通の古い `<file>` オブジェクトを返すことを考えると、これらの値をどのように構築するのかという疑問が生じます。実は、GOOPS の構築インターフェースを使うことができ、そこでは外部オブジェクトのすべてのフィールドに、関連付けられた初期化キーワード引数があります。
+
+```scheme
+(define* (my-open-file name #:optional (flags O_RDONLY))
+  (make <named-file> #:fd (open-fdes name flags) #:name name))
+
+(define-method (write (file <named-file>) port)
+  (format port "#<<file> ~s ~a>" (name file) (fd file)))
+```
+
+外部オブジェクトへの Scheme インターフェースの完全なドキュメントについては「外部オブジェクト」を参照してください。GOOPS の詳細については「GOOPS」を参照してください。
+
+最後の注意として、このシステムが機密性の高い値のカプセル化をどのようにサポートしているのか疑問に思うかもしれません。まず、一部の機能は本質的に安全でなく、グローバルなスコープを持つことを認識しなければなりません。たとえば C では、プログラムのある部分の完全性と機密性は、そのプログラムの他のすべての部分のなすがままです――プログラムのどの部分もそのアドレス空間内の何でも読み書きできるからです。同時に、C では構造化されたデータへの原則に基づいたアクセスは字句的な境界に沿って編成されています。オブジェクトのアクセサを公開しなければ、プログラムの他の部分がその障壁を回避しないことを信頼することになります。
+
+Scheme でも状況は似ています。Scheme の安全でない構成要素は C よりも数は少ないですが、存在します。`(system foreign)` モジュールは機密性と完全性を侵害するために使用でき、信頼できないコードに公開すべきではありません。`struct-ref` と `struct-set!` はそれほど危険ではありませんが、それでも抽象を貫く横断的な能力を持っています。外部オブジェクトのスロットに対して `struct-set!` を実行すると、安全でない外部のコードがクラッシュする可能性があります。結局のところ、Scheme における構造体は抽象のための能力であり、抽象そのものではありません。
+
+そうなると、コンストラクタやアクセサのような字句的な能力が残ります。ここにカプセル化があります。外部オブジェクトの内部が実際に公開される程度は、そのアクセサがユーザーコードで字句的に利用可能である程度です。ユーザーが外部オブジェクトのフィールドを参照できるようにしたい場合は、ゲッタを提供してください。そうでなければ、オブジェクトへの唯一のアクセスは、関連する権限を持つあなたのコードから、あるいは横断的な `struct-ref` などにアクセスできるコード（これも横断的な権限を持つ）からのみであると想定すべきです。
+
+## 5.6 関数のスナーフィング
+
+Guile で使用するための C コードを書くときは、通常 C 関数の集合を定義し、それから `scm_c_define_gsubr` や関連する関数を呼び出すことで、そのうちのいくつかを Scheme の世界から見えるようにします。公開する関数が多い場合、`scm_c_define_gsubr` の呼び出しのリストを関数定義のリストと同期させておくのが面倒になることがあります。
+
+Guile は、この問題を管理するための `guile-snarf` プログラムを提供しています。このツールを使うと、関数を定義するのに必要なすべての情報を関数定義自体と一緒に保持できます。`guile-snarf` はソースコードからこの情報を抽出し、初期化関数に `#include` できる `scm_c_define_gsubr` の呼び出しのファイルを自動的に生成します。
+
+スナーフィングの仕組みは、`scm_c_define_gsubr` の呼び出しを集めることだけでなく、多くの種類の初期化処理に対して機能します。何ができるかの完全なリストについては「スナーフィングマクロ」を参照してください。
+
+`guile-snarf` プログラムは次のように起動します。
+
+```
+guile-snarf [-o outfile] [cpp-args ...]
+```
+
+このコマンドは初期化処理を `outfile` に抽出します。`outfile` が指定されていない場合、または `outfile` が `-` の場合は、標準出力が使用されます。C プリプロセッサは `cpp-args`（通常は入力ファイルを含む）で呼び出され、その出力がフィルタリングされて初期化処理が抽出されます。
+
+処理中にエラーがあった場合、`outfile` は削除され、プログラムはゼロ以外のステータスで終了します。
+
+スナーフィング中は、プリプロセッサマクロ `SCM_MAGIC_SNARFER` が定義されます。これを使って、次のようなコードを書くことで、まだ存在しないスナーファーの出力ファイルをインクルードすることを避けることができます。
 
 ```c
-/* my_functions.c */
+#ifndef SCM_MAGIC_SNARFER
+#include "foo.x"
+#endif
+```
 
-/* 素数をチェック（自動登録用） */
-SCM_DEFINE(is_prime_p, "is-prime?", 1, 0, 0,
-           (SCM n),
-           "素数かどうかをチェック")
+以下は、C 関数 `clear_image` によって実装される Scheme 関数 `clear-image` を定義する方法の例です。
+
+```c
+#include <libguile.h>
+
+SCM_DEFINE (clear_image, "clear-image", 1, 0, 0,
+            (SCM image),
+            "Clear the image.")
 {
-  int num = scm_to_int(n);
-  if (num < 2) return SCM_BOOL_F;
-  
-  for (int i = 2; i * i <= num; i++) {
-    if (num % i == 0) return SCM_BOOL_F;
-  }
-  return SCM_BOOL_T;
+  /* C code to clear the image in image... */
 }
 
 void
-init_my_functions(void)
+init_image_type ()
 {
-  #include "my_functions.x"  /* 自動生成コード */
+#include "image-type.x"
 }
 ```
 
-## 5.7 実践的なプログラミング例
+`SCM_DEFINE` 宣言は、C 関数 `clear_image` が `clear-image` という Scheme 関数を実装しており、それは（`SCM` 型で `image` という名前の）必須引数を1つ取り、オプション引数を取らず、残余引数も取らないことを述べています。文字列 `"Clear the image."` は関数の短いヘルプテキストを提供し、これは docstring と呼ばれます。
 
-### 概要
+`SCM_DEFINE` マクロは、関数の Scheme での名前に初期化された文字の静的配列も定義します。この場合、`s_clear_image` は C 文字列 "clear-image" に設定されます。エラーメッセージを生成するときにこのシンボルを使いたくなるかもしれません。
 
-C と Scheme の組み合わせによる実践的な例。
+上記のテキストが `image-type.c` という名前のファイルにあると仮定すると、このファイルをコンパイルのために準備するには次のコマンドを実行する必要があります。
 
-### 例1: C での計算、Scheme でのロジック
+```
+guile-snarf -o image-type.x image-type.c
+```
+
+これは `image-type.c` を `SCM_DEFINE` 宣言のために走査し、`image-type.x` に次の出力を書き込みます。
 
 ```c
-/* 高速な C 関数 */
-SCM
-c_compute(SCM input)
-{
-  int result = expensive_calculation(scm_to_int(input));
-  return scm_from_int(result);
-}
-
-/* Scheme で高レベルロジックを実装 */
-(use-modules (my-c-lib))
-
-(define (process-data data)
-  (let ((computed (c-compute data)))
-    (if (> computed 1000)
-        (display "Large result")
-        (display "Small result"))))
+scm_c_define_gsubr ("clear-image", 1, 0, 0, (SCM (*)() ) clear_image);
 ```
 
-### 例2: C でのデータ構造、Scheme でのアルゴリズム
+通常どおりコンパイルされる場合、`SCM_DEFINE` は `clear_image` の関数ヘッダに展開されるマクロです。
 
-```c
-/* C で高速なデータ構造を実装 */
-typedef struct {
-  int *data;
-  int size;
-} Array;
+出力ファイル名が入力ファイルの `#include` と一致していることに注意してください。また、`scm_c_define_gsubr` を自分で使う場合と同じ情報をすべて提供する必要がありますが、その情報を関数定義自体の近くに置くことができるので、誤ったものや古いものになる可能性が低くなります。
 
-SCM
-create_array(SCM size_scm)
-{
-  /* ... 実装 ... */
-}
-
-/* Scheme で高レベルアルゴリズムを記述 */
-(define (array-sum arr)
-  (let loop ((i 0) (sum 0))
-    (if (>= i (array-length arr))
-        sum
-        (loop (+ i 1) 
-              (+ sum (array-ref arr i))))))
-```
-
-### テストベッドとしての Guile
-
-```c
-/* C の関数をテスト */
-int
-my_algorithm(int input)
-{
-  return input * 2 + 1;
-}
-
-SCM
-test_my_algorithm(SCM input)
-{
-  return scm_from_int(my_algorithm(scm_to_int(input)));
-}
-
-/* Scheme でテストスイート */
-(use-modules (srfi srfi-64))
-(use-modules (my-c-lib))
-
-(test-begin "algorithm")
-(test-equal "test 1" 3 (test-my-algorithm 1))
-(test-equal "test 5" 11 (test-my-algorithm 5))
-(test-end "algorithm")
-```
-
-## 5.8 Autoconf サポート
-
-### 概要
-
-GNU Autoconf ツールを使用した Guile 統合。
-
-### configure.ac の設定
-
-```autoconf
-AC_INIT([myproject], [1.0])
-AM_INIT_AUTOMAKE([foreign])
-AC_PROG_CC
-AC_PROG_LIBTOOL
-
-# Guile 3.0 の要求
-GUILE_PKG([3.0])
-
-AC_CONFIG_FILES([
-  Makefile
-  src/Makefile
-])
-AC_OUTPUT
-```
-
-### Autoconf マクロ
-
-Guile が提供する便利なマクロ：
-
-```autoconf
-# Guile 3.0 以上を必須に
-GUILE_PKG([3.0])
-
-# Guile モジュールをチェック
-GUILE_MODULE_REQUIRED([srfi srfi-1])
-
-# Guile のフラグを自動取得
-GUILE_CFLAGS
-GUILE_LIBS
-```
-
-### Makefile.in の例
+`guile-snarf` で処理しなければならないファイルが多い場合は、`Makefile` で次のような断片を使うことを検討すべきです。
 
 ```makefile
-bin_PROGRAMS = myprogram
-myprogram_SOURCES = myprogram.c
-myprogram_CFLAGS = $(GUILE_CFLAGS)
-myprogram_LDFLAGS = $(GUILE_LIBS)
+snarfcppopts = $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+.SUFFIXES: .x
+.c.x:
+        guile-snarf -o $@ $< $(snarfcppopts)
+```
 
-lib_LTLIBRARIES = libmyextension.la
-libmyextension_la_SOURCES = my_extension.c
-libmyextension_la_CFLAGS = $(GUILE_CFLAGS)
-libmyextension_la_LDFLAGS = -module -version-info 0:0:0
+これは、必要な各 `.x` ファイルを対応する `.c` ファイルから生成するために `guile-snarf` を実行するよう `make` に指示します。
+
+`guile-snarf` プログラムは、コマンドライン引数を C プリプロセッサに直接渡し、それを使ってソースコードから必要な情報を抽出します。これは、通常のコンパイルフラグを `guile-snarf` に渡して、プリプロセッサのシンボルを定義したり、ヘッダファイルのディレクトリを追加したりできることを意味します。
+
+## 5.7 Guile プログラミングの概要
+
+Guile は、C（および C++）で書かれたアプリケーションと簡単に統合できる拡張言語インタプリタとして設計されています。アプリケーション開発者にとっての大きな利点は、Guile のウェブページが言うように、Guile の統合が「プロジェクトのハックティベーションエネルギー（hacktivation energy）を下げる」ことです。ハックティベーションエネルギーを下げるということは、アプリケーション開発者であるあなたとあなたのユーザーが、普通の古い C ではなく高水準の拡張言語でアプリケーションを拡張できることから生じる恩恵を享受できるということです。
+
+抽象的な言葉で、これが本当に何を意味し、統合のプロセスに何が含まれるのかを説明するのは難しいので、代わりに、Guile を既存のプログラムに統合する方法と、そうすることで何を得られると期待できるかの例にいきなり飛び込むことから始めましょう。その例を身につけた後で、関係する議論と利用可能なプログラミングの選択肢の範囲について、より一般的な分析に戻ります。
+
+- Guile を使って Dia を拡張する方法
+- なぜ Scheme は C よりハックしやすいのか
+- 例: アプリケーションのテストベッドに Guile を使う
+- プログラミングの選択肢
+- アプリケーションのユーザーについては？
+
+### 5.7.1 Guile を使って Dia を拡張する方法
+
+Dia は、フローチャートや間取り図のような図式を描くためのフリーソフトウェアのプログラムです（http://www.gnome.org/projects/dia/）。この節では、Dia に Guile を追加するという思考実験を行います。そうすることで、一般にアプリケーションに Guile を追加する際に関わるいくつかのステップと考慮事項を説明することを目指しています。
+
+- Guile を追加したい理由を決める
+- Guile を追加するのに必要な4つのステップ
+- Dia のデータを Scheme で表現する方法
+- Dia のための Guile プリミティブを書く
+- Scheme コードを評価するためのフックを提供する
+- Guile 対応 Dia のトップレベル構造
+- Dia と Guile でさらに先へ
+
+#### 5.7.1.1 Guile を追加したい理由を決める
+
+まず第一に、そもそもなぜ Dia に Guile を追加したいのかを理解すべきであり、それは Dia が何をどのように行っているのかのイメージを形成することを意味します。では、Dia アプリケーションの構成要素は何でしょうか？
+
+- 最も重要なのは、アプリケーションのドメインオブジェクトです――言い換えれば、Dia をワードプロセッサやスプレッドシートのような他のアプリケーションと区別する概念、すなわち図形、テンプレート、コネクタ、ページ、そしてこれらすべてのもののプロパティです。
+- 上記のオブジェクトのレイアウトと表示を含む、アプリケーションのグラフィカルな面を管理するコード。
+- アプリケーションのユーザーが何かをしたいことを示す入力イベントを処理するコード。
+
+（言い換えれば、モデル - ビュー - コントローラのパラダイムの教科書的な例です。）
+
+次の質問: Guile の統合が完了したら、Dia はどのような恩恵を受けるでしょうか？ ここではいくつかの（肯定的な！）答えが可能であり、その選択は明らかにアプリケーション開発者次第です。それでも、一つの答えは、主な恩恵は Dia のアプリケーションドメインオブジェクトを Scheme から操作できるようになることだ、というものです。
+
+Dia が、図形やコネクタなどのオブジェクトに対する最も基本的な操作を表す手続きの集合を Scheme で利用可能にしたとしましょう。Scheme を使って、アプリケーションのユーザーは、これらの基本的な操作の上に構築して、より複雑な手続きを作成するコードを書くことができます。たとえば、ページ上のオブジェクトを列挙し、オブジェクトが正方形かどうかを判定し、単一の図形の塗りつぶしパターンを変更する基本的な手続きが与えられれば、ユーザーは現在のページ上のすべての正方形の塗りつぶしパターンを変更する Scheme 手続きを書くことができます。
+
+```scheme
+(define (change-squares'-fill-pattern new-pattern)
+  (for-each-shape current-page
+    (lambda (shape)
+      (if (square? shape)
+          (change-fill-pattern shape new-pattern)))))
+```
+
+#### 5.7.1.2 Guile を追加するのに必要な4つのステップ
+
+この目的を前提とすると、それを達成するには4つのステップが必要です。
+
+まず、アプリケーション固有のオブジェクト――前の例の `shape` のような――が Scheme の世界に渡されるときに、それらを表現する方法が必要です。オブジェクトが数値や文字列のような組み込みの Scheme データ型に自然に対応するほど単純でない限り、おそらく Guile の外部オブジェクトインターフェースを使って、オブジェクトのための新しい Scheme データ型を作成したいと思うでしょう。
+
+次に、`for-each-shape` や `square?` のような基本的な操作のコードを、既存のデータ構造に正しくアクセスして操作するように書き、それからこれらの操作を Scheme レベルのプリミティブとして利用可能にする必要があります。
+
+3番目に、任意の Scheme コードを評価させるためにユーザーがフックできる何らかの仕組みを、Dia アプリケーション内に提供する必要があります。
+
+最後に、Guile インタプリタを正しく初期化し、外部オブジェクトとプリミティブを Scheme の世界に宣言するように、アプリケーションのトップレベルの C コードを少し再構成する必要があります。
+
+以下の小節では、これら4つの点を順に詳しく説明します。
+
+#### 5.7.1.3 Dia のデータを Scheme で表現する方法
+
+最も些細なアプリケーション以外では、おそらくドメインオブジェクトの何らかの表現が Scheme レベルに存在できるようにしたいと思うでしょう。ここで外部オブジェクトが登場し、それとともに寿命の管理とガベージコレクションの問題も登場します。
+
+これをもっと具体的にするために、アプリケーションのユーザーが Dia 自体が提供するプリミティブから、Guile を使ってより高水準の関数を構築する方法について先に示した例をもう一度見てみましょう。
+
+```scheme
+(define (change-squares'-fill-pattern new-pattern)
+  (for-each-shape current-page
+    (lambda (shape)
+      (if (square? shape)
+          (change-fill-pattern shape new-pattern)))))
+```
+
+ここで変数 `shape` に何が格納されるかを考えてみましょう。現在のページ上の各図形について、`for-each-shape` プリミティブは、その図形を表す引数で `(lambda (shape) …)` を呼び出します。問題は、その引数が Scheme レベルでどのように表現されるかです。論点は次のとおりです。
+
+- 表現が何であれ、それは `square?` と `change-fill-pattern` プリミティブの C コードによって再びデコードできなければなりません。言い換えれば、`square?` のようなプリミティブは、受け取った値を、図形を記述する基礎となる C 構造体を指す何かに、何とかして戻せなければなりません。
+- 表現は、Scheme コードが後で使うために値を保持しておくことにも対処しなければなりません。Scheme コードが `shape` をグローバル変数に格納し、その後その図形が（Scheme コードが知らない方法で）削除され、さらにその後、他の Scheme コードがそのグローバル変数をたとえば `square?` の呼び出しで再び使ったらどうなるでしょうか？
+- Scheme の世界にのみ存在するオブジェクトの寿命とメモリ割り当ては、Guile のガベージコレクタによって1つの単純な規則を使って自動的に管理されます。オブジェクトへの参照が残っていなければ、そのオブジェクトは死んでいると見なされ、そのメモリは解放されます。しかし、C と Scheme の両方に存在するオブジェクトについては、状況はより複雑です。`shape` 引数が一時的に Scheme の世界に出入りする Dia の場合、Scheme コードが評価を終えたからといって基礎となる C の図形を削除するのはまったく間違っています。これが起こるのをどのように避ければよいでしょうか？
+
+これらの問題の一つの解決策は、図形の Scheme レベルの表現を、外部オブジェクトとしてラップされた新しい Scheme 固有の C 構造体にすることです。外部オブジェクトは Scheme コードに出入りするものであり、外部オブジェクト内の Scheme 固有の C 構造体は Dia の基礎となる C 構造体を指しているので、`square?` のようなプリミティブのコードはそれにたどり着くことができます。
+
+Scheme コードがまだ Scheme の図形の値を保持している間に基礎となる図形が削除されることに対処するために、基礎となる C 構造体には、Scheme 固有の外部オブジェクトを指す新しいフィールドを持たせるべきです。図形が削除されると、関連するコードは Scheme 固有の構造体までたどり、基礎となる構造体へのポインタを NULL に設定します。したがって、図形の外部オブジェクトの値は存在し続けますが、それを使おうとするプリミティブのコードは、基礎となる構造体へのポインタが NULL であることから、基礎となる図形が削除されたことを検出します。
+
+そこで、この問題の解決に関わるステップをまとめると（図形の基礎となる C 構造体が `struct dia_shape` であると仮定して）次のようになります。
+
+- 基礎となる C 構造体を指す、新しい Scheme 固有の構造体を定義します。
+
+  ```c
+  struct dia_guile_shape
+  {
+    struct dia_shape * c_shape;   /* NULL => deleted */
+  }
+  ```
+
+- `struct dia_shape` に、もしあればその `struct dia_guile_shape` を指すフィールドを追加します――
+
+  ```c
+  struct dia_shape
+  {
+    ...
+    struct dia_guile_shape * guile_shape;
+  }
+  ```
+
+  ――そうすれば、C コードは基礎となる図形が削除されたときに `guile_shape->c_shape` を NULL に設定できます。
+
+- `struct dia_guile_shape` を外部オブジェクト型としてラップします。
+- C の図形を Scheme レベルに表現する必要があるときはいつでも、そのための外部オブジェクトのインスタンスを作成し、それを渡します。
+- 図形の外部オブジェクトのインスタンスを受け取るプリミティブのコードでは、それをデコードするときに `c_shape` フィールドを確認して、基礎となる C の図形がまだ存在するかどうかを調べます。
+
+メモリ管理に関する限り、外部オブジェクトの値とその Scheme 固有の構造体はガベージコレクタの制御下にあり、一方、基礎となる C 構造体は、Guile を追加することを考える前に Dia がそれらを管理していたのとまったく同じ方法で明示的に管理されます。
+
+ガベージコレクタが図形の外部オブジェクトの値を解放すると決めたとき、それは図形の外部オブジェクト型を定義するときに指定されたファイナライザ関数を呼び出します。基礎となる C 構造体の `guile_shape` フィールドの正しさを維持するために、この関数は基礎となる C 構造体（まだ存在すれば）までたどり、その `guile_shape` フィールドを NULL に設定すべきです。
+
+外部オブジェクト型の定義と使用に関する完全なドキュメントについては、「新しい外部オブジェクト型の定義」を参照してください。
+
+#### 5.7.1.4 Dia のための Guile プリミティブを書く
+
+オブジェクトの表現の詳細が決まれば、必要なプリミティブ関数のコードを書くのは通常簡単です。
+
+プリミティブとは単に、引数と戻り値がすべて `SCM` 型であり、本体が望むことを何でも行う C 関数です。例として、以下は `square?` プリミティブの実装例です。
+
+```c
+static SCM square_p (SCM shape)
+{
+  struct dia_guile_shape * guile_shape;
+
+  /* Check that arg is really a shape object. */
+  scm_assert_foreign_object_type (shape_type, shape);
+
+  /* Access Scheme-specific shape structure. */
+  guile_shape = scm_foreign_object_ref (shape, 0);
+
+  /* Find out if underlying shape exists and is a
+     square; return answer as a Scheme boolean. */
+  return scm_from_bool (guile_shape->c_shape &&
+                        (guile_shape->c_shape->type == DIA_SQUARE));
+}
+```
+
+`square_p` が受け取る `SCM` の `shape` パラメータ――これは外部オブジェクトです――から、外部オブジェクト内の Scheme 固有の構造体へ、そしてそこから図形の基礎となる C 構造体へとたどるのがいかに簡単かに注目してください。
+
+このコードでは、`scm_assert_foreign_object_type`、`scm_foreign_object_ref`、`scm_from_bool` は標準の Guile API のものです。`shape_type` は、`scm_make_foreign_object_type` を使って図形の外部オブジェクト型を作成したときに与えられたものと仮定しています。`scm_assert_foreign_object_type` の呼び出しは、`shape` が実際に図形であることを保証します。これは、`(square? "hello")` のように、Scheme コードが `square?` 手続きを誤って使うことを防ぐために必要です。Scheme の潜在型付けは、このような使用上の誤りを実行時に捕捉しなければならないことを意味します。
+
+プリミティブの C コードを書いたら、`scm_c_define_gsubr` 関数を呼び出して、それらを Scheme の手続きとして利用可能にする必要があります。`scm_c_define_gsubr`（「プリミティブ手続き」を参照）は、プリミティブの Scheme レベルの名前と、それが受け付けることのできる必須、オプション、残余の引数の数を指定する引数を取ります。`square?` プリミティブは常にちょうど1つの引数を必要とするので、それを Scheme で利用可能にする呼び出しは次のようになります。
+
+```c
+scm_c_define_gsubr ("square?", 1, 0, 0, square_p);
+```
+
+この呼び出しをどこに置くかについては、Guile 対応のコードの構造に関する次の次の小節（「Guile 対応 Dia のトップレベル構造」を参照）を参照してください。
+
+#### 5.7.1.5 Scheme コードを評価するためのフックを提供する
+
+Guile の統合を有用なものにするためには、アプリケーションのユーザーが自分の Scheme コードを評価させるために使える、何らかのフックをアプリケーションに設計しなければなりません。
+
+技術的には、これは簡単です。アプリケーションに適した仕組みを決めるだけです。たとえば Emacs を考えてみてください。ESC : と入力すると、任意の Elisp コードを入力できるプロンプトが表示され、Emacs はそれを評価します。あるいは、これも Emacs のように、Scheme コードを特定のキーシーケンスに関連付け、そのキーシーケンスが入力されたときにそのコードを評価できるようにする仕組み（初期化ファイルなど）を提供することもできます。
+
+いずれの場合も、評価したい Scheme コードをヌル終端文字列として持っていれば、`scm_c_eval_string` 関数を呼び出すことで Guile にそれを評価するよう指示できます。
+
+#### 5.7.1.6 Guile 対応 Dia のトップレベル構造
+
+Guile 導入前の Dia のコードが、構造的に次のようになっていると仮定しましょう。
+
+- `main ()`
+  - 多くの初期化と設定の処理を行う
+  - Gtk のメインループに入る
+
+プログラムに Guile を追加するとき、一つの（かなり技術的な）要件は、Guile のガベージコレクタが C スタックの底がどこにあるかを知る必要があるということです。これを保証する最も簡単な方法は、次のように `scm_boot_guile` を使うことです。
+
+- `main ()`
+  - 多くの初期化と設定の処理を行う
+  - `scm_boot_guile (argc, argv, inner_main, NULL)`
+- `inner_main ()`
+  - すべての外部オブジェクト型を定義する
+  - `scm_c_define_gsubr` を使ってプリミティブを Scheme にエクスポートする
+  - Gtk のメインループに入る
+
+言い換えれば、以前 `main` 関数にあった中身を `inner_main` という新しい関数に移し、`main` の最後に、`inner_main` をパラメータとする `scm_boot_guile` の呼び出しを追加します。
+
+外部オブジェクトを使い、前の小節で説明したようにプリミティブのコードを書いていると仮定すると、新しい外部オブジェクトを宣言し、プリミティブを Scheme にエクスポートする呼び出しも挿入する必要があります。これらの宣言は、`scm_boot_guile` の呼び出しの動的スコープの内側で、かつそれらを使う可能性のあるコードが実行される前に行わなければなりません――`inner_main` の先頭がそのための理想的な場所です。
+
+#### 5.7.1.7 Dia と Guile でさらに先へ
+
+ここまで説明したステップは、Dia アプリケーションのユーザーにすでに多くの追加の力を与える、初期の Guile 統合を実装するものです。しかし、さらに進めることのできるステップもあり、そのいくつかを考えてみるのは興味深いことです。
+
+一般に、Dia のソースコードを C から Scheme へと段階的に移していくことができます。これにより、コードの保守性と拡張性が高まるかもしれず、C で実現するのは難しいが Scheme では簡単な新しいプログラミングパラダイムへの扉が開かれるかもしれません。
+
+その具体的な例として、Gtk+ ライブラリのほとんどに対する Scheme レベルの手続きを提供する guile-gtk パッケージを使って、Dia のオブジェクトをレイアウトして表示するコードを C から Scheme に移すことができます。
+
+この道をたどっていくと、Dia の元々の Guile に関係しないソースコードと、Scheme の世界のために外部オブジェクトやプリミティブを実装する後のコードとの区別を維持することは、自然とあまり有用ではなくなります。
+
+たとえば、元のソースコードに `dia_change_fill_pattern` 関数があったとしましょう。
+
+```c
+void dia_change_fill_pattern (struct dia_shape * shape,
+                              struct dia_pattern * pattern)
+{
+  /* real pattern change work */
+}
+```
+
+初期の Guile 統合の間に、Scheme のために `change_fill_pattern` プリミティブを追加します。これは外部オブジェクトの値から基礎となる構造体にアクセスし、実際の作業を行うために `dia_change_fill_pattern` を使います。
+
+```c
+SCM change_fill_pattern (SCM shape, SCM pattern)
+{
+  struct dia_shape * d_shape;
+  struct dia_pattern * d_pattern;
+
+  ...
+
+  dia_change_fill_pattern (d_shape, d_pattern);
+
+  return SCM_UNSPECIFIED;
+}
+```
+
+この時点では、`dia_change_fill_pattern` と `change_fill_pattern` を別々にしておくのは理にかなっています。`dia_change_fill_pattern` は、たとえばユーザーが C で登録された Gtk+ のコールバックを呼び出させるボタンをクリックしたために、Scheme をまったく経由せずに呼び出されることもあるからです。
+
+しかし、ボタンを作成してそのコールバックを登録するコードが（guile-gtk を使って）Scheme に移されると、`dia_change_fill_pattern` はもはや Scheme を経由する以外の方法では呼び出されなくなるかもしれません。その場合、それを廃止して、その内容を次のように直接 `change_fill_pattern` に移すのが理にかなっています。
+
+```c
+SCM change_fill_pattern (SCM shape, SCM pattern)
+{
+  struct dia_shape * d_shape;
+  struct dia_pattern * d_pattern;
+
+  ...
+
+  /* real pattern change work */
+
+  return SCM_UNSPECIFIED;
+}
+```
+
+このように、さらなる Guile の統合によって、長期的に保守しなければならない機能的な C コードの量が段階的に減っていきます。
+
+データ表現にも同様の議論が当てはまります。先の外部オブジェクトの議論では、C と Scheme のデータ構造に通常適用されるメモリ管理と寿命のモデルが異なるために問題が生じました。しかし、さらに Guile を統合すれば、すべてのデータ構造をガベージコレクタの制御下に置き、Scheme の世界からの参照によって生かし続けることで、この問題をより根本的な方法で解決できます。C で図形の配列や連結リストを保持する代わりに、Scheme でリストを保持するのです。
+
+`dia_change_fill_pattern` と `change_fill_pattern` の統合と同様に、このような変更の実際的な結果として、もはや `dia_shape` と `dia_guile_shape` の構造体を別々にしておく必要がなくなり、したがってそれらの間のポインタを気にする必要もなくなります。代わりに、外部オブジェクトの定義を `dia_shape` 構造体を直接ラップするように変更し、`dia_guile_shape` をスクラップ置き場に送ることができます。中間業者を排除するのです！
+
+最後に、Guile のフリーソフトウェア/拡張言語というアプローチの聖杯にたどり着きます。図形のような興味深い Dia のデータ型の Scheme での表現と、それらを操作するための便利なプリミティブの一群を手に入れると、突然、Dia 自体を超えて広範囲に使える可能性のある機能の束を手にしていることが明らかになります。言い換えれば、データ型とプリミティブは今やライブラリになりうるのであり、Dia はそのライブラリを使う多くの可能なアプリケーションの一つにすぎなくなります――もっとも、この初期の段階では、かなり重要なものですが！
+
+このモデルでは、Guile はすべてを結び付ける接着剤にすぎなくなります。Dia、Gnumeric、GnuCash の機能を有用に組み合わせたアプリケーションを想像してみてください――そのようなアプリケーションはまだ存在しないので今は難しいですが、いつかは実現するでしょう…
+
+### 5.7.2 なぜ Scheme は C よりハックしやすいのか
+
+Guile の価値提案の根底にあるのは、高水準言語、特に Guile の Scheme 実装でプログラミングすることは、C でプログラミングすることよりも何らかの点で必然的に優れているという前提です。この主張で私たちは何を意味しているのか、そしてどうしてそこまで確信できるのでしょうか？
+
+利点の一群は、Scheme だけでなく、より一般的に Emacs Lisp、Python、Ruby、TeX のマクロ言語のような、解釈可能な高水準のスクリプト言語すべてに当てはまります。C と比較したときのそのような言語すべてに共通する特徴は次のとおりです。
+
+- 通常はそれらの解釈可能性と、それらが使われる統合開発環境との組み合わせによって、迅速で実験的な開発サイクルに向いている。
+- C プログラミングに伴う低レベルの記帳作業、特にメモリ管理から開発者を解放する。
+- 一般的なプログラミング作業を容易にする、コンテナオブジェクトや例外処理のような高水準の機能を提供する。
+
+Scheme の場合、プログラミングをより容易に――そしてより楽しく！――する特有の機能は、プログラムの部分を抽象化するための強力な仕組み（クロージャ――「クロージャの概念」を参照）と反復のための強力な仕組み（「反復の仕組み」を参照）です。
+
+この主張を裏付ける証拠は経験的なものです。この仕組みをサポートするアプリケーションのために拡張言語で書かれてきた膨大な量のコードです。最も注目すべきは、GNU Emacs のための Emacs Lisp、TeX のための TeX のマクロ言語、Gimp のための Script-Fu で書かれた拡張ですが、現在では Lilypond や GnuCash のような Guile ベースのアプリケーションのための重要なコードのエコシステムもますます増えています。これらのアプリケーションの基盤となる実装言語で新しいコードを書くだけで、同等の量の機能を追加できたとはほとんど考えられません。
+
+### 5.7.3 例: アプリケーションのテストベッドに Guile を使う
+
+これが実際に何を意味するかの例として、（C インターフェースを介して）さまざまなリクエストを送信し、受け取った出力を検証することによってテストされるアプリケーションのテストベッドを書くことを想像してみてください。さらに、アプリケーションは現在の状態の考えを保持しており、あるリクエストに対する「正しい」出力は現在のアプリケーションの状態に依存する可能性があるとしましょう。このアプリケーションの完全な「ホワイトボックス」[^7] テスト計画は、区別可能な各状態において可能なすべてのリクエストを送信し、すべてのリクエストと状態の組み合わせについて出力を検証することを目指すでしょう。
+
+[^7]: ホワイトボックステスト計画とは、テスト対象のアプリケーションの内部設計に関する知識を組み込んだものです。
+
+このテストコードをすべて C で書くのは非常に退屈でしょう。代わりに、テストベッドのコードが、任意のリクエストを送信してレスポンスを返す新しい C 関数を1つだけ追加し、それから Guile を使ってこの関数を Scheme の手続きとしてエクスポートするとしましょう。そうすれば、テストベッドの残りの部分は Scheme で書くことができ、前の節で説明した Scheme でのプログラミングのすべての利点の恩恵を受けられます。
+
+（この特定の例では、テストベッドのほとんどを Scheme で書くことにはさらなる利点があります。ホワイトボックステストの一般的な問題は、テスト対象のアプリケーションの誤りや誤った前提が、テストベッドのコードで容易に再現されてしまうことです。テストベッドがアプリケーションとは異なる言語で書かれていると、このような誤りをコピーするのはより困難になります。）
+
+### 5.7.4 プログラミングの選択肢
+
+前述の議論と例は、多くの場合に当てはまる Guile プログラミングのモデルを示しています。このモデルによれば、Guile プログラミングには C と Scheme のプログラミングのバランスが関わり、その目的は、最小限の C レベルの作業から最大限の Scheme レベルの恩恵を引き出すことです。
+
+このモデルで必要とされる C レベルの作業は、通常、関数とアプリケーションのオブジェクトを Scheme レベルで見たり操作したりできるようにパッケージ化してエクスポートすることで構成されます。これを助けるために、Guile の C 言語インターフェースには、アプリケーション開発者にとってこの種の統合を非常に容易にすることを目的としたユーティリティ機能が含まれています。
+
+しかし、このモデルは実際には、可能なプログラミングの選択肢の範囲の一つにすぎません。必要なすべての機能が Scheme から利用可能であれば、代わりにアプリケーション全体を Scheme（または Guile が変換を通じてサポートする他の高水準言語の一つ）で書き、単に Guile を Scheme のインタプリタとして使うことを選ぶこともできます。（将来、Guile が Scheme コードをコンパイルできるようになり、C と Scheme のコードの性能差が縮まることを期待しています。）あるいは、C と Scheme の尺度の反対側の端では、アプリケーションの大部分を C で書き、設定ファイルの読み込みやユーザーが指定した拡張の実行のような特定の動作のためにのみ、ときどき Guile を呼び出すこともできます。選択は、2つの基本的な問いに集約されます。
+
+- アプリケーションのどの部分を C で書き、どの部分を Scheme（または他の高水準の変換される言語）で書くか？
+- アプリケーションの C の部分と Scheme の部分の間のインターフェースをどのように設計するか？
+
+これらはもちろん設計上の問いであり、任意のアプリケーションにとっての正しい設計は、常に満たそうとしている特定の要件に依存します。しかし Guile の文脈では、答えを設計する際に役立つ、一般に適用可能ないくつかの考慮事項があります。
+
+- どのような機能がすでに利用可能か？
+- 機能と性能の制約
+- 好みのプログラミングスタイル
+- 何がプログラムの実行を制御するか？
+
+#### 5.7.4.1 どのような機能がすでに利用可能か？
+
+議論のために、アプリケーション全体を Scheme で書くことを好むとしましょう。その場合、利用可能な API は次のもので構成されます。
+
+- 標準 Scheme
+- さらに、Guile がコア配布物で提供する標準 Scheme への拡張
+- さらに、Guile Scheme モジュールとして読み込めるようにあなたや他の人がパッケージ化した追加の機能
+
+最後のカテゴリのモジュールは、純粋な Scheme モジュール――言い換えれば Scheme でコーディングされたユーティリティ手続きの集まり――であるか、C でコーディングされた拡張ライブラリへの Scheme インターフェースを提供するモジュール――言い換えれば、誰か他の人が有用な C コードをラップする作業をしてくれた素晴らしいパッケージ――のいずれかです。利用可能なモジュールの集合は急速に増えており、すでに Gtk+ の描画関数を Scheme で利用可能にする `(gtk gtk)` や、Postgres データベースへの SQL アクセスを提供する `(database postgres)` のような有用な例が含まれています。
+
+既存のモジュールのコレクションが増えていることを考えると、これらのモジュールの選択を、Scheme で書かれた新しいアプリケーションのコードと組み合わせることで、アプリケーションを実装することは十分に可能です。
+
+アプリケーションが必要とする機能がまだこの形で利用可能でなく、新しい機能を Scheme で書くことが不可能であるために、このアプローチで十分でない場合は、何らかの C コードを書く必要があります。必要な関数がすでに C で（たとえばライブラリとして）利用可能であれば、必要なのはそれを Guile の世界に接続するための少しの接着剤だけです。そうでなければ、基本的なコードを書くことと、それを Guile に配管することの両方が必要です。
+
+いずれの場合も、2つの一般的な考慮事項が重要です。第一に、機能が Scheme の世界に提示されるインターフェースは何か？ インターフェースは関数呼び出しだけで構成されるのか（たとえば単純な描画インターフェース）、それとも C と Scheme の間で受け渡され、両方の世界で操作できる何らかのオブジェクトを含む必要があるのか。第二に、C コード内のオブジェクトの寿命とメモリ管理は、Scheme オブジェクトのガベージコレクションに支配されたアプローチとどのように関係するのか？ 基本的な C コードがまだ書かれていない場合は、最初から Guile の C インターフェースの機能を使うことで、メモリ管理の困難のほとんどを避けることができます。
+
+Guile のための C コードの書き方と既存の C コードを Guile の世界に接続する方法の完全なドキュメントについては、「新しい外部オブジェクト型の定義」、「プリミティブ手続き」、「外部関数インターフェース」を参照してください。
+
+#### 5.7.4.2 機能と性能の制約
+
+（原文のこの小節には本文がありません。）
+
+#### 5.7.4.3 好みのプログラミングスタイル
+
+（原文のこの小節には本文がありません。）
+
+#### 5.7.4.4 何がプログラムの実行を制御するか？
+
+（原文のこの小節には本文がありません。）
+
+### 5.7.5 アプリケーションのユーザーについては？
+
+ここまで、Guile プログラミングがアプリケーション開発者にとって何を意味するかを考えてきました。しかし、代わりに既存の Guile ベースのアプリケーションを使っていて、このアプリケーションをプログラミングして拡張するための選択肢が何かを知りたい場合はどうでしょうか？
+
+この問いへの答えはアプリケーションごとに異なります。利用可能な選択肢は、アプリケーション開発者があなたが独自のコードをぶら下げるためのフックを提供しているかどうか、そしてそのようなフックがある場合、それで何ができるかに必然的に依存するからです。[^8] たとえば…
+
+- アプリケーションが任意の Guile コードを読み込んで実行することを許可していれば、世界はあなたの思いのままです。好きな方法でアプリケーションを拡張できます。
+- より慎重なアプリケーションは、Guile コードを読み込んで実行することを許可するかもしれませんが、利用可能なインターフェースがアプリケーションによって標準の Guile API から制限された、安全な環境の中でのみ許可するかもしれません。
+- あるいは、本当に怖がりなアプリケーションは、ユーザーコードを本当に実行するためのフックをまったく提供せず、ユーザーがアプリケーションのデータや設定オプションを指定するための便利な方法として Scheme の構文を使うだけかもしれません。
+
+[^8]: もちろん、フリーソフトウェアの世界では、アプリケーションのソースコードを自分の要件に合わせて変更する自由が常にあります。ここで関心があるのは、ソースコードを変更する必要なしに、アプリケーションが用意している拡張の選択肢です。
+
+最後の2つのケースでは、できることは定義上アプリケーションによって制限されており、自分の選択肢を知るにはアプリケーション自身のマニュアルを参照すべきです。
+
+最初のケースの最もよく知られた例は、拡張言語 Emacs Lisp を持つ Emacs です。Emacs はテキストエディタであるだけでなく、任意の Emacs Lisp コードの読み込みと実行をサポートしています。このような開放性の結果は劇的でした。Emacs は現在、基本的な編集機能を拡張して、ニュースを読むことから精神分析やアドベンチャーゲームまで、あらゆることを行うユーザー提供の Emacs Lisp ライブラリの恩恵を受けています。唯一の制限は、拡張が Emacs の組み込みのプリミティブ操作の集合によって提供される機能に制限されることです。たとえば、Emacs バッファの内容を操作することでデータとやり取りしたり表示したりすることはできますが、Emacs の標準とはまったく異なるレイアウトのウィンドウをポップアップして描画することはできません。
+
+任意のユーザーコードの読み込みをサポートする Guile アプリケーションの状況も同様ですが、おそらくそれ以上です。Guile は C で書かれた拡張ライブラリの読み込みもサポートしているからです。この最後の点により、ユーザーコードは Guile に新しいプリミティブ操作を追加でき、Emacs Lisp に存在する制限を回避できます。
+
+この時点で、アプリケーション開発者とアプリケーションユーザーの区別はかなりあいまいになります。自分をアプリケーションを拡張するユーザーと見なす代わりに、元のアプリケーションが提供するプリミティブな機能の一部を使って独自の新しいアプリケーションを開発していると言うこともできるでしょう。そのため、この章の前の節のすべての議論が、拡張の開発をどのように進めるかに関係しています。
+
+## 5.8 Autoconf のサポート
+
+GNU ビルドシステムの一部である Autoconf は、ユーザーがパッケージを簡単にビルドできるようにします。この節では、Guile の Autoconf サポートについて文書化します。
+
+- Autoconf の背景
+- Autoconf マクロ
+- Autoconf マクロを使う
+
+### 5.8.1 Autoconf の背景
+
+GNU Autoconf マニュアルで説明されているように、どのパッケージもビルド時に設定を必要とします（『The GNU Autoconf Manual』の「Introduction」を参照）。パッケージが Guile を使う（または Guile を使うパッケージを使う）場合、おそらく具体的にどの Guile の機能が利用可能か、そしてそれらに関する詳細を知る必要があるでしょう。
+
+これを行う方法は、機能テストを書いて、それらが `configure` スクリプトによって実行されるよう手配することです。通常は `configure.ac` にテストを追加し、`autoconf` を実行して `configure` を作成します。パッケージのユーザーは、通常の方法で `configure` を実行します。
+
+マクロは、一般的な機能テストを簡単に表現するための方法です。Autoconf は幅広いマクロを提供しており（『The GNU Autoconf Manual』の「Existing Tests」を参照）、Guile のインストールは、プログラムの検出、コンパイルフラグの報告、Scheme モジュールの確認の分野で Guile 固有のテストを提供します。
+
+### 5.8.2 Autoconf マクロ
+
+この章の前の部分で述べたように、Guile は並行インストールをサポートしており、ユーザーが関心のある Guile のバージョンを選択できるように `pkg-config` を使用しています。`pkg-config` には独自の Autoconf マクロの集合があり、おそらくほとんどすべての開発システムにインストールされています。これらのマクロの中で最も有用なのは `PKG_CHECK_MODULES` です。
+
+```
+PKG_CHECK_MODULES([GUILE], [guile-3.0])
+```
+
+この例は Guile を探し、それに応じて `GUILE_CFLAGS` と `GUILE_LIBS` 変数を設定するか、Guile が見つからなければエラーを表示して終了します。
+
+Guile には、より多くの情報を提供する追加の Autoconf マクロが付属しており、`prefix/share/aclocal/guile.m4` としてインストールされます。それらの名前はすべて `GUILE_` で始まります。
+
+**Autoconf マクロ: `GUILE_PKG [VERSIONS]`**
+: このマクロは `pkg-config` ツールを実行して、利用可能なバージョンの Guile の開発ファイルを探します。
+
+  デフォルトでは、このマクロは Guile の最新の安定版（例: 3.0）を検索し、利用可能であれば以前の安定版（例: 2.2）にフォールバックします。`guile-VERSION.pc` ファイルが見つからなければ、エラーが通知されます。見つかったバージョンは `GUILE_EFFECTIVE_VERSION` に格納されます。
+
+  `GUILE_PROGS` がすでに呼び出されている場合、このマクロは開発ファイルが Guile プログラムと同じ実効バージョンを持つことを保証します。
+
+  `GUILE_EFFECTIVE_VERSION` は、`AC_SUBST` によるのと同様に置換の対象として印付けられます。
+
+**Autoconf マクロ: `GUILE_FLAGS`**
+: このマクロは `pkg-config` ツールを実行して、Guile に対してプログラムをコンパイルおよびリンクする方法を調べます。4つの変数 `GUILE_CFLAGS`、`GUILE_LDFLAGS`、`GUILE_LIBS`、`GUILE_LTLIBS` を設定します。
+
+  `GUILE_CFLAGS`: Guile のヘッダファイルを使うコードをビルドするために C または C++ コンパイラに渡すフラグです。これはほとんど常に1つ以上の `-I` フラグだけです。
+
+  `GUILE_LDFLAGS`: プログラムを Guile に対してリンクするためにコンパイラに渡すフラグです。これには Guile ライブラリ自体のための `-lguile-VERSION` が含まれ、またライブラリをどこで見つけるかをコンパイラに伝えるための1つ以上の `-L` フラグが含まれることもあります。しかし、プログラムの実行時のライブラリ検索パスに影響を与えるフラグは含まれないため、必要なすべてのライブラリが `/usr/lib` のような標準の場所にインストールされていない限り、起動に失敗するプログラムになってしまいます。
+
+  `GUILE_LIBS` と `GUILE_LTLIBS`: プログラムを Guile に対してリンクするために、それぞれコンパイラまたは libtool に渡すフラグです。これには、プログラムの実行時のライブラリ検索パスを拡張するフラグが含まれるため、共有ライブラリは、標準でない場所であっても、リンク時にあった場所で見つかります。`GUILE_LIBS` はプログラムをコンパイラで直接リンクするときに使い、`GUILE_LTLIBS` はプログラムのリンクを libtool を通じて行うときに使います。
+
+  これらの変数は、`AC_SUBST` によるのと同様に置換の対象として印付けられます。
+
+**Autoconf マクロ: `GUILE_SITE_DIR`**
+: これは Guile の「site」ディレクトリを探します。変数 `GUILE_SITE` は、Scheme ソースファイルのための Guile の「site」ディレクトリ（通常は `PREFIX/share/guile/site` のようなもの）に設定されます。`GUILE_SITE_CCACHE` は、`.go` ファイルとしても知られるコンパイル済み Scheme ファイルのためのディレクトリ（通常は `PREFIX/lib/guile/GUILE_EFFECTIVE_VERSION/site-ccache` のようなもの）に設定されます。`GUILE_EXTENSION` は、コンパイル済み C 拡張のためのディレクトリ（通常は `PREFIX/lib/guile/GUILE_EFFECTIVE_VERSION/extensions` のようなもの）に設定されます。後の2つは、特定のバージョンの Guile がそれらをサポートしていない場合は空に設定されます。このマクロは、`GUILE_PKG` と `GUILE_PROGS` マクロがまだ実行されていなければ、それらを実行することに注意してください。
+
+  これらの変数は、`AC_SUBST` によるのと同様に置換の対象として印付けられます。
+
+**Autoconf マクロ: `GUILE_PROGS [VERSION]`**
+: このマクロはプログラム `guile` と `guild` を探し、変数 `GUILE` と `GUILD` をそれぞれそのパスに設定します。マクロは、`-X.Y` という接尾辞付きの `guile` を見つけようとし、次に `X.Y` という接尾辞付きのものを探し、それから接尾辞なしの `guile` を探すことにフォールバックします。それでも `guile` が見つからなければ、エラーを通知します。`guile` を見つけるために必要だった接尾辞があれば、それは `guild` にも使われます。
+
+  デフォルトでは、このマクロは Guile の最新の安定版（例: 3.0）を検索します。`x.y` または `x.y.z` のバージョンを指定できます。より古いバージョンが見つかった場合、マクロはエラーを通知します。
+
+  見つかった `guile` の実効バージョンは `GUILE_EFFECTIVE_VERSION` に設定されます。このマクロは、実効バージョンが、以前に `GUILE_FLAGS` が呼び出されていればその結果と互換性があることを保証します。
+
+  レガシーなインターフェースとして、`guile-config` と `guile-tools` も探し、`GUILE_CONFIG` と `GUILE_TOOLS` を設定します。
+
+  これらの変数は、`AC_SUBST` によるのと同様に置換の対象として印付けられます。
+
+**Autoconf マクロ: `GUILE_CHECK_RETVAL var check`**
+: `var` は、戻り値に設定されるシェル変数の名前です。`check` は Guile Scheme の式で、"$GUILE -c" で評価され、チェックが成功したことを示すために 0 または #f 以外を返します。0 以外の数値または #f は失敗を示します。autoconf を混乱させるので、文字 "#" の使用は避けてください。
+
+**Autoconf マクロ: `GUILE_MODULE_CHECK var module featuretest description`**
+: `var` は、"yes" または "no" に設定されるシェル変数の名前です。`module` は `(ice-9 common-list)` のようなシンボルのリストです。`featuretest` は `GUILE_CHECK` が受け付ける式です（同項参照）。`description` は現在時制の動詞句です（`AC_MSG_CHECKING` に渡されます）。
+
+**Autoconf マクロ: `GUILE_MODULE_AVAILABLE var module`**
+: `var` は、"yes" または "no" に設定されるシェル変数の名前です。`module` は `(ice-9 common-list)` のようなシンボルのリストです。
+
+**Autoconf マクロ: `GUILE_MODULE_REQUIRED symlist`**
+: `symlist` は、`ice-9 common-list` のように、囲む括弧なしのシンボルのリストです。
+
+**Autoconf マクロ: `GUILE_MODULE_EXPORTS var module modvar`**
+: `var` は、"yes" または "no" に設定されるシェル変数です。`module` は `(ice-9 common-list)` のようなシンボルのリストです。`modvar` は確認する Guile Scheme の変数です。
+
+**Autoconf マクロ: `GUILE_MODULE_REQUIRED_EXPORT module modvar`**
+: `module` は `(ice-9 common-list)` のようなシンボルのリストです。`modvar` は確認する Guile Scheme の変数です。
+
+### 5.8.3 Autoconf マクロを使う
+
+autoconf マクロの使い方は簡単です。マクロの「呼び出し」（実際にはインスタンス化）を `configure.ac` に追加し、`aclocal` を実行し、最後に `autoconf` を実行します。システムに `guile.m4` がインストールされていない場合は、目的のマクロ定義（`AC_DEFUN` 形式）を `acinclude.m4` に置けば、`aclocal` が適切に処理してくれます。
+
+一部のマクロは `if foo ; then GUILE_BAZ ; fi` のように通常のシェル構文の中で使うことができますが、これは保証されていません。マクロはトップレベルでインスタンス化するのがおそらく良い考えでしょう。
+
+ここで、単純なものと複雑なものの2つの例を示します。
+
+最初の例は、libguile を使うため、それに対してコンパイルおよびリンクする方法を知る必要があるパッケージのためのものです。そこで `PKG_CHECK_MODULES` を使って変数 `GUILE_CFLAGS` と `GUILE_LIBS` を設定し、それらは Makefile 内で自動的に置換されます。
+
+`configure.ac` では:
+
+```
+PKG_CHECK_MODULES([GUILE], [guile-3.0])
+```
+
+`Makefile.in` では:
+
+```makefile
+GUILE_CFLAGS  = @GUILE_CFLAGS@
+GUILE_LIBS    = @GUILE_LIBS@
+
+myprog.o: myprog.c
+        $(CC) -o $ $(GUILE_CFLAGS) $<
+myprog: myprog.o
+        $(CC) -o $ $< $(GUILE_LIBS)
+```
+
+2つ目の例は、外部プログラムと他の Guile Scheme モジュールを使う Guile Scheme モジュールのパッケージのためのものです（これを「純粋な Scheme」パッケージと呼ぶ人もいるでしょう）。そこで `GUILE_SITE_DIR` マクロ、通常の `AC_PATH_PROG` マクロ、そして `GUILE_MODULE_AVAILABLE` マクロを使います。
+
+`configure.ac` では:
+
+```
+GUILE_SITE_DIR
+
+probably_wont_work=""
+
+# pgtype pgtable
+GUILE_MODULE_AVAILABLE(have_guile_pg, (database postgres))
+test $have_guile_pg = no &&
+    probably_wont_work="(my pgtype) (my pgtable) $probably_wont_work"
+
+# gpgutils
+AC_PATH_PROG(GNUPG,gpg)
+test x"$GNUPG" = x &&
+    probably_wont_work="(my gpgutils) $probably_wont_work"
+
+if test ! "$probably_wont_work" = "" ; then
+    p="         ***"
+    echo
+    echo "$p"
+    echo "$p NOTE:"
+    echo "$p The following modules probably won't work:"
+    echo "$p   $probably_wont_work"
+    echo "$p They can be installed anyway, and will work if their"
+    echo "$p dependencies are installed later.  Please see README."
+    echo "$p"
+    echo
+fi
+```
+
+`Makefile.in` では:
+
+```makefile
+instdir = @GUILE_SITE@/my
+
+install:
+        $(INSTALL) my/*.scm $(instdir)
 ```
 
 ---
 
-> **ライセンス**: このドキュメント内の翻訳は、GNU Free Documentation License v1.3 以降に基づいて作成されています。
+> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
 > 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
