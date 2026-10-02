@@ -84,3 +84,10 @@ src-tauri/target/release/rseditor  # または Windows では .exe、macOS で�
 - コミットメッセージは英語で記述
 - メッセージ本体はダッシュ/ハイフンで始まる（例: `- Fix bug in parser`）
 - コミットメッセージに `Co-Authored-By` または Claude 帰属行を含めない
+
+### Git 設定
+
+```bash
+git config user.name "Tetsuya Higashi"
+git config user.email "996846+sluchin@users.noreply.github.com"
+```
