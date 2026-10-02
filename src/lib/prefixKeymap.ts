@@ -3,13 +3,14 @@ import { useRef, KeyboardEvent } from 'react'
 interface PrefixKeymapOptions {
   onFindFile: () => void
   onSaveBuffer: () => void
+  onRedo?: () => void
 }
 
 /**
- * Handles the Emacs C-x prefix key sequences relevant to file operations:
- * C-x C-f (find-file) and C-x C-s (save-buffer).
+ * Handles the Emacs C-x prefix key sequences:
+ * C-x C-f (find-file), C-x C-s (save-buffer), C-x C-/ (redo), C-x h (mark-whole-buffer)
  */
-export function usePrefixKeymap({ onFindFile, onSaveBuffer }: PrefixKeymapOptions) {
+export function usePrefixKeymap({ onFindFile, onSaveBuffer, onRedo }: PrefixKeymapOptions) {
   const awaitingX = useRef(false)
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>): boolean => {
@@ -29,6 +30,17 @@ export function usePrefixKeymap({ onFindFile, onSaveBuffer }: PrefixKeymapOption
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault()
         onSaveBuffer()
+        return true
+      }
+      if (e.ctrlKey && e.key === '/') {
+        e.preventDefault()
+        onRedo?.()
+        return true
+      }
+      if (e.key === 'h') {
+        e.preventDefault()
+        const el = e.currentTarget as HTMLTextAreaElement
+        el.setSelectionRange(0, el.value.length)
         return true
       }
     }

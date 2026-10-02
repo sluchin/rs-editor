@@ -29,6 +29,9 @@ interface CodeEditorProps {
   onIsearchBackward: () => void
   onExecuteCommand: () => void
   onQuit: () => void
+  onUndo?: () => void
+  onRedo?: () => void
+  onPushUndo?: (currentCode: string, currentCursorPos: number) => void
   highlightRange?: { start: number; end: number } | null
   disabled?: boolean
 }
@@ -87,6 +90,9 @@ export default function CodeEditor({
   onIsearchBackward,
   onExecuteCommand,
   onQuit,
+  onUndo,
+  onRedo,
+  onPushUndo,
   highlightRange,
   disabled,
 }: CodeEditorProps) {
@@ -102,7 +108,7 @@ export default function CodeEditor({
     setCursorPos(pos)
   }
 
-  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer })
+  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({ onFindFile, onSaveBuffer, onRedo })
   const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
     textareaRef,
     value,
@@ -111,6 +117,8 @@ export default function CodeEditor({
     onIsearchBackward,
     onExecuteCommand,
     onQuit,
+    onUndo,
+    onPushUndo,
   })
 
   const tokens = useMemo(() => tokenize(value), [value])
