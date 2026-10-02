@@ -1,414 +1,1073 @@
-# 4. Scheme でのプログラミング
+# 4 Scheme でのプログラミング
 
-> **原文**: [Guile Reference Manual - Programming in Scheme](https://www.gnu.org/software/guile/manual/guile.html#Programming-in-Scheme)
-> 
-> このドキュメントはGNU Free Documentation Licenseの下で公開されています。
+> **原文**: [Guile Reference Manual - Programming in Scheme](https://www.gnu.org/software/guile/manual/html_node/Programming-in-Scheme.html)
+>
+> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
 
-このセクションでは、Guile を使用して実際に Scheme プログラムを開発する方法を説明します。
+Guile のコア言語は Scheme であり、C コードに潜り込まなければならない場合とは対照的に、単に Guile を使って Scheme プログラムを書いて実行するだけで多くのことを達成できます。マニュアルのこの部分では、このモードで Guile を使う方法を説明し、スクリプトの作成、デバッグ、配布のためのプログラムのパッケージ化を支援するために Guile が提供するツールについて説明します。
+
+Guile のアプリケーションプログラミングインターフェース（API）を構成する変数、関数などに関する詳細なリファレンス情報については、「API リファレンス」を参照してください。
+
+- Guile の Scheme 実装
+- Guile の起動
+- Guile スクリプティング
+- Guile を対話的に使う
+- Emacs で Guile を使う
+- Guile ツールを使う
+- サイトパッケージのインストール
+- Guile コードの配布
 
 ## 4.1 Guile の Scheme 実装
 
-### 概要
+Guile のコア言語は Scheme であり、これは RnRS として知られる一連のレポートで規定および説明されています。RnRS は Revised^n Report on the Algorithmic Language Scheme の略です。Guile は R5RS に完全に準拠しており（『R5RS』の「Introduction」を参照）、R6RS と R7RS にもおおむね準拠しています。
 
-Guile は複数の Scheme 標準規格をサポートしており、多くの SRFI（Scheme Requests for Implementation）モジュールも提供しています。
+Guile には、これらのレポートを超える多くの拡張もあります。Guile が標準 Scheme を拡張している領域の一部は次のとおりです。
 
-### 標準化への対応
-
-```scheme
-; R5RS 準拠のコード
-(define (factorial n)
-  (if (<= n 1) 1 (* n (factorial (- n 1)))))
-
-; R6RS/R7RS の追加機能
-(define-record-type <point>
-  (make-point x y)
-  point?
-  (x point-x)
-  (y point-y))
-
-; SRFI-1（拡張リスト処理）
-(use-modules (srfi srfi-1))
-(map (lambda (x) (* x 2)) (iota 5))
-```
-
-### 標準規格の違い
-
-- **R5RS**: 基本的な Scheme 標準、シンプルで汎用的
-- **R6RS**: より包括的、モジュールシステムとライブラリを追加
-- **R7RS**: R5RS と R6RS の中間、軽量で実用的
-- **SRFI**: 特定の機能（リスト処理、正規表現など）を定義
+- Guile の対話的ドキュメントシステム
+- POSIX 準拠のネットワークプログラミングに対する Guile のサポート
+- GOOPS ― オブジェクト指向プログラミングのための Guile のフレームワーク
 
 ## 4.2 Guile の起動
 
-### 概要
+Guile の多くの機能は、Guile の起動前または起動時にユーザーが提供する情報に依存し、またそれによって変更できます。以下では、どのような情報をどのように提供するかを説明します。
 
-Guile はコマンドラインから柔軟に起動でき、複数の起動オプションが提供されています。
+- コマンドラインオプション
+- 環境変数
 
-### コマンドラインオプション
+### 4.2.1 コマンドラインオプション
 
-```bash
-guile [options] [script] [args]
+ここでは Guile のコマンドライン処理について詳しく説明します。Guile は引数を左から右へ処理し、以下で説明するスイッチを認識します。例については「スクリプティングの例」を参照してください。
+
+`script arg...`<br>`-s script arg...`
+: デフォルトでは、Guile はコマンドラインで指定されたファイルをスクリプトとして読み込みます。`script` に続くコマンドライン引数 `arg...` はすべてスクリプトの引数になります。`command-line` 関数は `(script arg...)` という形式の文字列のリストを返します。
+
+  先頭にハイフンが付いた名前のファイル、たとえば `-myfile.scm` を指定することも可能です。この場合、（スクリプト）ファイルが指定されていることを Guile に伝えるために、ファイル名の前に `-s` を付けなければなりません。
+
+  スクリプトは、`load` 関数が行うのとまったく同じように、Scheme ソースコードとして読み込まれて評価されます。`script` を読み込んだ後、Guile は終了します。
+
+`-c expr arg...`
+: `expr` を Scheme コードとして評価してから終了します。`expr` に続くコマンドライン引数 `arg...` はすべてコマンドライン引数になります。`command-line` 関数は `(guile arg...)` という形式の文字列のリストを返します。ここで `guile` は Guile 実行ファイルのパスです。
+
+`-- arg...`
+: 対話的に実行し、ユーザーに式の入力を促してそれを評価します。`--` に続くコマンドライン引数 `arg...` はすべて対話セッションのコマンドライン引数になります。`command-line` 関数は `(guile arg...)` という形式の文字列のリストを返します。ここで `guile` は Guile 実行ファイルのパスです。
+
+`-L directory`
+: Guile のモジュール読み込みパスの先頭に `directory` を追加します。与えられたディレクトリは、コマンドラインで与えられた順序で、かつ `GUILE_LOAD_PATH` 環境変数にあるどのディレクトリよりも前に検索されます。ここで追加されたパスは、ユーザーの `.guile` ファイルの実行中には有効になりません。
+
+`-C directory`
+: `-L` と同様ですが、コンパイル済みファイルの読み込みパスを調整します。
+
+`-x extension`
+: Guile の読み込み拡張子リスト（`%load-extensions` を参照）の先頭に `extension` を追加します。指定された拡張子は、コマンドラインで与えられた順序で、かつデフォルトの読み込み拡張子よりも前に試されます。ここで追加された拡張子は、ユーザーの `.guile` ファイルの実行中には有効になりません。
+
+`-l file`
+: `file` から Scheme ソースコードを読み込み、コマンドラインの処理を続けます。
+
+`-e function`
+: `function` をスクリプトのエントリポイントにします。（`-s` で）スクリプトファイルを読み込むか、（`-c` で）式を評価した後、プログラム名とコマンドライン引数を含むリスト――`command-line` 関数が提供するリスト――に `function` を適用します。
+
+  `-e` スイッチは引数リストのどこにでも現れることができますが、Guile は常に、実行する最後の動作としてその関数を呼び出します。これは奇妙ですが、POSIX でのスクリプト起動の仕組み上、`-s` オプションは常にリストの最後に来なければならないためです。
+
+  `function` は、ほとんどの場合、スクリプト内で定義された関数を指す単純なシンボルです。`(@ module-name symbol)` という形式にすることもでき、その場合、`symbol` は `module-name` という名前のモジュールで検索されます。
+
+  省略形として、`(symbol ...)` という形式、すなわち `@` で始まらないシンボルだけのリストを使うことができます。これは `(@ module-name main)` と同等で、ここで `module-name` は `(symbol ...)` の形式です。「Guile モジュールを使う」と「スクリプティングの例」を参照してください。
+
+`-ds`
+: 最後の `-s` オプションを、コマンドライン上のこの位置にあったかのように扱います。つまり、ここでスクリプトを読み込みます。
+
+  このスイッチが必要なのは、POSIX のスクリプト起動の仕組みは事実上 `-s` オプションが最後に現れることを要求しますが、プログラマはコマンドラインで要求された他の動作よりも前にスクリプトを実行したいと思うことがあるからです。例については「スクリプティングの例」を参照してください。
+
+`\`
+: スクリプトファイルの2行目から始まる、さらなるコマンドライン引数を読み込みます。「メタスイッチ」を参照してください。
+
+`--use-srfi=list`
+: オプション `--use-srfi` は、カンマで区切られた数値のリストを期待します。各数値は、スクリプトファイルを評価する前、または REPL を開始する前にインタプリタに読み込まれる SRFI モジュールを表します。さらに、このオプションが使用されると、読み込まれた SRFI の機能識別子が手続き `cond-expand` によって認識されます。
+
+  以下は、GUILE インタプリタが開始される前に、モジュール SRFI-8（'receive'）と SRFI-13（'string library'）を読み込む例です。
+
+  ```
+  guile --use-srfi=8,13
+  ```
+
+`--r6rs`
+: R6RS をよりよくサポートするように Guile の初期環境を調整します。いくつかの注意点については「R6RS との非互換性」を参照してください。
+
+`--r7rs`
+: R7RS をよりよくサポートするように Guile の初期環境を調整します。いくつかの注意点については「R7RS との非互換性」を参照してください。
+
+`--debug`
+: デバッグ用の仮想マシン（VM）エンジンで開始します。デバッグ用 VM を使用すると VM フックのサポートが有効になります。これは、トレース、ブレークポイント、そしてプロファイリング時の正確な呼び出し回数のために必要です。ただし、デバッグ用 VM は通常の VM よりも約10パーセント遅くなります。詳細については「VM フック」を参照してください。
+
+  デフォルトでは、デバッグ用 VM エンジンは対話セッションに入るときにのみ使用されます。`-s` または `-c` でスクリプトを実行するときは、デフォルトで通常の、より高速な VM が使用されます。
+
+`--no-debug`
+: 対話セッションに入るときであっても、デバッグ用 VM エンジンを使用しません。
+
+  名前に反して、`--no-debug` で実行している Guile も、エラー時に詳細なバックトレースを表示するなど、通常のデバッグ機能はサポートしていることに注意してください。`--debug` との唯一の違いは、VM フックとそれに基づく機能のサポートがないことです（上記参照）。
+
+`-q`
+: 初期化ファイル `.guile` を読み込みません。このオプションは対話的に実行するときにのみ効果があります。スクリプトを実行するときは `.guile` ファイルは読み込まれません。「初期化ファイル ~/.guile」を参照してください。
+
+`--listen[=p]`
+: このプログラムの実行中、REPL クライアントのためにローカルポートまたはパスで待ち受けます。`p` が数字で始まる場合、それは待ち受けるローカルポートであると見なされます。スラッシュで始まる場合、それは待ち受ける UNIX ドメインソケットのファイル名であると見なされます。
+
+  `p` が与えられない場合、デフォルトはローカルポート 37146 です。逆さまに見ると、ほとんど「Guile」と読めます。netcat がインストールされていれば、`nc localhost 37146` で Guile のプロンプトが得られるはずです。あるいは、Emacs を起動してプロセスに接続することもできます。詳細については「Emacs で Guile を使う」を参照してください。
+
+  > **注意**: ポートを開くと、そのポートに接続できる誰もが、Guile プロセスを実行しているユーザーとして、Guile が行えることを何でも行えるようになります。マルチユーザーのマシンでは `--listen` を使用しないでください。もちろん、Guile に `--listen` を渡さなければ、ポートは開かれません。
+  >
+  > Guile は HTTP のプロトコル間攻撃（inter-protocol exploitation attack）から保護しています。これは、攻撃者が HTML ページを介して、ウェブブラウザにループバックインターフェースまたはプライベートネットワーク上で待ち受けている TCP サーバーにデータを送信させるというシナリオです。それでも、可能な限り `--listen=/some/local/file` のように UNIX ドメインソケットを使用することをお勧めします。
+
+  とはいえ、`--listen` は対話的なデバッグと開発には最適です。
+
+`--statprof=style`
+: すべてのスクリプトまたは式を statprof プロファイラの中で実行します。結果を `style` で表示します。`STYLE` に指定できる値については「Statprof」を参照してください。REPL の中では、代わりに「プロファイルコマンド」を使用してください。
+
+`--auto-compile`
+: ソースファイルを自動的にコンパイルします（デフォルトの動作）。
+
+`--fresh-auto-compile`
+: 自動コンパイルのキャッシュを無効として扱い、再コンパイルを強制します。
+
+`--no-auto-compile`
+: ソースファイルの自動コンパイルを無効にします。
+
+`--language=lang`
+: コマンドライン引数の残りの部分について、`-l` で言及されたファイルと `-c` で渡された式が `lang` で書かれていると見なします。`lang` は、コンパイラがサポートする言語のいずれかの名前でなければなりません（「コンパイラタワー」を参照）。対話的に実行する場合は、REPL の言語を `lang` に設定します（「Guile を対話的に使う」を参照）。
+
+  デフォルトの言語は `scheme` です。その他の興味深い値には、`elisp`（Emacs Lisp 用）と `ecmascript` があります。
+
+  以下の例は、Scheme、Emacs Lisp、ECMAScript での式の評価を示しています。
+
+  ```
+  guile -c "(apply + '(1 2))"
+  guile --language=elisp -c "(= (funcall (symbol-function '+) 1 2) 3)"
+  guile --language=ecmascript -c '(function (x) { return x * x; })(2);'
+  ```
+
+  Scheme で書かれたファイルと Emacs Lisp で書かれたファイルを読み込み、それから Scheme の REPL を開始するには、次のように入力します。
+
+  ```
+  guile -l foo.scm --language=elisp -l foo.el --language=scheme
+  ```
+
+`-h`, `--help`
+: Guile の起動に関するヘルプを表示してから終了します。
+
+`-v`, `--version`
+: Guile の現在のバージョンを表示してから終了します。
+
+### 4.2.2 環境変数
+
+**環境**（environment）はオペレーティングシステムの機能であり、名前と値を持つ変数の集まりで構成されます。各変数は**環境変数**（または、ときに「シェル変数」）と呼ばれます。環境変数の名前は大文字と小文字が区別され、慣例として大文字だけを使用します。値はすべてテキスト文字列であり、数字として書かれたものであっても同様です。（ここで言及しているのは、Guile を起動するオペレーティングシステムのシェルで定義される名前と値であることに注意してください。これは、実行中の Guile のインスタンス内で定義される Scheme の環境とは同じではありません。Scheme の環境の説明については、「名前、場所、値、環境」を参照してください。）
+
+Guile を起動する前に環境変数を設定する方法は、オペレーティングシステム、特に使用しているシェルによって異なります。たとえば、以下は Bash を使って `GUILE_WARN_DEPRECATED` を設定することにより、非推奨の機能に関する詳細な警告メッセージを提供するよう Guile に指示する方法です。
+
+```
+$ export GUILE_WARN_DEPRECATED="detailed"
+$ guile
 ```
 
-主要なオプション：
+あるいは、次のようにして単一の起動に対してのみ詳細な警告を有効にすることもできます。
 
-```bash
-# インタラクティブモード（デフォルト）
-guile
-
-# スクリプトファイルを実行
-guile script.scm
-
-# 式を評価して終了
-guile -c "(+ 2 3)"
-
-# REPL を起動した後にスクリプトを実行
-guile -l script.scm
-
-# バージョン確認
-guile --version
+```
+$ env GUILE_WARN_DEPRECATED="detailed" guile
 ```
 
-### 環境変数の設定
+実行中の Guile のインスタンス内から、Guile の実行時の動作に影響を与えるシェル環境変数の値を取得または変更したい場合は、「実行時環境」を参照してください。
 
-```bash
-# モジュール検索パスを設定
-export GUILE_LOAD_PATH=/path/to/modules:$GUILE_LOAD_PATH
+以下は、Guile の実行時の動作に影響を与える環境変数です。
 
-# コンパイル済みモジュールのキャッシュ
-export GUILE_LOAD_COMPILED_PATH=/path/to/compiled
-```
+`GUILE_AUTO_COMPILE`
+: これは、Scheme ソースファイルを自動的にコンパイルするかどうかを Guile に指示するために使用できるフラグです。Guile 2.0 以降、Scheme ソースファイルはデフォルトで自動的にコンパイルされます。
+
+  `.scm` ファイルに対応するコンパイル済み（`.go`）ファイルが見つからないか、`.scm` ファイルより新しくない場合、`.scm` ファイルはその場でコンパイルされ、結果の `.go` ファイルが保存されます。コンソールには助言的な注意が表示されます。
+
+  コンパイル済みファイルはディレクトリ `$XDG_CACHE_HOME/guile/ccache` に格納されます。ここで `XDG_CACHE_HOME` のデフォルトはディレクトリ `$HOME/.cache` です。このディレクトリがまだ存在しない場合は作成されます。
+
+  この仕組みは、`.go` ファイルのタイムスタンプが `.scm` ファイルのタイムスタンプより新しいことに依存していることに注意してください。インストール後に `.scm` ファイルや `.go` ファイルを移動する場合は、元のタイムスタンプを保持するよう注意する必要があります。
+
+  Scheme ファイルが自動的にコンパイルされないようにするには、`GUILE_AUTO_COMPILE` をゼロ（0）に設定します。コンパイル済みファイルより新しいかどうかにかかわらず Scheme ファイルをコンパイルするよう Guile に指示するには、この変数を「fresh」に設定します。
+
+  「Scheme コードのコンパイル」を参照してください。
+
+`GUILE_HISTORY`
+: この変数は、Guile REPL のコマンド履歴を保持するファイルの名前を指定します。この環境変数を設定することで、別の履歴ファイルを指定できます。デフォルトでは、履歴ファイルは `$HOME/.guile_history` です。
+
+`GUILE_INSTALL_LOCALE`
+: これは、起動時に `(setlocale LC_ALL "")` の呼び出しを介して現在のロケールをインストールするかどうかを Guile に指示するために使用できるフラグです。[^3] ロケールの詳細については「ロケール」を参照してください。
+
+  `GUILE_INSTALL_LOCALE` を `0` に設定することでロケールをインストールしたくないことを明示的に示すことができ、また変数を `1` に設定することで明示的に有効にすることができます。
+
+  通常、現在のロケールをインストールするのが正しい選択です。これにより、Guile は非 ASCII 文字を含む文字列を正しく解析および表示できます。そのため、このオプションはデフォルトでオンになっています。
+
+`GUILE_LOAD_COMPILED_PATH`
+: この変数は、読み込み時にコンパイル済み Scheme ファイル（`.go` ファイル）を検索するパスを拡張するために使用できます。その値はコロンで区切られたディレクトリのリストでなければなりません。特別なパス要素 `...`（省略記号）が含まれている場合、省略記号の位置にデフォルトのパスが置かれます。そうでなければ、デフォルトのパスは末尾に置かれます。結果は `%load-compiled-path` に格納されます（「読み込みパス」を参照）。
+
+  以下は、Bash シェルを使って、カレントディレクトリ `.` と相対ディレクトリ `../my-library` を `%load-compiled-path` に追加する例です。
+
+  ```
+  $ export GUILE_LOAD_COMPILED_PATH=".:../my-library"
+  $ guile -c '(display %load-compiled-path) (newline)'
+  (. ../my-library /usr/local/lib/guile/3.0/ccache)
+  ```
+
+`GUILE_LOAD_PATH`
+: この変数は、読み込み時に Scheme ファイルを検索するパスを拡張するために使用できます。その値はコロンで区切られたディレクトリのリストでなければなりません。特別なパス要素 `...`（省略記号）が含まれている場合、省略記号の位置にデフォルトのパスが置かれます。そうでなければ、デフォルトのパスは末尾に置かれます。結果は `%load-path` に格納されます（「読み込みパス」を参照）。
+
+  以下は、Bash シェルを使って、カレントディレクトリを `%load-path` の先頭に追加し、相対ディレクトリ `../srfi` を末尾に追加する例です。
+
+  ```
+  $ env GUILE_LOAD_PATH=".:...:../srfi" \
+  guile -c '(display %load-path) (newline)'
+  (. /usr/local/share/guile/3.0 \
+  /usr/local/share/guile/site/3.0 \
+  /usr/local/share/guile/site \
+  /usr/local/share/guile \
+  ../srfi)
+  ```
+
+  （注意: 上記の改行は説明のためだけのものであり、実際の例では必要ありません。）
+
+`GUILE_EXTENSIONS_PATH`
+: この変数は、`load-extension`、`dynamic-link`、`load-foreign-library` などを介して外部ライブラリを検索するパスを拡張するために使用できます。その値はコロンで区切られた（Windows ではセミコロンで区切られた）ディレクトリのリストでなければなりません。「外部ライブラリ」を参照してください。
+
+`GUILE_WARN_DEPRECATED`
+: Guile が進化するにつれて、一部の機能は削除されたり、より新しい機能に置き換えられたりします。この進化が起こる中でユーザーがコードを移行するのを助けるために、Guile は最終的に削除される予定の印が付けられた機能を使用するコードについて警告メッセージを発行します。これらの警告メッセージを表示しないよう Guile に指示するには `GUILE_WARN_DEPRECATED` を「no」に設定し、警告を説明するより長いメッセージを表示するよう Guile に指示するには「detailed」に設定します。「非推奨」を参照してください。
+
+`HOME`
+: Guile は、ホームディレクトリの名前である環境変数 `HOME` を使って、`.guile` や `.guile_history` などのさまざまなファイルの場所を特定します。
+
+`GUILE_JIT_THRESHOLD`
+: Guile には、Guile コードの実行を高速にするジャストインタイム（JIT）コード生成器があります。詳細については「ジャストインタイムのネイティブコード」を参照してください。コード生成の単位は関数です。各関数は独自のカウンタを持ち、関数が呼び出されたときと、関数内のループの各反復時にインクリメントされます。カウンタが `GUILE_JIT_THRESHOLD` を超えると、その関数は JIT コンパイルされます。JIT コンパイルを無効にするには `GUILE_JIT_THRESHOLD` を `-1` に設定し、各関数を最初に見たときに積極的に JIT コンパイルするには `0` に設定します。
+
+`GUILE_JIT_LOG`
+: JIT コンパイルのイベントについて、ログの量を増やしていくには `1`、`2`、`3` に設定します。デバッグに使用されます。
+
+`GUILE_JIT_STOP_AFTER`
+: JIT コンパイラはできる限りテストしていますが、バグがある可能性もあります。Guile の JIT コンパイラがプログラムの失敗の原因になっていると疑われる場合は、`GUILE_JIT_STOP_AFTER` を、JIT コンパイルする関数の最大数を示す正の整数に設定してください。`GUILE_JIT_STOP_AFTER` の値で二分探索することで、誤ってコンパイルされている関数を正確に特定できます。
+
+`GUILE_JIT_PAUSE_WHEN_STOPPING`
+: JIT コンパイラのデバッグには、実行中のプロセスを解析する必要がある場合があります。`GUILE_JIT_PAUSE_WHEN_STOPPING` を設定すると、JIT が停止したときにプロセスが一時停止し、デバッガを接続できるようになり、次のようなものが表示されます。
+
+  ```
+  stopping automatic JIT compilation, as requested
+  sleeping for 30s; to debug:
+    gdb -p 133646
+  ```
+
+[^3]: `GUILE_INSTALL_LOCALE` 環境変数は、2.0.9 より前のバージョンの Guile では無視されていました。
 
 ## 4.3 Guile スクリプティング
 
-### 概要
+AWK や Perl、あるいは任意のシェルと同様に、Guile はスクリプトファイルを解釈できます。Guile スクリプトとは、単に Scheme コードのファイルの先頭に、オペレーティングシステムに Guile の起動方法を伝え、次に Guile に Scheme コードの扱い方を伝える追加情報を付けたものです。
 
-Scheme スクリプトファイルを直接実行可能にし、シェルスクリプトのように使用できます。
+- スクリプトファイルの先頭
+- メタスイッチ
+- コマンドラインの処理
+- スクリプティングの例
 
-### スクリプトファイルの構造
+### 4.3.1 スクリプトファイルの先頭
+
+Guile スクリプトの1行目は、オペレーティングシステムに対してスクリプトの評価に Guile を使うよう伝え、次に Guile に対してそれをどのように行うかを伝えなければなりません。最も単純な場合は次のとおりです。
+
+- ファイルの最初の2文字は「`#!`」でなければなりません。
+
+  オペレーティングシステムはこれを、行の残りの部分がスクリプトを解釈できる実行ファイルの名前であるという意味に解釈します。しかし Guile は、これらの文字を、それだけからなる行にある文字「`!#`」で終わる複数行コメントの始まりとして解釈します。（これは、シェルスクリプトをサポートするために追加された、R5RS で説明されている構文の拡張です。）
+
+- これら2文字の直後には、Guile インタプリタへの完全なパス名が来なければなりません。ほとんどのシステムでは、これは「`/usr/local/bin/guile`」になります。
+- 次に空白が来て、その後に Guile に渡すコマンドライン引数が続かなければなりません。これは「`-s`」であるべきです。このスイッチは、端末からユーザーの入力を求める代わりに、スクリプトを実行するよう Guile に指示します。ここではより凝ったこともできます。「メタスイッチ」を参照してください。
+- その後に改行を続けます。
+- スクリプトの2行目には「`!#`」の文字だけを含めるべきです――ファイルの先頭と同じですが、逆順です。オペレーティングシステムはここまで読むことはありませんが、Guile はこれを、1行目で「`#!`」の文字によって始まったコメントの終わりとして扱います。
+- このソースコードファイルが ASCII または ISO-8859-1 でエンコードされていない場合は、ファイルの最初の5行のどこかのコメントに `coding: utf-8` のようなコーディング宣言を記述する必要があります。「ソースファイルの文字エンコーディング」を参照してください。
+- ファイルの残りの部分は Scheme プログラムであるべきです。
+
+Guile はプログラムを読み込み、式が現れる順序でそれらを評価します。ファイルの終わりに達すると、Guile は終了します。
+
+### 4.3.2 メタスイッチ
+
+Guile のコマンドラインスイッチを使うと、プログラマはスクリプト内でかなり複雑な動作を記述できます。残念ながら、POSIX のスクリプト起動の仕組みでは、「`#!`」行の Guile 実行ファイルへのパスの後に引数を1つしか置くことができず、その引数の長さに恣意的な制限を課しています。次のように始まるスクリプトを書いたとしましょう。
 
 ```scheme
-#!/usr/bin/guile -s
+#!/usr/local/bin/guile -e main -s
 !#
-
-; スクリプト本体
 (define (main args)
-  (format #t "Hello from Guile!~n"))
-
-(main (cdr (program-arguments)))
+  (map (lambda (arg) (display arg) (display " "))
+       (cdr args))
+  (newline))
 ```
 
-### メタスイッチの説明
+意図された意味は明らかです。ファイルを読み込み、それからコマンドライン引数に対して `main` を呼び出す、というものです。しかし、システムは Guile のパスの後のすべてを単一の引数――文字列 `"-e main -s"`――として扱うため、これは望んだことではありません。
 
-`#!/usr/bin/guile -s` 行：
-- `#!` - シェバン（実行ビット付きファイルの指定）
-- `/usr/bin/guile` - Guile インタプリタへのパス
-- `-s` - スクリプトモード（以降のコードをスクリプトとして実行）
-- `!#` - Guile メタブロックの終了マーク
+回避策として、メタスイッチ `\` を使うと、Guile プログラマはカーネルにパッチを当てることなく、任意の数のオプションを指定できます。Guile への最初の引数が `\` の場合、Guile は `\` に続く名前のスクリプトファイルを開き、ファイルの2行目から始まる引数を（以下で説明する規則に従って）解析し、それらを `\` スイッチの代わりに置き換えます。
 
-### コマンドライン引数の処理
+メタスイッチと協調して、Guile は文字「`#!`」を、文字「`!#`」だけを含む次の行まで続くコメントの始まりとして扱います。この種のコメントは Guile プログラムのどこにでも現れることができますが、ファイルの先頭で最も有用であり、POSIX のスクリプト起動の仕組みと魔法のようにかみ合います。
+
+したがって、次のように始まる `/u/jimb/ekko` という名前のスクリプトを考えてみましょう。
 
 ```scheme
-#!/usr/bin/guile -s
+#!/usr/local/bin/guile \
+-e main -s
 !#
-
-; 引数を処理する
-(define (process-args args)
-  (cond ((null? args) (display "No arguments\n"))
-        ((> (length args) 1) (display "Multiple arguments\n"))
-        (else (display (car args)) (newline))))
-
-(process-args (cdr (program-arguments)))
+(define (main args)
+        (map (lambda (arg) (display arg) (display " "))
+             (cdr args))
+        (newline))
 ```
 
-### スクリプティングの実践例
+ユーザーがこのスクリプトを次のように起動したとします。
 
-#### ファイル処理
+```
+$ /u/jimb/ekko a b c
+```
+
+何が起こるかは次のとおりです。
+
+- オペレーティングシステムはファイルの先頭にある「`#!`」トークンを認識し、コマンドラインを次のように書き換えます。
+
+  ```
+  /usr/local/bin/guile \ /u/jimb/ekko a b c
+  ```
+
+  これは POSIX で規定されている通常の動作です。
+
+- Guile は最初の2つの引数 `\ /u/jimb/ekko` を見ると、`/u/jimb/ekko` を開き、そこから3つの引数 `-e`、`main`、`-s` を解析して、それらを `\` スイッチの代わりに置き換えます。したがって、Guile のコマンドラインは次のようになります。
+
+  ```
+  /usr/local/bin/guile -e main -s /u/jimb/ekko a b c
+  ```
+
+- 次に Guile はこれらのスイッチを処理します。`/u/jimb/ekko` を Scheme コードのファイルとして読み込み（最初の3行をコメントとして扱う）、それから適用 `(main "/u/jimb/ekko" "a" "b" "c")` を実行します。
+
+Guile はメタスイッチ `\` を見ると、次の規則に従ってスクリプトファイルからコマンドライン引数を解析します。
+
+- 各空白文字は引数を終了させます。これは、2つの連続した空白が引数 `""` を導入することを意味します。
+- 混乱を避けるため、タブ文字は許可されません（以下で説明するようにバックスラッシュ文字でクォートしない限り）。
+- 改行文字は引数の並びを終了させ、最後の空でない引数も終了させます。（ただし、空白の後の改行は最後の空文字列引数を導入しません。それは引数リストを終了させるだけです。）
+- バックスラッシュ文字はエスケープ文字です。バックスラッシュ、空白、タブ、改行をエスケープします。`\n` や `\t` のような ANSI C のエスケープシーケンスもサポートされています。これらは引数の構成要素を生成します。2文字の組み合わせ `\n` は、終端の改行のようには機能しません。ちょうど3つの8進数字からなるエスケープシーケンス `\NNN` は、ASCII コードが NNN である文字として読まれます。上記と同様に、この方法で生成された文字は引数の構成要素です。バックスラッシュの後に他の文字が続くことは許可されません。
+
+### 4.3.3 コマンドラインの処理
+
+コマンドライン引数を受け取って処理する能力は、テキストファイルから情報を抽出したり、既存のコマンドラインアプリケーションとやり取りしたりするなど、特定の問題を解決するための Guile スクリプトを書く際に非常に重要です。この章では、Guile がコマンドライン引数を Guile スクリプトでどのように利用可能にするか、そしてコマンドライン引数の処理を支援するために Guile が提供するユーティリティについて説明します。
+
+Guile スクリプトが起動されると、Guile は手続き `command-line` を介してコマンドライン引数にアクセスできるようにします。この手続きは引数を文字列のリストとして返します。
+
+たとえば、次のスクリプトが
 
 ```scheme
-#!/usr/bin/guile -s
+#! /usr/local/bin/guile -s
 !#
-
-(define (count-lines filename)
-  (let ((lines 0))
-    (with-input-from-file filename
-      (lambda ()
-        (while (not (eof-object? (read-line)))
-          (set! lines (+ lines 1)))))
-    lines))
-
-(let ((file (car (cdr (program-arguments)))))
-  (format #t "Line count: ~a~n" (count-lines file)))
+(write (command-line))
+(newline)
 ```
 
-#### テキスト変換
+ファイル `cmdline-test.scm` に保存され、コマンドライン `./cmdline-test.scm bar.txt -o foo -frumple grob` を使って起動された場合、出力は次のようになります。
 
 ```scheme
-#!/usr/bin/guile -s
+("./cmdline-test.scm" "bar.txt" "-o" "foo" "-frumple" "grob")
+```
+
+スクリプトの起動に、スクリプトを読み込んだ後に呼び出す手続きを指定する `-e` オプションが含まれている場合、Guile はその手続きを `(command-line)` を引数として呼び出します。そのため、`-e` を使うスクリプトは、コード内で明示的に `command-line` を参照する必要はありません。たとえば、上記のスクリプトは、代わりに次のように書いても同一の動作をします。
+
+```scheme
+#! /usr/local/bin/guile \
+-e main -s
 !#
-
-(use-modules (ice-9 rdelim))
-
-(define (transform-text)
-  (let loop ()
-    (let ((line (read-line)))
-      (unless (eof-object? line)
-        (display (string-upcase line))
-        (newline)
-        (loop)))))
-
-(transform-text)
+(define (main args)
+  (write args)
+  (newline))
 ```
 
-## 4.4 Guile を対話的に使用する
+（スクリプトの起動に複数の Guile オプションを含められるように、メタスイッチ `\` を使用していることに注意してください。「メタスイッチ」を参照してください。）
 
-### 概要
+これらのスクリプトは `#!` という POSIX の慣例を使っているため、例のコマンドライン `./cmdline-test.scm bar.txt -o foo -frumple grob` のように、自身のファイル名を使って直接実行できます。しかし、次のように、暗黙の Guile コマンドラインを完全に入力して実行することもできます。
 
-REPL（Read-Eval-Print Loop）を使用して、対話的にコードを実行・テストできます。
+```
+$ guile -s ./cmdline-test.scm bar.txt -o foo -frumple grob
+```
 
-### init ファイル
+または
 
-`~/.guile` ファイルを作成すると、Guile 起動時に自動的に実行されます。
+```
+$ guile -e main -s ./cmdline-test2.scm bar.txt -o foo -frumple grob
+```
+
+スクリプトがこのより長い形式で起動された場合でも、スクリプトが受け取る引数は、短い形式で起動された場合と同じです。Guile は、Guile 自身が処理する引数を取り除くことで、`(command-line)` や `-e` の引数がスクリプトの起動方法に依存しないことを保証しています。
+
+スクリプトは、自分のコマンドライン引数を、選んだどのような方法で解析して処理してもかまいません。しかし、可能なオプションと引数の集合が複雑な場合、すべてのオプションを抽出したり、与えられた引数の妥当性を確認したりすることが難しくなることがあります。この作業は、Guile とともに配布されているモジュール `(ice-9 getopt-long)` を利用することで大幅に単純化できます。「(ice-9 getopt-long) モジュール」を参照してください。
+
+### 4.3.4 スクリプティングの例
+
+まず、Guile を直接起動するいくつかの例を示します。
+
+`guile -- a b c`
+: Guile を対話的に実行します。`(command-line)` は `("/usr/local/bin/guile" "a" "b" "c")` を返します。
+
+`guile -s /u/jimb/ex2 a b c`
+: ファイル `/u/jimb/ex2` を読み込みます。`(command-line)` は `("/u/jimb/ex2" "a" "b" "c")` を返します。
+
+`guile -c '(write %load-path) (newline)'`
+: 変数 `%load-path` の値を書き出し、改行を出力して終了します。
+
+`guile -e main -s /u/jimb/ex4 foo`
+: ファイル `/u/jimb/ex4` を読み込み、それから関数 `main` を呼び出して、リスト `("/u/jimb/ex4" "foo")` を渡します。
+
+`guile -e '(ex4)' -s /u/jimb/ex4.scm foo`
+: ファイル `/u/jimb/ex4.scm` を読み込み、それからモジュール '(ex4)' の関数 `main` を呼び出して、リスト `("/u/jimb/ex4" "foo")` を渡します。
+
+`guile -l first -ds -l last -s script`
+: ファイル `first`、`script`、`last` をこの順序で読み込みます。`-ds` スイッチは、`-s` スイッチをいつ処理するかを指定します。より動機付けのある例については、以下のスクリプトを参照してください。
+
+以下は非常に単純な Guile スクリプトです。
 
 ```scheme
-; ~/.guile
-(display "Welcome to Guile!\n")
-
-; 便利な関数を定義
-(define (square x) (* x x))
-(define (cube x) (* x x x))
+#!/usr/local/bin/guile -s
+!#
+(display "Hello, world!")
+(newline)
 ```
 
-### Readline サポート
+1行目は、このファイルを Guile スクリプトとして印付けます。ユーザーがこれを起動すると、システムは `/usr/local/bin/guile` を実行してスクリプトを解釈させ、`-s`、スクリプトのファイル名、そしてスクリプトに与えられた引数をコマンドライン引数として渡します。Guile は `-s script` を見ると `script` を読み込みます。したがって、このプログラムを実行すると次の出力が生成されます。
 
-Guile は GNU Readline ライブラリをサポートし、強力な行編集機能を提供：
-
-```bash
-scheme@(guile-user)> (+ 2 3)  ; 矢印キーで履歴を参照
-5
-scheme@(guile-user)> (define x 10)
-scheme@(guile-user)> x
-10
+```
+Hello, world!
 ```
 
-### 値の履歴
-
-前の評価結果は特殊な変数で参照できます：
+以下は、引数の階乗を出力するスクリプトです。
 
 ```scheme
-scheme@(guile-user)> (+ 2 3)
-5
-scheme@(guile-user)> $1
-5
-scheme@(guile-user)> (* $1 2)
-10
-scheme@(guile-user)> $2
-10
+#!/usr/local/bin/guile -s
+!#
+(define (fact n)
+  (if (zero? n) 1
+    (* n (fact (- n 1)))))
+
+(display (fact (string->number (cadr (command-line)))))
+(newline)
 ```
 
-### REPL コマンド
+実行例:
 
-REPL では以下の特殊コマンドが利用可能です：
+```
+$ ./fact 5
+120
+$
+```
+
+しかし、このファイルの `fact` の定義を別のスクリプトから使いたいとしましょう。スクリプトファイルを単に読み込んで `fact` の定義を使うことはできません。読み込んだときにスクリプトが階乗を計算して表示しようとするからです。この問題を避けるために、スクリプトを次のように書くことができます。
 
 ```scheme
-; ヘルプの表示
-scheme@(guile-user)> ,help
+#!/usr/local/bin/guile \
+-e main -s
+!#
+(define (fact n)
+  (if (zero? n) 1
+    (* n (fact (- n 1)))))
 
-; モジュール操作
-scheme@(guile-user)> ,module (srfi srfi-1)
-
-; 言語切り替え
-scheme@(guile-user)> ,language scheme
-
-; 式の検査
-scheme@(guile-user)> ,describe map
-
-; プロファイリング開始
-scheme@(guile-user)> ,profile (compute-heavy-task)
-
-; デバッグコマンド
-scheme@(guile-user)> ,trace (function-name)
-scheme@(guile-user)> ,break (lambda () ...)
+(define (main args)
+  (display (fact (string->number (cadr args))))
+  (newline))
 ```
 
-### エラーハンドリング
+このバージョンでは、スクリプトが実行すべき動作を関数 `main` にまとめています。これにより、余計な計算を行うことなく、純粋に定義のためにファイルを読み込むことができます。そして、メタスイッチ `\` とエントリポイントスイッチ `-e` を使って、スクリプトを読み込んだ後に `main` を呼び出すよう Guile に指示しました。
 
-Guile は詳細なエラーメッセージとスタックトレースを提供：
+```
+$ ./fact 50
+30414093201713378043612608166064768844377641568960512000000000000
+```
+
+ここで、組み合わせ関数 choose を計算するスクリプトを書きたいとしましょう。m 個の異なるオブジェクトの集合が与えられたとき、`(choose n m)` は、それぞれ n 個のオブジェクトを含む異なる部分集合の数です。`fact` があれば `choose` を書くのは簡単なので、スクリプトを次のように書くことができます。
 
 ```scheme
-scheme@(guile-user)> (car (cdr (cdr '(1 2))))
-ERROR: In procedure car:
-ERROR: Wrong type argument: ()
+#!/usr/local/bin/guile \
+-l fact -e main -s
+!#
+(define (choose n m)
+  (/ (fact m) (* (fact (- m n)) (fact n))))
 
-scheme@(guile-user)> (/ 1 0)
-ERROR: In procedure /:
-ERROR: Division by zero
+(define (main args)
+  (let ((n (string->number (cadr args)))
+        (m (string->number (caddr args))))
+    (display (choose n m))
+    (newline)))
 ```
 
-### 対話的デバッグ
+ここでのコマンドライン引数は、まずファイル `fact` を読み込み、それから `main` をエントリポイントとしてスクリプトを実行するよう Guile に指示します。言い換えれば、`choose` スクリプトは `fact` スクリプトで行われた定義を使うことができます。いくつかの実行例を示します。
+
+```
+$ ./choose 0 4
+1
+$ ./choose 1 4
+4
+$ ./choose 2 4
+6
+$ ./choose 3 4
+4
+$ ./choose 4 4
+1
+$ ./choose 50 100
+100891344545564193334812497256
+```
+
+与えられたモジュールの特定の手続きを呼び出すには、特殊形式 `(@ (module) procedure)` を使うことができます。
 
 ```scheme
-; 関数の実行トレース
-scheme@(guile-user)> (trace my-function)
-scheme@(guile-user)> (my-function 5)
-; my-function の呼び出しと戻り値が表示される
+#!/usr/local/bin/guile \
+-l fact -e (@ (fac) main) -s
+!#
+(define-module (fac)
+  #:export (main))
 
-; トレース終了
-scheme@(guile-user)> (untrace my-function)
+(define (choose n m)
+  (/ (fact m) (* (fact (- m n)) (fact n))))
+
+(define (main args)
+  (let ((n (string->number (cadr args)))
+        (m (string->number (caddr args))))
+    (display (choose n m))
+    (newline)))
 ```
 
-## 4.5 Emacs での Guile 使用
-
-### 概要
-
-Guile は Emacs と統合でき、Emacs Lisp と Scheme の共存が可能です。
-
-### Geiser インテグレーション
-
-`geiser` パッケージを Emacs にインストールすると、Guile との対話が容易になります。
-
-```elisp
-; .emacs
-(require 'geiser-guile)
-(setq geiser-active-implementations '(guile))
-```
-
-### Scheme ファイルの編集と実行
-
-Emacs で `.scm` ファイルを編集するとき：
-
-- `C-c C-z` - Guile REPL を起動
-- `C-c C-c` - 定義をコンパイル
-- `C-c C-l` - ファイルをロード
-- `C-c C-r` - リージョンを評価
-
-## 4.6 Guile ツール
-
-### 概要
-
-Guile は開発・保守を支援する様々なコマンドラインツールを提供します。
-
-### 主要なツール
-
-```bash
-# Scheme ファイルのコンパイル
-guile-tools compile script.scm
-
-# ドキュメントの表示
-guile-tools doc procedure-name
-
-# REPL の起動（フル機能）
-guile
-
-# スクリプト実行
-guile script.scm arg1 arg2
-```
-
-### スクリプト管理
-
-Guile スクリプトは実行ビットを付けることで直接実行可能：
-
-```bash
-chmod +x script.scm
-./script.scm arg1 arg2
-```
-
-## 4.7 モジュールの配布とインストール
-
-### 概要
-
-Scheme モジュールをシステムにインストールして、複数のプロジェクトで再利用できます。
-
-### モジュールの配置
-
-```
-my-project/
-├── modules/
-│   └── my-lib/
-│       ├── utilities.scm
-│       └── math.scm
-├── configure.ac
-└── Makefile.in
-```
-
-### インストール手順
-
-```bash
-./configure
-make
-make install
-
-# インストール後、モジュールは自動的に検出可能
-(use-modules (my-lib utilities))
-```
-
-### モジュール設定の例
+エクスポートされていない手続きを呼び出すには `@@` を使うことができます。エクスポートされた手続きについては、省略形 `(module)` を使ってこの呼び出しを単純化できます。
 
 ```scheme
-; modules/my-lib/utilities.scm
-(define-module (my-lib utilities)
-  #:use-module (srfi srfi-1)
-  #:export (double triple process-list))
+#!/usr/local/bin/guile \
+-l fact -e (fac) -s
+!#
+(define-module (fac)
+  #:export (main))
 
-(define (double x) (* x 2))
-(define (triple x) (* x 3))
-(define (process-list lst) (map double lst))
+(define (choose n m)
+  (/ (fact m) (* (fact (- m n)) (fact n))))
+
+(define (main args)
+  (let ((n (string->number (cadr args)))
+        (m (string->number (caddr args))))
+    (display (choose n m))
+    (newline)))
 ```
+
+移植性を最大にするために、代わりにシェルを使って、指定されたコマンドライン引数で guile を実行することができます。ここでは、コマンド引数を正しくクォートするよう注意する必要があります。
+
+```scheme
+#!/usr/bin/env sh
+exec guile -l fact -e '(@ (fac) main)' -s "$0" "$@"
+!#
+(define-module (fac)
+  #:export (main))
+
+(define (choose n m)
+  (/ (fact m) (* (fact (- m n)) (fact n))))
+
+(define (main args)
+  (let ((n (string->number (cadr args)))
+        (m (string->number (caddr args))))
+    (display (choose n m))
+    (newline)))
+```
+
+最後に、熟練したスクリプト作者はおそらく、サブプロセスについての言及がないことを物足りなく思っているでしょう。たとえば Bash では、ほとんどのシェルスクリプトは実際の作業を行うために `sed` などの他のプログラムを実行します。Guile では多くの場合、Guile 自体の中ですべてを済ませることができるので、まずはそれを試してみてください。しかし、単にプログラムを実行してその終了を待つ必要がある場合は、`system*` を使用してください。サブプログラムを実行してその出力を捕捉したり、入力を与えたりする必要がある場合は、`open-pipe` を使用してください。詳細については「プロセス」と「パイプ」を参照してください。
+
+## 4.4 Guile を対話的に使う
+
+`-c` 引数や実行するスクリプトの名前を付けずに、単に `guile` と入力して Guile を起動すると、Scheme 式を入力できる対話的インタプリタが得られ、Guile はそれを評価して結果を表示してくれます。いくつかの簡単な例を示します。
+
+```
+scheme@(guile-user)> (+ 3 4 5)
+$1 = 12
+scheme@(guile-user)> (display "Hello world!\n")
+Hello world!
+scheme@(guile-user)> (values 'a 'b)
+$2 = a
+$3 = b
+```
+
+この使い方のモードは REPL と呼ばれます。これは「Read-Eval-Print Loop」の略で、Guile インタプリタがまず入力された式を読み込み（read）、次にそれを評価し（eval）、それから結果を表示する（print）からです。
+
+プロンプトは、現在どの言語とどのモジュールにいるかを示します。この場合、現在の言語は `scheme` で、現在のモジュールは `(guile-user)` です。Scheme 以外の言語に対する Guile のサポートの詳細については、「他の言語のサポート」を参照してください。
+
+- 初期化ファイル ~/.guile
+- Readline
+- 値の履歴
+- REPL コマンド
+- エラー処理
+- 対話的デバッグ
+
+### 4.4.1 初期化ファイル ~/.guile
+
+対話的に実行されると、Guile は `~/.guile` からローカルの初期化ファイルを読み込みます。このファイルには評価する Scheme 式を含めるべきです。
+
+この機能により、ユーザーは追加のモジュールを取り込んだり、REPL の実装をパラメータ化したりして、自分の対話的な Guile 環境をカスタマイズできます。
+
+初期化ファイルを読み込まずに Guile を実行するには、`-q` コマンドラインオプションを使用します。
+
+### 4.4.2 Readline
+
+以前に入力した式を繰り返したり変更したり、あるいは入力中の式を編集したりしやすくするために、Guile は GNU Readline ライブラリを使用できます。これはライセンス上の理由からデフォルトでは有効になっていませんが、Readline を有効にするのに必要なのは次の2行だけです。
+
+```
+scheme@(guile-user)> (use-modules (ice-9 readline))
+scheme@(guile-user)> (activate-readline)
+```
+
+これら2行を（`scheme@(guile-user)>` プロンプトを除いて）`.guile` ファイルに入れておくとよいでしょう。`.guile` の詳細については「初期化ファイル ~/.guile」を参照してください。
+
+### 4.4.3 値の履歴
+
+Readline が以前の入力行を再利用するのを助けるのと同じように、値の履歴を使うと、以前の評価の結果を新しい式の中で使うことができます。値の履歴が有効になっていると、各評価結果は変数 `$1`、`$2`、… の並びの次のものに自動的に代入されます。その後、これらの変数を後続の式で使用できます。
+
+```
+scheme@(guile-user)> (iota 10)
+$1 = (0 1 2 3 4 5 6 7 8 9)
+scheme@(guile-user)> (apply * (cdr $1))
+$2 = 362880
+scheme@(guile-user)> (sqrt $2)
+$3 = 602.3952191045344
+scheme@(guile-user)> (cons $2 $1)
+$4 = (362880 0 1 2 3 4 5 6 7 8 9)
+```
+
+Guile の REPL は `(ice-9 history)` モジュールをインポートするため、値の履歴はデフォルトで有効になっています。値の履歴は、オプションのインターフェースを使って REPL 内でオフまたはオンにできます。
+
+```
+scheme@(guile-user)> ,option value-history #f
+scheme@(guile-user)> 'foo
+foo
+scheme@(guile-user)> ,option value-history #t
+scheme@(guile-user)> 'bar
+$5 = bar
+```
+
+値の履歴がオフであっても、以前に記録された値には引き続きアクセスできることに注意してください。まれに、これらの過去の計算への参照によって、Guile がメモリを使いすぎることがあります。以下で説明する `clear-value-history!` 手続きを使ってこれらの値をクリアすることで、ガベージコレクションを可能にできるかもしれません。
+
+値の履歴へのプログラム的なインターフェースはモジュールにあります。
+
+```scheme
+(use-modules (ice-9 history))
+```
+
+**Scheme 手続き: `value-history-enabled?`**
+: 値の履歴が有効であれば真を、そうでなければ偽を返します。
+
+**Scheme 手続き: `enable-value-history!`**
+: 値の履歴がオフであれば、オンにします。
+
+**Scheme 手続き: `disable-value-history!`**
+: 値の履歴がオンであれば、オフにします。
+
+**Scheme 手続き: `clear-value-history!`**
+: 値の履歴をクリアします。格納されていた値が他のデータ構造やクロージャによって捕捉されていなければ、それらはその後ガベージコレクタによって回収される可能性があります。
+
+### 4.4.4 REPL コマンド
+
+REPL は、式を読み込み、評価し、その結果を表示するために存在します。しかし、ときには REPL に式を別の方法で評価するよう指示したり、まったく別のことをさせたりしたいことがあります。ユーザーは REPL コマンドを使って REPL の動作に影響を与えることができます。
+
+前の節には、`,option` という形のコマンドの例がありました。
+
+```
+scheme@(guile-user)> ,option value-history #t
+```
+
+コマンドは、先頭のカンマ（「`,`」）によって式と区別されます。ほとんどの言語ではカンマで式を始めることはできないため、後続のテキストが式ではなくコマンドを形成していることを REPL に示す効果的な目印となります。
+
+REPL コマンドは常にそこにあるので便利です。現在のモジュールに `pretty-print` の束縛がなくても、いつでも `,pretty-print` を使うことができます。
+
+以下の節では、さまざまなコマンドを機能ごとにまとめて文書化しています。多くのコマンドには省略形があります。詳細についてはオンラインヘルプ（`,help`）を参照してください。
+
+- ヘルプコマンド
+- モジュールコマンド
+- 言語コマンド
+- コンパイルコマンド
+- プロファイルコマンド
+- デバッグコマンド
+- 検査コマンド
+- システムコマンド
+
+#### 4.4.4.1 ヘルプコマンド
+
+Guile が対話的に起動すると、「`,help`」と入力すればヘルプが得られることをユーザーに通知します。実際、`help` はコマンドであり、ユーザーが残りのコマンドを発見できるようにするため、特に有用なものです。
+
+**REPL コマンド: `help [all | group | [-c] command]`**
+: ヘルプを表示します。
+
+  引数が1つの場合、その引数をグループ名として検索しようとし、成功すればそのグループに関するヘルプを表示します。そうでなければ、その引数をコマンドとして検索しようとし、そのコマンドに関するヘルプを表示します。
+
+  グループ名でもある名前のコマンドがある場合は、グループではなくコマンドに関するヘルプを表示するために「`-c command`」の形式を使用してください。
+
+  引数がない場合は、ヘルプコマンドとコマンドグループのリストが表示されます。
+
+**REPL コマンド: `show [topic]`**
+: Guile に関する情報を表示します。
+
+  引数が1つの場合、特定の情報を表示しようとします。現在サポートされているトピックは「warranty」（または「w」）、「copying」（または「c」）、「version」（または「v」）です。
+
+  引数がない場合は、トピックのリストが表示されます。
+
+**REPL コマンド: `apropos regexp`**
+: 束縛/モジュール/パッケージを検索します。
+
+**REPL コマンド: `describe obj`**
+: 説明/ドキュメントを表示します。
+
+#### 4.4.4.2 モジュールコマンド
+
+**REPL コマンド: `module [module]`**
+: モジュールを変更します / 現在のモジュールを表示します。
+
+**REPL コマンド: `import module …`**
+: モジュールをインポートします / インポートされているものを一覧表示します。
+
+**REPL コマンド: `load file`**
+: 現在のモジュールでファイルを読み込みます。
+
+**REPL コマンド: `reload [module]`**
+: 与えられたモジュールを、何も与えられなければ現在のモジュールを、再読み込みします。
+
+**REPL コマンド: `binding`**
+: 現在の束縛を一覧表示します。
+
+**REPL コマンド: `in module expression`**<br>**REPL コマンド: `in module command arg …`**
+: モジュールの文脈で式を評価するか、あるいは別のメタコマンドを実行します。たとえば、「`,in (foo bar) ,binding`」はモジュール `(foo bar)` の束縛を表示します。
+
+#### 4.4.4.3 言語コマンド
+
+**REPL コマンド: `language language`**
+: 言語を変更します。
+
+#### 4.4.4.4 コンパイルコマンド
+
+**REPL コマンド: `compile exp`**
+: コンパイル済みコードを生成します。
+
+**REPL コマンド: `compile-file file`**
+: ファイルをコンパイルします。
+
+**REPL コマンド: `expand exp`**
+: 形式中のすべてのマクロを展開します。
+
+**REPL コマンド: `optimize exp`**
+: コードの一部に対して最適化器を実行し、その結果を表示します。
+
+**REPL コマンド: `disassemble exp`**
+: コンパイル済みの手続きを逆アセンブルします。
+
+**REPL コマンド: `disassemble-file file`**
+: ファイルを逆アセンブルします。
+
+#### 4.4.4.5 プロファイルコマンド
+
+**REPL コマンド: `time exp`**
+: 実行時間を計測します。
+
+**REPL コマンド: `profile exp [#:hz hz=100] [#:count-calls? count-calls?=#f] [#:display-style display-style=list]`**
+: 式の実行をプロファイルします。このコマンドは `exp` をコンパイルし、それから statprof プロファイラの中で実行し、すべてのキーワードオプションを `statprof` 手続きに渡します。statprof とこのコマンドで利用可能なオプションの詳細については、「Statprof」を参照してください。
+
+**REPL コマンド: `trace exp [#:width w] [#:max-indent i]`**
+: 実行をトレースします。
+
+  デフォルトでは、トレースの幅は端末の幅、または指定された場合は `width` に制限されます。入れ子になった手続きの呼び出しはより右側に表示されますが、インデントの幅が `max-indent` を超えると、インデントは省略されます。
+
+これらの REPL コマンドは、`(ice-9 time)` モジュールを含めることで、Scheme コード内で通常の関数として呼び出すこともできます。
+
+#### 4.4.4.6 デバッグコマンド
+
+これらのデバッグコマンドは再帰的な REPL の中でのみ利用可能で、トップレベルでは機能しません。
+
+**REPL コマンド: `backtrace [count] [#:width w] [#:full? f]`**
+: バックトレースを表示します。
+
+  すべてのスタックフレーム、または最も内側の `count` 個のフレームのバックトレースを表示します。`count` が負の場合、最後の `count` 個のフレームが表示されます。
+
+**REPL コマンド: `up [count]`**
+: 呼び出し元のスタックフレームを選択します。
+
+  このフレームを呼び出したスタックフレームを選択して表示します。引数は何フレーム上に行くかを指定します。
+
+**REPL コマンド: `down [count]`**
+: 呼び出されたスタックフレームを選択します。
+
+  このフレームから呼び出されたスタックフレームを選択して表示します。引数は何フレーム下に行くかを指定します。
+
+**REPL コマンド: `frame [idx]`**
+: フレームを表示します。
+
+  選択されたフレームを表示します。引数がある場合は、インデックスでフレームを選択してから表示します。
+
+**REPL コマンド: `locals`**
+: 局所変数を表示します。
+
+  選択されたフレームで局所的に束縛されている変数を表示します。
+
+**REPL コマンド: `error-message`**<br>**REPL コマンド: `error`**
+: エラーメッセージを表示します。
+
+  現在のデバッグ REPL を開始させたエラーに関連付けられたメッセージを表示します。
+
+**REPL コマンド: `registers`**
+: 現在のフレームに関連付けられた VM レジスタを表示します。
+
+  VM スタックフレームの詳細については「スタックレイアウト」を参照してください。
+
+**REPL コマンド: `width [cols]`**
+: `,backtrace` と `,locals` の出力の表示列数を `cols` に設定します。`cols` が与えられない場合は、端末の幅が使用されます。
+
+次の3つのコマンドは、どの REPL でも機能します。
+
+**REPL コマンド: `break proc`**
+: `proc` にブレークポイントを設定します。
+
+**REPL コマンド: `break-at-source file line`**
+: 与えられたソース位置にブレークポイントを設定します。
+
+**REPL コマンド: `tracepoint proc`**
+: 与えられた手続きにトレースポイントを設定します。これにより、その手続きのすべての呼び出しでトレースメッセージが表示されるようになります。詳細については「トレーストラップ」を参照してください。
+
+この小節の残りのコマンドはすべて、スタックが継続可能である場合――言い換えれば、スタックの由来であるプログラムが実行を続けることに意味がある場合――にのみ適用されます。通常、これはプログラムがトラップまたはブレークポイントによって停止したことを意味します。
+
+**REPL コマンド: `step`**
+: デバッグ中のプログラムに、次のソース位置までステップ実行するよう指示します。
+
+**REPL コマンド: `next`**
+: デバッグ中のプログラムに、同じフレーム内の次のソース位置までステップ実行するよう指示します。（これがどのように機能するかの詳細については「トラップ」を参照してください。）
+
+**REPL コマンド: `finish`**
+: デバッグ中のプログラムに、現在のスタックフレームが完了するまで実行を続け、その時点で結果を表示して REPL に再び入るよう指示します。
+
+#### 4.4.4.7 検査コマンド
+
+**REPL コマンド: `inspect exp`**
+: `exp` を評価した結果を検査します。
+
+**REPL コマンド: `pretty-print exp`**
+: `exp` を評価した結果を整形して表示します。
+
+#### 4.4.4.8 システムコマンド
+
+**REPL コマンド: `gc`**
+: ガベージコレクションを行います。
+
+**REPL コマンド: `statistics`**
+: 統計情報を表示します。
+
+**REPL コマンド: `option [name] [exp]`**
+: 引数がない場合、すべてのオプションを一覧表示します。引数が1つの場合、`name` オプションの現在の値を表示します。引数が2つの場合、`name` オプションを Scheme 式 `exp` を評価した結果に設定します。
+
+**REPL コマンド: `quit`**
+: このセッションを終了します。
+
+現在の REPL オプションには次のものがあります。
+
+`compile-options`
+: REPL で入力された式をコンパイルするときに使用されるオプションです。コンパイルオプションの詳細については「Scheme コードのコンパイル」を参照してください。
+
+`interp`
+: そのような選択肢が利用可能な場合に、REPL で与えられた式を解釈するかコンパイルするか。デフォルトではオフです（コンパイルを示す）。
+
+`prompt`
+: カスタマイズされた REPL プロンプトです。デフォルトでは `#f` で、デフォルトのプロンプトを示します。
+
+`print`
+: 各式を評価した結果を表示するために使用される、2引数の手続きです。引数は現在の REPL と表示する値です。デフォルトでは `#f` で、デフォルトの手続きを使用します。
+
+`value-history`
+: 値の履歴がオンかどうか。「値の履歴」を参照してください。
+
+`on-error`
+: エラーが発生したときに何をするか。デフォルトでは `debug` で、デバッガに入ることを意味します。他の値には、デバッガに入らずにバックトレースを表示する `backtrace` や、単に短いエラーの出力を表示する `report` があります。
+
+REPL オプションのデフォルト値は、`(system repl common)` の `repl-default-option-set!` を使って設定できます。
+
+**Scheme 手続き: `repl-default-option-set! key value`**
+: REPL オプションのデフォルト値を設定します。この関数は、ユーザーの初期化ファイルで特に有用です。「初期化ファイル ~/.guile」を参照してください。
+
+### 4.4.5 エラー処理
+
+REPL から評価されているコードがエラーに遭遇すると、Guile は新しいプロンプトに入り、エラーの文脈を検査できるようにします。
+
+```
+scheme@(guile-user)> (map string-append '("a" "b") '("c" #\d))
+ERROR: In procedure string-append:
+ERROR: Wrong type (expecting string): #\d
+Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
+scheme@(guile-user) [1]>
+```
+
+新しいプロンプトは古いプロンプトの内側で、エラーの動的文脈の中で実行されます。これは再帰的な REPL であり、スタックの具象化された表現が追加されていて、デバッグの準備ができています。
+
+`,backtrace`（省略形 `,bt`）は、エラーが発生した時点での Scheme の呼び出しスタックを表示します。
+
+```
+scheme@(guile-user) [1]> ,bt
+           1 (map #<procedure string-append _> ("a" "b") ("c" #\d))
+           0 (string-append "b" #\d)
+```
+
+上の例では、`map` と `string-append` がどちらもプリミティブであるため、バックトレースにはあまりソース情報がありません。しかし一般的な場合には、バックトレースの左側の空白に、ある手続きが別の手続きを呼び出している行と列が示されます。
+
+再帰的な REPL は、他の REPL を終了するのと同じ方法で終了できます。たとえば「`(quit)`」、「`,quit`」（省略形「`,q`」）、または C-d などです。
+
+### 4.4.6 対話的デバッグ
+
+再帰的なデバッグ REPL は、エラー発生時点での計算の状態を検査する他の多くのメタコマンドを提供します。これらのコマンドを使うと、次のことができます。
+
+- エラーが発生した時点での Scheme の呼び出しスタックを表示する。
+- 呼び出しスタックを上下に移動して、各フレームで評価されている式や適用されている手続きを詳しく見る。
+- 各フレームの文脈で変数や式の値を調べる。
+
+個々のコマンドのドキュメントについては「デバッグコマンド」を参照してください。この節では、典型的なデバッグセッションの手順をより詳しく紹介することを目指しています。
+
+まず、良いエラーが必要です。準クォート（quasiquote）形式の外で式 `(unquote foo)` をマクロ展開しようとして、マクロ展開器がこのエラーをどのように報告するかを見てみましょう。
+
+```
+scheme@(guile-user)> (macroexpand '(unquote foo))
+ERROR: In procedure macroexpand:
+ERROR: unquote: expression not valid outside of quasiquote in (unquote foo)
+Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
+scheme@(guile-user) [1]>
+```
+
+`bt` としても呼び出せる `backtrace` コマンドは、デバッガに入った時点での呼び出しスタック（別名バックトレース）を表示します。
+
+```
+scheme@(guile-user) [1]> ,bt
+In ice-9/psyntax.scm:
+  1130:21  3 (chi-top (unquote foo) () ((top)) e (eval) (hygiene #))
+  1071:30  2 (syntax-type (unquote foo) () ((top)) #f #f (# #) #f)
+  1368:28  1 (chi-macro #<procedure de9360 at ice-9/psyntax.scm...> ...)
+In unknown file:
+           0 (scm-error syntax-error macroexpand "~a: ~a in ~a" # #f)
+```
+
+呼び出しスタックはスタックフレームの並びで構成され、各フレームは、別の手続きから返される値を使って何かをしようと待っている1つの手続きを表しています。ここではスタック上に4つのフレームがあることが分かります。
+
+`macroexpand` はスタック上にないことに注意してください――それは `chi-top` への末尾呼び出しを行ったに違いありません。実際、`ice-9/psyntax.scm` でその定義を探せばそれが分かるでしょう。
+
+デバッガに入ると、最も内側のフレームが選択されます。これは、「現在の」フレームに関する情報を取得するコマンドや、現在のフレームの文脈で式を評価するコマンドが、デフォルトでは最も内側のフレームに関して動作することを意味します。これらの操作が別のフレームに適用されるように別のフレームを選択するには、次のように `up`、`down`、`frame` コマンドを使用します。
+
+```
+scheme@(guile-user) [1]> ,up
+In ice-9/psyntax.scm:
+  1368:28  1 (chi-macro #<procedure de9360 at ice-9/psyntax.scm...> ...)
+scheme@(guile-user) [1]> ,frame 3
+In ice-9/psyntax.scm:
+  1130:21  3 (chi-top (unquote foo) () ((top)) e (eval) (hygiene #))
+scheme@(guile-user) [1]> ,down
+In ice-9/psyntax.scm:
+  1071:30  2 (syntax-type (unquote foo) () ((top)) #f #f (# #) #f)
+```
+
+フレーム2で何が起きているかに興味があるかもしれないので、その局所変数を見てみましょう。
+
+```
+scheme@(guile-user) [1]> ,locals
+  Local variables:
+  $1 = e = (unquote foo)
+  $2 = r = ()
+  $3 = w = ((top))
+  $4 = s = #f
+  $5 = rib = #f
+  $6 = mod = (hygiene guile-user)
+  $7 = for-car? = #f
+  $8 = first = unquote
+  $9 = ftype = macro
+  $10 = fval = #<procedure de9360 at ice-9/psyntax.scm:2817:2 (x)>
+  $11 = fe = unquote
+  $12 = fw = ((top))
+  $13 = fs = #f
+  $14 = fmod = (hygiene guile-user)
+```
+
+すべての値は、値の履歴の名前（`$n`）でアクセスできます。
+
+```
+scheme@(guile-user) [1]> $10
+$15 = #<procedure de9360 at ice-9/psyntax.scm:2817:2 (x)>
+```
+
+REPL で手続きを直接呼び出すことさえできます。
+
+```
+scheme@(guile-user) [1]> ($10 'not-going-to-work)
+ERROR: In procedure macroexpand:
+ERROR: source expression failed to match any pattern in not-going-to-work
+Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
+```
+
+さて、この時点でエラーの中でエラーを起こしてしまいました。トップレベルに戻りましょう。
+
+```
+scheme@(guile-user) [2]> ,q
+scheme@(guile-user) [1]> ,q
+scheme@(guile-user)>
+```
+
+最後に、賢明な人への一言: ハッカーは REPL のプロンプトを C-d で閉じます。
+
+## 4.5 Emacs で Guile を使う
+
+どのテキストエディタでも Scheme を編集できますが、優れているものもあればそうでないものもあります。もちろん最高なのは Emacs であり、それは単に優れたテキストエディタだからというだけではありません。Emacs は最初から Scheme をよくサポートしており、適切なインデント規則、括弧の対応付け、構文ハイライト、さらには構造的編集のためのキーバインドのセットまで備えていて、バランスの取れた S 式に対して機能する移動、カット&ペースト、入れ替えの操作が可能です。
+
+それでもなお、Emacs と Guile での体験を大幅に向上させるものが2つあります。
+
+1つ目は Taylor Campbell の Paredit です。Paredit なしでどの Lisp 方言でもコードを書くべきではありません。（意見のない文章は退屈だと言われます――だからこの口調なのですが――それでも、これは真実です。）Paredit は最高です。
+
+2つ目は José Antonio Ortega Ruiz の Geiser です。Geiser は、comint-mode の REPL バッファを介して実行中の Guile プロセスと緊密に統合することで、Emacs の scheme-mode を補完します。
+
+もちろん REPL に切り替えるためのキーバインドや優れた REPL 環境もありますが、Geiser はそれを超えて、次のものを提供します。
+
+- 現在のファイルのモジュールの文脈での形式の評価
+- マクロ展開
+- ファイル/モジュールの読み込みおよび/またはコンパイル
+- 名前空間を認識した識別子の補完（局所束縛、現在のモジュールで見える名前、モジュール名を含む）
+- Autodoc: カーソル位置周辺の手続き/マクロのシグネチャに関する情報をエコー領域に自動的に表示
+- カーソル位置の識別子の定義へのジャンプ
+- ドキュメントへのアクセス（実装が提供していれば docstring を含む）
+- 指定されたモジュールがエクスポートする識別子の一覧
+- 手続きの呼び出し元/呼び出し先の一覧
+- デバッグとエラーのナビゲーションに対する初歩的なサポート
+- 複数の REPL の同時使用のサポート
+
+詳細については、Geiser のウェブページ http://www.nongnu.org/geiser/ を参照してください。
+
+## 4.6 Guile ツールを使う
+
+Guile には、コンパイラ、逆アセンブラ、いくつかのモジュール検査ツール、そして将来的にはインターネットから Guile パッケージをインストールするシステムなど、増え続けるコマンドラインユーティリティも付属しています。これらのツールは `guild` プログラムを使って起動できます。
+
+```
+$ guild compile -o foo.go foo.scm
+wrote `foo.go'
+```
+
+このプログラムは Guile バージョン 2.0.1 までは `guile-tools` と呼ばれており、後方互換性のために今でもその名前で呼び出すことができます。しかし私たちは名前を `guild` に変更しました。それは心地よく短く読みやすいからというだけでなく、このツールが、ハッカーたちが CPAN のようなシステムを使って互いにコードを共有できるようにすることで、Guile の魔法使いたちを結び付ける（ギルドとして）役割を果たすからです。
+
+`guild compile` の詳細については「Scheme コードのコンパイル」を参照してください。
+
+`guild` スクリプトの完全なリストは、`guild list` または単に `guild` を起動することで得られます。
+
+## 4.7 サイトパッケージのインストール
+
+いずれ、自分のコードを他の人と共有したくなるでしょう。それを効果的に行うには、ユーザーがパッケージを簡単にインストールして使用できるように、共通の慣例に従うことが重要です。
+
+最初に行うべきことは、Guile が見つけられる場所に Scheme ファイルをインストールすることです。Guile が Scheme ファイルを探しに行くときは、読み込みパスを検索してファイルを見つけます。まず Guile 自身のパスで、次にサイトパッケージのパスで探します。サイトパッケージとは、インストールされている Scheme コードのうち、Guile 自体の一部ではないものです。読み込みパスの詳細については「読み込みパス」を参照してください。
+
+歴史的な理由からサイトパスはいくつかありますが、一般に使用すべきものは `%site-dir` 手続きを呼び出すことで得られます。「設定、ビルド、インストール」を参照してください。Guile 3.0 がシステムの `/usr/` にインストールされている場合、`(%site-dir)` は `/usr/share/guile/site/3.0` になります。Scheme ファイルはそこにインストールすべきです。
+
+コンパイル済みの `.go` ファイルをインストールしない場合、Guile はモジュールやプログラムを最初に使用されたときにコンパイルし、ユーザーのホームディレクトリにキャッシュします。自動コンパイルの詳細については「Scheme コードのコンパイル」を参照してください。しかし、ファイルをインストールする前にコンパイルしておき、Guile が見つけられる場所にファイルを単にコピーするほうがよいでしょう。
+
+Scheme ファイルと同様に、Guile はコンパイル済みの `.go` ファイルを見つけるためにパス `%load-compiled-path` を検索します。デフォルトでは、このパスには2つのエントリがあります。Guile のファイルのためのパスと、サイトパッケージのためのパスです。`.go` ファイルは後者のディレクトリにインストールすべきで、その値は `%site-ccache-dir` 手続きを呼び出すことで返されます。前の例と同様に、Guile 3.0 がシステムの `/usr/` にインストールされている場合、`(%site-ccache-dir)` のサイトパッケージは `/usr/lib/guile/3.0/site-ccache` になります。
+
+`.go` ファイルは、それがより新しい場合にのみ `.scm` ファイルより優先して読み込まれることに注意してください。そのため、Scheme ファイルを先にインストールし、コンパイル済みファイルを後にインストールすべきです。読み込みプロセスの詳細については「読み込みパス」を参照してください。
+
+最後に、この節は Scheme についてのものですが、C の拡張もインストールする必要がある場合があります。共有ライブラリは extensions ディレクトリにインストールすべきです。この値はビルド設定から得られます（「設定、ビルド、インストール」を参照）。繰り返しになりますが、Guile 3.0 がシステムの `/usr/` にインストールされている場合、extensions ディレクトリは `/usr/lib/guile/3.0/extensions` になります。
 
 ## 4.8 Guile コードの配布
 
-### 概要
+Guile にはバンドルされていないものの、日々の Guile の体験において非常に役立つツールがあります。そのツールとは Hall です。
 
-Scheme プログラムを他のユーザーに配布するための方法とベストプラクティス。
+Hall は、シンプルなコマンドラインインターフェースを通じて、Guile プロジェクトの作成、管理、パッケージ化を支援します。新しいプロジェクトを開始すると、Hall は新しいプロジェクトの骨組みを含むフォルダを作成します。それには、テスト、ライブラリ、スクリプト、ドキュメントのためのディレクトリが含まれています。これにより、作業中のファイルをどこに置けばよいかがすぐに分かります。
 
-### 配布パッケージの構成
-
-```
-package-name/
-├── README
-├── AUTHORS
-├── COPYING
-├── configure.ac
-├── Makefile.in
-├── src/
-│   └── main.scm
-├── tests/
-│   └── test-main.scm
-└── docs/
-    └── manual.md
-```
-
-### ライセンスと著作権
-
-- **GPL**: フリーソフトウェア、変更後も公開義務
-- **LGPL**: ライブラリとしての使用に適切
-- **BSD/MIT**: シンプルで寛容なライセンス
-
-### ドキュメント作成
-
-```scheme
-; コメント付きコード例
-(define (factorial n)
-  "計算 n!（n の階乗）
-   Args:
-     n - 非負整数
-   Returns:
-     n の階乗"
-  (if (<= n 1) 1
-      (* n (factorial (- n 1)))))
-```
-
-### テストの含含
-
-```bash
-# テスト実行
-make check
-
-# カバレッジ測定
-guile-tools coverage tests/test-*.scm
-```
+さらに、骨組みには基本的な「Autotools」の設定が含まれているので、それを自分で手当てする必要はありません（GNU の「Autotools」の詳細については、『Autoconf: Creating Automatic Configuration Scripts』の「The GNU Build System」を参照してください）。プロジェクトに Autotools が設定されているということは、自分のコードが他の人のコンピュータで動作するかどうかを心配することなく、すぐにプロジェクトの作業を始められるということです。Hall は GNU Guix パッケージマネージャのためのパッケージ定義も生成できるので、Guix のユーザーが簡単にインストールできるようになります。
 
 ---
 
-> **ライセンス**: このドキュメント内の翻訳は、GNU Free Documentation License v1.3 以降に基づいて作成されています。
+> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
 > 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
