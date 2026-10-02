@@ -6,6 +6,7 @@ interface PrefixKeymapOptions {
   onRedo?: () => void
   onSwitchBuffer?: () => void
   onKillBuffer?: () => void
+  onListBuffers?: () => void
 }
 
 /**
@@ -19,6 +20,7 @@ export function usePrefixKeymap({
   onRedo,
   onSwitchBuffer,
   onKillBuffer,
+  onListBuffers,
 }: PrefixKeymapOptions) {
   const awaitingX = useRef(false)
 
@@ -44,6 +46,11 @@ export function usePrefixKeymap({
       if (e.ctrlKey && e.key === '/') {
         e.preventDefault()
         onRedo?.()
+        return true
+      }
+      if (e.ctrlKey && e.key === 'b') {
+        e.preventDefault()
+        onListBuffers?.()
         return true
       }
       if (e.key === 'h') {
