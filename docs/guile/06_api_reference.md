@@ -1,941 +1,244 @@
-# 6. API リファレンス
+# 6 API リファレンス
 
-> **原文**: [Guile Reference Manual - API Reference](https://www.gnu.org/software/guile/manual/guile.html#API-Reference)
-> 
-> このドキュメントはGNU Free Documentation Licenseの下で公開されています。
+> **原文**: [Guile Reference Manual - API Reference](https://www.gnu.org/software/guile/manual/html_node/API-Reference.html)
+>
+> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
 
-このセクションでは、Guile が提供する包括的な API（Application Programming Interface）について詳細に説明します。C プログラムから Guile を使用する際の関数・型定義が含まれます。
+Guile は、開発者に対して2つのコア言語、Scheme と C でアプリケーションプログラミングインターフェース（API）を提供しています。マニュアルのこの部分には、Scheme と C の両方のインターフェースを通じて利用可能なすべての機能のリファレンスドキュメントが含まれています。
+
+第6章は分量が多いため、節ごとにファイルを分けています。
+
+| 節 | ファイル |
+|---|---|
+| 6.1 Guile API の概要 | このファイル |
+| 6.2 非推奨 | このファイル |
+| 6.3 SCM 型 | このファイル |
+| 6.4 Guile の初期化 | このファイル |
+| 6.5 スナーフィングマクロ | このファイル |
+| 6.6 データ型 | `06_06_data_types*.md` |
+| 6.7 手続き | `06_07_procedures.md` |
+| 6.8 マクロ | `06_08_macros.md` |
+| 6.9 汎用ユーティリティ関数 | `06_09_utility_functions.md` |
+| 6.10 定義と変数の束縛 | `06_10_definitions.md` |
+| 6.11 プログラム実行の流れの制御 | `06_11_control_flow.md` |
+| 6.12 入出力 | `06_12_input_output.md` |
+| 6.13 正規表現 | `06_13_regular_expressions.md` |
+| 6.14 LALR(1) 構文解析 | `06_14_lalr_parsing.md` |
+| 6.15 PEG 構文解析 | `06_15_peg_parsing.md` |
+| 6.16 Scheme コードの読み込みと評価 | `06_16_read_eval.md` |
+| 6.17 メモリ管理とガベージコレクション | `06_17_memory_management.md` |
+| 6.18 モジュール | `06_18_modules.md` |
+| 6.19 外部関数インターフェース | `06_19_ffi.md` |
+| 6.20 外部オブジェクト | `06_20_foreign_objects.md` |
+| 6.21 Smob | `06_21_smobs.md` |
+| 6.22 スレッド、ミューテックス、async、動的ルート | `06_22_threads.md` |
+| 6.23 設定、機能、実行時オプション | `06_23_configuration.md` |
+| 6.24 他の言語のサポート | `06_24_other_languages.md` |
+| 6.25 国際化のサポート | `06_25_i18n.md` |
+| 6.26 デバッグ基盤 | `06_26_debugging.md` |
+| 6.27 コードカバレッジレポート | `06_27_code_coverage.md` |
 
 ## 6.1 Guile API の概要
 
-### 概要
+Guile のアプリケーションプログラミングインターフェース（API）は、アプリケーション開発者が C または Scheme のどちらのプログラミングでも使用できる機能を提供します。インターフェースは、C ではマクロ、関数、変数であり、Scheme では手続き、変数、構文、その他の種類のオブジェクトである要素で構成されます。
 
-Guile API は、C プログラムが Scheme インタプリタと相互作用するための統一的なインターフェースです。Scheme 値の操作、関数呼び出し、データ型変換、メモリ管理などをサポートします。
+多くの要素は、それぞれに適した形で、Scheme と C の両方で利用できます。たとえば、Scheme の手続き `assq` は、C コードからも `scm_assq` として利用できます。これらの要素は、Scheme と C の両方の側面を扱いながら、一度だけ文書化されています。
 
-### API の構成
+要素の Scheme での名前は、規則的な方法でその C での名前と関係しています。また、C 関数は体系的な方法でパラメータを受け取ります。
 
-Guile API は以下のレイヤーで構成されています：
+通常、C 関数の名前は、いくつかの単純なテキスト変換を使って、その Scheme での名前から導き出すことができます。
 
-- **低レベル API**: SCM 型と基本的な型変換
-- **プロシージャ呼び出し**: Scheme 関数の呼び出し
-- **型システム**: データ型の表現と変換
-- **メモリ管理**: ガベージコレクション
-- **モジュールシステム**: コードの整理と再利用
+- `-`（ハイフン）を `_`（アンダースコア）に置き換える。
+- `?`（疑問符）を `_p` に置き換える。
+- `!`（感嘆符）を `_x` に置き換える。
+- 内部の `->` を `_to_` に置き換える。
+- `<=`（以下）を `_leq` に置き換える。
+- `>=`（以上）を `_geq` に置き換える。
+- `<`（より小さい）を `_less` に置き換える。
+- `>`（より大きい）を `_gr` に置き換える。
+- 先頭に `scm_` を付ける。
 
-### 主要な機能
+C 関数は、対応する Scheme 関数が可変個の引数を取る場合でも、常に `SCM` 型の固定個の引数を取ります。
 
-```c
-/* ヘッダファイルのインクルード */
-#include <libguile.h>
+一部の Scheme 関数では、最後のいくつかの引数がオプションです。対応する C 関数は、常にすべてのオプション引数を指定して呼び出さなければなりません。引数が指定されなかったかのような効果を得るには、その値として `SCM_UNDEFINED` を渡します。途中の引数に対してこれを行うことはできません。ある引数が `SCM_UNDEFINED` であれば、それに続くすべての引数も `SCM_UNDEFINED` でなければなりません。
 
-/* 初期化 */
-scm_boot_guile(argc, argv, main_func, NULL);
+一部の Scheme 関数は、任意の個数の残余引数を取ります。対応する C 関数は、これらすべての引数のリストを付けて呼び出さなければなりません。このリストは常に C 関数の最後の引数です。
 
-/* 値の作成と変換 */
-SCM scm_val = scm_from_int(42);
-int c_val = scm_to_int(scm_val);
+これら2つの変形は組み合わせることもできます。
 
-/* 関数呼び出し */
-SCM result = scm_call_1(proc, arg);
+Scheme 関数に対応する C 関数の戻り値の型は常に `SCM` です。そのため、以下の説明では、戻り値と引数を除いて型はしばしば省略されています。
 
-/* GC 保護 */
-scm_gc_protect_object(important_obj);
-```
+## 6.2 非推奨
 
-## 6.2 非推奨機能
+ときどき、Guile の関数やその他の機能は時代遅れになります。Guile の非推奨（deprecation）は、これに対処するのを助ける仕組みです。
 
-### 概要
+非推奨の機能を使うと、実行時に警告メッセージが表示される可能性が高いです。また、十分に新しいツールチェーンがあれば、libguile の非推奨の関数を使うとリンク時に警告が出ます。
 
-Guile は古い API との後方互換性を提供しながら、新しい API への移行を推奨しています。
+特定のリリースでどのインターフェースが非推奨になっているかについての主要な情報源は、ファイル `NEWS` です。このファイルには、時代遅れになったものの代わりに何を使うべきかも記載されています。
 
-### 非推奨マクロと置き換え関数
+ファイル `README` には、Guile の公開 API から非推奨の機能を含めるか除外するかを制御する方法と、非推奨の警告メッセージを制御する方法についての説明が含まれています。
 
-非推奨のマクロは SCM 値の内部表現に直接アクセスしていました：
-
-| 非推奨 | 新API | 説明 |
-|--------|-------|------|
-| `SCM_INUMP(x)` | `scm_is_integer(x)` | 整数型チェック |
-| `SCM_INUM(x)` | `scm_to_int(x)` | 整数値取得 |
-| `SCM_MAKINUM(i)` | `scm_from_int(i)` | 整数値作成 |
-| `SCM_STRINGP(x)` | `scm_is_string(x)` | 文字列型チェック |
-| `SCM_STRING_CHARS(x)` | `scm_to_locale_string(x)` | 文字列取得 |
-
-### 新 API への移行例
-
-```c
-/* 非推奨: */
-if (SCM_INUMP(x)) {
-  int val = SCM_INUM(x);
-}
-
-/* 新API: */
-if (scm_is_integer(x)) {
-  int val = scm_to_int(x);
-}
-```
+この仕組みの背後にある考えは、通常はすべての非推奨のインターフェースが利用可能でありながら、それらを使うコードをコンパイルしたり実行したりするときにフィードバックが得られるので、自分のペースで新しい API に移行できる、というものです。
 
 ## 6.3 SCM 型
 
-### 概要
+Guile は、すべての Scheme 値を単一の C 型 `SCM` で表現します。このトピックの入門については、「動的型」を参照してください。
 
-SCM は Guile における全 Scheme 値の表現型です。SCM は不透明なポインタ型で、内部的に型情報とデータをエンコードしています。
+**C 型: `SCM`**
+: `SCM` は、Scheme オブジェクトの型が何であれ、Guile のすべての Scheme オブジェクトを表現するために使われる、ユーザーレベルの抽象的な C 型です。`SCM` 型の変数に対しては、代入以外のいかなる C の操作も動作することが保証されていないため、`SCM` 値を扱うにはマクロと関数だけを使うべきです。値は、ユーティリティ関数とマクロを使って C のデータ型と `SCM` 型の間で変換されます。
 
-### SCM 型の特性
+**C 型: `scm_t_bits`**
+: `scm_t_bits` は、任意の Scheme オブジェクトを表現するのに必要なすべての情報を保持するのに十分な大きさであることが保証されている、符号なし整数のデータ型です。このデータ型は主に Guile の内部を実装するために使われますが、Guile に対するある種の拡張を書くためにもこの型を使う必要があります。
 
-```c
-/* SCM は単純なデータ型 */
-typedef unsigned long SCM;
+**C 型: `scm_t_signed_bits`**
+: これは `scm_t_bits` と同じサイズの符号付き整数型です。
 
-/* あらゆる Scheme 値は SCM で表現される */
-SCM boolean = scm_from_bool(1);      /* #t */
-SCM integer = scm_from_int(42);      /* 42 */
-SCM string = scm_from_locale_string("hello");  /* "hello" */
-SCM list = scm_list_2(integer, string);  /* (42 "hello") */
+**C マクロ: `scm_t_bits SCM_UNPACK (SCM x)`**
+: `SCM` 値 `x` を、整数型としての表現に変換します。`SCM_UNPACK` を適用した後でのみ、`SCM` 値のビットと内容にアクセスできます。
 
-/* 型情報の埋め込み */
-if (scm_is_integer(value)) {
-  /* value は整数型 */
-}
-```
-
-### 特殊な SCM 値
-
-```c
-/* 未定義値 */
-SCM undefined = SCM_UNBOUND;
-
-/* false 値（違いに注意） */
-SCM false = SCM_BOOL_F;
-SCM eol = SCM_EOL;
-
-/* その他の重要な値 */
-SCM true = SCM_BOOL_T;
-```
+**C マクロ: `SCM SCM_PACK (scm_t_bits x)`**
+: Scheme オブジェクトの有効な整数表現を受け取り、それを `SCM` 値としての表現に変換します。
 
 ## 6.4 Guile の初期化
 
-### 概要
+Guile API の関数を使いたい各スレッドは、`scm_with_guile` または `scm_init_guile` のどちらかで自分自身を guile モードにする必要があります。Guile のグローバルな状態は、最初のスレッドが guile モードに入ったときに自動的に初期化されます。
 
-Guile を C プログラムに組み込む場合、初期化手順が重要です。
+スレッドが Guile API 関数の外でブロックしたい場合は、`scm_without_guile` で一時的に guile モードを離れるべきです。「Guile モードでのブロッキング」を参照してください。
 
-### 初期化関数
+`call-with-new-thread` または `scm_spawn_thread` によって作成されたスレッドは guile モードで開始するので、それらを初期化する必要はありません。
 
-#### scm_boot_guile
+**C 関数: `void * scm_with_guile (void *(*func)(void *), void *data)`**
+: `func` を呼び出して `data` を渡し、`func` が返したものを返します。`func` の実行中、現在のスレッドは guile モードにあり、したがって Guile API を使うことができます。
 
-メイン関数から Guile 環境を初期化する標準的な方法：
+  `scm_with_guile` が guile モードから呼び出された場合、`scm_with_guile` が戻ったときもスレッドは guile モードのままです。
 
-```c
-static void *
-inner_main(void *data)
-{
-  /* Guile が初期化された状態でここが実行される */
-  SCM result = scm_c_eval_string("(+ 2 3)");
-  printf("Result: %d\n", scm_to_int(result));
-  
-  return NULL;  /* inner_main の戻り値 */
-}
+  そうでなければ、現在のスレッドを guile モードにし、必要であれば、たとえば `all-threads` が返すリストに含まれる Scheme での表現をスレッドに与えます。この Scheme での表現は `scm_with_guile` が戻っても削除されないので、あるスレッドは、表現されるとすれば、その生存期間中は常に同じ Scheme 値によって表現されます。
 
-int
-main(int argc, char *argv[])
-{
-  /* Guile 環境を初期化して inner_main を実行 */
-  scm_boot_guile(argc, argv, inner_main, NULL);
-  return 0;
-}
-```
+  これが guile モードに入る最初のスレッドである場合、`func` を呼び出す前に Guile のグローバルな状態が初期化されます。
 
-#### scm_init_guile
+  関数 `func` は `scm_with_continuation_barrier` を介して呼び出されます。したがって、`scm_with_guile` はちょうど1回だけ戻ります。
 
-スレッド化環境またはライブラリコンテキストで初期化：
+  `scm_with_guile` が戻ると、スレッドはもはや guile モードではありません（`scm_with_guile` が guile モードから呼び出された場合を除く。上記参照）。したがって、スタック上に `SCM` 変数を格納して、それがガベージコレクタから保護されていると確信できるのは `func` だけです。この制限のない、Guile を初期化する別のアプローチについては `scm_init_guile` を参照してください。
 
-```c
-/* ライブラリコンテキストでの初期化 */
-scm_init_guile();
+  スレッドが `scm_without_guile` によって一時的に guile モードを離れている間に `scm_with_guile` を呼び出してもかまいません。その場合は、単に一時的に再び guile モードに入ります。
 
-/* 初期化後、Guile を使用可能 */
-SCM value = scm_c_eval_string("(define x 42)");
-```
+**C 関数: `void scm_init_guile ()`**
+: 現在のスレッド内のすべてのコードが、`scm_with_guile` の呼び出しの内側からであるかのように実行されるよう手配します。つまり、現在のスレッドによって呼び出されるすべての関数は、自分のスタックフレーム上の `SCM` 値がガベージコレクタから保護されていると想定できます（もちろん、スレッドが明示的に guile モードを離れている場合を除く）。
 
-### 初期化時の引数処理
+  すでに一度 guile モードになったことのあるスレッドから `scm_init_guile` が呼び出された場合は、何も起こりません。この動作は、スレッドが一時的に guile モードを離れているだけのときに `scm_init_guile` を呼び出す場合に問題になります。その場合、`scm_init_guile` が戻った後、スレッドは guile モードになっていません。したがって、そのようなシナリオでは `scm_init_guile` を使うべきではありません。
 
-```c
-/* プログラム引数を Guile に渡す */
-int
-main(int argc, char *argv[])
-{
-  scm_boot_guile(argc, argv, inner_main, NULL);
-  return 0;
-}
+  `scm_init_guile` によって guile モードにされたスレッドで捕捉されない throw が起こると、現在のエラーポートに短いメッセージが表示され、スレッドは `scm_pthread_exit (NULL)` によって終了します。継続には何の制限も課されません。
 
-/* inner_main 内から引数にアクセス */
-static void *
-inner_main(void *data)
-{
-  SCM args = scm_program_arguments();
-  /* args は (program-name arg1 arg2 ...) のリスト */
-  return NULL;
-}
-```
+  関数 `scm_init_guile` は、Guile が動作するすべてのプラットフォームに移植されているとは限らない、スタックの境界を見つけるための魔法を必要とするため、すべてのプラットフォームで利用できるとは限りません。したがって、可能であれば、この関数の代わりに `scm_with_guile` またはその変形である `scm_boot_guile` を使うほうがよいでしょう。
+
+**C 関数: `void scm_boot_guile (int argc, char **argv, void (*main_func) (void *data, int argc, char **argv), void *data)`**
+: `scm_with_guile` と同様に guile モードに入り、示されたとおりに `data`、`argc`、`argv` を渡して `main_func` を呼び出します。`main_func` が戻ると、`scm_boot_guile` は `exit (0)` を呼び出します。`scm_boot_guile` は決して戻りません。別の終了値が必要な場合は、`main_func` 自身に `exit` を呼び出させてください。まったく終了したくない場合は、`scm_boot_guile` の代わりに `scm_with_guile` を使ってください。
+
+  関数 `scm_boot_guile` は、Scheme の `command-line` 関数が `argc` と `argv` で与えられた文字列を返すよう手配します。`main_func` が `argc` または `argv` を変更する場合は、最終的なリストを付けて `scm_set_program_arguments` を呼び出し、どの引数が処理されたかを Scheme コードが分かるようにすべきです（「実行時環境」を参照）。
+
+**C 関数: `void scm_shell (int argc, char **argv)`**
+: `guile` 実行ファイルと同じ方法でコマンドライン引数を処理します。これには、通常の Guile 初期化ファイルの読み込み、ユーザーとの対話、あるいは `-s` または `-e` オプションで指定されたスクリプトや式の実行、そしてその後の終了が含まれます。詳細については「Guile の起動」を参照してください。
+
+  この関数は戻らないので、アプリケーション固有の初期化はすべてこの関数を呼び出す前に行わなければなりません。
 
 ## 6.5 スナーフィングマクロ
 
-### 概要
+以下のマクロは2つの異なることを行います。通常どおりコンパイルされたときはある方法で展開され、スナーフィング中に処理されたときは `guile-snarf` プログラムに何らかの初期化コードを拾わせます。「関数のスナーフィング」を参照してください。
 
-スナーフィングは、C から定義された関数を自動的に Scheme の手続きとして登録するツール。
+以下の説明では、コードが通常どおりコンパイルされる場合を指して「通常は」という用語を、コードが `guile-snarf` によって処理される場合を指して「スナーフィング中は」という用語を使います。
 
-### SCM_DEFINE マクロ
+**C マクロ: `SCM_SNARF_INIT (code)`**
+: 通常は、`SCM_SNARF_INIT` は何にも展開されません。スナーフィング中は、`code` を、その後にセミコロンを付けて、初期化処理ファイルに含めさせます。
 
-```c
-#include <libguile.h>
+  これは初期化処理をスナーフィングするための基本的なマクロです。以下のより特化したマクロは、内部でこれを使っています。
 
-/* C 関数をスナーフィングで定義 */
-SCM_DEFINE(my_double, "my-double", 1, 0, 0,
-           (SCM x),
-           "引数を 2 倍にする関数\n\n"
-           "Args:\n"
-           "  x - 整数\n"
-           "Returns: x * 2")
-{
-  return scm_from_int(2 * scm_to_int(x));
-}
+**C マクロ: `SCM_DEFINE (c_name, scheme_name, req, opt, var, arglist, docstring)`**
+: 通常は、このマクロは次のように展開されます。
 
-/* 初期化関数 */
-void
-init_my_module(void)
-{
-  #include "my_module.x"  /* スナーフィング生成ファイル */
-}
-```
+  ```c
+  static const char s_c_name[] = scheme_name;
+  SCM
+  c_name arglist
+  ```
 
-### スナーフィング処理
+  スナーフィング中は、次のものを初期化処理に追加させます。
 
-スナーフィングプロセスは以下を行います：
+  ```c
+  scm_c_define_gsubr (s_c_name, req, opt, var,
+                      c_name);
+  ```
 
-1. C ソース内の `SCM_DEFINE` を検索
-2. Scheme の手続き定義を生成
-3. メタデータ（ドキュメント、アリティ）を含める
-4. `.x` ファイルに出力
+  したがって、これを使って、`scheme_name` という名前で Scheme から利用可能になる `c_name` という名前の C 関数を宣言できます。
 
-使用方法：
+  `arglist` 引数は括弧で囲まなければならないことに注意してください。
 
-```bash
-guile-tools snarf my_module.c > my_module.x
-gcc -c -I. my_module.c
-```
+**C マクロ: `SCM_SYMBOL (c_name, scheme_name)`**<br>**C マクロ: `SCM_GLOBAL_SYMBOL (c_name, scheme_name)`**
+: 通常は、これらのマクロはそれぞれ次のように展開されます。
 
-## 6.6 データ型
+  ```c
+  static SCM c_name
+  ```
 
-### 6.6.1 ブール値
+  または
 
-```c
-/* C での操作 */
-SCM true = scm_from_bool(1);
-SCM false = scm_from_bool(0);
+  ```c
+  SCM c_name
+  ```
 
-int is_true = scm_is_true(value);     /* #t に類する */
-int is_false = scm_is_false(value);   /* #f のみ */
+  スナーフィング中は、どちらも次の初期化コードに展開されます。
 
-/* マクロ定義 */
-#define SCM_BOOL_T  /* #t */
-#define SCM_BOOL_F  /* #f */
-```
+  ```c
+  c_name = scm_permanent_object (scm_from_locale_symbol (scheme_name));
+  ```
 
-```scheme
-; Scheme での操作
-#t                  ; 真
-#f                  ; 偽
-(boolean? #t)       ; => #t
-(not #f)            ; => #t
-(if #f 1 2)         ; => 2（#f は偽として扱われる）
-```
+  したがって、これらを使って、`scheme_name` という名前のシンボルに初期化される `SCM` 型の静的変数またはグローバル変数を宣言できます。
 
-### 6.6.2 数値データ型
+**C マクロ: `SCM_KEYWORD (c_name, scheme_name)`**<br>**C マクロ: `SCM_GLOBAL_KEYWORD (c_name, scheme_name)`**
+: 通常は、これらのマクロはそれぞれ次のように展開されます。
 
-#### 数値タワー
+  ```c
+  static SCM c_name
+  ```
 
-Scheme は多層的な数値型をサポート：
+  または
 
-```
-複素数
-├ 実数
-  ├ 有理数
-    └ 整数
-```
+  ```c
+  SCM c_name
+  ```
 
-#### 整数操作
+  スナーフィング中は、どちらも次の初期化コードに展開されます。
 
-```c
-/* C での整数操作 */
-SCM scm_int = scm_from_int(42);
-SCM scm_long = scm_from_long(1000000L);
-SCM scm_uint = scm_from_uint(42U);
+  ```c
+  c_name = scm_permanent_object (scm_c_make_keyword (scheme_name));
+  ```
 
-int i = scm_to_int(scm_int);
-long l = scm_to_long(scm_long);
+  したがって、これらを使って、`scheme_name` という名前のキーワードに初期化される `SCM` 型の静的変数またはグローバル変数を宣言できます。
 
-/* 任意精度整数 */
-SCM big_int = scm_c_eval_string("999999999999999999");
-```
+**C マクロ: `SCM_VARIABLE (c_name, scheme_name)`**<br>**C マクロ: `SCM_GLOBAL_VARIABLE (c_name, scheme_name)`**
+: これらのマクロは、値を `SCM_BOOL_F` とした `SCM_VARIABLE_INIT` および `SCM_GLOBAL_VARIABLE_INIT` とそれぞれ同等です。
 
-```scheme
-; Scheme での整数
-42                  ; 整数リテラル
-#b101010            ; 2進表記（42）
-#o52                ; 8進表記（42）
-#x2a                ; 16進表記（42）
+**C マクロ: `SCM_VARIABLE_INIT (c_name, scheme_name, value)`**<br>**C マクロ: `SCM_GLOBAL_VARIABLE_INIT (c_name, scheme_name, value)`**
+: 通常は、これらのマクロはそれぞれ次のように展開されます。
 
-(integer? 42)       ; => #t
-(odd? 5)            ; => #t
-(even? 4)           ; => #t
-(prime? 17)         ; => #t
-```
+  ```c
+  static SCM c_name
+  ```
 
-#### 実数と有理数
+  または
 
-```scheme
-; 実数（浮動小数点数）
-3.14                ; 実数リテラル
-1.5e2               ; 指数表記（150.0）
-(real? 3.14)        ; => #t
-(inexact? 3.14)     ; => #t（浮動小数点数は非正確）
+  ```c
+  SCM c_name
+  ```
 
-; 有理数（正確な分数）
-1/2                 ; 有理数
-(rational? 1/3)     ; => #t
-(exact? 1/3)        ; => #t
-(+ 1/2 1/3)         ; => 5/6
-(denominator 5/6)   ; => 6
-```
+  スナーフィング中は、どちらも次の初期化コードに展開されます。
 
-#### 複素数
+  ```c
+  c_name = scm_permanent_object (scm_c_define (scheme_name, value));
+  ```
 
-```scheme
-3+4i                ; 複素数リテラル
-(complex? 3+4i)     ; => #t
-(real-part 3+4i)    ; => 3
-(imag-part 3+4i)    ; => 4
-(magnitude 3+4i)    ; => 5.0
-(angle 3+4i)        ; => 角度（ラジアン）
-```
-
-#### 数値演算
-
-```scheme
-; 基本演算
-(+ 1 2 3)           ; => 6
-(- 10 3)            ; => 7
-(* 2 3 4)           ; => 24
-(/ 10 3)            ; => 10/3（正確）
-(quotient 17 5)     ; => 3
-(remainder 17 5)    ; => 2
-(modulo 17 5)       ; => 2
-
-; 数学関数
-(sqrt 16)           ; => 4
-(expt 2 3)          ; => 8
-(sin 0)             ; => 0.0
-(cos 0)             ; => 1.0
-(log 1)             ; => 0.0
-(exp 1)             ; => e
-(ceiling 3.2)       ; => 4
-(floor 3.9)         ; => 3
-(round 3.5)         ; => 4
-(truncate 3.9)      ; => 3
-```
-
-### 6.6.3 文字
-
-```c
-/* C での文字操作 */
-SCM scm_char = scm_c_make_char('a');
-char c = scm_to_char(scm_char);
-
-/* 大文字・小文字変換 */
-SCM upper = scm_char_upcase(scm_char);
-SCM lower = scm_char_downcase(scm_char);
-```
-
-```scheme
-; Scheme での文字
-#\a                 ; 文字 'a'
-#\A                 ; 大文字 'A'
-#\space             ; スペース
-#\newline           ; 改行
-#\null              ; ヌル文字
-#\tab               ; タブ
-#\alarm             ; ベル
-#\backspace         ; バックスペース
-#\delete            ; DEL 文字
-
-(char? #\a)         ; => #t
-(char=? #\a #\a)    ; => #t
-(char<? #\a #\b)    ; => #t
-(char-upcase #\a)   ; => #\A
-(char-downcase #\A) ; => #\a
-(char->integer #\A) ; => 65
-(integer->char 65)  ; => #\A
-```
-
-### 6.6.4 文字集合
-
-文字集合は複数の文字をコンパクトに管理するデータ構造：
-
-```scheme
-(use-modules (srfi srfi-14))
-
-; 文字集合の作成
-(char-set #\a #\b #\c)         ; 具体的な文字
-(char-set-union cs1 cs2)        ; 共和
-(char-set-intersection cs1 cs2) ; 交差
-(char-set-complement cs)        ; 補集合
-
-; 標準的な文字集合
-char-set:lower-case             ; a-z
-char-set:upper-case             ; A-Z
-char-set:digit                  ; 0-9
-char-set:whitespace             ; 空白文字
-char-set:punctuation            ; 句読点
-```
-
-### 6.6.5 文字列
-
-#### 文字列の作成と操作
-
-```c
-/* C での文字列操作 */
-SCM scm_str = scm_from_locale_string("hello");
-char *c_str = scm_to_locale_string(scm_str);
-free(c_str);  /* 必ず解放 */
-
-size_t len = scm_c_string_length(scm_str);
-```
-
-```scheme
-; Scheme での文字列操作
-"hello"                         ; 文字列リテラル
-(string? "hello")               ; => #t
-(string-length "hello")         ; => 5
-(string-ref "hello" 0)          ; => #\h
-(string-set! str 0 #\H)         ; 文字を変更
-(substring "hello" 1 4)         ; => "ell"
-(string-append "hello" " " "world")  ; => "hello world"
-
-; 文字列変換
-(string-upcase "hello")         ; => "HELLO"
-(string-downcase "HELLO")       ; => "hello"
-(string-capitalize "hello world")  ; => "Hello world"
-
-; 文字列検索
-(string-contains "hello" "ll")  ; => 2（位置）
-(string-index "hello" #\l)      ; => 2
-(string-rindex "hello" #\l)     ; => 3
-
-; 文字列分割と結合
-(string-split "a,b,c" #\,)      ; => ("a" "b" "c")
-(string-join '("a" "b" "c") ",")  ; => "a,b,c"
-```
-
-### 6.6.6 シンボル
-
-```c
-/* C でのシンボル操作 */
-SCM sym = scm_from_locale_symbol("my-symbol");
-char *name = scm_symbol_to_string(sym);
-```
-
-```scheme
-; Scheme でのシンボル
-'foo                ; シンボル foo
-(symbol? 'foo)      ; => #t
-(symbol->string 'foo)  ; => "foo"
-(string->symbol "bar")  ; => bar
-
-; ユニークなシンボル
-(gensym)            ; => g1（毎回異なる）
-(gensym "x")        ; => x2
-```
-
-### 6.6.7 ペアとリスト
-
-```c
-/* C でのペア操作 */
-SCM pair = scm_cons(scm_from_int(1), scm_from_int(2));
-SCM car_val = scm_car(pair);      /* 1 */
-SCM cdr_val = scm_cdr(pair);      /* 2 */
-
-/* リスト操作 */
-SCM list = scm_list_3(
-  scm_from_int(1),
-  scm_from_int(2),
-  scm_from_int(3));
-```
-
-```scheme
-; Scheme でのペアとリスト
-(cons 1 2)              ; => (1 . 2)   ペア
-(list 1 2 3)            ; => (1 2 3)   リスト
-(car '(1 2 3))          ; => 1
-(cdr '(1 2 3))          ; => (2 3)
-(cadr '(1 2 3))         ; => 2
-(caddr '(1 2 3))        ; => 3
-
-; リスト操作
-(null? '())             ; => #t
-(length '(1 2 3))       ; => 3
-(append '(1 2) '(3 4))  ; => (1 2 3 4)
-(reverse '(1 2 3))      ; => (3 2 1)
-(member 2 '(1 2 3))     ; => (2 3)
-(nth 1 '(a b c))        ; => b
-(take '(1 2 3 4) 2)     ; => (1 2)
-(drop '(1 2 3 4) 2)     ; => (3 4)
-```
-
-### 6.6.8 ベクトル
-
-```c
-/* C でのベクトル操作 */
-SCM vec = scm_make_vector(scm_from_int(3), SCM_UNSPECIFIED);
-scm_c_vector_set_x(vec, 0, scm_from_int(10));
-SCM val = scm_c_vector_ref(vec, 0);
-size_t len = scm_c_vector_length(vec);
-```
-
-```scheme
-; Scheme でのベクトル
-#(1 2 3)                      ; ベクトルリテラル
-(vector? #(1 2 3))            ; => #t
-(make-vector 5 0)             ; 5 要素のベクトル
-(vector-length #(1 2 3))      ; => 3
-(vector-ref #(1 2 3) 0)       ; => 1
-(vector-set! #(1 2 3) 0 10)   ; 0 番目を 10 に設定
-(vector->list #(1 2 3))       ; => (1 2 3)
-(list->vector '(1 2 3))       ; => #(1 2 3)
-```
-
-### 6.6.9 バイトベクトル
-
-```scheme
-; バイトベクトル（SRFI-4）
-#u8(1 2 3 4 5)                  ; u8vector（0-255）
-#s8(1 -2 3 -4)                  ; s8vector（-128-127）
-#u16(256 512)                   ; u16vector
-#f64(1.5 2.5 3.5)               ; f64vector（浮動小数点数）
-
-(bytevector? #u8(1 2 3))        ; => #t
-(bytevector-length #u8(1 2))    ; => 2
-(bytevector-u8-ref #u8(1 2) 0)  ; => 1
-(bytevector-u8-set! bv 0 255)   ; 値を設定
-```
-
-## 6.7 手続き（プロシージャ）
-
-### 概要
-
-手続きは Scheme の最も基本的な概念で、計算を実行するユニット。
-
-### C から手続きの呼び出し
-
-```c
-/* 引数なし */
-SCM result = scm_call_0(proc);
-
-/* 1 引数 */
-SCM result = scm_call_1(proc, arg1);
-
-/* 2 引数 */
-SCM result = scm_call_2(proc, arg1, arg2);
-
-/* 3 引数 */
-SCM result = scm_call_3(proc, arg1, arg2, arg3);
-
-/* 可変引数 */
-SCM args = scm_list_2(arg1, arg2);
-SCM result = scm_apply_0(proc, args);
-```
-
-```scheme
-; Scheme での手続き定義
-(lambda (x y) (+ x y))          ; 無名手続き
-((lambda (x) (* x 2)) 5)        ; => 10
-
-; 名前付き手続き
-(define (square x) (* x x))
-(square 5)                       ; => 25
-
-; 高階手続き
-(define (apply-twice f x)
-  (f (f x)))
-(apply-twice (lambda (x) (* 2 x)) 3)  ; => 12
-
-; map と apply
-(map (lambda (x) (* x 2)) '(1 2 3))  ; => (2 4 6)
-(apply + '(1 2 3))              ; => 6
-```
-
-### 高階関数とクロージャ
-
-```scheme
-; クロージャ：環境をキャプチャ
-(define (make-counter)
-  (let ((count 0))
-    (lambda ()
-      (set! count (+ count 1))
-      count)))
-
-(define counter (make-counter))
-(counter)                       ; => 1
-(counter)                       ; => 2
-
-; 関数の部分適用
-(define add (lambda (x y) (+ x y)))
-(define add5 (lambda (x) (add x 5)))
-(add5 10)                       ; => 15
-```
-
-## 6.8 マクロ
-
-### 概要
-
-マクロはコード変換のための強力な機能。Scheme は多様なマクロシステムをサポート。
-
-### Syntax-rules マクロ
-
-パターンマッチング方式の基本的なマクロ：
-
-```scheme
-(define-syntax when
-  (syntax-rules ()
-    ((when test body ...)
-     (if test (begin body ...)))))
-
-(when (> x 5)
-  (display "x is large")
-  (newline))
-```
-
-### Syntax-case マクロ
-
-より詳細な制御が必要な場合：
-
-```scheme
-(define-syntax my-let
-  (lambda (x)
-    (syntax-case x ()
-      ((my-let ((var expr) ...) body ...)
-       #'((lambda (var ...) body ...) expr ...)))))
-
-(my-let ((x 1) (y 2))
-  (+ x y))                      ; => 3
-```
-
-## 6.9 変数バインディング
-
-### トップレベル定義
-
-```c
-/* C から定義 */
-scm_c_eval_string("(define x 42)");
-SCM x = scm_c_eval_string("x");
-```
-
-```scheme
-; トップレベル変数
-(define x 10)
-(define y 20)
-(set! x 50)                     ; 変更
-```
-
-### 局所変数バインディング
-
-```scheme
-; let：並列バインディング
-(let ((x 1) (y 2))
-  (+ x y))                      ; => 3
-
-; let*：順序依存バインディング
-(let* ((x 5)
-       (y (* x 2)))
-  (+ x y))                      ; => 15
-
-; letrec：相互再帰
-(letrec ((even? (lambda (n)
-                  (if (= n 0) #t (odd? (- n 1)))))
-         (odd? (lambda (n)
-                 (if (= n 0) #f (even? (- n 1))))))
-  (even? 4))                    ; => #t
-```
-
-## 6.10 制御フロー
-
-### 条件分岐
-
-```scheme
-; if 式
-(if (> x 0) "positive" "non-positive")
-
-; cond 式
-(cond ((< x 0) "negative")
-      ((= x 0) "zero")
-      (else "positive"))
-
-; case 式
-(case (car lst)
-  ((+ -) "arithmetic")
-  ((* /) "multiplication")
-  (else "unknown"))
-```
-
-### ループと反復
-
-```scheme
-; do ループ
-(do ((i 0 (+ i 1)))
-    ((>= i 10) "done")
-  (display i)
-  (newline))
-
-; for-each
-(for-each (lambda (x) (display x) (newline))
-          '(1 2 3 4 5))
-
-; map
-(map (lambda (x) (* x 2)) '(1 2 3))  ; => (2 4 6)
-```
-
-### 例外処理
-
-```scheme
-; catch で例外をキャッチ
-(catch 'my-error
-  (lambda ()
-    (throw 'my-error "error occurred"))
-  (lambda (key msg)
-    (display "Caught: ")
-    (display msg)))
-
-; with-exception-handler
-(with-exception-handler
-  (lambda (ex)
-    (display "Error occurred"))
-  (lambda ()
-    (error "something went wrong")))
-```
-
-## 6.11 入出力（I/O）
-
-### ポート操作
-
-```c
-/* C でのポート操作 */
-SCM input = scm_open_file(scm_from_locale_string("input.txt"),
-                          scm_from_locale_string("r"));
-SCM output = scm_open_file(scm_from_locale_string("output.txt"),
-                           scm_from_locale_string("w"));
-scm_close_port(input);
-scm_close_port(output);
-```
-
-```scheme
-; Scheme でのポート操作
-(current-input-port)            ; 標準入力
-(current-output-port)           ; 標準出力
-(current-error-port)            ; エラー出力
-
-; ファイル操作
-(open-input-file "input.txt")
-(open-output-file "output.txt")
-(with-input-from-file "data.txt"
-  (lambda ()
-    (read-line)))
-(with-output-to-file "output.txt"
-  (lambda ()
-    (display "Hello, file!")))
-```
-
-### テキスト入出力
-
-```scheme
-; 出力
-(display "Hello")               ; 人間向け
-(write '(1 2 3))                ; マシン向け
-(format #t "~a = ~d~n" "x" 42)  ; フォーマット出力
-(newline)                       ; 改行
-
-; 入力
-(read)                          ; S式を読み込み
-(read-line)                     ; 行を読み込み
-(get-char)                      ; 1 文字読み込み
-(peek-char)                     ; 1 文字先読み
-```
-
-### format 関数
-
-```scheme
-; format の例
-(format #t "Number: ~d~n" 42)           ; => Number: 42
-(format #t "String: ~s~n" "hello")      ; => String: "hello"
-(format #t "Hex: ~x~n" 255)             ; => Hex: ff
-(format #t "Padded: ~5d~n" 42)          ; => Padded:    42
-(format #f "~a + ~a = ~a" 2 3 5)        ; => "2 + 3 = 5"
-```
-
-## 6.12 正規表現
-
-```scheme
-(use-modules (ice-9 regex))
-
-; 基本的なマッチング
-(string-match "^[0-9]+$" "12345")       ; マッチ
-(string-match "^[0-9]+$" "abc")         ; #f（不一致）
-
-; マッチ結果から抽出
-(let ((m (string-match "(\\w+)@(\\w+)" "user@host")))
-  (match:substring m 1))                ; => "user"
-
-; 置換
-(regexp-substitute #f
-  (string-match "(.+)@(.+)" "user@host")
-  'pre 2 "@" 1 'post)                   ; => "host@user"
-```
-
-## 6.13 Scheme コードの評価
-
-### 動的評価
-
-```c
-/* C からコードを評価 */
-SCM result = scm_c_eval_string("(+ 2 3)");
-int val = scm_to_int(result);
-```
-
-```scheme
-; eval で S式を評価
-(eval '(+ 1 2) (interaction-environment))  ; => 3
-
-; eval-string でコード文字列を評価
-(use-modules (ice-9 eval-string))
-(eval-string "(+ 1 2)")                 ; => 3
-
-; compile でコンパイル
-(compile '(+ 1 2))                      ; コンパイル結果
-```
-
-## 6.14 メモリ管理とガベージコレクション
-
-### GC 保護
-
-```c
-/* グローバル変数を GC から保護 */
-static SCM important_object;
-
-void
-init_module(void)
-{
-  important_object = scm_from_int(42);
-  scm_gc_protect_object(important_object);
-}
-
-/* 後で保護を解除 */
-scm_gc_unprotect_object(important_object);
-```
-
-### 弱参照
-
-```scheme
-; 弱参照：GC の対象になる可能性がある参照
-(make-weak-vector size init)
-(weak-vector-ref wvec i default)
-```
-
-## 6.15 モジュールシステム
-
-### モジュール使用
-
-```c
-/* C からモジュール操作 */
-scm_c_eval_string("(use-modules (srfi srfi-1))");
-```
-
-```scheme
-; モジュール使用
-(use-modules (srfi srfi-1))             ; SRFI-1
-(use-modules (ice-9 regex))             ; 正規表現
-(use-modules (my-project utils))        ; カスタムモジュール
-```
-
-### モジュール作成
-
-```scheme
-(define-module (my-project utils)
-  #:use-module (srfi srfi-1)
-  #:export (double triple process))
-
-(define (double x) (* x 2))
-(define (triple x) (* x 3))
-(define (process lst) (map double lst))
-```
-
-## 6.16 読み込みと評価
-
-### コード読み込み
-
-```scheme
-; Scheme ファイルをロード
-(load "my-file.scm")
-
-; モジュールのロード
-(load-extension "libmy" "init_my")
-(use-modules (my-lib utils))
-```
-
-## 6.17 外部関数インターフェース（FFI）
-
-```scheme
-(use-modules (system foreign))
-
-; C ライブラリの関数をラップ
-(define libc (dynamic-link "libc.so.6"))
-(define strlen-proc
-  (pointer->procedure size_t
-    (dynamic-func "strlen" libc)
-    (list '*)))
-
-(strlen-proc (string->pointer "hello"))  ; => 5
-```
-
-## 6.18 スレッドと並行処理
-
-```scheme
-(use-modules (ice-9 threads))
-
-; スレッド作成
-(define t (make-thread (lambda () (display "Thread\n"))))
-(thread-join! t)
-
-; ミューテックス
-(define mutex (make-mutex))
-(with-mutex mutex (display "Protected"))
-
-; 条件変数
-(define cond-var (make-condition-variable))
-(condition-variable-wait! cond-var mutex)
-```
-
-## 6.19 デバッグ
-
-### トレース
-
-```scheme
-; 関数をトレース
-(trace square)
-(square 5)                              ; 呼び出しと戻り値を表示
-(untrace square)
-
-; ブレークポイント
-(break)                                 ; デバッガーに入る
-```
+  したがって、これらを使って、現在のモジュールにある `scheme_name` という名前の Scheme 変数を表すオブジェクトに初期化される、`SCM` 型の静的またはグローバルな C 変数を宣言できます。その変数は、まだ存在しない場合は定義されます。常に `value` に設定されます。
 
 ---
 
-> **ライセンス**: このドキュメント内の翻訳は、GNU Free Documentation License v1.3 以降に基づいて作成されています。
+> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
 > 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
