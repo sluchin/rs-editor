@@ -29,7 +29,7 @@ tarpaulin-report.html
 
 # doc
 /src-tauri/target/
-/docs/
+#/docs/
 
 # Claude Code のローカル設定
 .claude/
