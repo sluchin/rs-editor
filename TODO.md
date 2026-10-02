@@ -78,7 +78,7 @@
       `{ id, name, filePath, content, modified }[]` の配列に置き換える。
 - [x] `C-x b` (switch-to-buffer): ミニバッファでバッファ名を入力して切り替え。
 - [x] `C-x k` (kill-buffer): 現在のバッファを閉じる（未保存なら確認を挟む）。
-- [ ] `C-x C-b` (list-buffers): バッファ一覧を表示するビュー。
+- [x] `C-x C-b` (list-buffers): バッファ一覧を表示するビュー。
 - [ ] ウィンドウ分割（優先度は低いが Emacs らしさの要）: `C-x 2` (縦分割) / `C-x 3` (横分割) / `C-x o` (他ウィンドウへ移動) / `C-x 0` / `C-x 1`。
       React 側は「ペインのレイアウトツリー」を持たせ、各ペインに独立した `CodeEditor` インスタンス（同一バッファ参照可）を描画する。
 

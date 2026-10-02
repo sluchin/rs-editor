@@ -4,6 +4,7 @@ import MenuBar from './components/MenuBar'
 import CodeEditor, { CursorInfo } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, { MinibufferState } from './components/Minibuffer'
+import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
 import { findNextMatch } from './lib/isearch'
 import './App.css'
@@ -61,6 +62,7 @@ function App() {
   const [highlightRange, setHighlightRange] = useState<{ start: number; end: number } | null>(null)
   const [undoStack, setUndoStack] = useState<{ text: string; cursorPos: number }[]>([])
   const [redoStack, setRedoStack] = useState<{ text: string; cursorPos: number }[]>([])
+  const [showBufferList, setShowBufferList] = useState(false)
 
   const currentBuffer = buffers.find((b) => b.id === currentBufferId) || buffers[0]
 
@@ -195,6 +197,10 @@ function App() {
     } else {
       killBuffer(currentBuffer.id)
     }
+  }
+
+  const handleListBuffers = () => {
+    setShowBufferList(true)
   }
 
   const handleSaveBuffersKillTerminal = async () => {
@@ -384,8 +390,9 @@ function App() {
         onPushUndo={handlePushUndo}
         onSwitchBuffer={handleSwitchBuffer}
         onKillBuffer={handleKillBuffer}
+        onListBuffers={handleListBuffers}
         highlightRange={highlightRange}
-        disabled={minibufferState.mode !== 'message'}
+        disabled={minibufferState.mode !== 'message' || showBufferList}
       />
       <ModeLine
         bufferName={currentBuffer.name}
@@ -400,6 +407,17 @@ function App() {
         onCancel={handleMinibufferCancel}
         onIsearchRepeat={handleIsearchRepeat}
       />
+      {showBufferList && (
+        <BufferList
+          buffers={buffers}
+          currentBufferId={currentBufferId}
+          onSelectBuffer={(bufferId) => {
+            switchToBuffer(bufferId)
+            setShowBufferList(false)
+          }}
+          onClose={() => setShowBufferList(false)}
+        />
+      )}
     </div>
   )
 }
