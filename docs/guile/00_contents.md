@@ -1,19 +1,3 @@
-[](https://doc.guix.gnu.org/guile/latest/en/guile.html#)
-========================================================
-
-* guile 3.0.11guile 3.0.11
-    
-* [3.0.11](https://doc.guix.gnu.org/guile/3.0.11/en/guile.html)
-* [3.0.9](https://doc.guix.gnu.org/guile/3.0.9/en/guile.html)
-* [2.2.7](https://doc.guix.gnu.org/guile/2.2.7/en/guile.html)
-* [2.2.4](https://doc.guix.gnu.org/guile/2.2.4/en/guile.html)
-* [2.0.14](https://doc.guix.gnu.org/guile/2.0.14/en/guile.html)
-![](./Guile Reference Manual_files/h-separator.png)* [複数ページ](https://doc.guix.gnu.org/guile/latest/en/html_node)
-* [PDF](https://doc.guix.gnu.org/guile/latest/en/guile.pdf)
-    
-
-[](https://doc.guix.gnu.org/guile/latest/)
-
 次へ: [序文](00_preface.md#序文)、前へ: [(dir)](https://doc.guix.gnu.org/guile/latest/en/dir.html#Top)、上へ: [(dir)](https://doc.guix.gnu.org/en/guile) \[[目次](00_contents.md "目次")\]\[[インデックス](index_r5rs.md "インデックス")\]
 
 Guile リファレンス マニュアル
@@ -37,11 +21,7 @@ Guile リファレンス マニュアル
 
 さらに、SRFI 197モジュールのドキュメントは、以下のMITライセンスの下で公開されている仕様書を基に作成されています。
 
-本ソフトウェアおよび関連ドキュメントファイル（以下「ソフトウェア」といいます）のコピーを入手した者は、以下の条件に従い、ソフトウェアを無制限に取り扱う権利（使用、複製、変更、結合、公開、配布、サブライセンス、および／または販売する権利を含みますが、これらに限定されません）と、ソフトウェアの提供を受けた者がこれを行うことを許可する権利を、無償で許諾されます。
->
-上記の著作権表示および本許諾表示は、ソフトウェアのすべての複製物または実質的な部分に含めるものとします。
->
-本ソフトウェアは「現状のまま」提供され、明示的か黙示的かを問わず、商品性、特定目的への適合性、非侵害性を含むがこれらに限定されない、いかなる種類の保証もありません。いかなる場合においても、著作者または著作権者は、契約、不法行為、その他を問わず、本ソフトウェアまたは本ソフトウェアの使用もしくはその他の取引から生じる、またはこれに関連するいかなる請求、損害、その他の責任についても責任を負いません。
+（条文は上記のExpatライセンスと同一です。）
 
   
 
