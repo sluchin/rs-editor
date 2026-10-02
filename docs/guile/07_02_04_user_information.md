@@ -1,131 +1,131 @@
-#### 7.2.4 ユーザー情報 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#User-Information-1)
+#### 7.2.4 ユーザー情報
 
 このセクションの機能は、ユーザーおよびグループデータベースへのインターフェースを提供します。これらの機能は再入可能ではないため、慎重に使用してください。
 
 以下の関数は、ユーザー情報を表すオブジェクトを受け取り、選択されたコンポーネントを返します。
 
-スキーム手順: **passwd:name** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003aname)
+スキーム手順: **passwd:name** pw
 
 ユーザーIDの名前。
 
-スキーム手順: **passwd:passwd** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003apasswd)
+スキーム手順: **passwd:passwd** pw
 
 暗号化されたパスワード。
 
-スキーム手順: **passwd:uid** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003auid)
+スキーム手順: **passwd:uid** pw
 
 ユーザーID番号。
 
-スキーム手順: **passwd:gid** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003agid)
+スキーム手順: **passwd:gid** pw
 
 グループID番号。
 
-スキーム手順: **passwd:gecos** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003agecos)
+スキーム手順: **passwd:gecos** pw
 
 フルネーム。
 
-スキーム手順: **passwd:dir** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003adir)
+スキーム手順: **passwd:dir** pw
 
 ホームディレクトリ。
 
-スキーム手順: **passwd:shell** pw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-passwd_003ashell)
+スキーム手順: **passwd:shell** pw
 
 ログインシェル。
 
   
 
-Scheme Procedure: **getpwuid** uid [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getpwuid)
+Scheme Procedure: **getpwuid** uid
 
 ユーザーデータベースで整数型のユーザーIDを検索します。
 
-Scheme Procedure: **getpwnam** name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getpwnam)
+Scheme Procedure: **getpwnam** name
 
 ユーザーデータベースでユーザー名文字列を検索します。
 
-スキーム手順: **setpwent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setpwent)
+スキーム手順: **setpwent**
 
 `getpwent` がユーザーデータベースから読み込むために使用するストリームを初期化します。次回 `getpwent` を使用すると、最初のエントリが返されます。戻り値は未指定です。
 
-スキーム手順: **getpwent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getpwent)
+スキーム手順: **getpwent**
 
 ユーザーデータベースストリームの次のエントリを読み込みます。戻り値は上記のようなpasswdユーザーオブジェクト、またはエントリがなくなった場合は`#f`です。
 
-スキーム手順: **endpwent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-endpwent)
+スキーム手順: **endpwent**
 
 `getpwent`で使用されるストリームを閉じます。戻り値は未指定です。
 
-スキームプロシージャ: **setpw** \[arg\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setpw)
+スキームプロシージャ: **setpw** \[arg\]
 
-C 関数: **scm\_setpwent** (arg) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsetpwent)
+C 関数: **scm\_setpwent** (arg)
 
 引数が真の場合、パスワードデータストリームを初期化またはリセットします。それ以外の場合は、ストリームを閉じます。`setpwent` および `endpwent` プロシージャは、この上に実装されています。
 
-スキーム手順: **getpw** \[user\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getpw)
+スキーム手順: **getpw** \[user\]
 
-C 関数: **scm\_getpwuid** (user) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fgetpwuid)
+C 関数: **scm\_getpwuid** (user)
 
 ユーザーデータベースのエントリを検索します。user は整数、文字列、または省略可能で、それぞれ getpwuid、getpwnam、getpwent の動作になります。
 
 以下の関数は、グループ情報を表すオブジェクトを受け取り、選択されたコンポーネントを返します。
 
-スキーム手順: **group:name** gr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-group_003aname)
+スキーム手順: **group:name** gr
 
 グループ名。
 
-スキーム手順: **group:passwd** gr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-group_003apasswd)
+スキーム手順: **group:passwd** gr
 
 暗号化されたグループパスワード。
 
-スキーム手順: **group:gid** gr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-group_003agid)
+スキーム手順: **group:gid** gr
 
 グループID番号。
 
-スキーム手順: **group:mem** gr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-group_003amem)
+スキーム手順: **group:mem** gr
 
 このグループを補助グループとして持つユーザーIDのリスト。
 
   
 
-スキームプロシージャ: **getgrgid** gid [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getgrgid)
+スキームプロシージャ: **getgrgid** gid
 
 グループデータベースで整数型のグループIDを検索します。
 
-スキームプロシージャ: **getgrnam** 名前 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getgrnam)
+スキームプロシージャ: **getgrnam** 名前
 
 グループデータベースでグループ名を検索してください。
 
-スキーム手順: **setgrent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setgrent)
+スキーム手順: **setgrent**
 
 `getgrent` がグループデータベースから読み込むために使用するストリームを初期化します。次回 `getgrent` を使用すると、最初のエントリが返されます。戻り値は未指定です。
 
-スキーム手順: **getgrent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getgrent)
+スキーム手順: **getgrent**
 
 `setgrent`で設定されたストリームを使用して、グループデータベース内の次のエントリを返します。
 
-スキーム手順: **endgrent** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-endgrent)
+スキーム手順: **endgrent**
 
 `getgrent`で使用されるストリームを閉じます。戻り値は未指定です。
 
-Scheme手順: **setgr** \[arg\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setgr)
+Scheme手順: **setgr** \[arg\]
 
-C 関数: **scm\_setgrent** (arg) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsetgrent)
+C 関数: **scm\_setgrent** (arg)
 
 引数が真の場合、グループデータストリームを初期化またはリセットします。それ以外の場合は、ストリームを閉じます。`setgrent` および `endgrent` プロシージャは、この上に実装されています。
 
-スキーム手順: **getgr** \[group\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getgr)
+スキーム手順: **getgr** \[group\]
 
-C 関数: **scm\_getgrgid** (グループ) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fgetgrgid)
+C 関数: **scm\_getgrgid** (グループ)
 
 グループデータベースのエントリを検索します。group には整数、文字列、または省略することができ、それぞれ getgrgid、getgrnam、getgrent の動作になります。
 
 ユーザーデータベースへのアクセス手順に加えて、以下のショートカット手順も利用可能です。
 
-スキーム手順: **getlogin** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getlogin)
+スキーム手順: **getlogin**
 
-C 関数: **scm\_getlogin** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fgetlogin)
+C 関数: **scm\_getlogin** ()
 
 プロセスの制御端末にログインしているユーザー名を含む文字列を返します。この情報が取得できない場合は `#f` を返します。
 
 * * *
 
-次へ: [ランタイム環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Runtime-Environment)、前: [ユーザー情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#User-Information)、上: [POSIX システムコールとネットワーク](https://doc.guix.gnu.org/guile/latest/en/guile.html#POSIX) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ランタイム環境](07_02_06_runtime_environment.md#726-ランタイム環境)、前: [ユーザー情報](#724-ユーザー情報)、上: [POSIX システムコールとネットワーク](07_02_00_posix_system_calls_and_networking.md#72-posix-システムコールとネットワーク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

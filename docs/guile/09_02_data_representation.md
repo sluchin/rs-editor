@@ -1,4 +1,4 @@
-### 9.2 データ表現 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation-1)
+### 9.2 データ表現
 
 Schemeは潜在型言語です。つまり、システムは一般的に、コンパイル時に与えられた式の型を判別できません。型は実行時にのみ明らかになります。変数には固定型がなく、ある時点ではペアを、次の時点では整数を、さらに後には1000要素のベクトルを保持する可能性があります。固定型を持つのは変数ではなく値です。
 
@@ -8,17 +8,17 @@ Schemeは潜在型言語です。つまり、システムは一般的に、コ�
 
 以下のセクションでは、まずシンプルな型システムを紹介し、次にその主な弱点を修正するための改良を加えます。最後に、ガベージコレクションとデータ表現に関してGuileが採用した具体的な選択について考察します。
 
-* [単純な表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Simple-Representation)
-* [Faster Integers](https://doc.guix.gnu.org/guile/latest/en/guile.html#Faster-Integers)
-* [より安価なペア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Cheaper-Pairs)
-* [保守的なゴミ収集](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conservative-GC)
-* [GuileにおけるSCMタイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile)
+* [単純な表現](#921-単純な表現)
+* [Faster Integers](#922-より高速な整数)
+* [より安価なペア](#923-より安価なペア)
+* [保守的なゴミ収集](#924-保守的なガベージコレクション)
+* [GuileにおけるSCMタイプ](#925-guile-の-scm-タイプ)
 
 * * *
 
-次へ: [高速整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Faster-Integers)、上: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [高速整数](#922-より高速な整数)、上: [データ表現](#92-データ表現) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.1 単純な表現 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Simple-Representation-1)
+#### 9.2.1 単純な表現
 
 C言語でSchemeの値を表現する最も簡単な方法は、各値を型インジケータを含む構造体へのポインタとして表現し、その後に実際の値を保持する共用体を続けることです。`SCM`を汎用型の名前とすると、次のように記述できます。
 
@@ -49,9 +49,9 @@ struct { int length; SCM \*elts; } vector;
 
 * * *
 
-次へ: [より安価なペア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Cheaper-Pairs)、前: [シンプルな表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Simple-Representation)、上: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [より安価なペア](#923-より安価なペア)、前: [シンプルな表現](#921-単純な表現)、上: [データ表現](#92-データ表現) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.2 より高速な整数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Faster-Integers-1)
+#### 9.2.2 より高速な整数
 
 残念ながら、上記の表現方法には重大な欠点があります。整数を返すには、式は`struct value`を割り当て、その整数を表すように初期化し、そのポインタを返す必要があります。さらに、整数の値を取得するにはメモリ参照が必要となり、これはほとんどのプロセッサにおいてレジスタ参照よりもはるかに低速です。整数は非常に頻繁に出現するため、この表現方法は時間と空間の両面でコストが高すぎます。整数は生成と操作が非常に安価であるべきです。
 
@@ -107,9 +107,9 @@ MAKE_INTEGER (GET_INTEGER (x) + GET_INTEGER (y))
 
 * * *
 
-次へ: [保守的なガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conservative-GC)、前: [高速整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Faster-Integers)、上: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [保守的なガベージコレクション](#924-保守的なガベージコレクション)、前: [高速整数](#922-より高速な整数)、上: [データ表現](#92-データ表現) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.3 より安価なペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Cheaper-Pairs-1)
+#### 9.2.3 より安価なペア
 
 しかし、解決すべき問題がもう一つあります。ほとんどの Scheme ヒープには、他のどのタイプのオブジェクトよりも多くのペアが含まれています。Jonathan Rees は、自身の Scheme 実装である Scheme 48 では、ペアがヒープの 45% を占めていると述べています。しかし、上記の表現では、ペアごとに 3 つの `SCM` サイズのワードを使用しています。1 つは型、残りの 2 つは CAR と CDR です。ペアを 2 つのワードだけで表現する方法はないでしょうか？
 
@@ -168,9 +168,9 @@ x を逆参照してその型を調べる前に、x が `struct value` へのポ
 
 * * *
 
-次へ: [Guile の SCM タイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile)、前: [Cheaper Pairs](https://doc.guix.gnu.org/guile/latest/en/guile.html#Cheaper-Pairs)、上: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC _Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile の SCM タイプ](#925-guile-の-scm-タイプ)、前: [Cheaper Pairs](#923-より安価なペア)、上: [データ表現](#92-データ表現) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC _Contents "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.4 保守的なガベージコレクション [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conservative-Garbage-Collection)
+#### 9.2.4 保守的なガベージコレクション
 
 潜在型付けを除けば、Scheme実装におけるデータ表現の制約となる主な要因はガベージコレクタである。コレクタはヒープ内のすべての生存オブジェクトを走査し、どのオブジェクトが生存しておらず、したがって収集可能であるかを判断できなければならない。
 
@@ -196,9 +196,9 @@ BDW-GCはスタックに加えて、静的データセクションもスキャ�
 
 * * *
 
-前へ: [保守的なガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conservative-GC)、上へ: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [保守的なガベージコレクション](#924-保守的なガベージコレクション)、上へ: [データ表現](#92-データ表現) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5 Guile の SCM タイプ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile-1)
+#### 9.2.5 Guile の SCM タイプ
 
 GuileはSchemeオブジェクトを2種類に分類します。1つは`SCM`内に完全に収まるオブジェクト、もう1つはヒープストレージを必要とするオブジェクトです。
 
@@ -210,32 +210,32 @@ GuileはSchemeオブジェクトを2種類に分類します。1つは`SCM`内�
 
 実際、Guileではオブジェクトを表すための基本的なCデータ型が2つあります。`SCM`と`scm_t_bits`です。
 
-* [`SCM` と `scm_t_bits` の関係](https://doc.guix.gnu.org/guile/latest/en/guile.html#Relationship-Between-SCM-and-scm_005ft_005fbits)
-* [即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Immediate-Objects)
-* [非即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dImmediate-Objects)
-* [ヒープオブジェクトの割り当て](https://doc.guix.gnu.org/guile/latest/en/guile.html#Allocating-Heap-Objects)
-* [ヒープオブジェクト型情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Heap-Object-Type-Information)
-* [ヒープオブジェクトフィールドへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Heap-Object-Fields)
+* [`SCM` と `scm_t_bits` の関係](#9251-scm-と-scm_t_bits-の関係)
+* [即時オブジェクト](#9252-即時オブジェクト)
+* [非即時オブジェクト](#9253-非即時オブジェクト)
+* [ヒープオブジェクトの割り当て](#9254-ヒープオブジェクトの割り当て)
+* [ヒープオブジェクト型情報](#9255-ヒープオブジェクトタイプ情報)
+* [ヒープオブジェクトフィールドへのアクセス](#9256-ヒープオブジェクトフィールドへのアクセス)
 
 * * *
 
-次へ: [Immediate Objects](https://doc.guix.gnu.org/guile/latest/en/guile.html#Immediate-Objects)、上へ: [The SCM Type in Guile](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Immediate Objects](#9252-即時オブジェクト)、上へ: [The SCM Type in Guile](#925-guile-の-scm-タイプ) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 9.2.5.1 `SCM` と `scm_t_bits` の関係 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Relationship-Between-SCM-and-scm_005ft_005fbits-1)
+#### 9.2.5.1 `SCM` と `scm_t_bits` の関係
 
 型 `SCM` の変数は、有効な Scheme オブジェクトを保持することが保証されています。一方、型 `scm_t_bits` の変数は、C 整数型として `SCM` 値の表現を保持する場合がありますが、有効な Scheme オブジェクトに対応しない場合でも、任意の C 値を保持する場合があります。
 
-型が `SCM` の変数 x の場合、Scheme オブジェクトの型情報は直接使用できない形式で格納されます。スキーム値の型エンコーディングを操作するには、`SCM_UNPACK` マクロを使用して、`SCM` 変数を対応する `scm_t_bits` 変数 y の表現に変換する必要があります。この変換が完了すると、この章の前半の例で示したように ([Cheaper Pairs](https://doc.guix.gnu.org/guile/latest/en/guile.html#Cheaper-Pairs) を参照)、`scm_t_bits` 値 y のビットの内容からスキーム オブジェクト x の型を導出できます。逆に、`scm_t_bits` 変数としての Scheme 値の有効なビットエンコーディングは、`SCM_PACK` マクロを使用して対応する `SCM` 値に変換できます。
+型が `SCM` の変数 x の場合、Scheme オブジェクトの型情報は直接使用できない形式で格納されます。スキーム値の型エンコーディングを操作するには、`SCM_UNPACK` マクロを使用して、`SCM` 変数を対応する `scm_t_bits` 変数 y の表現に変換する必要があります。この変換が完了すると、この章の前半の例で示したように ([Cheaper Pairs](#923-より安価なペア) を参照)、`scm_t_bits` 値 y のビットの内容からスキーム オブジェクト x の型を導出できます。逆に、`scm_t_bits` 変数としての Scheme 値の有効なビットエンコーディングは、`SCM_PACK` マクロを使用して対応する `SCM` 値に変換できます。
 
 * * *
 
-次へ: [非即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dImmediate- Objects)、前: [`SCM` と `scm_t_bits` の関係](https://doc.guix.gnu.org/guile/latest/en/guile.html#Relationship-Between-SCM-and-scm_005ft_005fbits)、上: [Guile の SCM タイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [非即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dImmediate- Objects)、前: [`SCM` と `scm_t_bits` の関係](#9251-scm-と-scm_t_bits-の関係)、上: [Guile の SCM タイプ](#925-guile-の-scm-タイプ) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5.2 即時オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Immediate-Objects-1)
+#### 9.2.5.2 即時オブジェクト
 
 Schemeオブジェクトは、必要な情報をすべてそれ自体で保持する即値である場合と、名前が示すとおりヒープ上のデータであるヒープオブジェクトへの参照を含む場合があります。一般的に、オブジェクトが即値であるかどうかはユーザーコードには関係ありませんが、Guile自身のコード内では、この区別が重要になる場合があります。そのため、以下の低レベルマクロが提供されています。
 
-マクロ: `int` **SCM\_IMP** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fIMP)
+マクロ: `int` **SCM\_IMP** `(SCM x)`
 
 Schemeオブジェクトは、`SCM_IMP`述語を満たす場合は即値であり、そうでない場合はヒープオブジェクトへのエンコードされた参照を保持します。述語の結果はCスタイルのブール値として返されます。ユーザーコードおよびGuileを拡張するコードは、通常、このマクロを使用する必要はありません。
 
@@ -246,21 +246,21 @@ Schemeオブジェクトは、`SCM_IMP`述語を満たす場合は即値であ�
 
 Schemeには多くの特殊値があり、そのほとんどはこのマニュアルの別の箇所に記載されています。ここにそれらを記載するのは適切ではありませんが、とりあえず、これらの値の一部に付けられたC言語名の一覧を以下に示します。
 
-マクロ: `SCM` **SCM\_EOL** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fEOL)
+マクロ: `SCM` **SCM\_EOL**
 
 Scheme の空リストオブジェクト、または「リストの末尾」オブジェクトは、通常 Scheme では `'()` と表記されます。
 
-マクロ: `SCM` **SCM\_EOF\_VAL** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fEOF_005fVAL)
+マクロ: `SCM` **SCM\_EOF\_VAL**
 
 Schemeにおけるファイル終端値。当然ながら、標準的な記述方法は存在しない。
 
-マクロ: `SCM` **SCM\_UNSPECIFIED** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fUNSPECIFIED)
+マクロ: `SCM` **SCM\_UNSPECIFIED**
 
 Scheme標準では「未指定」の値を返すとされている式の一部（すべてではない）が返す値。
 
 これは少々奇妙なほど文字通りの解釈方法ですが、標準的な読み込み・評価・出力ループでは、式がこの値を返すと何も出力されないため、他に役に立つ方法が思いつかない場合は、これを返すのも悪くない方法です。
 
-マクロ: `SCM` **SCM\_UNDEFINED** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fUNDEFINED)
+マクロ: `SCM` **SCM\_UNDEFINED**
 
 「未定義」値。その最も重要な特性は、有効なScheme値と等しくないことです。これは、Guileとやり取りするCコードによって、さまざまな内部用途に使用されます。
 
@@ -268,29 +268,29 @@ Scheme標準では「未指定」の値を返すとされている式の一部�
 
 また、これは未定義変数をマークするためにも使用します。
 
-マクロ: `int` **SCM\_UNBNDP** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fUNBNDP)
+マクロ: `int` **SCM\_UNBNDP** `(SCM x)`
 
 xが`SCM_UNDEFINED`の場合はtrueを返します。これはxが`SCM_UNBOUND`かどうかをチェックするものではないことに注意してください。歴史は私たちに優しくないでしょう。
 
 * * *
 
-次へ: [ヒープオブジェクトの割り当て](https://doc.guix.gnu.org/guile/latest/en/guile.html#Allocating-Heap-Objects)、前: [即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Immediate-Objects)、上: [Guile の SCM タイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ヒープオブジェクトの割り当て](#9254-ヒープオブジェクトの割り当て)、前: [即時オブジェクト](#9252-即時オブジェクト)、上: [Guile の SCM タイプ](#925-guile-の-scm-タイプ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5.3 非即時オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dImmediate-Objects-1)
+#### 9.2.5.3 非即時オブジェクト
 
 述語 `SCM_IMP` を満たさない `SCM` 型の Scheme オブジェクトは、ヒープ オブジェクトへのエンコードされた参照を保持します。この参照は、`SCM_UNPACK_POINTER` マクロを使用して、ヒープ オブジェクトへの C ポインタにデコードできます。ヒープ オブジェクトへのポインタを `SCM` 値にエンコードするには、`SCM_PACK_POINTER` マクロを使用します。
 
 Guile 2.0以前のGuileは、2ワード単位の「セル」でヒープオブジェクトを割り当てる独自のガベージコレクタを使用していました。Guile 2.0でBDW-GCコレクタに移行したことで、Guileは任意のサイズのヒープオブジェクトを割り当てることができるようになり、セルの概念は廃止されました。しかし、この名前は様々な低レベルインターフェースでまだ使用されているため、ここで言及しておきます。
 
-マクロ: `scm_t_bits *` **SCM\_UNPACK\_POINTER** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fUNPACK_005fPOINTER)
+マクロ: `scm_t_bits *` **SCM\_UNPACK\_POINTER** `(SCM x)`
 
-マクロ: `scm_t_cell *` **SCM2PTR** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM2PTR)
+マクロ: `scm_t_cell *` **SCM2PTR** `(SCM x)`
 
 非即時 `SCM` オブジェクト x からヒープ オブジェクト ポインタを抽出して返します。`SCM2PTR` という名前は非推奨ですが、まだよく使われています。
 
-マクロ: `SCM_PACK_POINTER` **(scm\_t\_bits** `* x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0028scm_005ft_005fbits)
+マクロ: `SCM_PACK_POINTER` **(scm\_t\_bits** `* x)`
 
-マクロ: `SCM` **PTR2SCM** `(scm_t_cell * x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PTR2SCM)
+マクロ: `SCM` **PTR2SCM** `(scm_t_cell * x)`
 
 ヒープオブジェクトポインタxへの参照をエンコードした`SCM`値を返します。`PTR2SCM`という名前は非推奨ですが、依然としてよく使われています。
 
@@ -304,9 +304,9 @@ Guile 2.0以前のGuileは、2ワード単位の「セル」でヒープオブ�
 
 * * *
 
-次へ: [ヒープオブジェクト型情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Heap-Object-Type-Information)、前: [非即時オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dImmediate-Objects)、上: [Guile の SCM 型](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in -Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ヒープオブジェクト型情報](#9255-ヒープオブジェクトタイプ情報)、前: [非即時オブジェクト](#9253-非即時オブジェクト)、上: [Guile の SCM 型](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in -Guile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5.4 ヒープオブジェクトの割り当て [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Allocating-Heap-Objects-1)
+#### 9.2.5.4 ヒープオブジェクトの割り当て
 
 ヒープオブジェクトは、非即値 `SCM` 値によって指されるヒープに割り当てられたデータです。ヒープオブジェクトの最初のワードには型コードが含まれている必要があります。オブジェクトの長さは任意のワード数でよく、ポインタレス割り当て関数を使用してオブジェクトが割り当てられていない限り、通常はガベージコレクタによって追加のデータがないかスキャンされます。
 
@@ -314,91 +314,91 @@ Guile 2.0以前のGuileは、2ワード単位の「セル」でヒープオブ�
 
 単にペアを割り当てたい場合は、`scm_cons`を使用してください。
 
-関数: `SCM` **scm\_words** `(scm_t_bits word_0, uint32_t n_words)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwords)
+関数: `SCM` **scm\_words** `(scm_t_bits word_0, uint32_t n_words)`
 
 n_words を含む新しいヒープ オブジェクトを割り当て、最初のスロットを word_0 で初期化し、オブジェクトへのポインタをエンコードした非即値 `SCM` 値を返します。通常、word_0 には型タグが含まれます。
 
 また、2ワードオブジェクトを示すために「cell」という用語を使用する、非推奨ではあるものの一般的な`scm_words`のバリアントも存在します。
 
-関数: `SCM` **scm\_cell** `(scm_t_bits word_0, scm_t_bits word_1)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcell)
+関数: `SCM` **scm\_cell** `(scm_t_bits word_0, scm_t_bits word_1)`
 
 新しい2ワードのヒープオブジェクトを割り当て、2つのスロットをword_0とword_1で初期化し、それを返します。これは、`scm_words (word_0, 2)`を呼び出し、2番目のスロットをword_1で初期化するのと同様です。
 
 word_0とword_1は`scm_t_bits`型であることに注意してください。`SCM`オブジェクトを渡す場合は、`SCM_UNPACK`を使用する必要があります。
 
-関数: `SCM` **scm\_double\_cell** `(scm_t_bits word_0, scm_t_bits word_1, scm_t_bits word_2, scm_t_bits word_3)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdouble_005fcell)
+関数: `SCM` **scm\_double\_cell** `(scm_t_bits word_0, scm_t_bits word_1, scm_t_bits word_2, scm_t_bits word_3)`
 
 `scm_cell`と同様ですが、4ワードのヒープオブジェクトを割り当てます。
 
 * * *
 
-次へ: [ヒープオブジェクトフィールドへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Heap-Object-Fields)、前: [ヒープオブジェクトの割り当て](https://doc.guix.gnu.org/guile/latest/en/guile.html#Allocating-Heap-Objects)、上: [Guile の SCM タイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ヒープオブジェクトフィールドへのアクセス](#9256-ヒープオブジェクトフィールドへのアクセス)、前: [ヒープオブジェクトの割り当て](#9254-ヒープオブジェクトの割り当て)、上: [Guile の SCM タイプ](#925-guile-の-scm-タイプ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5.5 ヒープオブジェクトタイプ情報 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Heap-Object-Type-Information-1)
+#### 9.2.5.5 ヒープオブジェクトタイプ情報
 
 ヒープオブジェクトには型タグが含まれており、その後にワードサイズの複数のスロットが続きます。オブジェクトの内容の解釈は、オブジェクトの型によって異なります。
 
-マクロ: `scm_t_bits` **SCM\_CELL\_TYPE* `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fTYPE)
+マクロ: `scm_t_bits` **SCM\_CELL\_TYPE* `(SCM x)`
 
 xが指すヒープオブジェクトの最初のワードを抽出します。この値にはセルタイプに関する情報が含まれています。
 
-マクロ: `void` **SCM\_SET\_CELL\_TYPE* `(SCM x, scm_t_bits t)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fTYPE)
+マクロ: `void` **SCM\_SET\_CELL\_TYPE* `(SCM x, scm_t_bits t)`
 
 非即値Schemeオブジェクトxに対して、xが参照するヒープオブジェクトの最初のワードに値tを書き込む。値tは有効なセル型を保持しなければならない。
 
 * * *
 
-前へ: [ヒープオブジェクト型情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Heap-Object-Type-Information)、上へ: [Guile の SCM 型](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type-in-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [ヒープオブジェクト型情報](#9255-ヒープオブジェクトタイプ情報)、上へ: [Guile の SCM 型](#925-guile-の-scm-タイプ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.2.5.6 ヒープオブジェクトフィールドへのアクセス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Heap-Object-Fields-1)
+#### 9.2.5.6 ヒープオブジェクトフィールドへのアクセス
 
 非直接的な Scheme オブジェクト x の場合、オブジェクトの種類は、前のセクションで説明した `SCM_CELL_TYPE` マクロを使用して判別できます。ヒープ オブジェクトの種類ごとに、タグ付き Scheme オブジェクトを保持するフィールドと、タグなしの生データを保持するフィールドがわかっています。これらの異なるフィールドに適切にアクセスするために、次のマクロが用意されています。
 
-マクロ: `scm_t_bits` **SCM\_CELL\_WORD** `(SCM x, unsigned int n)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fWORD)
+マクロ: `scm_t_bits` **SCM\_CELL\_WORD** `(SCM x, unsigned int n)`
 
-マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_0** `(x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fWORD_005f0)
+マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_0** `(x)`
 
 マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_1** `(x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- SCM_005fCELL_005fWORD_005f1)
 
-マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_2** `(x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fWORD_005f2)
+マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_2** `(x)`
 
-マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_3** `(x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fWORD_005f3)
+マクロ: `scm_t_bits` **SCM\_CELL\_WORD\_3** `(x)`
 
 非直接的な Scheme オブジェクト x が参照するヒープ オブジェクトのフィールド n を、タグなしの生データとして出力します。このマクロは、タグなしデータを含むフィールドにのみ使用してください。タグ付きの `SCM` オブジェクトを含むフィールドには使用しないでください。
 
-マクロ: `SCM` **SCM\_CELL\_OBJECT** `(SCM x, unsigned int n)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fOBJECT)
+マクロ: `SCM` **SCM\_CELL\_OBJECT** `(SCM x, unsigned int n)`
 
-マクロ: `SCM` **SCM\_CELL\_OBJECT\_0** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fOBJECT_005f0)
+マクロ: `SCM` **SCM\_CELL\_OBJECT\_0** `(SCM x)`
 
-マクロ: `SCM` **SCM\_CELL\_OBJECT\_1** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fOBJECT_005f1)
+マクロ: `SCM` **SCM\_CELL\_OBJECT\_1** `(SCM x)`
 
-マクロ: `SCM` **SCM\_CELL\_OBJECT\_2** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fOBJECT_005f2)
+マクロ: `SCM` **SCM\_CELL\_OBJECT\_2** `(SCM x)`
 
-マクロ: `SCM` **SCM\_CELL\_OBJECT\_3** `(SCM x)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fCELL_005fOBJECT_005f3)
+マクロ: `SCM` **SCM\_CELL\_OBJECT\_3** `(SCM x)`
 
 非直接的な Scheme オブジェクト x が参照するヒープ オブジェクトのフィールド n を Scheme オブジェクトとして返します。このマクロは、タグ付きの `SCM` オブジェクトを含むフィールドにのみ使用してください。タグなしデータを含むフィールドには使用しないでください。
 
-マクロ: `void` **SCM\_SET\_CELL\_WORD** `(SCM x, unsigned int n, scm_t_bits w)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fWORD)
+マクロ: `void` **SCM\_SET\_CELL\_WORD** `(SCM x, unsigned int n, scm_t_bits w)`
 
-マクロ: `void` **SCM\_SET\_CELL\_WORD\_0** `(x, w)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fWORD_005f0)
+マクロ: `void` **SCM\_SET\_CELL\_WORD\_0** `(x, w)`
 
-マクロ: `void` **SCM\_SET\_CELL\_WORD\_1** `(x, w)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fWORD_005f1)
+マクロ: `void` **SCM\_SET\_CELL\_WORD\_1** `(x, w)`
 
-マクロ: `void` **SCM\_SET\_CELL\_WORD\_2** `(x, w)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fWORD_005f2)
+マクロ: `void` **SCM\_SET\_CELL\_WORD\_2** `(x, w)`
 
-マクロ: `void` **SCM\_SET\_CELL\_WORD\_3** `(x, w)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fWORD_005f3)
+マクロ: `void` **SCM\_SET\_CELL\_WORD\_3** `(x, w)`
 
 生の値 w を、非即値 Scheme 値 x が参照するヒープ オブジェクトのフィールド番号 n に書き込みます。ヒープ オブジェクトに生の値として書き込まれた値は、後で `SCM_CELL_WORD` マクロを使用してのみ読み取ることができます。
 
-マクロ: `void` **SCM\_SET\_CELL\_OBJECT** `(SCM x, unsigned int n, SCM o)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fOBJECT)
+マクロ: `void` **SCM\_SET\_CELL\_OBJECT** `(SCM x, unsigned int n, SCM o)`
 
-マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_0** `(SCM x, SCM o)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fOBJECT_005f0)
+マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_0** `(SCM x, SCM o)`
 
 マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_1** `(SCM x, SCM o)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- SCM_005fSET_005fCELL_005fOBJECT_005f1)
 
-マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_2** `(SCM x, SCM o)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fOBJECT_005f2)
+マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_2** `(SCM x, SCM o)`
 
-マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_3** `(SCM x, SCM o)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fSET_005fCELL_005fOBJECT_005f3)
+マクロ: `void` **SCM\_SET\_CELL\_OBJECT\_3** `(SCM x, SCM o)`
 
 Schemeオブジェクトoを、非即値Scheme値xが参照するヒープオブジェクトのn番目のフィールドに書き込みます。オブジェクトとしてヒープオブジェクトに書き込まれた値は、`SCM_CELL_OBJECT`マクロを使用してのみ読み取ることができます。
 
@@ -410,4 +410,4 @@ Schemeオブジェクトoを、非即値Scheme値xが参照するヒープオブ
 
 * * *
 
-次へ: [仮想マシンへのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiling-to-the-Virtual-Machine)、前: [データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation)、上: [Guile の実装](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Implementation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [仮想マシンへのコンパイル](09_04_compiling_to_the_virtual_machine.md#94-仮想マシンへのコンパイル)、前: [データ表現](#92-データ表現)、上: [Guile の実装](09_00_guile_implementation.md#9-guile-の実装) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

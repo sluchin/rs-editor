@@ -1,4 +1,4 @@
-#### 7.5.26 SRFI-38 - 共有構造を持つデータの外部表現 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d38-_002d-External-Representation-for-Data-With-Shared-Structure)
+#### 7.5.26 SRFI-38 - 共有構造を持つデータの外部表現
 
 このサブセクションは、Ray Dillinger によって書かれた [SRFI-38 の仕様](http://srfi.schemers.org/srfi-38/srfi-38.html) に基づいています。
 
@@ -14,11 +14,11 @@
 <非定義データ> --> <単純データ> | <複合データ>
 <indexnum> --> <数字10>+
 
-Scheme プロシージャ: **write-with-shared-structure** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dwith_002dshared_002dstructure)
+Scheme プロシージャ: **write-with-shared-structure** obj
 
-Scheme 手順: **write-with-shared-structure** obj port [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dwith_002dshared_002dstructure-1)
+Scheme 手順: **write-with-shared-structure** obj port
 
-Scheme プロシージャ: **write-with-shared-structure** obj port optarg [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dwith_002dshared_002dstructure-2)
+Scheme プロシージャ: **write-with-shared-structure** obj port optarg
 
 指定されたポートに、obj の外部表現を書き込みます。書き込まれる表現に含まれる文字列は二重引用符で囲まれ、文字列内のバックスラッシュと二重引用符はバックスラッシュでエスケープされます。文字オブジェクトは `#\` 表記を使用して書き込まれます。
 
@@ -30,15 +30,15 @@ Scheme プロシージャ: **write-with-shared-structure** obj port optarg [¶](
 
 例えば、コード
 
-(begin (define a ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) 'val1 'val2))
-([set-cdr!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dcdr_0021) aa)
-([write-with-shared-structure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dwith_002dshared_002dstructure) a))
+(begin (define a ([cons](06_06_08_pairs.md#668-ペア) 'val1 'val2))
+([set-cdr!](06_06_08_pairs.md#668-ペア) aa)
+([write-with-shared-structure](#7526-srfi-38---共有構造を持つデータの外部表現) a))
 
 出力は `#1=(val1 . #1#)` となるはずです。これは、`cdr` が自身を含む cons セルを示しています。
 
-Scheme手順: **read-with-shared-structure** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dwith_002dshared_002dstructure)
+Scheme手順: **read-with-shared-structure**
 
-Scheme 手順: **read-with-shared-structure** ポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dwith_002dshared_002dstructure-1)
+Scheme 手順: **read-with-shared-structure** ポート
 
 `read-with-shared-structure` は、`write-with-shared-structure` によって生成された Scheme オブジェクトの外部表現を Scheme オブジェクトに変換します。つまり、これは、上記で定義された拡張外部表現文法における非終端記号 '<datum>' のパーサーです。`read-with-shared-structure` は、指定された入力ポートから解析可能な次のオブジェクトを返し、port を更新して、オブジェクトの外部表現の末尾の次の最初の文字を指すようにします。
 
@@ -48,4 +48,4 @@ Scheme 手順: **read-with-shared-structure** ポート [¶](https://doc.guix.gn
 
 * * *
 
-次へ: [SRFI-41 - ストリーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41)、前: [SRFI-38 - 共有構造を持つデータの外部表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d38)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-41 - ストリーム](07_05_28_srfi41_streams.md#7528-srfi-41---ストリーム)、前: [SRFI-38 - 共有構造を持つデータの外部表現](#7526-srfi-38---共有構造を持つデータの外部表現)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

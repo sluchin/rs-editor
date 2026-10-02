@@ -1,4 +1,4 @@
-### 7.13 キュー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Queues-1)
+### 7.13 キュー
 
 このセクションの関数は以下によって提供されます
 
@@ -10,53 +10,53 @@
 
   
 
-Scheme手順: **make-q** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dq)
+Scheme手順: **make-q**
 
 新しいキューを返します。
 
-Scheme Procedure: **q?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_003f)
+Scheme Procedure: **q?** obj
 
 objがキューの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
 キューは独立したオブジェクトクラスではなく、consセルで実装されていることに注意してください。そのため、特定のリスト構造では`q?`から`#t`を取得できます。
 
-Scheme Procedure: **enq!** q obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-enq_0021)
+Scheme Procedure: **enq!** q obj
 
 objをqの末尾に追加し、qを返す。
 
-Scheme Procedure: **deq!** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-deq_0021)
+Scheme Procedure: **deq!** q
 
-スキーム手順: **q-pop!** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dpop_0021)
+スキーム手順: **q-pop!** q
 
 qから先頭の要素を削除して返します。qが空の場合は、`q-empty`例外がスローされます。
 
 `deq!` と `q-pop!` は同じ操作です。この 2 つの名前は、アプリケーションが `enq!` と `deq!`、または `q-push!` と `q-pop!` を対応付けることができるようにするためのものです。
 
-Scheme Procedure: **q-push!** q obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dpush_0021)
+Scheme Procedure: **q-push!** q obj
 
 objをqの先頭に追加し、qを返す。
 
-スキーム手順: **q-length** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dlength)
+スキーム手順: **q-length** q
 
 qに含まれる要素の数を返します。
 
-スキーム手順: **q-empty?** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dempty_003f)
+スキーム手順: **q-empty?** q
 
 qが空の場合はtrueを返します。
 
-スキーム手順: **q-empty-check** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dempty_002dcheck)
+スキーム手順: **q-empty-check** q
 
 qが空の場合は、`q-empty`例外をスローします。
 
-スキーム手順: **q-front** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dfront)
+スキーム手順: **q-front** q
 
 qの最初の要素を（削除せずに）返します。qが空の場合は、`q-empty`例外がスローされます。
 
-スキーム手順: **q-rear** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002drear)
+スキーム手順: **q-rear** q
 
 q の最後の要素を（削除せずに）返します。q が空の場合は、`q-empty` 例外がスローされます。
 
-Scheme Procedure: **q-remove!** q obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-q_002dremove_0021)
+Scheme Procedure: **q-remove!** q obj
 
 キューqからobjのすべての出現箇所を削除し、qを返します。objは`eq?`を使用してキューの要素と比較されます。
 
@@ -72,7 +72,7 @@ Scheme Procedure: **q-remove!** q obj [¶](https://doc.guix.gnu.org/guile/latest
 
 アプリケーションは、必要に応じてキューリストに直接アクセスできます。たとえば、要素を検索したり、特定の位置に挿入したりする場合などです。
 
-Scheme Procedure: **sync-q!** q [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sync_002dq_0021)
+Scheme Procedure: **sync-q!** q
 
 q の最後のセルフィールドを再計算します。
 
@@ -80,4 +80,4 @@ q の最後のセルフィールドを再計算します。
 
 * * *
 
-次へ: [Buffered Input](https://doc.guix.gnu.org/guile/latest/en/guile.html#Buffered-Input)、前: [Queues](https://doc.guix.gnu.org/guile/latest/en/guile.html#Queues)、上: [Guile Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Buffered Input](07_15_buffered_input.md#715-バッファリングされた入力)、前: [Queues](#713-キュー)、上: [Guile Modules](07_00_guile_modules.md#7つのguileモジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

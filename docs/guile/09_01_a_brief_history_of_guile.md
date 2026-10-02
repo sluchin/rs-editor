@@ -1,20 +1,20 @@
-### 9.1 Guile の簡単な歴史 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Brief-History-of-Guile)
+### 9.1 Guile の簡単な歴史
 
 Guileは、コードとしてもハッカーコミュニティとしても、歴史的な過程を経て生まれた産物です。ソースコードをハッキングする際には、過去の決定事項や将来の方向性を知るために、こうした歴史を理解しておくことが役立つ場合があります。
 
 もちろん、Guileの真の歴史は、ハッカーたちがハッキングすることによって書かれるものであり、ライターが書くことによって書かれるものではありません。そこで、現状と今後の方向性について触れて、このセクションを締めくくりたいと思います。
 
-* [Emacs Thesis](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Emacs-Thesis)
-* [初期の頃](https://doc.guix.gnu.org/guile/latest/en/guile.html#Early-Days)
-* [多数のメンテナーによるスキーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Scheme-of-Many-Maintainers)
-* [Guileの主要リリース一覧](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Timeline-of-Selected-Guile-Releases)
-* [ステータス、または：あなたの助けが必要です](https://doc.guix.gnu.org/guile/latest/en/guile.html#Status)
+* [Emacs Thesis](#911-emacs-テーゼ)
+* [初期の頃](#912-初期段階)
+* [多数のメンテナーによるスキーム](#913-多数のメンテナーによるスキーム)
+* [Guileの主要リリース一覧](#914-guile-の主要リリースのタイムライン)
+* [ステータス、または：あなたの助けが必要です](#915-ステータスまたは-ヘルプが必要です)
 
 * * *
 
-次へ: [初期](https://doc.guix.gnu.org/guile/latest/en/guile.html#Early-Days)、上へ: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [初期](#912-初期段階)、上へ: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.1.1 Emacs テーゼ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Emacs-Thesis-1)
+#### 9.1.1 Emacs テーゼ
 
 Guileの物語は、Emacsの開発経験をGNUシステム上の膨大なプログラムにもたらす物語である。
 
@@ -28,9 +28,9 @@ Emacsの使い勝手が広く評価されるようになると、多くのハッ
 
 * * *
 
-次へ: [多数のメンテナーによるスキーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Scheme-of-Many-Maintainers )、前: [Emacs の論文](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Emacs-Thesis)、上: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [多数のメンテナーによるスキーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Scheme-of-Many-Maintainers )、前: [Emacs の論文](#911-emacs-テーゼ)、上: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.1.2 初期段階 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Early-Days-1)
+#### 9.1.2 初期段階
 
 トム・ロードは、組み込み可能な言語ランタイムの開発に全力を注いだ最初の人物であり、それを「GEL」（GNU拡張言語）と名付けた。
 
@@ -48,9 +48,9 @@ GuileはTclへの反発として開発されたという誤解がよくありま
 
 * * *
 
-次へ: [Guile の厳選リリースのタイムライン](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Timeline-of-Selected-Guile-Releases)、前へ: [初期の頃](https://doc.guix.gnu.org/guile/latest/en/guile.html#Early-Days)、上へ: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile の厳選リリースのタイムライン](#914-guile-の主要リリースのタイムライン)、前へ: [初期の頃](#912-初期段階)、上へ: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.1.3 多数のメンテナーによるスキーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Scheme-of-Many-Maintainers-1)
+#### 9.1.3 多数のメンテナーによるスキーム
 
 現状を概観すると、Schemeの実装とメンテナーはN対1の関係にあるように思われる。つまり、Schemeを実装する人は複数回実装する可能性があるが、特定のSchemeの存続期間は一人のメンテナーの活動期間に左右されるということである。
 
@@ -66,9 +66,9 @@ Guileには、そうした機能の一部しか残っていません。小型で
 
 * * *
 
-次へ: [ステータス、または: ご協力のお願い](https://doc.guix.gnu.org/guile/latest/en/guile.html#Status)、前: [多数のメンテナーによるスキーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Scheme-of-Many-Maintainers)、上: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ステータス、または: ご協力のお願い](#915-ステータスまたは-ヘルプが必要です)、前: [多数のメンテナーによるスキーム](#913-多数のメンテナーによるスキーム)、上: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.1.4 Guile の主要リリースのタイムライン [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Timeline-of-Selected-Guile-Releases-1)
+#### 9.1.4 Guile の主要リリースのタイムライン
 
 guile-i — 1995年2月4日
 
@@ -126,9 +126,9 @@ Guileは、シンプルなジャストインタイム（JIT）コンパイラに
 
 * * *
 
-前へ: [Guile の厳選リリースのタイムライン](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Timeline-of-Selected-Guile-Releases)、上へ: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guile の厳選リリースのタイムライン](#914-guile-の主要リリースのタイムライン)、上へ: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 9.1.5 ステータス、または: ヘルプが必要です [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Status_002c-or_003a-Your-Help-Needed)
+#### 9.1.5 ステータス、または: ヘルプが必要です
 
 Guileは当初の目標の多くを達成したが、まだやるべきことはたくさんある。
 
@@ -150,4 +150,4 @@ Guileをこれらのアプリケーションに導入するには、投資、つ
 
 * * *
 
-次へ: [Guile 用仮想マシン](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Virtual-Machine-for-Guile)、前: [Guile の簡単な歴史](https://doc.guix.gnu.org/guile/latest/en/guile.html#History)、上: [Guile の実装](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Implementation) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile 用仮想マシン](09_03_a_virtual_machine_for_guile.md#93-guile-用仮想マシン)、前: [Guile の簡単な歴史](07_21_sxml.md#72131-履歴)、上: [Guile の実装](09_00_guile_implementation.md#9-guile-の実装) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

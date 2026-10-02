@@ -1,24 +1,24 @@
-### 7.10 整形印刷 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pretty-Printing-1)
+### 7.10 整形印刷
 
 モジュール`(ice-9 pretty-print)`は、 Schemeオブジェクトをきれいに整形して出力するプロシージャ`pretty-print`を提供します。これは、リストやベクトルなどの深くネストされたデータ構造や複雑なデータ構造に特に役立ちます。
 
 モジュールは、以下のコマンドを入力することでロードされます。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 [pretty-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pretty_002dprint)))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (ice-9 [pretty-print](04_programming_in_scheme.md#4447-コマンドの検査)))
 
 これにより、`pretty-print` プロシージャが利用可能になります。`pretty-print` がどのように出力をフォーマットするかの例を以下に示します。
 
-([pretty-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pretty_002dprint) '(define (foo) (lambda (x)
-(cond (([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) x) #t) (([negative?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negative_003f) x) \-x) (else
-(if ([\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) x 1) 2 ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) xxx)))))))
+([pretty-print](04_programming_in_scheme.md#4447-コマンドの検査) '(define (foo) (lambda (x)
+(cond (([zero?](06_06_02_numerical_data_types.md#6628-比較述語) x) #t) (([negative?](06_06_02_numerical_data_types.md#6628-比較述語) x) \-x) (else
+(if ([\=](06_06_02_numerical_data_types.md#6628-比較述語) x 1) 2 ([\*](06_06_02_numerical_data_types.md#66211-算術関数) xxx)))))))
 ⊣
 (define (foo)
 (ラムダ (x)
-(cond (([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) x) #t)
-(([negative?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negative_003f) x) \-x)
-(else (if ([\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) x 1) 2 ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) xxx))))))
+(cond (([zero?](06_06_02_numerical_data_types.md#6628-比較述語) x) #t)
+(([negative?](06_06_02_numerical_data_types.md#6628-比較述語) x) \-x)
+(else (if ([\=](06_06_02_numerical_data_types.md#6628-比較述語) x 1) 2 ([\*](06_06_02_numerical_data_types.md#66211-算術関数) xxx))))))
 
-Scheme 手順: **pretty-print** obj \[port\] \[keyword-options\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pretty_002dprint-1)
+Scheme 手順: **pretty-print** obj \[port\] \[keyword-options\]
 
 Schemeオブジェクトobjのテキスト表現をportに出力します。portが指定されていない場合は、現在の出力ポートがデフォルトで使用されます。
 
@@ -26,7 +26,7 @@ Schemeオブジェクトobjのテキスト表現をportに出力します。port
 
 `#:display?`フラグ
 
-flagがtrueの場合は、`display`を使用して出力します。デフォルトは`#f`で、これは`write`スタイルを使用することを意味します。[スキーム値の書き込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Write)を参照してください。
+flagがtrueの場合は、`display`を使用して出力します。デフォルトは`#f`で、これは`write`スタイルを使用することを意味します。[スキーム値の書き込み](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述)を参照してください。
 
 `#:per-line-prefix`文字列
 
@@ -42,23 +42,23 @@ flagがtrueの場合は、`display`を使用して出力します。デフォル
 
 `(ice-9 pretty-print)`モジュールによってエクスポートされるもう一つの関数は`truncated-print`です。これは、Schemeのデータを出力する際に、出力文字数を一定数に切り詰める処理です。これは、ユーザーに任意のデータを提示する必要があるものの、表示できる行が1行しかない場合に便利です。
 
-(define [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) '(ab #(cde) f . g))
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) #:width 10) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+(define [exp](06_06_02_numerical_data_types.md#66212-科学関数) '(ab #(cde) f . g))
+([truncated-print](#710-整形印刷) [exp](06_06_02_numerical_data_types.md#66212-科学関数) #:width 10) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
 ⊣ (ab . #)
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) #:width 15) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+([truncated-print](#710-整形印刷) [exp](06_06_02_numerical_data_types.md#66212-科学関数) #:width 15) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
 ⊣ (ab # f . g)
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) #:width 18) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
-⊣ (ab #(c [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) . #)
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) #:width 20) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+([truncated-print](#710-整形印刷) [exp](06_06_02_numerical_data_types.md#66212-科学関数) #:width 18) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
+⊣ (ab #(c [...](06_08_macros.md#6821-パターン)) . #)
+([truncated-print](#710-整形印刷) [exp](06_06_02_numerical_data_types.md#66212-科学関数) #:width 20) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
 ⊣ (ab #(cde) f . g)
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) "素早い茶色の狐" #:width 20) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+([truncated-print](#710-整形印刷) "素早い茶色の狐" #:width 20) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
 ⊣ 「素早く茶色に…」
-([truncated-print](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint) ([current-module](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dmodule)) #:width 20) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+([truncated-print](#710-整形印刷) ([current-module](06_18_modules.md#6188-モジュールシステムリフレクション)) #:width 20) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))
 ⊣ #<ディレクトリ (gui...>
 
-`truncated-print` は末尾の改行を出力しません。式が指定された幅に収まらない場合、式は切り詰められます。場合によっては省略形[27](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT27)になるか、最悪の場合は `#` として表示されます。
+`truncated-print` は末尾の改行を出力しません。式が指定された幅に収まらない場合、式は切り詰められます。場合によっては省略形[27](99_footnotes.md#27)になるか、最悪の場合は `#` として表示されます。
 
-Scheme Procedure: **truncated-print** obj \[port\] \[keyword-options\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-truncated_002dprint)
+Scheme Procedure: **truncated-print** obj \[port\] \[keyword-options\]
 
 obj を出力します。必要に応じて出力を切り詰め、幅の文字数に収まるようにします。デフォルトでは、obj は `write` を使用して出力されますが、この動作は `display?` キーワード引数で上書きできます。
 
@@ -68,7 +68,7 @@ obj を出力します。必要に応じて出力を切り詰め、幅の文字�
 
 `#:display?`フラグ
 
-flag が true の場合、`display` を使用して出力します。デフォルトは `#f` で、これは `write` スタイルを使用することを意味します。[スキーム値の書き込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Write) を参照してください。
+flag が true の場合、`display` を使用して出力します。デフォルトは `#f` で、これは `write` スタイルを使用することを意味します。[スキーム値の書き込み](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) を参照してください。
 
 `#:width`列
 
@@ -80,4 +80,4 @@ flagがtrueの場合、複合データ構造（リスト、ベクトル、ペア
 
 * * *
 
-次へ: [ファイルツリーウォーク](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Tree-Walk)、前: [整形印刷](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pretty-Printing)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ファイルツリーウォーク](07_12_file_tree_walk.md#712-ファイルツリーウォーク)、前: [整形印刷](#710-整形印刷)、上: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

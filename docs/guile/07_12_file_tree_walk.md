@@ -1,4 +1,4 @@
-### 7.12 ファイルツリーウォーク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Tree-Walk-1)
+### 7.12 ファイルツリーウォーク
 
 このセクションの関数は、ファイルとディレクトリのツリーを走査します。関数には2種類あります。1つ目は高レベルの関数型インターフェースで、2つ目はC言語の`ftw`および`nftw`ルーチンに似ています（GNU Cライブラリリファレンスマニュアルの[ディレクトリツリーの操作](https://doc.guix.gnu.org/libc/latest/en/libc.html#Working-with-Directory-Trees)を参照）。
 
@@ -6,7 +6,7 @@
 
   
 
-Scheme Procedure: **file-system-tree** file-name \[enter? \[stat\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-file_002dsystem_002dtree)
+Scheme Procedure: **file-system-tree** file-name \[enter? \[stat\]\]
 
 `(file-name stat children ...)` の形式のツリーを返します。ここで、`stat` は `(stat file-name)` の結果であり、`children` は、`file-name` がディレクトリを指定する場合に、`file-name` に含まれる各ファイルに対応する同様の構造です。
 
@@ -55,7 +55,7 @@ stat引数はオプションであり、`file-system-fold`と同様に、デフ�
 
 `file-system-tree` のようにメモリ上にエントリのツリーを構築するのではなく、ディレクトリのエントリを直接処理することが望ましい場合がよくあります。以下の手順（コンビネータ）は、ディレクトリツリーを走査しながらディレクトリのエントリを直接処理できるように設計されています。実際、`file-system-tree` はこのコンビネータに基づいて実装されています。
 
-Scheme Procedure: **file-system-fold** enter? leaf down up skip error init file-name \[stat\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-file_002dsystem_002dfold)
+Scheme Procedure: **file-system-fold** enter? leaf down up skip error init file-name \[stat\]
 
 指定されたファイル名のディレクトリを再帰的に走査し、以下に説明するリーフ、ダウン、アップ、スキップの各手順を順次適用した結果を返します。
 
@@ -71,7 +71,7 @@ enter? が `#f` を返す場合、または読み取り不可能なディレク�
 
 特殊な「.」と「..」のエントリは、これらのプロシージャには渡されません。プロシージャへのパス引数は完全なファイル名です（例：`"../foo/bar/gnu"`）。ファイル名が絶対ファイル名の場合、パスも絶対ファイル名になります。デバイス/inode番号のペアで識別されるファイルとディレクトリは、一度だけ走査されます。
 
-オプションの stat 引数のデフォルト値は `lstat` で、これはシンボリックリンクをたどらないことを意味します。シンボリックリンクをたどる場合は、代わりに `stat` プロシージャを使用できます ([stat](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System) を参照)。
+オプションの stat 引数のデフォルト値は `lstat` で、これはシンボリックリンクをたどらないことを意味します。シンボリックリンクをたどる場合は、代わりに `stat` プロシージャを使用できます ([stat](07_02_03_file_system.md#723-ファイルシステム) を参照)。
 
 以下の例は、`file-system-fold` の使用方法を示しています。
 
@@ -111,13 +111,13 @@ enter? が `#f` を返す場合、または読み取り不可能なディレク�
 
 代替となるC言語風関数については、以下で説明します。
 
-Scheme Procedure: **scandir** name \[select? \[entry<?\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scandir)
+Scheme Procedure: **scandir** name \[select? \[entry<?\]\]
 
-ディレクトリ名に含まれるファイルのうち、述語 select? に一致するファイルの名前のリストを返します (デフォルトではすべてのファイル)。返されるファイル名のリストは、entry<? に従ってソートされます。entry<? のデフォルトは `string-locale<?` で、ファイル名はロケールのアルファベット順にソートされます ([テキスト照合](https://doc.guix.gnu.org/guile/latest/en/guile.html#Text-Collation) を参照)。name が判読不能な場合、またはディレクトリでない場合は `#f` を返します。
+ディレクトリ名に含まれるファイルのうち、述語 select? に一致するファイルの名前のリストを返します (デフォルトではすべてのファイル)。返されるファイル名のリストは、entry<? に従ってソートされます。entry<? のデフォルトは `string-locale<?` で、ファイル名はロケールのアルファベット順にソートされます ([テキスト照合](06_25_support_for_internationalization.md#6252-テキスト照合) を参照)。name が判読不能な場合、またはディレクトリでない場合は `#f` を返します。
 
 この手順は、同名のCライブラリ関数をモデルにしています（GNU Cライブラリリファレンスマニュアルの[ディレクトリコンテンツのスキャン](https://doc.guix.gnu.org/libc/latest/en/libc.html#Scanning-Directory-Content)を参照）。
 
-スキームプロシージャ: **ftw** startname proc \['hash-size n\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ftw)
+スキームプロシージャ: **ftw** startname proc \['hash-size n\]
 
 開始名から下へファイルシステムツリーを走査し、各ファイルとディレクトリに対してprocを呼び出す。
 
@@ -125,7 +125,7 @@ Scheme Procedure: **scandir** name \[select? \[entry<?\]\] [¶](https://doc.guix
 
 各プロシージャ呼び出しは `(proc filename statinfo flag)` であり、続行するには `#t` を返し、停止するにはその他の値を返さなければなりません。
 
-filename は訪問した項目で、startname にパスと項目名を加えたものです。statinfo は filename に対する `stat` ([ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System) を参照) の戻り値です。flag は次のいずれかのシンボルです。
+filename は訪問した項目で、startname にパスと項目名を加えたものです。statinfo は filename に対する `stat` ([ファイルシステム](07_02_03_file_system.md#723-ファイルシステム) を参照) の戻り値です。flag は次のいずれかのシンボルです。
 
 `レギュラー`
 
@@ -149,11 +149,11 @@ filenameはディレクトリですが、読み取り不可能なディレクト
 
 `ftw` の戻り値は、処理が完了した場合は `#t` となり、それ以外の場合は、停止の原因となった proc からの `#t` 以外の値となります。
 
-オプション引数シンボル`hash-size`と整数を指定することで、既に訪問した項目を追跡するために使用されるハッシュテーブルのサイズを設定できます。（[ハッシュテーブルリファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hash-Table-Reference)を参照）
+オプション引数シンボル`hash-size`と整数を指定することで、既に訪問した項目を追跡するために使用されるハッシュテーブルのサイズを設定できます。（[ハッシュテーブルリファレンス](06_06_22_hash_tables.md#66222-ハッシュテーブルリファレンス)を参照）
 
 現在の実装では、proc から `#t` 以外の値を返すことだけが `ftw` を終了させる有効な方法です。proc は `throw` やそれに類する手段を使用してエスケープしてはなりません。
 
-スキームプロシージャ: **nftw** startname proc \['chdir\] \[' Depth\] \['hash-size n\] \['mount\] \['physical\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nftw)
+スキームプロシージャ: **nftw** startname proc \['chdir\] \[' Depth\] \['hash-size n\] \['mount\] \['physical\]
 
 開始名から始まるファイルシステムツリーを走査し、各ファイルとディレクトリに対してprocを呼び出します。`nftw`は、上記で説明した基本的な`ftw`に加えて、追加機能を備えています。
 
@@ -161,7 +161,7 @@ filenameはディレクトリですが、読み取り不可能なディレクト
 
 各プロシージャ呼び出しは `(proc filename statinfo flag base level)` であり、続行するには `#t` を返し、停止するにはその他の値を返さなければなりません。
 
-filename は、startname にパスと項目名を加えた、訪問した項目です。 statinfo は、filename に対する `stat` の戻り値です ([ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System) を参照)。 base は、filename 内の整数オフセットで、この項目の basename の開始位置です。 level は、ディレクトリのネストレベルを示す整数で、startname の内容 (またはファイルの場合はその項目自体) に対して 0 から始まります。 flag は、次の記号のいずれかです。
+filename は、startname にパスと項目名を加えた、訪問した項目です。 statinfo は、filename に対する `stat` の戻り値です ([ファイルシステム](07_02_03_file_system.md#723-ファイルシステム) を参照)。 base は、filename 内の整数オフセットで、この項目の basename の開始位置です。 level は、ディレクトリのネストレベルを示す整数で、startname の内容 (またはファイルの場合はその項目自体) に対して 0 から始まります。 flag は、次の記号のいずれかです。
 
 `レギュラー`
 
@@ -207,7 +207,7 @@ proc を呼び出す前に、対象アイテムを含むディレクトリに移
 
 `hash-size n`
 
-既に訪問した項目を追跡するために使用するハッシュテーブルのサイズを設定します。（[ハッシュテーブルリファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hash-Table-Reference)を参照）
+既に訪問した項目を追跡するために使用するハッシュテーブルのサイズを設定します。（[ハッシュテーブルリファレンス](06_06_22_hash_tables.md#66222-ハッシュテーブルリファレンス)を参照）
 
 `mount`
 
@@ -223,4 +223,4 @@ proc を呼び出す前に、対象アイテムを含むディレクトリに移
 
 * * *
 
-次へ: [Streams](https://doc.guix.gnu.org/guile/latest/en/guile.html#Streams)、前: [File Tree Walk](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-Tree-Walk)、上: [Guile Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Streams](07_14_streams.md#714-ストリーム)、前: [File Tree Walk](#712-ファイルツリーウォーク)、上: [Guile Modules](07_00_guile_modules.md#7つのguileモジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

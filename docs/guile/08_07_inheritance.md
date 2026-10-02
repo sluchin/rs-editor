@@ -1,4 +1,4 @@
-### 8.7 継承 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance-1)
+### 8.7 継承
 
 継承を説明するのに役立つクラス定義をいくつか示します。
 
@@ -30,23 +30,23 @@ F |
 
 クラスがスーパークラスを持つ場合、そのスロットのセットは、そのクラス自身のスロットとすべてのスーパークラスのスロットの和集合を取ることによって計算されます。したがって、D の各インスタンスは 3 つのスロット (`a`、`b`、`d`) を持ちます。クラスのスロットは、`class-slots` プリミティブを使用して検出できます。たとえば、
 
-([class-slots](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dslots) A) ⇒ ((a))
-([class-slots](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dslots) E) ⇒ ((a) (e) (c))
-([class-slots](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dslots) F) ⇒ ((e) (c) (b) (d) (a) (f))
+([class-slots](08_08_introspection.md#881-クラス) A) ⇒ ((a))
+([class-slots](08_08_introspection.md#881-クラス) E) ⇒ ((a) (e) (c))
+([class-slots](08_08_introspection.md#881-クラス) F) ⇒ ((e) (c) (b) (d) (a) (f))
 
 返されるスロットの順序は重要ではありません。
 
-* [クラス優先順位リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Precedence-List)
-* [ソート方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sorting-Methods)
-* [継承とアクセサー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance-and-accessors)
+* [クラス優先順位リスト](#871-クラス優先順位リスト)
+* [ソート方法](#872-ソート方法)
+* [継承とアクセサー](#873-継承とアクセサー)
 
 * * *
 
-次へ: [ソート方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sorting-Methods)、上: [継承](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ソート方法](#872-ソート方法)、上: [継承](#87-継承) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.7.1 クラス優先順位リスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Precedence-List-1)
+#### 8.7.1 クラス優先順位リスト
 
-クラスが、同じ名前だが定義が互換性のないスロット（例えば、異なる初期化値やスロット割り当て）を持つ 2 つ以上のスーパークラスから継承した場合、どうなるでしょうか。派生クラスが最終的にどのスロット定義を持つかを決定するルールが必要であり、このルールはクラスの _クラス優先順位リスト_ によって提供されます。[35](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT35)
+クラスが、同じ名前だが定義が互換性のないスロット（例えば、異なる初期化値やスロット割り当て）を持つ 2 つ以上のスーパークラスから継承した場合、どうなるでしょうか。派生クラスが最終的にどのスロット定義を持つかを決定するルールが必要であり、このルールはクラスの _クラス優先順位リスト_ によって提供されます。[35](99_footnotes.md#35)
 
 汎用関数を呼び出す際に、呼び出し引数に適用できるメソッドが複数存在する場合、別の問題が発生します。この場合、適用可能なメソッドの順序付けが必要になります。Guile がどのメソッドを最初に使用し、そのメソッドが `next-method` を呼び出す場合は次にどのメソッドを使用するかなどを判断できるようにするためです。この順序付けに必要な要素の一つは、各呼び出し引数に対して、適用可能な各メソッドの定義から、どの特殊化クラスがその引数に最も特化しているかを判断することです。ここでも、クラスの優先順位リストが役立ちます。
 
@@ -61,7 +61,7 @@ F |
 (x #:初期値 2))
 
 (クラス Z (XY) を定義)
-([...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+([...](06_08_macros.md#6821-パターン)))
 
 明らかに、`Z` クラスは `X` や `Y` よりも、`Z` のインスタンスに対してより具体的です。しかし、`X` と `Y` のどちらがより具体的でしょうか。したがって、上記の定義では、`Z` のインスタンスを作成する際にどちらの `#:init-value` が有効になるのでしょうか。GOOPS のルールでは、先にリストされたスーパークラスは後にリストされたスーパークラスよりも具体的です。したがって、`X` は `Y` よりも具体的であり、`Z` のインスタンスのスロット `x` の `#:init-value` は 1 になります。
 
@@ -75,19 +75,19 @@ F |
 
 クラスの優先順位リストは、`class-precedence-list` 関数を呼び出すことで取得できます。この関数は、最も具体的なクラスを最初の要素とする順序付きリストを返します。例：
 
-([class-precedence-list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dprecedence_002dlist) B) ⇒ (#<<class> B 401b97c8>
+([class-precedence-list](08_08_introspection.md#881-クラス) B) ⇒ (#<<class> B 401b97c8>
 #<<class> <object> 401e4a10>
 #<<class> <top> 4026a9d8>)
 
 あるいは、より分かりやすい結果を得るには：
 
-(map [class-name](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dname) ([class-precedence-list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dprecedence_002dlist) B)) ⇒ (B <object> <top>)
+(map [class-name](08_08_introspection.md#881-クラス) ([class-precedence-list](08_08_introspection.md#881-クラス) B)) ⇒ (B <object> <top>)
 
 * * *
 
-次へ: [継承とアクセサー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance-and-accessors)、前: [クラス優先順位リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Precedence-List)、上: [継承](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [継承とアクセサー](#873-継承とアクセサー)、前: [クラス優先順位リスト](#871-クラス優先順位リスト)、上: [継承](#87-継承) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.7.2 ソート方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sorting-Methods-1)
+#### 8.7.2 ソート方法
 
 さて、クラスの優先順位リストという概念を用いることで、汎用関数の複数のメソッドが呼び出し引数に適用可能な場合に、可能なメソッドがどのようにソートされるかを正確に記述することができます。
 
@@ -99,23 +99,23 @@ F |
 
 * * *
 
-前へ: [ソート方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sorting-Methods)、上へ: [継承](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [ソート方法](#872-ソート方法)、上へ: [継承](#87-継承) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.7.3 継承とアクセサー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance-and-accessors-1)
+#### 8.7.3 継承とアクセサー
 
 クラス <A> がそのスロット x のいずれかに対してゲッター、セッター、またはアクセサーを定義すると、クラス <A> に特化したアクセサー メソッドが作成されます。アクセサー メソッドは、常に具体的なクラスを参照するという点で特殊です。<A> をサブクラス化すると、x 用の新しいアクセサー メソッドが自動的に作成され、サブクラスに特化したものになります。
 
 (define-class <A> () (x #:accessor x))
 (define-class <B> (<A>))
-([generic-function-methods](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-generic_002dfunction_002dmethods) x)
+([generic-function-methods](08_08_introspection.md#884-汎用関数) x)
 ⇒
 (#<<accessor-method> (<B>) 7faa66b5b1c0>
 #<<accessor-method> (<A>) 7faa66b5b240>)
 
 特に、<A> に特化した x アクセサ メソッドは、クラス B のオブジェクトには適用できないことに注意してください。
 
-(define o ([make](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make-1) <B>))
-(compute-applicable-methods x ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) o))
+(define o ([make](08_03_instance_creation_and_slot_access.md#83-インスタンスの作成とスロットへのアクセス) <B>))
+(compute-applicable-methods x ([list](06_06_09_lists.md#6693-リストコンストラクタ) o))
 ⇒
 (#<<accessor-method> (<B>) 7faa66b5b1c0>)
 
@@ -123,4 +123,4 @@ F |
 
 * * *
 
-次へ: [エラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS-Error-Handling)、前: [継承](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inheritance)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [エラー処理](08_09_error_handling.md#89-エラー処理)、前: [継承](#87-継承)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

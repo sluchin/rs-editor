@@ -1,38 +1,38 @@
-### 6.7 手順 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-1)
+### 6.7 手順
 
-* [ラムダ: 基本的なプロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)
-* [プリミティブプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures)
-* [コンパイル済みプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiled-Procedures)
-* [オプションの引数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments)
-* [Case-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#Case_002dlambda)
-* [高階関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Higher_002dOrder-Functions)
-* [プロシージャのプロパティとメタ情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Properties)
-* [セッター付きプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters)
-* [インライン化可能な手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inlinable-Procedures)
+* [ラムダ: 基本的なプロシージャの作成](#671-ラムダ-基本的なプロシージャの作成)
+* [プリミティブプロシージャ](#672-プリミティブプロシージャ)
+* [コンパイル済みプロシージャ](#673-コンパイル済みプロシージャ)
+* [オプションの引数](#674-オプションの引数)
+* [Case-lambda](#675-case-lambda)
+* [高階関数](#676-高階関数)
+* [プロシージャのプロパティとメタ情報](#677-プロシージャのプロパティとメタ情報)
+* [セッター付きプロシージャ](#678-セッター付きプロシージャ)
+* [インライン化可能な手続き](#679-インライン化可能な手続き)
 
 * * *
 
-次へ: [プリミティブ手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures)、上へ: [手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プリミティブ手続き](#672-プリミティブプロシージャ)、上へ: [手続き](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.1 ラムダ: 基本的なプロシージャの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda_003a-Basic-Procedure-Creation)
+#### 6.7.1 ラムダ: 基本的なプロシージャの作成
 
-`lambda` 式はプロシージャに評価されます。`lambda` 式が評価されるときに有効な環境は、新しく作成されたプロシージャ内に閉じ込められます。これは _クロージャ_ と呼ばれます ([クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) を参照)。
+`lambda` 式はプロシージャに評価されます。`lambda` 式が評価されるときに有効な環境は、新しく作成されたプロシージャ内に閉じ込められます。これは _クロージャ_ と呼ばれます ([クロージャの概念](03_hello_scheme.md#34-クロージャの概念) を参照)。
 
 `lambda` で作成されたプロシージャが実引数とともに呼び出されると、プロシージャ内の環境は、仮引数リストで指定された変数を新しい場所にバインドし、実引数をこれらの場所に格納することによって拡張されます。その後、`lambda` 式の本体が順次評価されます。プロシージャ本体の最後の式の評価結果が、プロシージャ呼び出しの結果となります。
 
 以下の例では、`lambda` を使用してプロシージャを作成する方法と、これらのプロシージャで何ができるかを示します。
 
-(lambda (x) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) xx)) ⇒ a [procedure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure)
-((lambda (x) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) xx)) 4) ⇒ 8
+(lambda (x) ([+](06_06_02_numerical_data_types.md#66211-算術関数) xx)) ⇒ a [procedure](#678-セッター付きプロシージャ)
+((lambda (x) ([+](06_06_02_numerical_data_types.md#66211-算術関数) xx)) 4) ⇒ 8
 
 プロシージャを作成する際に有効な環境がプロシージャ内に含まれるという事実は、次の例で示されています。
 
 (define add4
 (let ((x 4))
-(lambda (y) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) xy))))
+(lambda (y) ([+](06_06_02_numerical_data_types.md#66211-算術関数) xy))))
 (add4 6) ⇒ 10
 
-構文: **ラムダ** 形式体の本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lambda-1)
+構文: **ラムダ** 形式体の本体
 
 形式引数は、次の表に示すような形式引数リストである必要があります。
 
@@ -48,119 +48,119 @@
 
 最後の変数の前にスペースで区切られたピリオドがある場合、この手続きは、ピリオドの前の仮引数の数である n 個以上の変数を受け取ります。ピリオドの前には少なくとも 1 つの引数が必要です。最初の n 個の実引数は、最初の n 個の仮引数用に新しく割り当てられた場所に格納され、残りの実引数のシーケンスはリストに変換されて、最後の仮引数の場所に格納されます。実引数がちょうど n 個の場合、空のリストが最後の仮引数の場所に格納されます。
 
-変数または変数n+1内のリストは常に新しく作成され、必要に応じてプロシージャがそれを変更できます。これは、プロシージャが`apply`を介して呼び出された場合でも同様で、リスト引数の必要な部分がコピーされます（[オンザフライ評価のプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fly-Evaluation)を参照）。
+変数または変数n+1内のリストは常に新しく作成され、必要に応じてプロシージャがそれを変更できます。これは、プロシージャが`apply`を介して呼び出された場合でも同様で、リスト引数の必要な部分がコピーされます（[オンザフライ評価のプロシージャ](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順)を参照）。
 
 本体は、プロシージャが呼び出されたときに順番に評価される一連のScheme式です。
 
 * * *
 
-次へ: [コンパイル済みプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiled-Procedures)、前: [ラムダ: 基本プロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)、上: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [コンパイル済みプロシージャ](#673-コンパイル済みプロシージャ)、前: [ラムダ: 基本プロシージャの作成](#671-ラムダ-基本的なプロシージャの作成)、上: [プロシージャ](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.2 プリミティブプロシージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures-1)
+#### 6.7.2 プリミティブプロシージャ
 
 C言語で記述されたプロシージャは、引数の型が`SCM`のみで、戻り値も`SCM`であれば、Schemeから使用できるように登録できます。登録（`scm_c_make_gsubr`）と定義（`scm_define`）のプロセスを組み合わせた`scm_c_define_gsubr`が最も便利なメカニズムとなるでしょう。
 
-関数: `SCM` **scm\_c\_make\_gsubr** `(const char *name, int req, int opt, int rst, fcn)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fmake_005fgsubr)
+関数: `SCM` **scm\_c\_make\_gsubr** `(const char *name, int req, int opt, int rst, fcn)`
 
 C言語のプロシージャfcnを「subr」（Schemeから呼び出し可能なプリミティブサブルーチン）として登録します。登録されたサブルーチンは指定された名前に関連付けられますが、環境バインディングは作成されません。引数req、opt、rstは、それぞれ必須引数、オプション引数、および「残りの」引数の数を指定します。これらの引数の合計数は、fcnへの実際の引数の数と一致する必要がありますが、10を超えることはできません。残りの引数の数は0または1である必要があります。`scm_c_make_gsubr`は、プロシージャの「ハンドル」である`SCM`型の値を返します。
 
-関数: `SCM` **scm\_c\_define\_gsubr** `(const char *name, int req, int opt, int rst, fcn)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fdefine_005fgsubr)
+関数: `SCM` **scm\_c\_define\_gsubr** `(const char *name, int req, int opt, int rst, fcn)`
 
 上記の`scm_c_make_gsubr`と同様にCプロシージャfcnを登録し、さらに`scm_define`を使用して「現在の環境」にプロシージャのトップレベルSchemeバインディングを作成します。`scm_c_define_gsubr`は`scm_c_make_gsubr`と同様にプロシージャのハンドルを返しますが、通常はそれ以上の処理は必要ありません。
 
-Scheme から C で記述されたプロシージャを呼び出すための別のインターフェースについては、[Foreign Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions) を参照してください。
+Scheme から C で記述されたプロシージャを呼び出すための別のインターフェースについては、[Foreign Functions](06_19_foreign_function_interface.md#6195-外部関数) を参照してください。
 
 * * *
 
-次へ: [オプション引数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments)、前: [プリミティブ手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures)、上: [手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [オプション引数](#674-オプションの引数)、前: [プリミティブ手続き](#672-プリミティブプロシージャ)、上: [手続き](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.3 コンパイル済みプロシージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiled-Procedures-1)
+#### 6.7.3 コンパイル済みプロシージャ
 
-[Lambda: 基本プロシージャ作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)で説明されている評価戦略では、プロシージャがどのように解釈されるかが説明されています。解釈は展開された Scheme ソース コードに対して直接動作し、評価器を再帰的に呼び出してネストされた式の値を取得します。
+[Lambda: 基本プロシージャ作成](#671-ラムダ-基本的なプロシージャの作成)で説明されている評価戦略では、プロシージャがどのように解釈されるかが説明されています。解釈は展開された Scheme ソース コードに対して直接動作し、評価器を再帰的に呼び出してネストされた式の値を取得します。
 
 ただし、ほとんどのプロシージャはコンパイルされます。これは、Guileがプロシージャを実行するたびに必要な処理を決定するために、事前に何らかの計算を行っていることを意味します。コンパイルされたプロシージャは、インタプリタ型のプロシージャよりも高速に実行されます。
 
-コンパイル済みプロシージャは通常、ファイルの読み込みによって生成されます。Guile は、ファイルがコンパイルされていない、またはコンパイル済みファイルが古いことを検出した場合、読み込み時にファイルのコンパイルを試み、結果をディスクに保存します。プロシージャは実行時にもコンパイルできます。実行時コンパイルの詳細については、[Scheme コードの読み込みと評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Read_002fLoad_002fEval_002fCompile) を参照してください。
+コンパイル済みプロシージャは通常、ファイルの読み込みによって生成されます。Guile は、ファイルがコンパイルされていない、またはコンパイル済みファイルが古いことを検出した場合、読み込み時にファイルのコンパイルを試み、結果をディスクに保存します。プロシージャは実行時にもコンパイルできます。実行時コンパイルの詳細については、[Scheme コードの読み込みと評価](06_16_reading_and_evaluating_scheme_code.md#616-scheme-コードの読み取りと評価) を参照してください。
 
-コンパイル済みプロシージャ（プログラムとも呼ばれます）は、プロシージャを操作するすべてのプロシージャに応答します。`procedure?`、`procedure-name`などにプログラムを渡すことができます（[プロシージャのプロパティとメタ情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Properties)を参照）。さらに、プログラムの低レベルな詳細情報を取得するためのアクセサもいくつか用意されています。
+コンパイル済みプロシージャ（プログラムとも呼ばれます）は、プロシージャを操作するすべてのプロシージャに応答します。`procedure?`、`procedure-name`などにプログラムを渡すことができます（[プロシージャのプロパティとメタ情報](#677-プロシージャのプロパティとメタ情報)を参照）。さらに、プログラムの低レベルな詳細情報を取得するためのアクセサもいくつか用意されています。
 
 ほとんどの人はこのセクションで説明するルーチンを使用する必要はないでしょうが、文書化しておくことは良いことです。ただし、まず適切なモジュールを含める必要があります。
 
 (use-modules (system vm program))
 
-Scheme手順: **program?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_003f)
+Scheme手順: **program?** obj
 
-C 関数: **scm\_program\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005fp)
+C 関数: **scm\_program\_p** (obj)
 
 objがコンパイル済みプロシージャの場合は`#t`を返し、それ以外の場合は`#f`を返します。
 
-スキーム手順: **program-code** プログラム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dcode)
+スキーム手順: **program-code** プログラム
 
-C 関数: **scm\_program\_code** (プログラム) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005fcode)
+C 関数: **scm\_program\_code** (プログラム)
 
 プログラムのエントリのアドレスを整数として返します。このアドレスは主に`(system vm debug)`内のプロシージャで役立ちます。
 
-スキームプロシージャ: **program-num-free-variable** プログラム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dnum_002dfree_002dvariable)
+スキームプロシージャ: **program-num-free-variable** プログラム
 
-C 関数: **scm\_program\_num\_free\_variables** (program) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005fnum_005ffree_005fvariables)
+C 関数: **scm\_program\_num\_free\_variables** (program)
 
 このプログラムによって捕捉された自由変数の数を返します。
 
-Scheme 手順: **program-free-variable-ref** program n [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dfree_002dvariable_002dref)
+Scheme 手順: **program-free-variable-ref** program n
 
-C 関数: **scm\_program\_free\_variable-ref** (program, n) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005ffree_005fvariable_002dref)
+C 関数: **scm\_program\_free\_variable-ref** (program, n)
 
-Scheme 手順: **program-free-variable-set!** program n val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dfree_002dvariable_002dset_0021)
+Scheme 手順: **program-free-variable-set!** program n val
 
-C 関数: **scm\_program\_free\_variable\_set\_x** (program, n, val) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005ffree_005fvariable_005fset_005fx)
+C 関数: **scm\_program\_free\_variable\_set\_x** (program, n, val)
 
 プログラムの自由変数へのアクセサ。取得される値の中には、実際には変数「ボックス」に格納されているものもあります。詳細については、「変数とVM」を参照してください。
 
 ユーザーは、自分が本当に賢いと思わない限り、返された値を変更してはならない。
 
-Scheme手順: **program-sources** プログラム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dsources)
+Scheme手順: **program-sources** プログラム
 
-スキーム手順: **source:addr** source [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_003aaddr)
+スキーム手順: **source:addr** source
 
-スキーム手順: **ソース:行** ソース [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_003aline)
+スキーム手順: **ソース:行** ソース
 
-スキーム手順: **source:column** source [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_003acolumn)
+スキーム手順: **source:column** source
 
-Scheme Procedure: **source:file** source [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_003afile)
+Scheme Procedure: **source:file** source
 
 プログラムとそのアクセサーのソースコード位置を示す注釈。
 
 ソース位置情報はコンパイラを介して伝播し、最終的にプログラムのメタデータにシリアル化されます。この情報は、プログラムのオブジェクトコード内の命令ポインタのオフセットをキーとして使用されます。具体的には、命令の_直後_にある`ip`をキーとして使用されるため、バックトレースによって実行中の呼び出しのソース位置を特定できます。
 
-スキーム手順: **program-arities** プログラム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002darities)
+スキーム手順: **program-arities** プログラム
 
-C 関数: **scm\_program\_arities** (プログラム) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005farities)
+C 関数: **scm\_program\_arities** (プログラム)
 
-スキーム手順: **program-arity** プログラム ip [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002darity)
+スキーム手順: **program-arity** プログラム ip
 
-Scheme Procedure: **arity:start** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003astart)
+Scheme Procedure: **arity:start** arity
 
-スキーム手順: **arity:end** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003aend)
+スキーム手順: **arity:end** arity
 
-スキーム手順: **arity:nreq** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003anreq)
+スキーム手順: **arity:nreq** arity
 
-スキーム手順: **arity:nopt** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003anopt)
+スキーム手順: **arity:nopt** arity
 
-スキーム手順: **arity:rest?** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003arest_003f)
+スキーム手順: **arity:rest?** arity
 
-スキーム手順: **arity:kw** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003akw)
+スキーム手順: **arity:kw** arity
 
-スキーム手順: **arity:allow-other-keys?** arity [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-arity_003aallow_002dother_002dkeys_003f)
+スキーム手順: **arity:allow-other-keys?** arity
 
 プログラムの「アリティ」を表すためのアクセサ。
 
 通常、プロシージャは引数を 1 つ持ちます。たとえば、`(lambda (x) x)` は必須引数を 1 つだけ取ります。必須引数の数は、`(arity:nreq (program-arities (lambda (x) x)))` で確認できます。同様に、`arity:nopt` はオプション引数の数を取得し、`arity:rest?` はプロシージャに残り引数がある場合は true を返します。
 
-`arity:kw` は、プロシージャにキーワード引数がある場合、`(kw . idx)` ペアのリストを返します。idx は idx 番目のローカル変数を指します。詳細については、[変数と VM](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variables-and-the-VM) を参照してください。最後に、`arity:allow-other-keys?` は、他のキーが許可されている場合は true を返します。詳細については、[オプション引数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments) を参照してください。
+`arity:kw` は、プロシージャにキーワード引数がある場合、`(kw . idx)` ペアのリストを返します。idx は idx 番目のローカル変数を指します。詳細については、[変数と VM](09_03_a_virtual_machine_for_guile.md#934-変数と-vm) を参照してください。最後に、`arity:allow-other-keys?` は、他のキーが許可されている場合は true を返します。詳細については、[オプション引数](#674-オプションの引数) を参照してください。
 
 では、`arity:start`と`arity:end`はどうでしょうか？これらは、プログラムのバイトコード内で、指定されたアリティが有効なバイト範囲を返します。実際、プロシージャは複数のアリティを持つことができます。「プロシージャのアリティとは何か」という問いは、これらの`arity:start`と`arity:end`の値によって区切られた、プログラムの特定の箇所でのみ意味を持ちます。
 
-Scheme手順: **program-arguments-alist** プログラム \[ip\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002darguments_002dalist)
+Scheme手順: **program-arguments-alist** プログラム \[ip\]
 
 プログラムが受け入れる引数を記述した連想リストを返します。情報が取得できない場合は `#f` を返します。
 
@@ -175,7 +175,7 @@ Scheme手順: **program-arguments-alist** プログラム \[ip\] [¶](https://do
 (allow-other-keys? . #f)
 （残りのd）
 
-Scheme Procedure: **program-lambda-list** program \[ip\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002dlambda_002dlist)
+Scheme Procedure: **program-lambda-list** program \[ip\]
 
 プログラムの引数をラムダリストとして返します。情報が利用できない場合は `#f` を返します。
 
@@ -187,22 +187,22 @@ Scheme Procedure: **program-lambda-list** program \[ip\] [¶](https://doc.guix.g
 
 * * *
 
-次へ: [Case-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#Case_002dlambda)、前: [Compiled Procedures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiled-Procedures)、上: [Procedures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Case-lambda](#675-case-lambda)、前: [Compiled Procedures](#673-コンパイル済みプロシージャ)、上: [Procedures](#67-手順) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "索引")\]
 
-#### 6.7.4 オプションの引数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments-1)
+#### 6.7.4 オプションの引数
 
-R5RSで定義されているSchemeプロシージャは、固定数の実引数を扱うことも、固定数の実引数の後に任意の数の追加引数を扱うこともできます。可変引数を持つプロシージャを作成することは便利ですが、残念ながら、長さが変化する引数リストを扱うための構文上の手段は少々不便です。固定数の引数には名前を付けることができますが、残りの（オプションの）引数は値のリストとしてのみ参照できます（[Lambda: 基本的なプロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)を参照）。
+R5RSで定義されているSchemeプロシージャは、固定数の実引数を扱うことも、固定数の実引数の後に任意の数の追加引数を扱うこともできます。可変引数を持つプロシージャを作成することは便利ですが、残念ながら、長さが変化する引数リストを扱うための構文上の手段は少々不便です。固定数の引数には名前を付けることができますが、残りの（オプションの）引数は値のリストとしてのみ参照できます（[Lambda: 基本的なプロシージャの作成](#671-ラムダ-基本的なプロシージャの作成)を参照）。
 
 このため、Guileは`lambda`の拡張機能である`lambda*`を提供しており、ユーザーはオプション引数とキーワード引数を持つプロシージャを定義できます。さらに、Guileの仮想マシンは、オプション引数とキーワード引数のディスパッチを低レベルでサポートしています。オプション引数とキーワード引数を持つプロシージャへの呼び出しは、レストリストを割り当てることなく、低コストで実行できます。
 
-* [ラムダ式と定義式。](https://doc.guix.gnu.org/guile/latest/en/guile.html#lambda_002a-and-define_002a)
-* [(ice-9 optargs)](https://doc.guix.gnu.org/guile/latest/en/guile.html#ice_002d9-optargs)
+* [ラムダ式と定義式。](#6741-lambda-と-define)
+* [(ice-9 optargs)](#6742-ice-9-optargs)
 
 * * *
 
-次へ: [(ice-9 optargs)](https://doc.guix.gnu.org/guile/latest/en/guile.html#ice_002d9-optargs)、上へ: [Optional Arguments](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [(ice-9 optargs)](#6742-ice-9-optargs)、上へ: [Optional Arguments](#674-オプションの引数) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "索引")\]
 
-#### 6.7.4.1 lambda\* と define\*。[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#lambda_002a-and-define_002a_002e)
+#### 6.7.4.1 lambda\* と define\*。
 
 `lambda*` は `lambda` に似ていますが、オプション引数とキーワード引数を許可するための拡張機能が追加されています。
 
@@ -210,13 +210,13 @@ R5RSで定義されているSchemeプロシージャは、固定数の実引数�
 [#:オプションの変数定義…]
 \[#:key vardef… \[#:allow-other-keys\]\]
 \[#:rest var | . var\])
-body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lambda_002a)
+body1 body2 …
 
   
 
 `#:optional` および `#:key` で指定されたオプション引数および/またはキーワード引数を受け取るプロシージャを作成します。例:
 
-([lambda\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lambda_002a) (ab #:optional cd . e) '())
+([lambda\*](#6741-lambda-と-define) (ab #:optional cd . e) '())
 
 は、固定引数 a と b、オプション引数 c と d、および残りの引数 e を持つ手続きです。呼び出し時にオプション引数が省略された場合、それらの変数は `#f` にバインドされます。
 
@@ -225,14 +225,14 @@ body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-l
 `lambda*` はキーワード引数を持つプロシージャを作成することもできます。例えば、次のように定義されたプロシージャです。
 
 (define\* (sir-yes-sir #:key action how-high)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) action how-high))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) action how-high))
 
 `(sir-yes-sir #:action 'jump)`、`(sir-yes-sir #:how-high 13)`、`(sir-yes-sir #:action 'lay-down #:how-high 0)`、または単に`(sir-yes-sir)`のように呼び出すことができます。キーワードとして指定された引数は値にバインドされます（指定されていない引数は`#f`です）。
 
 オプション引数とキーワード引数には、呼び出し時に引数がない場合に取得するデフォルト値も設定できます。これは、変数名と式の2要素リストを指定することで行います。たとえば、
 
 (define\* (frob foo #:optional (bar 42) #:key (baz 73))
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) foo bar baz))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) foo bar baz))
 
 fooは固定引数、barはデフォルト値42のオプション引数、bazはデフォルト値73のキーワード引数です。デフォルト値式は、必要になるまで、またプロシージャが呼び出されるまで評価されません。
 
@@ -241,7 +241,7 @@ fooは固定引数、barはデフォルト値42のオプション引数、bazは
 呼び出しでキーワードが2回指定されている場合、最後の値が使用されます。たとえば、
 
 (define\* (flips #:key (heads 0) (tails 0))
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) 表 裏)))
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) ([list](06_06_09_lists.md#6693-リストコンストラクタ) 表 裏)))
 
 （コインを投げる回数：表37回、裏42回、表99回）
 ⊣ (99 42)
@@ -250,35 +250,35 @@ fooは固定引数、barはデフォルト値42のオプション引数、bazは
 
 `#:key` がレスト引数と一緒に使用される場合、呼び出しのキーワードパラメータはすべてレストリストに残ります。これは Common Lisp と同じです。たとえば、
 
-(([lambda\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lambda_002a) (#:key (x 0) #:allow-other-keys #:rest r)
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) r))
+(([lambda\*](#6741-lambda-と-define) (#:key (x 0) #:allow-other-keys #:rest r)
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) r))
 #:x 123 #:y 456)
 ⊣ (#:x 123 #:y 456)
 
 `#:optional` と `#:key` は、左から右へ順にバインディングを確立します。これは、デフォルト式が以前のパラメーターを参照できることを意味します。たとえば、
 
-([lambda\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lambda_002a) (start #:optional (end ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 10 start)))
-(do ((i start ([1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1) i)))
-(([\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) i end))
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) i)))
+([lambda\*](#6741-lambda-と-define) (start #:optional (end ([+](06_06_02_numerical_data_types.md#66211-算術関数) 10 start)))
+(do ((i start ([1+](06_06_02_numerical_data_types.md#66211-算術関数) i)))
+(([\>](06_06_02_numerical_data_types.md#6628-比較述語) i end))
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) i)))
 
 この左から右へのスコープ規則の例外は、レスト引数です。レスト引数がある場合、それはオプション引数の後、キーワード引数の前にバインドされます。
 
 * * *
 
-前へ: [lambda\* と define\*。](https://doc.guix.gnu.org/guile/latest/en/guile.html#lambda_002a-and-define_002a)、上へ: [オプション引数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [lambda\* と define\*。](#6741-lambda-と-define)、上へ: [オプション引数](#674-オプションの引数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.4.2 (ice-9 optargs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#g_t_0028ice_002d9-optargs_0029)
+#### 6.7.4.2 (ice-9 optargs)
 
 Guile 2.0 より前は、`lambda*` と `define*` は、レストリスト引数を処理するマクロを使用して実装されていました。これは、オプション引数を持つプロシージャを呼び出す際に、プロシージャ呼び出しごとにレストリストを割り当てる必要があったため、最適な方法ではありませんでした。Guile 2.0 では、オプション引数とキーワード引数を Guile のコアに取り込むことで、この状況が改善されました。
 
 しかし、リストがあり、そこからオプション引数やキーワード引数を解析したい場合もあります。Guile の `(ice-9 optargs)` には、そのような作業を支援するマクロがいくつか用意されています。
 
-構文 `let-optional` と `let-optional*` は、残りの引数リストを分割代入し、リストの各要素に名前を付けるためのものです。`let-optional` はすべての変数を同時にバインドしますが、`let-optional*` は `let` と `let*` と同様に、それらを順次バインドします ([ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings) を参照)。
+構文 `let-optional` と `let-optional*` は、残りの引数リストを分割代入し、リストの各要素に名前を付けるためのものです。`let-optional` はすべての変数を同時にバインドしますが、`let-optional*` は `let` と `let*` と同様に、それらを順次バインドします ([ローカル変数バインディング](06_10_definitions_and_variable_bindings.md#6102-ローカル変数バインディング) を参照)。
 
-ライブラリ構文: **let-optional** rest-arg (binding …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002doptional)
+ライブラリ構文: **let-optional** rest-arg (binding …) body1 body2 …
 
-ライブラリ構文: **let-optional\*** rest-arg (binding …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002doptional_002a)
+ライブラリ構文: **let-optional\*** rest-arg (binding …) body1 body2 …
 
 これら 2 つのマクロは、非常に Scheme らしいオプション引数インターフェースを提供し、複雑な構文は導入しません。これらは同名の scsh マクロと互換性がありますが、若干拡張されています。それぞれのバインディングは、var または `(var default-value)` のいずれかの形式になります。rest-arg は、これらが使用されるプロシージャの rest-argument である必要があります。rest-arg の項目は、指定された変数名に順次バインドされます。rest-arg がなくなると、残りの var はデフォルト値にバインドされるか、デフォルト値が指定されていない場合は `#f` にバインドされます。rest-arg は、rest-arg に残っていたものにバインドされたままになります。
 
@@ -286,9 +286,9 @@ Guile 2.0 より前は、`lambda*` と `define*` は、レストリスト引数�
 
 同様に、`let-keywords` と `let-keywords*` はキーワード形式の引数リストから値を抽出し、ローカル変数をそれらの値またはデフォルト値にバインドします。
 
-ライブラリ構文: **let-keywords** args allow-other-keys? (binding …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002dkeywords)
+ライブラリ構文: **let-keywords** args allow-other-keys? (binding …) body1 body2 …
 
-ライブラリ構文: **let-keywords\*** args allow-other-keys? (binding …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002dkeywords_002a)
+ライブラリ構文: **let-keywords\*** args allow-other-keys? (binding …) body1 body2 …
 
 args は評価され、`(#:keyword1 value1 #:keyword2 value2 …)` の形式のリストが返されます。バインディングは変数とデフォルト式で、変数はキーワード値から (名前で) 設定されます。次に body1 body2 … の形式が評価され、最後のものが結果となります。例を挙げると構文が最も明確になります。
 
@@ -308,24 +308,24 @@ allow-other-keys? は評価され、引数リストに未知のキーワード�
 
 `(ice-9 optargs)` は、最新の Guile コーディングではあまり役に立たないものの、依然としてサポートされている `define*` の便利な機能もいくつか提供しています。`define*-public` は `define-public` の `lambda*` バージョンです。`defmacro*` と `defmacro*-public` は、引数リストの処理機能が向上したマクロを定義するために存在します。`-public` バージョンは、プロシージャ/マクロを定義するだけでなく、現在のモジュールからエクスポートします。
 
-ライブラリ構文: **define\*-public** 形式定義 body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002a_002dpublic)
+ライブラリ構文: **define\*-public** 形式定義 body1 body2 …
 
 `define*`と`define-public`を組み合わせたような感じ。
 
-ライブラリ構文: **defmacro\*** 名前 形式関数 body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-defmacro_002a)
+ライブラリ構文: **defmacro\*** 名前 形式関数 body1 body2 …
 
-ライブラリ構文: **defmacro\*-public** 名前 形式関数 body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-defmacro_002a_002dpublic)
+ライブラリ構文: **defmacro\*-public** 名前 形式関数 body1 body2 …
 
 これらは、`defmacro` および `defmacro-public` とほぼ同じですが、`lambda*` スタイルの拡張パラメータリストを受け取ります。このリストでは、`#:optional`、`#:key`、`#:allow-other-keys`、および `#:rest` が通常のセマンティクスで許可されます。オプション引数を持つマクロの例を以下に示します。
 
-([defmacro\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-defmacro_002a) transmogrify (a #:optional b)
+([defmacro\*](#6742-ice-9-optargs) transmogrify (a #:optional b)
 （a 1）
 
 * * *
 
-次へ: [高階関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Higher_002dOrder-Functions)、前: [オプション引数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments)、上: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [高階関数](#676-高階関数)、前: [オプション引数](#674-オプションの引数)、上: [プロシージャ](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.5 Case-lambda [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Case_002dlambda-1)
+#### 6.7.5 Case-lambda
 
 R5RSのレスト引数は確かに便利で汎用性が高いものの、必ずしも目的を達成するための最も適切で効率的な手段とは限りません。例えば、オプション引数の問題に関しては、レスト引数付きの`lambda`よりも`lambda*`の方がはるかに優れた解決策となります。
 
@@ -334,9 +334,9 @@ R5RSのレスト引数は確かに便利で汎用性が高いものの、必ず�
 例えば：
 
 (定義 (make-accum n)
-([case-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-case_002dlambda-1)
+([case-lambda](07_06_r6rs_support.md#7627-rnrs-コントロール)
 (() n)
-((m) ([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) n ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) nm)) n)))
+((m) ([set!](07_06_r6rs_support.md#7622-rnrs-ベース) n ([+](06_06_02_numerical_data_types.md#66211-算術関数) nm)) n)))
 
 ((make-accum 20)を定義する)
 (a) ⇒ 20
@@ -345,7 +345,7 @@ R5RSのレスト引数は確かに便利で汎用性が高いものの、必ず�
 
 `case-lambda`形式が返す値は、実引数の数と各節内の仮引数を順番に照合する手続きです。最初に一致した節が選択され、実引数リストから対応する値が節内の変数名にバインドされ、節の本体が評価されます。一致する節がない場合は、エラーが通知されます。
 
-`case-lambda` 形式の構文は、次の EBNF 文法で定義されています。_Formals_ は、`lambda` と同様に、形式引数リストを意味します ([Lambda: 基本手続きの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda) を参照)。
+`case-lambda` 形式の構文は、次の EBNF 文法で定義されています。_Formals_ は、`lambda` と同様に、形式引数リストを意味します ([Lambda: 基本手続きの作成](#671-ラムダ-基本的なプロシージャの作成) を参照)。
 
 <case-lambda>
 --> (case-lambda <case-lambda-clause>\*)
@@ -360,12 +360,12 @@ R5RSのレスト引数は確かに便利で汎用性が高いものの、必ず�
 `case-lambda` では、レストリストが役立つ場合があります。
 
 (定義プラス)
-([case-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-case_002dlambda-1)
+([case-lambda](07_06_r6rs_support.md#7627-rnrs-コントロール)
 「すべての引数の合計を返します。」
 (() 0)
 （（a）a）
-((ab) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab))
-((ab . rest) ([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) plus ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab) rest))))
+((ab) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ab))
+((ab . rest) ([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) plus ([+](06_06_02_numerical_data_types.md#66211-算術関数) ab) rest))))
 （プラス 1 2 3）⇒ 6
 
 また、補足として、Guile では `case-lambda*` も定義されています。これは `case-lambda` と似ていますが、`lambda*` 句を使用します。`case-lambda*` 句は、引数が必須引数を満たし、かつオプション引数や残りの引数に対して多すぎない場合に一致します。
@@ -402,85 +402,85 @@ R5RSのレスト引数は確かに便利で汎用性が高いものの、必ず�
 
 * * *
 
-次へ: [手続きのプロパティとメタ情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Properties)、前: [ケースラムダ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Case_002dlambda)、上: [手続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [手続きのプロパティとメタ情報](#677-プロシージャのプロパティとメタ情報)、前: [ケースラムダ](#675-case-lambda)、上: [手続き](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.6 高階関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Higher_002dOrder-Functions-1)
+#### 6.7.6 高階関数
 
 関数型プログラミング言語であるSchemeでは、高階関数、すなわち関数を引数として受け取り、かつ／または関数を返す関数を定義できます。他の手続きから手続きを導出するためのユーティリティが提供されており、以下で説明します。
 
-Scheme手順: **const**値[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const)
+Scheme手順: **const**値
 
 任意の数の引数を受け取り、値を返すプロシージャを返します。
 
-([procedure?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_003f) ([const](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const) 3)) ⇒ #t
-(([const](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const) 'hello)) ⇒ hello
-(([const](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-const) 'hello) 'world) ⇒ hello
+([procedure?](#677-プロシージャのプロパティとメタ情報) ([const](#676-高階関数) 3)) ⇒ #t
+(([const](#676-高階関数) 'hello)) ⇒ hello
+(([const](#676-高階関数) 'hello) 'world) ⇒ hello
 
-Scheme プロシージャ: **negate** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate)
+Scheme プロシージャ: **negate** proc
 
 proc と同じ引数数を持つプロシージャを返し、そのプロシージャの結果の `not` を返します。
 
-([procedure?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_003f) ([negate](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate) [number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f))) ⇒ #t
-(([negate](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate) [odd?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-odd_003f)) 2) ⇒ #t
-(([negate](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate) [real?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_003f)) 'dream) ⇒ #t
-(([negate](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate) [string-prefix?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dprefix_003f)) "GNU" "GNU Guile")
+([procedure?](#677-プロシージャのプロパティとメタ情報) ([negate](#676-高階関数) [number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー))) ⇒ #t
+(([negate](#676-高階関数) [odd?](06_06_02_numerical_data_types.md#6627-整数値に対する演算)) 2) ⇒ #t
+(([negate](#676-高階関数) [real?](06_06_02_numerical_data_types.md#6623-実数と有理数)) 'dream) ⇒ #t
+(([negate](#676-高階関数) [string-prefix?](06_06_05_strings.md#6658-文字列検索)) "GNU" "GNU Guile")
 ⇒ #f
-([filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-filter) ([negate](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-negate) [number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f)) '(a 2 "b"))
+([filter](06_06_09_lists.md#6696-リストの変更) ([negate](#676-高階関数) [number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー)) '(a 2 "b"))
 ⇒（a "b")
 
-Scheme手順: **compose** proc1 proc2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose)
+Scheme手順: **compose** proc1 proc2 …
 
 プロシージャproc1と、最後のproc引数が最初に適用され、proc1が最後に適用されるように、プロシージャproc2…を合成し、結果として得られるプロシージャを返します。指定されたプロシージャは、引数の数が互換性のあるものでなければなりません。
 
-([procedure?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_003f) ([compose](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1) [1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1))) ⇒ #t
-(([compose](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose) [sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1)) 2) ⇒ 2.0
-(([compose](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1) [sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt)) 3) ⇒ 2.73205080756888
-([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) ([compose](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1)) [1+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002b-1)) ⇒ #t
+([procedure?](#677-プロシージャのプロパティとメタ情報) ([compose](#676-高階関数) [1+](06_06_02_numerical_data_types.md#66211-算術関数) [1-](06_06_02_numerical_data_types.md#66211-算術関数))) ⇒ #t
+(([compose](#676-高階関数) [sqrt](06_06_02_numerical_data_types.md#66212-科学関数) [1+](06_06_02_numerical_data_types.md#66211-算術関数) [1+](06_06_02_numerical_data_types.md#66211-算術関数)) 2) ⇒ 2.0
+(([compose](#676-高階関数) [1+](06_06_02_numerical_data_types.md#66211-算術関数) [sqrt](06_06_02_numerical_data_types.md#66212-科学関数)) 3) ⇒ 2.73205080756888
+([eq?](06_09_general_utility_functions.md#691-平等) ([compose](#676-高階関数) [1+](06_06_02_numerical_data_types.md#66211-算術関数)) [1+](06_06_02_numerical_data_types.md#66211-算術関数)) ⇒ #t
 
-(([compose](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compose) [zip](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zip) [unzip2](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip2)) '((1 2) (ab)))
+(([compose](#676-高階関数) [zip](07_05_03_srfi1_list_library.md#7534-長さ追加連結など) [unzip2](07_05_03_srfi1_list_library.md#7534-長さ追加連結など)) '((1 2) (ab)))
 ⇒ ((1 2) (ab))
 
-Scheme Procedure: **identity** x [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-identity)
+Scheme Procedure: **identity** x
 
 Xを返します。
 
-Scheme Procedure: **and=>** value proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-and_003d_003e)
+Scheme Procedure: **and=>** value proc
 
 値が`#f`の場合は`#f`を返します。それ以外の場合は`(proc value)`を返します。
 
 * * *
 
-次へ: [セッター付きプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters)、前: [高階関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Higher_002dOrder-Functions)、上: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [セッター付きプロシージャ](#678-セッター付きプロシージャ)、前: [高階関数](#676-高階関数)、上: [プロシージャ](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.7 プロシージャのプロパティとメタ情報 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Properties-and-Meta_002dinformation)
+#### 6.7.7 プロシージャのプロパティとメタ情報
 
 プロシージャの実行に厳密に必要な情報に加えて、プロシージャにはその他の関連情報が含まれる場合があります。たとえば、プロシージャ名はプロシージャ自体の情報ではなく、プロシージャに関する情報です。このメタ情報は、プロシージャのプロパティインターフェイスからアクセスできます。
 
-スキームプロシージャ: **procedure?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_003f)
+スキームプロシージャ: **procedure?** obj
 
-C 関数: **scm\_procedure\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fp)
+C 関数: **scm\_procedure\_p** (obj)
 
 objがプロシージャの場合は`#t`を返します。
 
-Scheme手順: **thunk?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-thunk_003f)
+Scheme手順: **thunk?** obj
 
-C 関数: **scm\_thunk\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fthunk_005fp)
+C 関数: **scm\_thunk\_p** (obj)
 
-obj が引数なしで呼び出し可能なプロシージャである場合は、`#t` を返します。プロシージャが受け入れる引数の詳細については、[コンパイル済みプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiled-Procedures) を参照してください。
+obj が引数なしで呼び出し可能なプロシージャである場合は、`#t` を返します。プロシージャが受け入れる引数の詳細については、[コンパイル済みプロシージャ](#673-コンパイル済みプロシージャ) を参照してください。
 
 プロシージャプロパティとは、プロシージャに関連付けられた一般的なプロパティです。これには、プロシージャ名やデバッグヒントなどの関連情報が含まれます。
 
 手続きのプロパティを関連付ける最も一般的な方法は、プログラムによって行うことです。
 
-Scheme プロシージャ: **procedure-property** proc key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dproperty)
+Scheme プロシージャ: **procedure-property** proc key
 
-C 関数: **scm\_procedure\_property** (proc, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fproperty)
+C 関数: **scm\_procedure\_property** (proc, key)
 
 名前がキーのprocのプロパティを返します。見つからない場合は`#f`を返します。
 
-Scheme プロシージャ: **set-procedure-property!** proc key value [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dprocedure_002dproperty_0021)
+Scheme プロシージャ: **set-procedure-property!** proc key value
 
-C 関数: **scm\_set\_procedure\_property\_x** (proc, key, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fprocedure_005fproperty_005fx)
+C 関数: **scm\_set\_procedure\_property\_x** (proc, key, value)
 
 プロシージャのkeyという名前のプロパティに値を設定します。
 
@@ -504,45 +504,45 @@ C 関数: **scm\_set\_procedure\_property\_x** (proc, key, value) [¶](https://d
 
 キーとして「documentation」を指定して「procedure-property」を呼び出すことは、「procedure-documentation」を呼び出すこととまったく同じです。同様に、「procedure-name」は「name」プロシージャプロパティと同じであり、「procedure-source」は「source」プロパティに対応します。
 
-Scheme プロシージャ: **procedure-name** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dname)
+Scheme プロシージャ: **procedure-name** proc
 
-C 関数: **scm\_procedure\_name** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fname)
+C 関数: **scm\_procedure\_name** (proc)
 
-スキームプロシージャ: **procedure-source** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dsource)
+スキームプロシージャ: **procedure-source** proc
 
-C 関数: **scm\_procedure\_source** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fsource)
+C 関数: **scm\_procedure\_source** (proc)
 
-Scheme 手順: **procedure-documentation** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002ddocumentation)
+Scheme 手順: **procedure-documentation** proc
 
-C 関数: **scm\_procedure\_documentation** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fdocumentation)
+C 関数: **scm\_procedure\_documentation** (proc)
 
 proc の `name`、`source`、または `documentation` プロパティの値を返します。プロパティが設定されていない場合は `#f` を返します。
 
 手続きプロパティの全体に対して作業を行うこともできます。
 
-Scheme プロシージャ: **procedure-properties** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dproperties)
+Scheme プロシージャ: **procedure-properties** proc
 
-C 関数: **scm\_procedure\_properties** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fproperties)
+C 関数: **scm\_procedure\_properties** (proc)
 
 procに関連付けられたプロパティを、関連付けリストとして返します。
 
-スキームプロシージャ: **set-procedure-properties!** プロシージャリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dprocedure_002dproperties_0021)
+スキームプロシージャ: **set-procedure-properties!** プロシージャリスト
 
-C 関数: **scm\_set\_procedure\_properties\_x** (proc, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fprocedure_005fproperties_005fx)
+C 関数: **scm\_set\_procedure\_properties\_x** (proc, alist)
 
 procのプロパティリストをalistに設定します。
 
 * * *
 
-次へ: [インライン化可能なプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inlinable-Procedures)、前: [プロシージャのプロパティとメタ情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Properties)、上: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [インライン化可能なプロシージャ](#679-インライン化可能な手続き)、前: [プロシージャのプロパティとメタ情報](#677-プロシージャのプロパティとメタ情報)、上: [プロシージャ](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.8 セッター付きプロシージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters-1)
+#### 6.7.8 セッター付きプロシージャ
 
 セッター付きプロシージャは、通常はデータ構造にアクセスするアクセサプロシージャと同様の動作をする特殊なプロシージャです。違いは、この種のプロシージャには、データ構造に何かを格納するためのプロシージャであるセッターが付属している点です。
 
 セッターを持つプロシージャは、プロシージャが特別な形式 `set!` で記述されている場合に特別に扱われます。その動作は、例を見るのが一番分かりやすいでしょう。
 
-`foo-ref` というプロシージャがあるとします。このプロシージャは、型 `foo` の値と整数の 2 つの引数を受け取ります。プロシージャは、`foo` オブジェクト内の指定されたインデックスに格納されている値を返します。`f` を、このような `foo` データ構造を含む変数とします。[13](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT13)
+`foo-ref` というプロシージャがあるとします。このプロシージャは、型 `foo` の値と整数の 2 つの引数を受け取ります。プロシージャは、`foo` オブジェクト内の指定されたインデックスに格納されている値を返します。`f` を、このような `foo` データ構造を含む変数とします。[13](99_footnotes.md#13)
 
 (foo-ref f 0) ⇒ バー
 (foo-ref f 1) ⇒ braz
@@ -554,40 +554,40 @@ procのプロパティリストをalistに設定します。
 
 これで、アクセサプロシージャ`foo-ref`とセッタープロシージャ`foo-set!`を指定して`make-procedure-with-setter`を呼び出すことで、セッターを持つプロシージャ`foo`という新しいプロシージャを作成できます。この新しいプロシージャを`foo`と呼びましょう。
 
-(define foo ([make-procedure-with-setter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dprocedure_002dwith_002dsetter) foo-ref foo-set!))
+(define foo ([make-procedure-with-setter](#678-セッター付きプロシージャ) foo-ref foo-set!))
 
 今後は、`foo` は `f` に格納されているデータ構造から読み込むためにも、その構造に書き込むためにも使用できます。
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) (foo f 0) 'dum)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) (foo f 0) 'dum)
 (foo f 0) ⇒ dum
 
-スキームプロシージャ: **make-procedure-with-setter** プロシージャセッター [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dprocedure_002dwith_002dsetter)
+スキームプロシージャ: **make-procedure-with-setter** プロシージャセッター
 
-C 関数: **scm\_make\_procedure\_with\_setter** (procedure, setter) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fprocedure_005fwith_005fsetter)
+C 関数: **scm\_make\_procedure\_with\_setter** (procedure, setter)
 
 プロシージャのように動作するが、関連付けられたセッターを持つ新しいプロシージャを作成します。
 
-スキームプロシージャ: **procedure-with-setter?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dwith_002dsetter_003f)
+スキームプロシージャ: **procedure-with-setter?** obj
 
-C 関数: **scm\_procedure\_with\_setter\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fwith_005fsetter_005fp)
+C 関数: **scm\_procedure\_with\_setter\_p** (obj)
 
 objが関連付けられたセッタープロシージャを持つプロシージャである場合は、`#t`を返します。
 
-スキームプロシージャ: **procedure** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure)
+スキームプロシージャ: **procedure** proc
 
-C 関数: **scm\_procedure** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure)
+C 関数: **scm\_procedure** (proc)
 
 proc のプロシージャを返します。proc は適用可能な構造体である必要があります。
 
-スキームプロシージャ: **setter** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setter-1)
+スキームプロシージャ: **setter** proc
 
 proc のセッターを返します。セッターは、セッターを持つプロシージャ、または演算子構造体のいずれかである必要があります。
 
 * * *
 
-前へ: [セッター付きプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters)、上へ: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [セッター付きプロシージャ](#678-セッター付きプロシージャ)、上へ: [プロシージャ](#67-手順) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.7.9 インライン化可能な手続き [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Inlinable-Procedures-1)
+#### 6.7.9 インライン化可能な手続き
 
 `define` の代わりに `define-inlinable` を使用することで、インライン化可能なプロシージャを定義できます。インライン化可能なプロシージャは通常のプロシージャと同じように動作しますが、直接呼び出しを行うと、プロシージャ本体が呼び出し元にインライン化されます。
 
@@ -601,14 +601,14 @@ $1 = (define foo
 
 ただし、部分評価器はトップレベルのバインディングをインライン化しないため、このような状況では`define-inlinable`を使用すると便利かもしれません。
 
-`define-inlinable` で定義されたプロシージャは、すべての直接呼び出し箇所で常にインライン化されます。これにより、コードサイズが増加する代わりに、関数呼び出しのオーバーヘッドが削減されます。さらに、インライン化されたプロシージャが再定義された場合、呼び出し元は新しい定義を透過的に使用しません。インライン化されたプロシージャをトレースしたり、ブレークポイントを設定したりすることはできません（[Traps](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) を参照）。これらの理由から、パフォーマンスが決定的に向上することが証明されない限り、プロシージャをインライン化すべきではありません。
+`define-inlinable` で定義されたプロシージャは、すべての直接呼び出し箇所で常にインライン化されます。これにより、コードサイズが増加する代わりに、関数呼び出しのオーバーヘッドが削減されます。さらに、インライン化されたプロシージャが再定義された場合、呼び出し元は新しい定義を透過的に使用しません。インライン化されたプロシージャをトレースしたり、ブレークポイントを設定したりすることはできません（[Traps](06_26_debugging_infrastructure.md#6265-トラップ) を参照）。これらの理由から、パフォーマンスが決定的に向上することが証明されない限り、プロシージャをインライン化すべきではありません。
 
 一般的に、インライン化を検討すべきなのは小規模な手続きのみである。大規模な手続きをインライン化しようとすると、コードサイズが増加する可能性が高いからである。さらに、大規模な手続きの場合、呼び出しオーバーヘッドの削減はほとんど意味をなさない。
 
-Scheme構文: **define-inlinable** (名前 パラメータ …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dinlinable)
+Scheme構文: **define-inlinable** (名前 パラメータ …) body1 body2 …
 
 名前を、パラメータ parameters とボディ body1、body2、... を持つプロシージャとして定義します。
 
 * * *
 
-次へ: [汎用ユーティリティ関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Utility-Functions)、前: [プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [汎用ユーティリティ関数](06_09_general_utility_functions.md#69-一般的なユーティリティ関数)、前: [プロシージャ](#67-手順)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

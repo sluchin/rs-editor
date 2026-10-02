@@ -1,23 +1,23 @@
-#### 6.6.1 ブール値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Booleans-1)
+#### 6.6.1 ブール値
 
 2つのブール値は、真の場合は`#t`、偽の場合は`#f`です。R7RSに従って、`#true`と`#false`と表記することもできます。
 
-ブール値は、一般的な等価述語である `eq?`、`eqv?`、`equal?` ([Equality](https://doc.guix.gnu.org/guile/latest/en/guile.html#Equality) を参照) や、`string=?` ([String Comparison](https://doc.guix.gnu.org/guile/latest/en/guile.html#String-Comparison) および `<=` ([Comparison Predicates](https://doc.guix.gnu.org/guile/latest/en/guile.html#Comparison) を参照) などの述語手続きによって返されます。
+ブール値は、一般的な等価述語である `eq?`、`eqv?`、`equal?` ([Equality](06_09_general_utility_functions.md#691-平等) を参照) や、`string=?` ([String Comparison](06_06_05_strings.md#6657-文字列の比較) および `<=` ([Comparison Predicates](07_05_49_srfi207_stringnotated_bytevectors.md#75496-比較) を参照) などの述語手続きによって返されます。
 
-([<=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003c_003d) 3 8)
+([<=](06_06_02_numerical_data_types.md#6628-比較述語) 3 8)
 ⇒ #t
 
-([<=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003c_003d) 3 \-3)
+([<=](06_06_02_numerical_data_types.md#6628-比較述語) 3 \-3)
 ⇒ #f
 
-([equal?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-equal_003f) "house" "houses")
+([equal?](06_09_general_utility_functions.md#691-平等) "house" "houses")
 ⇒ #f
 
-([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) #f #f)
+([eq?](06_09_general_utility_functions.md#691-平等) #f #f)
 ⇒
 #t
 
-`if` や `cond` のようなテスト条件のコンテキスト ([単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals) を参照) では、条件式が「true」と評価された場合にのみサブ式のグループが評価されます。「true」とは、`#f` 以外のすべての値を意味します。
+`if` や `cond` のようなテスト条件のコンテキスト ([単純な条件評価](06_11_controlling_the_flow_of_program_execution.md#6112-単純な条件評価) を参照) では、条件式が「true」と評価された場合にのみサブ式のグループが評価されます。「true」とは、`#f` 以外のすべての値を意味します。
 
 (#tが「はい」「いいえ」の場合)
 ⇒ 「はい」
@@ -34,43 +34,43 @@
 
 C言語では、Schemeの2つのブール値は、定数`SCM_BOOL_T`（`#t`用）と`SCM_BOOL_F`（`#f`用）として利用できます。ただし、偽値`SCM_BOOL_F`には注意が必要です。C言語の条件式で使用すると、偽値として扱われません。これを判定するには、`scm_is_false`または`scm_is_true`を使用してください。
 
-Scheme Procedure: **not** x [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not)
+Scheme Procedure: **not** x
 
-C 関数: **scm\_not** (x) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fnot)
+C 関数: **scm\_not** (x)
 
 xが`#f`の場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-スキームプロシージャ: **boolean?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-boolean_003f)
+スキームプロシージャ: **boolean?** obj
 
-C 関数: **scm\_boolean\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fboolean_005fp)
+C 関数: **scm\_boolean\_p** (obj)
 
 objが`#t`または`#f`の場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-C マクロ: `SCM` **SCM\_BOOL\_T** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fBOOL_005fT)
+C マクロ: `SCM` **SCM\_BOOL\_T**
 
 Schemeオブジェクト`#t`の`SCM`表現。
 
-C マクロ: `SCM` **SCM\_BOOL\_F** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fBOOL_005fF)
+C マクロ: `SCM` **SCM\_BOOL\_F**
 
 Schemeオブジェクト`#f`の`SCM`表現。
 
-C 関数: `int` **scm\_is\_true** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005ftrue)
+C 関数: `int` **scm\_is\_true** `(SCM obj)`
 
 objが`#f`の場合は`0`を返し、そうでない場合は`1`を返します。
 
-C 関数: `int` **scm\_is\_false** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005ffalse)
+C 関数: `int` **scm\_is\_false** `(SCM obj)`
 
 objが`#f`の場合は`1`を返し、そうでない場合は`0`を返します。
 
-C 関数: `int` **scm\_is\_bool** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005fbool)
+C 関数: `int` **scm\_is\_bool** `(SCM obj)`
 
 objが`#t`または`#f`の場合は`1`を返し、それ以外の場合は`0`を返します。
 
-C 関数: `SCM` **scm\_from\_bool** `(int val)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005fbool)
+C 関数: `SCM` **scm\_from\_bool** `(int val)`
 
 valが0の場合は`#f`を返し、それ以外の場合は`#t`を返します。
 
-C 関数: `int` **scm\_to\_bool** `(SCM 値)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fto_005fbool)
+C 関数: `int` **scm\_to\_bool** `(SCM 値)`
 
 valが`SCM_BOOL_T`の場合は`1`を返し、valが`SCM_BOOL_F`の場合は`0`を返し、それ以外の場合は「型が間違っています」というエラーを通知します。
 
@@ -78,4 +78,4 @@ valが`SCM_BOOL_T`の場合は`1`を返し、valが`SCM_BOOL_F`の場合は`0`�
 
 * * *
 
-次へ: [文字](https://doc.guix.gnu.org/guile/latest/en/guile.html#Characters)、前: [ブール値](https://doc.guix.gnu.org/guile/latest/en/guile.html#Booleans)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [文字](06_06_03_characters.md#663-文字)、前: [ブール値](#661-ブール値)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

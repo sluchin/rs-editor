@@ -1,18 +1,18 @@
-### 7.17 `sxml-match`: SXML のパターンマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#sxml_002dmatch_003a-Pattern-Matching-of-SXML)
+### 7.17 `sxml-match`: SXML のパターンマッチング
 
-`(sxml match)` モジュールは、`syntax-rules` および `syntax-case` マクロシステムのパターンマッチングを彷彿とさせる「例による」スタイルで、SXML ツリーのパターンマッチングのための構文形式を提供します。SXML の詳細については、[SXML](https://doc.guix.gnu.org/guile/latest/en/guile.html#SXML) を参照してください。
+`(sxml match)` モジュールは、`syntax-rules` および `syntax-case` マクロシステムのパターンマッチングを彷彿とさせる「例による」スタイルで、SXML ツリーのパターンマッチングのための構文形式を提供します。SXML の詳細については、[SXML](07_21_sxml.md#721-sxml) を参照してください。
 
-次の例[29](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT29)は、音楽アルバムカタログ言語をHTMLに変換する簡単な例を示しています。
+次の例[29](99_footnotes.md#29)は、音楽アルバムカタログ言語をHTMLに変換する簡単な例を示しています。
 
 (define (album->html x)
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) x
-((アルバム ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (タイトル ,t)) (カタログ (番号 ,n) (フォーマット ,f)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+([sxml-match](#構文) x
+((アルバム ([@](06_18_modules.md#6182-guileモジュールの使用) (タイトル ,t)) (カタログ (番号 ,n) (フォーマット ,f)) [...](06_08_macros.md#6821-パターン))
 \`(ul (li ,t)
-(li (b ,n) (i ,f)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))))
+(li (b ,n) (i ,f)) [...](06_08_macros.md#6821-パターン))))
 
 3つのマクロが提供されています：`sxml-match`、`sxml-match-let`、および`sxml-match-let*`。
 
-標準的なS式パターンマッチング（[パターンマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pattern-Matching)を参照）と比較して、`sxml-match`には以下の利点があります。
+標準的なS式パターンマッチング（[パターンマッチング](07_08_pattern_matching.md#78-パターンマッチング)を参照）と比較して、`sxml-match`には以下の利点があります。
 
 * SXML要素のマッチングは、SXMLの正規化の程度に依存しません。
 * SXML属性（要素内）のマッチングは順序が下がっています。パターン内で指定された属性の順序は、マッチング対象の要素の順序と一致する必要はありません。
@@ -20,24 +20,24 @@
 
 本モジュールはWebIt!の後継であり、インディアナ大学のエリック・ヒルズデール、ダン・フリードマン、ケント・ディブヴィグによって開発されたS式パターンマッチングに触発されたものである。
 
-* [構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax)
-* [XML要素のマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-XML-Elements)
-* [パターン内の楕円](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ellipses-in-Patterns)
-* [準引用符付き出力における省略記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ellipses-in-Quasiquote_0027d-Output)
-* [マッチングノードセット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-Nodesets)
-* [ノードセットの「残りの部分」のマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-the-_0060_0060Rest_0027_0027-of-a-Nodeset)
-* [一致しない属性のマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-the-Unmatched-Attributes)
-* [属性パターンのデフォルト値](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Values-in-Attribute-Patterns)
-* [パターンにおけるガード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guards-in-Patterns)
-* [カタモーフィズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Catamorphisms)
-* [名前付きカタモルフィズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Named_002dCatamorphisms)
-* [`sxml-match-let` および `sxml-match-let*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#sxml_002dmatch_002dlet-and-sxml_002dmatch_002dlet_002a)
+* [構文](#構文)
+* [XML要素のマッチング](#xml要素のマッチング)
+* [パターン内の楕円](#パターン内の楕円)
+* [準引用符付き出力における省略記号](#準引用符付き出力における省略記号)
+* [マッチングノードセット](#ノードセットのマッチング)
+* [ノードセットの「残りの部分」のマッチング](#ノードセットの残りの部分のマッチング)
+* [一致しない属性のマッチング](#一致しない属性のマッチング)
+* [属性パターンのデフォルト値](#属性パターンのデフォルト値)
+* [パターンにおけるガード](#パターンにおけるガード)
+* [カタモーフィズム](#カタモーフィズム)
+* [名前付きカタモルフィズム](#名前付きカタモルフィズム)
+* [`sxml-match-let` および `sxml-match-let*`](#sxml-match-let-および-sxml-match-let)
 
-#### 構文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax)
+#### 構文
 
 `sxml-match`は、XMLノードのパターンマッチングに`case`のような形式を提供します。
 
-Scheme構文: **sxml-match** input-expression clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch)
+Scheme構文: **sxml-match** input-expression clause1 clause2 …
 
 入力式（SXMLツリー）を、指定された句（1つ以上）に従って照合します。各句は、パターンと、パターンが一致した場合に評価される1つ以上の式で構成されます。オプションとして、`sxml-match`内の各句には、ガード式を含めることができます。
 
@@ -95,19 +95,19 @@ pat-var-or-cata ::= (var-symbol を引用解除)
 
 以下のセクションでは、`sxml-match` パターンマッチングの具体的な側面について説明します。
 
-#### XML要素のマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-XML-Elements)
+#### XML要素のマッチング
 
 以下の例は、XML要素のパターンマッチングを示しています。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(e ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (i 1)) 3 4 5)
-((e ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (i ,d)) ,a ,b ,c) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) dabc))
+([sxml-match](#構文) '(e ([@](06_18_modules.md#6182-guileモジュールの使用) (i 1)) 3 4 5)
+((e ([@](06_18_modules.md#6182-guileモジュールの使用) (i ,d)) ,a ,b ,c) ([list](06_06_09_lists.md#6693-リストコンストラクタ) dabc))
 （、そうでなければ#f）
 
 `sxml-match` の各句は、パターンと、パターンが正しく一致した場合に評価される 1 つ以上の式の 2 つの部分から構成されます。上記の例では、属性 `i` と 3 つの子要素を持つ要素 `e` に一致しています。
 
 パターン変数はパターン内で「引用符なし」で記述する必要があります。上記の式では、d は `1`、a は `3`、b は `4`、c は `5` にバインドされます。
 
-#### パターン内の楕円 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ellipses-in-Patterns)
+#### パターン内の楕円
 
 `syntax-rules`と同様に、省略記号（…）を使用して繰り返しパターンを指定できます。パターン`item ...`は、パターン`item`が0回以上一致することを指定することに注意してください。
 
@@ -115,112 +115,112 @@ pat-var-or-cata ::= (var-symbol を引用解除)
 
 (define x '(d (a 1 2 3) (a 4 5) (a 6 7 8) (a 9 10)))
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) x
-((d (a ,b [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) b [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))))
+([sxml-match](#構文) x
+((d (a ,b [...](06_08_macros.md#6821-パターン)) [...](06_08_macros.md#6821-パターン))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) ([list](06_06_09_lists.md#6693-リストコンストラクタ) b [...](06_08_macros.md#6821-パターン)) [...](06_08_macros.md#6821-パターン))))
 
 上記の式は、`((1 2 3) (4 5) (6 7 8) (9 10))` という値を返します。
 
-#### 準引用符付き出力における省略記号 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ellipses-in-Quasiquote_0027d-Output)
+#### 準引用符付き出力における省略記号
 
 `sxml-match`フォームの本文内では、省略記号（…）を使用できる、少し拡張されたquasiquoteが提供されています。以下の例でその例を示します。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(e 3 4 5 6 7)
-((e ,i [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) 6 7) \`("start" ,([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) 'wrap i) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) "end"))
+([sxml-match](#構文) '(e 3 4 5 6 7)
+((e ,i [...](06_08_macros.md#6821-パターン) 6 7) \`("start" ,([list](06_06_09_lists.md#6693-リストコンストラクタ) 'wrap i) [...](06_08_macros.md#6821-パターン) "end"))
 （、そうでなければ#f）
 
 一般的なパターンは、``(something ,i ...)` が ``(something ,@i)` に書き換えられることです。
 
-#### ノードセットのマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-Nodesets)
+#### ノードセットのマッチング
 
 ノードセットパターンは、パターン内の識別子リストで始まるリストによって指定されます。以下の例は、ノードセットのマッチングを示しています。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '("i" "j" "k" "l" "m")
-(([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ,a ,b ,c ,d ,e)
+([sxml-match](#構文) '("i" "j" "k" "l" "m")
+(([list](06_06_09_lists.md#6693-リストコンストラクタ) ,a ,b ,c ,d ,e)
 \`((p ,a) (p ,b) (p ,c) (p ,d) (p ,e))))
 
 この例では、各ノードセット項目をHTMLの段落要素で囲んでいます。この例は、省略記号（…）を使用することで、書き換えて簡略化できます。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '("i" "j" "k" "l" "m")
-(([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ,i [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-\`((p ,i) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))))
+([sxml-match](#構文) '("i" "j" "k" "l" "m")
+(([list](06_06_09_lists.md#6693-リストコンストラクタ) ,i [...](06_08_macros.md#6821-パターン))
+\`((p ,i) [...](06_08_macros.md#6821-パターン))))
 
 このバージョンでは、任意の長さのノードセットに一致し、ノードセット内の各項目をHTMLの段落要素で囲みます。
 
-#### ノードセットの「残りの部分」のマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-the-_0060_0060Rest_0027_0027-of-a-Nodeset)
+#### ノードセットの「残りの部分」のマッチング
 
 ノードセットの「残りの部分」に一致させるには、要素またはノードセットパターンの末尾に`. rest)`パターンを使用します。
 
 これは以下の例で示されています。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(e 3 (f 4 5 6) 7)
+([sxml-match](#構文) '(e 3 (f 4 5 6) 7)
 ((e ,a (f . ,y) ,d)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ayd)))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) ayd)))
 
 上記の式は `(3 (4 5 6) 7)` を返します。
 
-#### 一致しない属性のマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Matching-the-Unmatched-Attributes)
+#### 一致しない属性のマッチング
 
 マッチング対象の要素に存在するものの、パターンには含まれていない属性のリストをバインドすると便利な場合があります。これは、属性リストパターンの最後に`.rest)`パターンを使用することで実現できます。以下の例でその例を示します。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(a ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- _0040) (z 1) (y 2) (x 3)) 4 5 6)
-((a ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (y ,www) . ,qqq) ,t ,u ,v)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) www qqq tuv)))
+([sxml-match](#構文) '(a ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- _0040) (z 1) (y 2) (x 3)) 4 5 6)
+((a ([@](06_18_modules.md#6182-guileモジュールの使用) (y ,www) . ,qqq) ,t ,u ,v)
+([list](06_06_09_lists.md#6693-リストコンストラクタ) www qqq tuv)))
 
 上記の式は属性 `y` に一致し、残りの属性のリストを変数 qqq にバインドします。上記の式の結果は `(2 ((z 1) (x 3)) 4 5 6)` です。
 
 このタイプのパターンでは、すべての属性をバインドすることも可能です。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(a ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (z 1) (y 2) (x 3)))
-((a ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) . ,qqq))
+([sxml-match](#構文) '(a ([@](06_18_modules.md#6182-guileモジュールの使用) (z 1) (y 2) (x 3)))
+((a ([@](06_18_modules.md#6182-guileモジュールの使用) . ,qqq))
 qqq))
 
-#### 属性パターンのデフォルト値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Values-in-Attribute-Patterns)
+#### 属性パターンのデフォルト値
 
 属性にデフォルト値を指定することが可能です。このデフォルト値は、一致対象の要素にその属性が存在しない場合に適用されます。以下の例でその例を示します。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(e 3 4 5)
-((e ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (z (,d 1))) ,a ,b ,c) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) dabc)))
+([sxml-match](#構文) '(e 3 4 5)
+((e ([@](06_18_modules.md#6182-guileモジュールの使用) (z (,d 1))) ,a ,b ,c) ([list](06_06_09_lists.md#6693-リストコンストラクタ) dabc)))
 
 属性「z」が要素「e」に存在しない場合、値「1」が使用されます。
 
-#### パターンにおけるガード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guards-in-Patterns)
+#### パターンにおけるガード
 
 ガードは、`guard` キーワードを使用してパターン句に追加できます。ガード式には、パターンが一致した場合にのみ評価される式を 0 個以上含めることができます。ガード式が `#t` と評価された場合にのみ、句の本体が評価されます。
 
 ガード式の使用例を以下に示します。
 
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) '(a 2 3)
-((a ,n) ([guard](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard) ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) n)) n)
-((a ,m ,n) ([guard](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard) ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) m) ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) n)) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) mn)))
+([sxml-match](#構文) '(a 2 3)
+((a ,n) ([guard](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理) ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) n)) n)
+((a ,m ,n) ([guard](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理) ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) m) ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) n)) ([+](06_06_02_numerical_data_types.md#66211-算術関数) mn)))
 
-#### カタモーフィズム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Catamorphisms)
+#### カタモーフィズム
 
 以下の例は、`sxml-match` フォーム内で明示的な再帰を使用する方法を示しています。この例では、XML 要素 `plus`、`minus`、`times`、および `div` で表される基本的な算術演算を行うためのシンプルな計算機を実装しています。
 
 (simple-eval を定義)
 (ラムダ (x)
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) x
-(,i ([guard](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard) ([integer?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-integer_003f) i)) i)
-((plus ,x ,y) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (simple-eval x) (simple-eval y)))
-(([times](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-times) ,x ,y) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) (simple-eval x) (simple-eval y)))
-((マイナス ,x ,y) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) (simple-eval x) (simple-eval y)))
-(([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) ,x ,y) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) (simple-eval x) (simple-eval y)))
-(、そうでなければ ([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "simple-eval: 無効な式" x)))))
+([sxml-match](#構文) x
+(,i ([guard](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理) ([integer?](06_06_02_numerical_data_types.md#6622-整数) i)) i)
+((plus ,x ,y) ([+](06_06_02_numerical_data_types.md#66211-算術関数) (simple-eval x) (simple-eval y)))
+(([times](07_02_05_time.md#725-時間) ,x ,y) ([\*](06_06_02_numerical_data_types.md#66211-算術関数) (simple-eval x) (simple-eval y)))
+((マイナス ,x ,y) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) (simple-eval x) (simple-eval y)))
+(([div](07_06_r6rs_support.md#7622-rnrs-ベース) ,x ,y) ([/](06_06_02_numerical_data_types.md#66211-算術関数) (simple-eval x) (simple-eval y)))
+(、そうでなければ ([error](04_programming_in_scheme.md#4446-デバッグコマンド) "simple-eval: 無効な式" x)))))
 
 `sxml-match` のカタモルフィズム機能を使用すると、`simple-eval` のより簡潔なバージョンを作成できます。パターン `,(x)` は、この位置にバインドされた値に対してパターンマッチャーを再帰的に呼び出します。
 
 (simple-eval を定義)
 (ラムダ (x)
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) x
-(,i ([guard](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard) ([integer?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-integer_003f) i)) i)
-((プラス、(x)、(y)) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) xy))
-(([times](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-times) ,(x) ,(y)) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) xy))
-((マイナス ,(x) ,(y)) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) xy))
-(([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) ,(x) ,(y)) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) xy))
-(、そうでなければ ([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "simple-eval: 無効な式" x)))))
+([sxml-match](#構文) x
+(,i ([guard](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理) ([integer?](06_06_02_numerical_data_types.md#6622-整数) i)) i)
+((プラス、(x)、(y)) ([+](06_06_02_numerical_data_types.md#66211-算術関数) xy))
+(([times](07_02_05_time.md#725-時間) ,(x) ,(y)) ([\*](06_06_02_numerical_data_types.md#66211-算術関数) xy))
+((マイナス ,(x) ,(y)) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) xy))
+(([div](07_06_r6rs_support.md#7622-rnrs-ベース) ,(x) ,(y)) ([/](06_06_02_numerical_data_types.md#66211-算術関数) xy))
+(、そうでなければ ([error](04_programming_in_scheme.md#4446-デバッグコマンド) "simple-eval: 無効な式" x)))))
 
-#### 名前付きカタモルフィズム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Named_002dCatamorphisms)
+#### 名前付きカタモルフィズム
 
 「cata」の位置で演算子を明示的に指定することも可能です。`,(id*)` は現在の `sxml-match` の先頭に再帰し、`,(cata -> id*)` は `cata` に再帰します。`cata` は、引数を 1 つ取り、`->` の後に続く識別子の数と同じ数の値を返すプロシージャに評価される必要があります。
 
@@ -228,46 +228,46 @@ qqq))
 
 (define (tv-guide->html g)
 (define (cast-list cl)
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) cl
-((CastList (CastMember (Character (Name ,ch)) (Actor (Name ,a))) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-\`([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) (ul (li ,ch ": " ,a) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))))
+([sxml-match](#構文) cl
+((CastList (CastMember (Character (Name ,ch)) (Actor (Name ,a))) [...](06_08_macros.md#6821-パターン))
+\`([div](07_06_r6rs_support.md#7622-rnrs-ベース) (ul (li ,ch ": " ,a) [...](06_08_macros.md#6821-パターン)))))
 (define (prog p)
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) p
+([sxml-match](#構文) p
 ((プログラム (開始 ,開始時刻) (期間 ,期間) (シリーズ ,シリーズタイトル)
-(説明 ,desc [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
-\`([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) (p ,start-time
+(説明 ,desc [...](06_08_macros.md#6821-パターン)))
+\`([div](07_06_r6rs_support.md#7622-rnrs-ベース) (p ,start-time
 （br）シリーズタイトル
-(br) ,desc [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))))
+(br) ,desc [...](06_08_macros.md#6821-パターン))))
 ((プログラム (開始 ,開始時刻) (期間 ,期間) (シリーズ ,シリーズタイトル)
-(説明 ,desc [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(説明 ,desc [...](06_08_macros.md#6821-パターン))
 ,(キャストリスト -> cl))
-\`([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) (p ,start-time
+\`([div](07_06_r6rs_support.md#7622-rnrs-ベース) (p ,start-time
 （br）シリーズタイトル
-(br) ,desc [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(br) ,desc [...](06_08_macros.md#6821-パターン))
 、cl))))
-([sxml-match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch) g
-((TVGuide ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (start ,start-date)
+([sxml-match](#構文) g
+((TVGuide ([@](06_18_modules.md#6182-guileモジュールの使用) (start ,start-date)
 (終了、終了日)
-(Channel (Name ,nm) ,(prog \-> p) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(Channel (Name ,nm) ,(prog \-> p) [...](06_08_macros.md#6821-パターン)) [...](06_08_macros.md#6821-パターン))
 `(html (head (title "TVガイド"))
 (body (h1 "TVガイド"))
-([div](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-div) (h2 ,nm) ,p [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))))))
+([div](07_06_r6rs_support.md#7622-rnrs-ベース) (h2 ,nm) ,p [...](06_08_macros.md#6821-パターン)) [...](06_08_macros.md#6821-パターン))))))
 
-#### `sxml-match-let` および `sxml-match-let*` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#sxml_002dmatch_002dlet-and-sxml_002dmatch_002dlet_002a)
+#### `sxml-match-let` および `sxml-match-let*`
 
-Scheme構文: **sxml-match-let** ((pat expr) ...) expression0 expression ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch_002dlet)
+Scheme構文: **sxml-match-let** ((pat expr) ...) expression0 expression ...
 
-Scheme構文: **sxml-match-let\*** ((pat expr) ...) expression0 expression ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch_002dlet_002a)
+Scheme構文: **sxml-match-let\*** ((pat expr) ...) expression0 expression ...
 
 これらの形式は、Scheme の `let` および `let*` 形式を一般化し、単純な変数ではなく XML パターンをバインディング位置に使用できるようにします。
 
 例えば、以下の式：
 
-([sxml-match-let](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sxml_002dmatch_002dlet) (((a ,i ,j) '(a 1 2)))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) i [j](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-j)))
+([sxml-match-let](#sxml-match-let-および-sxml-match-let) (((a ,i ,j) '(a 1 2)))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) i [j](09_03_a_virtual_machine_for_guile.md#93715-分岐手順)))
 
 指定されたXML値内の変数iとjをそれぞれ`1`と`2`にバインドします。
 
 * * *
 
-次へ: [カリー定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Curried-Definitions)、前: [`sxml-match`: SXML のパターンマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#sxml_002dmatch)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [カリー定義](07_19_curried_definitions.md#719-カリー定義)、前: [`sxml-match`: SXML のパターンマッチング](#717-sxml-match-sxml-のパターンマッチング)、上: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

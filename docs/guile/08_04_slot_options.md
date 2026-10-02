@@ -1,14 +1,14 @@
-### 8.4 スロットオプション [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Slot-Options-1)
+### 8.4 スロットオプション
 
 スロットを指定する際（`(define-class …)` の形式）、スロット名に加えて様々なオプションを指定できます。各オプションはキーワードで指定します。使用可能なキーワードの一覧は以下のとおりです。
 
-スロットオプション: **#:init-value** init-value [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003ainit_002dvalue)
+スロットオプション: **#:init-value** init-value
 
-スロットオプション: **#:init-form** init-form [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003ainit_002dform)
+スロットオプション: **#:init-form** init-form
 
-スロットオプション: **#:init-thunk** init-thunk [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003ainit_002dthunk)
+スロットオプション: **#:init-thunk** init-thunk
 
-スロットオプション: **#:init-keyword** init-keyword [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003ainit_002dkeyword)
+スロットオプション: **#:init-keyword** init-keyword
 
 これらのオプションは、インスタンス作成時にスロットの値を初期化する方法を指定するための様々な方法を提供する。
 
@@ -50,11 +50,11 @@ init-keywordは、新しいインスタンスを作成する際に`make`に初�
 
 特定のクラスのインスタンスの初期化は、そのクラス専用の `initialize` メソッドを定義することでカスタマイズできます。また、専用メソッドの作成者は、専用コード内の任意の箇所で `next-method` を呼び出すか、あるいは全く呼び出さないかを選択できます。`next-method` を呼び出すと、次に汎用的な `initialize` メソッドが呼び出されます。したがって、一般的に、ここで説明する初期化メカニズムは、より汎用的なコードによって変更または上書きされる場合があり、特定のクラスでは全くサポートされない場合もあります。
 
-スロットオプション: **#:getter** ゲッター [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003agetter)
+スロットオプション: **#:getter** ゲッター
 
-スロットオプション: **#:setter** セッター [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003asetter)
+スロットオプション: **#:setter** セッター
 
-スロットオプション: **#:accessor** アクセサー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003aaccessor)
+スロットオプション: **#:accessor** アクセサー
 
 `foo` と `bar` という名前のスロットを持つオブジェクト obj が与えられた場合、関連するスロット名を指定して `slot-ref` と `slot-set!` を呼び出すことで、これらのスロットを読み書きすることが常に可能です。例:
 
@@ -82,9 +82,9 @@ GOOPSは、ゲッターまたはアクセサーのどちらを使用してもス
 * アクセサを使用する場合、スロット値は汎用的な `set!` 構文を使用して設定されます。
 * 実際には、スロットがこれら 3 つのオプションすべてを使用することはまれです。読み取り専用、書き込み専用、読み書き可能なスロットは、通常、それぞれ `#:getter`、`#:setter`、`#:accessor` オプションのみを使用します。
 
-指定された名前のバインドは、`define-class` 式の環境で行われます。名前が既に（その環境で）汎用関数にアップグレードできない値にバインドされている場合、`define-class` 式が評価されるときにそれらの値が上書きされます。詳細については、[ensure-generic](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Internals) を参照してください。
+指定された名前のバインドは、`define-class` 式の環境で行われます。名前が既に（その環境で）汎用関数にアップグレードできない値にバインドされている場合、`define-class` 式が評価されるときにそれらの値が上書きされます。詳細については、[ensure-generic](08_11_the_metaobject_protocol.md#8119-汎用関数の内部構造) を参照してください。
 
-スロットオプション: **#:allocation** 割り当て [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003aallocation)
+スロットオプション: **#:allocation** 割り当て
 
 `#:allocation` オプションは、GOOPS にスロットのストレージをどのように割り当てるかを指示します。割り当て可能な値は次のとおりです。
 
@@ -105,11 +105,11 @@ GOOPSが、このスロット用に、包含クラス（およびそのサブク
 GOOPS がこのスロットにストレージを割り当てないことを示します。スロット定義には、このスロットの値を参照および設定する方法を指定するために、`#:slot-ref` オプションと `#:slot-set!` オプションも含める必要があります。以下の例を参照してください。
     
 
-スロット割り当てオプションは、クラスのメタクラスによって特殊化された汎用関数 `compute-get-n-set` によって新しいクラスを定義する際に処理されます。したがって、新しいタイプのスロット割り当ては、新しいメタクラスと、その新しいメタクラスに特化した `compute-get-n-set` メソッドを定義することによって実装できます。この方法の例については、[クラス定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Definition) を参照してください。
+スロット割り当てオプションは、クラスのメタクラスによって特殊化された汎用関数 `compute-get-n-set` によって新しいクラスを定義する際に処理されます。したがって、新しいタイプのスロット割り当ては、新しいメタクラスと、その新しいメタクラスに特化した `compute-get-n-set` メソッドを定義することによって実装できます。この方法の例については、[クラス定義のカスタマイズ](08_11_the_metaobject_protocol.md#8116-クラス定義のカスタマイズ) を参照してください。
 
-スロットオプション: **#:slot-ref** ゲッター [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003aslot_002dref-1)
+スロットオプション: **#:slot-ref** ゲッター
 
-スロットオプション: **#:slot-set!** セッター [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003aslot_002dset_0021-1)
+スロットオプション: **#:slot-set!** セッター
 
 スロット割り当てが `#:virtual` の場合は、`#:slot-ref` オプションと `#:slot-set!` オプションを指定する必要があります。それ以外の場合は、これらのオプションは無視されます。
 
@@ -117,4 +117,4 @@ getterは、単一のインスタンスパラメータを受け取り、現在�
 
 * * *
 
-次へ: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions )、前: [スロットオプション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Slot-Options)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions )、前: [スロットオプション](#84-スロットオプション)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

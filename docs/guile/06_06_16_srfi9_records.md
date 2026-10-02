@@ -1,13 +1,13 @@
-#### 6.6.16 SRFI-9 レコード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records-1)
+#### 6.6.16 SRFI-9 レコード
 
-SRFI-9 は、新しいレコード型を定義し、述語、コンストラクタ、フィールドのゲッターおよびセッター関数を作成するための構文を標準化しています。Guile では、新しいレコード型を作成する際にこの方法が推奨されています ([レコードの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Record-Overview) を参照)。これは以下の環境で使用できます。
+SRFI-9 は、新しいレコード型を定義し、述語、コンストラクタ、フィールドのゲッターおよびセッター関数を作成するための構文を標準化しています。Guile では、新しいレコード型を作成する際にこの方法が推奨されています ([レコードの概要](06_06_15_record_overview.md#6615-レコードの概要) を参照)。これは以下の環境で使用できます。
 
 (use-modules (srfi srfi-9))
 
 Scheme構文: **レコード型の定義** 型
 （コンストラクタフィールド名…）
 述語
-(フィールド名アクセサー \[修飾子\]) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002drecord_002dtype)
+(フィールド名アクセサー \[修飾子\]) …
 
   
 
@@ -44,19 +44,19 @@ predicate は、`(predicate obj)` として呼び出される関数にバイン�
 
 `define-record-type`によって作成される関数は、通常のトップレベルの`define`です。必要に応じて再定義したり、`set!`したり、モジュールからエクスポートしたりできます。
 
-* [非トップレベルのレコード定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dtoplevel-Record-Definitions)
-* [カスタムプリンタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Printers)
-* [関数型「セッター」](https://doc.guix.gnu.org/guile/latest/en/guile.html#Functional-_0060_0060Setters_0027_0027)
+* [非トップレベルのレコード定義](#非トップレベルのレコード定義)
+* [カスタムプリンタ](#カスタムプリンタ)
+* [関数型「セッター」](#関数型セッター)
 
-#### 非トップレベルのレコード定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Non_002dtoplevel-Record-Definitions)
+#### 非トップレベルのレコード定義
 
 SRFI-9仕様では、`lambda`本体内やletブロック内など、トップレベル以外のコンテキストでのレコード定義を明示的に禁止しています。しかし、Guileの実装ではこの制限が適用されていません。
 
-#### カスタムプリンタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Custom-Printers)
+#### カスタムプリンタ
 
 `set-record-type-printer!` を使用すると、レコードのデフォルトの印刷動作をカスタマイズできます。これは Guile の拡張機能であり、SRFI-9 の一部ではありません。`(srfi srfi-9 gnu)` モジュールに含まれています。
 
-Scheme構文: **set-record-type-printer!** type proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002drecord_002dtype_002dprinter_0021)
+Scheme構文: **set-record-type-printer!** type proc
 
 ここで、type は `define-record-type` の最初の引数に対応し、proc は、出力するレコードと出力ポートの 2 つの引数を受け取るプロシージャです。
 
@@ -68,7 +68,7 @@ Scheme構文: **set-record-type-printer!** type proc [¶](https://doc.guix.gnu.o
 (従業員名レコードの表示) ポート
 (write-char #\\\] port)))
 
-#### 関数型「セッター」[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Functional-_0060_0060Setters_0027_0027)
+#### 関数型「セッター」
 
 関数型プログラミングのスタイルでコードを書く場合、レコードの内容を変更しないことが望ましい。そのため、既存のレコードに基づいて新しいレコードインスタンスを返す簡単な方法が非常に重要となる。
 
@@ -83,13 +83,13 @@ Scheme構文: **define-immutable-record-type** type
 
 さらに、汎用マクロである`set-field`および`set-fields`は、任意のSRFI-9レコードに適用できます。
 
-Scheme構文: **set-field** レコード (フィールド サブフィールド ...) 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dfield)
+Scheme構文: **set-field** レコード (フィールド サブフィールド ...) 値
 
 指定されたフィールドを除き、対応するレコードのフィールドと等しいフィールドを持つ、レコード型の新しいレコードを返します。
 
 field は、「設定」されるレコードのフィールドに対応するゲッターの名前でなければなりません。後続の subfields は、そのフィールド値内で設定するサブフィールドを指定するレコードゲッターでなければなりません（以下の例を参照）。
 
-Scheme構文: **set-fields** record ((field sub-fields ...) value) ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dfields)
+Scheme構文: **set-fields** record ((field sub-fields ...) value) ...
 
 `set-field` と同様ですが、一度に複数のフィールドを設定できます。これにより、単一の `set-field` 呼び出しを複数回行うよりも効率的なコードになります。
 
@@ -136,4 +136,4 @@ Scheme構文: **set-fields** record ((field sub-fields ...) value) ... [¶](http
 
 * * *
 
-次へ: [構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures)、前: [SRFI-9 レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [構造](06_06_18_structures.md#6618-構造体)、前: [SRFI-9 レコード](#6616-srfi-9-レコード)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

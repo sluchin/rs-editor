@@ -1,24 +1,24 @@
-#### 6.6.18 構造体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures-1)
+#### 6.6.18 構造体
 
 _structure_ は、0 から始まる番号のフィールドに Scheme 値または C ワードを保持する第一級データ型です。_vtable_ は、構造体型を表す構造体であり、フィールド型と権限、および `write` などのオプションの print 関数を提供します。
 
-構造体はレコードよりも低レベルです（[レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records)を参照）。通常、構造化データを表現する必要がある場合は、レコードを使用します。しかし、新しい種類の構造化データ抽象化を実装する必要がある場合もあり、その目的には構造体が役立ちます。実際、Guile のレコードは構造体を使用して実装されています。
+構造体はレコードよりも低レベルです（[レコード](06_06_17_records.md#6617-レコード)を参照）。通常、構造化データを表現する必要がある場合は、レコードを使用します。しかし、新しい種類の構造化データ抽象化を実装する必要がある場合もあり、その目的には構造体が役立ちます。実際、Guile のレコードは構造体を使用して実装されています。
 
-* [Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables)
-* [構造体の基本](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structure-Basics)
-* [Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)
-* [Meta-Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)
-* [Vtable の例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Example)
+* [Vtables](#66181-vtables)
+* [構造体の基本](#66182-構造体の基本)
+* [Vtable の内容](#66183-vtable-の内容)
+* [Meta-Vtables](#66184-meta-vtables)
+* [Vtable の例](#66185-vtable-の例)
 
 * * *
 
-次へ: [構造の基本](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structure-Basics)、上へ: [構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [構造の基本](#66182-構造体の基本)、上へ: [構造](#6618-構造体) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.18.1 Vtables [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables-1)
+#### 6.6.18.1 Vtables
 
-vtableは構造体型であり、そのレイアウトやその他の情報を指定します。vtable自体も実際には構造体ですが、最初はそれを気にする必要はありません（[Vtable Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)を参照）。
+vtableは構造体型であり、そのレイアウトやその他の情報を指定します。vtable自体も実際には構造体ですが、最初はそれを気にする必要はありません（[Vtable Contents](#66183-vtable-の内容)を参照）。
 
-Scheme手順: **make-vtable** フィールド \[print\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dvtable)
+Scheme手順: **make-vtable** フィールド \[print\]
 
 新しいvtableを作成します。
 
@@ -44,15 +44,15 @@ fields は、作成する構造体内のフィールドを記述する文字列�
 
 * * *
 
-次へ: [Vtable Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)、前: [Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables)、上: [Structures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Vtable Contents](#66183-vtable-の内容)、前: [Vtables](#66181-vtables)、上: [Structures](#6618-構造体) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "索引")\]
 
-#### 6.6.18.2 構造体の基本 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structure-Basics-1)
+#### 6.6.18.2 構造体の基本
 
 このセクションでは、構造体を操作するための基本的な手順について説明します。`make-struct/no-tail` は構造体を作成し、`struct-ref` と `struct-set!` はそのフィールドにアクセスします。
 
-Scheme手順: **make-struct/no-tail** vtable init … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dstruct_002fno_002dtail)
+Scheme手順: **make-struct/no-tail** vtable init …
 
-指定されたvtableに従ってレイアウトされた新しい構造を作成します（[Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables)を参照）。
+指定されたvtableに従ってレイアウトされた新しい構造を作成します（[Vtables](#66181-vtables)を参照）。
 
 オプションの init… 引数は、構造体のフィールドの初期値です。読み取り専用フィールドに値を設定するには、この方法しかありません。init 引数の数がフィールドの数より少ない場合、デフォルト値は Scheme フィールド (型 `p`) の場合は `#f`、ボックス化されていないフィールド (型 `u`) の場合は 0 になります。
 
@@ -65,33 +65,33 @@ Scheme手順: **make-struct/no-tail** vtable init … [¶](https://doc.guix.gnu.
 (struct-ref s 0) ⇒ 123
 (struct-ref s 1) ⇒ "abc"
 
-C 関数: `SCM` **scm\_make\_struct** `(SCM vtable, SCM tail_size, SCM init_list)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fstruct)
+C 関数: `SCM` **scm\_make\_struct** `(SCM vtable, SCM tail_size, SCM init_list)`
 
-C 関数: `SCM` **scm\_c\_make\_struct** `(SCM vtable、SCM tail_size、SCM init、...)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fmake_005fstruct)
+C 関数: `SCM` **scm\_c\_make\_struct** `(SCM vtable、SCM tail_size、SCM init、...)`
 
-C 関数: `SCM` **scm\_c\_make\_structv** `(SCM vtable, SCM tail_size, size_t n_inits, scm_t_bits init[])` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fmake_005fstructv)
+C 関数: `SCM` **scm\_c\_make\_structv** `(SCM vtable, SCM tail_size, size_t n_inits, scm_t_bits init[])`
 
 C言語で構造体を作成する方法はいくつかあります。`scm_make_struct`はリストを受け取り、`scm_c_make_struct`はSCM_UNDEFINEDで終端された可変引数を受け取り、`scm_c_make_structv`はパックされた配列を受け取ります。
 
 これらすべてにおいて、tail_size はゼロである必要があります (SCM 値として)。
 
-Scheme手順: **struct?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_003f)
+Scheme手順: **struct?** obj
 
-C 関数: **scm\_struct\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fp)
+C 関数: **scm\_struct\_p** (obj)
 
 objが構造体の場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-Scheme手順: **struct-ref** struct n [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dref)
+Scheme手順: **struct-ref** struct n
 
-C 関数: **scm\_struct\_ref** (struct, n) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fref)
+C 関数: **scm\_struct\_ref** (struct, n)
 
 構造体内のn番目のフィールドの内容を返します。最初のフィールドは0番目のフィールドです。
 
 nが範囲外の場合はエラーが発生します。
 
-Scheme手順: **struct-set!** struct n value [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dset_0021)
+Scheme手順: **struct-set!** struct n value
 
-C 関数: **scm\_struct\_set\_x** (struct, n, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fset_005fx)
+C 関数: **scm\_struct\_set\_x** (struct, n, value)
 
 構造体内のフィールド番号nに値を設定します。最初のフィールドは番号0です。
 
@@ -99,46 +99,46 @@ nが範囲外の場合、またはフィールドが読み取り専用（r）の
 
 ボックス化されていないフィールド（型が「u」のフィールド）には、特別な手順でアクセスする必要があります。
 
-Scheme手順: **struct-ref/unboxed** struct n [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dref_002funboxed)
+Scheme手順: **struct-ref/unboxed** struct n
 
-Scheme手順: **struct-set!/unboxed** struct n value [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dset_0021_002funboxed)
+Scheme手順: **struct-set!/unboxed** struct n value
 
-C 関数: **scm\_struct\_ref\_unboxed** (struct, n) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fref_005funboxed)
+C 関数: **scm\_struct\_ref\_unboxed** (struct, n)
 
-C 関数: **scm\_struct\_set\_x\_unboxed** (struct, n, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fset_005fx_005funboxed)
+C 関数: **scm\_struct\_set\_x\_unboxed** (struct, n, value)
 
 `struct-ref` や `struct-set!` と同様ですが、これらはボックス化されていないフィールドにのみ使用できます。`struct-ref/unboxed` は常に正の整数を返します。同様に、`struct-set!/unboxed` は値引数として符号なし整数を受け取り、それ以外の場合はエラーを通知します。
 
-Scheme手順: **struct-vtable** struct [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dvtable)
+Scheme手順: **struct-vtable** struct
 
-C 関数: **scm\_struct\_vtable** (struct) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fvtable)
+C 関数: **scm\_struct\_vtable** (struct)
 
 構造体を記述するvtableを返します。
 
-vtableは実質的に構造体の型です。vtableの詳細については、[Vtable Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)を参照してください。
+vtableは実質的に構造体の型です。vtableの詳細については、[Vtable Contents](#66183-vtable-の内容)を参照してください。
 
 * * *
 
-次へ: [Meta-Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)、前: [Structure Basics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structure-Basics)、上: [Structures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Meta-Vtables](#66184-meta-vtables)、前: [Structure Basics](#66182-構造体の基本)、上: [Structures](#6618-構造体) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 6.6.18.3 Vtable の内容[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents-1)
+#### 6.6.18.3 Vtable の内容
 
 vtable自体が構造体です。vtableには、そのインスタンス（vtableから作成される構造体）のさまざまな側面を記述する特定のフィールドセットがあります。これらのフィールドの中にはGuile内部のものと、パブリックインターフェースの一部となっているものがあり、ユーザーが追加できるフィールドもあります。
 
 各vtableには、インスタンスのレイアウトを表すフィールド、インスタンスの印刷に使用されるプロシージャを表すフィールド、およびvtable自体の名前を表すフィールドがあります。レイアウトとプリンタへのアクセスは、フィールドインデックスを介して直接行われます。vtable名へのアクセスは、アクセサプロシージャを介して行われます。
 
-Scheme変数: **vtable-index-layout** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002dindex_002dlayout)
+Scheme変数: **vtable-index-layout**
 
-C マクロ: **scm\_vtable\_index\_layout** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvtable_005findex_005flayout)
+C マクロ: **scm\_vtable\_index\_layout**
 
-vtable 内のレイアウト仕様のフィールド番号。レイアウト仕様は、`make-vtable` に渡されるフィールド文字列から形成される `pwpw` のようなシンボル、または `make-struct-layout` によって作成されるシンボルです ([Meta-Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables) を参照)。
+vtable 内のレイアウト仕様のフィールド番号。レイアウト仕様は、`make-vtable` に渡されるフィールド文字列から形成される `pwpw` のようなシンボル、または `make-struct-layout` によって作成されるシンボルです ([Meta-Vtables](#66184-meta-vtables) を参照)。
 
 (define v (make-vtable "pwpw" 0))
 (struct-ref v vtable-index-layout) ⇒ pwpw
 
 vtableを使用する構造体のレイアウトは変更できないため、このフィールドは読み取り専用です。
 
-Scheme変数: **vtable-index-printer** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002dindex_002dprinter)
+Scheme変数: **vtable-index-printer**
 
 C マクロ: **scm\_vtable\_index\_printer** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvtable_005findex_005fprinter )
 
@@ -151,13 +151,13 @@ C マクロ: **scm\_vtable\_index\_printer** [¶](https://doc.guix.gnu.org/guile
 
 このフィールドは書き込み可能であり、印刷機能を動的に変更できます。
 
-Scheme手順: **struct-vtable-name** vtable [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dvtable_002dname)
+Scheme手順: **struct-vtable-name** vtable
 
-Scheme手順: **set-struct-vtable-name!** vtable名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dstruct_002dvtable_002dname_0021)
+Scheme手順: **set-struct-vtable-name!** vtable名
 
-C 関数: **scm\_struct\_vtable\_name** (vtable) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fvtable_005fname)
+C 関数: **scm\_struct\_vtable\_name** (vtable)
 
-C 関数: **scm\_set\_struct\_vtable\_name\_x** (vtable, name) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fstruct_005fvtable_005fname_005fx)
+C 関数: **scm\_set\_struct\_vtable\_name\_x** (vtable, name)
 
 vtable の名前を取得または設定します。name はシンボルであり、vtable から作成された構造体を印刷する際のデフォルトの印刷関数で使用されます。
 
@@ -169,9 +169,9 @@ vtable の名前を取得または設定します。name はシンボルであ�
 
 * * *
 
-次へ: [Vtable の例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Example)、前: [Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)、上: [構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) \[[内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Vtable の例](#66185-vtable-の例)、前: [Vtable の内容](#66183-vtable-の内容)、上: [構造](#6618-構造体) \[[内容](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.18.4 Meta-Vtables [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables-1)
+#### 6.6.18.4 Meta-Vtables
 
 構造体であるvtable自体もvtableを持ち、vtableもまた構造体です。構造体、そのvtable、vtableのvtableなどによって構造体のツリーが形成されます。新しい構造体を作成すると、ツリーに葉が追加されます。その構造体がvtableである場合、その構造体を使用して他の葉を作成することができます。
 
@@ -192,7 +192,7 @@ $6 = #<<standard-vtable> 12c3fa0>
 
 この例では、`$1` は `$2` のインスタンスであり、`$2` は `$3` のインスタンスであり、`$3` は `$4` のインスタンスであり、そして不思議なことに `$4` はそれ自身のインスタンスであると言えます。このコンソール セッションで `$4` にバインドされている値は、デフォルト 環境の `<standard-vtable>` にもバインドされています。
 
-スキーム変数: **<standard-vtable>** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003cstandard_002dvtable_003e)
+スキーム変数: **<standard-vtable>**
 
 新しいvtableを作成する際に便利なメタvtable。
 
@@ -200,9 +200,9 @@ $6 = #<<standard-vtable> 12c3fa0>
 
 この定義により、vtable が何であるかをより正確に指定できます。vtable は、メタ vtable から作成される構造体です。メタ vtable から構造体を作成する際には、構造体の最初のフィールドが有効なレイアウトであることを確認するための特別なチェックが実行されます。さらに、これらのチェックによって、子 vtable のレイアウトに vtable に必要なすべてのフィールドが正しい順序で含まれていることが確認された場合、子 vtable もメタ テーブルとなり、親から特別なビットを継承します。
 
-Scheme手順: **struct-vtable?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-struct_002dvtable_003f)
+Scheme手順: **struct-vtable?** obj
 
-C 関数: **scm\_struct\_vtable\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstruct_005fvtable_005fp)
+C 関数: **scm\_struct\_vtable\_p** (obj)
 
 objがvtable構造体（メタvtableのインスタンス）である場合は、`#t`を返します。
 
@@ -221,19 +221,19 @@ $9 = モジュール
 
 先の例の続きとして、`$2` は追加フィールドを持つ vtable です。これは、その vtable である `$3` が、拡張レイアウトを持つメタ vtable から作成されたためです。`vtable-offset-user` は、`standard-vtable-fields` のフィールド数を示す便利な定義です。
 
-スキーム変数: **standard-vtable-fields** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-standard_002dvtable_002dfields)
+スキーム変数: **standard-vtable-fields**
 
 vtableが持つべきフィールドの順序付きセットを含む文字列。
 
-スキーム変数: **vtable-offset-user** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002doffset_002duser)
+スキーム変数: **vtable-offset-user**
 
 ユーザーが利用できるvtable内の最初のインデックス。
 
-Scheme手順: **make-struct-layout**フィールド[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dstruct_002dlayout)
+Scheme手順: **make-struct-layout**フィールド
 
-C 関数: **scm\_make\_struct\_layout** (フィールド) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fstruct_005flayout)
+C 関数: **scm\_make\_struct\_layout** (フィールド)
 
-フィールド文字列から構造体レイアウトシンボルを返します。フィールドは`make-vtable`で説明されているとおりです（[Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables)を参照）。無効なフィールド文字列はエラーとなります。
+フィールド文字列から構造体レイアウトシンボルを返します。フィールドは`make-vtable`で説明されているとおりです（[Vtables](#66181-vtables)を参照）。無効なフィールド文字列はエラーとなります。
 
 これらの定義を用いると、`make-vtable`は次のように定義できる。
 
@@ -244,9 +244,9 @@ C 関数: **scm\_make\_struct\_layout** (フィールド) [¶](https://doc.guix.
 
 * * *
 
-前へ: [Meta-Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)、上へ: [Structures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Meta-Vtables](#66184-meta-vtables)、上へ: [Structures](#6618-構造体) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "索引")\]
 
-#### 6.6.18.5 Vtable の例 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Example-1)
+#### 6.6.18.5 Vtable の例
 
 これらの点を例を用いてまとめてみましょう。単一継承のシンプルなオブジェクトシステムを考えます。オブジェクトは通常の構造体であり、クラスは、クラス名、親クラス、フィールドのリストという3つの追加クラスフィールドを持つvtableになります。
 
@@ -326,4 +326,4 @@ xy)
 
 * * *
 
-次へ: [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists )、前: [構造体](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists )、前: [構造体](#6618-構造体)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

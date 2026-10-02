@@ -1,21 +1,21 @@
-### 6.19 外部関数インターフェース [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface-1)
+### 6.19 外部関数インターフェース
 
 C言語やRust、あるいはScheme以外の言語で書かれたライブラリを使用する必要がある場合があります。さらに稀なケースとして、Guileを拡張するためにC言語でコードを書く必要があるかもしれません。このセクションでは、これらの「外部ライブラリ」をロードする方法、ライブラリ内のデータや関数を検索する方法などについて説明します。
 
-* [外国のライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Libraries)
-* [外部拡張機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions)
-* [外部ポインタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Pointers)
-* [外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
-* [外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions)
-* [ボイドポインタとバイトアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Void-Pointers-and-Byte-Access)
-* [外部構造体](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Structs)
-* [その他の外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#More-Foreign-Functions)
+* [外国のライブラリ](#6191-外国図書館)
+* [外部拡張機能](#6192-外部拡張機能)
+* [外部ポインタ](#6193-外部ポインタ)
+* [外部型](#6194-外部型)
+* [外部関数](#6195-外部関数)
+* [ボイドポインタとバイトアクセス](#6196-ボイドポインタとバイトアクセス)
+* [外部構造体](#6197-外部構造体)
+* [その他の外部関数](#6198-その他の外部関数)
 
 * * *
 
-次へ: [外部拡張機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部拡張機能](#6192-外部拡張機能)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.1 外国図書館 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Libraries-1)
+#### 6.19.1 外国図書館
 
 Guileは実行時にSchemeライブラリをロードできるのと同様に、C言語やその他の低レベル言語で書かれたシステムライブラリもロードできます。これらの動的にロード可能なモジュールを「外部ライブラリ」と呼び、SchemeやGuileが実装する他の言語で書かれたネイティブライブラリと区別します。
 
@@ -31,7 +31,7 @@ Guileは実行時にSchemeライブラリをロードできるのと同様に、
 
 (use-modules (system foreign-library))
 
-Scheme Procedure: **load-foreign-library** \[library\] \[#:extensions=system-library-extensions\] \[#:search-ltdl-library-path?=#t\] \[#:search-path=search-path\] \[#:search-system-paths?=#t\] \[#:lazy?=#t\] \[#:global=#f\] \[#:host-type-rename?=#t\] \[#:allow-dll-version-suffix?=#t\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-load_002dforeign_002dlibrary)
+Scheme Procedure: **load-foreign-library** \[library\] \[#:extensions=system-library-extensions\] \[#:search-ltdl-library-path?=#t\] \[#:search-path=search-path\] \[#:search-system-paths?=#t\] \[#:lazy?=#t\] \[#:global=#f\] \[#:host-type-rename?=#t\] \[#:allow-dll-version-suffix?=#t\]
 
 このプロシージャは、library（文字列）で指定された共有ライブラリを検索し、実行中のGuileアプリケーションに動的にリンクします。成功した場合、このプロシージャはリンクされたオブジェクトファイルを表すのに適したSchemeオブジェクトを返します。失敗した場合は、エラーが発生します。
 
@@ -55,7 +55,7 @@ search-ltdl-library-path? が true の場合、この環境変数を使用して
 
 `GUILE_SYSTEM_EXTENSIONS_PATH`
 
-Guile の検索パスの最後のパスは Guile 自身のパスであり、デフォルトでは libdir と extensiondir の順になります。たとえば、/opt/guile にインストールした場合、これらはそれぞれ /opt/guile/lib と `/opt/guile/lib/guile/3.0/extensions` になります。`extensionsdir` の詳細については、[並列インストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Installations) を参照してください。
+Guile の検索パスの最後のパスは Guile 自身のパスであり、デフォルトでは libdir と extensiondir の順になります。たとえば、/opt/guile にインストールした場合、これらはそれぞれ /opt/guile/lib と `/opt/guile/lib/guile/3.0/extensions` になります。`extensionsdir` の詳細については、[並列インストール](05_programming_in_c.md#51-並列インストール) を参照してください。
 
 DLLを使用するシステムの場合、libdirではなくbindirが検索されるため、この例では/opt/guile/binが検索対象となります。
 
@@ -73,15 +73,15 @@ dll-version-suffix? が true (デフォルト) の場合、検索動作が変更
 
 上記の環境変数は、外部ライブラリモジュールが最初にロードされ、パラメータにバインドされる際に解析されます。パスの構成要素がnullの場合、例えば`GUILE_SYSTEM_EXTENSIONS_PATH="::"`の3つの構成要素は無視されます。
 
-スキームパラメータ: **guile-extensions-path** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guile_002dextensions_002dpath)
+スキームパラメータ: **guile-extensions-path**
 
-スキームパラメータ: **ltdl-library-path** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ltdl_002dlibrary_002dpath)
+スキームパラメータ: **ltdl-library-path**
 
-スキームパラメータ: **guile-system-extensions-path** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guile_002dsystem_002dextensions_002dpath)
+スキームパラメータ: **guile-system-extensions-path**
 
-初期値がそれぞれ `GUILE_EXTENSIONS_PATH`、`LTDL_LIBRARY_PATH`、および `GUILE_SYSTEM_EXTENSIONS_PATH` から取得されるパラメータ。詳細は [Parameters](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters) を参照してください。呼び出し元が明示的に `#:search-path` 引数を渡さない限り、`load-foreign-library` が呼び出されたときに検索パスを構築する際に、これらのパラメータの現在の値が使用されます。
+初期値がそれぞれ `GUILE_EXTENSIONS_PATH`、`LTDL_LIBRARY_PATH`、および `GUILE_SYSTEM_EXTENSIONS_PATH` から取得されるパラメータ。詳細は [Parameters](06_11_controlling_the_flow_of_program_execution.md#61112-パラメータ) を参照してください。呼び出し元が明示的に `#:search-path` 引数を渡さない限り、`load-foreign-library` が呼び出されたときに検索パスを構築する際に、これらのパラメータの現在の値が使用されます。
 
-スキーム手順: **foreign-library?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-foreign_002dlibrary_003f)
+スキーム手順: **foreign-library?** obj
 
 objが外部ライブラリの場合は`#t`を返し、それ以外の場合は`#f`を返します。
 
@@ -97,9 +97,9 @@ Guile 3.0.6より前のバージョンでは、Guileはlibtoolが提供する動
 
 * * *
 
-次へ: [外部ポインタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Pointers)、前: [外部ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Libraries)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部ポインタ](#6193-外部ポインタ)、前: [外部ライブラリ](#6191-外国図書館)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.2 外部拡張機能 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions-1)
+#### 6.19.2 外部拡張機能
 
 共有ライブラリを使用する方法の一つは、Guileを拡張することです。このようなロード可能なモジュールは通常、1つの特別な初期化関数を定義しており、この関数が呼び出されると、`libguile` APIを使用して現在のモジュール内のプロシージャを定義します。
 
@@ -124,13 +124,13 @@ scm\_c\_define\_gsubr ("j0", 1, 0, 0, j0\_wrapper);
 
 gcc -shared -o bessel.so -fPIC bessel.c
 
-Guile を拡張する共有ライブラリを配置するのに最適なデフォルトの場所は、extensions ディレクトリです。コマンドラインまたはビルドスクリプトから、`pkg-config --variable=extensionsdir guile-3.0` を実行すると、extensions ディレクトリが表示されます。詳細については、[並列インストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Installations) を参照してください。
+Guile を拡張する共有ライブラリを配置するのに最適なデフォルトの場所は、extensions ディレクトリです。コマンドラインまたはビルドスクリプトから、`pkg-config --variable=extensionsdir guile-3.0` を実行すると、extensions ディレクトリが表示されます。詳細については、[並列インストール](05_programming_in_c.md#51-並列インストール) を参照してください。
 
 Guileは`load-extension`を介して`bessel.so`をロードできます。
 
-Scheme手順: **load-extension** lib init [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-load_002dextension)
+Scheme手順: **load-extension** lib init
 
-C 関数: **scm\_load\_extension** (lib、init) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fload_005fextension)
+C 関数: **scm\_load\_extension** (lib、init)
 
 LIBとINITで指定された拡張機能をロードして初期化します。
 
@@ -139,7 +139,7 @@ LIBとINITで指定された拡張機能をロードして初期化します。
 (define-module (math bessel)
 #:export (j0))
 
-([load-extension](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-load_002dextension) "bessel" "init\_math\_bessel")
+([load-extension](#6192-外部拡張機能) "bessel" "init\_math\_bessel")
 
 この `load-extension` 呼び出しは、`(load-foreign-library "bessel")` を介して `bessel` ライブラリをロードし、次にライブラリ内で `init_math_bessel` シンボルを検索し、それを引数なしの関数として扱い、その関数を呼び出します。
 
@@ -158,7 +158,7 @@ sed 's|PKGLIBDIR|$(pkglibdir)|' <$< >$
 
 別の方法としては、`guile-extensions-path` パラメータ、またはそれに対応する環境変数を再バインドする方法がありますが、これらのパラメータを変更すると、`load-foreign-library` の他のユーザーにも影響することに注意してください。
 
-拡張機能が `scm_c_define_gsubr` ([プリミティブ手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures)を参照) またはその他のメカニズムを使用して Guile に追加する新しいプリミティブは、`scm_c_define_gsubr` が実行されたときにカレントなモジュールに配置されるため、何がどこに配置されるかを明確にするには、上記のように `load-extension` をモジュールに含めるのが最善です。あるいは、C コードで `scm_c_define_module` を使用して、作成するモジュールを指定することもできます。
+拡張機能が `scm_c_define_gsubr` ([プリミティブ手順](06_07_procedures.md#672-プリミティブプロシージャ)を参照) またはその他のメカニズムを使用して Guile に追加する新しいプリミティブは、`scm_c_define_gsubr` が実行されたときにカレントなモジュールに配置されるため、何がどこに配置されるかを明確にするには、上記のように `load-extension` をモジュールに含めるのが最善です。あるいは、C コードで `scm_c_define_module` を使用して、作成するモジュールを指定することもできます。
 
 static void
 do_init (void \*unused)
@@ -173,17 +173,17 @@ init_math_bessel()
 scm_c_define_module ("math bessel", do_init, NULL);
 }
 
-しかし...もし私たちが単に `j0` 関数だけを求めているのであれば、Guile ユーザーがそれを呼び出せるように、初期化関数とラッパー モジュールを備えた Guile 専用のラッパー ライブラリをコンパイルする必要があるというのは、非常に面倒な手続きのように思えます。別の方法もありますが、そのためにはまず関数ポインタと関数型について説明しなければなりません。[外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions) を参照して、重要な部分だけを確認してください。
+しかし...もし私たちが単に `j0` 関数だけを求めているのであれば、Guile ユーザーがそれを呼び出せるように、初期化関数とラッパー モジュールを備えた Guile 専用のラッパー ライブラリをコンパイルする必要があるというのは、非常に面倒な手続きのように思えます。別の方法もありますが、そのためにはまず関数ポインタと関数型について説明しなければなりません。[外部関数](#6195-外部関数) を参照して、重要な部分だけを確認してください。
 
 * * *
 
-次へ: [外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)、前: [外部拡張](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部型](#6194-外部型)、前: [外部拡張](#6192-外部拡張機能)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.3 外部ポインタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Pointers-1)
+#### 6.19.3 外部ポインタ
 
 外部ライブラリは基本的にキーと値のマッピングであり、キーは定義の名前、値はその定義のアドレスです。定義のアドレスを調べるには、`(system foreign-library)`モジュールの`foreign-library-pointer`を使用します。
 
-Scheme Procedure: **foreign-library-pointer** ライブラリ名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-foreign_002dlibrary_002dpointer)
+Scheme Procedure: **foreign-library-pointer** ライブラリ名
 
 lib が参照する共有オブジェクト内のシンボル名に対応する「ラップドポインタ」を返します。返されるポインタは C オブジェクトを指します。
 
@@ -202,58 +202,58 @@ lib が参照する共有オブジェクト内のシンボル名に対応する�
 
 (use-modules (system foreign))
 
-Scheme手順: **ポインタアドレス** ポインタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_002daddress)
+Scheme手順: **ポインタアドレス** ポインタ
 
-C 関数: **scm\_pointer\_address** (ポインタ) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpointer_005faddress)
+C 関数: **scm\_pointer\_address** (ポインタ)
 
 ポインタの数値を返します。
 
 （ポインタアドレス初期化）
 ⇒ 139984413364296 ; 結果は人によって異なります
 
-Scheme手順: **make-pointer** アドレス \[finalizer\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dpointer)
+Scheme手順: **make-pointer** アドレス \[finalizer\]
 
 アドレスを指す外部ポインタオブジェクトを返します。ファイナライザが渡された場合は、ポインタオブジェクトが到達不能になったときに呼び出される、引数1つのC関数へのポインタである必要があります。
 
-Scheme手順: **ポインタ?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_003f)
+Scheme手順: **ポインタ?** obj
 
 objがポインタオブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-Scheme変数: **%null-pointer** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025null_002dpointer)
+Scheme変数: **%null-pointer**
 
 値が0の外部ポインタ。
 
-Scheme手順: **nullポインタ？** ポインタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_002dpointer_003f)
+Scheme手順: **nullポインタ？** ポインタ
 
 ポインタがヌルポインタの場合は`#t`を返し、それ以外の場合は`#f`を返します。
 
 SCM値を外部関数に直接渡したり、外部関数がSCM値を返したりできるようにするため、Guileは安全でない型変換演算子もいくつかサポートしています。
 
-Scheme手順: **scm->pointer** scm [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_002d_003epointer)
+Scheme手順: **scm->pointer** scm
 
 scmの`object-address`を持つ外部ポインタオブジェクトを返します。
 
-Scheme手順: **pointer->scm** ポインタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_002d_003escm)
+Scheme手順: **pointer->scm** ポインタ
 
 Schemeオブジェクトへのポインタを安全でない方法でキャストしました。幸運を祈りましょう！
 
 C言語の拡張機能から動的FFIにアクセスできるようにしたい場合があります。その際、「ポインタ」という名称は、ポインタをラップする`SCM`オブジェクトを指す場合もあれば、`void*`値を指す場合もあるため、混乱を招くことがあります。そこで、Schemeオブジェクトを指す場合は「ポインタオブジェクト」、`void*`値を指す場合は「ポインタ値」という用語を使用することにします。
 
-C 関数: `SCM` **scm\_from\_pointer** `(void *ptr, void (*finalizer) (void*))` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005fpointer)
+C 関数: `SCM` **scm\_from\_pointer** `(void *ptr, void (*finalizer) (void*))`
 
 ポインタ値からポインタオブジェクトを作成します。
 
 ファイナライザがnullでない場合、Guileはポインタオブジェクトが収集可能になった後のいずれかの時点で、ポインタ値に対してファイナライザを呼び出すように手配します。
 
-C 関数: `void*` **scm\_to\_pointer** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fto_005fpointer)
+C 関数: `void*` **scm\_to\_pointer** `(SCM obj)`
 
 ポインタオブジェクトからポインタ値を解凍します。
 
 * * *
 
-次へ: [外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions)、前: [外部ポインタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Pointers)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部関数](#6195-外部関数)、前: [外部ポインタ](#6193-外部ポインタ)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.4 外部型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types-1)
+#### 6.19.4 外部型
 
 Schemeの観点から見ると、外部ポインタは混沌の断片です。ユーザーは任意のアドレスに対して外部ポインタを作成し、それを自由に操作できます。全体に秩序感を与える唯一の要素は、特定の記憶場所に特定の型があるという共通の認識だけです。外部インターフェース用のSchemeラッパーを作成する際には、パラメータとフィールドのデータ型を明示的に表現することで、この混沌を隠蔽します。
 
@@ -263,59 +263,59 @@ Schemeの観点から見ると、外部ポインタは混沌の断片です。�
 
 `(system foreign)` は、基本的な C 型を表すいくつかの値をエクスポートします。
 
-Scheme変数: **int8** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int8)
+Scheme変数: **int8**
 
-Scheme変数: **uint8** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint8)
+Scheme変数: **uint8**
 
-Scheme変数: **uint16** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint16)
+Scheme変数: **uint16**
 
-Scheme変数: **int16** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int16)
+Scheme変数: **int16**
 
-Scheme変数: **uint32** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint32)
+Scheme変数: **uint32**
 
-Scheme変数: **int32** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int32)
+Scheme変数: **int32**
 
-Scheme変数: **uint64** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint64)
+Scheme変数: **uint64**
 
-Scheme変数: **int64** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int64)
+Scheme変数: **int64**
 
-Scheme変数: **float** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-float)
+Scheme変数: **float**
 
-Scheme変数: **double** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-double)
+Scheme変数: **double**
 
-Scheme変数: **complex-double** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_002ddouble)
+Scheme変数: **complex-double**
 
-Scheme変数: **complex-float** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_002dfloat)
+Scheme変数: **complex-float**
 
 これらの値は、指定されたサイズと符号を持つC言語の数値型を表します。`complex-float`と`complex-double`は、それぞれC99の`float_Complex`と`double_Complex`を表します。
 
 さらに、プラットフォームに依存するサイズの種類を示すための便利なバインディングもいくつか用意されています。
 
-Scheme変数: **int** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int)
+Scheme変数: **int**
 
-Scheme変数: **unsigned-int** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dint)
+Scheme変数: **unsigned-int**
 
-Scheme変数: **long** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-long)
+Scheme変数: **long**
 
-Scheme変数: **unsigned-long** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dlong)
+Scheme変数: **unsigned-long**
 
-Scheme変数: **short** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-short)
+Scheme変数: **short**
 
-Scheme変数: **unsigned-short** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dshort)
+Scheme変数: **unsigned-short**
 
-スキーム変数: **size\_t** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-size_005ft-1)
+スキーム変数: **size\_t**
 
-スキーム変数: **ssize\_t** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ssize_005ft)
+スキーム変数: **ssize\_t**
 
-スキーム変数: **ptrdiff\_t** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ptrdiff_005ft)
+スキーム変数: **ptrdiff\_t**
 
-Scheme変数: **intptr\_t** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-intptr_005ft)
+Scheme変数: **intptr\_t**
 
-Scheme変数: **uintptr\_t** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uintptr_005ft)
+Scheme変数: **uintptr\_t**
 
 `(system foreign)`モジュールによってエクスポートされる値で、C言語の数値型を表します。例えば、`long`は64ビットプラットフォームでは`int64`と`equal?`になる場合があります。
 
-Scheme変数: **void** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-void)
+Scheme変数: **void**
 
 `void`型。`pointer->procedure`の最初の引数として使用することで、何も返さないC関数をラップできます。
 
@@ -323,31 +323,31 @@ Scheme変数: **void** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#
 
 * * *
 
-次へ: [Void ポインタとバイト アクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Void-Pointers-and-Byte-Access)、前: [外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Void ポインタとバイト アクセス](#6196-ボイドポインタとバイトアクセス)、前: [外部型](#6194-外部型)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.5 外部関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions-1)
+#### 6.19.5 外部関数
 
 動的ライブラリを使う上で最も自然なことは、関数ポインタ、つまり_外部関数_を探すことです。これらのSchemeインターフェースを使用するには、`(system foreign)`モジュールをロードしてください。
 
 (use-modules (system foreign))
 
-Scheme プロシージャ: **pointer->procedure** return\_type func\_ptr arg\_types \[#:return-errno?=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_002d_003eprocedure)
+Scheme プロシージャ: **pointer->procedure** return\_type func\_ptr arg\_types \[#:return-errno?=#f\]
 
-C 関数: **scm_pointer_to_procedure** (return_type, func_ptr, arg_types) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpointer_005fto_005fprocedure)
+C 関数: **scm_pointer_to_procedure** (return_type, func_ptr, arg_types)
 
-C 関数: **scm\_pointer\_to\_procedure\_with\_errno** (return\_type, func\_ptr, arg\_types) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpointer_005fto_005fprocedure_005fwith_005ferrno)
+C 関数: **scm\_pointer\_to\_procedure\_with\_errno** (return\_type, func\_ptr, arg\_types)
 
 外部関数を作成する。
 
 外部関数のvoidポインタfunc_ptr、その引数型arg_types、および戻り値型return_typeが与えられたとき、引数を外部関数に渡して適切な値を返す手続きを返してください。
 
-`arg_types` は外部型のリストである必要があります。`return_type` も外部型である必要があります。外部型の詳細については、[Foreign Types](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types) を参照してください。
+`arg_types` は外部型のリストである必要があります。`return_type` も外部型である必要があります。外部型の詳細については、[Foreign Types](#6194-外部型) を参照してください。
 
 return-errno? が true の場合、または `scm_pointer_to_procedure_with_errno` を呼び出す場合、返されるプロシージャは 2 つの値を返し、2 番目の値は `errno` になります。
 
 最後に、`(system foreign-library)`には、`foreign-library-pointer`と`pointer->procedure`を結合する便利なラッパー関数があります。
 
-Scheme 手順: **foreign-library-function** ライブラリ名 \[#:return-type=void\] \[#:arg-types='()\] \[#:return-errno?=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-foreign_002dlibrary_002dfunction)
+Scheme 手順: **foreign-library-function** ライブラリ名 \[#:return-type=void\] \[#:arg-types='()\] \[#:return-errno?=#f\]
 
 lib から name のアドレスをロードし、引数 arg-types を受け取り、戻り値型を返す関数として扱います。オプションで errno も使用します。
 
@@ -372,23 +372,23 @@ lib から name のアドレスをロードし、引数 arg-types を受け取�
 
 以上です！Cは全くありません。
 
-より詳細な例に進む前に、次の 2 つのセクションでは、たとえば `int8` よりも複雑なデータの扱い方について説明します。外部関数の例については、[More Foreign Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#More-Foreign-Functions) を参照してください。
+より詳細な例に進む前に、次の 2 つのセクションでは、たとえば `int8` よりも複雑なデータの扱い方について説明します。外部関数の例については、[More Foreign Functions](#6198-その他の外部関数) を参照してください。
 
 * * *
 
-次へ: [外部構造体](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Structs)、前: [外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Functions)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部構造体](#6197-外部構造体)、前: [外部関数](#6195-外部関数)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.6 ボイドポインタとバイトアクセス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Void-Pointers-and-Byte-Access-1)
+#### 6.19.6 ボイドポインタとバイトアクセス
 
-ラップされたポインタは型指定されていないため、実質的には C 言語の `void` ポインタと同等です。C 言語と同様に、ポインタが指すメモリ領域にはバイトレベルでアクセスできます。これは _bytevectors_ を使用して実現されます ([Bytevectors](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevectors) を参照)。`(rnrs bytevectors)` モジュールには、バイト シーケンスを文字列、浮動小数点数、整数などの Scheme オブジェクトに変換するために使用できるプロシージャが含まれています。
+ラップされたポインタは型指定されていないため、実質的には C 言語の `void` ポインタと同等です。C 言語と同様に、ポインタが指すメモリ領域にはバイトレベルでアクセスできます。これは _bytevectors_ を使用して実現されます ([Bytevectors](06_06_12_bytevectors.md#6612-バイトベクトル) を参照)。`(rnrs bytevectors)` モジュールには、バイト シーケンスを文字列、浮動小数点数、整数などの Scheme オブジェクトに変換するために使用できるプロシージャが含まれています。
 
 これらの Scheme インターフェースを使用するには、`(system foreign)` モジュールをロードしてください。
 
 (use-modules (system foreign))
 
-Scheme手順: **pointer->bytevector** pointer len \[offset \[uvec\_type\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_002d_003ebytevector)
+Scheme手順: **pointer->bytevector** pointer len \[offset \[uvec\_type\]\]
 
-C 関数: **scm\_pointer\_to\_bytevector** (pointer, len, offset, uvec\_type) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpointer_005fto_005fbytevector)
+C 関数: **scm\_pointer\_to\_bytevector** (pointer, len, offset, uvec\_type)
 
 ポインタが指す len バイトをエイリアスしたバイトベクターを返します。
 
@@ -398,25 +398,25 @@ offset が渡された場合、それは返されるバイトベクターによ�
 
 返されたバイトベクターを変更すると、ポインタが指すメモリも変更されるため、シートベルトをしっかり締めてください。
 
-Scheme手順: **bytevector->pointer** bv \[offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytevector_002d_003epointer)
+Scheme手順: **bytevector->pointer** bv \[offset\]
 
-C 関数: **scm\_bytevector\_to\_pointer** (bv, offset) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbytevector_005fto_005fpointer)
+C 関数: **scm\_bytevector\_to\_pointer** (bv, offset)
 
 bv が指すメモリ領域へのエイリアスポインタを返すか、offset が渡された場合は bv の後の offset バイトを返す。
 
 これらの基本機能に加えて、便利な手続きも利用可能です。
 
-Scheme手順: **dereference-pointer** ポインタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dereference_002dpointer)
+Scheme手順: **dereference-pointer** ポインタ
 
 ポインタがポインタを保持するメモリ領域を指していると仮定して、そのポインタを返します。
 
-Scheme手順: **string->pointer** string \[encoding\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003epointer)
+Scheme手順: **string->pointer** string \[encoding\]
 
 指定されたエンコーディングでヌル終端された文字列のコピーへの外部ポインタを返します。デフォルトは現在のロケールエンコーディングです。返された外部ポインタが到達不能になった時点で、C文字列は解放されます。
 
 これは、Scheme における `scm_to_stringn` に相当するものです。
 
-Scheme手順: **pointer->string** pointer \[length\] \[encoding\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pointer_002d_003estring)
+Scheme手順: **pointer->string** pointer \[length\] \[encoding\]
 
 ポインタが指すC文字列を表す文字列を返します。lengthが省略されている場合、または`-1`が指定されている場合は、文字列はヌル終端されているとみなされます。それ以外の場合は、lengthはポインタが指すメモリ内のバイト数です。C文字列は指定されたエンコーディングであるとみなされ、デフォルトは現在のロケールエンコーディングになります。
 
@@ -424,7 +424,7 @@ Scheme手順: **pointer->string** pointer \[length\] \[encoding\] [¶](https://d
 
 ほとんどのオブジェクト指向Cライブラリは、特定のデータ構造へのポインタを使用してオブジェクトを識別します。このような場合、異なるポインタ型を互いに素なScheme型として具体化することが有効です。`define-wrapped-pointer-type`マクロはこの処理を簡素化します。
 
-Scheme構文: **define-wrapped-pointer-type** type-name pred wrap unwrap print [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dwrapped_002dpointer_002dtype)
+Scheme構文: **define-wrapped-pointer-type** type-name pred wrap unwrap print
 
 ポインタオブジェクトを、型が異なるSchemeオブジェクトにラップするためのヘルパープロシージャを定義します。具体的には、このマクロは以下を定義します。
 
@@ -484,25 +484,25 @@ Guileの内部状態を破壊したい場合は、`scm_numptob`に別の値を�
 
 * * *
 
-次へ: [その他の外部関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#More-Foreign-Functions)、前: [ボイドポインタとバイトアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Void-Pointers-and-Byte-Access)、上: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [その他の外部関数](#6198-その他の外部関数)、前: [ボイドポインタとバイトアクセス](#6196-ボイドポインタとバイトアクセス)、上: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.7 外部構造体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Structs-1)
+#### 6.19.7 外部構造体
 
 最後に、外部関数を呼び出す前に、外部値に関する最後の注意点を述べておきます。C言語の構造体を扱う必要がある場合があり、その場合は構造体の各要素を型、オフセット、アライメントに基づいて解釈する必要があります。`(system foreign)`モジュールには、これをサポートするプリミティブがいくつか用意されています。
 
 (use-modules (system foreign))
 
-Scheme プロシージャ: **sizeof** 型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sizeof)
+Scheme プロシージャ: **sizeof** 型
 
-C 関数: **scm_sizeof** (型) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsizeof)
+C 関数: **scm_sizeof** (型)
 
 型のサイズをバイト単位で返します。
 
 type は、`int` のような有効な C 型である必要があります。あるいは、type はシンボル `*` でも構いません。その場合は、ポインタのサイズが返されます。type は型のリストでも構いません。その場合は、ABI に準拠したパッキングによる `struct` のサイズが返されます。
 
-Scheme プロシージャ: **alignof** 型[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alignof)
+Scheme プロシージャ: **alignof** 型
 
-C 関数: **scm\_alignof** (型) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005falignof)
+C 関数: **scm\_alignof** (型)
 
 型の配置をバイト単位で返します。
 
@@ -511,14 +511,14 @@ type は、`int` のような有効な C 型である必要があります。あ
 Guileは、C言語の構造体とバイトベクトルを効率的に読み書きするための便利な構文も提供しています。
 
 Scheme構文: **read-c-struct** bv offset
-((フィールドタイプ) …) k [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dc_002dstruct)
+((フィールドタイプ) …) k
 
 バイトベクター bv のオフセット offset から、型 type... のフィールドを持つ C 構造体を読み込みます。フィールドを識別子 field... にバインドし、`(k field ...)` を返します。
 
 クロスコンパイルを行わない限り、フィールド型はマクロ展開時に評価されます。これにより、結果として得られるバイトベクトルアクセサとサイズ／アライメント計算を完全にインライン化できます。
 
 Scheme構文: **write-c-struct** bv offset
-((フィールドタイプ) …) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dc_002dstruct)
+((フィールドタイプ) …)
 
 型 type... のフィールド field... を持つ C 構造体を、バイトベクトル bv のオフセット offset に書き込みます。ゼロ値を返します。
 
@@ -548,7 +548,7 @@ Scheme構文: **write-c-struct** bv offset
 
 また、`read-c-struct` および `write-c-struct` とほぼ同等の古いインターフェースも存在しますが、こちらは実行時ディスパッチを使用し、バイトベクターではなく外部ポインタを操作します。
 
-Scheme手順: **parse-c-struct** 外部型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-parse_002dc_002dstruct)
+Scheme手順: **parse-c-struct** 外部型
 
 C言語の構造体への外部ポインタを解析し、値のリストを返します。
 
@@ -565,9 +565,9 @@ C言語の構造体への外部ポインタを解析し、値のリストを返�
 
 * * *
 
-前へ: [外部構造体](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Structs)、上へ: [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [外部構造体](#6197-外部構造体)、上へ: [外部関数インターフェース](#619-外部関数インターフェース) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.19.8 その他の外部関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#More-Foreign-Functions-1)
+#### 6.19.8 その他の外部関数
 
 外部関数へのポインタを渡したり、ポインタを返したりすることが可能です。その場合、引数または戻り値の型はポインタを示す記号「*」にする必要があります。例えば、次のコードは`memcpy`をSchemeで使用できるようにします。
 
@@ -593,7 +593,7 @@ C言語の構造体への外部ポインタを解析し、値のリストを返�
 (bytevector->u8-list (pointer->bytevector dest 16))
 ⇒ (0 1 2 3 4 5 6 7 0 0 0 0 0 0 0 0)
 
-構造体を値として渡すことも、外部ポインタとして渡すこともできます。構造体の型と値の表現方法の詳細については、[外部構造体](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Structs)を参照してください。
+構造体を値として渡すことも、外部ポインタとして渡すこともできます。構造体の型と値の表現方法の詳細については、[外部構造体](#6197-外部構造体)を参照してください。
 
 「 Out」引数は外部ポインタとして渡されます。外部ポインタが指すメモリ領域は、その場で変更されます。
 
@@ -619,13 +619,13 @@ C言語の構造体への外部ポインタを解析し、値のリストを返�
 ⇒ 1270587589
 ⇒ 499553
 
-ご覧のとおり、外部関数へのこのインターフェースは非常に低レベルで、やや危険なレベルにあります[22](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT22)。
+ご覧のとおり、外部関数へのこのインターフェースは非常に低レベルで、やや危険なレベルにあります[22](99_footnotes.md#22)。
 
 FFIは逆方向にも機能し、Schemeの手続きをC言語から呼び出し可能にすることができます。これにより、Schemeの手続きをC言語の関数が期待する「コールバック」として使用することが可能になります。
 
-Scheme プロシージャ: **procedure->pointer** 戻り値の型 proc 引数の型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002d_003epointer)
+Scheme プロシージャ: **procedure->pointer** 戻り値の型 proc 引数の型
 
-C 関数: **scm\_procedure\_to\_pointer** (return\_type, proc, arg\_types) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprocedure_005fto_005fpointer)
+C 関数: **scm\_procedure\_to\_pointer** (return\_type, proc, arg\_types)
 
 引数の型が arg-types (リスト) で、プロシージャ proc のプロキシとして機能する、戻り値の型が return-type の C 関数へのポインタを返します。したがって、proc の引数の数、サポートされる引数の型、および戻り値の型は、return-type および arg-types と一致する必要があります。
 
@@ -671,4 +671,4 @@ ptr)))))
 
 * * *
 
-次へ: [Smobs](https://doc.guix.gnu.org/guile/latest/en/guile.html#Smobs)、前: [Foreign Function Interface](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface)、上: [API Reference](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Smobs](06_21_smobs.md#621-smobs)、前: [Foreign Function Interface](#619-外部関数インターフェース)、上: [API Reference](06_00_api_reference.md#6-apiリファレンス) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

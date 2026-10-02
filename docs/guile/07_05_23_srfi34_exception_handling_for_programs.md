@@ -1,14 +1,14 @@
-#### 7.5.23 SRFI-34 - プログラムの例外処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d34-_002d-Exception-handling-for-programs)
+#### 7.5.23 SRFI-34 - プログラムの例外処理
 
-Guile は、独自の組み込みメカニズムの代替として、[SRFI-34 の例外処理メカニズム](http://srfi.schemers.org/srfi-34/srfi-34.html) の実装を提供します ([例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) を参照)。これは次のようにして利用できます。
+Guile は、独自の組み込みメカニズムの代替として、[SRFI-34 の例外処理メカニズム](http://srfi.schemers.org/srfi-34/srfi-34.html) の実装を提供します ([例外](06_11_controlling_the_flow_of_program_execution.md#6118-例外) を参照)。これは次のようにして利用できます。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-34))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (srfi srfi-34))
 
-`with-exception-handler` および `raise` (コア Guile では `raise-exception` として知られています) の詳細については、[例外の発生と処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions) を参照してください。
+`with-exception-handler` および `raise` (コア Guile では `raise-exception` として知られています) の詳細については、[例外の発生と処理](06_11_controlling_the_flow_of_program_execution.md#61182-例外の発生と処理) を参照してください。
 
 SRFI-34の`guard`形式は、`with-exception-handler`に対するシンタックスシュガーです。
 
-構文: **guard** (var 句 …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard)
+構文: **guard** (var 句 …) 本体 …
 
 例外ハンドラを使用して本体を評価し、発生したオブジェクトを変数 var にバインドします。そして、そのバインドの範囲内で、句…を条件式の句であるかのように評価します。その暗黙の条件式は、ガード式の継続と動的な環境を使用して評価されます。
 
@@ -16,4 +16,4 @@ SRFI-34の`guard`形式は、`with-exception-handler`に対するシンタック
 
 * * *
 
-次へ: [SRFI-37 - args-fold](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d37)、前: [SRFI-34 - プログラムの例外処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d34)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-37 - args-fold](07_05_25_srfi37_argsfold.md#7525-srfi-37---args-fold)、前: [SRFI-34 - プログラムの例外処理](#7523-srfi-34---プログラムの例外処理)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

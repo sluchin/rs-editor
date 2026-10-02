@@ -1,4 +1,4 @@
-#### 6.6.19 辞書型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dictionary-Types-1)
+#### 6.6.19 辞書型
 
 ディクショナリオブジェクトは、ユーザー定義の方法で情報をインデックス化するために使用されるデータ構造です。標準のSchemeでは、主な集約データ型はリストとベクトルです。リストは実際にはインデックス化されず、ベクトルは数値のみでインデックス化されます（例：`(vector-ref foo 5)`）。多くの場合、データを別の型でインデックス化すると便利です。たとえば、図書館の蔵書目録では、著者名で本を検索したい場合があります。ディクショナリは、このような方法で情報を整理するのに役立ちます。
 
@@ -12,4 +12,4 @@
 
 * * *
 
-次へ: [VList ベースのハッシュ リストまたは「VHash」](https://doc.guix.gnu.org/guile/latest/en/guile.html#VHashes)、前: [辞書型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dictionary-Types)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [VList ベースのハッシュ リストまたは「VHash」](06_06_21_vlistbased_hash_lists_or_vhashes.md#6621-vlist-ベースのハッシュ-リストまたはvhash)、前: [辞書型](#6619-辞書型)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

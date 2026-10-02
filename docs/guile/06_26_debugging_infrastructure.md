@@ -1,25 +1,25 @@
-### 6.26 デバッグインフラストラクチャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging-Infrastructure)
+### 6.26 デバッグインフラストラクチャ
 
 Guileは、シンプルなプリントベースのデバッグ機能に加え、より高度なデバッグ機能も提供しています。Guileの高度なデバッグ機能を理解するには、まずGuileがSchemeの制御スタックをどのように表現しているかを少し理解する必要があります。それが分かれば、仮想マシンが実行するように設定できる低レベルのトラップ呼び出し、そしてそれらの呼び出しに基づいて構築されるトラップとブレークポイントのインフラストラクチャについて説明できます。
 
-* [簡易デバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Debugging)
-* [評価とSchemeスタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model)
-* [ソースプロパティ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties)
+* [簡易デバッグ](#6261-シンプルなデバッグ)
+* [評価とSchemeスタック](#6262-評価とschemeスタック)
+* [ソースプロパティ](#6263-ソースプロパティ)
 * [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling )
-* [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps)
-* [GDB サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#GDB-Support)
+* [トラップ](#6265-トラップ)
+* [GDB サポート](#6266-gdb-サポート)
 
 * * *
 
-次へ: [評価とスキームスタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model)、上: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [評価とスキームスタック](#6262-評価とschemeスタック)、上: [デバッグインフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.1 シンプルなデバッグ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Debugging-1)
+#### 6.26.1 シンプルなデバッグ
 
-Guile は、REPL でのイントロスペクションとデバッグのための強力なツールを提供しており、このセクションの残りの部分とこのマニュアルの他の箇所で説明されています ([インタラクティブ デバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Interactive-Debugging) を参照)。ここでは、プログラムの実行中に値を表示することで単純なエラーを迅速に診断できる、一般的に「プリント デバッグ」と呼ばれる、より原始的なアプローチについて説明します。Guile は、この種のデバッグのための便利で強力なツールとして、一般的に `pk` (文字を順番に発音) として知られる `peek` プロシージャを提供しています。
+Guile は、REPL でのイントロスペクションとデバッグのための強力なツールを提供しており、このセクションの残りの部分とこのマニュアルの他の箇所で説明されています ([インタラクティブ デバッグ](04_programming_in_scheme.md#446-対話型デバッグ) を参照)。ここでは、プログラムの実行中に値を表示することで単純なエラーを迅速に診断できる、一般的に「プリント デバッグ」と呼ばれる、より原始的なアプローチについて説明します。Guile は、この種のデバッグのための便利で強力なツールとして、一般的に `pk` (文字を順番に発音) として知られる `peek` プロシージャを提供しています。
 
-Scheme手順: **peek** の内容… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peek)
+Scheme手順: **peek** の内容…
 
-Scheme Procedure: **pk** stuff … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk)
+Scheme Procedure: **pk** stuff …
 
 `write`を使用して、現在の出力ポートにデータを出力します。最後の引数を返します。
 
@@ -27,7 +27,7 @@ Scheme Procedure: **pk** stuff … [¶](https://doc.guix.gnu.org/guile/latest/en
 
 (define fire 'burns)
 
-([pk](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk) fire)
+([pk](#6261-シンプルなデバッグ) fire)
 ⇒
 
 ;;; (火傷)
@@ -36,8 +36,8 @@ Scheme Procedure: **pk** stuff … [¶](https://doc.guix.gnu.org/guile/latest/en
 コードの実行中に値を検査する例を以下に示します。
 
 (map (lambda (v)
-(if ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) v)
-([pk](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk) 'number->string ([number->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002d_003estring) v))
+(if ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) v)
+([pk](#6261-シンプルなデバッグ) 'number->string ([number->string](06_06_02_numerical_data_types.md#6629-数値と文字列の変換) v))
 v))
 （1 "2" "3" 4））
 ⇒
@@ -49,7 +49,7 @@ v))
 `pk` を使用する際によく用いられる手法として、値の由来を把握するために、値にシンボルをラベルとして付ける方法があります。必ずしもシンボルである必要はありませんが、シンボルを使うと便利です。以下に、そのパターンを示す少し複雑な例を示します。
 
 (define (pk-identity x)
-([pk](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk) 'arg-to-identity x))
+([pk](#6261-シンプルなデバッグ) 'arg-to-identity x))
 
 (pk-identity 42)
 ⇒
@@ -59,7 +59,7 @@ v))
 
 `pk`には注目すべき小さな癖が1つあります。現状では、複数値を返す場合、最初の値のみを返します。例えば、次のようになります。
 
-([pk](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk) 'vals ([values](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-values) 1 2 3))
+([pk](#6261-シンプルなデバッグ) 'vals ([values](06_11_controlling_the_flow_of_program_execution.md#6117-複数の値の返却と受け入れ) 1 2 3))
 ⇒
 
 ;;; (vals 1)
@@ -67,11 +67,11 @@ v))
 
 この制限を回避するには、このような複数値の戻り値をバインドしてから結果を検査すればよい。ただし、`pk` は単一の値しか返せない。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-11))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (srfi srfi-11))
 
 (let-values (((xyz)
-([values](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-values) 1 2 3)))
-([pk](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pk) 'vals xyz))
+([values](06_11_controlling_the_flow_of_program_execution.md#6117-複数の値の返却と受け入れ) 1 2 3)))
+([pk](#6261-シンプルなデバッグ) 'vals xyz))
 ⇒
 
 ;;; (値 1 2 3)
@@ -79,9 +79,9 @@ v))
 
 * * *
 
-次へ: [ソースプロパティ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties)、前: [簡易デバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Debugging)、上: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ソースプロパティ](#6263-ソースプロパティ)、前: [簡易デバッグ](#6261-シンプルなデバッグ)、上: [デバッグインフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.2 評価とSchemeスタック [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-and-the-Scheme-Stack)
+#### 6.26.2 評価とSchemeスタック
 
 Schemeスタックの概念は、多くのデバッグ作業において中心的な役割を果たします。Schemeスタックは、式の継続における保留中の関数戻り値を具体化した表現です。Guileはスタックを用いて関数呼び出しを実装するため、この具体化は複数のネストされたスタックフレームという形で表現され、それぞれのフレームは一連の引数に対するプロシージャの適用に対応します。
 
@@ -93,27 +93,27 @@ Schemeスタックは常に暗黙的に存在し、`make-stack`呼び出しに�
 
 したがって、実行中のプログラムでエラーが発生した場合、プログラムがブレークポイントに到達した場合、あるいはプログラマが任意の時点で、その時点におけるプログラムの状態は、その時点で論理的に実行中のすべてのプロシージャの適用をスタックとして表すことができます。各プロシージャの適用は「フレーム」と呼ばれます。プログラマは、スタックとそのフレームを調べることで、その時点におけるプログラムの状態についてより詳しく知ることができます。
 
-* [スタックキャプチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Capture)
-* [スタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stacks)
-* [フレーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Frames)
+* [スタックキャプチャ](#62621-スタックキャプチャ)
+* [スタック](#62622-スタック)
+* [フレーム](#62623-フレーム)
 
 * * *
 
-次へ: [スタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stacks)、上: [評価とスキームスタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [スタック](#62622-スタック)、上: [評価とスキームスタック](#6262-評価とschemeスタック) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.2.1 スタックキャプチャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Capture-1)
+#### 6.26.2.1 スタックキャプチャ
 
 Scheme プログラムは、コード内のどこでも、最初の引数 `#t` を指定して `make-stack` プリミティブを使用することで、その時点での Scheme スタックを記述する Scheme 値を構築できます。
 
-([make-stack](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dstack) #t)
+([make-stack](#62621-スタックキャプチャ) #t)
 ⇒
 #<スタック 25205a0>
 
 `start-stack` を使用すると、今後の `make-stack` 呼び出しで取得されるスタック範囲を制限できます。
 
-Scheme 手順: **make-stack** obj arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dstack)
+Scheme 手順: **make-stack** obj arg …
 
-C 関数: **scm\_make\_stack** (obj, args) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fstack)
+C 関数: **scm\_make\_stack** (obj, args)
 
 新しいスタックを作成します。objが`#t`の場合、現在の評価スタックがスタックフレームの作成に使用されます。そうでない場合は、obj（継続またはフレームオブジェクトである必要があります）からフレームが取得されます。
 
@@ -127,121 +127,121 @@ arg …は、整数、プロシージャ、アドレス範囲、およびプロ�
 
 最後のペアのouter_cut_iが欠落している場合は、0とみなされます。
 
-Scheme構文: **start-stack** id exp [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-start_002dstack)
+Scheme構文: **start-stack** id exp
 
 識別子IDを持つ新しい呼び出しスタック上でexpを評価します。評価中にexpが中断された場合、バックトレースにはexpの最上位フォームより前のフレームは表示されません。このマクロは、主にユーザーの利便性を考慮して、バックトレースとスタックプロシージャを意図的に制限する方法です。
 
 * * *
 
-次へ: [フレーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Frames)、前: [スタックキャプチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Capture)、上: [評価とスキームスタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Content s "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [フレーム](#62623-フレーム)、前: [スタックキャプチャ](#62621-スタックキャプチャ)、上: [評価とスキームスタック](#6262-評価とschemeスタック) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Content s "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.2.2 スタック [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stacks-1)
+#### 6.26.2.2 スタック
 
-Scheme手順: **stack?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stack_003f)
+Scheme手順: **stack?** obj
 
-C 関数: **scm\_stack\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstack_005fp)
+C 関数: **scm\_stack\_p** (obj)
 
 objが呼び出しスタックである場合は、`#t`を返します。
 
-Scheme Procedure: **stack-id** stack [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stack_002did)
+Scheme Procedure: **stack-id** stack
 
-C 関数: **scm\_stack\_id** (スタック) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstack_005fid)
+C 関数: **scm\_stack\_id** (スタック)
 
 `start-stack`によってスタックに与えられた識別子を返します。
 
-Scheme手順: **stack-length** stack [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stack_002dlength)
+Scheme手順: **stack-length** stack
 
-C 関数: **scm\_stack\_length** (スタック) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstack_005flength)
+C 関数: **scm\_stack\_length** (スタック)
 
 スタックの長さを返します。
 
-Scheme手順: **stack-ref** スタックインデックス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stack_002dref)
+Scheme手順: **stack-ref** スタックインデックス
 
-C 関数: **scm\_stack\_ref** (スタック、インデックス) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstack_005fref)
+C 関数: **scm\_stack\_ref** (スタック、インデックス)
 
 スタックからインデックス番目のフレームを返します。
 
-Scheme Procedure: **display-backtrace** stack port \[first \[depth \[highlights\]\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display_002dbacktrace)
+Scheme Procedure: **display-backtrace** stack port \[first \[depth \[highlights\]\]\]
 
-C 関数: **scm\_display\_backtrace\_with\_highlights** (stack、port、first、depth、highlights) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdisplay_005fbacktrace_005fwith_005fhighlights)
+C 関数: **scm\_display\_backtrace\_with\_highlights** (stack、port、first、depth、highlights)
 
-C 関数: **scm\_display\_backtrace** (stack、port、first、depth) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdisplay_005fbacktrace)
+C 関数: **scm\_display\_backtrace** (stack、port、first、depth)
 
 出力ポート port へのバックトレースを表示します。 stack はバックトレースを取得するスタック、first はスタック内の開始位置、depth は表示するフレーム数を指定します。first と depth には `#f` を指定でき、これはデフォルト値が使用されることを意味します。 highlights を指定する場合はリストである必要があります。このリストの要素は、バックトレース内のどこに表示されていてもハイライト表示されます。
 
 * * *
 
-前へ: [スタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stacks)、上へ: [評価とスキームスタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [スタック](#62622-スタック)、上へ: [評価とスキームスタック](#6262-評価とschemeスタック) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.2.3 フレーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Frames-1)
+#### 6.26.2.3 フレーム
 
-スキームプロシージャ: **frame?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_003f)
+スキームプロシージャ: **frame?** obj
 
-C 関数: **scm\_frame\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fframe_005fp)
+C 関数: **scm\_frame\_p** (obj)
 
 objがスタックフレームの場合は`#t`を返します。
 
-スキーム手順: **frame-previous** フレーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dprevious)
+スキーム手順: **frame-previous** フレーム
 
-C 関数: **scm\_frame\_previous** (frame) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fframe_005fprevious)
+C 関数: **scm\_frame\_previous** (frame)
 
 frame の前のフレームを返します。frame がスタック内の最初のフレームの場合は `#f` を返します。
 
-スキームプロシージャ: **frame-procedure-name** フレーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dprocedure_002dname)
+スキームプロシージャ: **frame-procedure-name** フレーム
 
-C 関数: **scm\_frame\_procedure\_name** (frame) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fframe_005fprocedure_005fname)
+C 関数: **scm\_frame\_procedure\_name** (frame)
 
 フレーム内で適用されているプロシージャの名前をシンボルとして返します。プロシージャに名前がない場合は `#f` を返します。
 
-Scheme手順: **frame-arguments** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002darguments)
+Scheme手順: **frame-arguments** frame
 
-C 関数: **scm\_frame\_arguments** (frame) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fframe_005farguments)
+C 関数: **scm\_frame\_arguments** (frame)
 
 frameの引数を返します。
 
-スキーム手順: **frame-address** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002daddress)
+スキーム手順: **frame-address** frame
 
 Scheme Procedure: **frame-instruction-pointer** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- frame_002dinstruction_002dpointer)
 
-Scheme Procedure: **frame-stack-pointer** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dstack_002dpointer)
+Scheme Procedure: **frame-stack-pointer** frame
 
-このフレームに関連付けられた 3 つの VM レジスタ (フレーム ポインタ (fp)、命令ポインタ (ip)、スタック ポインタ (sp)) へのアクセサーです。詳細については、[VM の概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Concepts) を参照してください。
+このフレームに関連付けられた 3 つの VM レジスタ (フレーム ポインタ (fp)、命令ポインタ (ip)、スタック ポインタ (sp)) へのアクセサーです。詳細については、[VM の概念](09_03_a_virtual_machine_for_guile.md#932-vm-の概念) を参照してください。
 
-スキーム手順: **frame-dynamic-link** フレーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002ddynamic_002dlink)
+スキーム手順: **frame-dynamic-link** フレーム
 
-スキーム手順: **frame-return-address** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dreturn_002daddress)
+スキーム手順: **frame-return-address** frame
 
-スキーム手順: **frame-mv-return-address** frame [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dmv_002dreturn_002daddress)
+スキーム手順: **frame-mv-return-address** frame
 
-フレーム内に保存された 3 つの VM レジスタ (前のフレーム ポインタ、単一値の戻りアドレス、および複数値の戻りアドレス) へのアクセサー。詳細については、[スタック レイアウト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Layout) を参照してください。
+フレーム内に保存された 3 つの VM レジスタ (前のフレーム ポインタ、単一値の戻りアドレス、および複数値の戻りアドレス) へのアクセサー。詳細については、[スタック レイアウト](09_03_a_virtual_machine_for_guile.md#933-スタックレイアウト) を参照してください。
 
-Scheme 手順: **frame-bindings** フレーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dbindings)
+Scheme 手順: **frame-bindings** フレーム
 
 フレーム内で有効なローカル変数を示すバインディングレコードのリストを返します。
 
-Scheme手順: **frame-lookup-binding** frame var [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-frame_002dlookup_002dbinding)
+Scheme手順: **frame-lookup-binding** frame var
 
 フレーム内のバインディングを取得し、名前が var である最初のバインディングを返します。それ以外の場合は `#f` を返します。
 
-Scheme 手順: **binding-index** バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002dindex)
+Scheme 手順: **binding-index** バインディング
 
-Scheme Procedure: **binding-name** binding [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002dname)
+Scheme Procedure: **binding-name** binding
 
-Scheme 手順: **binding-slot** バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002dslot)
+Scheme 手順: **binding-slot** バインディング
 
-Scheme 手順: **binding-representation** バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002drepresentation)
+Scheme 手順: **binding-representation** バインディング
 
 バインディング内の各種フィールドへのアクセサー。暗黙の「呼び出し先」引数はインデックス0、最初の引数はインデックス1、以下同様に引数の末尾まで続きます。その後は一時変数です。変数が破棄された場合、使用できなくなる可能性があることに注意してください。
 
-Scheme手順: **binding-ref** バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002dref)
+Scheme手順: **binding-ref** バインディング
 
-Scheme 手順: **binding-set!** binding val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-binding_002dset_0021)
+Scheme 手順: **binding-set!** binding val
 
 フレーム内のローカル変数の値へのアクセサー。
 
-Scheme Procedure: **display-application** frame \[port \[indent\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display_002dapplication)
+Scheme Procedure: **display-application** frame \[port \[indent\]\]
 
-C 関数: **scm\_display\_application** (フレーム、ポート、インデント) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdisplay_005fapplication)
+C 関数: **scm\_display\_application** (フレーム、ポート、インデント)
 
 プロシージャアプリケーションフレームを出力ポート port に表示します。indent は出力のインデントを指定します。
 
@@ -249,11 +249,11 @@ C 関数: **scm\_display\_application** (フレーム、ポート、インデン
 
 * * *
 
-次へ: [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling)、前: [評価と Scheme スタック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluation-Model)、上: [デバッグ インフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プログラムによるエラー処理](#6264-プログラムによるエラー処理)、前: [評価と Scheme スタック](#6262-評価とschemeスタック)、上: [デバッグ インフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.3 ソースプロパティ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties-1)
+#### 6.26.3 ソースプロパティ
 
-ポートから解析されたデータムにソースの場所を関連付ける最適な方法は何でしょうか？ 正しい方法は、解析された各データムのすべてのコンポーネントに注釈を付けることです。`read-syntax` の詳細については、[コンパイラ向け Scheme コードの読み取り](https://doc.guix.gnu.org/guile/latest/en/guile.html#Annotated-Scheme-Read) を参照してください。
+ポートから解析されたデータムにソースの場所を関連付ける最適な方法は何でしょうか？ 正しい方法は、解析された各データムのすべてのコンポーネントに注釈を付けることです。`read-syntax` の詳細については、[コンパイラ向け Scheme コードの読み取り](06_16_reading_and_evaluating_scheme_code.md#6163-コンパイラのためのスキームコードの読み方) を参照してください。
 
 しかし、Guileが`read-syntax`を使用するようになったのは2021年のことである。それまでの30年間は、_source properties_と呼ばれる仕組みを使用していた。
 
@@ -261,81 +261,81 @@ Guileはファイルまたは標準入力からSchemeコードを読み込む際
 
 ただし、このサイドテーブルがデータとソースプロパティを関連付ける方法には制限があります。Guileは、ソースプロパティを新しく割り当てられたオブジェクトにのみ関連付けることができるのです。これは、個々のシンボル、キーワード、文字、ブール値、または小さな整数を除外します。この制限が、最終的に`read-syntax`への切り替えを促しました。
 
-Scheme Procedure: **supports-source-properties?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-supports_002dsource_002dproperties_003f)
+Scheme Procedure: **supports-source-properties?** obj
 
-C 関数: **scm\_supports\_source\_properties\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsupports_005fsource_005fproperties_005fp)
+C 関数: **scm\_supports\_source\_properties\_p** (obj)
 
 ソースプロパティをオブジェクトに関連付けることができる場合は#tを返し、そうでない場合は#fを返します。
 
-ソースプロパティの記録は、「positions」という名前の読み取りオプションによって制御されます（[Reading Scheme Code](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Read)を参照）。このオプションはデフォルトで_オン_になっています。ただし、`read-syntax`が利用可能になったため、Guileは将来的にこのフラグのデフォルト値をオフに変更する可能性があります。
+ソースプロパティの記録は、「positions」という名前の読み取りオプションによって制御されます（[Reading Scheme Code](06_16_reading_and_evaluating_scheme_code.md#6162-リーディングスキームコード)を参照）。このオプションはデフォルトで_オン_になっています。ただし、`read-syntax`が利用可能になったため、Guileは将来的にこのフラグのデフォルト値をオフに変更する可能性があります。
 
 以下の手順を使用すると、読み取り式のソースプロパティにアクセスして設定できます。
 
-スキーム手順: **set-source-properties!** オブジェクトリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dsource_002dproperties_0021)
+スキーム手順: **set-source-properties!** オブジェクトリスト
 
-C 関数: **scm\_set\_source\_properties\_x** (obj, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fsource_005fproperties_005fx)
+C 関数: **scm\_set\_source\_properties\_x** (obj, alist)
 
 関連付けリスト alist を obj のソースプロパティリストとしてインストールします。
 
-Scheme Procedure: **set-source-property!** obj key datum [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dsource_002dproperty_0021)
+Scheme Procedure: **set-source-property!** obj key datum
 
-C 関数: **scm\_set\_source\_property\_x** (obj, key, datum) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fsource_005fproperty_005fx)
+C 関数: **scm\_set\_source\_property\_x** (obj, key, datum)
 
 オブジェクト obj のソースプロパティを、キーで指定されたデータムに設定します。通常、キーはシンボルになります。
 
-Scheme手順: **source-properties** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_002dproperties)
+Scheme手順: **source-properties** obj
 
-C 関数: **scm\_source\_properties** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsource_005fproperties)
+C 関数: **scm\_source\_properties** (obj)
 
 obj のソースプロパティ関連付けリストを返します。
 
-Scheme Procedure: **source-property** obj key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-source_002dproperty)
+Scheme Procedure: **source-property** obj key
 
-C 関数: **scm\_source\_property** (obj, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsource_005fproperty)
+C 関数: **scm\_source\_property** (obj, key)
 
 objのソースプロパティから、キーで指定されたプロパティを返します。
 
 `positions` リーダーオプションが有効になっている場合、サポートされている式では、`filename`、`line`、`column` プロパティに値が設定されます。
 
-ソースプロパティは構文オブジェクトにも関連付けられています。手続き型マクロは、`syntax-source`アクセサを使用して入力のソース位置を取得できます。詳細については、[構文変換ヘルパー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Transformer-Helpers)を参照してください。
+ソースプロパティは構文オブジェクトにも関連付けられています。手続き型マクロは、`syntax-source`アクセサを使用して入力のソース位置を取得できます。詳細については、[構文変換ヘルパー](06_08_macros.md#684-構文変換ヘルパー)を参照してください。
 
 Guileは、`syntax-source`に基づいて構築された便利なマクロもいくつか定義しています。
 
-スキーム構文: **current-source-location** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dsource_002dlocation)
+スキーム構文: **current-source-location**
 
 `(current-source-location)` フォームの場所に対応するソースプロパティに展開します。
 
-Scheme構文: **current-filename** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dfilename)
+Scheme構文: **current-filename**
 
 現在のファイル名に展開されます。これは、`(current-filename)` フォームが表示されているファイル名です。この情報が利用できない場合は、`#f` に展開されます。
 
-defmacros ([Lispスタイルのマクロ定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defmacros)を参照) で行き詰まっていて、ソース情報を保持したい場合は、次のヘルパー関数が役立つかもしれません。
+defmacros ([Lispスタイルのマクロ定義](06_08_macros.md#685-lispスタイルのマクロ定義)を参照) で行き詰まっていて、ソース情報を保持したい場合は、次のヘルパー関数が役立つかもしれません。
 
-Scheme Procedure: **cons-source** xorig xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons_002dsource)
+Scheme Procedure: **cons-source** xorig xy
 
-C 関数: **scm\_cons\_source** (xorig, x, y) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcons_005fsource)
+C 関数: **scm\_cons\_source** (xorig, x, y)
 
 carとcdrがそれぞれxとyである新しいペアを作成して返します。xorigに関連付けられているソースプロパティは、新しいペアにも関連付けられます。
 
 * * *
 
-次へ: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps)、前: [ソースプロパティ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Source-Properties)、上: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [トラップ](#6265-トラップ)、前: [ソースプロパティ](#6263-ソースプロパティ)、上: [デバッグインフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.4 プログラムによるエラー処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling-1)
+#### 6.26.4 プログラムによるエラー処理
 
 良くも悪くも、すべてのプログラムにはバグが存在し、バグへの対処はプログラミングの一部です。このセクションでは、例外を発生させるバグ、つまり、自分のコード、ライブラリ、またはGuile自体から発生するバグについて解説します。
 
-* [例外のキャッチ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Catching-Exceptions)
-* [プリアンワインドデバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pre_002dUnwind-Debugging)
-* [エラー処理を伴う呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Error-Handling)
-* [Stack Overflow](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Overflow)
-* [デバッグオプション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debug-Options)
+* [例外のキャッチ](#62641-例外のキャッチ)
+* [プリアンワインドデバッグ](#62642-プリアンワインドデバッグ)
+* [エラー処理を伴う呼び出し](#62643-エラー処理を伴う呼び出し)
+* [Stack Overflow](#62644-スタックオーバーフロー)
+* [デバッグオプション](#62645-デバッグオプション)
 
 * * *
 
-次へ: [プリアンワインドデバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pre_002dUnwind-Debugging)、上: [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プリアンワインドデバッグ](#62642-プリアンワインドデバッグ)、上: [プログラムによるエラー処理](#6264-プログラムによるエラー処理) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.4.1 例外のキャッチ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Catching-Exceptions-1)
+#### 6.26.4.1 例外のキャッチ
 
 Scheme プログラムでエラーが発生した際に、できるだけ多くの有用なコンテキスト情報を表示できることが一般的な要件です。エラーに関する最も直接的な情報は、エラーの種類（例えば「ゼロ除算」）と、エラーを通知したコードが明示的に指定したパラメータです。この情報は、エラーを通知する `error` または `raise-exception` 呼び出し（エラーが C コードによって検出された場合は、C コードでの同等の呼び出し）から発生し、最も内側の適用可能な例外ハンドラのハンドラプロシージャに自動的に渡されます。
 
@@ -344,26 +344,26 @@ Scheme プログラムでエラーが発生した際に、できるだけ多く�
 例えば、エラーが発生したときにメッセージを表示し、#f を返すには、次のようにします。
 
 (define (catch-all thunk)
-([with-exception-handler](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dexception_002dhandler)
+([with-exception-handler](06_11_controlling_the_flow_of_program_execution.md#61182-例外の発生と処理)
 (ラムダ (exn)
-([format](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-format) ([current-error-port](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002derror_002dport))
+([format](07_05_20_srfi28_basic_format_strings.md#7520-srfi-28---基本フォーマット文字列) ([current-error-port](06_12_input_and_output.md#6129-入力出力およびエラーのデフォルトポート))
 「捕捉されなかった例外: ~s\\n」exn)
 #f)
 ドスン
 #:リラックス？ #t))
 
 （包括的な）
-(lambda () ([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "野菜ではありません: トマト")))
+(lambda () ([error](04_programming_in_scheme.md#4446-デバッグコマンド) "野菜ではありません: トマト")))
 ⊣捕捉されなかった例外: #<&exception-with-kind-and-args ...>
 ⇒ #f
 
-詳細については、[例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)を参照してください。
+詳細については、[例外](06_11_controlling_the_flow_of_program_execution.md#6118-例外)を参照してください。
 
 * * *
 
-次へ: [call-with-error-handling](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Error-Handling)、前: [Catching Exceptions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Catching-Exceptions)、上: [Programmatic Error Handling](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [call-with-error-handling](#62643-エラー処理を伴う呼び出し)、前: [Catching Exceptions](#62641-例外のキャッチ)、上: [Programmatic Error Handling](#6264-プログラムによるエラー処理) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "索引")\]
 
-#### 6.26.4.2 プリアンワインドデバッグ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pre_002dUnwind-Debugging-1)
+#### 6.26.4.2 プリアンワインドデバッグ
 
 何らかの問題が発生した場合、必要なのは例外的な状況の表現だけでなく、その状況を引き起こしたコンテキストも含まれることがあります。前のセクションの例では、`with-exception-handler` に `#:unwind #t` を渡しており、これは `raise-exception` が例外ハンドラを呼び出す前にスタックをアンワインドする必要があることを示しています。しかし、このアプローチを採用せず、代わりに例外ハンドラを `raise-exception` のコンテキストで呼び出すようにすれば、バックトレースを出力したり、再帰デバッガを起動したり、その他の「アンワインド前」のアクションを実行したりできます。
 
@@ -378,11 +378,11 @@ Scheme プログラムでエラーが発生した際に、できるだけ多く�
 
 ここでは、組み込みの`backtrace`プロシージャを使用してバックトレースを出力します。
 
-Scheme手順: **バックトレース** \[ハイライト\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-backtrace-1)
+Scheme手順: **バックトレース** \[ハイライト\]
 
-C 関数: **scm\_backtrace\_with\_highlights** (ハイライト) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbacktrace_005fwith_005fhighlights)
+C 関数: **scm\_backtrace\_with\_highlights** (ハイライト)
 
-C 関数: **scm\_backtrace** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbacktrace)
+C 関数: **scm\_backtrace** ()
 
 現在のスタックのバックトレースを現在の出力ポートに表示します。highlightsを指定する場合はリストを指定してください。このリストの要素は、バックトレース内の出現箇所すべてでハイライト表示されます。
 
@@ -411,21 +411,21 @@ C 関数: **scm\_backtrace** () [¶](https://doc.guix.gnu.org/guile/latest/en/gu
 (キャンセル #f))
 ドスン))))
 
-`make-stack` などを使用してスタックを走査する、より強力なプログラム的な方法もあります。詳細については、[Stacks](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stacks) および [Frames](https://doc.guix.gnu.org/guile/latest/en/guile.html#Frames) に記載されている API を参照してください。
+`make-stack` などを使用してスタックを走査する、より強力なプログラム的な方法もあります。詳細については、[Stacks](#62622-スタック) および [Frames](#62623-フレーム) に記載されている API を参照してください。
 
 * * *
 
-次へ: [スタックオーバーフロー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Overflow)、前: [プリアンワインドデバッグ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pre_002dUnwind-Debugging)、上: [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [スタックオーバーフロー](#62644-スタックオーバーフロー)、前: [プリアンワインドデバッグ](#62642-プリアンワインドデバッグ)、上: [プログラムによるエラー処理](#6264-プログラムによるエラー処理) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.4.3 エラー処理を伴う呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#call_002dwith_002derror_002dhandling)
+#### 6.26.4.3 エラー処理を伴う呼び出し
 
 Guile REPL コード (system/repl/repl.scm および関連ファイル) は、REPL に入力された式でエラーが発生した場合に、プリアンワインド ハンドラを備えた `catch` を使用してスタックをキャプチャし、エラーのコンテキストでそのスタックを対話的にデバッグします。
 
 これらの手順は、ユーザープログラムが使用できるよう、`(system repl error-handling)`モジュールに用意されています。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) repl エラー処理))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) repl エラー処理))
 
-Scheme Procedure: **call-with-error-handling** thunk \[#:on-error on-error='debug\] \[#:post-error post-error='catch\] \[#:pass-keys pass-keys='(quit)\] \[#:report-keys report-keys='(stack-overflow)\] \[#:trap-handler trap-handler='debug\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002derror_002dhandling)
+Scheme Procedure: **call-with-error-handling** thunk \[#:on-error on-error='debug\] \[#:post-error post-error='catch\] \[#:pass-keys pass-keys='(quit)\] \[#:report-keys report-keys='(stack-overflow)\] \[#:trap-handler trap-handler='debug\]
 
 エラーが処理されるコンテキストでサンクを呼び出します。
 
@@ -449,7 +449,7 @@ Scheme Procedure: **call-with-error-handling** thunk \[#:on-error on-error='debu
 
 トラップハンドラを指定します。ブレークポイントに到達したときに何を実行するかを指定します。
 
-有効なオプションは、デバッガーを起動する`debug`、何も実行しない`pass`、トラップを完全に無効にする`disabled`です。詳細については、[トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps)を参照してください。
+有効なオプションは、デバッガーを起動する`debug`、何も実行しない`pass`、トラップを完全に無効にする`disabled`です。詳細については、[トラップ](#6265-トラップ)を参照してください。
 
 パスキー
 
@@ -461,13 +461,13 @@ Scheme Procedure: **call-with-error-handling** thunk \[#:on-error on-error='debu
 
 * * *
 
-次へ: [デバッグ オプション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debug-Options)、前: [エラー処理付き呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Error-Handling)、上: [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [デバッグ オプション](#62645-デバッグオプション)、前: [エラー処理付き呼び出し](#62643-エラー処理を伴う呼び出し)、上: [プログラムによるエラー処理](#6264-プログラムによるエラー処理) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.4.4 スタックオーバーフロー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Overflow-1)
+#### 6.26.4.4 スタックオーバーフロー
 
 Schemeプログラムが末尾以外の位置で関数呼び出しを行うたびに、新しいフレームがスタックにプッシュされます。関数から値を返すと、スタックの最上位フレームがポップされます。スタックフレームはメモリを消費しますが、メモリは無限ではないため、深い再帰によってGuileのメモリが不足する可能性があります。スタックメモリが不足する状態を「スタックオーバーフロー」と呼びます。
 
-#### スタック制限 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Limits)
+#### スタック制限
 
 ほとんどのプログラミング言語には、スタックオーバーフローに関する深刻な問題があります。例えば、C言語では、スタックを使いすぎるとプログラムが「未定義動作」を起こし、運が良ければクラッシュします。C言語では、関数がどれだけのスタックを使用するか、またユーザーシステムによって課されるスタック制限が事前にわからないため、特に問題となります。しかも、スタック制限はメモリ全体のサイズに比べて非常に小さい場合が多いのです。
 
@@ -493,7 +493,7 @@ Pythonのようなマネージド言語は、スタックオーバーフロー�
 
 GuileにはSchemeコードのスタック制限はありません。スレッドがGuileを初めて呼び出すと、小さなスタック（メモリ1ページ分）が割り当てられます。メモリ制限に達しそうになると、Guileはスタックを2倍に拡張します。ガベージコレクションが発生すると、Guileはスタックの未使用部分をオペレーティングシステムに返しますが、スタックが縮小することはありません。このようにして、スタックはGuileプロセスが使用できるすべてのメモリを消費するまで拡張でき、再帰的な計算が最終的に完了すると、そのスタックメモリはシステムに返されます。
 
-#### 例外的な状況 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptional-Situations)
+#### 例外的な状況
 
 もちろん、スタックメモリが不足する可能性は依然としてあります。その最も一般的な原因は、次のような無制限の再帰を引き起こすプログラムのバグです。
 
@@ -502,17 +502,17 @@ GuileにはSchemeコードのスタック制限はありません。スレッド
 (cons (f (car l)) (faulty-map fl))
 '()))
 
-バグに気づきましたか？`faulty-map` の再帰呼び出しが `(cdr l)` ではなく l で再帰していました。このプログラムを実行すると、Guile がシステム内のすべてのメモリを使い果たし、最終的に Guile はスタックを拡張できなくなります。その時点で問題が発生します。Guile はスタックを巻き戻してメモリをシステムに戻すために例外を発生させる必要がありますが、ユーザーはスタックが巻き戻される前に実行したい例外ハンドラ ([例外の発生と処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions) を設定している可能性があり、それらを実行するためのスタックがありません。
+バグに気づきましたか？`faulty-map` の再帰呼び出しが `(cdr l)` ではなく l で再帰していました。このプログラムを実行すると、Guile がシステム内のすべてのメモリを使い果たし、最終的に Guile はスタックを拡張できなくなります。その時点で問題が発生します。Guile はスタックを巻き戻してメモリをシステムに戻すために例外を発生させる必要がありますが、ユーザーはスタックが巻き戻される前に実行したい例外ハンドラ ([例外の発生と処理](06_11_controlling_the_flow_of_program_execution.md#61182-例外の発生と処理) を設定している可能性があり、それらを実行するためのスタックがありません。
 
 したがって、この場合、Guile はアンワインド専用の例外を発生させ、プリアンワインド ハンドラは実行されません。これは非常に特殊なケースであるため、ユーザーがプリアンワインド ハンドラからバックトレースを取得できると期待していた場合に備えて、Guile はコンソールにメッセージを出力します。
 
-#### 暴走再帰 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Runaway-Recursion)
+#### 暴走再帰
 
 とはいえ、この障害モードはあまり好ましいものではありません。REPL のように、実行中に対話的にプログラムを構築する環境を使用している場合、意図しない暴走再帰を検出するために、構築中のプログラム部分に人為的なスタック制限を課したい場合があります。そのためには、`(system vm vm)` の `call-with-stack-overflow-handler` を使用できます。
 
 (use-module (system vm vm))
 
-Scheme 手順: **call-with-stack-overflow-handler** 制限サンクハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dstack_002doverflow_002dhandler)
+Scheme 手順: **call-with-stack-overflow-handler** 制限サンクハンドラ
 
 スタック制限が削減され、追加のワードが制限されている環境で、サンクを呼び出します。制限に達すると、エラーの動的環境でハンドラ（サンク）が呼び出されます。ハンドラの呼び出し中は、スタック制限とハンドラは、`call-with-stack-overflow-handler` が呼び出されたときの値に復元されます。
 
@@ -522,13 +522,13 @@ Scheme 手順: **call-with-stack-overflow-handler** 制限サンクハンドラ 
 
 Guileがスタックを拡張できない場合にスローされるアンワインド専用例外とは異なり、スタックオーバーフローハンドラによってスローされる例外は、プリアンワインドハンドラを呼び出す可能性があります。実際、スタックオーバーフローハンドラ自体が一種のプリアンワインドハンドラです。スタック制限を課すコードが、内部サンクからの悪意のあるプリアンワインドハンドラから自身を保護したい場合は、内部サンクによって捕捉される可能性のある例外をスローするのではなく、独自のプロンプトに異常終了する必要があります。
 
-#### Cスタックの使用方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Stack-Usage)
+#### Cスタックの使用方法
 
 GuileでもCスタックの容量が不足する可能性があります。ループ内でプリミティブプロシージャを呼び出し、さらにそのプリミティブプロシージャがSchemeプロシージャを呼び出すと、Cスタック領域が消費されます。GuileはCスタック領域の過剰な消費を検出し、プロセスの利用可能なスタック（オペレーティングシステムによって割り当てられたもの）の80%に達した場合、または厳密な制限がない場合は160キロワードに達した場合にエラーをスローします。
 
 例えば、サンクを呼び出すプリミティブである`call-with-vm`をループ処理すると、次のようになります。
 
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) ([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) vm vm))
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) ([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) vm vm))
 scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- _003e) (let lp () (call-with-vm lp))
 エラー: スタックオーバーフロー
 
@@ -536,19 +536,19 @@ scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#inde
 
 このようなエラーが発生した場合は、スタック領域の使用量を少なくするようにコードを書き直すか、最大スタックサイズを増やしてみてください。最大スタックサイズを増やすには、`debug-set!`を使用します。例：
 
-([debug-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-debug_002dset_0021) スタック 200000)
+([debug-set!](#62645-デバッグオプション) スタック 200000)
 
 次のセクションでは、`debug-set!`についてさらに詳しく説明します。もちろん、C言語のトランポリンを使ったループを避けることで、コードがリソースをあまり消費せずに動作するようにするのが最善です。
 
 * * *
 
-前へ: [Stack Overflow](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Overflow)、上へ: [Programmatic Error Handling](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Stack Overflow](#62644-スタックオーバーフロー)、上へ: [Programmatic Error Handling](#6264-プログラムによるエラー処理) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.4.5 デバッグオプション [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debug-options)
+#### 6.26.4.5 デバッグオプション
 
 `backtrace`プロシージャおよびデフォルトのエラーハンドラの動作は、デバッグオプションによってパラメータ化できます。
 
-Scheme手順: **debug-options** \[setting\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-debug_002doptions)
+Scheme手順: **debug-options** \[setting\]
 
 デバッグオプションの現在の設定を表示します。設定が省略された場合は、現在の読み取りオプションの短縮形のみが表示されます。それ以外の場合、設定がシンボル「help」であれば、オプションの完全な説明が表示されます。
 
@@ -568,11 +568,11 @@ warn-deprecated いいえ 非推奨の機能が使用された場合に警告を
 
 ブール値のオプションは、`debug-enable`と`debug-disable`で切り替えることができます。ブール値以外のオプションは、`debug-set!`を使用して設定する必要があります。
 
-Scheme Procedure: **debug-enable** option-name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-debug_002denable)
+Scheme Procedure: **debug-enable** option-name
 
-Scheme Procedure: **debug-disable** option-name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-debug_002ddisable)
+Scheme Procedure: **debug-disable** option-name
 
-Scheme構文: **debug-set!** オプション名 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-debug_002dset_0021)
+Scheme構文: **debug-set!** オプション名 値
 
 デバッグオプションを変更します。`debug-enable`はブール値オプションと組み合わせて使用し、オプションを有効にします。`debug-disable`はオプションを無効にします。
 
@@ -580,9 +580,9 @@ Scheme構文: **debug-set!** オプション名 値 [¶](https://doc.guix.gnu.or
 
 * * *
 
-次へ: [GDB サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#GDB-Support)、前: [プログラムによるエラー処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programmatic-Error-Handling)、上: [デバッグ インフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [GDB サポート](#6266-gdb-サポート)、前: [プログラムによるエラー処理](#6264-プログラムによるエラー処理)、上: [デバッグ インフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5 トラップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps-1)
+#### 6.26.5 トラップ
 
 Guileの仮想マシンは、重要なポイントでユーザーが指定した任意のプロシージャを呼び出すように構成できる。
 
@@ -594,18 +594,18 @@ VMフックは非常に低レベルなため、GuileにはVMフックの上に�
 
 以下のサブセクションでは、トラップを使用したいユーザーと、インターフェースの仕組みを理解したい開発者の両方に向けて、これらすべてを詳細に説明します。
 
-* [VM フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Hooks)
-* [トラップインターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-Interface)
-* [低レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Low_002dLevel-Traps)
-* [トレーストラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tracing-Traps)
-* [トラップ状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-States)
-* [高レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#High_002dLevel-Traps)
+* [VM フック](#62651-vmフック)
+* [トラップインターフェース](#62652-トラップインターフェース)
+* [低レベルトラップ](#62653-低レベルトラップ)
+* [トレーストラップ](#62654-トレーストラップ)
+* [トラップ状態](#62655-トラップ状態)
+* [高レベルトラップ](#62656-高レベルトラップ)
 
 * * *
 
-次へ: [トラップインターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-Interface)、上へ: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [トラップインターフェース](#62652-トラップインターフェース)、上へ: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.1 VMフック [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Hooks-1)
+#### 6.26.5.1 VMフック
 
 Guileで実行されるすべてのものは、その仮想マシン上で動作します。仮想マシンとは、Schemeプログラムが実行できる一連の操作を定義するCプログラムです。
 
@@ -613,9 +613,9 @@ Guileには複数のVM「エンジン」が存在することに注意してく�
 
 フックを使用して実行されていることを確認するには、プログラムを実行する際に Guile に `--debug` オプションを渡すか、`call-with-vm` および `set-vm-engine!` プロシージャを使用して、`debug` エンジンを備えた VM で実行されていることを確認してください。
 
-話が逸れますが、GuileのVMには、異なるタイミングで実行できる4つの異なるフックがあります。実装上の理由から、これらのフックは実際には第一級のSchemeフック（[Hooks](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hooks)を参照）では実装されておらず、アドホックなインターフェースを使用して管理されています。
+話が逸れますが、GuileのVMには、異なるタイミングで実行できる4つの異なるフックがあります。実装上の理由から、これらのフックは実際には第一級のSchemeフック（[Hooks](06_09_general_utility_functions.md#696-フック)を参照）では実装されておらず、アドホックなインターフェースを使用して管理されています。
 
-VMフックは、現在のフレームという1つの引数で呼び出されます。[フレーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Frames)を参照してください。これらのフックは非常に頻繁に発生する可能性があるため、Guileは厄介なことに、ガベージコレクションされるヒープではなく、Cスタック上にフレームを割り当てます。
+VMフックは、現在のフレームという1つの引数で呼び出されます。[フレーム](#62623-フレーム)を参照してください。これらのフックは非常に頻繁に発生する可能性があるため、Guileは厄介なことに、ガベージコレクションされるヒープではなく、Cスタック上にフレームを割り当てます。
 
 つまり、フレームはフック呼び出しの動的な範囲内でのみ有効です。フックプロシージャがフックの範囲外でフレームへの参照を保持すると、問題が発生します。
 
@@ -625,35 +625,35 @@ VMフックは、現在のフレームという1つの引数で呼び出され�
 
 これらの関数はすべて、現在のスレッドの仮想マシンに対してのみ暗黙的に作用します。
 
-Scheme Procedure: **vm-add-next-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dadd_002dnext_002dhook_0021)
+Scheme Procedure: **vm-add-next-hook!** f
 
 命令が完了（および実行される）前にfを呼び出すように設定する。
 
-Scheme Procedure: **vm-add-apply-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dadd_002dapply_002dhook_0021)
+Scheme Procedure: **vm-add-apply-hook!** f
 
 手続きが適用されるたびに、関数 f を呼び出すように設定します。フレームのローカル変数には、呼び出し先と、呼び出しへの引数が続きます。
 
 手続きの適用は、継続のプッシュやポップとはやや直交することに注意してください。呼び出しが、以前に存在していたフレームに関して末尾呼び出しであるかどうかを知るには、フレームポインタの値を前のフレームポインタの値と比較します。
 
-Scheme Procedure: **vm-add-return-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dadd_002dreturn_002dhook_0021)
+Scheme Procedure: **vm-add-return-hook!** f
 
 フレームから戻る前に関数fを呼び出すように設定してください。フレーム内の値は、フレームの戻り値となります。
 
 なお、「内部」フレーム、つまりそのフレームポインタを持つ呼び出しが直前に行われていないフレームから戻ることも可能です。この場合、構成可能な継続を適用するか、保存された非限定継続を復元するかのいずれかの理由で、非ローカルな制御フロージャンプに対応します。
 
-Scheme 手順: **vm-add-abort-hook!** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dadd_002dabort_002dhook_0021)
+Scheme 手順: **vm-add-abort-hook!**
 
-プロンプトに異常終了した後、f を呼び出すように設定してください。[プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts)を参照してください。
+プロンプトに異常終了した後、f を呼び出すように設定してください。[プロンプト](06_11_controlling_the_flow_of_program_execution.md#6115-プロンプト)を参照してください。
 
 残念ながら、プロンプトハンドラに渡される値はfから簡単には利用できません。
 
-Scheme Procedure: **vm-remove-next-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dremove_002dnext_002dhook_0021)
+Scheme Procedure: **vm-remove-next-hook!** f
 
-Scheme Procedure: **vm-remove-apply-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dremove_002dapply_002dhook_0021)
+Scheme Procedure: **vm-remove-apply-hook!** f
 
-Scheme Procedure: **vm-remove-return-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dremove_002dreturn_002dhook_0021)
+Scheme Procedure: **vm-remove-return-hook!** f
 
-Scheme Procedure: **vm-remove-abort-hook!** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dremove_002dabort_002dhook_0021)
+Scheme Procedure: **vm-remove-abort-hook!** f
 
 現在のスレッドに対応するVMフックからfを削除します。
 
@@ -661,21 +661,21 @@ Scheme Procedure: **vm-remove-abort-hook!** f [¶](https://doc.guix.gnu.org/guil
 
 利便性を考慮し、VMがフックを発火する際には、トラップレベルを一時的に0に設定します。これにより、フックの処理中にフックが発火するのを防ぎます。フック処理が完了すると、トレースレベルは元の値に戻ります。
 
-スキーム手順: **vm-trace-level** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vm_002dtrace_002dlevel)
+スキーム手順: **vm-trace-level**
 
 VMの「トレースレベル」を取得します。値が正の場合、VMに関連付けられたトレースフックが実行されます。初期トレースレベルは0です。
 
-Scheme Procedure: **set-vm-trace-level!** level [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dvm_002dtrace_002dlevel_0021)
+Scheme Procedure: **set-vm-trace-level!** level
 
 VMの「トレースレベル」を設定します。
 
-Guileの仮想マシンに関する詳細は、[Guile用仮想マシン](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Virtual-Machine-for-Guile)を参照してください。
+Guileの仮想マシンに関する詳細は、[Guile用仮想マシン](09_03_a_virtual_machine_for_guile.md#93-guile-用仮想マシン)を参照してください。
 
 * * *
 
-次へ: [低レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Low_002dLevel-Traps)、前: [VM フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Hooks)、上: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [低レベルトラップ](#62653-低レベルトラップ)、前: [VM フック](#62651-vmフック)、上: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.2 トラップインターフェース[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-Interface-1)
+#### 6.26.5.2 トラップインターフェース
 
 フックによって提供される機能は素晴らしいが、フックだけではユーザーがやりたいことと完全に一致することはほとんどない。
 
@@ -697,13 +697,13 @@ Guileの仮想マシンに関する詳細は、[Guile用仮想マシン](https:/
 
 * * *
 
-次へ: [トラップのトレース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tracing-Traps)、前: [トラップインターフェイス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-Interface)、上: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [トラップのトレース](#62654-トレーストラップ)、前: [トラップインターフェイス](#62652-トラップインターフェース)、上: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.3 低レベルトラップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Low_002dLevel-Traps-1)
+#### 6.26.5.3 低レベルトラップ
 
 これまでのセクションをまとめると、トラップは有効または無効にすることができ、有効にすると、さまざまな VM フックに追加されます。
 
-ただし、_トラップは VM トレース レベルを上げません_ という点に注意してください。トラップを作成すると、トラップは有効になりますが、VM のトレース レベルを上げる他の何かがない限り ( [VM フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Hooks) )、トラップは発生しません。どのトラップが有効になっているかを全体的に把握できないと、VM トレース レベルを正しく設定するのは難しいことがわかります。この問題に対する Guile の解決策については、[トラップ状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-States) を参照してください。
+ただし、_トラップは VM トレース レベルを上げません_ という点に注意してください。トラップを作成すると、トラップは有効になりますが、VM のトレース レベルを上げる他の何かがない限り ( [VM フック](#62651-vmフック) )、トラップは発生しません。どのトラップが有効になっているかを全体的に把握できないと、VM トレース レベルを正しく設定するのは難しいことがわかります。この問題に対する Guile の解決策については、[トラップ状態](#62655-トラップ状態) を参照してください。
 
 トラップはプロシージャを呼び出すことによって作成されます。これらのプロシージャのほとんどは共通のキーワード引数セットを共有しているため、個別に文書化するのではなく、ここでまとめて説明します。
 
@@ -717,13 +717,13 @@ Guileの仮想マシンに関する詳細は、[Guile用仮想マシン](https:/
 
 これらの手順にアクセスするには、`(system vm traps)`モジュールをインポートする必要があります。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) vm トラップ))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) vm トラップ))
 
-スキームプロシージャ: **trap-at-procedure-call** proc ハンドラ \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dat_002dprocedure_002dcall)
+スキームプロシージャ: **trap-at-procedure-call** proc ハンドラ \[#:vm\]
 
 プロシージャが適用されたときにハンドラを呼び出すトラップ。
 
-Scheme Procedure: **trap-in-procedure** proc enter-handler exit-handler \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002din_002dprocedure)
+Scheme Procedure: **trap-in-procedure** proc enter-handler exit-handler \[#:current-frame\] \[#:vm\]
 
 プロシージャに制御が入ったときにenter-handlerを呼び出し、プロシージャから制御が抜けたときにexit-handlerを呼び出すトラップ。
 
@@ -740,64 +740,64 @@ Scheme Procedure: **trap-in-procedure** proc enter-handler exit-handler \[#:curr
 * 継続の呼び出し。
 * 中止。
 
-Scheme Procedure: **trap-instructions-in-procedure** proc next-handler exit-handler \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dinstructions_002din_002dprocedure)
+Scheme Procedure: **trap-instructions-in-procedure** proc next-handler exit-handler \[#:current-frame\] \[#:vm\]
 
 proc内で実行されるすべての命令に対してnext-handlerを呼び出し、procからの実行が終了する際にexit-handlerを呼び出すトラップ。
 
-スキームプロシージャ: **trap-at-procedure-ip-in-range** proc 範囲ハンドラー \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dat_002dprocedure_002dip_002din_002drange)
+スキームプロシージャ: **trap-at-procedure-ip-in-range** proc 範囲ハンドラー \[#:current-frame\] \[#:vm\]
 
 プロシージャ内の命令範囲に実行が入ったときにハンドラを呼び出すトラップ。range は、`((start . end) ...)` という単純なペアの組です。開始アドレスは含まれ、終了アドレスは含まれません。
 
-Scheme Procedure: **trap-at-source-location** file user-line handler \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dat_002dsource_002dlocation)
+Scheme Procedure: **trap-at-source-location** file user-line handler \[#:current-frame\] \[#:vm\]
 
 指定されたソース位置で制御が到達したときに発動するトラップ。ユーザー行パラメータは、Guileが行数を数える0ではなく、ユーザーが行数を数える1から始まるインデックスになっています。
 
-Scheme Procedure: **trap-frame-finish** frame return-handler abort-handler \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dframe_002dfinish)
+Scheme Procedure: **trap-frame-finish** frame return-handler abort-handler \[#:vm\]
 
 指定されたフレームから制御が離れたときに発生するトラップ。frame は、現在の継続中の有効なフレームである必要があります。return-handler は通常の戻り時に呼び出され、abort-handler は非ローカルな終了時に呼び出されます。
 
-Scheme Procedure: **trap-in-dynamic-extent** proc enter-handler return-handler abort-handler \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002din_002ddynamic_002dextent)
+Scheme Procedure: **trap-in-dynamic-extent** proc enter-handler return-handler abort-handler \[#:vm\]
 
 より伝統的な動的風トラップで、制御がプロシージャに入ったときにenter-handlerを、正常な戻り時にreturn-handlerを、非ローカルな終了時にabort-handlerを実行します。
 
 巻き戻しは処理されないため、巻き戻しハンドラは存在しません。
 
-Scheme Procedure: **trap-calls-in-dynamic-extent** proc apply-handler return-handler \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dcalls_002din_002ddynamic_002dextent)
+Scheme Procedure: **trap-calls-in-dynamic-extent** proc apply-handler return-handler \[#:current-frame\] \[#:vm\]
 
 プロシージャが適用されるたびに apply-handler を呼び出し、戻り値に対して return-handler を呼び出すトラップですが、プロシージャの適用が動的に行われる期間中のみ呼び出されます。
 
-Scheme Procedure: **trap-instructions-in-dynamic-extent** proc next-handler \[#:current-frame\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dinstructions_002din_002ddynamic_002dextent)
+Scheme Procedure: **trap-instructions-in-dynamic-extent** proc next-handler \[#:current-frame\] \[#:vm\]
 
 proc呼び出しの動的範囲内にある、終了したすべての命令に対してnext-handlerを呼び出すトラップ。
 
-Scheme プロシージャ: **trap-calls-to-procedure** proc apply-handler return-handler \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dcalls_002dto_002dprocedure)
+Scheme プロシージャ: **trap-calls-to-procedure** proc apply-handler return-handler \[#:vm\]
 
 プロシージャが適用されるたびにapply-handlerを呼び出し、プロシージャが戻るときにreturn-handlerを呼び出すトラップですが、呼び出し深度という追加の引数が渡されます。
 
 つまり、ハンドラは2つの引数を受け取ります。1つは対象のフレーム、もう1つは呼び出し深度（負でない整数）です。
 
-Scheme Procedure: **trap-matching-instructions** frame-pred handler \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dmatching_002dinstructions)
+Scheme Procedure: **trap-matching-instructions** frame-pred handler \[#:vm\]
 
 命令ごとにフレーム予測関数を呼び出し、フレーム予測関数が真の値を返した場合にフレームのハンドラを呼び出すトラップ。
 
 * * *
 
-次へ: [トラップ状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-States)、前: [低レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Low_002dLevel-Traps)、上: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [トラップ状態](#62655-トラップ状態)、前: [低レベルトラップ](#62653-低レベルトラップ)、上: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.4 トレーストラップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tracing-Traps-1)
+#### 6.26.5.4 トレーストラップ
 
 `(system vm trace)` モジュールは、プロシージャアプリケーションのトレースのためのトラップをいくつか定義しています。プロシージャがトレースされるとは、プログラム実行中にそのプロシージャへのすべての呼び出しがユーザーに報告されることを意味します。トレース対象のプロシージャの集合をマークすると、Guile はその後、次のような形式の行を出力します。
 
-| | ([手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure) 引数 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+| | ([手順](06_07_procedures.md#678-セッター付きプロシージャ) 引数 [...](06_08_macros.md#6821-パターン))
 
 マークされたプロシージャが引数に適用されようとするたびに、このマークが付けられます。これにより、プログラマは関数が間違ったタイミングで呼び出されているか、または間違った引数で呼び出されているかを判断することができます。
 
 さらに、出力のインデントは、トレースされたアプリケーションが互いに末尾再帰的であるか否かを示すのに役立ちます。したがって、末尾再帰的でない階乗の実装のトレースは次のようになります。
 
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) (define (fact1 n)
-(if ([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n) 1
-([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) n (fact1 ([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) n)))))
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) 、trace (fact1 4)
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) (define (fact1 n)
+(if ([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n) 1
+([\*](06_06_02_numerical_data_types.md#66211-算術関数) n (fact1 ([1-](06_06_02_numerical_data_types.md#66211-算術関数) n)))))
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) 、trace (fact1 4)
 トレース: (事実1 4)
 トレース: | (事実1 3)
 トレース: | | (事実1 2)
@@ -811,11 +811,11 @@ scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#inde
 
 一般的な末尾再帰の実装は次のようになります。
 
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) (define (facti acc n)
-(if ([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n) acc
-(facti ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) n acc) ([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) n))))
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) (define (fact2 n) (facti 1 n))
-scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) 、trace (fact2 4)
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) (define (facti acc n)
+(if ([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n) acc
+(facti ([\*](06_06_02_numerical_data_types.md#66211-算術関数) n acc) ([1-](06_06_02_numerical_data_types.md#66211-算術関数) n))))
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) (define (fact2 n) (facti 1 n))
+scheme@(guile-user)[\>](06_06_02_numerical_data_types.md#6628-比較述語) 、trace (fact2 4)
 トレース: (事実2 4)
 トレース: (事実 1 4)
 トレース: (事実 4 3)
@@ -824,7 +824,7 @@ scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#inde
 トレース: (facti 24 0)
 トレース: 24
 
-以下の低レベルトラップ（[低レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Low_002dLevel-Traps)を参照）には、いくつかの共通オプションがあります。
+以下の低レベルトラップ（[低レベルトラップ](#62653-低レベルトラップ)を参照）には、いくつかの共通オプションがあります。
 
 `#:幅`
 
@@ -840,23 +840,23 @@ scheme@(guile-user)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#inde
 
 これらの手順にアクセスするには、`(system vm trace)`モジュールをインポートする必要があります。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) vm [trace](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trace)))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) vm [trace](04_programming_in_scheme.md#4445-プロファイルコマンド)))
 
-Scheme プロシージャ: **trace-calls-to-procedure** proc \[#:width\] \[#:vm\] \[#:prefix\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trace_002dcalls_002dto_002dprocedure)
+Scheme プロシージャ: **trace-calls-to-procedure** proc \[#:width\] \[#:vm\] \[#:prefix\]
 
 proc の適用時と戻り時のトレースを出力します。
 
-Scheme プロシージャ: **trace-calls-in-procedure** proc \[#:width\] \[#:vm\] \[#:prefix\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trace_002dcalls_002din_002dprocedure)
+Scheme プロシージャ: **trace-calls-in-procedure** proc \[#:width\] \[#:vm\] \[#:prefix\]
 
 proc への呼び出しの動的範囲内にあるすべてのアプリケーションと戻り値でトレースを出力します。
 
-Scheme プロシージャ: **trace-instructions-in-procedure** proc \[#:width\] \[#:vm\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trace_002dinstructions_002din_002dprocedure)
+Scheme プロシージャ: **trace-instructions-in-procedure** proc \[#:width\] \[#:vm\]
 
 proc への呼び出しの動的範囲内で実行されたすべての命令のトレースを出力します。
 
 さらに、Guileはサンクを呼び出す手順を定義しており、サンク内のすべての手順呼び出しと戻り値をトレースします。
 
-Scheme Procedure: **call-with-trace** thunk \[#:calls?=#t\] \[#:instructions?=#f\] \[#:width=80\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dtrace)
+Scheme Procedure: **call-with-trace** thunk \[#:calls?=#t\] \[#:instructions?=#f\] \[#:width=80\]
 
 thunk を呼び出し、その動的範囲内で行われるすべての実行をトレースします。
 
@@ -866,13 +866,13 @@ instruction? が true の場合、Guile は命令が実行されるたびにメ�
 
 この手順はVMトレースレベルを直接操作するため、REPLのトラップとは相性が良くないことに注意してください。
 
-REPLでのトレースの詳細については、[Profile Commands](https://doc.guix.gnu.org/guile/latest/en/guile.html#Profile-Commands)を参照してください。
+REPLでのトレースの詳細については、[Profile Commands](04_programming_in_scheme.md#4445-プロファイルコマンド)を参照してください。
 
 * * *
 
-次へ: [高レベルトラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#High_002dLevel-Traps)、前: [トレーストラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tracing-Traps)、上: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [高レベルトラップ](#62656-高レベルトラップ)、前: [トレーストラップ](#62654-トレーストラップ)、上: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.5 トラップ状態 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-States-1)
+#### 6.26.5.5 トラップ状態
 
 システムに複数のトラップが存在する場合、管理上の問題が発生します。トラップにはどのように名前を付ければよいのでしょうか？また、トラップを無効化、有効化、または削除するにはどうすればよいのでしょうか？
 
@@ -882,43 +882,43 @@ Guileでは、この問題に対してスレッドごとに暗黙的なトラッ
 
 これらの手順には専用のモジュールがあります。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) vm trap-state))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) vm trap-state))
 
-Scheme Procedure: **add-trap!** トラップ名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dtrap_0021)
+Scheme Procedure: **add-trap!** トラップ名
 
 現在のトラップ状態にトラップを追加し、指定された名前を関連付けます。新しいトラップ識別子（整数）を返します。
 
-ただし、通常は、この関数よりも [High-Level Traps](https://doc.guix.gnu.org/guile/latest/en/guile.html#High_002dLevel-Traps) で詳述されているより具体的な関数が優先的に使用されることに注意してください。
+ただし、通常は、この関数よりも [High-Level Traps](#62656-高レベルトラップ) で詳述されているより具体的な関数が優先的に使用されることに注意してください。
 
-Scheme Procedure: **list-traps** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dtraps)
+Scheme Procedure: **list-traps**
 
 現在有効なトラップと無効なトラップの両方を一覧表示します。整数のリストを返します。
 
-スキーム手順: **trap-name** idx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002dname)
+スキーム手順: **trap-name** idx
 
 トラップIDxに関連付けられた名前を返します。そのようなトラップが存在しない場合は`#f`を返します。
 
-Scheme Procedure: **trap-enabled?** idx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trap_002denabled_003f)
+Scheme Procedure: **trap-enabled?** idx
 
 トラップIDxが存在し、かつ有効になっている場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-Scheme Procedure: **enable-trap!** idx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-enable_002dtrap_0021)
+Scheme Procedure: **enable-trap!** idx
 
 トラップIDXを有効にします。
 
-Scheme Procedure: **disable-trap!** idx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-disable_002dtrap_0021)
+Scheme Procedure: **disable-trap!** idx
 
 トラップIDXを無効にします。
 
-Scheme Procedure: **delete-trap!** idx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_002dtrap_0021)
+Scheme Procedure: **delete-trap!** idx
 
 トラップIDXを削除します。必要に応じて、まず無効化します。
 
 * * *
 
-前へ: [トラップ状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Trap-States)、上へ: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [トラップ状態](#62655-トラップ状態)、上へ: [トラップ](#6265-トラップ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.5.6 高レベルトラップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#High_002dLevel-Traps-1)
+#### 6.26.5.6 高レベルトラップ
 
 低レベルのトラップAPIを使用すると、プロシージャを呼び出すトラップを作成できます。また、トラップ状態APIを使用すると、どのようなトラップが存在するかを追跡できます。しかし、これらのAPIはどちらも、ブレークポイントを設定したい場合には直接役立ちません。トラップが発生したときに何をすべきかが明確ではないからです。デバッガーを起動するのか、状況の概要を大叔母にメールで送るのか、それともどうするのか？
 
@@ -928,49 +928,49 @@ Scheme Procedure: **delete-trap!** idx [¶](https://doc.guix.gnu.org/guile/lates
 
 これらの手順は、トラップ状態と同じモジュールを共有しています。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ([system](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system) vm trap-state))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) ([system](07_02_07_processes.md#727-プロセス) vm trap-state))
 
-Scheme プロシージャ: **with-default-trap-handler** ハンドラ サンク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002ddefault_002dtrap_002dhandler)
+Scheme プロシージャ: **with-default-trap-handler** ハンドラ サンク
 
 ハンドラが現在のトラップハンドラである動的コンテキストで、thunk を呼び出します。
 
-さらに、thunk の実行中は、VM トレースレベル ([VM フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#VM-Hooks) を参照) が有効になっているトラップの数に設定されます。これにより、トラップが確実に発生するようになります。
+さらに、thunk の実行中は、VM トレースレベル ([VM フック](#62651-vmフック) を参照) が有効になっているトラップの数に設定されます。これにより、トラップが確実に発生するようになります。
 
 ハンドラが `#f` の場合、トラップを処理するものが何もないため、VM フックは通常のように有効になりません。
 
 `with-default-trap-handler` のトレースレベル設定機能は、その便利な機能の 1 つですが、その機能を使わずにグローバルなトラップハンドラをインストールしたい場合は、そのための関数も用意されています。
 
-Scheme 手順: **install-trap-handler!** ハンドラー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-install_002dtrap_002dhandler_0021)
+Scheme 手順: **install-trap-handler!** ハンドラー
 
 現在のスレッドのトラップハンドラをハンドラに設定します。
 
 このモジュールのプロシージャによってインストールされたトラップが発火すると、トラップハンドラが呼び出されます。現在、このAPIの「利用者」はGuileのREPLですが、他のデバッグツールとの連携のために、他のトラップハンドラを使用することも容易に想像できます。
 
-Scheme プロシージャ: **add-trap-at-procedure-call!** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dtrap_002dat_002dprocedure_002dcall_0021)
+Scheme プロシージャ: **add-trap-at-procedure-call!** proc
 
 procが呼び出されたときに発動するトラップをインストールします。
 
 これは転換点だ。
 
-Scheme プロシージャ: **add-trace-at-procedure-call!** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dtrace_002dat_002dprocedure_002dcall_0021)
+Scheme プロシージャ: **add-trace-at-procedure-call!** proc
 
-procが呼び出されたときにトレースメッセージを出力するトラップをインストールしてください。詳細については、[トレーストラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tracing-Traps)を参照してください。
+procが呼び出されたときにトレースメッセージを出力するトラップをインストールしてください。詳細については、[トレーストラップ](#62654-トレーストラップ)を参照してください。
 
 これはトレースポイントです。
 
-Scheme Procedure: **add-trap-at-source-location!** file user-line [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dtrap_002dat_002dsource_002dlocation_0021)
+Scheme Procedure: **add-trap-at-source-location!** file user-line
 
 指定されたソース位置への制御が到達したときに作動するトラップをインストールします。user-line は、Guile が行数をカウントするゼロではなく、ユーザーが行数をカウントする 1 インデックスです。
 
 これはソースコードのブレークポイントです。
 
-Scheme 手順: **add-ephemeral-trap-at-frame-finish!** フレーム ハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dephemeral_002dtrap_002dat_002dframe_002dfinish_0021)
+Scheme 手順: **add-ephemeral-trap-at-frame-finish!** フレーム ハンドラ
 
 フレームの実行が完了したときにハンドラを呼び出すトラップをインストールします。トラップは、発火後、または非ローカル終了時にトラップ状態から削除されます。
 
 これは終了トラップであり、REPLの「finish」コマンドを実装するために使用されます。
 
-Scheme手順: **add-ephemeral-stepping-trap!** フレームハンドラ \[#:into?\] \[#:instruction?\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dephemeral_002dstepping_002dtrap_0021)
+Scheme手順: **add-ephemeral-stepping-trap!** フレームハンドラ \[#:into?\] \[#:instruction?\]
 
 別のソース行または命令にステップインした後にハンドラを呼び出すトラップを設定します。トラップは、発火後、または非ローカル終了時にトラップ状態から削除されます。
 
@@ -982,9 +982,9 @@ instruction? が false (デフォルト) の場合、トラップは制御が新
 
 * * *
 
-前へ: [トラップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Traps)、上へ: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [トラップ](#6265-トラップ)、上へ: [デバッグインフラストラクチャ](#626-デバッグインフラストラクチャ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.26.6 GDB サポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#GDB-Support-1)
+#### 6.26.6 GDB サポート
 
 GuileアプリケーションをCレベルでデバッグする必要が生じる場合があります。しかし、デバッガーはGuileの`SCM`型を認識しないため、`SCM`値を意味のある形で表示できず、デバッグ作業は面倒になることがあります。
 
@@ -1002,4 +1002,4 @@ GuileアプリケーションをCレベルでデバッグする必要が生じ�
 
 * * *
 
-前へ: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging)、上へ: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [デバッグインフラストラクチャ](#626-デバッグインフラストラクチャ)、上へ: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

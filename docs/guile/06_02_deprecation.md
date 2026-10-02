@@ -1,4 +1,4 @@
-### 6.2 非推奨 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Deprecation-1)
+### 6.2 非推奨
 
 Guileの機能やその他の特徴は、時として時代遅れになることがあります。Guileの「非推奨化」機能は、こうした問題に対処するための仕組みです。
 
@@ -12,4 +12,4 @@ READMEファイルには、Guileの公開APIから非推奨機能を追加また
 
 * * *
 
-次へ: [Guile の初期化](https://doc.guix.gnu.org/guile/latest/en/guile.html#Initialization)、前: [非推奨](https://doc.guix.gnu.org/guile/latest/en/guile.html#Deprecation)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile の初期化](06_04_initializing_guile.md#64-guile-の初期化)、前: [非推奨](#62-非推奨)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

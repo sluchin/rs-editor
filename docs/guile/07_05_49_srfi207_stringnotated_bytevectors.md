@@ -1,6 +1,6 @@
-#### 7.5.49 SRFI-207 文字列表記バイトベクトル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-String_002dnotated-bytevectors)
+#### 7.5.49 SRFI-207 文字列表記バイトベクトル
 
-[SRFI-207](http://srfi.schemers.org/srfi-207/srfi-207.html) は、バイナリデータをより人間が理解しやすい形で表現するためのASCIIテキスト表記法を提供します。詳細は[Bytevectors](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevectors)を参照してください。また、整数、文字、文字列、その他のバイトベクトルのシーケンスからバイトベクトルを構築するためのバイト文字列指向の手順、およびバイトベクトルを文字列のように操作するための手順も提供します。
+[SRFI-207](http://srfi.schemers.org/srfi-207/srfi-207.html) は、バイナリデータをより人間が理解しやすい形で表現するためのASCIIテキスト表記法を提供します。詳細は[Bytevectors](06_06_12_bytevectors.md#6612-バイトベクトル)を参照してください。また、整数、文字、文字列、その他のバイトベクトルのシーケンスからバイトベクトルを構築するためのバイト文字列指向の手順、およびバイトベクトルを文字列のように操作するための手順も提供します。
 
 バイナリファイル形式は通常、自己記述型ではなく、自己記述型であっても、記述部分自体がバイナリ形式であるため、人間が解釈するのは困難です。この問題を解決するために、ファイルの先頭、あるいは場合によってはファイルの各セクションの先頭に、人間が読みやすいセクションを設けるのが一般的です。歴史的な経緯やテキストエンコーディングの複雑さを避けるため、この人間が読みやすいセクションは通常ASCIIテキストで表現されます。
 
@@ -12,23 +12,23 @@
 
 このSRFIのほとんどのプロシージャは、他のバイトベクタープロシージャと区別するために`bytestring-`で始まります。これは、これらのプロシージャが別のバイトストリング型を受け入れたり返したりすることを意味するものではありません。バイトストリングとバイトベクターは全く同じ型です。
 
-* [外部表記法](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-External-Notation)
-* [コンストラクター](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Constructors)
-* [変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Conversion)
-* [選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Selection)
-* [置換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Replacement)
-* [比較](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Comparison)
-* [検索中](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Searching)
-* [結合と分割](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Joining-And-Splitting)
-* [I/O](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-I_002fO)
-* [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Exceptions)
-* [謝辞](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Acknowledgements)
+* [外部表記法](#75491-外部表記法)
+* [コンストラクター](#75492-コンストラクタ)
+* [変換](#75493-変換)
+* [選択](#75494-選択)
+* [置換](#75495-置換)
+* [比較](#75496-比較)
+* [検索中](#75497-検索)
+* [結合と分割](#75498-結合と分割)
+* [I/O](#75499-io)
+* [例外](#754910-例外)
+* [謝辞](#754911-謝辞)
 
 * * *
 
-次へ: [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Contructors)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Contructors)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.1 外部表記法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#External-Notation)
+#### 7.5.49.1 外部表記法
 
 文字列表記のバイトベクターの基本形式は `#u8"CONTENT"` です。Scheme のリーダーは、`(read-enable 'bytestrings)` でバイト文字列が有効になっている場合にそれを読み取り、Scheme のライターは、`(print-enable 'bytestrings)` でバイト文字列が有効になっている場合にそれを書き込みます。
 
@@ -55,11 +55,11 @@ Scheme リーダーが文字列表記のバイトベクトルに遭遇すると�
 
 * * *
 
-次へ: [変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Conversion)、前: [外部表記](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-External-Notation)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [変換](#75493-変換)、前: [外部表記](#75491-外部表記法)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 7.5.49.2 コンストラクタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Constructors-1)
+#### 7.5.49.2 コンストラクタ
 
-Scheme手順: **バイト文字列**部分… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring)
+Scheme手順: **バイト文字列**部分…
 
 各部分を小さな整数のシーケンスに変換し、対応するバイトのバイトベクトルを以下のように返します。
 
@@ -75,11 +75,11 @@ Scheme手順: **バイト文字列**部分… [¶](https://doc.guix.gnu.org/guil
 (バイト文字列 "η" #\\space #u8(#x65 #x71 #x75 #x69 #x76))
 ⇒バイト文字列エラーが発生しました
 
-Scheme手順: **make-bytestring** 部分 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dbytestring)
+Scheme手順: **make-bytestring** 部分
 
 指定されたパーツが`bytestring`の引数として適切であれば、それらに`bytestring`を適用した結果得られるバイトベクトルを返します。そうでない場合は、`bytestring-error?`を満たすエラーが発生します。
 
-Scheme手順: **make-bytestring!** バイトベクター (パーツ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dbytestring_0021))
+Scheme手順: **make-bytestring!** バイトベクター (パーツ)
 
 パーツが`bytestring`の適切な引数である場合、`make-bytestring`を呼び出した場合に得られるバイトベクターのバイトを、インデックスatから始まるバイトベクターに書き込みます。例：
 
@@ -89,22 +89,22 @@ Scheme手順: **make-bytestring!** バイトベクター (パーツ [¶](https:/
 
 * * *
 
-次へ: [選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Selection)、前: [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Contructors)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [選択](#75494-選択)、前: [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Contructors)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.3 変換 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conversion-1)
+#### 7.5.49.3 変換
 
-Scheme手順: **bytevector->hex-string** bytevector [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytevector_002d_003ehex_002dstring)
+Scheme手順: **bytevector->hex-string** bytevector
 
-Scheme手順: **16進数文字列→バイトベクトル**文字列[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-hex_002dstring_002d_003ebytevecto)
+Scheme手順: **16進数文字列→バイトベクトル**文字列
 
 バイトベクトルと、16進数のペアを含む文字列との間で変換を行います。文字列が16進数のペアでない場合、`bytestring-error?` を満たすエラーが発生します。
 
 (バイトベクトル→16進数文字列 #u8"Ford") ⇒ "467f7264"
 (16進数文字列→バイトベクトル "5a6170686f64") ⇒ #u8"Zaphod")
 
-Scheme Procedure: **bytevector->base64** bytevector \[digits\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytevector_002d_003ebase64)
+Scheme Procedure: **bytevector->base64** bytevector \[digits\]
 
-Scheme手順: **base64->bytevecto** 文字列 \[digits\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-base64_002d_003ebytevecto)
+Scheme手順: **base64->bytevecto** 文字列 \[digits\]
 
 バイトベクトルとそのBase64エンコーディング（文字列）との間で変換を行います。64桁は、文字0～9、AZ、az、および記号+と/で表されます。ただし、Base64エンコーディングには、62桁目と63桁目の表現が異なるさまざまなバリアントが存在します。オプション引数digits（2文字の文字列）が指定された場合、その2文字が62桁目と63桁目として使用されます。詳細は[RFC 4648](https://tools.ietf.org/html/rfc4648)を参照してください。
 
@@ -114,13 +114,13 @@ Scheme手順: **base64->bytevecto** 文字列 \[digits\] [¶](https://doc.guix.g
 (bytevector->base64 #u8"Arthur Dent") ⇒ "QXJ0aHVyIERlbnQ="
 (base64->bytevector "+/ /+") ⇒ #u8(#xfb #xff #xfe)
 
-Scheme手順: **bytestring->list** bytevector \[start \[end\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002d_003elist)
+Scheme手順: **bytestring->list** bytevector \[start \[end\]\]
 
 バイトベクトルの全部または一部を、同じ長さのリストに変換します。このリストには、32～127の範囲の要素には文字が、その他の要素には正確な整数が含まれます。</p>
 
 (bytestring->list #u8(#x41 #x42 1 2) 1 3) ⇒ (#\\B 1)
 
-Scheme手順: **make-bytestring-generator** arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dbytestring_002dgenerator)
+Scheme手順: **make-bytestring-generator** arg …
 
 呼び出されると、`bytestring` が引数に適用された場合に作成されるバイトベクターの連続バイトを返すジェネレーターを返します。ただし、バイトベクター自体は作成されません。バイトが生成される前に引数が検証されます。引数の形式が不正な場合は、`bytestring-error?` を満たすエラーが発生します。
 
@@ -129,24 +129,24 @@ Scheme手順: **make-bytestring-generator** arg … [¶](https://doc.guix.gnu.or
 
 * * *
 
-次へ: [置換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Replacement)、前: [変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Conversion)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [置換](#75495-置換)、前: [変換](#75493-変換)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.4 選択 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Selection)
+#### 7.5.49.4 選択
 
-Scheme手順: **bytestring-pad** bytevector len char-or-u8 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dpad)
+Scheme手順: **bytestring-pad** bytevector len char-or-u8
 
-Scheme手順: **bytestring-pad-right** bytevector len char-or-u8 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dpad_002dright)
+Scheme手順: **bytestring-pad-right** bytevector len char-or-u8
 
 バイトベクターの内容に加えて、先頭または末尾に char-or-u8 (ASCII 文字または 0～255 の範囲の正確な整数) を含む十分な追加バイトを含む、新たに割り当てられたバイトベクターを返します。結果の長さは少なくとも len になります。
 
 (bytestring-pad #u8"Zaphod" 10 #\\\_) ⇒ #u8"\_\_\_\_Zaphod"
 (bytestring-pad-right #u8(#x80 #x7f) 8 0) ⇒ #u8(#x80 #x7f 0 0 0 0 0 0)
 
-Scheme手順: **bytestring-trim** bytevector pred [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dtrim)
+Scheme手順: **bytestring-trim** bytevector pred
 
-Scheme 手順: **bytestring-trim-right** bytevector pred [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dtrim_002dright)
+Scheme 手順: **bytestring-trim-right** bytevector pred
 
-Scheme 手順: **bytestring-trim-both** bytevector pred [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dtrim_002dboth)
+Scheme 手順: **bytestring-trim-both** bytevector pred
 
 bytevector の内容を含む、新しく割り当てられた bytevector を返します。ただし、pred を満たす先頭/末尾/先頭と末尾の両方の連続するバイトは含まれません。
 
@@ -156,11 +156,11 @@ bytevector の内容を含む、新しく割り当てられた bytevector を返
 
 * * *
 
-次へ: [比較](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Comparison)、前へ: [選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Selection)、上へ: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [比較](#75496-比較)、前へ: [選択](#75494-選択)、上へ: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.5 置換 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Replacement)
+#### 7.5.49.5 置換
 
-Scheme手順: **bytestring-replace** bytevector1 bytevector2 start1 end1 \[start2 end2\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dreplace)
+Scheme手順: **bytestring-replace** bytevector1 bytevector2 start1 end1 \[start2 end2\]
 
 bytevector1 の内容を含む、新しく割り当てられた bytevector を返します。ただし、start1 と end1 でインデックス付けされたバイトは含まれず、代わりに bytevector2 の start2 と end2 でインデックス付けされたバイトが代入されます。
 
@@ -169,19 +169,19 @@ bytevector1 の内容を含む、新しく割り当てられた bytevector を�
 
 * * *
 
-次へ: [検索中](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Searching)、前: [置換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Replacement)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [検索中](#75497-検索)、前: [置換](#75495-置換)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.6 比較 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Comparison-1)
+#### 7.5.49.6 比較
 
-バイトベクトルの等価性を比較するには、`(rnrs bytevectors)` の `bytevector=?` プロシージャ ([Bytevectors](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevectors) を参照) または `equal?` を使用します。
+バイトベクトルの等価性を比較するには、`(rnrs bytevectors)` の `bytevector=?` プロシージャ ([Bytevectors](06_06_12_bytevectors.md#6612-バイトベクトル) を参照) または `equal?` を使用します。
 
-Scheme手順: **bytestring<?** bytevector1 bytevector2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_003c_003f)
+Scheme手順: **bytestring<?** bytevector1 bytevector2
 
-Scheme手順: **bytestring>?** bytevector1 bytevector2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_003e_003f)
+Scheme手順: **bytestring>?** bytevector1 bytevector2
 
-Scheme手順: **bytestring<=?** bytevector1 bytevector2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_003c_003d_003f)
+Scheme手順: **bytestring<=?** bytevector1 bytevector2
 
-Scheme手順: **bytestring>=?** bytevector1 bytevector2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_003e_003d_003f)
+Scheme手順: **bytestring>=?** bytevector1 bytevector2
 
 bytevector1がbytevector2より小さい、大きい、以下、以上である場合に`#t`を返します。比較は辞書式順序で行われ、短いbytevectorが長いbytevectorより先に比較され、すべての要素が等しい場合に比較されます。
 
@@ -191,13 +191,13 @@ bytevector1がbytevector2より小さい、大きい、以下、以上である�
 
 * * *
 
-次へ: [結合と分割](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Joining-And-Splitting)、前: [比較](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Comparison)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [結合と分割](#75498-結合と分割)、前: [比較](#75496-比較)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 7.5.49.7 検索 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Searching-1)
+#### 7.5.49.7 検索
 
-Scheme手順: **bytestring-index** bytevector pred \[start \[end\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dindex)
+Scheme手順: **bytestring-index** bytevector pred \[start \[end\]\]
 
-Scheme プロシージャ: **bytestring-index-right** bytevector pred \[start \[end\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dindex_002dright)
+Scheme プロシージャ: **bytestring-index-right** bytevector pred \[start \[end\]\]
 
 バイトベクターを先頭から末尾、または末尾から先頭の順に検索し、predを満たす最初のバイトを見つけ、そのバイトを含むバイトベクター内のインデックスを返します。どちらの方向でも、先頭は含まれ、末尾は含まれません。そのようなバイトが見つからない場合は、`#f`を返します。
 
@@ -205,9 +205,9 @@ Scheme プロシージャ: **bytestring-index-right** bytevector pred \[start \[
 (バイト文字列インデックス #u8"Beeblebrox" (λ (b) (> b #x7f))) ⇒ #f
 (bytestring-index-right #u8"Zaphod" は奇数か?) ⇒ 4
 
-Scheme プロシージャ: **bytestring-break** bytevector pred [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dbreak)
+Scheme プロシージャ: **bytestring-break** bytevector pred
 
-Scheme手順: **bytestring-span** bytevector pred [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dspan)
+Scheme手順: **bytestring-span** bytevector pred
 
 2 つの値を返します。1 つは、pred を満たさない/満たす文字の最大シーケンス (bytevector の先頭から末尾まで検索) を含む bytevector であり、もう 1 つは残りの文字を含む bytevector です。
 
@@ -218,11 +218,11 @@ Scheme手順: **bytestring-span** bytevector pred [¶](https://doc.guix.gnu.org/
 
 * * *
 
-次へ: [I/O](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-I_002fO)、前へ: [検索中](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Searching)、上へ: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [I/O](#75499-io)、前へ: [検索中](#75497-検索)、上へ: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.8 結合と分割 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Joining-And-Splitting)
+#### 7.5.49.8 結合と分割
 
-Scheme手順: **bytestring-join** バイトベクトルリスト区切り文字 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002djoin)
+Scheme手順: **bytestring-join** バイトベクトルリスト区切り文字
 
 `bytevector-list` 内のバイトベクターを、区切り文字を使用して結合します。区切り文字は、`bytestring` の引数として適切なものであれば何でも構いません。`grammar` 引数は、区切り文字の使用方法を決定するシンボルで、デフォルトは `infix` です。`grammar` に次の 4 つのシンボル以外を指定するとエラーになります。
 
@@ -251,7 +251,7 @@ Scheme手順: **bytestring-join** バイトベクトルリスト区切り文字 
 (バイト文字列結合 '() 0 '厳密な中置)
 ⇒ ⇒ バイト文字列エラーが発生しました
 
-Scheme手順: **bytestring-split** バイトベクトル区切り文字 \[grammar\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002dsplit)
+Scheme手順: **bytestring-split** バイトベクトル区切り文字 \[grammar\]
 
 バイトベクターの要素を分割し、区切り文字（ASCII文字または0～255の範囲の整数）を使用して新しく割り当てられたバイトベクターのリストを返します。区切り文字のバイトは結果のバイトベクターには含まれません。
 
@@ -264,11 +264,11 @@ grammar引数は、バイトベクターの分割方法を制御するために�
 
 * * *
 
-次へ: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Exceptions)、前: [結合と分割](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Joining-And-Splitting)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [例外](#754910-例外)、前: [結合と分割](#75498-結合と分割)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 7.5.49.9 I/O [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#I_002fO)
+#### 7.5.49.9 I/O
 
-Scheme Procedure: **read-textual-bytestring** prefix \[port\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dtextual_002dbytestring)
+Scheme Procedure: **read-textual-bytestring** prefix \[port\]
 
 このSRFIで説明されている外部形式の文字列をポートから読み込み、バイトベクトルとして返します。prefix引数がfalseの場合、このプロシージャは「#u8」が既にポートから読み込まれているとみなします。ポートが省略された場合、デフォルト値として「(current-input-port)」の値が使用されます。読み込まれた文字が外部形式でない場合、「bytestring-error?」を満たすエラーが発生します。
 
@@ -277,7 +277,7 @@ Scheme Procedure: **read-textual-bytestring** prefix \[port\] [¶](https://doc.g
 (lambda (port) (read-textual-bytestring #t port)))
 ⇒ #u8(#x41 #x42 #xad #xf0 #x0d #x43 #x44)
 
-Scheme プロシージャ: **write-textual-bytestring** bytevector \[port\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dtextual_002dbytestring)
+Scheme プロシージャ: **write-textual-bytestring** bytevector \[port\]
 
 この SRFI で説明されている外部フォーマットのバイトベクトルをポートに書き込みます。非グラフィック ASCII 文字を表すバイトはエンコードされません。その他のすべてのバイトは、可能な場合は単一の文字でエンコードされ、そうでない場合は `\x` エスケープでエンコードされます。ポートが省略された場合、デフォルト値は `(current-output-port)` になります。
 
@@ -290,7 +290,7 @@ Scheme プロシージャ: **write-textual-bytestring** bytevector \[port\] [¶]
 (get-output-string port)))
 ⇒ 「#u8\\"\\\\tアーサー\\\\n\\"」
 
-Scheme Procedure: **write-binary-bytestring** port arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-write_002dbinary_002dbytestring)
+Scheme Procedure: **write-binary-bytestring** port arg …
 
 各引数を、`bytestring` と同じ解釈でバイナリ出力ポート port に出力しますが、バイトベクトルは作成しません。引数は、ポートにバイトを書き込む前に検証されます。引数の形式が不正な場合は、`bytestring-error?` を満たすエラーが発生します。
 
@@ -303,11 +303,11 @@ Scheme Procedure: **write-binary-bytestring** port arg … [¶](https://doc.guix
 
 * * *
 
-次へ: [謝辞](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Acknowledgements)、前: [I/O](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-I_002fO)、上: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [謝辞](#754911-謝辞)、前: [I/O](#75499-io)、上: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 7.5.49.10 例外 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-2)
+#### 7.5.49.10 例外
 
-Scheme手順: **bytestring-error?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bytestring_002derror_003f)
+Scheme手順: **bytestring-error?** obj
 
 objが以下のいずれかの手続きによって通知された`&bytestring-error`である場合、かつそれらが説明する状況下では、`#t`を返します。
 
@@ -323,9 +323,9 @@ objが以下のいずれかの手続きによって通知された`&bytestring-e
 
 * * *
 
-前へ: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207-Exceptions)、上へ: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [例外](#754910-例外)、上へ: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.49.11 謝辞 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Acknowledgements-1)
+#### 7.5.49.11 謝辞
 
 ダフネ・プレストン＝ケンダルはバイトベクトルの文字列表記法を考案し、ジョン・コーワンは手続きライブラリを作成し、ヴォルフガング・コーコラン＝マテは手続きのオリジナルのサンプル実装を作成した。
 
@@ -335,4 +335,4 @@ SRFIメーリングリストの参加者の皆様にも感謝申し上げます�
 
 * * *
 
-前へ: [SRFI-207 文字列表記バイトベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d207)、上へ: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [SRFI-207 文字列表記バイトベクトル](#7549-srfi-207-文字列表記バイトベクトル)、上へ: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

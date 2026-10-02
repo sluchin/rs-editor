@@ -4,7 +4,7 @@
 
 Guile専用に設計されたプログラムであれば、通常はこの仕組みは必要なく、もちろんGuileの各種ドキュメント化された部分を直接利用できます。
 
-構文: **cond-expand** (機能本体…) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cond_002dexpand)
+構文: **cond-expand** (機能本体…) …
 
 機能仕様が満たされている最初の節の本体まで展開します。どの機能も満たされていない場合はエラーとなります。
 
@@ -52,7 +52,7 @@ srfi-105
 
 その他のSRFI機能シンボルは、`use-modules`でコードがロードされた後に定義されます。なぜなら、その時点で初めてバインディングが利用可能になるからです。
 
-'\--use-srfi' コマンドラインオプション ([Guile の呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Invoking-Guile) を参照) は、移植可能なプログラムを実行する際に `cond-expand` を満たす SRFI をロードする良い方法です。
+'\--use-srfi' コマンドラインオプション ([Guile の呼び出し](04_programming_in_scheme.md#42-guile-の呼び出し) を参照) は、移植可能なプログラムを実行する際に `cond-expand` を満たす SRFI をロードする良い方法です。
 
 `guile`機能をテストすることで、プログラムはGuileモジュールシステムに適応しつつ、他のSchemeシステムでも動作させることができます。例えば、以下のコードはSRFI-8（`receive`）を必要としますが、Guileメカニズムを使ってそれをロードする方法も知っています。
 
@@ -71,8 +71,8 @@ srfi-105
 ;; コンパイルフェーズを分離します。
 (fluid-set! current-reader my-reader)))
 
-`cond-expand` は `*features*` メカニズムとは別物であることに注意してください ([Feature Tracking](https://doc.guix.gnu.org/guile/latest/en/guile.html#Feature-Tracking) を参照)。一方の機能シンボルは他方の機能シンボルとは無関係です。
+`cond-expand` は `*features*` メカニズムとは別物であることに注意してください ([Feature Tracking](06_23_configuration_features_and_runtime_options.md#6232-機能追跡) を参照)。一方の機能シンボルは他方の機能シンボルとは無関係です。
 
 * * *
 
-次へ: [SRFI-2 - and-let\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d2)、前: [SRFI-0 - cond-expand](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d0)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-2 - and-let\*](07_05_04_srfi2_andlet.md#754-srfi-2---and-let)、前: [SRFI-0 - cond-expand](#752-srfi-0---cond-expand-)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

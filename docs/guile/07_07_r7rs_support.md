@@ -1,38 +1,38 @@
-### 7.7 R7RS サポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Support-1)
+### 7.7 R7RS サポート
 
 [R7RS](https://small.r7rs.org/) 標準は、基本的に R5RS (Guile によって直接サポートされています) にモジュール機能とバインディングを標準モジュールセットに整理したもので、
 
-幸いなことに、R7RS モジュールの構文は R6RS と互換性があるように設計されているため、Guile のドキュメントはそのまま適用されます。R6RS ライブラリの定義方法と Guile モジュールとの統合方法の詳細については、[R6RS ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Libraries) を参照してください。また、[ライブラリの使用方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Library-Usage) も参照してください。
+幸いなことに、R7RS モジュールの構文は R6RS と互換性があるように設計されているため、Guile のドキュメントはそのまま適用されます。R6RS ライブラリの定義方法と Guile モジュールとの統合方法の詳細については、[R6RS ライブラリ](06_18_modules.md#6186-r6rsライブラリ) を参照してください。また、[ライブラリの使用方法](07_06_r6rs_support.md#7621-ライブラリの使用方法) も参照してください。
 
-* [R7RSとの非互換性](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Incompatibilities)
-* [R7RS 標準ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Standard-Libraries)
+* [R7RSとの非互換性](#771-r7rsとの非互換性)
+* [R7RS 標準ライブラリ](#772-r7rs-標準ライブラリ)
 
 * * *
 
-次へ: [R7RS 標準ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Standard-Libraries)、上へ: [R7RS サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [R7RS 標準ライブラリ](#772-r7rs-標準ライブラリ)、上へ: [R7RS サポート](#77-r7rs-サポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.7.1 R7RSとの非互換性 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Incompatibilities-with-the-R7RS)
+#### 7.7.1 R7RSとの非互換性
 
-R7RSはR6RSに比べてはるかに野心的な標準ではないため（[GuileとScheme](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-Scheme)を参照）、Guileでのサポートは非常に容易です。そのため、Guileは時折発生するバグといくつかの未実装機能を除けば、R7RSに完全に準拠した実装となっています。
+R7RSはR6RSに比べてはるかに野心的な標準ではないため（[GuileとScheme](01_introduction.md#11-guile-と-scheme)を参照）、Guileでのサポートは非常に容易です。そのため、Guileは時折発生するバグといくつかの未実装機能を除けば、R7RSに完全に準拠した実装となっています。
 
 * R7RS では、`#0=(1 2 3 . #0#)` のような _データラベル_ を使用して循環データ構造を読み取る構文が指定されています。Guile のリーダーは現在この構文をサポートしていません。[https://bugs.gnu.org/38236](https://bugs.gnu.org/38236)。
-* R6RSと同様に、R7RSの多くの字句機能はGuileの従来の構文と競合します。`r6rs-hex-escapes`と`hungry-eol-escapes`（[R6RSとの非互換性](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Incompatibilities)を参照）に加えて、`r7rs-symbols`リーダー機能を明示的に有効にする必要があります。
+* R6RSと同様に、R7RSの多くの字句機能はGuileの従来の構文と競合します。`r6rs-hex-escapes`と`hungry-eol-escapes`（[R6RSとの非互換性](07_06_r6rs_support.md#761-r6rsとの非互換性)を参照）に加えて、`r7rs-symbols`リーダー機能を明示的に有効にする必要があります。
 
 Guileは、ルートモジュール内に、Guileの従来のデフォルト設定よりもR7RSのデフォルト設定を選択するための手順を公開しています。
 
-Scheme 手順: **install-r7rs!** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-install_002dr7rs_0021)
+Scheme 手順: **install-r7rs!**
 
 ガイルのデフォルト設定をR7RSにより適合するように変更する。
 
-Guile のデフォルト設定は今後変更される可能性がありますが、この手順で実施する変更は、R7RS の規約をより適切にサポートするために、`.sls` と `.guile.sls` をサポートされている `%load-extensions` のセットに追加することです。[ロード パス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths) を参照してください。`install-r7rs!` を実行すると、上記のリーダー オプションも有効になります。
+Guile のデフォルト設定は今後変更される可能性がありますが、この手順で実施する変更は、R7RS の規約をより適切にサポートするために、`.sls` と `.guile.sls` をサポートされている `%load-extensions` のセットに追加することです。[ロード パス](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス) を参照してください。`install-r7rs!` を実行すると、上記のリーダー オプションも有効になります。
 
 最後に、`--r7rs` コマンドライン引数は、ユーザーコードを呼び出す前に `install-r7rs!` を呼び出すことに注意してください。R7RS ユーザーは、この引数を Guile に渡したい場合が多いでしょう。
 
 * * *
 
-前へ: [R7RSとの非互換性](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Incompatibilities)、上へ: [R7RSのサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [R7RSとの非互換性](#771-r7rsとの非互換性)、上へ: [R7RSのサポート](#77-r7rs-サポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.7.2 R7RS 標準ライブラリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Standard-Libraries-1)
+#### 7.7.2 R7RS 標準ライブラリ
 
 R7RSは、R5RSの定義をモジュールごとに整理し、さらにいくつかの新しい定義を追加しています。
 
@@ -42,7 +42,7 @@ R6RSとは異なり、R7RSにはR5RSに比べて新しい定義がほとんど�
 
 （スキームベース）
 
-コア機能は、主に R5RS に対応していますが、以下に個別にリストされている要素を除き、SRFI-34 エラー処理 ([SRFI-34 - プログラムの例外処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d34) を参照)、バイトベクトルとバイトベクトルポート ([Bytevectors](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevectors) を参照)、およびその他のいくつかの新しい手順が追加されています。
+コア機能は、主に R5RS に対応していますが、以下に個別にリストされている要素を除き、SRFI-34 エラー処理 ([SRFI-34 - プログラムの例外処理](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理) を参照)、バイトベクトルとバイトベクトルポート ([Bytevectors](06_06_12_bytevectors.md#6612-バイトベクトル) を参照)、およびその他のいくつかの新しい手順が追加されています。
 
 `(scheme case-lambda)`
 
@@ -82,11 +82,11 @@ R6RSとは異なり、R7RSにはR5RSに比べて新しい定義がほとんど�
 
 `(scheme process-context)`
 
-環境変数。[SRFI-98 環境変数へのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d98) を参照してください。また、`command-line`、`emergency-exit` (Guile の `primitive-_exit` と同様)、および `exit` も参照してください。
+環境変数。[SRFI-98 環境変数へのアクセス](07_05_43_srfi98_accessing_environment_variables.md#7543-srfi-98-環境変数へのアクセス) を参照してください。また、`command-line`、`emergency-exit` (Guile の `primitive-_exit` と同様)、および `exit` も参照してください。
 
 `(スキーム r5rs)`
 
-`r5rs` によってエクスポートされる正確なバインディングのセットですが、`transcript-off` / `transcript-on` は含まれておらず、`_` や `else` などの補助構文定義も含まれています。補助構文の詳細については、[構文ルール マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Rules) を参照してください。
+`r5rs` によってエクスポートされる正確なバインディングのセットですが、`transcript-off` / `transcript-on` は含まれておらず、`_` や `else` などの補助構文定義も含まれています。補助構文の詳細については、[構文ルール マクロ](06_08_macros.md#682-構文規則マクロ) を参照してください。
 
 （スキーム読み込み）
 
@@ -108,4 +108,4 @@ R6RSとは異なり、R7RSにはR5RSに比べて新しい定義がほとんど�
 
 * * *
 
-次へ: [Readline サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Readline-Support)、前: [R7RS サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Support)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Readline サポート](07_09_readline_support.md#79-readline-サポート)、前: [R7RS サポート](#77-r7rs-サポート)、上: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

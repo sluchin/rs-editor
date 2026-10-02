@@ -1,4 +1,4 @@
-#### 7.5.48 SRFI-197: パイプライン演算子 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d197_003a-Pipeline-Operators)
+#### 7.5.48 SRFI-197: パイプライン演算子
 
 [SRFI-197](http://srfi.schemers.org/srfi-197/srfi-197.html) は、Clojure の `->` や OCaml の `|>` のような関数型パイプライン (スレッド) 演算子を提供します。パイプラインは、深くネストされた式を記述するためのシンプルで簡潔かつ読みやすい方法です。この SRFI は、`(ab (cd (efg)))` のようなネストされた式を `(chain g (ef _) (cd _) (ab _))` という一連の操作に書き換えることができる、チェーンおよびネスト パイプライン演算子のファミリーを定義します。
 
@@ -6,7 +6,7 @@
 
 複雑な構文を含むパイプラインの場合、`nest` および `nest-reverse` 演算子は `chain` のように見えますが、`let*` 形式ではなく、ネストされた形式に展開されることが保証されています。`nest` は `chain` とは逆方向にネストされるため、`(nest (a _) (b _) c)` は `(a (bc))` に展開されます。
 
-Scheme構文: **chain** 初期値 \[プレースホルダー \[省略記号\]\] ステップ … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain)
+Scheme構文: **chain** 初期値 \[プレースホルダー \[省略記号\]\] ステップ …
 
 各部分を小さな整数のシーケンスに変換し、対応するバイトのバイトベクトルを以下のように返します。
 
@@ -22,26 +22,26 @@ Scheme構文: **chain** 初期値 \[プレースホルダー \[省略記号\]\] 
 
 各ステップ内のプレースホルダー記号は、そのステップのパイプライン値に、出現順に置き換えられます。ステップのプレースホルダーの数とパイプライン値の数が異なる場合はエラーとなります。ただし、ステップにプレースホルダーが含まれていない場合は、パイプライン値は無視されます。
 
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) x (ab [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
+([chain](#7548-srfi-197-パイプライン演算子) x (ab [\_](06_08_macros.md#6821-パターン)))
 ⇒（abx）
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) (ab) (c [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) d) (ef [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
+([chain](#7548-srfi-197-パイプライン演算子) (ab) (c [\_](06_08_macros.md#6821-パターン) d) (ef [\_](06_08_macros.md#6821-パターン)))
 ⇒ (let\* ((x (ab)) (x (cxd))) (efx))
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) (a) (b [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (c [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
+([chain](#7548-srfi-197-パイプライン演算子) (a) (b [\_](06_08_macros.md#6821-パターン) [\_](06_08_macros.md#6821-パターン)) (c [\_](06_08_macros.md#6821-パターン)))
 ⇒ (let\*-values (((x1 x2) (a)) ((x) (b x1 x2))) (cx))
 
 ステップがプレースホルダー記号の後に省略記号が続く形で終了する場合、そのプレースホルダーシーケンスは、対応するプレースホルダーを持たない残りのすべてのパイプライン値に置き換えられます。
 
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) (a) (b [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) c [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) (d [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
-⇒ (let\*-values (((x1 . x2) (a)) ((x) ([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) b x1 c x2))) (dx))
+([chain](#7548-srfi-197-パイプライン演算子) (a) (b [\_](06_08_macros.md#6821-パターン) c [\_](06_08_macros.md#6821-パターン) [...](06_08_macros.md#6821-パターン)) (d [\_](06_08_macros.md#6821-パターン)))
+⇒ (let\*-values (((x1 . x2) (a)) ((x) ([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) b x1 c x2))) (dx))
 
 `chain` およびその他のすべての SRFI 197 マクロはカスタムプレースホルダー記号をサポートしており、構文定義の本体で `_` または `....` を挿入する場合に、衛生状態を維持するのに役立ちます。
 
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) (ab) <> (c <> d) (ef <>))
+([chain](#7548-srfi-197-パイプライン演算子) (ab) <> (c <> d) (ef <>))
 ⇒ (let\* ((x (ab)) (x (cxd))) (efx))
-([chain](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain) (a) [\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) \--- (b [\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) c [\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) \---) (d [\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d)))
-⇒ (let\*-values (((x1 . x2) (a)) ((x) ([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) b x1 c x2))) (dx))
+([chain](#7548-srfi-197-パイプライン演算子) (a) [\-](06_06_02_numerical_data_types.md#66211-算術関数) \--- (b [\-](06_06_02_numerical_data_types.md#66211-算術関数) c [\-](06_06_02_numerical_data_types.md#66211-算術関数) \---) (d [\-](06_06_02_numerical_data_types.md#66211-算術関数)))
+⇒ (let\*-values (((x1 . x2) (a)) ((x) ([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) b x1 c x2))) (dx))
 
-スキーム構文: **chain-and** initial-value \[placeholder\] step … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dand)
+スキーム構文: **chain-and** initial-value \[placeholder\] step …
 
 initial-value は式です。placeholder はリテラル記号です。これはプレースホルダー記号です。placeholder が指定されていない場合、プレースホルダー記号は `_` です。step の構文は (datum … \[placeholder datum …\]) です。
 
@@ -53,18 +53,18 @@ initial-value は式です。placeholder はリテラル記号です。これは
 
 `chain-and`は各ステップの戻り値をチェックするため、複数の戻り値を持つステップはサポートしていません。ステップが複数の値を返す場合はエラーとなります。
 
-Scheme構文: **chain-when** initial-value \[placeholder\] (\[guard\] step) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dwhen)
+Scheme構文: **chain-when** initial-value \[placeholder\] (\[guard\] step) …
 
 initial-value と guard は式です。placeholder はリテラル記号です。これはプレースホルダー記号です。placeholder が存在しない場合、プレースホルダー記号は `_` です。step の構文は (datum … \[placeholder datum …\]) です。
 
 セマンティクス: 各ステップにガード式があり、ガード式が #f と評価された場合にスキップされる `chain` のバリアント。
 
 (定義 (数値 n を記述)
-([chain-when](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dwhen) '()
-(([odd?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-odd_003f) n) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "odd" [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
-(([even?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-even_003f) n) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "even" [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
-(([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "zero" [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
-(([positive?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-positive_003f) n) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "positive" [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))))
+([chain-when](#7548-srfi-197-パイプライン演算子) '()
+(([odd?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) n) ([cons](06_06_08_pairs.md#668-ペア) "odd" [\_](06_08_macros.md#6821-パターン)))
+(([even?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) n) ([cons](06_06_08_pairs.md#668-ペア) "even" [\_](06_08_macros.md#6821-パターン)))
+(([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n) ([cons](06_06_08_pairs.md#668-ペア) "zero" [\_](06_08_macros.md#6821-パターン)))
+(([positive?](06_06_02_numerical_data_types.md#6628-比較述語) n) ([cons](06_06_08_pairs.md#668-ペア) "positive" [\_](06_08_macros.md#6821-パターン)))))
 
 (describe-number 3) ; => '("positive" "odd")
 (describe-number 4) ; => '("positive" "even")
@@ -77,7 +77,7 @@ initial-value と guard は式です。placeholder はリテラル記号です�
 
 `chain-when`はステップをスキップする可能性があるため、複数の戻り値を持つステップをサポートしていません。ステップが複数の値を返す場合はエラーとなります。
 
-Scheme構文: **chain-lambda** \[placeholder \[ellipsis\]\] ステップ … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dlambda)
+Scheme構文: **chain-lambda** \[placeholder \[ellipsis\]\] ステップ …
 
 プレースホルダーと省略記号はリテラル記号です。これらはプレースホルダー記号と省略記号です。プレースホルダーまたは省略記号が存在しない場合、それぞれデフォルトで「_」と「...」になります。
 
@@ -85,9 +85,9 @@ Scheme構文: **chain-lambda** \[placeholder \[ellipsis\]\] ステップ … [¶
 
 セマンティクス：`chain`ステップのシーケンスからプロシージャを作成します。`chain-lambda`プロシージャが呼び出されると、各ステップが左から右の順に評価され、各ステップの結果が次のステップに渡されます。
 
-([chain-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dlambda) (a [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (b [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
+([chain-lambda](#7548-srfi-197-パイプライン演算子) (a [\_](06_08_macros.md#6821-パターン)) (b [\_](06_08_macros.md#6821-パターン)))
 ⇒ (lambda (x) (let\* ((x (ax))) (bx)))
-([chain-lambda](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-chain_002dlambda) (a [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (bc [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)))
+([chain-lambda](#7548-srfi-197-パイプライン演算子) (a [\_](06_08_macros.md#6821-パターン) [\_](06_08_macros.md#6821-パターン)) (bc [\_](06_08_macros.md#6821-パターン)))
 ⇒ (lambda (x1 x2) (let\* ((x (a x1 x2))) (bcx)))
 
 各ステップはアプリケーションとして評価され、そのアプリケーションの戻り値が次のステップのパイプライン値として渡されます。プロシージャの引数は、最初のステップのパイプライン値です。プロシージャの戻り値は、最後のステップの戻り値です。
@@ -98,42 +98,42 @@ Scheme構文: **chain-lambda** \[placeholder \[ellipsis\]\] ステップ … [¶
 
 最初のステップにおけるプレースホルダーの数によって、プロシージャの引数の個数が決まります。最初のステップが省略記号で終わる場合、そのプロシージャは可変引数プロシージャです。
 
-Scheme構文: **ネスト** \[プレースホルダー\] <ステップ> … 初期値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest)
+Scheme構文: **ネスト** \[プレースホルダー\] <ステップ> … 初期値
 
 プレースホルダーはリテラル記号です。これがプレースホルダー記号です。プレースホルダーが存在しない場合、プレースホルダー記号は `_` です。ステップの構文は (データ … プレースホルダー データ …) です。初期値は式です。
 
 意味論: `nest` は `chain` と似ていますが、手順の順序が逆です。`chain` とは異なり、`nest` は式を文字通りネストします。そのため、`chain` のような厳密な評価順序の保証は提供しません。
 
-([nest](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest) (ab [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (cd [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) e) ; => (ab (cde))
+([nest](#7548-srfi-197-パイプライン演算子) (ab [\_](06_08_macros.md#6821-パターン)) (cd [\_](06_08_macros.md#6821-パターン)) e) ; => (ab (cde))
 
 `nest` 式は、最後のステップのプレースホルダーを初期値で字句的に置換し、次にその置換値で最後から2番目のステップのプレースホルダーを置換するという手順で評価され、最初のステップのプレースホルダーが置換されるまでこの処理が繰り返されます。最終的な置換結果が式でない場合はエラーとなり、式が評価されてその値が返されます。
 
 `nest`は実際にネストされた形式を生成するため、`chain`では構築できない式を構築できます。たとえば、`nest`は引用符で囲まれたデータ構造を構築できます。
 
-([nest](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest) '\_ (1 2 [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (3 [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) 5) ([\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) 4) ; => '(1 2 (3 (4) 5))
+([nest](#7548-srfi-197-パイプライン演算子) '\_ (1 2 [\_](06_08_macros.md#6821-パターン)) (3 [\_](06_08_macros.md#6821-パターン) 5) ([\_](06_08_macros.md#6821-パターン)) 4) ; => '(1 2 (3 (4) 5))
 
 `nest` は、if、let、lambda、parameterize などの特殊な形式をパイプラインに安全に含めることもできます。
 
 カスタムプレースホルダーを使用すると、`nest` 式を安全にネストできます。
 
-([nest](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest) ([nest](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest) \_2 '\_2 (1 2 3 \_2) [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) 6)
-([\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) 5 \_2)
+([nest](#7548-srfi-197-パイプライン演算子) ([nest](#7548-srfi-197-パイプライン演算子) \_2 '\_2 (1 2 3 \_2) [\_](06_08_macros.md#6821-パターン) 6)
+([\_](06_08_macros.md#6821-パターン) 5 \_2)
 4)
 ⇒ '(1 2 3 (4 5 6))
 
-Scheme構文: **nest-reverse** initial-value \[placeholder\] step … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest_002dreverse)
+Scheme構文: **nest-reverse** initial-value \[placeholder\] step …
 
 構文: initial-value は式です。 placeholder はリテラル記号です。これはプレースホルダー記号です。 placeholder が存在しない場合、プレースホルダー記号は `_` です。 step の構文は (datum … placeholder datum …) です。
 
 意味: `nest-reverse` は `nest` のバリアントで、逆順でネストします。これは `chain` と同じ順序です。
 
-([nest-reverse](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nest_002dreverse) e (cd [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f)) (ab [\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f))) ; => (ab (cde))
+([nest-reverse](#7548-srfi-197-パイプライン演算子) e (cd [\_](06_08_macros.md#6821-パターン)) (ab [\_](06_08_macros.md#6821-パターン))) ; => (ab (cde))
 
 `nest-reverse`式は、まず最初のステップのプレースホルダーを初期値で字句的に置換し、次にその置換値で2番目のステップのプレースホルダーを置換し、最後のステップのプレースホルダーが置換されるまでこの処理を繰り返して評価されます。最終的な置換値が式でない場合はエラーとなり、式が評価されてその値が返されます。
 
-* [謝辞](https://doc.guix.gnu.org/guile/latest/en/guile.html#Acknowledgements)
+* [謝辞](#75481-謝辞)
 
-#### 7.5.48.1 謝辞 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Acknowledgements)
+#### 7.5.48.1 謝辞
 
 アダム・ネルソンがこのSRFIを改良するのを手伝ってくれたSRFI 197メーリングリストの参加者、特にマーク・ニーパー＝ヴィスキルヒェン、リヌス・ビョルンスタム、河合史郎、ラッシ・コルテラ、ジョン・コーワンに感謝します。
 
@@ -143,4 +143,4 @@ Marcが提供した段落は、（わずかな変更を加えただけで）ネ�
 
 * * *
 
-次へ: [SRFI-244 - 複数値定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d244)、前: [SRFI-197: パイプライン演算子](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d197)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-244 - 複数値定義](07_05_50_srfi244_multiplevalue_definitions.md#7550-srfi-244---複数値定義)、前: [SRFI-197: パイプライン演算子](#7548-srfi-197-パイプライン演算子)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

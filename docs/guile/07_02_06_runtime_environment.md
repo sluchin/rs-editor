@@ -1,18 +1,18 @@
-#### 7.2.6 ランタイム環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Runtime-Environment-1)
+#### 7.2.6 ランタイム環境
 
-Scheme手順: **プログラム引数** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program_002darguments)
+Scheme手順: **プログラム引数**
 
-Scheme手順: **コマンドライン** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-command_002dline)
+Scheme手順: **コマンドライン**
 
-Scheme手順: **set-program-arguments** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dprogram_002darguments)
+Scheme手順: **set-program-arguments**
 
-C 関数: **scm\_program\_arguments** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprogram_005farguments)
+C 関数: **scm\_program\_arguments** ()
 
-C 関数: **scm\_set\_program\_arguments\_scm** (lst) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fprogram_005farguments_005fscm)
+C 関数: **scm\_set\_program\_arguments\_scm** (lst)
 
 Guileに渡されるコマンドライン引数を取得するか、新しい引数を設定します。
 
-引数は文字列のリストで、最初の文字列は呼び出されるプログラム名です。対話的に実行する場合は単に「guile」（または実行可能ファイルのパス）となり、-s オプションでスクリプトを実行する場合はスクリプト名となります（[Guile の呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Invoking-Guile) を参照）。
+引数は文字列のリストで、最初の文字列は呼び出されるプログラム名です。対話的に実行する場合は単に「guile」（または実行可能ファイルのパス）となり、-s オプションでスクリプトを実行する場合はスクリプト名となります（[Guile の呼び出し](04_programming_in_scheme.md#42-guile-の呼び出し) を参照）。
 
 guile -L /my/extra/dir -s foo.scm abc def
 
@@ -24,7 +24,7 @@ guile -L /my/extra/dir -s foo.scm abc def
 
 `program-arguments`と`command-line`という2つの名前は、歴史的な偶然によるもので、どちらも全く同じ機能を持っています。`scm_set_program_arguments_scm`という名前には、後述のC言語関数との衝突を避けるため、末尾に`_scm`が追加されています。
 
-C 関数: `void` **scm\_set\_program\_arguments** `(int argc, char **argv, char *first)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fprogram_005farguments)
+C 関数: `void` **scm\_set\_program\_arguments** `(int argc, char **argv, char *first)`
 
 上記で、`program-arguments`と`command-line`にコマンドライン引数のリストを設定してください。
 
@@ -44,13 +44,13 @@ scm_set_program_arguments (\-1, argv, progname);
 
 このような処理は、起動時に`scm_boot_guile`で行われることが多く、Cレベルで処理されるオプションは削除されます。指定された文字列はすべてコピーされるため、`scm_set_program_arguments`が戻るとCデータは再度アクセスされません。
 
-スキームプロシージャ: **getenv** 名前 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getenv)
+スキームプロシージャ: **getenv** 名前
 
-C 関数: **scm\_getenv** (名前) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fgetenv)
+C 関数: **scm\_getenv** (名前)
 
 現在の環境内で文字列名を検索します。戻り値は`#f`ですが、`NAME=VALUE`の形式の文字列が見つかった場合は、文字列`VALUE`が返されます。
 
-Scheme手順: **setenv** 名前 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-setenv)
+Scheme手順: **setenv** 名前 値
 
 現在のプロセスの環境を変更します。この環境は、子プロセスが継承するデフォルトの環境でもあります。
 
@@ -58,19 +58,19 @@ Scheme手順: **setenv** 名前 値 [¶](https://doc.guix.gnu.org/guile/latest/e
 
 戻り値は指定されていません。
 
-Scheme手順: **unsetenv** name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsetenv)
+Scheme手順: **unsetenv** name
 
 環境変数から変数名を削除してください。変数名には「\=」文字を含めることはできません。
 
-Scheme手順: **environ** \[env\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-environ)
+Scheme手順: **environ** \[env\]
 
-C 関数: **scm\_environ** (env) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fenviron)
+C 関数: **scm\_environ** (env)
 
 env が省略された場合は、現在の環境 (Unix の意味で) を文字列のリストとして返します。それ以外の場合は、現在の環境 (子プロセスのデフォルト環境でもある) を、指定された文字列のリストに設定します。env の各メンバーは、name\=value の形式である必要があり、name の値は重複してはなりません。env が指定された場合、戻り値は未指定です。
 
-Scheme手順: **putenv** str [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-putenv)
+Scheme手順: **putenv** str
 
-C 関数: **scm\_putenv** (str) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fputenv)
+C 関数: **scm\_putenv** (str)
 
 現在のプロセスの環境を変更します。この環境は、子プロセスが継承するデフォルトの環境でもあります。
 
@@ -80,4 +80,4 @@ strが`NAME=VALUE`の形式の場合、strは環境に直接書き込まれ、�
 
 * * *
 
-次へ: [シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)、前: [ランタイム環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Runtime-Environment)、上: [POSIX システムコールとネットワーク](https://doc.guix.gnu.org/guile/latest/en/guile.html#POSIX) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [シグナル](07_02_08_signals.md#728-シグナル)、前: [ランタイム環境](#726-ランタイム環境)、上: [POSIX システムコールとネットワーク](07_02_00_posix_system_calls_and_networking.md#72-posix-システムコールとネットワーク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

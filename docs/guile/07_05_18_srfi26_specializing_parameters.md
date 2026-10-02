@@ -1,12 +1,12 @@
-#### 7.5.18 SRFI-26 - パラメータの特殊化 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d26-_002d-specializing-parameters)
+#### 7.5.18 SRFI-26 - パラメータの特殊化
 
 この SRFI は、関数の選択されたパラメータを簡単に特殊化するための構文を提供します。これは、
 
 (use-modules (srfi srfi-26))
 
-ライブラリ構文: **cut** slot1 slot2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cut)
+ライブラリ構文: **cut** slot1 slot2 …
 
-ライブラリ構文: **cute** slot1 slot2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cute)
+ライブラリ構文: **cute** slot1 slot2 …
 
 指定された式に特化した選択されたパラメータを使用して、(slot1 slot2 …) を呼び出す新しいプロシージャを返します。
 
@@ -63,4 +63,4 @@
 
 * * *
 
-次へ: [SRFI-28 - 基本フォーマット文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d28)、前: [SRFI-26 - パラメータの特殊化](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d26)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-28 - 基本フォーマット文字列](07_05_20_srfi28_basic_format_strings.md#7520-srfi-28---基本フォーマット文字列)、前: [SRFI-26 - パラメータの特殊化](#7518-srfi-26---パラメータの特殊化)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

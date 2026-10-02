@@ -1,22 +1,22 @@
-2 こんにちは、Guile! [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021-1)
+2 こんにちは、Guile!
 ------------------------------------------------------------------------------------------
 
 この章では、Guileの様々な使用方法を簡単に紹介します。Guileのソースコード配布パッケージに含まれるexamples/ディレクトリには、さらに多くの使用例が用意されています。また、問題を発見した場合の最適な報告方法についても説明します。
 
 以下の例は、Guile が `/usr/local/` にインストールされていることを前提としています。
 
-* [Guileをインタラクティブに実行する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Interactively)
-* [Guileスクリプトの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Scripts)
-* [Guileをプログラムにリンクする](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-into-Programs)
-* [Guile拡張機能の作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-Guile-Extensions)
-* [Guileモジュールシステムの使用方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System)
-* [バグの報告](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Bugs)
+* [Guileをインタラクティブに実行する](#21-guile-を対話的に実行する)
+* [Guileスクリプトの実行](#22-guile-スクリプトの実行)
+* [Guileをプログラムにリンクする](#23-guile-をプログラムにリンクする)
+* [Guile拡張機能の作成](#24-guile拡張機能の作成)
+* [Guileモジュールシステムの使用方法](#25-guileモジュールシステムの使用)
+* [バグの報告](#26-バグの報告)
 
 * * *
 
-次へ: [Guile スクリプトの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Scripts)、上へ: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile スクリプトの実行](#22-guile-スクリプトの実行)、上へ: [Hello Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.1 Guile を対話的に実行する [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Interactively-1)
+### 2.1 Guile を対話的に実行する
 
 Guileは、最もシンプルな形では、Schemeプログラミング言語の対話型インタープリタとして機能し、ユーザーが端末から入力したScheme式を読み込んで評価します。以下は、Guileとユーザー間のやり取りの例です。ユーザーの入力は、`$`と`scheme@(guile-user)>`のプロンプトの後に表示されます。
 
@@ -34,13 +34,13 @@ $
 
 * * *
 
-次へ: [Guile をプログラムにリンクする](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-into-Programs)、前: [Guile を対話的に実行する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Interactively)、上: [こんにちは Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile をプログラムにリンクする](#23-guile-をプログラムにリンクする)、前: [Guile を対話的に実行する](#21-guile-を対話的に実行する)、上: [こんにちは Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.2 Guile スクリプトの実行 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Scripts-1)
+### 2.2 Guile スクリプトの実行
 
 AWK、Perl、あるいは他のシェルと同様に、Guileはスクリプトファイルを解釈できます。Guileスクリプトとは、Schemeコードのファイルであり、冒頭にGuileの起動方法をオペレーティングシステムに指示する追加情報と、GuileがSchemeコードを処理する方法を指示する情報が記述されています。
 
-以下は簡単なGuileスクリプトです。詳細については、[Guileスクリプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Scripting)を参照してください。
+以下は簡単なGuileスクリプトです。詳細については、[Guileスクリプト](04_programming_in_scheme.md#43-guile-スクリプト)を参照してください。
 
 #!/usr/local/bin/guile -s
 !#
@@ -49,9 +49,9 @@ AWK、Perl、あるいは他のシェルと同様に、Guileはスクリプト�
 
 * * *
 
-次へ: [Guile拡張機能の作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-Guile-Extensions)、前: [Guileスクリプトの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Running-Guile-Scripts)、上: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile拡張機能の作成](#24-guile拡張機能の作成)、前: [Guileスクリプトの実行](#22-guile-スクリプトの実行)、上: [Hello Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.3 Guile をプログラムにリンクする [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-into-Programs-1)
+### 2.3 Guile をプログラムにリンクする
 
 Guileインタープリタはオブジェクトライブラリとして提供されており、Schemeを構成言語または拡張言語として使用するアプリケーションにリンクすることができます。
 
@@ -99,9 +99,9 @@ scheme@(guile-user)> (my-hostname)
 
 * * *
 
-次へ: [Guile モジュール システムの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System)、前: [Guile をプログラムにリンクする](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-into-Programs)、上: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile モジュール システムの使用](#25-guileモジュールシステムの使用)、前: [Guile をプログラムにリンクする](#23-guile-をプログラムにリンクする)、上: [Hello Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.4 Guile拡張機能の作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-Guile-Extensions-1)
+### 2.4 Guile拡張機能の作成
 
 Guileをプログラムにリンクすることで、プログラムのユーザーがSchemeを利用できるようになります。また、ライブラリをGuileにリンクすることで、その機能をGuileのすべてのユーザーが利用できるようになります。
 
@@ -138,31 +138,31 @@ scheme@(guile-user)> (load-extension "./libguile-bessel" "init\_bessel")
 scheme@(guile-user)> (j0 2)
 1ドル＝0.223890779141236
 
-拡張機能のインストール方法の詳細については、[サイトパッケージのインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Installing-Site-Packages)を参照してください。
+拡張機能のインストール方法の詳細については、[サイトパッケージのインストール](04_programming_in_scheme.md#47-サイトパッケージのインストール)を参照してください。
 
 * * *
 
-次へ: [バグの報告](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Bugs)、前: [Guile拡張機能の作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-Guile-Extensions)、上: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [バグの報告](#26-バグの報告)、前: [Guile拡張機能の作成](#24-guile拡張機能の作成)、上: [Hello Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.5 Guileモジュールシステムの使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System-1)
+### 2.5 Guileモジュールシステムの使用
 
 Guileはプログラムをモジュールに分割する機能をサポートしています。モジュールを使用することで、関連するコードをグループ化し、ほぼ独立した部分から完全なプログラムを構成する際の管理が容易になります。
 
-この入門資料を超えるモジュールシステムの詳細については、[モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules)を参照してください。
+この入門資料を超えるモジュールシステムの詳細については、[モジュール](06_18_modules.md#618-モジュール)を参照してください。
 
-* [モジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Modules)
-* [新しいモジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-new-Modules)
-* [拡張機能をモジュールに組み込む](https://doc.guix.gnu.org/guile/latest/en/guile.html#Putting-Extensions-into-Modules)
+* [モジュールの使用](#251-モジュールの使用)
+* [新しいモジュールの作成](#252-新しいモジュールの作成)
+* [拡張機能をモジュールに組み込む](#253-拡張機能をモジュールに組み込む)
 
 * * *
 
-次へ: [新しいモジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-new-Modules)、上へ: [Guile モジュール システムの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [新しいモジュールの作成](#252-新しいモジュールの作成)、上へ: [Guile モジュール システムの使用](#25-guileモジュールシステムの使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 2.5.1 モジュールの使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Modules-1)
+#### 2.5.1 モジュールの使用
 
 Guileには、文字列処理やコマンドライン解析など、多くの便利なモジュールが付属しています。さらに、他のGuile開発者によって作成されたGuileモジュールも多数存在しますが、これらは手動でインストールする必要があります。
 
-以下に、パイプを介して他のプロセスと通信する手段を提供する `(ice-9 popen)` モジュールと、関数 `read-line` を提供する `(ice-9 rdelim)` モジュールの使用方法を示すサンプル対話型セッションを示します。[1](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT1)
+以下に、パイプを介して他のプロセスと通信する手段を提供する `(ice-9 popen)` モジュールと、関数 `read-line` を提供する `(ice-9 rdelim)` モジュールの使用方法を示すサンプル対話型セッションを示します。[1](99_footnotes.md#1)
 
 ガイル
 scheme@(guile-user)> (use-modules (ice-9 popen))
@@ -175,9 +175,9 @@ $2 = "drwxr-sr-x 2 mgrabmue mgrabmue 1024 Mar 29 19:57 CVS"
 
 * * *
 
-次へ: [拡張機能をモジュールに組み込む](https://doc.guix.gnu.org/guile/latest/en/guile.html#Putting-Extensions-into-Modules)、前: [モジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Modules)、上: [Guile モジュール システムの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [拡張機能をモジュールに組み込む](#253-拡張機能をモジュールに組み込む)、前: [モジュールの使用](#251-モジュールの使用)、上: [Guile モジュール システムの使用](#25-guileモジュールシステムの使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 2.5.2 新しいモジュールの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-new-Modules-1)
+#### 2.5.2 新しいモジュールの作成
 
 構文形式 `define-module` を使用して新しいモジュールを作成できます。この形式に続く定義は、次の `define-module` まですべて新しいモジュール内に記述されます。
 
@@ -195,13 +195,13 @@ scheme@(guile-user)> (use-modules (foo bar))
 scheme@(guile-user)> (frob 12)
 1ドル＝24
 
-モジュールのインストール方法の詳細については、[サイトパッケージのインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Installing-Site-Packages)を参照してください。
+モジュールのインストール方法の詳細については、[サイトパッケージのインストール](04_programming_in_scheme.md#47-サイトパッケージのインストール)を参照してください。
 
 * * *
 
-前へ: [新しいモジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-new-Modules)、上へ: [Guile モジュール システムの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [新しいモジュールの作成](#252-新しいモジュールの作成)、上へ: [Guile モジュール システムの使用](#25-guileモジュールシステムの使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 2.5.3 拡張機能をモジュールに組み込む [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Putting-Extensions-into-Modules-1)
+#### 2.5.3 拡張機能をモジュールに組み込む
 
 Schemeコードに加えて、C言語で定義されたものもモジュールに含めることができます。
 
@@ -221,13 +221,13 @@ scheme@(guile-user)> (use-modules (math bessel))
 scheme@(guile-user)> (j0 2)
 1ドル＝0.223890779141236
 
-詳細については、[外部拡張機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions)を参照してください。
+詳細については、[外部拡張機能](06_19_foreign_function_interface.md#6192-外部拡張機能)を参照してください。
 
 * * *
 
-前へ: [Guileモジュールシステムの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-Module-System)、上へ: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guileモジュールシステムの使用](#25-guileモジュールシステムの使用)、上へ: [Hello Guile!](#2-こんにちはguile) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 2.6 バグの報告 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Bugs-1)
+### 2.6 バグの報告
 
 インストールに関する問題はすべて、[bug-guile@gnu.org](mailto:bug-guile@gnu.org)まで報告してください。
 
@@ -274,4 +274,4 @@ REPLで問題を再現できるのであれば、それが最善です。REPLで
 
 * * *
 
-次へ: [Programming in Scheme](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-Scheme)、前: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello- Guile_0021)、上: [The Guile Reference Manual](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Programming in Scheme](04_programming_in_scheme.md#4-scheme-でのプログラミング)、前: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello- Guile_0021)、上: [The Guile Reference Manual](00_contents.md) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

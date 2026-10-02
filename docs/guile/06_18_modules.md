@@ -1,4 +1,4 @@
-### 6.18 モジュール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-1)
+### 6.18 モジュール
 
 プログラムが大規模になると、あるファイルで定義された関数やグローバル変数が、別のファイルで定義された関数やグローバル変数と同じ名前を持つ場合、名前の競合が発生する可能性があります。関数名が似ているだけでも、プログラマーが誤った関数名を入力してしまう可能性があるため、見つけにくいバグの原因となることがあります。
 
@@ -12,30 +12,30 @@ C言語のような古い言語では、名前空間の操作や保護に関す�
 
 さらに、Guileは変数を第一級オブジェクトとして提供しています。これらはモジュールシステムとのやり取りに使用できます。
 
-* [モジュールに関する一般情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Information-about-Modules)
-* [Guileモジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules)
-* [Guileモジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules)
-* [モジュールとファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-and-the-File-System)
-* [R6RS バージョン リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References)
-* [R6RSライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Libraries)
-* [変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variables)
-* [モジュールシステムリフレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Module-System-Reflection)
-* [宣言型モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Declarative-Modules)
-* [C言語からのモジュールへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Modules-from-C)
-* [provide and require](https://doc.guix.gnu.org/guile/latest/en/guile.html#provide-and-require)
-* [環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environments)
+* [モジュールに関する一般情報](#6181-モジュールに関する一般情報)
+* [Guileモジュールの使用](#6182-guileモジュールの使用)
+* [Guileモジュールの作成](#6183-guileモジュールの作成)
+* [モジュールとファイルシステム](#6184-モジュールとファイルシステム)
+* [R6RS バージョン リファレンス](#6185-r6rs-バージョンのリファレンス)
+* [R6RSライブラリ](#6186-r6rsライブラリ)
+* [変数](#6187-変数)
+* [モジュールシステムリフレクション](#6188-モジュールシステムリフレクション)
+* [宣言型モジュール](#6189-宣言型モジュール)
+* [C言語からのモジュールへのアクセス](#61810-c言語からモジュールにアクセスする)
+* [provide and require](#61811-provide-と-require)
+* [環境](#61812-環境)
 
 * * *
 
-次へ: [Guile モジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules)、上へ: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile モジュールの使用](#6182-guileモジュールの使用)、上へ: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.1 モジュールに関する一般情報 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Information-about-Modules-1)
+#### 6.18.1 モジュールに関する一般情報
 
 Guileモジュールは、名前付きプロシージャ、変数、マクロの集合と考えることができます。より正確には、シンボル（名前）とSchemeオブジェクトの_バインディング_の集合です。
 
-モジュール内では、すべてのバインディングが可視です。特定のバインディングは _public_ として宣言することができ、その場合、それらはモジュールのいわゆる _export list_ に追加されます。この公開バインディングのセットは、モジュールの _public interface_ と呼ばれます ([Guile モジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules) を参照)。
+モジュール内では、すべてのバインディングが可視です。特定のバインディングは _public_ として宣言することができ、その場合、それらはモジュールのいわゆる _export list_ に追加されます。この公開バインディングのセットは、モジュールの _public interface_ と呼ばれます ([Guile モジュールの作成](#6183-guileモジュールの作成) を参照)。
 
-クライアントモジュールは、提供モジュールのパブリックインターフェイスにアクセスするか、カスタムインターフェイスを構築してそれにアクセスすることによって、提供モジュールのバインディングを_使用します_。カスタムインターフェイスでは、クライアントモジュールはアクセスするバインディングを_選択_でき、バインディングの名前をアルゴリズム的に_変更_することもできます。これに対し、提供モジュールのパブリックインターフェイスを使用する場合は、エクスポートリスト全体が名前変更なしで利用可能です（[Guileモジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules)を参照）。
+クライアントモジュールは、提供モジュールのパブリックインターフェイスにアクセスするか、カスタムインターフェイスを構築してそれにアクセスすることによって、提供モジュールのバインディングを_使用します_。カスタムインターフェイスでは、クライアントモジュールはアクセスするバインディングを_選択_でき、バインディングの名前をアルゴリズム的に_変更_することもできます。これに対し、提供モジュールのパブリックインターフェイスを使用する場合は、エクスポートリスト全体が名前変更なしで利用可能です（[Guileモジュールの使用](#6182-guileモジュールの使用)を参照）。
 
 Guileのすべてのモジュールには、`(ice-9 popen)`や`(srfi srfi-11)`のように、一意のモジュール名があります。モジュール名は、1つ以上のシンボルのリストです。
 
@@ -45,28 +45,28 @@ Guile がモジュールのインターフェース (例えば `(ice-9 popen)`) 
 
 * * *
 
-次へ: [Guile モジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules)、前: [モジュールに関する一般情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Information-about-Modules)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile モジュールの作成](#6183-guileモジュールの作成)、前: [モジュールに関する一般情報](#6181-モジュールに関する一般情報)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.2 Guileモジュールの使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules-1)
+#### 6.18.2 Guileモジュールの使用
 
-Guile モジュールを使用するということは、その公開インターフェースまたはカスタムインターフェースにアクセスすることです ([モジュールに関する一般情報](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Information-about-Modules) を参照)。どちらのタイプのアクセスも、構文形式 `use-modules` で処理されます。この構文は、1 つ以上のインターフェース仕様を受け入れ、評価後に、それらのインターフェースが現在のモジュールで使用できるようにします。このプロセスには、`%load-path` に続く、指定されたモジュールのコードがまだロードされていない場合に、そのコードを見つけてロードすることが含まれる場合があります ([モジュールとファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-and-the-File-System) を参照)。
+Guile モジュールを使用するということは、その公開インターフェースまたはカスタムインターフェースにアクセスすることです ([モジュールに関する一般情報](#6181-モジュールに関する一般情報) を参照)。どちらのタイプのアクセスも、構文形式 `use-modules` で処理されます。この構文は、1 つ以上のインターフェース仕様を受け入れ、評価後に、それらのインターフェースが現在のモジュールで使用できるようにします。このプロセスには、`%load-path` に続く、指定されたモジュールのコードがまだロードされていない場合に、そのコードを見つけてロードすることが含まれる場合があります ([モジュールとファイルシステム](#6184-モジュールとファイルシステム) を参照)。
 
 インターフェース仕様には2つの形式があります。1つ目の形式は、モジュールに名前を付けるだけで、その場合、アクセスされるのは公開インターフェースです。例：
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 popen))
+([use-modules](#6182-guileモジュールの使用) (ice-9 popen))
 
-ここでは、インターフェース仕様は `(ice-9 popen)` であり、その結果、現在のモジュールは `open-pipe`、`close-pipe`、`open-input-pipe` などにアクセスできるようになっています ([Pipes](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pipes) を参照)。
+ここでは、インターフェース仕様は `(ice-9 popen)` であり、その結果、現在のモジュールは `open-pipe`、`close-pipe`、`open-input-pipe` などにアクセスできるようになっています ([Pipes](07_02_10_pipes.md#7210-パイプ) を参照)。
 
 前の例では、現在のモジュールが既に `open-pipe` を定義していた場合、その定義は `(ice-9 popen)` の定義によって上書きされることに注意してください。この理由（およびその他の理由）から、アクセスするモジュールを指定するだけでなく、そのモジュールからバインディングを選択し、現在のモジュールのニーズに合わせて名前を変更する、インターフェース指定の 2 番目のバリエーションがあります。例:
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ((ice-9 popen)
-#:select (([open-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open_002dpipe) . pipe-open) [close-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-close_002dpipe))
-#:renamer ([symbol-prefix-proc](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dprefix_002dproc) 'unixy:)))
+([use-modules](#6182-guileモジュールの使用) ((ice-9 popen)
+#:select (([open-pipe](07_02_10_pipes.md#7210-パイプ) . pipe-open) [close-pipe](07_02_10_pipes.md#7210-パイプ))
+#:renamer ([symbol-prefix-proc](#6182-guileモジュールの使用) 'unixy:)))
 
 あるいはもっと簡単に言うと：
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ((ice-9 popen)
-#:select (([open-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open_002dpipe) . pipe-open) [close-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- close_002dpipe))
+([use-modules](#6182-guileモジュールの使用) ((ice-9 popen)
+#:select (([open-pipe](07_02_10_pipes.md#7210-パイプ) . pipe-open) [close-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- close_002dpipe))
 #:プレフィックス unixy:))
 
 ここでは、インターフェースの仕様が以前よりも複雑になっているため、結果として、2つのバインディングのみを持つカスタムインターフェースが作成され、現在のモジュールによってアクセスされることになります。旧名から新名へのマッピングは以下のとおりです。
@@ -79,8 +79,8 @@ close-pipe unixy:close-pipe
 
 `@`構文を使用すると、モジュール内のバインディングを直接参照することもできます。たとえば、上記の`use-modules`ステートメントを使用して`unixy:pipe-open`と記述し、`(ice-9 popen)`の`pipe-open`を参照する代わりに、`(@ (ice-9 popen) open-pipe)`と記述することもできます。したがって、完全な`use-modules`ステートメントの代替案は次のようになります。
 
-(define unixy:pipe-open ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (ice-9 popen) [open-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open_002dpipe)))
-(define unixy:close-pipe ([@](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040) (ice-9 popen) [close-pipe](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-close_002dpipe)))
+(define unixy:pipe-open ([@](#6182-guileモジュールの使用) (ice-9 popen) [open-pipe](07_02_10_pipes.md#7210-パイプ)))
+(define unixy:close-pipe ([@](#6182-guileモジュールの使用) (ice-9 popen) [close-pipe](07_02_10_pipes.md#7210-パイプ)))
 
 また、`@@`という演算子もあり、これは`@`と同様に使用できますが、アクセスしようとしている変数が実際にエクスポートされているかどうかはチェックしません。したがって、`@@`は`@`の非公式版と考えることができ、最終手段として、またはデバッグなどの場合にのみ使用すべきです。
 
@@ -88,11 +88,11 @@ close-pipe unixy:close-pipe
 
 バインディングが変数を参照する場合、`set!` のターゲットとして `@` および `@@` 構文を使用することもできます。
 
-Scheme プロシージャ: **symbol-prefix-proc** prefix-sym [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dprefix_002dproc)
+Scheme プロシージャ: **symbol-prefix-proc** prefix-sym
 
 引数（シンボル）に「prefix-sym」という接頭辞を付ける手続きを返します。
 
-構文: **use-modules** 仕様 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules)
+構文: **use-modules** 仕様 …
 
 各インターフェース仕様をインターフェースに解決し、現在のモジュールからアクセスできるようにします。戻り値は未定義です。
 
@@ -115,25 +115,25 @@ specはシンボルのリストである場合があり、その場合は、パ�
 
 #:version バージョン仕様
 
-ここで、version-spec は R6RS 互換のバージョン参照です。同じ名前のモジュールが既にロードされている場合、そのモジュールがバージョンを指定していて、そのバージョンが version-spec と互換性がない場合は、エラーが通知されます。バージョン参照の詳細については、[R6RS バージョン参照](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References) を参照してください。
+ここで、version-spec は R6RS 互換のバージョン参照です。同じ名前のモジュールが既にロードされている場合、そのモジュールがバージョンを指定していて、そのバージョンが version-spec と互換性がない場合は、エラーが通知されます。バージョン参照の詳細については、[R6RS バージョン参照](#6185-r6rs-バージョンのリファレンス) を参照してください。
 
 モジュール名が解決できない場合、`use-modules` はエラーを通知します。
 
 C APIについては、`scm_c_use_module`も参照してください。
 
-構文: **@** モジュール名 バインディング名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040)
+構文: **@** モジュール名 バインディング名
 
 モジュール module-name 内の binding-name という名前のバインディングを参照してください。このバインディングは、モジュールによってエクスポートされている必要があります。
 
-構文: **@@** モジュール名 バインディング名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0040_0040)
+構文: **@@** モジュール名 バインディング名
 
-モジュール module-name 内の binding-name という名前のバインディングを参照してください。このバインディングは、モジュールによってエクスポートされていてはいけません。この構文は、デバッグ目的または最終手段としてのみ使用してください。`@@` の使用に関するいくつかの制限については、[宣言型モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Declarative-Modules) を参照してください。
+モジュール module-name 内の binding-name という名前のバインディングを参照してください。このバインディングは、モジュールによってエクスポートされていてはいけません。この構文は、デバッグ目的または最終手段としてのみ使用してください。`@@` の使用に関するいくつかの制限については、[宣言型モジュール](#6189-宣言型モジュール) を参照してください。
 
 * * *
 
-次へ: [モジュールとファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-and-the-File-System)、前: [Guile モジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [モジュールとファイルシステム](#6184-モジュールとファイルシステム)、前: [Guile モジュールの使用](#6182-guileモジュールの使用)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.3 Guileモジュールの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules-1)
+#### 6.18.3 Guileモジュールの作成
 
 独自のモジュールを作成する場合は、以下の手順を実行する必要があります。
 
@@ -141,7 +141,7 @@ C APIについては、`scm_c_use_module`も参照してください。
 * 先頭に `define-module` フォームを追加します。
 * `define-public` または `export` (どちらも下記に記載) を使用して、公開インターフェースに含めるべきすべてのバインディングをエクスポートします。
 
-構文: **define-module** module-name オプション … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dmodule)
+構文: **define-module** module-name オプション …
 
 module-nameは、1つ以上のシンボルのリストです。
 
@@ -153,9 +153,9 @@ module-nameは、1つ以上のシンボルのリストです。
 
 `#:use-module interface-specification`
 
-`(use-modules interface-specification)` と同等です（[Guile モジュールの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Modules) を参照）。
+`(use-modules interface-specification)` と同等です（[Guile モジュールの使用](#6182-guileモジュールの使用) を参照）。
 
-`#:autoload module symbol-list` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-autoload)
+`#:autoload module symbol-list`
 
 シンボルリストのいずれかにアクセスされたときにモジュールをロードします。たとえば、
 
@@ -165,39 +165,39 @@ module-nameは、1つ以上のシンボルのリストです。
 （何かが
 (set! foo (delete-duplicates ...)))
 
-モジュールが自動ロードされると、シンボルリスト内のバインディングのみが使用可能になります[21](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT21)。
+モジュールが自動ロードされると、シンボルリスト内のバインディングのみが使用可能になります[21](99_footnotes.md#21)。
 
 オートロードは、大きなモジュールを本当に必要になるまでロードしないようにする良い方法です。例えば、起動を高速化したり、特定の状況でのみ必要となる場合に有効です。
 
-`#:export list` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-export)
+`#:export list`
 
 シンボルまたはシンボルのペアのリストである必要があるリスト内のすべての識別子をエクスポートします。これは、モジュール本体の `(export list)` と同等です。
 
-`#:re-export list` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-re_002dexport)
+`#:re-export list`
 
 リスト内のすべての識別子を再エクスポートします。リストはシンボルまたはシンボルのペアのリストである必要があります。リスト内のシンボルは、現在のモジュールが他のモジュールからインポートしたものである必要があります。これは、以下の `re-export` と同等です。
 
-`#:置換リスト` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-replace)
+`#:置換リスト`
 
 リスト（シンボルまたはシンボルのペアのリスト）内のすべての識別子をエクスポートし、それらを「置換バインディング」としてマークします。モジュールユーザーの名前空間では、これにより、「置換」としてマークされていない同名のバインディングがすべて置き換えられます。通常、置換によって「オーバーライド」警告メッセージが表示されますが、`#:replace` を使用するとそれを回避できます。
 
 一般的に、`(guile)`モジュールに既に定義が存在するバインディングをエクスポートするモジュールは、`#:export`ではなく`#:replace`を使用する必要があります。`#:replace`は、ある意味で、モジュールがコアバインディングを意図的に置き換えることをGuileに知らせます。ただし、このバインディングの置き換えは、モジュールを使用する名前空間に限定されることに注意してください。つまり、問題のコアバインディングの値は、他のモジュールでは変更されません。
 
-置換後のバインディングが `(guile)` のバインディングと互換性を保つことは多くの場合良いアイデアですが、ユーザーを驚かせないようにするために、バインディングが互換性を持たない場合もあります。たとえば、SRFI-19 は独自のバージョンの `current-time` をエクスポートしますが ([SRFI-19 Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time) を参照)、これはコアの `current-time` 関数 ([Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#Time) を参照) とは互換性がありません。Guile は、モジュールをインポートするユーザーが何をしているのかを理解していると想定し、このバインディングには `#:export` ではなく `#:replace` を使用します。
+置換後のバインディングが `(guile)` のバインディングと互換性を保つことは多くの場合良いアイデアですが、ユーザーを驚かせないようにするために、バインディングが互換性を持たない場合もあります。たとえば、SRFI-19 は独自のバージョンの `current-time` をエクスポートしますが ([SRFI-19 Time](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻) を参照)、これはコアの `current-time` 関数 ([Time](07_02_05_time.md#725-時間) を参照) とは互換性がありません。Guile は、モジュールをインポートするユーザーが何をしているのかを理解していると想定し、このバインディングには `#:export` ではなく `#:replace` を使用します。
 
 `#:replace` 句は、モジュール本体内の `(export! list)` と同等です。
 
 `#:duplicates`（下記参照）は、モジュールユーザー側での重複バインディング処理に関する詳細な制御を提供します。
 
-`#:re-export-and-replace list` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-re_002dexport_002dand_002dreplace)
+`#:re-export-and-replace list`
 
 `#:re-export` と同様ですが、`#:replace` の意味での置換としてバインディングをマークします。
 
-`#:version list` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module-version)
+`#:version list`
 
 モジュールのバージョンは、0個以上の正確な非負整数のリストの形式で指定します。`use-modules` フォームの対応する `#:version` オプションを使用すると、呼び出し元はこのオプションの値をさまざまな方法で制限できます。
 
-`#:重複リスト` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-duplicate-binding-handlers)
+`#:重複リスト`
 
 Guile に、現在のモジュールによってインポートされたバインディングの重複バインディングを、リスト (シンボルのリスト) で定義されたポリシーに従って処理するように指示します。リストには、以下のいずれかから選択された重複バインディング処理ポリシーを表すシンボルが含まれている必要があります。
 
@@ -235,73 +235,73 @@ Guile に、現在のモジュールによってインポートされたバイ�
 
 リストに複数のシンボルが含まれている場合、重複バインディングの解決時には、リストの先頭にある重複バインディングハンドラが優先的に使用されます。前述のとおり、一部の解決ポリシーでは、重複処理の責任をリスト内の次のハンドラに明示的に委ねる場合があります。
 
-`#:duplicates`句が処理される前にGOOPSがロードされている場合、ジェネリック関数を処理するための追加の戦略が利用可能です。詳細については、[ジェネリックのマージ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Merging-Generics)を参照してください。
+`#:duplicates`句が処理される前にGOOPSがロードされている場合、ジェネリック関数を処理するための追加の戦略が利用可能です。詳細については、[ジェネリックのマージ](08_06_methods_and_generic_functions.md#863-ジェネリクスのマージ)を参照してください。
 
 デフォルトの重複バインディング解決ポリシーは、`default-duplicate-binding-handler` プロシージャによって指定され、
 
-(warn-override-core warn [last](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-last) を置き換えます)
+(warn-override-core warn [last](07_05_03_srfi1_list_library.md#7533-セレクタ) を置き換えます)
 
-`#:pure` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pure-module)
+`#:pure`
 
 構文形式以外の標準手続きバインディングを一切含まないモジュール、つまり「純粋な」モジュールを作成します。これは、危険な手続きについて何も知らない「安全な」モジュールを作成する場合に便利です。
 
-構文: **export** 変数 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-export-1)
+構文: **export** 変数 …
 
 現在のモジュールのエクスポートされたバインディングのリストに、すべての変数（シンボルまたはシンボルのペアである必要があります）を追加します。変数がペアの場合、`car` は現在のモジュールから見た変数の名前を示し、`cdr` は現在のモジュールのパブリックインターフェイスにおけるバインディングの名前を指定します。
 
-構文: **define-public** … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dpublic)
+構文: **define-public** …
 
 `(begin (define foo ...) (export foo))` と同等です。
 
-構文: **再エクスポート** 変数 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-re_002dexport-1)
+構文: **再エクスポート** 変数 …
 
 現在のモジュールの再エクスポートされたバインディングのリストに、すべての変数（シンボルまたはシンボルのペアである必要があります）を追加します。シンボルのペアは、`export` と同様に処理されます。再エクスポートされたバインディングは、現在のモジュールが他のモジュールからインポートしたものでなければなりません。
 
-構文: **export!** 変数 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-export_0021)
+構文: **export!** 変数 …
 
 `export` と同様ですが、エクスポートされた変数を置換対象としてマークします。置換バインディングを持つモジュールを使用すると、既存のバインディングは警告なしに置換されます。上記の `#:replace` の説明を参照してください。
 
 * * *
 
-次へ: [R6RS バージョンリファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References)、前: [Guile モジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [R6RS バージョンリファレンス](#6185-r6rs-バージョンのリファレンス)、前: [Guile モジュールの作成](#6183-guileモジュールの作成)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.4 モジュールとファイルシステム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-and-the-File-System-1)
+#### 6.18.4 モジュールとファイルシステム
 
 一般的なプログラムは、Guileシステムにインストールされているモジュールのごく一部しか使用しません。起動時間を短縮するため、Guileはプログラムがモジュールを使用する際にのみ、必要に応じてモジュールをロードします。
 
 プログラムが `(use-modules (ice-9 popen))` を評価し、モジュールがロードされていない場合、Guile は _load path_ 内で慣例的な名前のファイルを検索します。
 
-この場合、`(ice-9 popen)` をロードすると、最終的に Guile は `(primitive-load-path "ice-9/popen")` を実行します。`primitive-load-path` は、`%load-path` 内で ice-9/popen ファイルを検索します ([Load Paths](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths) を参照)。`%load-path` 内の各ディレクトリについて、Guile は `%load-extensions` の拡張子を連結したファイル名を検索します。デフォルトでは、これにより Guile は ice-9/popen.scm と ice-9/popen を `stat` します。`primitive-load-path` の詳細については、[Load Paths](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths) を参照してください。
+この場合、`(ice-9 popen)` をロードすると、最終的に Guile は `(primitive-load-path "ice-9/popen")` を実行します。`primitive-load-path` は、`%load-path` 内で ice-9/popen ファイルを検索します ([Load Paths](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス) を参照)。`%load-path` 内の各ディレクトリについて、Guile は `%load-extensions` の拡張子を連結したファイル名を検索します。デフォルトでは、これにより Guile は ice-9/popen.scm と ice-9/popen を `stat` します。`primitive-load-path` の詳細については、[Load Paths](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス) を参照してください。
 
-`%load-compiled-path` またはフォールバック パスに、対応するコンパイル済みの .go ファイルが見つかり、ソース ファイルと同程度の最新性であれば、ソース ファイルの代わりにそのコンパイル済みファイルがロードされます。コンパイル済みファイルが見つからない場合、Guile はソース ファイルをコンパイルし、生成された .go ファイルをキャッシュに保存する場合があります。コンパイルの詳細については、[Scheme コードのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compilation) を参照してください。
+`%load-compiled-path` またはフォールバック パスに、対応するコンパイル済みの .go ファイルが見つかり、ソース ファイルと同程度の最新性であれば、ソース ファイルの代わりにそのコンパイル済みファイルがロードされます。コンパイル済みファイルが見つからない場合、Guile はソース ファイルをコンパイルし、生成された .go ファイルをキャッシュに保存する場合があります。コンパイルの詳細については、[Scheme コードのコンパイル](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル) を参照してください。
 
 Guileは適切なソースファイルまたはコンパイル済みファイルを見つけると、そのファイルをロードします。ファイルのロード後も、対象となるモジュールがまだ定義されていない場合、Guileはエラーを通知します。
 
-Schemeモジュールのインストール場所と方法の詳細については、[サイトパッケージのインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Installing-Site-Packages)を参照してください。
+Schemeモジュールのインストール場所と方法の詳細については、[サイトパッケージのインストール](04_programming_in_scheme.md#47-サイトパッケージのインストール)を参照してください。
 
 * * *
 
-次へ: [R6RS ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Libraries)、前: [モジュールとファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules-and-the-File-System)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [R6RS ライブラリ](#6186-r6rsライブラリ)、前: [モジュールとファイルシステム](#6184-モジュールとファイルシステム)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.5 R6RS バージョンのリファレンス[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References-1)
+#### 6.18.5 R6RS バージョンのリファレンス
 
 Guile のモジュール システムには、R6RS で説明されているものと同じ形式の宣言されたバージョン指定子に基づいてモジュールを検索する機能が含まれています (「アルゴリズム言語スキームに関する改訂版レポート」の [R6RS ライブラリ フォーム](https://doc.guix.gnu.org/guile/latest/en/r6rs.html#Library-form) を参照)。`define-module` フォームで `#:version` キーワードを使用することで、モジュールは、0 個以上の正確な非負整数のリストとしてバージョンを指定できます。
 
 このバージョンは、モジュール検索プロセス中にモジュールを特定するために使用できます。クライアントモジュールおよび`use-modules`関数の呼び出し元は、次のいずれかの形式を持つ_version参照_を提供することにより、対象モジュールのバージョンに関する制約を指定できます。
 
-(サブバージョン参照 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-（およびバージョン参照[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)）
-（またはバージョン参照[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)）
-([not](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not) バージョンリファレンス)
+(サブバージョン参照 [...](06_08_macros.md#6821-パターン))
+（およびバージョン参照[...](06_08_macros.md#6821-パターン)）
+（またはバージョン参照[...](06_08_macros.md#6821-パターン)）
+([not](06_06_01_booleans.md#661-ブール値) バージョンリファレンス)
 
 ここで、サブバージョン参照は、次のいずれかである。
 
 （サブバージョン）
-([\>=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e_003d) サブバージョン)
-([<=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003c_003d) サブバージョン)
-（およびサブバージョン参照[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)）
-（またはサブバージョン参照[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)）
-([not](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not) サブバージョン参照)
+([\>=](06_06_02_numerical_data_types.md#6628-比較述語) サブバージョン)
+([<=](06_06_02_numerical_data_types.md#6628-比較述語) サブバージョン)
+（およびサブバージョン参照[...](06_08_macros.md#6821-パターン)）
+（またはサブバージョン参照[...](06_08_macros.md#6821-パターン)）
+([not](06_06_01_booleans.md#661-ブール値) サブバージョン参照)
 
 ここで、sub-version は上記のとおり、正確な非負の整数です。バージョン参照は、以下の規則に従って、バージョン参照の各要素がモジュールバージョンの対応する要素と一致する場合に、宣言されたモジュールバージョンと一致します。
 
@@ -318,15 +318,15 @@ Guile のモジュール システムには、R6RS で説明されているも�
 
 以下のいずれかの `use-modules` 式によって正常にロードされます。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ((mylib mymodule) #:version (1 2 ([\>=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e_003d) 0))))
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ((mylib mymodule) #:version (または (1 2 0) (1 2 1))))
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) ((mylib mymodule) #:version ((and ([\>=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e_003d) 1) ([not](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not) 2)) 2 0)))
+([use-modules](#6182-guileモジュールの使用) ((mylib mymodule) #:version (1 2 ([\>=](06_06_02_numerical_data_types.md#6628-比較述語) 0))))
+([use-modules](#6182-guileモジュールの使用) ((mylib mymodule) #:version (または (1 2 0) (1 2 1))))
+([use-modules](#6182-guileモジュールの使用) ((mylib mymodule) #:version ((and ([\>=](06_06_02_numerical_data_types.md#6628-比較述語) 1) ([not](06_06_01_booleans.md#661-ブール値) 2)) 2 0)))
 
 * * *
 
-次へ: [変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variables)、前: [R6RS バージョン参照](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [変数](#6187-変数)、前: [R6RS バージョン参照](#6185-r6rs-バージョンのリファレンス)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.6 R6RSライブラリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Libraries-1)
+#### 6.18.6 R6RSライブラリ
 
 前述のセクションで説明した API に加えて、R6RS で説明されているポータブルな `library` 形式を使用してモジュールを作成するオプションもあります (「アルゴリズム言語スキームに関する改訂版レポート」の [R6RS ライブラリ形式](https://doc.guix.gnu.org/guile/latest/en/r6rs.html#Library-form) を参照)。また、他のプログラマによってこの形式で作成されたライブラリをインポートすることもできます。Guile の R6RS ライブラリ実装は、モジュールシステムに組み込まれた柔軟性を活用し、R6RS ライブラリ形式を対応する Guile `define-module` 形式に展開します。この形式では、同等のインポートおよびエクスポート要件が指定され、同じ本体式が含まれます。ライブラリ式は次のとおりです。
 
@@ -345,18 +345,18 @@ R6RSライブラリの仕組みの中核となるのは、インポートおよ�
 
 Guileのライブラリ実装では、_暗黙的フェージング_と呼ばれる手法（Abdulaziz GhuloumとR. Kent Dybvigによって最初に記述されたもの）が用いられており、これにより、エクスパンダーとコンパイラは、別のライブラリからインポートされたバインディングに必要な可視性を自動的に判断できます。そのため、以下に説明する`for`サブフォームはGuileでは無視されます（ただし、フェージングが明示的なSchemesでは必要となる場合があります）。
 
-Scheme構文: **ライブラリ** 名前 (export export-spec ...) (import import-spec ...) 本体 ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-library)
+Scheme構文: **ライブラリ** 名前 (export export-spec ...) (import import-spec ...) 本体 ...
 
 指定された名前、エクスポート、インポートを持つ新しいライブラリを定義し、このライブラリの環境で指定された本体式を評価します。
 
-ライブラリ名は、空でない識別子のリストであり、オプションで上記で説明した形式のバージョン指定で終わります（[Guile モジュールの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules)を参照）。
+ライブラリ名は、空でない識別子のリストであり、オプションで上記で説明した形式のバージョン指定で終わります（[Guile モジュールの作成](#6183-guileモジュールの作成)を参照）。
 
 各エクスポート仕様は、ライブラリによって定義またはインポートされた変数の名前であるか、`(rename (internal-name external-name) ...)` の形式をとる必要があります。ここで、識別子 internal-name はライブラリによって定義またはインポートされた変数の名前であり、external-name はインポートするライブラリによって変数が認識される名前です。
 
 各インポート仕様は、_インポートセット_（下記参照）であるか、または`(インポートセットのインポートレベル...)`の形式である必要があります。ここで、各インポートレベルは次のいずれかです。
 
 走る
-[expand](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-expand)
+[expand](04_programming_in_scheme.md#4444-コンパイルコマンド)
 （メタレベル）
 
 ここで level は整数です。Guile は明示的なフェーズ指定を必要としないため、`for` サブフォーム内で見つかったインポート セットは展開時に「展開」され、直接指定されたかのように処理されることに注意してください。
@@ -365,12 +365,12 @@ Scheme構文: **ライブラリ** 名前 (export export-spec ...) (import import
 
 図書館の参考資料
 （図書館 図書館参考資料）
-(インポートセット識別子のみ [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(インポートセット識別子を除く [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(インポートセット識別子のみ [...](06_08_macros.md#6821-パターン))
+(インポートセット識別子を除く [...](06_08_macros.md#6821-パターン))
 （プレフィックスインポートセット識別子）
-(rename import-set (internal-identifier external-identifier) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(rename import-set (internal-identifier external-identifier) [...](06_08_macros.md#6821-パターン))
 
-ここで、library-reference は、オプションのバージョン参照で終わる識別子の空でないリストです ([R6RS バージョン参照](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References) を参照)。その他のサブフォームは、ネストされたインポート セットに対して再帰的に定義される次の意味を持ちます。
+ここで、library-reference は、オプションのバージョン参照で終わる識別子の空でないリストです ([R6RS バージョン参照](#6185-r6rs-バージョンのリファレンス) を参照)。その他のサブフォームは、ネストされたインポート セットに対して再帰的に定義される次の意味を持ちます。
 
 * `library` サブフォームは、名前が識別子「library」で始まるインポート用ライブラリを指定するために使用されます。
 * `only` サブフォームは、指定されたインポートセットから指定された識別子のみをインポートします。
@@ -380,15 +380,15 @@ Scheme構文: **ライブラリ** 名前 (export export-spec ...) (import import
 
 GuileはR6RSライブラリをモジュール定義に変換するため、インポート仕様を使用してネイティブGuileモジュールへの依存関係を宣言できますが、そうするとライブラリが他のSchemeに移植しにくくなる可能性があることに注意してください。
 
-Scheme構文: **import** import-spec ... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-import-1)
+Scheme構文: **import** import-spec ...
 
 指定されたインポート仕様で指定されたライブラリを現在の環境にインポートします。各インポート仕様は、上記で説明した`library`形式と同じ形式をとります。
 
 * * *
 
-次へ: [モジュール システム リフレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Module-System-Reflection)、前: [R6RS ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Libraries)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [モジュール システム リフレクション](#6188-モジュールシステムリフレクション)、前: [R6RS ライブラリ](#6186-r6rsライブラリ)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.7 変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variables-1)
+#### 6.18.7 変数
 
 各モジュールには独自のハッシュテーブル（_obarray_と呼ばれることもある）があり、そのモジュールで定義された名前を対応する変数オブジェクトにマッピングします。
 
@@ -404,53 +404,53 @@ Scheme構文: **import** import-spec ... [¶](https://doc.guix.gnu.org/guile/lat
 
 初期値 value を持つ変数を作成し、現在のモジュール内の name という名前にバインドします。ただし、コンストラクタプロシージャ `make-variable` および `make-undefined-variable` のいずれかを呼び出すことで、動的に作成することもできます。
 
-Scheme手順: **make-undefined-variable** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dundefined_002dvariable)
+Scheme手順: **make-undefined-variable**
 
-C 関数: **scm\_make\_undefined\_variable** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fundefined_005fvariable)
+C 関数: **scm\_make\_undefined\_variable** ()
 
 初期状態ではバインドされていない変数を返します。
 
-Scheme手順: **make-variable** init [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dvariable)
+Scheme手順: **make-variable** init
 
-C 関数: **scm\_make\_variable** (init) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fvariable)
+C 関数: **scm\_make\_variable** (init)
 
 初期値 init で初期化された変数を返します。
 
-Scheme手順: **変数バインド?** var [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_002dbound_003f)
+Scheme手順: **変数バインド?** var
 
-C 関数: **scm\_variable\_bound\_p** (var) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvariable_005fbound_005fp)
+C 関数: **scm\_variable\_bound\_p** (var)
 
 変数varが値にバインドされている場合は`#t`を返し、そうでない場合は`#f`を返します。varが変数オブジェクトでない場合はエラーをスローします。
 
-Scheme手順: **variable-ref** var [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_002dref)
+Scheme手順: **variable-ref** var
 
-C 関数: **scm\_variable\_ref** (var) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvariable_005fref)
+C 関数: **scm\_variable\_ref** (var)
 
 変数varを逆参照してその値を返します。varは変数オブジェクトである必要があります。`make-variable`および`make-undefined-variable`を参照してください。
 
-Scheme 手順: **変数セット!** var val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_002dset_0021)
+Scheme 手順: **変数セット!** var val
 
-C 関数: **scm\_variable\_set\_x** (var, val) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvariable_005fset_005fx)
+C 関数: **scm\_variable\_set\_x** (var, val)
 
 変数 var の値を val に設定します。var は変数オブジェクトである必要があり、val は任意の値です。未指定の値を返します。
 
-Scheme手順: **variable-unset!** var [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_002dunset_0021)
+Scheme手順: **variable-unset!** var
 
-C 関数: **scm\_variable\_unset\_x** (var) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvariable_005funset_005fx)
+C 関数: **scm\_variable\_unset\_x** (var)
 
 変数 var の値を解除し、var を未定義の状態にします。
 
-Scheme手順: **変数?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_003f)
+Scheme手順: **変数?** obj
 
-C 関数: **scm\_variable\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvariable_005fp)
+C 関数: **scm\_variable\_p** (obj)
 
 objが変数オブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
 * * *
 
-次へ: [宣言型モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Declarative-Modules)、前: [変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variables)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [宣言型モジュール](#6189-宣言型モジュール)、前: [変数](#6187-変数)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.8 モジュールシステムリフレクション [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Module-System-Reflection-1)
+#### 6.18.8 モジュールシステムリフレクション
 
 これまでのセクションでは、モジュールシステムの宣言的な側面について説明しました。Guileがモジュールシステムを実装するために使用するSchemeオブジェクトのさまざまな部分にアクセスして変更することで、プログラム的にモジュールシステムを操作することもできます。
 
@@ -458,65 +458,65 @@ objが変数オブジェクトの場合は`#t`を返し、そうでない場合�
 
 これらのモジュールオブジェクトは、`eval` の 2 番目の引数として使用できます。
 
-Scheme手順: **current-module** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dmodule)
+Scheme手順: **current-module**
 
-C 関数: **scm\_current\_module** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcurrent_005fmodule)
+C 関数: **scm\_current\_module** ()
 
 現在のモジュールオブジェクトを返します。
 
-Scheme手順: **set-current-module** module [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dcurrent_002dmodule)
+Scheme手順: **set-current-module** module
 
 C 関数: **scm\_set\_current\_module** (モジュール) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fcurrent_005fmodule )
 
 現在のモジュールをモジュールに設定し、以前の現在のモジュールを返します。
 
-Scheme 手順: **save-module-excursion** thunk [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-save_002dmodule_002dexcursion)
+Scheme 手順: **save-module-excursion** thunk
 
-`dynamic-wind` 内で thunk を呼び出すと、thunk の動的範囲が終了したときに、呼び出し時に現在のモジュールが復元されます ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)。
+`dynamic-wind` 内で thunk を呼び出すと、thunk の動的範囲が終了したときに、呼び出し時に現在のモジュールが復元されます ([Dynamic Wind](06_11_controlling_the_flow_of_program_execution.md#61110-ダイナミックウィンド) を参照)。
 
 より正確には、サンクが非ローカルにエスケープした場合、エスケープ時の現在のモジュールが保存され、サンクの動的範囲に最後に入った時の元の現在のモジュールが復元されます。サンクの動的範囲に再び入った場合は、現在のモジュールが保存され、以前に保存された内部モジュールが再び現在のモジュールとして設定されます。
 
-Scheme Procedure: **resolve-module** name \[autoload=#t\] \[version=#f\] \[#:ensure=#t\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-resolve_002dmodule)
+Scheme Procedure: **resolve-module** name \[autoload=#t\] \[version=#f\] \[#:ensure=#t\]
 
-C 関数: **scm\_resolve\_module** (名前) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fresolve_005fmodule)
+C 関数: **scm\_resolve\_module** (名前)
 
-名前が指定されたモジュールを検索して返します。まだ定義されておらず、autoload が true の場合は、自動ロードを試みます。それでも見つからない場合は、ensure が true であれば空のモジュールを作成し、そうでなければ `#f` を返します。version が true の場合は、結果として得られるモジュールが指定されたバージョン参照と互換性があることを確認します ([R6RS バージョン参照](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Version-References) を参照)。名前はシンボルのリストです。
+名前が指定されたモジュールを検索して返します。まだ定義されておらず、autoload が true の場合は、自動ロードを試みます。それでも見つからない場合は、ensure が true であれば空のモジュールを作成し、そうでなければ `#f` を返します。version が true の場合は、結果として得られるモジュールが指定されたバージョン参照と互換性があることを確認します ([R6RS バージョン参照](#6185-r6rs-バージョンのリファレンス) を参照)。名前はシンボルのリストです。
 
-Scheme Procedure: **resolve-interface** name \[#:select=#f\] \[#:hide='()\] \[#:prefix=#f\] \[#:renamer=#f\] \[#:version=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-resolve_002dinterface)
+Scheme Procedure: **resolve-interface** name \[#:select=#f\] \[#:hide='()\] \[#:prefix=#f\] \[#:renamer=#f\] \[#:version=#f\]
 
 `resolve-module` と同様に、指定された名前のモジュールを検索し、そのインターフェースを返します。モジュールのインターフェースもモジュールオブジェクトですが、エクスポートされたバインディングのみが含まれています。
 
-Scheme手順: **module-uses**モジュール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002duses)
+Scheme手順: **module-uses**モジュール
 
 モジュールが使用するインターフェースのリストを返します。
 
-Scheme手順: **module-use!** モジュールインターフェース [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002duse_0021)
+Scheme手順: **module-use!** モジュールインターフェース
 
 モジュールの使用リストの先頭にインターフェースを追加します。両方の引数はモジュールオブジェクトである必要があり、インターフェースは`resolve-interface`によって返されるモジュールである可能性が非常に高いです。
 
-Scheme手順: **reload-module** module [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reload_002dmodule)
+Scheme手順: **reload-module** module
 
 モジュールに対応するソースファイルを再度確認してください。指定されたモジュールに関連付けられたソースファイルが存在しない場合はエラーが発生します。
 
-前のセクションで述べたように、モジュールには識別子（シンボル）とストレージの場所（変数）のマッピングが含まれています。Guile はこのマッピングにアクセスできるようにするための手順をいくつか定義しています。C でプログラミングしている場合は、[C からのモジュールへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Modules-from-C) を参照してください。
+前のセクションで述べたように、モジュールには識別子（シンボル）とストレージの場所（変数）のマッピングが含まれています。Guile はこのマッピングにアクセスできるようにするための手順をいくつか定義しています。C でプログラミングしている場合は、[C からのモジュールへのアクセス](#61810-c言語からモジュールにアクセスする) を参照してください。
 
-Scheme手順: **module-variable** モジュール名 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002dvariable)
+Scheme手順: **module-variable** モジュール名
 
 モジュール内の name にバインドされた変数 (シンボル) を返します。name がバインドされていない場合は `#f` を返します。
 
-スキームプロシージャ: **module-add!** モジュール名 var [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002dadd_0021)
+スキームプロシージャ: **module-add!** モジュール名 var
 
 モジュール内で、name（シンボル）とvar（変数）の間に新しいバインディングを定義します。
 
-スキームプロシージャ: **module-ref** モジュール名[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002dref)
+スキームプロシージャ: **module-ref** モジュール名
 
 モジュール内で名前にバインドされている値を検索します。`module-variable`と同様ですが、結果として得られる変数に対して`variable-ref`も実行し、名前がバインドされていない場合はエラーを発生させます。
 
-スキームプロシージャ: **module-define!** モジュール名の値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002ddefine_0021)
+スキームプロシージャ: **module-define!** モジュール名の値
 
 モジュール内で名前と値をローカルにバインドします。名前が既にモジュール内でローカルにバインドされている場合（つまり、インポートされたモジュールではなくローカルで定義されている場合）、既存の変数に格納されている値が更新されます。そうでない場合は、`module-add!` を介して新しい変数がモジュールに追加されます。
 
-スキームプロシージャ: **module-set!** モジュール名の値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-module_002dset_0021)
+スキームプロシージャ: **module-set!** モジュール名の値
 
 モジュール内の名前と値のバインディングを更新し、名前がモジュール内で既にバインドされていない場合はエラーを発生させます。
 
@@ -524,9 +524,9 @@ Scheme手順: **module-variable** モジュール名 [¶](https://doc.guix.gnu.o
 
 * * *
 
-次へ: [C からのモジュールへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Modules-from-C)、前: [モジュール システム リフレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Module-System-Reflection)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [C からのモジュールへのアクセス](#61810-c言語からモジュールにアクセスする)、前: [モジュール システム リフレクション](#6188-モジュールシステムリフレクション)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.9 宣言型モジュール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Declarative-Modules-1)
+#### 6.18.9 宣言型モジュール
 
 前の節で説明したモジュールとモジュール変数へのファーストクラスアクセスは非常に強力で、GuileユーザーはGuileシステムについて動的に学習するための多くのツールを構築できます。しかし、Schemeの創始者であるMathias Felleisenが「プログラミング言語の表現力について」で述べたように、表現力の高い言語は必然的に推論が難しくなります。Guileのコンパイラが行いたい変換の中には、すべてのトップレベル定義がいつでも変更される可能性がある場合、実行できないものがあります。
 
@@ -555,13 +555,13 @@ Guileがモジュール内のトップレベルの値について推論できる
 
 デフォルトでは、モジュールのコンパイル時に `user-modules-declarative?` パラメータが true の場合、モジュールは宣言的にコンパイルされます。
 
-スキームパラメータ: **user-modules-declarative?** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-user_002dmodules_002ddeclarative_003f)
+スキームパラメータ: **user-modules-declarative?**
 
 `define-module` によって作成されたモジュール内の定義、または明示的なモジュールなしでコンパイル単位の一部として暗黙的に作成された定義を宣言的として扱うことができるかどうかを示すブール値。
 
 通常はこれが望ましい値であるため、`user-modules-declarative?` のデフォルト値は `#t` です。
 
-#### モジュールを宣言型としてマークすべきでしょうか？ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Should-I-Mark-My-Module-As-Declarative_003f)
+#### モジュールを宣言型としてマークすべきでしょうか？
 
 ほとんどのユースケースでは、宣言型モジュールが最適です。ただし、例外もあります。
 
@@ -577,31 +577,31 @@ scheme@(boxes)> (define (box-set! xy) (set-car! x (pk y)))
 
 scheme@(guile-user)> 、リロード(ボックス)
 
-リロード方式の利点は、宣言型モジュールによって実現される最適化を維持しつつ、コードをリアルタイムで更新できる点です。モジュールが重要なプログラム状態を保持している場合、それらの定義を `define-once` としてマークすることで、リロードによる上書きを防ぐことができます。`define-once` の詳細については、[トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level) を参照してください。ちなみに、`define-once` は宣言型定義の最適化も防止するため、再定義可能なバインディングのサブセットが限られている場合は、対話型プログラム開発において、それらの定義を作業中としてマークするための便利なツールとして `define-once` が役立つかもしれません。
+リロード方式の利点は、宣言型モジュールによって実現される最適化を維持しつつ、コードをリアルタイムで更新できる点です。モジュールが重要なプログラム状態を保持している場合、それらの定義を `define-once` としてマークすることで、リロードによる上書きを防ぐことができます。`define-once` の詳細については、[トップレベル変数定義](06_10_definitions_and_variable_bindings.md#6101-トップレベル変数定義) を参照してください。ちなみに、`define-once` は宣言型定義の最適化も防止するため、再定義可能なバインディングのサブセットが限られている場合は、対話型プログラム開発において、それらの定義を作業中としてマークするための便利なツールとして `define-once` が役立つかもしれません。
 
 ユーザーにとって、モジュールが宣言型か非宣言型かはほとんど重要ではありません。`use-modules` による通常の使用方法に加え、ユーザーは公開バインディングまたは非公開バインディングをプログラム的に、あるいは対話的に参照および再定義できます。唯一の違いは、宣言型の定義を変更しても、そのすべての使用箇所が変更されるとは限らないことです。この使用例が重要であり、モジュール全体を再読み込みするだけでは不十分な場合は、モジュール定義に `#:declarative? #f` を追加することで、モジュール内のすべての定義を非宣言型としてマークできます。
 
-モジュールが宣言型であるか否かのデフォルト設定は、前述の `(user-modules-declarative?)` パラメータで制御できますが、このパラメータはモジュールのコンパイル時に設定する必要があります。例えば、`(eval-when (expand) (user-modules-declarative? #f))` のように設定します。詳細は [Eval-when](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-When) を参照してください。
+モジュールが宣言型であるか否かのデフォルト設定は、前述の `(user-modules-declarative?)` パラメータで制御できますが、このパラメータはモジュールのコンパイル時に設定する必要があります。例えば、`(eval-when (expand) (user-modules-declarative? #f))` のように設定します。詳細は [Eval-when](06_08_macros.md#688-eval-when) を参照してください。
 
-あるいは、デフォルトの `-O2` ではなく `-O1` 最適化レベルでコンパイルするか、`guild compile` 呼び出しに明示的に `-Ono-letrectify` を渡すことで、宣言的定義の最適化を防止できます。コンパイラオプションの詳細については、[Scheme コードのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compilation) を参照してください。
+あるいは、デフォルトの `-O2` ではなく `-O1` 最適化レベルでコンパイルするか、`guild compile` 呼び出しに明示的に `-Ono-letrectify` を渡すことで、宣言的定義の最適化を防止できます。コンパイラオプションの詳細については、[Scheme コードのコンパイル](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル) を参照してください。
 
 最後に一点補足します。現在、宣言型モジュールの定義は、定義されているモジュール内、かつコンパイル単位内でのみインライン化できます。将来的には、Guile がインポートされた宣言型定義もインライン化できるようになる可能性があります（モジュール間インライン化）。Guile にとって、定義がインライン化可能かどうかは、定義自体の特性であり、使用方法とは関係ありません。将来的には、宣言型バインディングが再定義された際に、古い定義をユーザーが識別できるように、コンパイラツールを改善していく予定です。
 
 * * *
 
-次へ: [provide and require](https://doc.guix.gnu.org/guile/latest/en/guile.html#provide-and-require)、前: [Declarative Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Declarative-Modules)、上: [Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [provide and require](#61811-provide-と-require)、前: [Declarative Modules](#6189-宣言型モジュール)、上: [Modules](#618-モジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 6.18.10 C言語からモジュールにアクセスする [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Modules-from-C-1)
+#### 6.18.10 C言語からモジュールにアクセスする
 
 これまでのセクションでは、モジュールの作成とアクセス方法として推奨されているSchemeコードでのモジュールの使用方法について説明しました。C言語からモジュールを扱うことも可能ですが、より煩雑になります。
 
 以下の手順が利用可能です。
 
-C 関数: `SCM` **scm\_c\_call\_with\_current\_module** `(SCM モジュール、SCM (*func)(void *)、void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fcall_005fwith_005fcurrent_005fmodule)
+C 関数: `SCM` **scm\_c\_call\_with\_current\_module** `(SCM モジュール、SCM (*func)(void *)、void *data)`
 
 関数を呼び出し、呼び出し中にモジュールを現在のモジュールにします。引数データは関数に渡されます。`scm_c_call_with_current_module` の戻り値は、関数の戻り値です。
 
-C 関数: `SCM` **scm\_public\_variable** `(SCM モジュール名, SCM 名前)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpublic_005fvariable)
+C 関数: `SCM` **scm\_public\_variable** `(SCM モジュール名, SCM 名前)`
 
 C 関数: `SCM` **scm\_c\_public\_variable** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- scm_005fc_005fpublic_005fvariable)
 
@@ -611,19 +611,19 @@ module_name は、Scheme オブジェクトとして表現する場合はシン�
 
 指定された名前のモジュールが見つからなかった場合、エラーを通知します。モジュール内で名前がバインドされていない場合は、単に `#f` を返します。
 
-C 関数: `SCM` **scm\_private\_variable** `(SCM モジュール名, SCM 名前)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprivate_005fvariable)
+C 関数: `SCM` **scm\_private\_variable** `(SCM モジュール名, SCM 名前)`
 
-C 関数: `SCM` **scm\_c\_private\_variable** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fprivate_005fvariable)
+C 関数: `SCM` **scm\_c\_private\_variable** `(const char *module_name, const char *name)`
 
 `scm_public_variable`と同様ですが、公開インターフェースではなく、module_nameという名前のモジュールの内部を参照します。論理的には、これらのプロシージャは、自分で作成したモジュールに対してのみ呼び出すべきです。
 
-C 関数: `SCM` **scm\_public\_lookup** `(SCM モジュール名, SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpublic_005flookup)
+C 関数: `SCM` **scm\_public\_lookup** `(SCM モジュール名, SCM 名)`
 
-C 関数: `SCM` **scm\_c\_public\_lookup** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fpublic_005flookup)
+C 関数: `SCM` **scm\_c\_public\_lookup** `(const char *module_name, const char *name)`
 
-C 関数: `SCM` **scm\_private\_lookup** `(SCM モジュール名, SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprivate_005flookup)
+C 関数: `SCM` **scm\_private\_lookup** `(SCM モジュール名, SCM 名)`
 
-C 関数: `SCM` **scm\_c\_private\_lookup** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fprivate_005flookup)
+C 関数: `SCM` **scm\_c\_private\_lookup** `(const char *module_name, const char *name)`
 
 `scm_public_variable` や `scm_private_variable` と同様ですが、モジュール内で名前がバインドされていない場合はエラーを通知します。常に変数を返します。
 
@@ -642,63 +642,63 @@ SCM my_eval_string (SCM str)
 return scm_call_1 (scm_variable_ref (eval_string_var), str);
 }
 
-C 関数: `SCM` **scm\_public\_ref** `(SCM モジュール名, SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpublic_005fref)
+C 関数: `SCM` **scm\_public\_ref** `(SCM モジュール名, SCM 名)`
 
-C 関数: `SCM` **scm\_c\_public\_ref** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fpublic_005fref)
+C 関数: `SCM` **scm\_c\_public\_ref** `(const char *module_name, const char *name)`
 
-C 関数: `SCM` **scm\_private\_ref** `(SCM モジュール名, SCM 名前)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fprivate_005fref)
+C 関数: `SCM` **scm\_private\_ref** `(SCM モジュール名, SCM 名前)`
 
-C 関数: `SCM` **scm\_c\_private\_ref** `(const char *module_name, const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fprivate_005fref)
+C 関数: `SCM` **scm\_c\_private\_ref** `(const char *module_name, const char *name)`
 
 `scm_public_lookup` や `scm_private_lookup` と同様ですが、変数の参照解除も行います。変数オブジェクトがバインドされていない場合は、エラーを通知します。モジュール_name 内の name にバインドされている値を返します。
 
 さらに、他にも検索関連の手順がいくつかあります。可能であれば、`scm_public_` および `scm_private_` 系の手順を使用することをお勧めします。
 
-C 関数: `SCM` **scm\_c\_lookup** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005flookup)
+C 関数: `SCM` **scm\_c\_lookup** `(const char *name)`
 
 現在のモジュール内で、名前で指定されたシンボルにバインドされている変数を返します。そのようなバインドが存在しない場合、またはシンボルが変数にバインドされていない場合は、エラーを通知します。
 
-C 関数: `SCM` **scm\_lookup** `(SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005flookup)
+C 関数: `SCM` **scm\_lookup** `(SCM 名)`
 
 `scm_c_lookup`と同様ですが、シンボルが直接指定されます。
 
-C 関数: `SCM` **scm\_c\_module\_lookup** `(SCM モジュール、const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fmodule_005flookup)
+C 関数: `SCM` **scm\_c\_module\_lookup** `(SCM モジュール、const char *name)`
 
-C 関数: `SCM` **scm\_module\_lookup** `(SCM モジュール、SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmodule_005flookup)
+C 関数: `SCM` **scm\_module\_lookup** `(SCM モジュール、SCM 名)`
 
 `scm_c_lookup`や`scm_lookup`と同様ですが、現在のモジュールの代わりに指定されたモジュールが使用されます。
 
-C 関数: `SCM` **scm\_module\_variable** `(SCM モジュール、SCM 名)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmodule_005fvariable)
+C 関数: `SCM` **scm\_module\_variable** `(SCM モジュール、SCM 名)`
 
 `scm_module_lookup`と同様ですが、バインディングが存在しない場合は、エラーを発生させる代わりに`#f`を返します。
 
 値を定義するには、`scm_define`を使用します。
 
-C 関数: `SCM` **scm\_c\_define** `(const char *name, SCM val)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fdefine-1)
+C 関数: `SCM` **scm\_c\_define** `(const char *name, SCM val)`
 
 nameで示されるシンボルを現在のモジュール内の変数にバインドし、その変数をvalに設定します。nameが既に変数にバインドされている場合は、それを使用します。そうでない場合は、新しい変数を作成します。
 
-C 関数: `SCM` **scm\_define** `(SCM 名, SCM 値)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdefine-1)
+C 関数: `SCM` **scm\_define** `(SCM 名, SCM 値)`
 
 `scm_c_define`と同様だが、シンボルが直接指定される。
 
-C 関数: `SCM` **scm\_c\_module\_define** `(SCM モジュール、const char *name、SCM 値)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fmodule_005fdefine)
+C 関数: `SCM` **scm\_c\_module\_define** `(SCM モジュール、const char *name、SCM 値)`
 
-C 関数: `SCM` **scm\_module\_define** `(SCM モジュール、SCM 名前、SCM 値)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmodule_005fdefine)
+C 関数: `SCM` **scm\_module\_define** `(SCM モジュール、SCM 名前、SCM 値)`
 
 `scm_c_define`や`scm_define`と同様ですが、現在のモジュールの代わりに指定されたモジュールが使用されます。
 
 まれに、既存の変数のバインディングを変更せずに、`scm_module_define` がアクセスするはずだった変数にアクセスする必要がある場合があります。その場合は、`scm_module_ensure_local_variable` を使用してください。
 
-C 関数: `SCM` **scm\_module\_ensure\_local\_variable** `(SCM モジュール、SCM シンボル)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmodule_005fensure_005flocal_005fvariable)
+C 関数: `SCM` **scm\_module\_ensure\_local\_variable** `(SCM モジュール、SCM シンボル)`
 
 `scm_module_define` と同様ですが、シンボルが既にそのモジュール内でローカルにバインドされている場合、変数の既存のバインドはリセットされません。変数を返します。
 
-C 関数: `SCM` **scm\_module\_reverse\_lookup** `(SCM モジュール、SCM 変数)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmodule_005freverse_005flookup)
+C 関数: `SCM` **scm\_module\_reverse\_lookup** `(SCM モジュール、SCM 変数)`
 
 モジュール内の変数にバインドされているシンボルを検索します。そのようなバインドが見つからない場合は、`#f` を返します。
 
-C 関数: `SCM` **scm\_c\_define\_module** `(const char *name, void (*init)(void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fdefine_005fmodule)
+C 関数: `SCM` **scm\_c\_define\_module** `(const char *name, void (*init)(void *), void *data)`
 
 名前が付けられた新しいモジュールを定義し、init が呼び出されている間、そのモジュールをカレントモジュールとして設定し、データを渡します。モジュールを返します。
 
@@ -706,29 +706,29 @@ C 関数: `SCM` **scm\_c\_define\_module** `(const char *name, void (*init)(void
 
 既に同じ名前のモジュールが存在する場合は、そのまま使用されます。存在しない場合は、空のモジュールが作成されます。
 
-C 関数: `SCM` **scm\_c\_resolve\_module** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fresolve_005fmodule)
+C 関数: `SCM` **scm\_c\_resolve\_module** `(const char *name)`
 
 指定されたモジュール名 name を検索して返します。まだ定義されていない場合は、自動ロードを試みます。それでも見つからない場合は、空のモジュールを作成します。この名前は、`scm_c_define_module` と同様に解釈されます。
 
-C 関数: `SCM` **scm\_c\_use\_module** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fuse_005fmodule)
+C 関数: `SCM` **scm\_c\_use\_module** `(const char *name)`
 
 `(use-modules name)` のように、指定された名前のモジュールを現在のモジュールの使用リストに追加します。この名前は `scm_c_define_module` の場合と同様に解釈されます。
 
-C 関数: `void` **scm\_c\_export** `(const char *name, ...)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fexport)
+C 関数: `void` **scm\_c\_export** `(const char *name, ...)`
 
 名前で指定されたバインディングを、現在のモジュールのパブリックインターフェースに追加します。名前のリストは`NULL`で終了します。
 
 * * *
 
-次へ: [環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environments)、前: [C からのモジュールへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Modules-from-C)、上: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [環境](#61812-環境)、前: [C からのモジュールへのアクセス](#61810-c言語からモジュールにアクセスする)、上: [モジュール](#618-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.18.11 provide と require [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#provide-and-require-1)
+#### 6.18.11 provide と require
 
 オーブリー・ジャファーは、主に自身のポータブルSchemeライブラリSLIBをサポートするために、多くのScheme実装に対してprovide/requireメカニズムを実装しました。SLIB内のライブラリファイルは機能を_提供_し、ユーザープログラムがその機能を_必要と_すると、ライブラリファイルがロードされます。
 
 例えば、SLIB パッケージ内の random.scm ファイルには次の行が含まれています。
 
-([provide](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-provide) 'random)
+([provide](06_23_configuration_features_and_runtime_options.md#62321-機能操作) 'random)
 
 そのため、その手順を使用するには、ユーザーは次のように入力します。
 
@@ -740,23 +740,23 @@ SLIBをGuileと併用する場合、provideとrequireを使用してその機能
 
 * * *
 
-前へ: [provide and require](https://doc.guix.gnu.org/guile/latest/en/guile.html#provide-and-require)、上へ: [Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+前へ: [provide and require](#61811-provide-と-require)、上へ: [Modules](#618-モジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 6.18.12 環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environments-1)
+#### 6.18.12 環境
 
-R5RSで定義されているSchemeには、完全なモジュールシステムは_ありません_。しかし、トップレベルの_環境_という概念は定義されています。このような環境は、識別子（シンボル）をプロシージャやリストなどのSchemeオブジェクトにマッピングします。[クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)。言い換えれば、一連の_バインディング_を実装しています。
+R5RSで定義されているSchemeには、完全なモジュールシステムは_ありません_。しかし、トップレベルの_環境_という概念は定義されています。このような環境は、識別子（シンボル）をプロシージャやリストなどのSchemeオブジェクトにマッピングします。[クロージャの概念](03_hello_scheme.md#34-クロージャの概念)。言い換えれば、一連の_バインディング_を実装しています。
 
-R5RS の環境は、`eval` の 2 番目の引数として渡すことができます ([オンザフライ評価の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fly-Evaluation) を参照)。環境を返すための 3 つの手順が定義されています。`scheme-report-environment`、`null-environment`、および `interaction-environment` ([オンザフライ評価の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fly-Evaluation) を参照)。
+R5RS の環境は、`eval` の 2 番目の引数として渡すことができます ([オンザフライ評価の手順](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) を参照)。環境を返すための 3 つの手順が定義されています。`scheme-report-environment`、`null-environment`、および `interaction-environment` ([オンザフライ評価の手順](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) を参照)。
 
 さらに、Guileでは、任意のモジュールをR5RS環境として使用できます。つまり、`eval`の2番目の引数として渡すことができます。
 
 注：以下の2つの手順は、`(ice-9 r5rs)`モジュールがロードされている場合にのみ利用可能です。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 r5rs))
+([use-modules](#6182-guileモジュールの使用) (ice-9 r5rs))
 
-Scheme手順: **scheme-report-environment**バージョン[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scheme_002dreport_002denvironment)
+Scheme手順: **scheme-report-environment**バージョン
 
-Scheme手順: **null-environment**バージョン [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_002denvironment)
+Scheme手順: **null-environment**バージョン
 
 version は、Scheme レポートの改訂 5 (Revised^5 Report on Scheme) に対応する正確な整数「5」でなければなりません。`scheme-report-environment` は、レポートで定義されている、必須またはオプションで実装によってサポートされているすべてのバインディングを除いて空の環境の指定子を返します。`null-environment` は、レポートで定義されている、必須またはオプションで実装によってサポートされているすべての構文キーワードの (構文) バインディングを除いて空の環境の指定子を返します。
 
@@ -766,4 +766,4 @@ version は、Scheme レポートの改訂 5 (Revised^5 Report on Scheme) に対
 
 * * *
 
-次へ: [外部オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects)、前: [モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Modules)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部オブジェクト](06_20_foreign_objects.md#620-外部オブジェクト)、前: [モジュール](#618-モジュール)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
