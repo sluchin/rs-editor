@@ -1,0 +1,3 @@
+[submodule "docs/scheme/r7rs-small-spec-ja"]
+	path = docs/scheme/r7rs-small-spec-ja
+	url = https://github.com/oitomo/r7rs-small-spec-ja.git
