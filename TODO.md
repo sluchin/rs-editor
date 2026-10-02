@@ -60,15 +60,15 @@
 
 ## Phase 4: 編集コマンドの強化
 
-- [ ] Undo / Redo: `C-/` (undo), `C-x C-/`または `M-_` 相当の redo。
+- [x] Undo / Redo: `C-/` (undo), `C-x C-/`または `M-_` 相当の redo。
       `<textarea>` のネイティブ undo に頼らず、独自の undo スタックを持たせるか検討する
       （kill-ring や mark と同様、バッファごとの状態として `App.tsx` か新規 hook で管理）。
-- [ ] Kill-ring の多段化: 現在 `emacsKeymap.ts` の `killRing` は単一の `useRef<string>`。
+- [x] Kill-ring の多段化: 現在 `emacsKeymap.ts` の `killRing` は単一の `useRef<string>`。
       Emacs の `M-y` (yank-pop) を実装するには配列化してリングにする必要がある。
-- [ ] `C-t` (transpose-chars) を追加する。
-- [ ] `M-<` / `M->` (buffer-start / buffer-end) を追加する。
-- [ ] `C-x h` (mark-whole-buffer) を追加する。
-- [ ] Scheme 向けの構造編集コマンド（あると差別化になる）:
+- [x] `C-t` (transpose-chars) を追加する。
+- [x] `M-<` / `M->` (buffer-start / buffer-end) を追加する。
+- [x] `C-x h` (mark-whole-buffer) を追加する。
+- [x] Scheme 向けの構造編集コマンド（あると差別化になる）:
       - `C-M-f` / `C-M-b` (forward-sexp / backward-sexp) … `bracketMatch` のロジックを流用して S 式単位の移動を実装。
       - `C-M-k` (kill-sexp)
 
