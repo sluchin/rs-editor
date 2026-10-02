@@ -1,86 +1,86 @@
-# Scheme Editor Project Guide
+# Scheme エディタプロジェクトガイド
 
-## Overview
-A Tauri + React + Rust Scheme language editor with a built-in interpreter and REPL.
+## 概要
+Tauri + React + Rust で構築された Scheme 言語エディタで、組み込みインタプリタと REPL を備えています。
 
-## Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Rust + Tauri 2
-- **Build**: Cargo + npm
-- **Development**: Hot reload for both frontend and Rust backend
+## 技術スタック
+- **フロントエンド**: React 18 + TypeScript + Vite
+- **バックエンド**: Rust + Tauri 2
+- **ビルド**: Cargo + npm
+- **開発**: フロントエンドと Rust バックエンド両方のホットリロード対応
 
-## Key Architecture
-Frontend (React components in `src/`) manages the editor UI with minibuffer, file operations, and code display. Backend (Rust in `src-tauri/`) handles the Scheme interpreter, parser, evaluator, and file I/O. Utility modules in `src/lib/` provide keymapping, syntax highlighting, and bracket matching logic (not yet integrated).
+## アーキテクチャ
+フロントエンド（`src/` 内の React コンポーネント）はミニバッファ、ファイル操作、コード表示を備えたエディタ UI を管理します。バックエンド（`src-tauri/` 内の Rust）は Scheme インタプリタ、パーサ、評価器、ファイル I/O を処理します。`src/lib/` のユーティリティモジュールはキーマッピング、構文ハイライト、括弧マッチング機能を提供します（未統合）。
 
-## Development Workflow
-- **Start dev server**: `npm run tauri:dev` — frontend and Rust both reload on changes
-- **Tests**: `npm run test` (Vitest for `src/`) and `cargo test` (for `src-tauri/`)
-- **Format + lint**: `npm run check` (runs format:check, lint, and test — the CI gate)
-- CI runs the same on every push/PR to `main`
+## 開発ワークフロー
+- **開発サーバーを起動**: `npm run tauri:dev` — フロントエンドと Rust は両方とも変更時に自動リロード
+- **テスト**: `npm run test`（`src/` に対する Vitest）と `cargo test`（`src-tauri/` に対する）
+- **フォーマット + リント**: `npm run check`（format:check、lint、test を実行 — CI ゲート）
+- CI は `main` へのすべてのプッシュ/PR で同じ内容を実行
 
-## Adding Features
+## 機能の追加
 
-### Adding Scheme Built-in Functions
-Edit `src-tauri/src/scheme/evaluator.rs`:
-1. Add new match arm in `eval_builtin()` function
-2. Implement the logic using pattern matching on `Value` types
-3. Return `Value` result or error string
+### Scheme 組み込み関数の追加
+`src-tauri/src/scheme/evaluator.rs` を編集:
+1. `eval_builtin()` 関数内に新しい match 分岐を追加
+2. `Value` 型のパターンマッチングを使用してロジックを実装
+3. `Value` 結果またはエラー文字列を返す
 
-### Updating the UI
-Edit components in `src/`:
-1. Components are in `src/components/`
-2. Styles are in `src/styles/`
-3. Update `App.tsx` for state/prop changes
+### UI の更新
+`src/` 内のコンポーネントを編集:
+1. コンポーネントは `src/components/` に配置
+2. スタイルは `src/styles/` に配置
+3. 状態/プロップの変更について `App.tsx` を更新
 
-### Tauri Commands
-To add new backend functions callable from React:
-1. Add `#[tauri::command]` function in `src-tauri/src/main.rs`
-2. Add to `.invoke_handler(tauri::generate_handler![...])` list
-3. Call from React: `await invoke('function_name', { arg: value })`
+### Tauri コマンド
+React から呼び出し可能な新しいバックエンド関数を追加:
+1. `src-tauri/src/main.rs` に `#[tauri::command]` 関数を追加
+2. `.invoke_handler(tauri::generate_handler![...])` リストに追加
+3. React から呼び出し: `await invoke('function_name', { arg: value })`
 
-## Current Implementation Status
+## 現在の実装状況
 
-### Implemented
-- ✅ Parser: Lists, symbols, numbers, strings, booleans
-- ✅ Basic arithmetic: +, -, *, /
-- ✅ List operations: quote, list
-- ✅ REPL with history (last 10 items)
-- ✅ Error handling and display
-- ✅ Dark theme UI
+### 実装済み
+- ✅ パーサ: リスト、シンボル、数値、文字列、ブール値
+- ✅ 基本算術演算: +, -, *, /
+- ✅ リスト操作: quote, list
+- ✅ REPL と履歴機能（最後の 10 項目）
+- ✅ エラーハンドリングと表示
+- ✅ ダークテーマ UI
 
 ### TODO
-- [ ] More operators: >, <, =, etc.
-- [ ] Control flow: if, cond, case
-- [ ] Variable binding: define, let, let*, letrec
-- [ ] Lambda: lambda, define-syntax
-- [ ] List operations: car, cdr, cons, append, length, map
-- [ ] Type checking: integer?, string?, etc.
-- [ ] Comments in editor (already parsed)
-- [ ] Syntax highlighting (consider Monaco Editor)
-- [ ] Better error messages with line numbers
+- [ ] 追加演算子: >, <, = など
+- [ ] 制御フロー: if, cond, case
+- [ ] 変数バインディング: define, let, let*, letrec
+- [ ] ラムダ: lambda, define-syntax
+- [ ] リスト操作: car, cdr, cons, append, length, map
+- [ ] 型チェック: integer?, string? など
+- [ ] エディタ内のコメント（既にパースされているが）
+- [ ] 構文ハイライト（Monaco Editor の検討）
+- [ ] 行番号付きのより良いエラーメッセージ
 
-## Building and Distribution
+## ビルドと配布
 
 ```bash
-# Development
+# 開発
 npm run tauri:dev
 
-# Build for current platform
+# 現在のプラットフォーム用にビルド
 npm run tauri:build
 
-# Built app location
-src-tauri/target/release/rseditor  # or .exe on Windows, .app on macOS
+# ビルドされたアプリの場所
+src-tauri/target/release/rseditor  # または Windows では .exe、macOS では .app
 ```
 
-## Tips
+## ヒント
 
-- Frontend hot-reload works via Vite dev server
-- Rust code changes require app reload (happens automatically)
-- Check console for errors: Ctrl+Shift+I in Tauri app
-- Rust compilation can be slow on first build
+- フロントエンドのホットリロードは Vite 開発サーバーを経由して機能
+- Rust コードの変更はアプリのリロードが必要（自動的に発生）
+- エラーをチェック: Tauri アプリで Ctrl+Shift+I
+- Rust のコンパイルは最初のビルドでは遅くなる可能性がある
 
-## Commit Guidelines
+## コミットガイドライン
 
-- Write commit messages in English
-- Message body should start with a dash/hyphen (e.g., `- Fix bug in parser`)
-- Do not include `Co-Authored-By` or Claude attribution lines in commit messages
+- コミットメッセージは英語で記述
+- メッセージ本体はダッシュ/ハイフンで始まる（例: `- Fix bug in parser`）
+- コミットメッセージに `Co-Authored-By` または Claude 帰属行を含めない
