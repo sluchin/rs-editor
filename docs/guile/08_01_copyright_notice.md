@@ -1,4 +1,4 @@
-### 8.1 著作権表示 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Copyright-Notice-1)
+### 8.1 著作権表示
 
 本章の内容は、エリック・ガレシオ氏が執筆したSTkリファレンスマニュアルから一部引用されており、同氏の著作権表示は以下のとおりです。
 
@@ -8,4 +8,4 @@
 
 * * *
 
-次へ: [インスタンスの作成とスロットへのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation)、前: [著作権表示](https://doc.guix.gnu.org/guile/latest/en/guile.html#Copyright-Notice)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [インスタンスの作成とスロットへのアクセス](08_03_instance_creation_and_slot_access.md#83-インスタンスの作成とスロットへのアクセス)、前: [著作権表示](#81-著作権表示)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

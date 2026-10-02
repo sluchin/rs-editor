@@ -1,12 +1,12 @@
-### 6.4 Guile の初期化 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Initializing-Guile)
+### 6.4 Guile の初期化
 
 Guile API の機能を使用する各スレッドは、`scm_with_guile` または `scm_init_guile` を使用して Guile モードに移行する必要があります。最初のスレッドが Guile モードに入ると、Guile のグローバル状態が自動的に初期化されます。
 
-スレッドが Guile API 関数の外でブロックしたい場合は、`scm_without_guile` を使用して一時的に Guile モードを終了する必要があります。[Guile モードでのブロッキング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Blocking) を参照してください。
+スレッドが Guile API 関数の外でブロックしたい場合は、`scm_without_guile` を使用して一時的に Guile モードを終了する必要があります。[Guile モードでのブロッキング](06_22_threads_mutexes_asyncs_and_dynamic_roots.md#6226-guile-モードでのブロッキング) を参照してください。
 
 `call-with-new-thread` または `scm_spawn_thread` によって作成されたスレッドは、Guile モードで開始されるため、初期化する必要はありません。
 
-C 関数: `void *` **scm\_with\_guile** `(void *(*func)(void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005fguile)
+C 関数: `void *` **scm\_with\_guile** `(void *(*func)(void *), void *data)`
 
 関数を呼び出し、データを渡して、関数が返す値を返します。関数が実行されている間、現在のスレッドはGuileモードになり、Guile APIを使用できます。
 
@@ -22,7 +22,7 @@ C 関数: `void *` **scm\_with\_guile** `(void *(*func)(void *), void *data)` [�
 
 スレッドが `scm_without_guile` によって一時的に Guile モードから抜け出している状態でも、`scm_with_guile` を呼び出すことは問題ありません。その場合、スレッドは一時的に再び Guile モードに入ります。
 
-C 関数: `void` **scm\_init\_guile** `()` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005finit_005fguile)
+C 関数: `void` **scm\_init\_guile** `()`
 
 現在のスレッド内のすべてのコードが、`scm_with_guile` の呼び出し内から実行されるかのように動作するように設定してください。つまり、現在のスレッドから呼び出されるすべての関数は、スタック フレーム上の `SCM` 値がガベージ コレクタから保護されていると想定できます (もちろん、スレッドが明示的に guile モードを終了した場合を除く)。
 
@@ -32,18 +32,18 @@ C 関数: `void` **scm\_init\_guile** `()` [¶](https://doc.guix.gnu.org/guile/l
 
 関数 `scm_init_guile` は、スタック境界を見つけるための特殊な処理を必要とするため、すべてのプラットフォームで利用できるとは限りません。この処理は、Guile が動作するすべてのプラットフォームに移植されているとは限らないためです。したがって、可能であれば、この関数の代わりに `scm_with_guile` またはその派生版である `scm_boot_guile` を使用することをお勧めします。
 
-C 関数: `void` **scm\_boot\_guile** `(int argc, char **argv, void (*main_func) (void *data, int argc, char **argv), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fboot_005fguile)
+C 関数: `void` **scm\_boot\_guile** `(int argc, char **argv, void (*main_func) (void *data, int argc, char **argv), void *data)`
 
 `scm_with_guile` と同様に Guile モードに入り、指定されたデータ、argc、argv を渡して main\_func を呼び出します。main\_func が戻ると、`scm_boot_guile` は `exit (0)` を呼び出します。`scm_boot_guile` は決して戻りません。別の終了値が必要な場合は、main\_func 自身で `exit` を呼び出すようにしてください。まったく終了したくない場合は、`scm_boot_guile` の代わりに `scm_with_guile` を使用してください。
 
-関数 `scm_boot_guile` は、Scheme の `command-line` 関数が argc と argv で指定された文字列を返すように設定しています。main\_func が argc または argv を変更する場合は、最終的なリストを使用して `scm_set_program_arguments` を呼び出す必要があります。そうすることで、Scheme コードはどの引数が処理されたかを認識できます ([ランタイム環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Runtime-Environment) を参照)。
+関数 `scm_boot_guile` は、Scheme の `command-line` 関数が argc と argv で指定された文字列を返すように設定しています。main\_func が argc または argv を変更する場合は、最終的なリストを使用して `scm_set_program_arguments` を呼び出す必要があります。そうすることで、Scheme コードはどの引数が処理されたかを認識できます ([ランタイム環境](07_02_06_runtime_environment.md#726-ランタイム環境) を参照)。
 
-C 関数: `void` **scm\_shell** `(int argc, char **argv)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fshell)
+C 関数: `void` **scm\_shell** `(int argc, char **argv)`
 
-コマンドライン引数を`guile`実行ファイルと同様の方法で処理します。これには、通常のGuile初期化ファイルの読み込み、ユーザーとの対話、`-s`または`-e`オプションで指定されたスクリプトや式の実行、そして終了が含まれます。詳細については、[Guileの起動](https://doc.guix.gnu.org/guile/latest/en/guile.html#Invoking-Guile)を参照してください。
+コマンドライン引数を`guile`実行ファイルと同様の方法で処理します。これには、通常のGuile初期化ファイルの読み込み、ユーザーとの対話、`-s`または`-e`オプションで指定されたスクリプトや式の実行、そして終了が含まれます。詳細については、[Guileの起動](04_programming_in_scheme.md#42-guile-の呼び出し)を参照してください。
 
 この関数は値を返さないため、この関数を呼び出す前に、アプリケーション固有の初期化処理をすべて完了しておく必要があります。
 
 * * *
 
-次へ: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types)、前: [ Guile の初期化](https://doc.guix.gnu.org/guile/latest/en/guile.html#Initialization)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [データ型](06_06_00_data_types.md#66-データ型)、前: [ Guile の初期化](#64-guile-の初期化)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

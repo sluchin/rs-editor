@@ -1,19 +1,19 @@
-#### 7.5.16 SRFI-19 - 時刻/日付ライブラリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-_002d-Time_002fDate-Library)
+#### 7.5.16 SRFI-19 - 時刻/日付ライブラリ
 
 これは SRFI-19 時刻/日付ライブラリの実装です。ここで説明する関数と変数は、
 
 (use-modules (srfi srfi-19))
 
 * [SRFI-19 の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19- Introduction)
-* [SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
-* [SRFI-19 日付](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date)
-* [SRFI-19 時刻/日付変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time_002fDate-conversions)
-* [SRFI-19 日付を文字列に変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date-to-string)
-* [SRFI-19 文字列（現在まで）](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-String-to-date)
+* [SRFI-19 時刻](#75162-srfi-19-時刻)
+* [SRFI-19 日付](#75163-srfi-19-日付)
+* [SRFI-19 時刻/日付変換](#75164-srfi-19-時刻日付変換)
+* [SRFI-19 日付を文字列に変換](#75165-srfi-19-日付を文字列に変換する)
+* [SRFI-19 文字列（現在まで）](#75166-srfi-19-日付までの文字列)
 
 * * *
 
-次へ: [SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)、上へ: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-19 時刻](#75162-srfi-19-時刻)、上へ: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
 #### 7.5.16.1 SRFI-19 の概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19- Introduction-1)
 
@@ -31,107 +31,107 @@
 
 * * *
 
-次へ: [SRFI-19 日付](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date)、前へ: [SRFI-19 概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Introduction)、上へ: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-19 日付](#75163-srfi-19-日付)、前へ: [SRFI-19 概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Introduction)、上へ: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.16.2 SRFI-19 時刻 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time-1)
+#### 7.5.16.2 SRFI-19 時刻
 
 _time_ オブジェクトには、ある時点から始まる時刻を表す type、seconds、nanoseconds フィールドがあります。これは、特定の時刻だけでなく、任意の時点を表します。時刻はナノ秒単位で表されますが、実際の解像度はそれよりも低い場合があります。
 
 以下の変数には、使用可能な時間タイプが格納されます。例えば、`(current-time time-process)` は現在のCPUプロセス時間を返します。
 
-変数: **time-utc** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc)
+変数: **time-utc**
 
 協定世界時（UTC）。
 
-変数: **time-tai** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai)
+変数: **time-tai**
 
 国際原子時（TAI）。
 
-変数: **time-monotonic** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic)
+変数: **time-monotonic**
 
 単調時間、つまり、特定されていない時点から単調に増加する時間を意味する。
 
 現在の実装では、`time-monotonic` は `time-tai` と同じであるため、残念ながらシステムクロックの調整の影響を受けてしまいます。将来的には変更される可能性があります。
 
-変数: **time-duration** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dduration)
+変数: **time-duration**
 
 期間とは、単純に2つの時間の差を意味する。
 
-変数: **time-process** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dprocess)
+変数: **time-process**
 
 現在のプロセスで費やされたCPU時間（プロセス開始時点から）。
 
-変数: **time-thread** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dthread)
+変数: **time-thread**
 
 現在のスレッドで費やされたCPU時間。現在は実装されていません。
 
   
 
-関数: **time?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003f-1)
+関数: **time?** obj
 
 objが時間オブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-関数: **make-time** タイプ ナノ秒 秒 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dtime)
+関数: **make-time** タイプ ナノ秒 秒
 
 指定された型、秒数、ナノ秒数を使用して時間オブジェクトを作成します。
 
-関数: **time-type** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtype)
+関数: **time-type** time
 
-関数: **time-nanosecond** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dnanosecond)
+関数: **time-nanosecond** time
 
-関数: **time-second** 時間 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dsecond)
+関数: **time-second** 時間
 
-機能: **set-time-type!** 時刻タイプ[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dtime_002dtype_0021)
+機能: **set-time-type!** 時刻タイプ
 
-関数: **set-time-nanosecond!** time nsec [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dtime_002dnanosecond_0021)
+関数: **set-time-nanosecond!** time nsec
 
-関数: **set-time-second!** time sec [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dtime_002dsecond_0021)
+関数: **set-time-second!** time sec
 
 時間オブジェクトのタイプ、秒数、ナノ秒数のフィールドを取得または設定します。
 
-`set-time-type!` は単にフィールドを変更するだけで、時間値を変換するわけではありません。変換については、[SRFI-19 時刻/日付変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time_002fDate-conversions) を参照してください。
+`set-time-type!` は単にフィールドを変更するだけで、時間値を変換するわけではありません。変換については、[SRFI-19 時刻/日付変換](#75164-srfi-19-時刻日付変換) を参照してください。
 
-機能: **copy-time** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-copy_002dtime)
+機能: **copy-time** time
 
 指定された時刻のコピーである、新しい時刻オブジェクトを返します。
 
-関数: **current-time** \[type\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dtime-2)
+関数: **current-time** \[type\]
 
 指定された型の現在時刻を返します。デフォルトの型は`time-utc`です。
 
-`current-time` という名前は、Guile コアの `current-time` 関数 ([Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#Time) を参照) および SRFI-18 の `current-time` 関数 ([SRFI-18 Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d18-Time) を参照) と競合することに注意してください。これらの関数を複数使用するアプリケーションでは、それぞれ異なる名前で参照する必要があります。
+`current-time` という名前は、Guile コアの `current-time` 関数 ([Time](07_02_05_time.md#725-時間) を参照) および SRFI-18 の `current-time` 関数 ([SRFI-18 Time](07_05_15_srfi18_multithreading_support.md#75154-srfi-18-時刻) を参照) と競合することに注意してください。これらの関数を複数使用するアプリケーションでは、それぞれ異なる名前で参照する必要があります。
 
-機能: **time-resolution** \[type\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dresolution)
+機能: **time-resolution** \[type\]
 
 指定された時刻タイプの分解能をナノ秒単位で返します。デフォルトのタイプは`time-utc`です。
 
-関数: **time<=?** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003c_003d_003f)
+関数: **time<=?** t1 t2
 
-関数: **time<?** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003c_003f)
+関数: **time<?** t1 t2
 
-関数: **time=?** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003d_003f)
+関数: **time=?** t1 t2
 
-関数: **time>=?** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003e_003d_003f)
+関数: **time>=?** t1 t2
 
-関数: **time>?** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_003e_003f)
+関数: **time>?** t1 t2
 
 時間オブジェクトt1とt2の関係に応じて、`#t`または`#f`を返します。t1とt2は同じ時間型である必要があります。
 
-関数: **時間差** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002ddifference)
+関数: **時間差** t1 t2
 
-関数: **時間差!** t1 t2 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002ddifference_0021)
+関数: **時間差!** t1 t2
 
 t1とt2の間の期間を表す、`time-duration`型の時間オブジェクトを返します。t1とt2は同じ時間型である必要があります。
 
 `time-difference` は新しい時間オブジェクトを返します。`time-difference!` は t1 を変更して戻り値を生成する場合があります。
 
-関数: **add-duration** 時間期間[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dduration)
+関数: **add-duration** 時間期間
 
-関数: **add-duration!** 時間期間 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dduration_0021)
+関数: **add-duration!** 時間期間
 
-関数: **subtract-duration** 時間期間 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-subtract_002dduration)
+関数: **subtract-duration** 時間期間
 
-関数: **subtract-duration!** 時間期間 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-subtract_002dduration_0021)
+関数: **subtract-duration!** 時間期間
 
 指定された期間を加算または減算した時間を表す時間オブジェクトを返します。期間には、`time-duration`型の時間オブジェクトを指定する必要があります。
 
@@ -139,9 +139,9 @@ t1とt2の間の期間を表す、`time-duration`型の時間オブジェクト�
 
 * * *
 
-次へ: [SRFI-19 時刻/日付変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time_002fDate-conversions)、前: [SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)、上: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-19 時刻/日付変換](#75164-srfi-19-時刻日付変換)、前: [SRFI-19 時刻](#75162-srfi-19-時刻)、上: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.16.3 SRFI-19 日付 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date-1)
+#### 7.5.16.3 SRFI-19 日付
 
 _date_オブジェクトは、グレゴリオ暦の日付と、その日付における特定のタイムゾーンでの時刻を表します。
 
@@ -149,139 +149,139 @@ _date_オブジェクトは、グレゴリオ暦の日付と、その日付に�
 
 歴史的に見ると、グレゴリオ暦は1582年後半以降に初めて使用されるようになり、多くの国ではさらに後になってから採用されました。それ以前は、ほとんどの国でユリウス暦が使用されていました。SRFI-19はユリウス暦を一切扱わないため、この歴史的な暦の改革を反映していません。その代わりに、必要に応じてグレゴリオ暦を遡って適用します。特に大英帝国が1752年にグレゴリオ暦を採用する以前の歴史的データを扱う際には、それぞれの状況でどの暦が使用されているかに注意し、必要に応じてSRFI-19以外の変換機能を利用する必要があります。
 
-関数: **date?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_003f)
+関数: **date?** obj
 
 objが日付オブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-関数: **make-date** nsecs seconds minutes hours day month year zone-offset [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002ddate)
+関数: **make-date** nsecs seconds minutes hours day month year zone-offset
 
 新しい日付オブジェクトを作成します。
 
-関数: **date-nanosecond** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dnanosecond)
+関数: **date-nanosecond** date
 
 ナノ秒、0～999999999。
 
-関数: **date-second** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dsecond)
+関数: **date-second** date
 
 秒数は0～59、うるう秒は60です。UTC内で完全に作業している場合は60は表示されず、TAIとの間で変換する場合のみ表示されます。
 
-関数: **date-minute** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dminute)
+関数: **date-minute** date
 
 分、0～59。
 
-関数: **date-hour** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dhour)
+関数: **date-hour** date
 
 時、0時～23時。
 
-関数: **date-day** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dday)
+関数: **date-day** date
 
 月の日付、1日から31日（または月によってはそれより少ない日数）。
 
-関数: **date-month** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dmonth)
+関数: **date-month** date
 
 1～12ヶ月目。
 
-関数: **date-year** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dyear)
+関数: **date-year** date
 
 年、例: 2003。紀元前は負の数で表されます。例: _\-46_ は紀元前 46 年です。0 年はなく、_\-1_ の後に 1 年が続きます。
 
-関数: **date-zone-offset** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dzone_002doffset)
+関数: **date-zone-offset** date
 
 タイムゾーン。グリニッジ標準時を基準とした、東経秒数の整数値。
 
-関数: **date-year-day** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dyear_002dday)
+関数: **date-year-day** date
 
 1月1日を1として数える、1年のうちの日数。
 
-関数: **date-week-day** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dweek_002dday)
+関数: **date-week-day** date
 
 曜日。日曜日は0から始まります。
 
-関数: **date-week-number** date dstartw [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002dweek_002dnumber)
+関数: **date-week-number** date dstartw
 
 年間の週番号（最初の部分的な週は除く）。dstartwは週の開始日を表す曜日で、日曜日は0、月曜日は1などとなります。
 
-関数: **current-date** \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002ddate)
+関数: **current-date** \[tz-offset\]
 
 現在の日時を、UTCからtz-offsetでオフセットした値で表した日付オブジェクトを返します。tz-offsetはグリニッジ標準時を基準とした秒数で、デフォルトはローカルタイムゾーンです。
 
-関数: **current-julian-day** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002djulian_002dday)
+関数: **current-julian-day**
 
 現在のユリウス日を返します。
 
-関数: **current-modified-julian-day** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dmodified_002djulian_002dday)
+関数: **current-modified-julian-day**
 
 現在の修正ユリウス日を返します。
 
 * * *
 
-次へ: [SRFI-19 日付から文字列へ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date-to-string)、前: [SRFI-19 日付](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date)、上: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-19 日付から文字列へ](#75165-srfi-19-日付を文字列に変換する)、前: [SRFI-19 日付](#75163-srfi-19-日付)、上: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.16.4 SRFI-19 時刻/日付変換 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time_002fDate-conversions-1)
+#### 7.5.16.4 SRFI-19 時刻/日付変換
 
-関数: **date->julian-day** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003ejulian_002dday)
+関数: **date->julian-day** date
 
-関数: **date->modified-julian-day** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003emodified_002djulian_002dday)
+関数: **date->modified-julian-day** date
 
-関数: **date->time-monotonic** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003etime_002dmonotonic)
+関数: **date->time-monotonic** date
 
-関数: **date->time-tai** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003etime_002dtai)
+関数: **date->time-tai** date
 
-関数: **date->time-utc** date [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003etime_002dutc)
+関数: **date->time-utc** date
 
-関数: **julian-day->date** jdn \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-julian_002dday_002d_003edate)
+関数: **julian-day->date** jdn \[tz-offset\]
 
-関数: **julian-day->time-monotonic** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-julian_002dday_002d_003etime_002dmonotonic)
+関数: **julian-day->time-monotonic** jdn
 
-関数: **julian-day->time-tai** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-julian_002dday_002d_003etime_002dtai)
+関数: **julian-day->time-tai** jdn
 
-関数: **julian-day->time-utc** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-julian_002dday_002d_003etime_002dutc)
+関数: **julian-day->time-utc** jdn
 
-関数: **modified-julian-day->date** jdn \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-modified_002djulian_002dday_002d_003edate)
+関数: **modified-julian-day->date** jdn \[tz-offset\]
 
-関数: **modified-julian-day->time-monotonic** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-modified_002djulian_002dday_002d_003etime_002dmonotonic)
+関数: **modified-julian-day->time-monotonic** jdn
 
-関数: **modified-julian-day->time-tai** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-modified_002djulian_002dday_002d_003etime_002dtai)
+関数: **modified-julian-day->time-tai** jdn
 
-機能: **modified-julian-day->time-utc** jdn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-modified_002djulian_002dday_002d_003etime_002dutc)
+機能: **modified-julian-day->time-utc** jdn
 
-関数: **time-monotonic->date** time \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic_002d_003edate)
+関数: **time-monotonic->date** time \[tz-offset\]
 
-関数: **time-monotonic->time-tai** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic_002d_003etime_002dtai)
+関数: **time-monotonic->time-tai** time
 
-関数: **time-monotonic->time-tai!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic_002d_003etime_002dtai_0021)
+関数: **time-monotonic->time-tai!** time
 
-関数: **time-monotonic->time-utc** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic_002d_003etime_002dutc)
+関数: **time-monotonic->time-utc** time
 
-関数: **time-monotonic->time-utc!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic_002d_003etime_002dutc_0021)
+関数: **time-monotonic->time-utc!** time
 
-関数: **time-tai->date** time \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003edate)
+関数: **time-tai->date** time \[tz-offset\]
 
-関数: **time-tai->julian-day** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003ejulian_002dday)
+関数: **time-tai->julian-day** time
 
-関数: **time-tai->modified-julian-day** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003emodified_002djulian_002dday)
+関数: **time-tai->modified-julian-day** time
 
-関数: **time-tai->time-monotonic** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003etime_002dmonotonic)
+関数: **time-tai->time-monotonic** time
 
-関数: **time-tai->time-monotonic!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003etime_002dmonotonic_0021)
+関数: **time-tai->time-monotonic!** time
 
-機能: **time-tai->time-utc** 時間 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003etime_002dutc)
+機能: **time-tai->time-utc** 時間
 
-機能: **time-tai->time-utc!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai_002d_003etime_002dutc_0021)
+機能: **time-tai->time-utc!** time
 
-関数: **time-utc->date** time \[tz-offset\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003edate)
+関数: **time-utc->date** time \[tz-offset\]
 
-関数: **time-utc->julian-day** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003ejulian_002dday)
+関数: **time-utc->julian-day** time
 
-関数: **time-utc->modified-julian-day** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003emodified_002djulian_002dday)
+関数: **time-utc->modified-julian-day** time
 
-関数: **time-utc->time-monotonic** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003etime_002dmonotonic)
+関数: **time-utc->time-monotonic** time
 
-関数: **time-utc->time-monotonic!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003etime_002dmonotonic_0021)
+関数: **time-utc->time-monotonic!** time
 
-関数: **time-utc->time-tai** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003etime_002dtai)
+関数: **time-utc->time-tai** time
 
-関数: **time-utc->time-tai!** time [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc_002d_003etime_002dtai_0021)
+関数: **time-utc->time-tai!** time
 
   
 
@@ -289,21 +289,21 @@ objが日付オブジェクトの場合は`#t`を返し、そうでない場合�
 
 `!` 型の関数は、戻り値を生成するために時間引数を変更する場合があります。通常の関数は新しいオブジェクトを作成します。
 
-日付への変換の場合、tz-offset はグリニッジ標準時より東に秒数離れた値です。デフォルトは、システムが提供する `localtime` を使用した指定時刻のローカルタイムゾーンです ([Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#Time) を参照)。
+日付への変換の場合、tz-offset はグリニッジ標準時より東に秒数離れた値です。デフォルトは、システムが提供する `localtime` を使用した指定時刻のローカルタイムゾーンです ([Time](07_02_05_time.md#725-時間) を参照)。
 
 32 ビット システムでは、`localtime` は 32 ビットの `time_t` に制限されているため、デフォルトの tz-offset は 1901 年 12 月から 2038 年 1 月までの時刻にのみ使用できます。それ以前の日付については、アプリケーションは 1902 年の値を使用したい場合がありますが、一部の地域ではそれ以前にタイムゾーンが変更されています。将来の日付については、アプリケーションは今日の規則が無期限に適用されると考える場合があります。しかし、夏時間への正しい移行には、同じ曜日と時刻で、開始曜日と閏日/非閏日が同じ (10 月の最終日曜日などの規則をサポートするため) 1 年以内のオフセットを取得する必要があります。
 
 * * *
 
-次へ: [SRFI-19 文字列から日付へ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-String-to-date)、前: [SRFI-19 時刻/日付変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time_002fDate-conversions)、上: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-19 文字列から日付へ](#75166-srfi-19-日付までの文字列)、前: [SRFI-19 時刻/日付変換](#75164-srfi-19-時刻日付変換)、上: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.16.5 SRFI-19 日付を文字列に変換する [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date-to-string-1)
+#### 7.5.16.5 SRFI-19 日付を文字列に変換する
 
-関数: **date->string** date \[format\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date_002d_003estring)
+関数: **date->string** date \[format\]
 
 日付をフォーマット制御された文字列に変換します。フォーマットは「~」エスケープ文字を含む文字列で、以下の変換表に従って展開されます。デフォルトのフォーマットは「~c」で、ロケールに依存する日付と時刻です。
 
-これらの変換文字の多くは POSIX の `strftime` と同じです ([Time](https://doc.guix.gnu.org/guile/latest/en/guile.html#Time) を参照) が、いくつかの追加文字とバリエーションがあります。
+これらの変換文字の多くは POSIX の `strftime` と同じです ([Time](07_02_05_time.md#725-時間) を参照) が、いくつかの追加文字とバリエーションがあります。
 
 `~~`
 
@@ -461,15 +461,15 @@ ISO-8601 日付/時刻、'~Y-~m-~dT~H:~M:~S'
 
 仕様とリファレンス実装が異なるため、変換「~D」、「~x」、「~X」については現時点では説明していません。
 
-ロケールの変換は、それをサポートするシステムではロケールに依存します（[ロケール情報へのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Locale-Information)を参照）。現在のロケールを変更する方法については、[`setlocale`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)を参照してください。
+ロケールの変換は、それをサポートするシステムではロケールに依存します（[ロケール情報へのアクセス](06_25_support_for_internationalization.md#6255-ロケール情報へのアクセス)を参照）。現在のロケールを変更する方法については、[`setlocale`](07_02_13_locales.md#7213-ロケール)を参照してください。
 
 * * *
 
-前へ: [SRFI-19 日付から文字列へ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Date-to-string)、上へ: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [SRFI-19 日付から文字列へ](#75165-srfi-19-日付を文字列に変換する)、上へ: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.16.6 SRFI-19 日付までの文字列 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-String-to-date-1)
+#### 7.5.16.6 SRFI-19 日付までの文字列
 
-機能: **string->date** 入力テンプレート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003edate)
+機能: **string->date** 入力テンプレート
 
 入力文字列をテンプレート文字列の制御下にある日付に変換します。新しく作成された日付オブジェクトを返します。
 
@@ -617,8 +617,8 @@ ISO-8601 日付/時刻、'~Y-~m-~dT~H:~M:~S'
 
 曜日のマッチング形式は返される日付オブジェクトには影響しないことに注意してください。曜日は日、月、年から自動的に決定されます。
 
-ロケールの変換は、それをサポートするシステムではロケールに依存します（[ロケール情報へのアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessing-Locale-Information)を参照）。現在のロケールを変更する方法については、[`setlocale`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)を参照してください。
+ロケールの変換は、それをサポートするシステムではロケールに依存します（[ロケール情報へのアクセス](06_25_support_for_internationalization.md#6255-ロケール情報へのアクセス)を参照）。現在のロケールを変更する方法については、[`setlocale`](07_02_13_locales.md#7213-ロケール)を参照してください。
 
 * * *
 
-次へ: [SRFI-26 - パラメータの特殊化](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d26)、前: [SRFI-19 - 時刻/日付ライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-26 - パラメータの特殊化](07_05_18_srfi26_specializing_parameters.md#7518-srfi-26---パラメータの特殊化)、前: [SRFI-19 - 時刻/日付ライブラリ](#7516-srfi-19---時刻日付ライブラリ)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

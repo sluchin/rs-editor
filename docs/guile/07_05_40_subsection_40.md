@@ -13,4 +13,4 @@
 
 * * *
 
-次へ: [SRFI-88 キーワードオブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d88)、前: [SRFI-71 - 複数値のための拡張 let 構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d71)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-88 キーワードオブジェクト](07_05_42_srfi88_keyword_objects.md#7542-srfi-88-キーワードオブジェクト)、前: [SRFI-71 - 複数値のための拡張 let 構文](#7540-srfi-71---複数値のための拡張let構文-)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

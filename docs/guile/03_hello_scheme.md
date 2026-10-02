@@ -1,35 +1,35 @@
-3 Hello Scheme! [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021-1)
+3 Hello Scheme!
 --------------------------------------------------------------------------------------------
 
 本章では、Scheme言語の優雅さと強力さを支える基本概念を紹介します。
 
 Schemeに関する基礎知識をお持ちの読者は、この章を飛ばしても構いません。しかし、Schemeを初めて学ぶ読者のために、データ、手続き、式、クロージャに関する以下の説明は、以降の章で前提とされる最低限のScheme理解を提供することを目的としています。
 
-この入門資料のスタイルは、R5RSの簡潔で正確な記述と、既存のSchemeチュートリアルの解説的な記述の中間を目指しています。ウェブ上の有用なSchemeリソースへのリンクについては、[参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)をご覧ください。
+この入門資料のスタイルは、R5RSの簡潔で正確な記述と、既存のSchemeチュートリアルの解説的な記述の中間を目指しています。ウェブ上の有用なSchemeリソースへのリンクについては、[参考文献](#35-参考文献)をご覧ください。
 
-* [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data)
-* [プロシージャの表現と使用法](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)
-* [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)
-* [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)
-* [参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)
+* [データ型、値、変数](#31-データ型値変数)
+* [プロシージャの表現と使用法](#32-プロシージャの表現と使用)
+* [式と評価](#33-式と評価)
+* [クロージャの概念](#34-クロージャの概念)
+* [参考文献](#35-参考文献)
 
 * * *
 
-次へ: [手続きの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [手続きの表現と使用](#32-プロシージャの表現と使用)、上: [Hello Scheme!](#3-hello-scheme) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 3.1 データ型、値、変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types_002c-Values-and-Variables)
+### 3.1 データ型、値、変数
 
 このセクションでは、データ型と値の表現、Schemeが潜在型言語であることの意味、そして変数の役割について説明します。最後に、新しい変数を定義するためのSchemeの構文と、既存の変数の値を変更するための構文を紹介します。
 
-* [潜在型付け](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing)
-* [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)
-* [変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)
+* [潜在型付け](#311-潜在型付け)
+* [値と変数](#312-値と変数)
+* [変数の定義と設定](#313-変数の定義と設定)
 
 * * *
 
-次へ: [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)、上: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [値と変数](#312-値と変数)、上: [データ型、値、変数](#31-データ型値変数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.1.1 潜在型付け [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing-1)
+#### 3.1.1 潜在型付け
 
 「潜在型付け」という用語は、Schemeなどのコンピュータ言語を説明する際に使用されます。これらの言語では、一般的に、プログラムのソースコードを見ただけでは、特定の変数や特定の式の結果に関連付けられるデータの型を判断することはできません。
 
@@ -43,9 +43,9 @@ Schemeに関する基礎知識をお持ちの読者は、この章を飛ばし�
 
 * * *
 
-次へ: [変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)、前: [潜在型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Latent-Typing)、上: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [変数の定義と設定](#313-変数の定義と設定)、前: [潜在型](#311-潜在型付け)、上: [データ型、値、変数](#31-データ型値変数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.1.2 値と変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables-1)
+#### 3.1.2 値と変数
 
 Schemeには、データを表現するために使用できる多くのデータ型が用意されています。プリミティブ型には、文字、文字列、数値、プロシージャなどがあります。複合型は、プリミティブ型と複合型の値をまとめて格納できるもので、リスト、ペア、ベクトル、多次元配列などがあります。さらに、Guileでは、アプリケーションが独自のデータ型を定義することができ、それらはSchemeの標準組み込み型と同じステータスを持ちます。
 
@@ -59,9 +59,9 @@ Schemeプログラムの実行中、あらゆる型の値が次々と出現し�
 
 * * *
 
-前へ: [値と変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Values-and-Variables)、上へ: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [値と変数](#312-値と変数)、上へ: [データ型、値、変数](#31-データ型値変数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.1.3 変数の定義と設定 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-and-Setting-Variables)
+#### 3.1.3 変数の定義と設定
 
 新しい変数を定義するには、Schemeの`define`構文を次のように使用します。
 
@@ -79,44 +79,44 @@ Schemeプログラムの実行中、あらゆる型の値が次々と出現し�
 
 既に存在する変数の値を変更する方法も非常に似ていますが、`define` が Scheme の構文 `set!` に置き換えられます。例：
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 変数名 新しい値)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) 変数名 新しい値)
 
 変数には固定の型がないため、新しい値は、変数名で指定された場所に以前格納されていた値とは全く異なる型になる可能性があります。したがって、以下の2つの例はどちらも正しいと言えます。
 
 ;; `x` の値を 5 に変更します。
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x 5)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) x 5)
 
 ;; `organization` の値を FSF の番地に変更します。
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021)組織545)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース)組織545)
 
-これらの例では、value と new-value はリテラルな数値または文字列です。しかし一般に、value と new-value は任意の Scheme 式にすることができます。Scheme 式が取り得る形式についてはまだ説明していませんが ([式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) を参照)、次の `set!` の例が何をするかはおそらく推測できるでしょう。
+これらの例では、value と new-value はリテラルな数値または文字列です。しかし一般に、value と new-value は任意の Scheme 式にすることができます。Scheme 式が取り得る形式についてはまだ説明していませんが ([式と評価](#33-式と評価) を参照)、次の `set!` の例が何をするかはおそらく推測できるでしょう。
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) x 1))
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) x ([+](06_06_02_numerical_data_types.md#66211-算術関数) x 1))
 
 （注：これは `define` と `set!` の完全な説明ではありません。不足している部分を補うには、Scheme の他の側面を紹介する必要があるためです。ただし、Scheme の構造に既に精通している場合は、次の参照に進んで不足している部分についてすぐに読むことができます。）
 
-* [ラムダの代替](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives) では、新しいプロシージャを定義する際に使用できる `define` 構文の代替形式について説明しています。
-* [セッターを使用したプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters) を参照してください。これは、複合データ構造の奥深くにある単一の値を変更するのに役立つ、`set!` 構文の別の形式について説明しています。
-* Scheme プログラムでトップレベル以外で `define` を使用する方法については、[内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions) を参照してください。既存の変数の値を変更するために `set!` ではなく `define` を使用する場合の議論も含まれています。
+* [ラムダの代替](#324-ラムダの代替手段) では、新しいプロシージャを定義する際に使用できる `define` 構文の代替形式について説明しています。
+* [セッターを使用したプロシージャ](06_07_procedures.md#678-セッター付きプロシージャ) を参照してください。これは、複合データ構造の奥深くにある単一の値を変更するのに役立つ、`set!` 構文の別の形式について説明しています。
+* Scheme プログラムでトップレベル以外で `define` を使用する方法については、[内部定義](06_10_definitions_and_variable_bindings.md#6103-内部定義) を参照してください。既存の変数の値を変更するために `set!` ではなく `define` を使用する場合の議論も含まれています。
 
 * * *
 
-次へ: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)、前: [データ型、値、変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Data)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [式と評価](#33-式と評価)、前: [データ型、値、変数](#31-データ型値変数)、上: [Hello Scheme!](#3-hello-scheme) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 3.2 プロシージャの表現と使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Representation-and-Use-of-Procedures)
+### 3.2 プロシージャの表現と使用
 
 このセクションでは、Schemeプロシージャの使用と作成の基本について説明します。プロシージャをScheme値の一種として表現する方法、およびプロシージャ呼び出し式の構築方法について解説します。次に、`lambda`を使用して新しいプロシージャを作成する方法を説明し、最後に、明示的な`lambda`式を記述する代わりに使用できる`define`のさまざまな省略形を紹介します。
 
-* [プロシージャを値として扱う](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values)
-* [シンプルな手続き呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)
-* [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)
-* [Lambda の代替手段](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives)
+* [プロシージャを値として扱う](#321-プロシージャを値として扱う)
+* [シンプルな手続き呼び出し](#322-シンプルなプロシージャ呼び出し)
+* [新しいプロシージャの作成と使用](#323-新しいプロシージャの作成と使用)
+* [Lambda の代替手段](#324-ラムダの代替手段)
 
 * * *
 
-次へ: [単純なプロシージャ呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)、上: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [単純なプロシージャ呼び出し](#322-シンプルなプロシージャ呼び出し)、上: [プロシージャの表現と使用](#32-プロシージャの表現と使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.2.1 プロシージャを値として扱う [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values-1)
+#### 3.2.1 プロシージャを値として扱う
 
 Schemeの大きな簡略化の一つは、プロシージャが単なる値の型の一つであり、プロシージャの値は文字列やリストなどと全く同じように受け渡しや変数への格納ができるという点です。`open-input-file`のような組み込みの標準Schemeプロシージャについて話す場合、実際には、`open-input-file`という事前定義されたトップレベル変数があり、その値はR5RSが`open-input-file`に実行させるべき処理を実装するプロシージャであることを意味します。
 
@@ -134,51 +134,51 @@ Schemeの大きな簡略化の一つは、プロシージャが単なる値の�
 
 `call/cc` に必要なプロシージャ値が保持されたので、`call-with-current-continuation` をまったく別の目的で使用するか、あるいはその値を変更して、プログラム内で `call/cc` の代わりに誤って `call-with-current-continuation` をプロシージャとして使用した場合にエラーが発生するようにすることができます。例:
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) call-with-current-continuation "もはや手続きではありません!")
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) call-with-current-continuation "もはや手続きではありません!")
 
 あるいは、`call-with-current-continuation` をそのままにしておいても構いません。複数の変数に同じプロシージャ値が保持されていても全く問題ありません。
 
 * * *
 
-次へ: [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)、前: [値としてのプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-as-Values)、上: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [新しいプロシージャの作成と使用](#323-新しいプロシージャの作成と使用)、前: [値としてのプロシージャ](#321-プロシージャを値として扱う)、上: [プロシージャの表現と使用](#32-プロシージャの表現と使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.2.2 シンプルなプロシージャ呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Procedure-Invocation)
+#### 3.2.2 シンプルなプロシージャ呼び出し
 
 Schemeにおけるプロシージャ呼び出しは、次のように記述されます。
 
-([procedure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure) \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
+([procedure](06_07_procedures.md#678-セッター付きプロシージャ) \[arg1 \[arg2 [...](06_08_macros.md#6821-パターン)\]\])
 
 この式において、procedureは値がプロシージャである任意のScheme式です。ただし、最も一般的なのは、値がプロシージャである変数の名前です。
 
 例えば、`string-append` は標準的な Scheme 手続きで、文字列として与えられる引数をすべて連結する動作をします。したがって、式は次のようになります。
 
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew")
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "/home" "/" "andrew")
 
 これは、結果として文字列値「/home/andrew」が得られるプロシージャ呼び出しです。
 
 同様に、`string-length` は単一の文字列引数の長さを返す標準的な Scheme 手続きです。
 
-([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) "abc")
+([string-length](06_06_05_strings.md#6655-文字列の選択) "abc")
 
 これは、結果として数値3となるプロシージャ呼び出しです。
 
 プロシージャ呼び出しの各パラメータは、それ自体が任意の Scheme 式になり得ます。プロシージャ呼び出し自体が式の型であるため、これら 2 つの例を組み合わせると次のようになります。
 
-([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) ([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew"))
+([string-length](06_06_05_strings.md#6655-文字列の選択) ([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "/home" "/" "andrew"))
 
 —結果として数値12となる手続き呼び出し。
 
 （この2つの例を逆の順序で組み合わせるとどうなるのか疑問に思うかもしれません。そうすると、構文的に正しいプロシージャ呼び出し式を作成できます。）
 
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend ) "/home" ([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) "abc"))
+([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend ) "/home" ([string-length](06_06_05_strings.md#6655-文字列の選択) "abc"))
 
 しかし、この式を実行するとエラーが発生します。なぜなら、`(string-length "abc")` の結果は数値であり、`string-append` は引数として数値を受け入れるように設計されていないからです。
 
 * * *
 
-次へ: [ラムダの代替手段](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives)、前: [単純なプロシージャ呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Invocation)、上: [プロシージャの表現と使用法](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ラムダの代替手段](#324-ラムダの代替手段)、前: [単純なプロシージャ呼び出し](#322-シンプルなプロシージャ呼び出し)、上: [プロシージャの表現と使用法](#32-プロシージャの表現と使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.2.3 新しいプロシージャの作成と使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-and-Using-a-New-Procedure)
+#### 3.2.3 新しいプロシージャの作成と使用
 
 Schemeには多くの標準プロシージャがあり、Guileはそれらをすべて定義済みのトップレベル変数を通して提供します。これらの標準プロシージャはすべて、このリファレンスマニュアルの後半の章で説明されています。
 
@@ -186,19 +186,19 @@ Schemeには多くの標準プロシージャがあり、Guileはそれらをす
 
 例えば、次の Scheme 式の値は
 
-(lambda (name address) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(lambda (name address) body [...](06_08_macros.md#6821-パターン))
 
 これは、`name` と `address` という 2 つの引数を取る、新しく作成されたプロシージャです。この新しいプロシージャの動作は、プロシージャ定義の本体にある式と定義の順序によって決まります。（通常、本体は何らかの方法で引数を使用します。そうでなければ、プロシージャに引数を渡す意味がありません。）この新しいプロシージャが呼び出されると、本体の最後の式の値を返します。
 
 より具体的に説明するために、2つの引数が両方とも文字列であり、この手順の目的がこれらの引数を含む結合文字列を作成することだと仮定しましょう。すると、完全なラムダ式は次のようになります。
 
 (lambda (name address)
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "Name=" name ":Address=" address))
 
 前の節で述べたように、プロシージャ呼び出し式のプロシージャ部分は、値がプロシージャである任意の Scheme 式にすることができます。しかし、ラムダ式はまさにそれです！したがって、次のようにラムダ式をプロシージャ呼び出しで直接使用できます。
 
 ((lambda (name address)
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "Name=" name ":Address=" address))
 「FSF」
 「ケンブリッジ」
 
@@ -210,7 +210,7 @@ Schemeには多くの標準プロシージャがあり、Guileはそれらをす
 
 (make-combined-string を定義)
 (lambda (name address)
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address)))
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "Name=" name ":Address=" address)))
 
 そして、プロシージャ呼び出しで変数名を使用するには：
 
@@ -222,70 +222,70 @@ Schemeには多くの標準プロシージャがあり、Guileはそれらをす
 
 * * *
 
-前へ: [新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure)、上へ: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [新しいプロシージャの作成と使用](#323-新しいプロシージャの作成と使用)、上へ: [プロシージャの表現と使用](#32-プロシージャの表現と使用) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.2.4 ラムダの代替手段 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives-1)
+#### 3.2.4 ラムダの代替手段
 
 Scheme プログラムでは、プロシージャを作成してそれを変数に格納したいという要望が非常に一般的であるため、まさにそれを可能にする `define` 構文の別の形式が用意されています。
 
 形式の `define` 式
 
-(define (name \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
-本文 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(define (name \[arg1 \[arg2 [...](06_08_macros.md#6821-パターン)\]\])
+本文 [...](06_08_macros.md#6821-パターン))
 
 長い形式と完全に同等です
 
 (名前を定義する)
-(lambda (\[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
-本文 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+(lambda (\[arg1 \[arg2 [...](06_08_macros.md#6821-パターン)\]\])
+本文 [...](06_08_macros.md#6821-パターン)))
 
 例えば、前の小節の`make-combined-string`の定義は、次のように記述することもできます。
 
 (define (make-combined-string name address)
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "Name=" name ":Address=" address))
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "Name=" name ":Address=" address))
 
 この種のプロシージャ定義では、想定どおりの引数数を必要とするプロシージャが作成されます。ラムダ式にはさらに2つの形式があり、これらは可変個の引数を受け入れることができるプロシージャを作成します。
 
-(lambda (arg1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(lambda (arg1 [...](06_08_macros.md#6821-パターン) . args) body [...](06_08_macros.md#6821-パターン))
 
-(ラムダ引数本体 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(ラムダ引数本体 [...](06_08_macros.md#6821-パターン))
 
 代替の`define`構文に対応する形式は次のとおりです。
 
-(define (name arg1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e) . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(define (name arg1 [...](06_08_macros.md#6821-パターン) . args) body [...](06_08_macros.md#6821-パターン))
 
-(define (name . args) body [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(define (name . args) body [...](06_08_macros.md#6821-パターン))
 
-これらのフォームの仕組みの詳細については、[ラムダ: 基本プロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)を参照してください。
+これらのフォームの仕組みの詳細については、[ラムダ: 基本プロシージャの作成](06_07_procedures.md#671-ラムダ-基本的なプロシージャの作成)を参照してください。
 
-Guile 2.0 より前は、Guile は `define` 構文に拡張機能を提供しており、以前の拡張機能を任意の深さまでネストすることができました。これらの拡張機能はデフォルトでは提供されなくなり、代わりに [カリー定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Curried-Definitions) に移動されました。
+Guile 2.0 より前は、Guile は `define` 構文に拡張機能を提供しており、以前の拡張機能を任意の深さまでネストすることができました。これらの拡張機能はデフォルトでは提供されなくなり、代わりに [カリー定義](07_19_curried_definitions.md#719-カリー定義) に移動されました。
 
 （代替の`define`形式は、特にScheme言語の初心者にとってはやや紛らわしいと言えるかもしれない。なぜなら、それらは`lambda`の役割と、手続きが他の種類の値と同様に変数に格納される値であるという事実の両方を隠してしまうからである。一方で、それらは非常に便利であり、Schemeの強力な機能のもう1つ、つまり実行時に任意の構文変換を指定し、それを後続の読み込み入力に適用できるという機能の良い例でもある。）
 
 * * *
 
-次へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)、前: [プロシージャの表現と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Procedures)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [クロージャの概念](#34-クロージャの概念)、前: [プロシージャの表現と使用](#32-プロシージャの表現と使用)、上: [Hello Scheme!](#3-hello-scheme) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 3.3 式と評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Expressions-and-Evaluation)
+### 3.3 式と評価
 
 これまで、新しい変数を作成および初期化する `define` 式のように、何らかの処理を行う式について見てきました。また、プロシージャ呼び出し式の値のように、値を持つ式についても説明してきました。
 
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew")
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "/home" "/" "andrew")
 
 しかし、このような手続き呼び出しのような式がその「値」に還元される原因や、そのような式の処理がSchemeプログラム全体の実行とどのように関連しているかについては、まだ明確にしていません。
 
 このセクションでは、「評価」という概念を導入することで、式の値の意味を明確にします。評価がもたらす副作用について議論し、Schemeの様々な式がどのように評価されるかを説明し、評価を検証するためのメカニズムとしてのGuile REPLの動作と使用法について解説します。最後に、Schemeの一般的な構文式を簡潔にまとめます。
 
-* [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating)
-* [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)
-* [Guile REPL の使用方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)
-* [共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)
+* [式の評価とプログラムの実行](#331-式の評価とプログラムの実行)
+* [末尾呼び出し](#332-末尾呼び出し)
+* [Guile REPL の使用方法](#333-guile-repl-の使用)
+* [共通構文の概要](#334-共通構文の概要)
 
 * * *
 
-次へ: [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [末尾呼び出し](#332-末尾呼び出し)、上: [式と評価](#33-式と評価) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.1 式の評価とプログラムの実行 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Expressions-and-Executing-Programs)
+#### 3.3.1 式の評価とプログラムの実行
 
 Schemeでは、式を実行するプロセスを「評価」と呼びます。評価には2種類の結果があります。
 
@@ -296,7 +296,7 @@ Schemeでは、式を実行するプロセスを「評価」と呼びます。�
 
 「値」と「副作用」の意味、そしてそれらの違いをより直感的に定義しようと試みたくなる気持ちは理解できます。しかし、一般的にこれは非常に困難です。また、そのような定義は不要です。Schemeプログラムの動作は、Schemeがプログラム全体をどのように実行するかを指定し、各式タイプの評価における値と副作用を個別に記述することで、十分に定義できます。
 
-そこで、いくつかの定義[2](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT2)…
+そこで、いくつかの定義[2](99_footnotes.md#2)…
 
 Schemeプログラムは、一連の式で構成されます。
 * Scheme インタープリタは、これらの式を順番に 1 つずつ評価することによってプログラムを実行します。
@@ -308,16 +308,16 @@ Schemeプログラムは、一連の式で構成されます。
 
 以下の各項では、これらの表現形式がどのように評価されるかを説明します。
 
-* [リテラルデータの評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Literal)
-* [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)
-* [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)
-* [特殊な構文式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Special)
+* [リテラルデータの評価](#3311-リテラルデータの評価)
+* [変数参照の評価](#3312-変数参照の評価)
+* [プロシージャ呼び出し式の評価](#3313-プロシージャ呼び出し式の評価)
+* [特殊な構文式の評価](#3314-特殊構文式の評価)
 
 * * *
 
-次へ: [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [変数参照の評価](#3312-変数参照の評価)、上: [式の評価とプログラムの実行](#331-式の評価とプログラムの実行) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.1.1 リテラルデータの評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Literal-Data)
+#### 3.3.1.1 リテラルデータの評価
 
 リテラルデータ式が評価されると、その式の値は、式が記述する値そのものになります。リテラルデータ式の評価には副作用はありません。
 
@@ -329,13 +329,13 @@ Schemeプログラムは、一連の式で構成されます。
 
 このようにリテラルで表現できるデータ型については、そのデータ型のリテラルデータ式の構文、つまり、その型のリテラル値を表すためにコードに記述する必要がある構文を、そのデータ型の読み取り構文と呼びます。このマニュアルでは、各データ型の説明セクションで、それぞれの読み取り構文を規定しています。
 
-データ型によっては読み取り構文がないものがあります。たとえば、プロシージャはリテラルデータとして表現することはできません。プロシージャは、`lambda` 式を使用して作成する必要があります ([新しいプロシージャの作成と使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-a-Procedure) を参照)。または、`define` の省略形を使用して暗黙的に作成する必要があります ([ラムダの代替](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda-Alternatives) を参照)。
+データ型によっては読み取り構文がないものがあります。たとえば、プロシージャはリテラルデータとして表現することはできません。プロシージャは、`lambda` 式を使用して作成する必要があります ([新しいプロシージャの作成と使用](#323-新しいプロシージャの作成と使用) を参照)。または、`define` の省略形を使用して暗黙的に作成する必要があります ([ラムダの代替](#324-ラムダの代替手段) を参照)。
 
 * * *
 
-次へ: [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)、前: [リテラルデータの評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Literal)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プロシージャ呼び出し式の評価](#3313-プロシージャ呼び出し式の評価)、前: [リテラルデータの評価](#3311-リテラルデータの評価)、上: [式の評価とプログラムの実行](#331-式の評価とプログラムの実行) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.1.2 変数参照の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-a-Variable-Reference)
+#### 3.3.1.2 変数参照の評価
 
 変数名のみで構成される式を評価すると、その式の値は指定された変数の値になります。変数参照式の評価には副作用はありません。
 
@@ -345,7 +345,7 @@ Schemeプログラムは、一連の式で構成されます。
 
 式 `key` の値は文字列値 `"Paul Evans"` です。key が次のように変更された場合
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) key 3.74)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) key 3.74)
 
 式「key」の値は数値3.74です。
 
@@ -353,13 +353,13 @@ Schemeプログラムは、一連の式で構成されます。
 
 * * *
 
-次へ: [特殊構文式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Special)、前: [変数参照の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Variable)、上: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [特殊構文式の評価](#3314-特殊構文式の評価)、前: [変数参照の評価](#3312-変数参照の評価)、上: [式の評価とプログラムの実行](#331-式の評価とプログラムの実行) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.1.3 プロシージャ呼び出し式の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-a-Procedure-Invocation-Expression)
+#### 3.3.1.3 プロシージャ呼び出し式の評価
 
 ここから評価が面白くなってきます！既に述べたように、プロシージャ呼び出し式は次の形式になります。
 
-([procedure](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure) \[arg1 \[arg2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)\]\])
+([procedure](06_07_procedures.md#678-セッター付きプロシージャ) \[arg1 \[arg2 [...](06_08_macros.md#6821-パターン)\]\])
 
 ここで、procedureは、評価された値がプロシージャとなる式でなければならない。
 
@@ -376,7 +376,7 @@ Schemeで定義された手続きにおいて、「値のリストをパラメ�
 
 これを説明するために、もう一度プロシージャ呼び出し式を見てみましょう。
 
-([string-length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dlength) ([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) "/home" "/" "andrew"))
+([string-length](06_06_05_strings.md#6655-文字列の選択) ([string-append](06_06_05_strings.md#66510-文字列の反転と追加) "/home" "/" "andrew"))
 
 最も外側の式では、procedure は `string-length` で、arg1 は `(string-append "/home" "/" "andrew")` です。
 
@@ -395,29 +395,29 @@ Schemeで定義された手続きにおいて、「値のリストをパラメ�
 
 * * *
 
-前へ: [プロシージャ呼び出し式の評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Eval-Procedure)、上へ: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [プロシージャ呼び出し式の評価](#3313-プロシージャ呼び出し式の評価)、上へ: [式の評価とプログラムの実行](#331-式の評価とプログラムの実行) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.1.4 特殊構文式の評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating-Special-Syntactic-Expressions)
+#### 3.3.1.4 特殊構文式の評価
 
 プロシージャ呼び出し式が評価される際には、プロシージャとすべての引数式が評価されてからでないとプロシージャは呼び出されません。特殊な構文式は、引数を未評価の形式で操作でき、引数式の一部またはすべてを評価するかどうかを選択できるため、特別なものとなっています。
 
 なぜこれが必要なのでしょうか？例えば、ユーザーにファイルを削除するかどうかを尋ね、ユーザーが「はい」と答えた場合にファイルを削除するプログラムを考えてみましょう。
 
-(if ([string=?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003d_003f) (read-answer "このファイルを削除すべきでしょうか？")
+(if ([string=?](06_06_05_strings.md#6657-文字列の比較) (read-answer "このファイルを削除すべきでしょうか？")
 "はい"）
-([delete-file](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_002dfile) ファイル))
+([delete-file](07_02_03_file_system.md#723-ファイルシステム) ファイル))
 
 ここで一番外側の `(if …)` 式がプロシージャ呼び出し式だった場合、実際にファイルを削除する副作用を持つ式 `(delete-file file)` は、`if` プロシージャが呼び出される前に既に評価されてしまっています。これは明らかに役に立ちません。`if` 式の重要な点は、`if` 式の条件が「真」の場合にのみ、_後続の_式が評価されるということです。
 
 したがって、`if` は手続きではなく、特別な構文でなければなりません。すでに説明した他の特別な構文には、`define`、`set!`、`lambda` があります。`define` と `set!` は、`define` または `set!` 式の最初の引数として指定された変数 _name_ の値ではなく、その変数の値を知る必要があるため、構文です。`lambda` は、手続き本体を定義する式をすぐに評価するのではなく、これらの式を組み込んだ手続きオブジェクトを作成し、その手続きが呼び出されたときに後で評価できるようにするため、構文です。
 
-各特殊構文式を評価するための規則は、それぞれの特殊構文ごとに個別に規定されています。標準的な特殊構文の概要については、[共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)を参照してください。
+各特殊構文式を評価するための規則は、それぞれの特殊構文ごとに個別に規定されています。標準的な特殊構文の概要については、[共通構文の概要](#334-共通構文の概要)を参照してください。
 
 * * *
 
-次へ: [Guile REPL の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)、前: [式の評価とプログラムの実行](https://doc.guix.gnu.org/guile/latest/en/guile.html#Evaluating)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile REPL の使用](#333-guile-repl-の使用)、前: [式の評価とプログラムの実行](#331-式の評価とプログラムの実行)、上: [式と評価](#33-式と評価) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.2 末尾呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-calls)
+#### 3.3.2 末尾呼び出し
 
 Schemeは「適切に末尾再帰的」であり、特定のコンテキストからの末尾呼び出しや再帰はスタック領域やその他のリソースを消費しないため、任意のサイズのデータや任意の長さの計算に使用できます。たとえば、
 
@@ -435,7 +435,7 @@ Schemeは「適切に末尾再帰的」であり、特定のコンテキスト�
 
 `foo` は、指定された n から始めて無限に数値を出力します。これは、n を出力した後、自身を再帰的に呼び出して _n+1_ を出力するという方法で実装されています。この再帰は末尾呼び出しであり、最後に実行される処理です。Scheme では、このような末尾呼び出しは無制限に実行できます。
 
-または、値が返される場合を考えてみましょう。SRFI-1 の `last` 関数のバージョン ([セレクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Selectors) を参照) はリストの最後の要素を返します。
+または、値が返される場合を考えてみましょう。SRFI-1 の `last` 関数のバージョン ([セレクタ](07_05_03_srfi1_list_library.md#7533-セレクタ) を参照) はリストの最後の要素を返します。
 
 (define (my-last lst)
 (if (null? (cdr lst))
@@ -470,15 +470,15 @@ Schemeは「適切に末尾再帰的」であり、特定のコンテキスト�
 
   
 
-上記はコア機能と特殊形式のみです。他のモジュールにおける末尾呼び出しについては、関連するドキュメントで説明されています。例えば、SRFI-1の`any`と`every`（[Searching](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Searching)を参照）などです。
+上記はコア機能と特殊形式のみです。他のモジュールにおける末尾呼び出しについては、関連するドキュメントで説明されています。例えば、SRFI-1の`any`と`every`（[Searching](07_05_03_srfi1_list_library.md#7537-検索)を参照）などです。
 
 末尾呼び出しになる可能性のある箇所は多数あることに注意してください。たとえば、`for-each` の最後の呼び出しなどですが、明示的に説明されている箇所のみが保証されます。
 
 * * *
 
-次へ: [共通構文の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Syntax-Summary)、前: [末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)、上: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [共通構文の概要](#334-共通構文の概要)、前: [末尾呼び出し](#332-末尾呼び出し)、上: [式と評価](#33-式と評価) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.3 Guile REPL の使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-the-Guile-REPL)
+#### 3.3.3 Guile REPL の使用
 
 Guileを起動する際に、実行する特定のプログラムを指定しない場合、Guileは標準の読み込み・評価・印刷ループ（略して_REPL_）に入ります。このモードでは、Guileはユーザーが入力する次のScheme式を繰り返し読み込み、評価し、結果の値を表示します。
 
@@ -494,55 +494,55 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 
 * * *
 
-前へ: [Guile REPL の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-REPL)、上へ: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guile REPL の使用](#333-guile-repl-の使用)、上へ: [式と評価](#33-式と評価) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.3.4 共通構文の概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Summary-of-Common-Syntax)
+#### 3.3.4 共通構文の概要
 
 このサブセクションでは、Schemeで最もよく使われる構文式を一覧表示します。これは、よく使われる特殊構文を目にしたときにすぐに認識できるようにするためです。各構文の詳細な説明については、該当するリファレンスを参照してください。
 
-`lambda`（[Lambda: 基本的なプロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda)を参照）は、プロシージャ オブジェクトを構築するために使用されます。
+`lambda`（[Lambda: 基本的なプロシージャの作成](06_07_procedures.md#671-ラムダ-基本的なプロシージャの作成)を参照）は、プロシージャ オブジェクトを構築するために使用されます。
 
-`define`（[トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)を参照）は、新しい変数を作成し、その初期値を設定するために使用されます。
+`define`（[トップレベル変数定義](06_10_definitions_and_variable_bindings.md#6101-トップレベル変数定義)を参照）は、新しい変数を作成し、その初期値を設定するために使用されます。
 
-`set!`（[トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)を参照）は、既存の変数の値を変更するために使用されます。
+`set!`（[トップレベル変数定義](06_10_definitions_and_variable_bindings.md#6101-トップレベル変数定義)を参照）は、既存の変数の値を変更するために使用されます。
 
-`let`、`let*`、`letrec`（[ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）は、一連の式を評価するための内部レキシカル環境を作成します。この環境では、指定された一連のローカル変数が、対応する一連の式の値にバインドされます。環境の概要については、[クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)を参照してください。
+`let`、`let*`、`letrec`（[ローカル変数バインディング](06_10_definitions_and_variable_bindings.md#6102-ローカル変数バインディング)を参照）は、一連の式を評価するための内部レキシカル環境を作成します。この環境では、指定された一連のローカル変数が、対応する一連の式の値にバインドされます。環境の概要については、[クロージャの概念](#34-クロージャの概念)を参照してください。
 
-`begin`（[シーケンスとスプライシング](https://doc.guix.gnu.org/guile/latest/en/guile.html#begin)を参照）は、一連の式を順番に実行し、最後の式の値を返します。これは、最後の引数を返すプロシージャとは異なります。プロシージャ呼び出し式の評価では、引数が順番に評価されることが保証されないためです。
+`begin`（[シーケンスとスプライシング](06_11_controlling_the_flow_of_program_execution.md#6111-シーケンスとスプライシング)を参照）は、一連の式を順番に実行し、最後の式の値を返します。これは、最後の引数を返すプロシージャとは異なります。プロシージャ呼び出し式の評価では、引数が順番に評価されることが保証されないためです。
 
-`if` と `cond` ([単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals) を参照) は、1 つ以上の条件が「true」または「false」と評価されるかどうかに応じて、引数式の条件付き評価を提供します。
+`if` と `cond` ([単純な条件評価](06_11_controlling_the_flow_of_program_execution.md#6112-単純な条件評価) を参照) は、1 つ以上の条件が「true」または「false」と評価されるかどうかに応じて、引数式の条件付き評価を提供します。
 
-`case`（[単純な条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals)を参照）は、変数が指定された値グループのいずれかを持っているかどうかに応じて、引数式の条件付き評価を提供します。
+`case`（[単純な条件付き評価](06_11_controlling_the_flow_of_program_execution.md#6112-単純な条件評価)を参照）は、変数が指定された値グループのいずれかを持っているかどうかに応じて、引数式の条件付き評価を提供します。
 
-`and`（[式のシーケンスの条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)を参照）は、式がなくなるか、いずれかの式が「false」と評価されるまで、式のシーケンスを順番に実行します。
+`and`（[式のシーケンスの条件付き評価](06_11_controlling_the_flow_of_program_execution.md#6113-式のシーケンスの条件付き評価)を参照）は、式がなくなるか、いずれかの式が「false」と評価されるまで、式のシーケンスを順番に実行します。
 
-`or`（[式のシーケンスの条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)を参照）は、式がなくなるか、いずれかの式が「true」と評価されるまで、式のシーケンスを順番に実行します。
+`or`（[式のシーケンスの条件付き評価](06_11_controlling_the_flow_of_program_execution.md#6113-式のシーケンスの条件付き評価)を参照）は、式がなくなるか、いずれかの式が「true」と評価されるまで、式のシーケンスを順番に実行します。
 
 * * *
 
-次へ: [参考文献](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading)、前: [式と評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Expressions)、上: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [参考文献](#35-参考文献)、前: [式と評価](#33-式と評価)、上: [Hello Scheme!](#3-hello-scheme) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 3.4 クロージャの概念 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Concept-of-Closure)
+### 3.4 クロージャの概念
 
 クロージャの概念とは、ラムダ式が、そのラムダ式が出現する時点でレキシカルスコープ内にある変数バインディングを「キャプチャ」するという考え方です。ラムダ式によって作成されたプロシージャは、キャプチャされたバインディングを参照および変更することができ、これらのバインディングの値はプロシージャ呼び出し間で保持されます。
 
 このセクションでは、このアイデアのさまざまな要素について、より詳細に説明し、考察します。
 
-* [名前、場所、値、環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Environments)
-* [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)
-* [環境連鎖](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)
-* [語彙スコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)
-* [クローズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)
-* [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)
-* [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)
-* [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)
-* [例 4: オブジェクト指向](https://doc.guix.gnu.org/guile/latest/en/guile.html#OO-Closure)
+* [名前、場所、値、環境](#341-名前場所値および環境)
+* [ローカル変数と環境](#342-ローカル変数と環境)
+* [環境連鎖](#343-環境連鎖)
+* [語彙スコープ](#344-語彙スコープ)
+* [クローズ](#345-クロージャ)
+* [例 1: シリアル番号生成器](#346-例-1-シリアル番号生成器)
+* [例 2: 共有永続変数](#347-例-2-共有永続変数-)
+* [例 3: コールバッククロージャの問題](#348-例-3-コールバッククロージャ問題)
+* [例 4: オブジェクト指向](#349-例-4-オブジェクト指向)
 
 * * *
 
-次へ: [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ローカル変数と環境](#342-ローカル変数と環境)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.1 名前、場所、値、および環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Names_002c-Locations_002c-Values-and-Environments)
+#### 3.4.1 名前、場所、値、および環境
 
 先に述べたように、Schemeプログラムにおける変数名は、あらゆる種類のScheme値を格納できる場所と関連付けられています。（ちなみに、LispやSchemeのコミュニティでは、「場所」の代替として「vcell」という用語がよく使われます。）したがって、「変数を作成する」とは、Schemeプログラムコードで使用される名前（識別子）と、その名前が参照する変数の場所との間に関連付けを確立することを意味します。その場所に格納される値は変化する可能性がありますが、特定の名前が参照する場所は常に同じです。
 
@@ -558,11 +558,11 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 
 * * *
 
-次へ: [環境連鎖](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)、前: [名前、場所、値、環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Environments)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [環境連鎖](#343-環境連鎖)、前: [名前、場所、値、環境](#341-名前場所値および環境)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.2 ローカル変数と環境 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables-and-Environments)
+#### 3.4.2 ローカル変数と環境
 
-`define`構文を使用してトップレベル変数を作成する方法を見てきました（[変数の定義と設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definition)を参照）。通常、プロシージャ本体の一部として、スコープがより限定された変数を作成すると便利な場合がよくあります。Schemeでは、これは`let`構文、またはその修正形式である`let*`と`letrec`を使用して行います。これらの構文については、マニュアルの後半で詳しく説明します（[ローカル変数のバインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）。ここでは、ローカル変数がどのように機能するかがわかる程度に、これらの構文の使用方法を説明します。
+`define`構文を使用してトップレベル変数を作成する方法を見てきました（[変数の定義と設定](#313-変数の定義と設定)を参照）。通常、プロシージャ本体の一部として、スコープがより限定された変数を作成すると便利な場合がよくあります。Schemeでは、これは`let`構文、またはその修正形式である`let*`と`letrec`を使用して行います。これらの構文については、マニュアルの後半で詳しく説明します（[ローカル変数のバインディング](06_10_definitions_and_variable_bindings.md#6102-ローカル変数バインディング)を参照）。ここでは、ローカル変数がどのように機能するかがわかる程度に、これらの構文の使用方法を説明します。
 
 例えば、次のコードはローカル変数`s`を使用して、3辺の長さが与えられた三角形の面積の計算を簡略化しています。
 
@@ -571,16 +571,16 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 (c 2.8 を定義)
 
 （領域を定義する）
-(let ((s ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) abc) 2)))
-([sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) s ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sa) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sb) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sc))))
+(let ((s ([/](06_06_02_numerical_data_types.md#66211-算術関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) abc) 2)))
+([sqrt](06_06_02_numerical_data_types.md#66212-科学関数) ([\*](06_06_02_numerical_data_types.md#66211-算術関数) s ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sa) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sb) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sc))))
 
 `let` 式の効果は、新しい環境を作成し、その環境内で、名前 `s` と新しい場所との関連付けを行うことです。新しい場所の初期値は、`(/ (+ abc) 2)` を評価することによって得られます。次に、`let` 本体内の式、すなわち `(sqrt (* s (- sa) (- sb) (- sc)))` が新しい環境のコンテキストで評価され、最後に評価された式の値が `let` 式全体の値となり、したがって変数 `area` の値となります。
 
 * * *
 
-次へ: [語彙スコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)、前: [ローカル変数と環境](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variables)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [語彙スコープ](#344-語彙スコープ)、前: [ローカル変数と環境](#342-ローカル変数と環境)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.3 環境連鎖 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Chaining)
+#### 3.4.3 環境連鎖
 
 前の小節の例では、重要な点を省略しました。その例の `let` 式の本体は、ローカル変数 `s` だけでなく、トップレベル変数 `a`、`b`、`c`、`sqrt` も参照しています。（`sqrt` は、平方根を計算するための Scheme の標準手続きです。）`let` 式の本体が _local_ `let` 環境のコンテキストで評価される場合、評価によってこれらのトップレベル変数の値はどのように取得されるのでしょうか？
 
@@ -596,9 +596,9 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 
 * * *
 
-次へ: [クロージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)、前: [環境チェイニング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Chaining)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [クロージャ](#345-クロージャ)、前: [環境チェイニング](#343-環境連鎖)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.4 語彙スコープ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope-1)
+#### 3.4.4 語彙スコープ
 
 これまで説明してきたルールは、Schemeにおける「レキシカルスコープ」の実装方法の詳細です。この節では、レキシカルスコープが一般的に何を意味するのかを少し説明し、非レキシカルスコープの例を示します。
 
@@ -609,13 +609,13 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 
 実際には、ほとんどのプログラミング言語では字句スコープが標準であり、おそらく皆さんが直感的に「普通」と考えるものに相当します。もしかしたら、それ以外の方法、あるいはそれ以外の有用な方法が一体どのように考えられるのか疑問に思うかもしれません。そこで、別の種類のスコープも可能であることを示し、字句スコープと比較するために、次の節では字句スコープ以外の例を示し、その動作が対応する字句スコープのコードとどのように異なるかを詳細に検討します。
 
-* [非レキシカルスコープの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scoping-Example)
+* [非レキシカルスコープの例](#3441-非レキシカルスコープの例)
 
 * * *
 
-上へ: [語彙範囲](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+上へ: [語彙範囲](#344-語彙スコープ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.4.1 非レキシカルスコープの例 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#An-Example-of-Non_002dLexical-Scoping)
+#### 3.4.4.1 非レキシカルスコープの例
 
 非語彙的スコープが存在し、有用であることを示すために、「動的スコープ」言語であるEmacs Lispから以下の例を示します。
 
@@ -645,10 +645,10 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 (通貨略語「USD」を定義する)
 
 (定義 (通貨文字列単位百分の一)
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) 通貨略語
-([数値->文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002d_003estring) 単位)
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) 通貨略語
+([数値->文字列](06_06_02_numerical_data_types.md#6629-数値と文字列の変換) 単位)
 「。」
-([number->string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002d_003estring) 百分の一)))
+([number->string](06_06_02_numerical_data_types.md#6629-数値と文字列の変換) 百分の一)))
 
 (define (french-currency-string units hundredths)
 (let ((currency-abbreviation "FRF"))
@@ -667,23 +667,23 @@ REPLに式を入力して、期待どおりの結果が得られるかどうか�
 `french-currency-string`を変更することで、`currency-string`を変更しなくてもほぼ正常に動作させることは可能ですが、この修正方法は洗練されておらず、割り込みによって`currency-abbreviation`変数が誤った状態になる可能性が高くなります。
 
 (define (french-currency-string units hundredths)
-([セット!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 通貨略語 "FRF")
+([セット!](07_06_r6rs_support.md#7622-rnrs-ベース) 通貨略語 "FRF")
 (let ((result (currency-string units hundredths)))
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) currency-abbreviation "USD")
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) currency-abbreviation "USD")
 結果））
 
 ここでの重要な点は、コードが識別子`currency-abbreviation`のローカルバインディングを作成しないため、この識別子のすべての出現箇所がトップレベルの変数を参照するということです。
 
 * * *
 
-次へ: [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)、前: [レキシカルスコープ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lexical-Scope)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [例 1: シリアル番号生成器](#346-例-1-シリアル番号生成器)、前: [レキシカルスコープ](#344-語彙スコープ)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.5 クロージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure-1)
+#### 3.4.5 クロージャ
 
 ラムダ式を含まない`let`式を考えてみましょう。
 
-(let ((s ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) abc) 2)))
-([sqrt](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sqrt) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) s ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sa) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sb) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) sc)))
+(let ((s ([/](06_06_02_numerical_data_types.md#66211-算術関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) abc) 2)))
+([sqrt](06_06_02_numerical_data_types.md#66212-科学関数) ([\*](06_06_02_numerical_data_types.md#66211-算術関数) s ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sa) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sb) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) sc)))
 
 Scheme インタープリタがこれを評価すると、
 
@@ -706,16 +706,16 @@ Scheme インタープリタがこれを評価すると、
 
 * * *
 
-次へ: [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)、前: [クロージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Closure)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [例 2: 共有永続変数](#347-例-2-共有永続変数-)、前: [クロージャ](#345-クロージャ)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.6 例 1: シリアル番号生成器 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-1_003a-A-Serial-Number-Generator)
+#### 3.4.6 例 1: シリアル番号生成器
 
 この例では、クロージャを使用して、ローカル変数のようにプロシージャ内でのみ有効な変数バインディングを持つプロシージャを作成します。ただし、その変数の値はプロシージャ呼び出し間で保持されます。
 
 (define (make-serial-number-generator)
 (let ((current-serial-number 0))
 (ラムダ()
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) current-serial-number ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) current-serial-number 1))
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) current-serial-number ([+](06_06_02_numerical_data_types.md#66211-算術関数) current-serial-number 1))
 現在のシリアル番号)))
 
 (エントリSNジェネレーターの定義 (シリアル番号ジェネレーターの作成))
@@ -736,7 +736,7 @@ Scheme インタープリタがこれを評価すると、
 
 * * *
 
-次へ: [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)、前: [例 1: シリアル番号生成器](https://doc.guix.gnu.org/guile/latest/en/guile.html#Serial-Number)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [例 3: コールバッククロージャの問題](#348-例-3-コールバッククロージャ問題)、前: [例 1: シリアル番号生成器](#346-例-1-シリアル番号生成器)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
 #### 3.4.7 例 2: 共有永続変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-2_003a-A-Shared-Persistent-Variable )
 
@@ -748,16 +748,16 @@ Scheme インタープリタがこれを評価すると、
 (預金番号fを定義する)
 
 (let ((balance 0))
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) get-balance
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) get-balance
 (ラムダ()
 バランス））
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) deposit
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) deposit
 (ラムダ(量)
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 残高 ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 残高金額))
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) 残高 ([+](06_06_02_numerical_data_types.md#66211-算術関数) 残高金額))
 バランス）））
 
 (定義 (引き出し金額)
-(入金 ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) 金額)))
+(入金 ([\-](06_06_02_numerical_data_types.md#66211-算術関数) 金額)))
 
 (残高取得)
 ⇒
@@ -775,9 +775,9 @@ Scheme インタープリタがこれを評価すると、
 
 * * *
 
-次へ: [例 4: オブジェクト指向](https://doc.guix.gnu.org/guile/latest/en/guile.html#OO-Closure)、前: [例 2: 共有永続変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shared-Variable)、上: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [例 4: オブジェクト指向](#349-例-4-オブジェクト指向)、前: [例 2: 共有永続変数](#347-例-2-共有永続変数-)、上: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.8 例 3: コールバッククロージャ問題 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-3_003a-The-Callback-Closure-Problem)
+#### 3.4.8 例 3: コールバッククロージャ問題
 
 ライブラリコードでよく用いられるプログラミングモデルの一つは、アプリケーションが特定のイベント発生時にライブラリが呼び出すコールバック関数を登録できるようにすることです。複数の類似したライブラリイベントを同じアプリケーションコードで処理できる場合など、アプリケーションが同じコールバック関数を使用して複数の登録を行うことはしばしば有用ですが、その場合、一つのコールバック登録に関連付けられたコールバック関数呼び出しと、異なるコールバック登録に関連付けられたコールバック関数呼び出しを区別する必要が生じます。
 
@@ -794,25 +794,25 @@ Schemeでは、クロージャを使用することで、ライブラリコー�
 
 ;; 図書館にて:
 (define (register-callback event-type handler-proc)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 
 ;; アプリケーション内:
 (define (make-handler event-type user-data)
 (ラムダ()
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+[...](06_08_macros.md#6821-パターン)
 <イベントタイプとユーザーデータを参照するコード>
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+[...](06_08_macros.md#6821-パターン)))
 
 (register-callback イベントタイプ)
-(make-handler イベントタイプ [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+(make-handler イベントタイプ [...](06_08_macros.md#6821-パターン)))
 
 ライブラリの観点から見ると、`handler-proc`は引数のないプロシージャであり、ライブラリは適切なイベントが発生したときにそれを呼び出すだけで済みます。しかし、アプリケーションの観点から見ると、ハンドラプロシージャはクロージャを使用して、ハンドラコードがイベントを正しく処理するために必要なすべてのコンテキスト（`event-type`と`user-data`）を含む環境をキャプチャしています。
 
 * * *
 
-前へ: [例 3: コールバッククロージャの問題](https://doc.guix.gnu.org/guile/latest/en/guile.html#Callback-Closure)、上へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [例 3: コールバッククロージャの問題](#348-例-3-コールバッククロージャ問題)、上へ: [クロージャの概念](#34-クロージャの概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 3.4.9 例 4: オブジェクト指向 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example-4_003a-Object-Orientation)
+#### 3.4.9 例 4: オブジェクト指向
 
 クロージャとは、永続的な変数バインディングを含む環境を、プロシージャまたは関連するプロシージャ群の定義内にキャプチャすることです。これは、オブジェクト指向言語において、関連するデータ変数群を「オブジェクト」内にカプセル化し、カプセル化されたデータを操作する「メソッド」群を一緒にカプセル化するという考え方とよく似ています。以下の例は、クロージャを使用してSchemeでオブジェクト、メソッド、カプセル化の概念をエミュレートする方法を示しています。
 
@@ -821,19 +821,19 @@ Schemeでは、クロージャを使用することで、ライブラリコー�
 (define (get-balance)
 バランス）
 (定義 (預金額)
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 残高 ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 残高金額))
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) 残高 ([+](06_06_02_numerical_data_types.md#66211-算術関数) 残高金額))
 バランス）
 (定義 (引き出し金額)
-(入金 ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) 金額)))
+(入金 ([\-](06_06_02_numerical_data_types.md#66211-算術関数) 金額)))
 
 (ラムダ引数)
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply)
-(case ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) args)
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順)
+(case ([car](06_06_08_pairs.md#668-ペア) args)
 ((get-balance) get-balance)
 （（預金）預金）
 （（撤回）撤回する）
-(else ([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "無効なメソッドです!")))
-([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) args))))
+(else ([error](04_programming_in_scheme.md#4446-デバッグコマンド) "無効なメソッドです!")))
+([cdr](06_06_08_pairs.md#668-ペア) args))))
 
 `make-account` を呼び出すたびに、サンプルコード内の「(lambda args)」で始まる式によって作成された新しいプロシージャが作成され、返されます。
 
@@ -865,9 +865,9 @@ Schemeでは、クロージャを使用することで、ライブラリコー�
 
 * * *
 
-前へ: [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)、上へ: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [クロージャの概念](#34-クロージャの概念)、上へ: [Hello Scheme!](#3-hello-scheme) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 3.5 参考文献 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Further-Reading-1)
+### 3.5 参考文献
 
 * ウェブサイト [http://www.schemers.org/](http://www.schemers.org/) は、Scheme に関するあらゆることの出発点として最適です。
 * Dorai Sitaram 氏によるオンライン Scheme チュートリアル「Teach Yourself Scheme in Fixnum Days」、[http://www.ccs.neu.edu/home/dorai/ty-scheme/ty-scheme.html](http://www.ccs.neu.edu/home/dorai/ty-scheme/ty-scheme.html)。継続に関する分かりやすい説明が含まれています。
@@ -875,4 +875,4 @@ Schemeでは、クロージャを使用することで、ライブラリコー�
 
 * * *
 
-次へ: [C言語プログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C)、前: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021)、上: [Guileリファレンスマニュアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[目次](https:/ /doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [C言語プログラミング](05_programming_in_c.md#5-c言語によるプログラミング)、前: [Hello Scheme!](#3-hello-scheme)、上: [Guileリファレンスマニュアル](00_contents.md) \[[目次](https:/ /doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](index_r5rs.md "索引")\]

@@ -1,6 +1,6 @@
-#### 7.2.1 POSIX インターフェース規約 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#POSIX-Interface-Conventions)
+#### 7.2.1 POSIX インターフェース規約
 
-これらのインターフェースは、オペレーティングシステムの機能へのアクセスを提供します。これらは、基盤となるCインターフェースをシンプルにラップすることで、Schemeからの利用をより便利にします。また、scshのGuileポートを実装するためにも使用されます（[Schemeシェル（scsh）](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Scheme-shell-_0028scsh_0029)を参照）。
+これらのインターフェースは、オペレーティングシステムの機能へのアクセスを提供します。これらは、基盤となるCインターフェースをシンプルにラップすることで、Schemeからの利用をより便利にします。また、scshのGuileポートを実装するためにも使用されます（[Schemeシェル（scsh）](07_18_the_scheme_shell_scsh.md#718-schemeシェル-scsh)を参照）。
 
 一般的に、対応するUnix機能ごとに1つの手順が存在します。ただし、例外もあり、例えば、Unixに同等の基本的な機能がないSchemeの速度と利便性のために実装された手順（例：`copy-file`）などがあります。
 
@@ -17,9 +17,9 @@
 
 予期しない状況は、通常、例外を発生させることで処理されます。一部のプロシージャは、処理が成功しなかった場合に特別な値を返します。例えば、`getenv` は、要求された文字列が環境に見つからない場合に `#f` を返します。これらのケースについては、ドキュメントに記載されています。
 
-例外の処理方法については、[例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)を参照してください。
+例外の処理方法については、[例外](06_11_controlling_the_flow_of_program_execution.md#6118-例外)を参照してください。
 
-Cライブラリがヌルポインタを返すか、その他の方法で報告するエラーは、`scm-error`を使用して`system-error`例外を発生させることで報告されます（[エラー通知の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Error-Reporting)を参照）。データパラメータは、Unixの`errno`値（整数）を含むリストです。たとえば、
+Cライブラリがヌルポインタを返すか、その他の方法で報告するエラーは、`scm-error`を使用して`system-error`例外を発生させることで報告されます（[エラー通知の手順](06_11_controlling_the_flow_of_program_execution.md#6119-エラー通知の手順)を参照）。データパラメータは、Unixの`errno`値（整数）を含むリストです。たとえば、
 
 (define (my-handler key func fmt fmtargs data)
 （表示キー）（改行）
@@ -39,7 +39,7 @@ Cライブラリがヌルポインタを返すか、その他の方法で報告�
 
   
 
-関数: **system-error-errno** 引数リスト[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system_002derror_002derrno)
+関数: **system-error-errno** 引数リスト
 
 例外ハンドラの引数であるリストから `errno` 値を返します。例外が `system-error` でない場合は、`#f` が返されます。例:
 
@@ -60,4 +60,4 @@ Cライブラリがヌルポインタを返すか、その他の方法で報告�
 
 * * *
 
-次へ: [ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)、前: [POSIX インターフェース規約](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conventions)、上: [POSIX システムコールとネットワーク](https://doc.guix.gnu.org/guile/latest/en/guile.html#POSIX) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)、前: [POSIX インターフェース規約](#721-posix-インターフェース規約)、上: [POSIX システムコールとネットワーク](07_02_00_posix_system_calls_and_networking.md#72-posix-システムコールとネットワーク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

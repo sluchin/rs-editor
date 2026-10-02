@@ -1,47 +1,47 @@
-#### 7.5.3 SRFI-1 - リストライブラリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-_002d-List-library)
+#### 7.5.3 SRFI-1 - リストライブラリ
 
 SRFI-1で定義されているリストライブラリには、リストやペアの構築、検査、分解、操作を行うための多くの便利なリスト処理手順が含まれています。
 
-SRFI-1 では、R5RS に既に含まれている、したがって Guile コアライブラリでサポートされているいくつかの手順も定義されているため、SRFI-1 ドキュメントに記載されているリストおよびペアの手順の一部は、このセクションには記載されていない場合があります。したがって、特定のリスト/ペア処理手順を探す場合は、[リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lists) および [ペア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pairs) のセクションも参照してください。
+SRFI-1 では、R5RS に既に含まれている、したがって Guile コアライブラリでサポートされているいくつかの手順も定義されているため、SRFI-1 ドキュメントに記載されているリストおよびペアの手順の一部は、このセクションには記載されていない場合があります。したがって、特定のリスト/ペア処理手順を探す場合は、[リスト](06_06_09_lists.md#669-リスト) および [ペア](06_06_08_pairs.md#668-ペア) のセクションも参照してください。
 
-* [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Constructors)
-* [述語](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Predicates)
-* [セレクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Selectors)
-* [長さ、追加、連結など](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Length-Append-etc)
-* [折りたたみ、展開、マップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Fold-and-Map)
-* [フィルタリングとパーティショニング](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Filtering-and-Partitioning)
-* [検索中](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Searching)
-* [削除中](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Deleting)
-* [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Association-Lists)
-* [リストに対する集合演算](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Set-Operations)
+* [コンストラクタ](#7531-コンストラクタ)
+* [述語](#7532-述語)
+* [セレクタ](#7533-セレクタ)
+* [長さ、追加、連結など](#7534-長さ追加連結など)
+* [折りたたみ、展開、マップ](#7535-折りたたみ展開マップ)
+* [フィルタリングとパーティショニング](#7536-フィルタリングとパーティショニング)
+* [検索中](#7537-検索)
+* [削除中](#7538-削除)
+* [関連リスト](#7539-関連付けリスト)
+* [リストに対する集合演算](#75310-リストに対する集合演算)
 
 * * *
 
-次へ: [述語](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Predicates)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [述語](#7532-述語)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.1 コンストラクタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Constructors)
+#### 7.5.3.1 コンストラクタ
 
 以下のいずれかの手続きを呼び出すことで、新しいリストを作成できます。
 
-Scheme Procedure: **xcons** da [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-xcons)
+Scheme Procedure: **xcons** da
 
 `cons` と同様だが、引数の順序が入れ替わっている。主に高階プロシージャに渡す場合に便利。
 
-Scheme プロシージャ: **list-tabulate** n init-proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dtabulate)
+Scheme プロシージャ: **list-tabulate** n init-proc
 
 n個の要素からなるリストを返します。各リスト要素は、対応するリストインデックスにinit-procプロシージャを適用することによって生成されます。init-procがインデックスに適用される順序は指定されません。
 
-Scheme Procedure: **list-copy** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dcopy-1)
+Scheme Procedure: **list-copy** lst
 
 リストlstの要素を含む新しいリストを返します。
 
-この関数は、コア関数である `list-copy` ([リストコンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Constructors) を参照) とは異なり、不適切なリストも受け入れます。また、lst がペアでない場合は、不適切なリストの最後の要素として扱われ、そのまま返されます。
+この関数は、コア関数である `list-copy` ([リストコンストラクタ](06_06_09_lists.md#6693-リストコンストラクタ) を参照) とは異なり、不適切なリストも受け入れます。また、lst がペアでない場合は、不適切なリストの最後の要素として扱われ、そのまま返されます。
 
-スキーム手順: **circular-list** elt1 elt2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-circular_002dlist)
+スキーム手順: **circular-list** elt1 elt2 …
 
 指定された引数 elt1 elt2 … を含む循環リストを返します。
 
-スキーム手順: **iota** カウント \[開始ステップ\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-iota)
+スキーム手順: **iota** カウント \[開始ステップ\]
 
 開始値から始めて毎回ステップを追加しながらカウント数を含むリストを返します。デフォルトの開始値は 0、デフォルトのステップ値は 1 です。たとえば、
 
@@ -52,22 +52,22 @@ Scheme Procedure: **list-copy** lst [¶](https://doc.guix.gnu.org/guile/latest/e
 
 * * *
 
-次へ: [セレクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Selectors)、前へ: [コンストラクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Constructors)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [セレクタ](#7533-セレクタ)、前へ: [コンストラクタ](#7531-コンストラクタ)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.2 述語 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Predicates)
+#### 7.5.3.2 述語
 
 このセクションの手順では、リストの特定の特性をテストします。
 
-Scheme Procedure: **proper-list?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-proper_002dlist_003f)
+Scheme Procedure: **proper-list?** obj
 
-objが適切なリストであれば`#t`を返し、そうでなければ`#f`を返します。これはコアの`list?`と同じです（[リスト述語](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Predicates)を参照）。
+objが適切なリストであれば`#t`を返し、そうでなければ`#f`を返します。これはコアの`list?`と同じです（[リスト述語](06_06_09_lists.md#6692-リスト述語)を参照）。
 
 適切なリストとは、通常の方法で空リスト `()` で終わるリストのことです。空リスト `()` 自体も適切なリストです。
 
 (proper-list? '(1 2 3)) ⇒ #t
 (proper-list? '()) ⇒ #t
 
-スキーム手順: **circular-list?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-circular_002dlist_003f)
+スキーム手順: **circular-list?** obj
 
 objが循環リストの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
@@ -78,7 +78,7 @@ objが循環リストの場合は`#t`を返し、そうでない場合は`#f`を
 x ⇒ (1 2 3 4 3 4 3 4 ...)
 (循環リスト? x) ⇒ #t
 
-Scheme Procedure: **dotted-list?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dotted_002dlist_003f)
+Scheme Procedure: **dotted-list?** obj
 
 objがドットリストの場合は`#t`を返し、それ以外の場合は`#f`を返します。
 
@@ -91,104 +91,104 @@ Scheme オブジェクトは、上記の 3 つのテスト `proper-list?`、`cir
 
   
 
-Scheme Procedure: **null-list?** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_002dlist_003f)
+Scheme Procedure: **null-list?** lst
 
 lst が空のリスト `()` の場合は `#t` を返し、それ以外の場合は `#f` を返します。lst に適切なリストまたは循環リスト以外のものが渡された場合は、エラーが通知されます。この手順は、ドット付きリストが許可されていない状況でリストの末尾を確認する場合に推奨されます。
 
-Scheme Procedure: **not-pair?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not_002dpair_003f)
+Scheme Procedure: **not-pair?** obj
 
 obj がペアでない場合は `#t` を返し、そうでない場合は `#f` を返します。これは `(not (pair? obj))` という省略記法で、ドット付きリストが許可されているコンテキストでリストの末尾チェックに使用されることを想定しています。
 
-スキーム手順: **list=** elt= list1 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_003d)
+スキーム手順: **list=** elt= list1 …
 
 引数リストがすべて等しい場合は `#t` を返し、そうでない場合は `#f` を返します。リストの等価性は、すべてのリストの長さが同じで、対応する要素が等価述語 elt= の意味で等しいかどうかをテストすることによって判定されます。リストが指定されていない場合、またはリストが 1 つだけの場合は、`#t` が返されます。
 
 * * *
 
-次へ: [長さ、追加、連結など](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Length-Append-etc)、前: [述語](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Predicates)、上: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [長さ、追加、連結など](#7534-長さ追加連結など)、前: [述語](#7532-述語)、上: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.3 セレクタ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Selectors)
+#### 7.5.3.3 セレクタ
 
-スキーム手順: **最初の**ペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)
+スキーム手順: **最初の**ペア
 
-スキーム手順: **2番目の**ペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-second)
+スキーム手順: **2番目の**ペア
 
-スキーム手順: **3番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-third)
+スキーム手順: **3番目**のペア
 
-スキーム手順: **4番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fourth)
+スキーム手順: **4番目**のペア
 
-スキーム手順: **5番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fifth)
+スキーム手順: **5番目**のペア
 
-スキーム手順: **6番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sixth)
+スキーム手順: **6番目**のペア
 
-スキーム手順: **7番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-seventh)
+スキーム手順: **7番目**のペア
 
-スキーム手順: **8番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eighth)
+スキーム手順: **8番目**のペア
 
-スキーム手順: **9番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ninth)
+スキーム手順: **9番目**のペア
 
-スキーム手順: **10番目**のペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-tenth)
+スキーム手順: **10番目**のペア
 
 これらは `car`、`cadr`、`caddr`、… の同義語です。
 
-スキーム手順: **car+cdr** ペア [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car_002bcdr)
+スキーム手順: **car+cdr** ペア
 
 ペアのCARとCDRの2つの値を返します。
 
-([car+cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car_002bcdr) '(0 1 2 3))
+([car+cdr](#7533-セレクタ) '(0 1 2 3))
 ⇒
 0
 （1 2 3）
 
-スキーム手順: **take** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-take)
+スキーム手順: **take** lst i
 
-Scheme Procedure: **take!** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-take_0021)
+Scheme Procedure: **take!** lst i
 
 lstの最初のi個の要素を含むリストを返します。
 
 `take!` は、結果を生成するために引数リスト lst の構造を変更する場合があります。
 
-スキーム手順: **drop** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-drop)
+スキーム手順: **drop** lst i
 
 lst の最初の i 個の要素を除くすべての要素を含むリストを返します。
 
-スキーム手順: **take-right** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-take_002dright)
+スキーム手順: **take-right** lst i
 
 lst の最後の i 個の要素を含むリストを返します。返されるリストは lst と共通の末尾を持ちます。
 
-スキーム手順: **drop-right** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-drop_002dright)
+スキーム手順: **drop-right** lst i
 
-スキーム手順: **drop-right!** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-drop_002dright_0021)
+スキーム手順: **drop-right!** lst i
 
 lst の最後の i 個の要素を除くすべての要素を含むリストを返します。
 
 `drop-right` は、i がゼロの場合でも常に新しいリストを返します。`drop-right!` は、結果を生成するために引数リスト lst の構造を変更する場合があります。
 
-スキーム手順: **split-at** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-split_002dat)
+スキーム手順: **split-at** lst i
 
-スキーム手順: **split-at!** lst i [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-split_002dat_0021)
+スキーム手順: **split-at!** lst i
 
 リストlstの最初のi個の要素を含むリストと、残りの要素を含むリストの2つの値を返します。
 
 `split-at!` は、結果を生成するために引数リスト lst の構造を変更する場合があります。
 
-Scheme Procedure: **last** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-last)
+Scheme Procedure: **last** lst
 
 空でない有限リスト lst の最後の要素を返します。
 
 * * *
 
-次へ: [折りたたみ、展開、マップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Fold-and-Map)、前: [セレクタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Selectors)、上: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [折りたたみ、展開、マップ](#7535-折りたたみ展開マップ)、前: [セレクタ](#7533-セレクタ)、上: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.4 長さ、追加、連結など [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Length_002c-Append_002c-Concatenate_002c-etc_002e)
+#### 7.5.3.4 長さ、追加、連結など
 
-スキーム手順: **length+** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-length_002b)
+スキーム手順: **length+** lst
 
 引数リスト lst の長さを返します。lst が循環リストの場合は、`#f` が返されます。
 
-Scheme手順: **concatenate** リストのリスト[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-concatenate)
+Scheme手順: **concatenate** リストのリスト
 
-Scheme 手順: **concatenate!** リストのリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-concatenate_0021)
+Scheme 手順: **concatenate!** リストのリスト
 
 リストのリストに含まれるすべてのリストを連結して、リストを作成します。
 
@@ -196,9 +196,9 @@ Scheme 手順: **concatenate!** リストのリスト [¶](https://doc.guix.gnu.
 
 `concatenate` は `(apply append list-of-lists)` と同じです。これは、Scheme の実装によっては関数が受け取る引数の数に制限があり、`apply` がその制限を超える可能性があるためです。Guile にはそのような制限はありません。
 
-Scheme Procedure: **append-reverse** rev-head tail [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append_002dreverse)
+Scheme Procedure: **append-reverse** rev-head tail
 
-Scheme Procedure: **append-reverse!** rev-head tail [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append_002dreverse_0021)
+Scheme Procedure: **append-reverse!** rev-head tail
 
 rev-headを反転し、それにtailを追加して結果を返します。これは`(append (reverse rev-head) tail)`と同等ですが、実装がより効率的です。
 
@@ -206,23 +206,23 @@ rev-headを反転し、それにtailを追加して結果を返します。こ�
 
 `append-reverse!` は結果を生成するために rev-head を変更する場合があります。
 
-スキーム手順: **zip** lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zip)
+スキーム手順: **zip** lst1 lst2 …
 
 引数として指定されたリストのうち、最も短いものと同じ長さのリストを返します。各要素はリストです。最初のリストには引数リストの最初の要素が含まれ、2番目のリストには2番目の要素が含まれる、といった具合です。
 
-スキーム手順: **unzip1** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip1)
+スキーム手順: **unzip1** lst
 
-Scheme手順: **unzip2** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip2)
+Scheme手順: **unzip2** lst
 
-Scheme手順: **unzip3** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip3)
+Scheme手順: **unzip3** lst
 
-スキーム手順: **unzip4** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip4)
+スキーム手順: **unzip4** lst
 
-Scheme 手順: **unzip5** lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unzip5)
+Scheme 手順: **unzip5** lst
 
 `unzip1`はリストのリストを受け取り、各リストの最初の要素を含むリストを返します。`unzip2`は2つのリストを返し、1つ目は各リストの最初の要素を、2つ目は各リストの2番目の要素を含みます。以下同様です。
 
-スキーム手順: **count** pred lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-count)
+スキーム手順: **count** pred lst1 lst2 …
 
 指定されたリストの要素に対して pred 関数を呼び出したときに、true を返す回数を返します。
 
@@ -232,13 +232,13 @@ pred 関数は、N 個のパラメータ `(pred elem1 … elemN )` を引数と�
 
 * * *
 
-次へ: [フィルタリングとパーティショニング](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Filtering-and-Partitioning)、前: [長さ、追加、連結など](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Length-Append-etc)、上: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [フィルタリングとパーティショニング](#7536-フィルタリングとパーティショニング)、前: [長さ、追加、連結など](#7534-長さ追加連結など)、上: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 7.5.3.5 折りたたみ、展開、マップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fold_002c-Unfold-_0026-Map)
+#### 7.5.3.5 折りたたみ、展開、マップ
 
-Scheme手順: **fold** proc init lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fold)
+Scheme手順: **fold** proc init lst1 lst2 …
 
-Scheme手順: **fold-right** proc init lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fold_002dright)
+Scheme手順: **fold-right** proc init lst1 lst2 …
 
 lst1、lst2…の要素にprocを適用して結果を作成し、その結果を返します。
 
@@ -281,15 +281,15 @@ lst))
 
 もちろん、`for-each` と結果を構築するための変数を使えば同様のことはできますが、自己完結型のプロシージャは複数のコンテキストで再利用できます。一方、`for-each` の場合は毎回記述する必要があります。
 
-Scheme Procedure: **pair-fold** proc init lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pair_002dfold)
+Scheme Procedure: **pair-fold** proc init lst1 lst2 …
 
-Scheme 手順: **pair-fold-right** proc init lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pair_002dfold_002dright)
+Scheme 手順: **pair-fold-right** proc init lst1 lst2 …
 
 `fold` および `fold-right` と同じですが、リストの要素ではなく、リストのペアに対して proc を適用します。
 
-Scheme プロシージャ: **reduce** proc default lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reduce)
+Scheme プロシージャ: **reduce** proc default lst
 
-Scheme プロシージャ: **reduce-right** proc default lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reduce_002dright)
+Scheme プロシージャ: **reduce-right** proc default lst
 
 `reduce`は`fold`の派生形であり、procへの最初の呼び出しは、1つの要素と指定された初期値ではなく、lstからの2つの要素に対して行われます。
 
@@ -310,14 +310,14 @@ lstが空の場合、`reduce`はデフォルト値を返します（デフォル
 
 処理順序が重要でない場合、またはどちらの順序でも構わない場合は、`reduce` の方が `reduce-right` より若干効率的なので、`reduce` を優先すべきです。
 
-Scheme 手順: **unfold** pfg seed \[tail-gen\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unfold)
+Scheme 手順: **unfold** pfg seed \[tail-gen\]
 
 `unfold`は以下のように定義されます。
 
-([unfold](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unfold) pfg seed) [\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d)
+([unfold](#7535-折りたたみ展開マップ) pfg seed) [\=](06_06_02_numerical_data_types.md#6628-比較述語)
 (もし(pシード)(テールジェンシード)の場合)
-([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) (f seed)
-([unfold](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unfold) pfg (g seed))))
+([cons](06_06_08_pairs.md#668-ペア) (f seed)
+([unfold](#7535-折りたたみ展開マップ) pfg (g seed))))
 
 p
 
@@ -341,14 +341,14 @@ g
 
 gは一連のシード値を生成し、fはそれらをリスト要素にマッピングします。これらの要素は左から右の順にリストに格納され、pは展開を停止するタイミングを示します。
 
-スキーム手順: **unfold-right** pfg seed \[tail\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unfold_002dright)
+スキーム手順: **unfold-right** pfg seed \[tail\]
 
 以下のループを使用してリストを作成します。
 
 (let lp ((seed seed) (lis tail))
 (もし(pシード)リスの場合)
 (lp (g シード)
-([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) (f seed) lis))))
+([cons](06_06_08_pairs.md#668-ペア) (f seed) lis))))
 
 p
 
@@ -370,69 +370,69 @@ g
 
 リストの末尾。デフォルトは「'()」です。
 
-Scheme Procedure: **map** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-map-1)
+Scheme Procedure: **map** f lst1 lst2 …
 
 リスト lst1、lst2、… に対してプロシージャをマッピングし、プロシージャの適用結果を含むリストを返します。引数リストの長さが異なる可能性があるため、このプロシージャは R5RS に対して拡張されています。結果リストの長さは、引数リストの中で最も短いものと同じになります。f がリスト要素に適用される順序は指定されていません。
 
-スキーム手順: **for-each** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-for_002deach-1)
+スキーム手順: **for-each** f lst1 lst2 …
 
 リストlst1、lst2、…の各対応する要素のペアに、プロシージャfを適用します。戻り値は指定されていません。引数リストの長さが異なる場合があるため、このプロシージャはR5RSに対して拡張されています。fの呼び出し回数は、引数リストの長さによって決まります。fはリスト要素に左から右の順に適用されます。
 
-Scheme Procedure: **append-map** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append_002dmap)
+Scheme Procedure: **append-map** f lst1 lst2 …
 
-Scheme 手順: **append-map!** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append_002dmap_0021)
+Scheme 手順: **append-map!** f lst1 lst2 …
 
 同等
 
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) [append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append) (map f clist1 clist2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) [append](06_06_09_lists.md#6695-追加と逆順) (map f clist1 clist2 [...](06_08_macros.md#6821-パターン)))
 
 そして
 
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) [append!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append_0021) (map f clist1 clist2 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) [append!](06_06_09_lists.md#6695-追加と逆順) (map f clist1 clist2 [...](06_08_macros.md#6821-パターン)))
 
 `map` 関数と同様に、リストの要素に対して `map f` を実行します。ただし、最終的な結果を作成するために、各処理の結果が連結されます。`append-map` は `append` を使用して結果を連結し、`append-map!` は `append!` を使用して連結します。
 
 fの様々な適用が行われる動的な順序は指定されていない。
 
-Scheme Procedure: **map!** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-map_0021)
+Scheme Procedure: **map!** f lst1 lst2 …
 
 `map` の線形更新バリアント – `map!` は、結果リストを構築するために lst1 の cons セルを変更することが許可されていますが、必須ではありません。
 
 f の様々な適用が行われる動的な順序は指定されていません。n 項の場合、lst2、lst3、…は少なくとも lst1 と同じ数の要素を持つ必要があります。
 
-スキーム手順: **pair-for-each** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pair_002dfor_002deach)
+スキーム手順: **pair-for-each** f lst1 lst2 …
 
 `for-each`と同様ですが、引数リストの要素ではなく、引数リストを構成するペアに対して手続きfを適用します。戻り値は指定されていません。
 
-スキーム手順: **filter-map** f lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-filter_002dmap)
+スキーム手順: **filter-map** f lst1 lst2 …
 
 `map`と同様ですが、fを適用した結果のうち、真であるものだけが結果リストに保存されます。
 
 * * *
 
-次へ: [検索](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Searching)、前へ: [折りたたみ、展開、マップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Fold-and-Map)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [検索](#7537-検索)、前へ: [折りたたみ、展開、マップ](#7535-折りたたみ展開マップ)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.6 フィルタリングとパーティショニング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Filtering-and-Partitioning)
+#### 7.5.3.6 フィルタリングとパーティショニング
 
 フィルタリングとは、特定の条件を満たすリストの要素をすべて収集することです。リストのパーティショニングとは、条件を満たす要素を含むグループと、条件を満たさない要素を含むグループの2つのグループにリストの要素を分けることです。
 
-`filter` および `filter!` 関数は Guile コアに実装されています。[リストの変更](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Modification) を参照してください。
+`filter` および `filter!` 関数は Guile コアに実装されています。[リストの変更](06_06_09_lists.md#6696-リストの変更) を参照してください。
 
-Scheme Procedure: **partition** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-partition)
+Scheme Procedure: **partition** pred lst
 
-Scheme Procedure: **partition!** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-partition_0021)
+Scheme Procedure: **partition!** pred lst
 
 lst を述語 pred を満たす要素と満たさない要素に分割します。
 
-戻り値は 2 つの値です ([複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values) を参照)。1 つ目は、pred を満たす lst のすべての要素のリスト、2 つ目は、pred を満たさない要素のリストです。
+戻り値は 2 つの値です ([複数の値の返却と受け入れ](06_11_controlling_the_flow_of_program_execution.md#6117-複数の値の返却と受け入れ) を参照)。1 つ目は、pred を満たす lst のすべての要素のリスト、2 つ目は、pred を満たさない要素のリストです。
 
 結果リスト内の要素は lst と同じ順序ですが、リスト要素に対して `(pred elem)` の呼び出しが行われる順序は指定されていません。
 
 `partition` は lst を変更しませんが、返されるリストのいずれかが lst と末尾を共有する場合があります。`partition!` は、返されるリストを構築するために lst を変更する場合があります。
 
-Scheme Procedure: **remove** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-remove)
+Scheme Procedure: **remove** pred lst
 
-Scheme Procedure: **remove!** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-remove_0021)
+Scheme Procedure: **remove!** pred lst
 
 述語 pred を満たさない、リスト lst のすべての要素を含むリストを返します。結果リストの要素の順序は lst と同じです。pred がリスト要素に適用される順序は指定されません。
 
@@ -440,47 +440,47 @@ Scheme Procedure: **remove!** pred lst [¶](https://doc.guix.gnu.org/guile/lates
 
 * * *
 
-次へ: [削除](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Deleting)、前: [フィルタリングとパーティショニング](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Filtering-and-Partitioning)、上: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [削除](#7538-削除)、前: [フィルタリングとパーティショニング](#7536-フィルタリングとパーティショニング)、上: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.7 検索 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Searching)
+#### 7.5.3.7 検索
 
 リスト内の要素を検索する手順は、検索対象となる要素を決定するための述語または比較オブジェクトのいずれかを受け入れる。
 
-Scheme手順: **find** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find)
+Scheme手順: **find** pred lst
 
 述語 pred を満たす lst の最初の要素を返し、そのような要素が見つからない場合は `#f` を返します。
 
-Scheme Procedure: **find-tail** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find_002dtail)
+Scheme Procedure: **find-tail** pred lst
 
 CARが述語predを満たす最初のlstのペアを返し、そのような要素が見つからない場合は`#f`を返します。
 
-Scheme Procedure: **take-while** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-take_002dwhile)
+Scheme Procedure: **take-while** pred lst
 
-Scheme Procedure: **take-while!** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-take_002dwhile_0021)
+Scheme Procedure: **take-while!** pred lst
 
 要素がすべて述語 pred を満たす、lst の最長の先頭接頭辞を返します。
 
 `take-while!` は、結果を生成しながら入力リストを変更するために使用できますが、必須ではありません。
 
-Scheme Procedure: **drop-while** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-drop_002dwhile)
+Scheme Procedure: **drop-while** pred lst
 
 要素がすべて述語 pred を満たす lst の最長の先頭接頭辞を削除します。
 
-Scheme Procedure: **span** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-span)
+Scheme Procedure: **span** pred lst
 
-Scheme Procedure: **span!** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-span_0021)
+Scheme Procedure: **span!** pred lst
 
-Scheme Procedure: **break** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-break-2)
+Scheme Procedure: **break** pred lst
 
-Scheme Procedure: **break!** pred lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-break_0021)
+Scheme Procedure: **break!** pred lst
 
 `span` はリスト lst を、要素がすべて述語 pred を満たす最長の先頭接頭辞と、残りの末尾に分割します。`break` は述語の意味を反転させます。
 
 `span!` と `break!` は許可されていますが、結果を生成するために入力リスト lst の構造を変更するために必須ではありません。
 
-`break` という名前は、`while` によって確立された `break` バインディングと競合することに注意してください ([反復メカニズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do) を参照)。`while` ループ内で `break` を使用したいアプリケーションは、別の名前で新しい定義を作成する必要があります。
+`break` という名前は、`while` によって確立された `break` バインディングと競合することに注意してください ([反復メカニズム](06_11_controlling_the_flow_of_program_execution.md#6114-反復メカニズム) を参照)。`while` ループ内で `break` を使用したいアプリケーションは、別の名前で新しい定義を作成する必要があります。
 
-スキーム手順: **any** pred lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-any)
+スキーム手順: **any** pred lst1 lst2 …
 
 lst1、lst2、…のいずれかの要素セットがpredを満たすかどうかをテストします。満たす場合は、pred呼び出しが成功したときの戻り値が戻り値となり、満たさない場合は`#f`が戻り値となります。
 
@@ -488,7 +488,7 @@ lst1、lst2、…のいずれかの要素セットがpredを満たすかどう�
 
 最後の要素セット（つまり、最短リストの末尾に達したとき）に対する pred 呼び出しは、その時点に達した場合、末尾呼び出しになります。
 
-スキーム手順: **every** pred lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-every)
+スキーム手順: **every** pred lst1 lst2 …
 
 lst1、lst2、…の各要素セットがpredを満たすかどうかをテストします。満たす場合は、最後のpred呼び出しからの戻り値が戻り値となり、満たさない場合は`#f`が戻り値となります。
 
@@ -498,7 +498,7 @@ lst1、lst2、…の各要素セットがpredを満たすかどうかをテス�
 
 lst1、lst2、…のいずれかが空の場合、predへの呼び出しは行われず、戻り値は`#t`になります。
 
-スキーム手順: **list-index** pred lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dindex)
+スキーム手順: **list-index** pred lst1 lst2 …
 
 予測を満たす、lst1、lst2、…の各要素から1つずつ選ばれた最初の要素セットのインデックスを返します。
 
@@ -507,7 +507,7 @@ pred は `(elem1 elem2 …)` として呼び出されます。最短リストの
 (リストインデックスが奇数か？ '(2 4 6 9)) ⇒ 3
 (list-index = '(1 2 3) '(3 1 2)) ⇒ #f
 
-スキーム手順: **member** x lst \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-member-1)
+スキーム手順: **member** x lst \[=\]
 
 lst のサブリストのうち、CAR が x と等しい最初のサブリストを返します。x が lst に含まれていない場合は、`#f` を返します。
 
@@ -515,17 +515,17 @@ lst のサブリストのうち、CAR が x と等しい最初のサブリスト
 
 (メンバー 5 '(3 5 1 7 2 9) <) ⇒ (7 2 9)
 
-このバージョンの `member` は、等価述語を受け入れることでコアの `member` ([リスト検索](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Searching) を参照) を拡張しています。
+このバージョンの `member` は、等価述語を受け入れることでコアの `member` ([リスト検索](06_06_09_lists.md#6697-リスト検索) を参照) を拡張しています。
 
 * * *
 
-次へ: [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Association-Lists)、前へ: [検索](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Searching)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [関連リスト](#7539-関連付けリスト)、前へ: [検索](#7537-検索)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.8 削除 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Deleting)
+#### 7.5.3.8 削除
 
-Scheme Procedure: **delete** x lst \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete-1)
+Scheme Procedure: **delete** x lst \[=\]
 
-Scheme Procedure: **delete!** x lst \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_0021-1)
+Scheme Procedure: **delete!** x lst \[=\]
 
 lst の要素のうち、x と等しい要素を削除したリストを返します。返される要素は、lst の要素と同じ順序になります。
 
@@ -535,11 +535,11 @@ lst の要素のうち、x と等しい要素を削除したリストを返し�
 
 `delete` は lst を変更しませんが、戻り値は lst と共通の末尾を持つ可能性があります。`delete!` は、戻り値を構築するために lst の構造を変更する場合があります。
 
-これらの関数は、コア関数である `delete` および `delete!` ([リストの変更](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Modification) を参照) を拡張し、等価述語を受け入れるようにしています。リストから複数の要素を削除するには、`lset-difference` ([リストに対するセット操作](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Set-Operations) を参照) も参照してください。
+これらの関数は、コア関数である `delete` および `delete!` ([リストの変更](06_06_09_lists.md#6696-リストの変更) を参照) を拡張し、等価述語を受け入れるようにしています。リストから複数の要素を削除するには、`lset-difference` ([リストに対するセット操作](#75310-リストに対する集合演算) を参照) も参照してください。
 
-スキーム手順: **delete-duplicates** lst \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_002dduplicates)
+スキーム手順: **delete-duplicates** lst \[=\]
 
-Scheme Procedure: **delete-duplicates!** lst \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delete_002dduplicates_0021)
+Scheme Procedure: **delete-duplicates!** lst \[=\]
 
 lst の要素を重複なく含んだリストを返します。
 
@@ -553,15 +553,15 @@ lst の要素を重複なく含んだリストを返します。
 
 * * *
 
-次へ: [リストに対する集合演算](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Set-Operations)、前へ: [削除](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Deleting)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [リストに対する集合演算](#75310-リストに対する集合演算)、前へ: [削除](#7538-削除)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.9 関連付けリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists-2)
+#### 7.5.3.9 関連付けリスト
 
-関連付けリストについては、[関連付けリスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists)のセクションで詳しく説明されています。本セクションでは、SRFI-1で定義されている関連付けリストを扱うための追加手順のみを説明します。
+関連付けリストについては、[関連付けリスト](06_06_20_association_lists.md#6620-関連付けリスト)のセクションで詳しく説明されています。本セクションでは、SRFI-1で定義されている関連付けリストを扱うための追加手順のみを説明します。
 
-スキーム手順: **assoc** key alist \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc-1)
+スキーム手順: **assoc** key alist \[=\]
 
-キーに一致する alist のペアを返します。これは、オプションの \= 比較手順を受け入れることで、コアの `assoc` ([Alist エントリの取得](https://doc.guix.gnu.org/guile/latest/en/guile.html#Retrieving-Alist-Entries) を参照) を拡張します。
+キーに一致する alist のペアを返します。これは、オプションの \= 比較手順を受け入れることで、コアの `assoc` ([Alist エントリの取得](06_06_20_association_lists.md#66203-alistエントリの取得) を参照) を拡張します。
 
 デフォルトの比較は `equal?` です。\= パラメータが指定された場合は、`(= key alistcar)` と呼ばれます。つまり、指定されたターゲットキーが最初の引数となり、alist から取得した `car` が 2 番目の引数となります。
 
@@ -570,21 +570,21 @@ lst の要素を重複なく含んだリストを返します。
 (assoc "yy" '(("XX" . 1) ("YY" . 2)) string-ci=?)
 ⇒ （"YY" . 2）
 
-スキーム手順: **alist-cons** キー データ alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002dcons)
+スキーム手順: **alist-cons** キー データ alist
 
 新しい関連付けキーとデータをalistに追加し、結果を返します。これは以下と同等です。
 
-([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) key datum) alist)
+([cons](06_06_08_pairs.md#668-ペア) ([cons](06_06_08_pairs.md#668-ペア) key datum) alist)
 
-Guile コアの `acons` ([Adding or Setting Alist Entries](https://doc.guix.gnu.org/guile/latest/en/guile.html#Adding-or-Setting-Alist-Entries) を参照) も同じことを行います。
+Guile コアの `acons` ([Adding or Setting Alist Entries](06_06_20_association_lists.md#66202-alistエントリの追加または設定) を参照) も同じことを行います。
 
-Scheme Procedure: **alist-copy** alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002dcopy)
+Scheme Procedure: **alist-copy** alist
 
 alist の新たに割り当てられたコピーを返します。つまり、リストの骨格とペアの両方がコピーされます。
 
-Scheme Procedure: **alist-delete** key alist \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002ddelete)
+Scheme Procedure: **alist-delete** key alist \[=\]
 
-Scheme Procedure: **alist-delete!** key alist \[=\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002ddelete_0021)
+Scheme Procedure: **alist-delete!** key alist \[=\]
 
 alist の要素のうち、キーが deleted と等しい要素を除いたリストを返します。返される要素は、alist に含まれていた要素と同じ順序になります。
 
@@ -594,17 +594,17 @@ alist の要素のうち、キーが deleted と等しい要素を除いたリ�
 
 * * *
 
-前へ: [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Association-Lists)、上へ: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [関連リスト](#7539-関連付けリスト)、上へ: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.5.3.10 リストに対する集合演算 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Set-Operations-on-Lists)
+#### 7.5.3.10 リストに対する集合演算
 
 リストはオブジェクトの集合を表すために使用できます。このセクションの手順は、そのようなリストを集合として扱います。
 
-リストは大規模なセットを実装する効率的な方法ではないことに注意してください。ここで説明する手順は、m 個と n 個の要素を持つリストを操作する場合、通常 _mxn_ の時間がかかります。ツリー、ビットセット ([ビットベクトル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bit-Vectors) を参照)、ハッシュテーブル ([ハッシュテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hash-Tables) を参照) などの他のデータ構造の方が高速です。
+リストは大規模なセットを実装する効率的な方法ではないことに注意してください。ここで説明する手順は、m 個と n 個の要素を持つリストを操作する場合、通常 _mxn_ の時間がかかります。ツリー、ビットセット ([ビットベクトル](06_06_11_bit_vectors.md#6611-ビットベクトル) を参照)、ハッシュテーブル ([ハッシュテーブル](06_06_22_hash_tables.md#6622-ハッシュテーブル) を参照) などの他のデータ構造の方が高速です。
 
-これらの手続きはすべて、最初の引数として等価述語を受け取ります。この述語は、リストセット内のオブジェクトが同一であるかどうかをテストするために使用されます。この述語は、2つのリスト要素が`eq?`である場合、述語の下でもそれらが等しくなければならないという意味で、`eq?`（[Equality](https://doc.guix.gnu.org/guile/latest/en/guile.html#Equality)を参照）と整合していなければなりません。これは、与えられたオブジェクトがそれ自身と等しくなければならないことを意味します。
+これらの手続きはすべて、最初の引数として等価述語を受け取ります。この述語は、リストセット内のオブジェクトが同一であるかどうかをテストするために使用されます。この述語は、2つのリスト要素が`eq?`である場合、述語の下でもそれらが等しくなければならないという意味で、`eq?`（[Equality](06_09_general_utility_functions.md#691-平等)を参照）と整合していなければなりません。これは、与えられたオブジェクトがそれ自身と等しくなければならないことを意味します。
 
-Scheme手順: **lset<=** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_003c_003d)
+Scheme手順: **lset<=** \= list …
 
 各リストが次のリストのサブセットである場合、`#t` を返します。つまり、list1 は list2 のサブセットであり、list2 は list3 のサブセットである、といった具合に、指定されたリストの数だけサブセットが続きます。リストが 1 つだけの場合、またはリストが指定されていない場合は、戻り値は `#t` になります。
 
@@ -614,7 +614,7 @@ Scheme手順: **lset<=** \= list … [¶](https://doc.guix.gnu.org/guile/latest/
 (lset<= eqv? '(1 2 3) '(1)) ⇒ #f
 (lset<= eqv? '(1 3 2) '(4 3 1 2)) ⇒ #t
 
-Scheme手順: **lset=** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_003d)
+Scheme手順: **lset=** \= list …
 
 引数リストがすべて等しい場合は、`#t` を返します。リスト1とリスト2、リスト2とリスト3、といったように、指定されたリストの数だけ比較されます。リストが1つだけの場合、またはリストが指定されていない場合は、戻り値は `#t` になります。
 
@@ -624,7 +624,7 @@ Scheme手順: **lset=** \= list … [¶](https://doc.guix.gnu.org/guile/latest/e
 (lset= eqv? '(1 2 3) '(3 2 1)) ⇒ #t
 (lset= string-ci=? '("a" "A" "b") '("B" "b" "a")) ⇒ #t
 
-スキームプロシージャ: **lset-adjoin** \= list elem … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dadjoin)
+スキームプロシージャ: **lset-adjoin** \= list elem …
 
 リストにまだ含まれていない指定された要素をリストに追加します。要素はリストの先頭に`cons`で追加されます（そのため、戻り値はリストと共通の末尾を持ちます）が、要素が追加される順序は指定されていません。
 
@@ -632,9 +632,9 @@ Scheme手順: **lset=** \= list … [¶](https://doc.guix.gnu.org/guile/latest/e
 
 (lset-adjoin eqv? '(1 2 3) 4 1 5) ⇒ (5 4 1 2 3)
 
-Scheme手順: **lset-union** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dunion)
+Scheme手順: **lset-union** \= list …
 
-Scheme Procedure: **lset-union!** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dunion_0021)
+Scheme Procedure: **lset-union!** \= list …
 
 引数として指定されたリストセットの和集合を返します。結果は、リスト1とリスト2の和集合、次にリスト3との和集合、といったように、指定されたリストの数だけ和集合を取ることで構築されます。引数としてリストが1つだけの場合は、そのリスト自体が結果となり、引数としてリストがない場合は、空のリストが結果となります。
 
@@ -650,9 +650,9 @@ Scheme Procedure: **lset-union!** \= list … [¶](https://doc.guix.gnu.org/guil
 
 `lset-union` は指定されたリストを変更しませんが、結果は最初の空でないリストと末尾を共有する場合があります。`lset-union!` は指定されたすべてのリストを変更して結果を生成します。
 
-スキーム手順: **lset-intersection** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dintersection)
+スキーム手順: **lset-intersection** \= list1 list2 …
 
-Scheme Procedure: **lset-intersection!** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dintersection_0021)
+Scheme Procedure: **lset-intersection!** \= list1 list2 …
 
 list1と他の引数リストとの共通部分、つまりlist1の要素のうちlist2の要素もすべて含む要素などを返します。引数リストが1つだけの場合は、そのリストのみが返されます。
 
@@ -666,9 +666,9 @@ list1の要素が戻り値に含まれるための条件は、list2などの各�
 
 `lset-intersection` の戻り値は、list1 と末尾を共有する場合があります。`lset-intersection!` は、結果を生成するために list1 を変更する場合があります。
 
-Scheme Procedure: **lset-difference** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002ddifference)
+Scheme Procedure: **lset-difference** \= list1 list2 …
 
-Scheme Procedure: **lset-difference!** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002ddifference_0021)
+Scheme Procedure: **lset-difference!** \= list1 list2 …
 
 list1からlist2、list3などの要素をすべて削除（減算）して返します。引数としてリストが1つだけの場合は、そのリストのみが返されます。
 
@@ -680,19 +680,19 @@ list1からlist2、list3などの要素をすべて削除（減算）して返�
 
 `lset-difference` の戻り値は、list1 と末尾を共有する場合があります。`lset-difference!` は、結果を生成するために list1 を変更する場合があります。
 
-スキーム手順: **lset-diff+intersection** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002ddiff_002bintersection)
+スキーム手順: **lset-diff+intersection** \= list1 list2 …
 
-Scheme Procedure: **lset-diff+intersection!** \= list1 list2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002ddiff_002bintersection_0021)
+Scheme Procedure: **lset-diff+intersection!** \= list1 list2 …
 
-2 つの値を返します ([複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values) を参照)。これは、上記の `lset-difference` および `lset-intersection` に従って、引数リストの差分と共通部分です。
+2 つの値を返します ([複数の値の返却と受け入れ](06_11_controlling_the_flow_of_program_execution.md#6117-複数の値の返却と受け入れ) を参照)。これは、上記の `lset-difference` および `lset-intersection` に従って、引数リストの差分と共通部分です。
 
 リスト引数が2つの場合、これはリスト1を、リスト2に含まれる要素と含まれない要素に分割します。（ただし、引数が3つ以上の場合、リスト1の要素は差分にも共通部分にも含まれない可能性があります。）
 
 `lset-diff+intersection` の戻り値のうちの 1 つは、list1 と末尾を共有する可能性があります。`lset-diff+intersection!` は、結果を生成するために list1 を変更する可能性があります。
 
-Scheme Procedure: **lset-xor** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dxor)
+Scheme Procedure: **lset-xor** \= list …
 
-Scheme Procedure: **lset-xor!** \= list … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lset_002dxor_0021)
+Scheme Procedure: **lset-xor!** \= list …
 
 引数として渡されたリストのXOR演算結果を返します。2つのリストの場合、これはどちらか一方のリストにのみ含まれる要素を意味します。3つ以上のリストの場合、これは奇数個のリストに含まれる要素を意味します。
 
@@ -705,4 +705,4 @@ Scheme Procedure: **lset-xor!** \= list … [¶](https://doc.guix.gnu.org/guile/
 
 * * *
 
-次へ: [SRFI-4 - 同質な数値ベクトルデータ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d4)、前: [SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1)、上: [SRFI サポートモジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-4 - 同質な数値ベクトルデータ型](07_05_05_srfi4_homogeneous_numeric_vector_datatypes.md#755-srfi-4---同質な数値ベクトルデータ型)、前: [SRFI-1 - リストライブラリ](#753-srfi-1---リストライブラリ)、上: [SRFI サポートモジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

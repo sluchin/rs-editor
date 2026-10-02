@@ -1,4 +1,4 @@
-1 はじめに [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html# Introduction-1)
+1 はじめに
 --------------------------------------------------------------------------------------
 
 Guile は Scheme プログラミング言語の実装です。Scheme ([http://schemers.org/](http://schemers.org/)) は、Guy Steele と Gerald Sussman によって考案され、その後 RnRS (Revised^n Reports on Scheme) として知られる一連のレポートによって進化してきた、Lisp のエレガントで概念的にシンプルな方言です。
@@ -12,28 +12,28 @@ Schemeにはさまざまな実装があり、それぞれ異なる特徴を持�
 
 次のいくつかのセクションでは、これらのポイントの意味について説明します。その後のセクションでは、Guileの入手方法とインストール方法、およびこのマニュアルで使用している表記規則について説明します。
 
-* [GuileとScheme](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-Scheme)
-* [Cコードとの結合](https://doc.guix.gnu.org/guile/latest/en/guile.html#Combining-with-C)
-* [GuileとGNUプロジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-the-GNU-Project)
-* [対話型プログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Interactive-Programming)
-* [複数言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Supporting-Multiple-Languages)
-* [Guileの入手とインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Obtaining-and-Installing-Guile)
-* [このマニュアルの構成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Organisation-of-this-Manual)
-* [タイポグラフィの慣例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Typographical-Conventions)
+* [GuileとScheme](#11-guile-と-scheme)
+* [Cコードとの結合](#12-cコードとの結合)
+* [GuileとGNUプロジェクト](#13-guile-と-gnu-プロジェクト)
+* [対話型プログラミング](#14-対話型プログラミング)
+* [複数言語のサポート](#15-複数言語のサポート)
+* [Guileの入手とインストール](#16-guile-の入手とインストール)
+* [このマニュアルの構成](#17-本マニュアルの構成)
+* [タイポグラフィの慣例](#18-組版規則)
 
 * * *
 
-次へ: [Cコードとの結合](https://doc.guix.gnu.org/guile/latest/en/guile.html#Combining-with-C)、上へ: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Cコードとの結合](#12-cコードとの結合)、上へ: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.1 Guile と Scheme [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-Scheme-1)
+### 1.1 Guile と Scheme
 
 Guileは、アルゴリズム言語Schemeに関する改訂版5次報告書（通称R5RS）に記載されているSchemeを実装しており、簡潔で汎用的なデータ構造と制御構造を提供します。Guileは、R5RSで提示されているやや簡素な言語を超え、モジュールシステム、POSIXシステムコールへの完全なアクセス、ネットワークサポート、マルチスレッド、動的リンク、外部関数呼び出しインターフェース、強力な文字列処理など、実際のプログラミングに必要な多くの機能を追加しています。
 
-2007年、SchemeコミュニティはRnRSシリーズの重要な改訂版であるR6RSに合意し、公開しました。R6RSはSchemeの中核言語を拡張し、Guileを含む実装がこれまで異なる方法で行ってきた多くの非中核機能を標準化しています。Guileは時を経て、R6RSのほぼすべての機能を組み込み、既存の機能の一部をR6RS仕様に準拠するように調整してきました。詳細については、[R6RSサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Support)を参照してください。
+2007年、SchemeコミュニティはRnRSシリーズの重要な改訂版であるR6RSに合意し、公開しました。R6RSはSchemeの中核言語を拡張し、Guileを含む実装がこれまで異なる方法で行ってきた多くの非中核機能を標準化しています。Guileは時を経て、R6RSのほぼすべての機能を組み込み、既存の機能の一部をR6RS仕様に準拠するように調整してきました。詳細については、[R6RSサポート](07_06_r6rs_support.md#76-r6rs-サポート)を参照してください。
 
-公式の標準化活動と並行して、SRFI プロセス ([http://srfi.schemers.org/](http://srfi.schemers.org/)) は、マルチスレッド プログラミングや多次元配列など、多くの実用的なニーズに対応するインターフェースを標準化しています。Guile は多くの SRFI をサポートしており、[SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) に詳細が記載されています。
+公式の標準化活動と並行して、SRFI プロセス ([http://srfi.schemers.org/](http://srfi.schemers.org/)) は、マルチスレッド プログラミングや多次元配列など、多くの実用的なニーズに対応するインターフェースを標準化しています。Guile は多くの SRFI をサポートしており、[SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) に詳細が記載されています。
 
-R6RS 標準の策定過程は、Scheme コミュニティの分裂を浮き彫りにしました。R6RS を作成した実装者たちは、R5RS では有用で移植性の高いプログラムを書くことは不可能であり、この問題を解決するには野心的な標準が必要だと考えていました。しかし、Scheme 界の一部は、R6RS の取り組みが広範すぎると考え、よりミニマルな Scheme 実装では決して採用されないコンポーネントが含まれていると見ていました。この 2 番目のグループは、公式の Scheme 標準化トラックの主導権を握り、2013 年に、基本的に R5RS とモジュール システムから構成される、より限定的な R7RS をリリースしました。Guile も R7RS をサポートしています。[R7RS サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R7RS-Support) を参照してください。
+R6RS 標準の策定過程は、Scheme コミュニティの分裂を浮き彫りにしました。R6RS を作成した実装者たちは、R5RS では有用で移植性の高いプログラムを書くことは不可能であり、この問題を解決するには野心的な標準が必要だと考えていました。しかし、Scheme 界の一部は、R6RS の取り組みが広範すぎると考え、よりミニマルな Scheme 実装では決して採用されないコンポーネントが含まれていると見ていました。この 2 番目のグループは、公式の Scheme 標準化トラックの主導権を握り、2013 年に、基本的に R5RS とモジュール システムから構成される、より限定的な R7RS をリリースしました。Guile も R7RS をサポートしています。[R7RS サポート](07_07_r7rs_support.md#77-r7rs-サポート) を参照してください。
 
 R6RSとR7RSの登場により、統一Scheme標準化プロセスはほぼ完了したと言えるでしょう。今後も両方のシステムで記述されたコードや、SRFIプロセスを用いて定義されたモジュールは増え続けるでしょうし、Guileも両方をサポートします。しかし、今後の方向性については、GuileはRacket、Clojure、Concurrent MLなど、他の関連言語コミュニティからヒントを得ています。
 
@@ -41,9 +41,9 @@ R6RSとR7RSの登場により、統一Scheme標準化プロセスはほぼ完了
 
 * * *
 
-次へ: [Guile と GNU プロジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-the-GNU-Project)、前: [Guile と Scheme](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-Scheme)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile と GNU プロジェクト](#13-guile-と-gnu-プロジェクト)、前: [Guile と Scheme](#11-guile-と-scheme)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.2 Cコードとの結合 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Combining-with-C-Code)
+### 1.2 Cコードとの結合
 
 Guileはシェルと同様に、対話的に実行することも、スクリプトインタープリタとして実行することもできます。対話的に実行する場合は、ユーザーから式を読み込み、評価して結果を表示します。スクリプトインタープリタとして実行する場合は、ファイルからSchemeコードを読み込んで実行します。Guileにはオブジェクトライブラリ_libguile_も用意されており、他のアプリケーションが完全なSchemeインタープリタを簡単に組み込むことができます。アプリケーションは、Guileを拡張言語、簡潔で強力な設定言語、またはアプリケーションが提供するプリミティブを接続する多目的の「接着剤」として使用できます。CコードからSchemeコードを呼び出すことも、その逆も容易であるため、アプリケーション設計者はインタープリタの呼び出し方法とタイミングを完全に制御できます。アプリケーションは、新しい関数、データ型、制御構造、さらには構文をGuileに追加して、堅牢な言語設計に基づきながらも、目の前のタスクに合わせたドメイン固有言語を作成できます。
 
@@ -53,9 +53,9 @@ Guileのモジュールシステムでは、大規模なプログラムを、明
 
 * * *
 
-次へ: [対話型プログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Interactive-Programming)、前: [Cコードとの結合](https://doc.guix.gnu.org/guile/latest/en/guile.html#Combining-with-C)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [対話型プログラミング](#14-対話型プログラミング)、前: [Cコードとの結合](#12-cコードとの結合)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.3 Guile と GNU プロジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-the-GNU-Project-1)
+### 1.3 Guile と GNU プロジェクト
 
 Guileは、Emacsの拡張言語としてEmacs Lispが驚異的な成功を収めたことを受けて、GNUプロジェクトによって構想されました。Emacs LispがEmacs環境内で完全かつ斬新なアプリケーションの開発を可能にしたように、Guileも他のGNUプロジェクトアプリケーションに対して同様の機能を提供するべきだという考えに基づいています。この考えは今日でも変わっていません。
 
@@ -65,9 +65,9 @@ Guileは現在、AutoGen、Lilypond、Denemo、Mailutils、TeXmacs、Gnucashと�
 
 * * *
 
-次へ: [複数言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Supporting-Multiple-Languages)、前: [GuileとGNUプロジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-and-the-GNU-Project)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [複数言語のサポート](#15-複数言語のサポート)、前: [GuileとGNUプロジェクト](#13-guile-と-gnu-プロジェクト)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.4 対話型プログラミング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Interactive-Programming-1)
+### 1.4 対話型プログラミング
 
 非フリーソフトウェアは、ユーザーがその動作原理を知ることを望んでいません。ユーザーはただそれを受け入れるか、問題を報告してソースコードの所有者が修正に取り組むことを期待するしかないのです。
 
@@ -79,9 +79,9 @@ Guileはこのような対話型プログラミングのために設計されて
 
 * * *
 
-次へ: [Guile の入手とインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Obtaining-and-Installing-Guile)、前: [対話型プログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Interactive-Programming)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile の入手とインストール](#16-guile-の入手とインストール)、前: [対話型プログラミング](#14-対話型プログラミング)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.5 複数言語のサポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Supporting-Multiple-Languages-1)
+### 1.5 複数言語のサポート
 
 Guileはバージョン2.0以降、あらゆる言語をコア仮想マシンバイトコードにコンパイルできるアーキテクチャを採用しており、Schemeはその対応言語の一つに過ぎません。その他、Emacs Lisp、ECMAScript（一般的にはJavaScriptとして知られています）、Brainfuckにも対応しており、Lua、Ruby、Pythonについても現在開発が進められています。
 
@@ -89,9 +89,9 @@ Guileはバージョン2.0以降、あらゆる言語をコア仮想マシンバ
 
 * * *
 
-次へ: [このマニュアルの構成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Organisation-of-this-Manual)、前: [複数の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Supporting-Multiple-Languages)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [このマニュアルの構成](#17-本マニュアルの構成)、前: [複数の言語のサポート](#15-複数言語のサポート)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.6 Guile の入手とインストール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Obtaining-and-Installing-Guile-1)
+### 1.6 Guile の入手とインストール
 
 Guileは、GNUのメインアーカイブサイト[ftp://ftp.gnu.org](ftp://ftp.gnu.org/)またはそのミラーサイトから入手できます。ファイル名はguile-version.tar.gzです。現在のバージョンは3.0.11なので、ダウンロードするファイルは次のとおりです。
 
@@ -114,9 +114,9 @@ cd guile-3.0.11
 
 * * *
 
-次へ: [タイポグラフィの規則](https://doc.guix.gnu.org/guile/latest/en/guile.html#Typographical-Conventions)、前: [Guile の入手とインストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Obtaining-and-Installing-Guile)、上: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [タイポグラフィの規則](#18-組版規則)、前: [Guile の入手とインストール](#16-guile-の入手とインストール)、上: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.7 本マニュアルの構成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Organisation-of-this-Manual-1)
+### 1.7 本マニュアルの構成
 
 本書の残りの部分は、以下の章で構成されています。
 
@@ -150,20 +150,20 @@ GOOPSについて説明します。GOOPSは、クラス、多重継承、およ�
 
 * * *
 
-前へ: [このマニュアルの構成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Organisation-of-this-Manual)、上へ: [はじめに](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [このマニュアルの構成](#17-本マニュアルの構成)、上へ: [はじめに](#1-はじめに) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 1.8 組版規則 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Typographical-Conventions-1)
+### 1.8 組版規則
 
 例や手順の説明、その他Scheme式の評価を示す箇所では、式の出力や評価結果を表すために何らかの表記法を用います。
 
 記号「⇒」は、評価によって返される値を示すために使用されます。
 
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 2)
+([+](06_06_02_numerical_data_types.md#66211-算術関数) 1 2)
 ⇒ 3
 
 一部のプロシージャは、値を返すだけでなく、何らかの出力を生成します。これは記号「 ⊣ 」で示されます。
 
-(begin ([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) 1) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline)) 'hooray)
+(begin ([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) 1) ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース)) 'hooray)
 ⊣ 1
 ⇒やったー
 
@@ -171,4 +171,4 @@ GOOPSについて説明します。GOOPSは、クラス、多重継承、およ�
 
 * * *
 
-次へ: [Hello Scheme!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Scheme_0021)、前: [Introduction](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introduction)、上: [The Guile Reference Manual](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Hello Scheme!](03_hello_scheme.md#3-hello-scheme)、前: [Introduction](#1-はじめに)、上: [The Guile Reference Manual](00_contents.md) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

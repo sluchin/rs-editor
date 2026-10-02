@@ -1,4 +1,4 @@
-### 6.15 PEG解析 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing-1)
+### 6.15 PEG解析
 
 構文解析式文法（PEG）は、テキスト処理のための形式言語を定義する方法です。PEGは、マッチング（正規表現など）にも、再帰下降構文解析器（lex/yaccなど）の構築にも使用できます。Guileは、構文解析中に保持する情報をより細かく制御できる、PEG構文の上位セットを使用しています。
 
@@ -12,20 +12,20 @@ PEGを紹介した論文には、PEGの動作原理に関するより詳細な�
 
 このドキュメントの残りの部分は、構文リファレンス、APIリファレンス、およびチュートリアルで構成されています。
 
-* [PEG構文リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Syntax-Reference)
-* [PEG API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-API-Reference)
-* [PEGチュートリアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Tutorial)
-* [PEG Internals](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Internals)
+* [PEG構文リファレンス](#6151-peg構文リファレンス)
+* [PEG API リファレンス](#6152-peg-api-リファレンス)
+* [PEGチュートリアル](#6153-pegチュートリアル)
+* [PEG Internals](#6154-peg-内部)
 
 * * *
 
-次へ: [PEG API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-API-Reference)、上へ: [PEG 解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [PEG API リファレンス](#6152-peg-api-リファレンス)、上へ: [PEG 解析](#615-peg解析) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.15.1 PEG構文リファレンス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Syntax-Reference-1)
+#### 6.15.1 PEG構文リファレンス
 
-#### 標準PEG構文: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Normal-PEG-Syntax_003a)
+#### 標準PEG構文:
 
-PEG パターン: **シーケンス** ab [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sequence)
+PEG パターン: **シーケンス** ab
 
 aを解析します。解析が成功した場合、aとして解析されたテキストの末尾からbの解析を続行します。aとbの両方が成功すれば成功です。
 
@@ -33,7 +33,7 @@ aを解析します。解析が成功した場合、aとして解析されたテ
 
 （そしてab）
 
-PEGパターン: **順序付き選択** ab [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ordered-choice)
+PEGパターン: **順序付き選択** ab
 
 a を解析します。これが失敗した場合は、バックトラックして b を解析します。a または b のいずれかが成功すれば成功です。
 
@@ -41,7 +41,7 @@ a を解析します。これが失敗した場合は、バックトラックし
 
 （またはab）
 
-PEG パターン: **ゼロ以上** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero-or-more)
+PEG パターン: **ゼロ以上**
 
 前の a によって解析されたテキストの末尾から各 a を開始し、可能な限り連続して a を解析します。必ず成功します。
 
@@ -49,7 +49,7 @@ PEG パターン: **ゼロ以上** [¶](https://doc.guix.gnu.org/guile/latest/en
 
 `(* a)`
 
-PEG パターン: **1 つ以上** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-one-or-more)
+PEG パターン: **1 つ以上**
 
 前の a によって解析されたテキストの末尾から各 a を開始し、可能な限り連続して a を解析します。少なくとも 1 つの a が解析されれば成功です。
 
@@ -57,7 +57,7 @@ PEG パターン: **1 つ以上** [¶](https://doc.guix.gnu.org/guile/latest/en/
 
 `(+ a)`
 
-PEG パターン: **オプション** a [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-optional)
+PEG パターン: **オプション** a
 
 a を解析しようとします。a が成功すれば成功です。
 
@@ -65,7 +65,7 @@ a を解析しようとします。a が成功すれば成功です。
 
 `(? a)`
 
-PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-followed-by) が ** ** に続きます
+PEG パターン: が ** ** に続きます
 
 解析が可能かどうかを確認しますが、実際に解析は行いません。解析が成功する場合に成功します。
 
@@ -73,7 +73,7 @@ PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index
 
 （aが続く）
 
-PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not-followed-by) が ** 後に続かない **
+PEG パターン: が ** 後に続かない **
 
 解析が不可能であることを確認しますが、実際には解析しません。解析が失敗する場合に成功します。
 
@@ -81,7 +81,7 @@ PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index
 
 （aが後に続かない）
 
-PEG パターン: **文字列リテラル** “abc” [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string-literal)
+PEG パターン: **文字列リテラル** “abc”
 
 文字列「abc」を解析します。解析が成功すれば成功となります。
 
@@ -89,7 +89,7 @@ PEG パターン: **文字列リテラル** “abc” [¶](https://doc.guix.gnu.
 
 `"abc"`
 
-PEGパターン: **任意の文字** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-any-character)
+PEGパターン: **任意の文字**
 
 任意の1文字を解析します。解析対象のテキストがなくなるまで、処理は成功します。
 
@@ -97,7 +97,7 @@ PEGパターン: **任意の文字** [¶](https://doc.guix.gnu.org/guile/latest/
 
 `peg-any`
 
-PEG パターン: **文字クラス** ab [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-character-class)
+PEG パターン: **文字クラス** ab
 
 aとbが文字の場合の「順序付き選択 ab」の別の構文。
 
@@ -105,7 +105,7 @@ aとbが文字の場合の「順序付き選択 ab」の別の構文。
 
 （または「a」「b」）
 
-PEG パターン: **文字範囲** az [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-range-of-characters)
+PEG パターン: **文字範囲** az
 
 aからzまでの間の任意の文字を解析します。
 
@@ -113,7 +113,7 @@ aからzまでの間の任意の文字を解析します。
 
 `(範囲 #\a #\z)`
 
-PEG パターン: **文字の逆範囲** az [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-inverse-range-of-characters)
+PEG パターン: **文字の逆範囲** az
 
 aとzの間に含まれない文字を解析します。
 
@@ -129,23 +129,23 @@ aとzの間に含まれない文字を解析します。
 
 （そして
 （または
-(そして ([not-followed-by](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not-followed-by) b))
-(および c ([followed-by](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-followed-by) ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) d))))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "e"))
+(そして ([not-followed-by](#標準peg構文) b))
+(および c ([followed-by](#標準peg構文) ([\*](06_06_02_numerical_data_types.md#66211-算術関数) d))))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) "e"))
 
-#### 拡張構文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extended-Syntax)
+#### 拡張構文
 
 S式には、いくつかの追加構文があります。
 
-PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ignore) を **無視**
+PEG パターン: を **無視**
 
 に一致するテキストを無視します
 
-PEG パターン: [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-capture)をキャプチャします
+PEG パターン:をキャプチャします
 
 a に一致するテキストを取得します。
 
-PEG パターン: **peg** a [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg)
+PEG パターン: **peg** a
 
 文字列構文を使用してPEGパターンaを埋め込みます。
 
@@ -155,23 +155,23 @@ PEG パターン: **peg** a [¶](https://doc.guix.gnu.org/guile/latest/en/guile.
 
 同等です
 
-（または（[peg](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg) "!a") "b")
+（または（[peg](#拡張構文) "!a") "b")
 
 そして
 
-(または ([not-followed-by](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not-followed-by) a) "b")
+(または ([not-followed-by](#標準peg構文) a) "b")
 
 * * *
 
-次へ: [PEG チュートリアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Tutorial)、前: [PEG 構文リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Syntax-Reference)、上: [PEG 解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [PEG チュートリアル](#6153-pegチュートリアル)、前: [PEG 構文リファレンス](#6151-peg構文リファレンス)、上: [PEG 解析](#615-peg解析) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.15.2 PEG API リファレンス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-API-Reference-1)
+#### 6.15.2 PEG API リファレンス
 
-#### マクロの定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Define-Macros)
+#### マクロの定義
 
 PEGを定義する最も簡単な方法は、defineマクロのいずれかを使用することです（これらのマクロはどちらも`define`式に展開されます）。これらのマクロは、解析関数を変数にバインドします。これらの解析関数は、`match-pattern`または`search-for-pattern`によって呼び出され、PEGマッチレコードが返されます。このレコードから、PEGマッチデコンストラクタ関数を使用して生データを取得できます。より複雑な（そしておそらくより分かりやすい）例は、チュートリアルに記載されています。
 
-Scheme マクロ: **define-peg-string-patterns** peg-string [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dpeg_002dstring_002dpatterns)
+Scheme マクロ: **define-peg-string-patterns** peg-string
 
 PEG ペグ文字列内のすべての非終端記号を定義します。より正確には、`define-peg-string-patterns` は PEG のスーパーセットを受け取ります。通常の PEG では、非終端記号とパターンの間に `<-` があります。`define-peg-string-patterns` はこの記号を使用して、構文木を伝播させるべき情報を決定します。通常の `<-` は一致したテキストを構文木を伝播させ、`<--` は一致したテキストに非終端記号の名前をタグ付けして構文木を伝播させ、`<` は一致したテキストを破棄して構文木を伝播させません。また、非終端記号には「-」文字を含めることができますが、通常の PEG では許可されていません。
 
@@ -190,12 +190,12 @@ as-or-bs-tag <-- as-tag/bs-tag")
 
 ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern ) as-or-bs "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as-or-bs-tag "aabbcc") ⇒
-#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as-or-bs-tag (as-tag aa))[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+([match-pattern](#構文解析とマッチング関数) as-or-bs-tag "aabbcc") ⇒
+#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as-or-bs-tag (as-tag aa))[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
 なお、この操作を行うことで、トップレベルで 6 つの変数 (as、bs、as-or-bs、as-tag、bs-tag、as-or-bs-tag) をバインドしています。
 
-Scheme マクロ: **define-peg-pattern** name capture-type peg-sexp [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dpeg_002dpattern)
+Scheme マクロ: **define-peg-pattern** name capture-type peg-sexp
 
 単一の非終端名を定義します。capture-type は、構文解析ツリーに渡される情報の量を決定します。peg-sexp は、S 式形式の PEG です。
 
@@ -215,27 +215,27 @@ capture-type の指定可能な値:
 
 例えば、私たちが：
 
-(define-peg-pattern as body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-(define-peg-pattern bs body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "b"))
+(define-peg-pattern as body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+(define-peg-pattern bs body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "b"))
 (define-peg-pattern as-or-bs body (or as bs))
-(define-peg-pattern as-tag all ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-(define-peg-pattern bs-tag all ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "b"))
+(define-peg-pattern as-tag all ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+(define-peg-pattern bs-tag all ([+](06_06_02_numerical_data_types.md#66211-算術関数) "b"))
 (define-peg-pattern as-or-bs-tag all (or as-tag bs-tag))
 
 それから：
 
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as-or-bs "aabbcc") ⇒
+([match-pattern](#構文解析とマッチング関数) as-or-bs "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as-or-bs-tag "aabbcc") ⇒
-#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as-or-bs-tag (as-tag aa))[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+([match-pattern](#構文解析とマッチング関数) as-or-bs-tag "aabbcc") ⇒
+#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as-or-bs-tag (as-tag aa))[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
 なお、この操作を行うことで、トップレベルで 6 つの変数 (as、bs、as-or-bs、as-tag、bs-tag、as-or-bs-tag) をバインドしています。
 
-#### コンパイル関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compile-Functions)
+#### コンパイル関数
 
 実行時に匿名PEGパターンをコンパイルできると便利な場合があります。これらの関数を使用すると、どちらの構文でもコンパイルできます。
 
-Scheme手順: **peg-string-compile** peg-stringキャプチャタイプ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_002dstring_002dcompile)
+Scheme手順: **peg-string-compile** peg-stringキャプチャタイプ
 
 キャプチャタイプに従って伝播するペグストリングにPEGパターンをコンパイルします（キャプチャタイプは`define-peg-pattern`のいずれかの値になります）。
 
@@ -245,19 +245,19 @@ Scheme Procedure: **compile-peg-pattern** peg-sexp capture-type [¶](https://doc
 
 これらの関数は構文オブジェクトを返します。構文オブジェクトはマクロで使用する場合に便利です。新しい非終端記号を定義するだけであれば、次のようにします。
 
-(define [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) '([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-(define as ([compile](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compile) ([compile-peg-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compile_002dpeg_002dpattern) [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp) 'body)))
+(define [exp](06_06_02_numerical_data_types.md#66212-科学関数) '([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+(define as ([compile](04_programming_in_scheme.md#4444-コンパイルコマンド) ([compile-peg-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compile_002dpeg_002dpattern) [exp](06_06_02_numerical_data_types.md#66212-科学関数) 'body)))
 
 この非終端記号は、通常のPEG関数すべてで使用できます。
 
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as "aaaa") ⇒
+([match-pattern](#構文解析とマッチング関数) as "aaaa") ⇒
 #<ペグ開始: 0 終了: 5 文字列: aaaaa ツリー: aaaaa>
 
-#### 構文解析とマッチング関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parsing-_0026-Matching-Functions)
+#### 構文解析とマッチング関数
 
 ここでいう「解析」とは、文字列を最初の文字から始まるツリー構造に解析することを意味し、「マッチング」とは、文字列の中から部分文字列を検索することを意味します。実際には、この2つの関数の違いは、`match-pattern`はインデックス0から始まる有効な部分文字列が見つからない場合に処理を中止するのに対し、`search-for-pattern`は検索を続ける点のみです。これらの制約条件の下では、どちらの関数も「解析」と「マッチング」を同等に実行できます。
 
-Scheme 手順: **match-pattern** 非用語文字列 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern)
+Scheme 手順: **match-pattern** 非用語文字列
 
 nontermに格納されているPEGを使用して文字列を解析します。一致するパターンが見つからない場合、`match-pattern`はfalseを返します。一致するパターンが見つかった場合は、PEG一致レコードが返されます。
 
@@ -275,132 +275,132 @@ nontermに格納されているPEGを使用して文字列を解析します。�
 
 何もない
 
-(define-peg-pattern as all ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as "aabbcc") ⇒
-#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as aa)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+(define-peg-pattern as all ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+([match-pattern](#構文解析とマッチング関数) as "aabbcc") ⇒
+#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as aa)[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
-(define-peg-pattern as body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as "aabbcc") ⇒
+(define-peg-pattern as body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+([match-pattern](#構文解析とマッチング関数) as "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
 
-(define-peg-pattern as none ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) as "aabbcc") ⇒
-#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: ()[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+(define-peg-pattern as none ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+([match-pattern](#構文解析とマッチング関数) as "aabbcc") ⇒
+#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: ()[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
-(define-peg-pattern bs body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "b"))
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) bs "aabbcc") ⇒
+(define-peg-pattern bs body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "b"))
+([match-pattern](#構文解析とマッチング関数) bs "aabbcc") ⇒
 #f
 
-Scheme マクロ: **search-for-pattern** nonterm-or-peg string [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern)
+Scheme マクロ: **search-for-pattern** nonterm-or-peg string
 
 文字列内を検索し、一致する部分式を探します。nonterm-or-peg には、非終端記号またはリテラル PEG パターンを指定できます。リテラル PEG パターンが指定された場合、`search-for-pattern` は、多くのハッカーが慣れ親しんでいる正規表現検索と非常によく似た動作をします。一致するものが見つからなかった場合、`search-for-pattern` は false を返します。一致するものが見つかった場合は、PEG 一致レコードが返されます。
 
-(define-peg-pattern as body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) as "aabbcc") ⇒
+(define-peg-pattern as body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+([search-for-pattern](#構文解析とマッチング関数) as "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a") "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a") "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) "'a'+" "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) "'a'+" "aabbcc") ⇒
 #<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: aa>
 
-(define-peg-pattern as all ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "a"))
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) as "aabbcc") ⇒
-#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as aa)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+(define-peg-pattern as all ([+](06_06_02_numerical_data_types.md#66211-算術関数) "a"))
+([search-for-pattern](#構文解析とマッチング関数) as "aabbcc") ⇒
+#<peg 開始: 0 終了: 2 文字列: aabbcc ツリー: (as aa)[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
-(define-peg-pattern bs body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "b"))
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) bs "aabbcc") ⇒
+(define-peg-pattern bs body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "b"))
+([search-for-pattern](#構文解析とマッチング関数) bs "aabbcc") ⇒
 #<ペグ開始: 2 終了: 4 文字列: aabbcc ツリー: bb>
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "b") "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) "b") "aabbcc") ⇒
 #<ペグ開始: 2 終了: 4 文字列: aabbcc ツリー: bb>
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) "'b'+" "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) "'b'+" "aabbcc") ⇒
 #<ペグ開始: 2 終了: 4 文字列: aabbcc ツリー: bb>
 
-(define-peg-pattern zs body ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "z"))
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) zs "aabbcc") ⇒
+(define-peg-pattern zs body ([+](06_06_02_numerical_data_types.md#66211-算術関数) "z"))
+([search-for-pattern](#構文解析とマッチング関数) zs "aabbcc") ⇒
 #f
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "z") "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) "z") "aabbcc") ⇒
 #f
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) "'z'+" "aabbcc") ⇒
+([search-for-pattern](#構文解析とマッチング関数) "'z'+" "aabbcc") ⇒
 #f
 
-#### PEG マッチ レコード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Match-Records)
+#### PEG マッチ レコード
 
 `match-pattern`関数と`search-for-pattern`関数はどちらもPEGマッチレコードを返します。これらのレコードから実際の情報を抽出するには、以下の関数を使用します。
 
-Scheme Procedure: **peg:string** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003astring)
+Scheme Procedure: **peg:string** match-record
 
 `match-record` の作成時に解析された元の文字列を返します。
 
-スキーム手順: **peg:start** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003astart)
+スキーム手順: **peg:start** match-record
 
 元の文字列（`peg:string`から取得）の中で、解析された最初の文字のインデックスを返します。これが`peg:end`と同じ場合、何も解析されませんでした。
 
-スキーム手順: **peg:end** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003aend)
+スキーム手順: **peg:end** match-record
 
 元の文字列（`peg:string`から取得）の中で最後に解析された文字のインデックスより1大きい値を返します。これが`peg:start`と同じ場合、何も解析されませんでした。
 
-Scheme Procedure: **peg:substring** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003asubstring)
+Scheme Procedure: **peg:substring** match-record
 
 `match-record` によって解析された部分文字列を返します。これは `(substring (peg:string match-record) (peg:start match-record) (peg:end match-record))` と同等です。
 
-スキーム手順: **peg:tree** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree)
+スキーム手順: **peg:tree** match-record
 
 `match-record`によって解析されたツリーを返します。
 
-スキーム手順: **peg-record?** match-record [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_002drecord_003f)
+スキーム手順: **peg-record?** match-record
 
 `match-record`がPEGマッチレコードであればtrueを返し、そうでなければfalseを返します。
 
 例：
 
-(define-peg-pattern bs all ([peg](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg) "'b'+"))
+(define-peg-pattern bs all ([peg](#拡張構文) "'b'+"))
 
-([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) bs "aabbcc") ⇒
-#<peg 開始: 2 終了: 4 文字列: aabbcc ツリー: (bs bb)[\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e)
+([search-for-pattern](#構文解析とマッチング関数) bs "aabbcc") ⇒
+#<peg 開始: 2 終了: 4 文字列: aabbcc ツリー: (bs bb)[\>](06_06_02_numerical_data_types.md#6628-比較述語)
 
-(let ((pm ([search-for-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-search_002dfor_002dpattern) bs "aabbcc")))
-\`(([string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string) ,([peg:string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003astring) pm))
-(開始、([peg:開始](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003astart) pm))
-(end ,([peg:end](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003aend) pm))
-([substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-substring) ,([peg:substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003asubstring) pm))
-(ツリー、([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) pm))
-([record?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_003f) ,([peg-record?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_002drecord_003f) pm)))) ⇒
-(([string](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string) "aabbcc")
+(let ((pm ([search-for-pattern](#構文解析とマッチング関数) bs "aabbcc")))
+\`(([string](06_06_05_strings.md#6653-文字列コンストラクタ) ,([peg:string](#peg-マッチ-レコード) pm))
+(開始、([peg:開始](#peg-マッチ-レコード) pm))
+(end ,([peg:end](#peg-マッチ-レコード) pm))
+([substring](06_06_05_strings.md#6655-文字列の選択) ,([peg:substring](#peg-マッチ-レコード) pm))
+(ツリー、([peg:tree](#peg-マッチ-レコード) pm))
+([record?](06_06_17_records.md#6617-レコード) ,([peg-record?](#peg-マッチ-レコード) pm)))) ⇒
+(([string](06_06_05_strings.md#6653-文字列コンストラクタ) "aabbcc")
 （開始2）
 （終了4）
-([substring](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-substring) "bb")
+([substring](06_06_05_strings.md#6655-文字列の選択) "bb")
 (ツリー (bs "bb"))
-([record?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-record_003f) #t))
+([record?](06_06_17_records.md#6617-レコード) #t))
 
-#### その他 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Miscellaneous)
+#### その他
 
-Scheme手順: **context-flatten** tst lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-context_002dflatten)
+Scheme手順: **context-flatten** tst lst
 
 述語 tst とリスト lst を受け取ります。すべての要素がアトムであるか、または tst を満たすまで、lst を平坦化します。lst 自体が tst を満たす場合、`(list lst)` が返されます (これは、唯一の要素が tst を満たす平坦なリストです)。
 
-([context-flatten](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-context_002dflatten) (lambda (x) (and ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) x)) ([\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) x) 1))) '(2 2 (1 1 (2 2)) (2 2 (1 1)))) ⇒
+([context-flatten](#その他) (lambda (x) (and ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) ([car](06_06_08_pairs.md#668-ペア) x)) ([\=](06_06_02_numerical_data_types.md#6628-比較述語) ([car](06_06_08_pairs.md#668-ペア) x) 1))) '(2 2 (1 1 (2 2)) (2 2 (1 1)))) ⇒
 (2 2 (1 1 (2 2)) 2 2 (1 1))
-([context-flatten](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-context_002dflatten) (lambda (x) (and ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) x)) ([\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) x) 1))) '(1 1 (1 1 (2 2)) (2 2 (1 1)))) ⇒
+([context-flatten](#その他) (lambda (x) (and ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) ([car](06_06_08_pairs.md#668-ペア) x)) ([\=](06_06_02_numerical_data_types.md#6628-比較述語) ([car](06_06_08_pairs.md#668-ペア) x) 1))) '(1 1 (1 1 (2 2)) (2 2 (1 1)))) ⇒
 ((1 1 (1 1 (2 2)) (2 2 (1 1))))
 
 なぜこれがここにあるのか疑問に思うなら、チュートリアルを見てください。
 
-スキーム手順: **keyword-flatten** terms lst [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002dflatten)
+スキーム手順: **keyword-flatten** terms lst
 
 `context-flatten` のより限定的な形式。終端アトムのリスト `terms` を受け取り、すべての要素がアトムであるか、`terms` のアトムを最初の要素として持つリストになるまで、lst を平坦化します。
 
-([keyword-flatten](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002dflatten) '(ab) '(cab (ac) (bc) (c (ba) (ca)))) ⇒
+([keyword-flatten](#その他) '(ab) '(cab (ac) (bc) (c (ba) (ca)))) ⇒
 (cab (ac) (bc) c (ba) ca)
 
 なぜこれがここにあるのか疑問に思うなら、チュートリアルを見てください。
 
 * * *
 
-次へ: [PEG の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Internals )、前: [PEG API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-API-Reference)、上: [PEG の解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [PEG の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Internals )、前: [PEG API リファレンス](#6152-peg-api-リファレンス)、上: [PEG の解析](#615-peg解析) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.15.3 PEGチュートリアル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Tutorial-1)
+#### 6.15.3 PEGチュートリアル
 
-#### /etc/passwd の解析 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parsing-_002fetc_002fpasswd)
+#### /etc/passwd の解析
 
 この例では、PEGを使用して/etc/passwdを解析する方法を示します。
 
@@ -432,18 +432,18 @@ NL < '\\n'")
 
 以下は、S式を用いて定義された同じPEGです。
 
-(define-peg-pattern passwd body (and ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) entry) ([not-followed-by](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not-followed-by) peg-any)))
-(define-peg-pattern entry all (and ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) (and ([not-followed-by](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-not-followed-by) NL) peg-any))
-			([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) NL)))
+(define-peg-pattern passwd body (and ([\*](06_06_02_numerical_data_types.md#66211-算術関数) entry) ([not-followed-by](#標準peg構文) peg-any)))
+(define-peg-pattern entry all (and ([\*](06_06_02_numerical_data_types.md#66211-算術関数) (and ([not-followed-by](#標準peg構文) NL) peg-any))
+			([\*](06_06_02_numerical_data_types.md#66211-算術関数) NL)))
 (define-peg-pattern NL none "\\n")
 
 明らかにこれははるかに冗長です。一方で、より明示的であるため、自動的に構築しやすくなります。ただし、場合によってはS式を使いやすくするいくつかのテクニックがあります。1つは`ignore`キーワードです。文字列構文では、テキストを別の非終端記号に分割する以外に「このテキストを破棄する」方法がありません。たとえば、改行を破棄するには`NL`を定義する必要がありました。S式構文では、単に`(ignore "\n")`と書くだけで済みます。また、文字列構文の方がはるかに簡潔な場合は、`peg`キーワードを使用して文字列構文をS式構文に埋め込むことができます。たとえば、次のように書くことができます。
 
-(define-peg-pattern passwd body ([peg](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg) "entry\* !."))
+(define-peg-pattern passwd body ([peg](#拡張構文) "entry\* !."))
 
 どのように定義しても、`*etc-passwd*`を非終端記号`passwd`で解析すると、同じ結果が得られます。
 
-([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) passwd \*etc-passwd\*)) ⇒
+([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) passwd \*etc-passwd\*)) ⇒
 ((エントリ "root:x:0:0:root:/root:/bin/bash")
 (エントリ「デーモン:x:1:1:デーモン:/usr/sbin:/bin/sh」)
 (エントリ "bin:x:2:2:bin:/bin:/bin/sh")
@@ -453,7 +453,7 @@ NL < '\\n'")
 
 しかし、注意すべき点があります。
 
-([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) passwd "one entry")) ⇒
+([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) passwd "one entry")) ⇒
 （エントリー「1件」）
 
 デフォルトでは、PEG によって生成される構文木は、情報を失うことなく可能な限り圧縮されます。最初はこれが望ましいものではないように見えるかもしれませんが、圧縮されていない構文木は非常に厄介です (特定のリストがどの程度深くネストされるかを簡単に予測する方法がなく、空のリストが至る所に散らばっているなど)。ただし、このことによる副作用として、圧縮が過剰になる場合があります。`((entry "one entry"))` が `(entry "one entry")` に圧縮されても情報は破棄されませんが、この特定のケースではおそらく望ましい結果ではありません。
@@ -462,20 +462,20 @@ NL < '\\n'")
 
 ここで必要なのは`keyword-flatten`です。
 
-([keyword-flatten](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002dflatten) '(entry) ([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) passwd \*etc-passwd\*))) ⇒
+([keyword-flatten](#その他) '(entry) ([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) passwd \*etc-passwd\*))) ⇒
 ((エントリ "root:x:0:0:root:/root:/bin/bash")
 (エントリ「デーモン:x:1:1:デーモン:/usr/sbin:/bin/sh」)
 (エントリ "bin:x:2:2:bin:/bin:/bin/sh")
 (エントリ "sys:x:3:3:sys:/dev:/bin/sh")
 (エントリ "nobody:x:65534:65534:nobody:/nonexistent:/bin/sh")
 (エントリ "messagebus:x:103:107::/var/run/dbus:/bin/false"))
-([keyword-flatten](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002dflatten) '(entry) ([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) passwd "one entry"))) ⇒
+([keyword-flatten](#その他) '(entry) ([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) passwd "one entry"))) ⇒
 （（エントリー「1エントリー」））
 
 もちろん、これはやや作為的な例です。実際には、曖昧さを解消するために、非終端記号`passwd`にタグを付けるだけでしょう（S式の場合は`all`キーワード、文字列の場合は`<--`記号を使用します）。
 
-(define-peg-pattern tag-passwd all ([peg](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg) "entry\* !."))
-([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) tag-passwd \*etc-passwd\*)) ⇒
+(define-peg-pattern tag-passwd all ([peg](#拡張構文) "entry\* !."))
+([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) tag-passwd \*etc-passwd\*)) ⇒
 (タグパスワード)
 (エントリ "root:x:0:0:root:/root:/bin/bash")
 (エントリ「デーモン:x:1:1:デーモン:/usr/sbin:/bin/sh」)
@@ -483,7 +483,7 @@ NL < '\\n'")
 (エントリ "sys:x:3:3:sys:/dev:/bin/sh")
 (エントリ "nobody:x:65534:65534:nobody:/nonexistent:/bin/sh")
 (エントリ "messagebus:x:103:107::/var/run/dbus:/bin/false"))
-([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern ) tag-passwd "one entry"))
+([peg:tree](#peg-マッチ-レコード) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern ) tag-passwd "one entry"))
 (タグパスワード)
 （エントリー「1エントリー」）
 
@@ -567,7 +567,7 @@ NL < '\\n'
 
 空の一致を示す記号を表示したくない場合は、`entry` の `nameORcomment` の後に `*` を `+` に置き換え、`?` を追加してください。そうすると、1 文字以上の解析が試みられ、失敗（解析ツリーに何も挿入されない）しますが、nameORcomment に一致しなくても処理が続行されるため、処理は継続されます。
 
-#### 算術式の埋め込み [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Embedding-Arithmetic-Expressions)
+#### 算術式の埋め込み
 
 以下のPEGを使用して、単純な数式を解析できます。
 
@@ -580,7 +580,7 @@ value <-- number / '(' expr ')'
 
 それから：
 
-([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) expr "1+1/2\*3+(1+1)/2")) ⇒
+([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) expr "1+1/2\*3+(1+1)/2")) ⇒
 （合計（積（値（数値 "1")）））
 「＋」
 (合計 (積)
@@ -605,23 +605,23 @@ value <-- number / '(' expr ')'
 これらの構文解析ツリーをLisp式に変換するのは非常に簡単です。
 
 (define (parse-sum sum left . rest)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) rest)
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-product left)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol ) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) rest))
-	([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-product left)
-	([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-sum ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) rest)))))
+(if ([null?](06_06_09_lists.md#6692-リスト述語) rest)
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-product left)
+([list](06_06_09_lists.md#6693-リストコンストラクタ) ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol ) ([car](06_06_08_pairs.md#668-ペア) rest))
+	([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-product left)
+	([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-sum ([cadr](06_06_08_pairs.md#668-ペア) rest)))))
 
 (define (parse-product product left . rest)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) rest)
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-value left)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) rest))
-	([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-value left)
-	([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-product ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) rest)))))
+(if ([null?](06_06_09_lists.md#6692-リスト述語) rest)
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-value left)
+([list](06_06_09_lists.md#6693-リストコンストラクタ) ([string->symbol](06_06_06_symbols.md#6664-シンボルに関連する操作) ([car](06_06_08_pairs.md#668-ペア) rest))
+	([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-value left)
+	([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-product ([cadr](06_06_08_pairs.md#668-ペア) rest)))))
 
-(define (parse-value value [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first) . rest)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) rest)
-([string->number](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003enumber) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-sum ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) rest))))
+(define (parse-value value [first](07_05_03_srfi1_list_library.md#7533-セレクタ) . rest)
+(if ([null?](06_06_09_lists.md#6692-リスト述語) rest)
+([string->number](06_06_02_numerical_data_types.md#6629-数値と文字列の変換) ([cadr](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-sum ([car](06_06_08_pairs.md#668-ペア) rest))))
 
 (parse-expr parse-sum を定義)
 
@@ -629,8 +629,8 @@ value <-- number / '(' expr ')'
 
 それから：
 
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-expr ([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) expr "1+1/2\*3+(1+1)/2"))) ⇒
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) 1 ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) 2 3)) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 1) 2)))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-expr ([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) expr "1+1/2\*3+(1+1)/2"))) ⇒
+([+](06_06_02_numerical_data_types.md#66211-算術関数) 1 ([+](06_06_02_numerical_data_types.md#66211-算術関数) ([/](06_06_02_numerical_data_types.md#66211-算術関数) 1 ([\*](06_06_02_numerical_data_types.md#66211-算術関数) 2 3)) ([/](06_06_02_numerical_data_types.md#66211-算術関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) 1 1) 2)))
 
 しかし待ってください！結合法則が間違っています！`(/ 1 (* 2 3))` とあるところは、`(* (/ 1 2) 3)` とあるべきです。
 
@@ -638,7 +638,7 @@ value <-- number / '(' expr ')'
 
 では、PEGを使って左結合二項演算子をどのように解析すればよいのでしょうか？正直なところ、これはPEGの大きな欠点の1つです。汎用的な方法はありませんが、ここでは繰り返し演算子が適切な選択肢となります。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-1))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (srfi srfi-1))
 
 (ペグストリングパターンの定義)
 "expr <- sum
@@ -649,45 +649,45 @@ value <-- number / '(' expr ')'
 
 深呼吸して…
 (define (make-left-parser next-func)
-(lambda (sum [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first) . rest) ;; 一般的な形式、以下のコメントは、
+(lambda (sum [first](07_05_03_srfi1_list_library.md#7533-セレクタ) . rest) ;; 一般的な形式、以下のコメントは、
 ;; 合計式を扱っている
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) rest) ;; form (sum (product ...))
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) next-func [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first))
-(if ([string?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003f) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)));; form (sum ((product ...) "+") (product ...))
-	([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))
-		([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) next-func ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))
-		([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) next-func ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) rest)))
+(if ([null?](06_06_09_lists.md#6692-リスト述語) rest) ;; form (sum (product ...))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) next-func [first](07_05_03_srfi1_list_library.md#7533-セレクタ))
+(if ([string?](06_06_05_strings.md#6652-文字列述語) ([cadr](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)));; form (sum ((product ...) "+") (product ...))
+	([list](06_06_09_lists.md#6693-リストコンストラクタ) ([string->symbol](06_06_06_symbols.md#6664-シンボルに関連する操作) ([cadr](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))
+		([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) next-func ([car](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))
+		([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) next-func ([car](06_06_08_pairs.md#668-ペア) rest)))
 ;; 形式 (合計 (((積 ...) "+") ((積 ...) "+")) (積 ...))
-	([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car)
-	([reduce](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reduce) ;; リストを走査して左結合木を構築する
+	([car](06_06_08_pairs.md#668-ペア)
+	([reduce](07_05_03_srfi1_list_library.md#7535-折りたたみ展開マップ) ;; リストを走査して左結合木を構築する
 	(ラムダ (lr)
-	([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) r) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) r) ([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) next-func ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) l)))
-		([文字列->シンボル](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) l)))
+	([list](06_06_09_lists.md#6693-リストコンストラクタ) ([list](06_06_09_lists.md#6693-リストコンストラクタ) ([cadr](06_06_08_pairs.md#668-ペア) r) ([car](06_06_08_pairs.md#668-ペア) r) ([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) next-func ([car](06_06_08_pairs.md#668-ペア) l)))
+		([文字列->シンボル](06_06_06_symbols.md#6664-シンボルに関連する操作) ([cadr](06_06_08_pairs.md#668-ペア) l)))
 	'無視する
-	([append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append) ;; すべての製品のリストを作成します
+	([append](06_06_09_lists.md#6695-追加と逆順) ;; すべての製品のリストを作成します
 ;; 最初のものは事前に解析しておく必要があります
-	([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) next-func ([caar](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-caar) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))
-			([string->symbol](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003esymbol) ([cadar](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadar) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))))
-	([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first))
+	([list](06_06_09_lists.md#6693-リストコンストラクタ) ([list](06_06_09_lists.md#6693-リストコンストラクタ) ([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) next-func ([caar](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))
+			([string->symbol](06_06_06_symbols.md#6664-シンボルに関連する操作) ([cadar](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))))
+	([cdr](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ))
 ;; 最後の一つは追加する必要があります
-	([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-append) rest '("done"))))))))))
+	([list](06_06_09_lists.md#6693-リストコンストラクタ) ([append](06_06_09_lists.md#6695-追加と逆順) rest '("done"))))))))))
 
-(define (parse-value value [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first) . rest)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) rest)
-([string->number](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003enumber) ([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) [first](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-first)))
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-sum ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) rest))))
+(define (parse-value value [first](07_05_03_srfi1_list_library.md#7533-セレクタ) . rest)
+(if ([null?](06_06_09_lists.md#6692-リスト述語) rest)
+([string->number](06_06_02_numerical_data_types.md#6629-数値と文字列の変換) ([cadr](06_06_08_pairs.md#668-ペア) [first](07_05_03_srfi1_list_library.md#7533-セレクタ)))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-sum ([car](06_06_08_pairs.md#668-ペア) rest))))
 (define parse-product (make-left-parser parse-value))
 (define parse-sum (make-left-parser parse-product))
 (parse-expr parse-sum を定義)
 
 それから：
 
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) parse-expr ([peg:tree](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-peg_003atree) ([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) expr "1+1/2\*3+(1+1)/2"))) ⇒
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 ([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) 1 2) 3)) ([/](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002f) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 1 1) 2))
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) parse-expr ([peg:tree](#peg-マッチ-レコード) ([match-pattern](#構文解析とマッチング関数) expr "1+1/2\*3+(1+1)/2"))) ⇒
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) 1 ([\*](06_06_02_numerical_data_types.md#66211-算術関数) ([/](06_06_02_numerical_data_types.md#66211-算術関数) 1 2) 3)) ([/](06_06_02_numerical_data_types.md#66211-算術関数) ([+](06_06_02_numerical_data_types.md#66211-算術関数) 1 1) 2))
 
 ご覧のとおり、これはかなり見苦しいです（`context-flatten` を使用すればもっと見やすくできますが、上記のように記述することで、0 個以上の `*` 式が解析される 3 つの方法をどのように処理するかが明確になります）。幸いなことに、ほとんどの場合は右結合性のみを使用すれば問題ありません。
 
-#### 簡略化された関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simplified-Functions)
+#### 簡略化された関数
 
 さらに興味深い例として、(非常に)簡略化されたC言語関数を解析する以下の文法を考えてみましょう。
 
@@ -710,7 +710,7 @@ cSP < \[ \\t\\n\]\*")
 
 それから：
 
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) cfunc "int square(int a) { return a\*a;}") ⇒
+([match-pattern](#構文解析とマッチング関数) cfunc "int square(int a) { return a\*a;}") ⇒
 （32）
 (cfunc (ctype "int")
 (cname "square")
@@ -719,7 +719,7 @@ cSP < \[ \\t\\n\]\*")
 
 そして：
 
-([match-pattern](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dpattern) cfunc "int mod(int a, int b) { int c = a/b;return ab\*c; }") ⇒
+([match-pattern](#構文解析とマッチング関数) cfunc "int mod(int a, int b) { int c = a/b;return ab\*c; }") ⇒
 （52）
 (cfunc (ctype "int")
 (cname "mod")
@@ -734,9 +734,9 @@ cSP < \[ \\t\\n\]\*")
 
 * * *
 
-前へ: [PEG チュートリアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Tutorial)、上へ: [PEG 解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [PEG チュートリアル](#6153-pegチュートリアル)、上へ: [PEG 解析](#615-peg解析) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.15.4 PEG 内部 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Internals-1)
+#### 6.15.4 PEG 内部
 
 PEGパーサーは、文字列を入力として受け取り、それを指定された非終端記号として解析しようとします。PEG実装の重要な考え方は、すべての非終端記号が、文字列を引数として受け取り、その文字列を非終端記号として解析しようとする関数であるということです。関数は常に先頭から開始しますが、解析の最後に何らかの素材が残っていれば、解析は成功したとみなされます。
 
@@ -755,7 +755,7 @@ PEGパーサーは、文字列を入力として受け取り、それを指定�
 
 もちろん、上記のコードだけではうまく動作しません。解析関数同士が通信するための何らかの方法が必要です。実際に使用するインターフェースは以下のとおりです。
 
-#### 構文解析関数インターフェース [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parsing-Function-Interface)
+#### 構文解析関数インターフェース
 
 構文解析関数は、文字列、その文字列の長さ、および解析を開始する文字列内の位置という3つの引数を取ります。実際には、構文解析関数は部分文字列を分割して渡します。最初の引数は文字のバッファであり、後の2つの引数は、構文解析関数が参照すべきバッファ内の範囲を指定します。
 
@@ -766,13 +766,13 @@ PEGパーサーは、文字列を入力として受け取り、それを指定�
 例えば、実際のインターフェースを使用して「ab」に一致する関数を以下に示します。
 
 (define (match-ab str len pos)
-(and ([<=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003c_003d) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) pos 2) len)
-([string=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_003d) str "ab" pos ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) pos 2))
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) pos 2) '()))) ; 追加情報は返されません
+(and ([<=](06_06_02_numerical_data_types.md#6628-比較述語) ([+](06_06_02_numerical_data_types.md#66211-算術関数) pos 2) len)
+([string=](06_06_05_strings.md#6657-文字列の比較) str "ab" pos ([+](06_06_02_numerical_data_types.md#66211-算術関数) pos 2))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) ([+](06_06_02_numerical_data_types.md#66211-算術関数) pos 2) '()))) ; 追加情報は返されません
 
 "ab")` を実行することで文字列を照合するために使用できます。
 
-#### コードジェネレータと拡張可能な構文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Code-Generators-and-Extensible-Syntax)
+#### コードジェネレータと拡張可能な構文
 
 `define-peg-pattern`形式などのPEG式は、内部的に2つのステップで解釈されます。
 
@@ -782,7 +782,7 @@ PEGパーサーは、文字列を入力として受け取り、それを指定�
 
 PEG構文は、`compile-peg-pattern`にその形式に対して行う処理に関するオプションを追加することで拡張できます。拡張された構文は、例えば`my-parsing-form`のようなシンボルに関連付けられ、その形式のすべてのPEG式に対して呼び出されます。
 
-(my-parsing-form [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(my-parsing-form [...](06_08_macros.md#6821-パターン))
 
 解析関数は2つの引数を取る必要があります。1つ目は、フォームのすべての引数（ただしフォーム名は含まない）のリストを含む構文オブジェクト、2つ目は、`define-peg-pattern`に渡される`capture-type`引数です。
 
@@ -790,4 +790,4 @@ PEG構文は、`compile-peg-pattern`にその形式に対して行う処理に�
 
 * * *
 
-次へ: [メモリ管理とガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Memory-Management)、前: [PEG解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#PEG-Parsing)、上: [APIリファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メモリ管理とガベージコレクション](06_17_memory_management_and_garbage_collection.md#617-メモリ管理とガベージコレクション)、前: [PEG解析](#615-peg解析)、上: [APIリファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

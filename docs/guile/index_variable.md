@@ -1,9 +1,9 @@
-変数インデックス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variable-Index-1)
+変数インデックス
 ----------------------------------------------------------------------------------------
 
 これは、Guileにおけるすべての重要な変数と定数をアルファベット順に並べたリストです。
 
-特定の変数または定数を探す場合は、Scheme 名と C 名の両方で検索してください。C 名は、Scheme 名から簡単な変換によって構築できます。詳細は、[Guile API の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Overview) のセクションを参照してください。
+特定の変数または定数を探す場合は、Scheme 名と C 名の両方で検索してください。C 名は、Scheme 名から簡単な変換によって構築できます。詳細は、[Guile API の概要](06_01_overview_of_the_guile_api.md#61-guile-api-の概要) のセクションを参照してください。
 
 ジャンプ先:
 
@@ -16,351 +16,351 @@
 
 [`*機能*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002afeatures_002a)
 
-[機能追跡](https://doc.guix.gnu.org/guile/latest/en/guile.html#Feature-Tracking)
+[機能追跡](06_23_configuration_features_and_runtime_options.md#6232-機能追跡)
 
-[`*line-width*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002aline_002dwidth_002a)
+[`*line-width*`](07_22_texinfo_processing.md#72262-使用法)
 
-[texinfo プレーンテキスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#texinfo-plain_002dtext)
+[texinfo プレーンテキスト](07_22_texinfo_processing.md#7226-texinfo-プレーンテキスト)
 
-[`*random-state*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002arandom_002dstate_002a)
+[`*random-state*`](06_06_02_numerical_data_types.md#66214-乱数生成)
 
-[ランダム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random)
+[ランダム](06_06_02_numerical_data_types.md#66214-乱数生成)
 
-[`*sdocbook->stexi-rules*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002asdocbook_002d_003estexi_002drules_002a)
+[`*sdocbook->stexi-rules*`](07_22_texinfo_processing.md#72222-使用法)
 
-[texinfo docbook](https://doc.guix.gnu.org/guile/latest/en/guile.html#texinfo-docbook)
+[texinfo docbook](07_22_texinfo_processing.md#7222-texinfo-docbook)
 
-[`*sdocbook-block-commands*`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002asdocbook_002dblock_002dcommands_002a)
+[`*sdocbook-block-commands*`](07_22_texinfo_processing.md#72222-使用法)
 
-[texinfo docbook](https://doc.guix.gnu.org/guile/latest/en/guile.html#texinfo-docbook)
+[texinfo docbook](07_22_texinfo_processing.md#7222-texinfo-docbook)
 
 * * *
 
 ＆
 
-[`&condition`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026condition-1)
+[`&condition`](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[SRFI-35](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d35)
+[SRFI-35](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[`&error`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026error-2)
+[`&error`](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[SRFI-35](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d35)
+[SRFI-35](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[`&message`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026message-2)
+[`&message`](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[SRFI-35](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d35)
+[SRFI-35](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[`&serious`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026serious-1)
+[`&serious`](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
-[SRFI-35](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d35)
+[SRFI-35](07_05_24_srfi35_conditions.md#7524-srfi-35---条件)
 
 * * *
 
 ％
 
-[`%auto-compilation-options`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025auto_002dcompilation_002doptions)
+[`%auto-compilation-options`](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル)
 
-[コンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compilation)
+[コンパイル](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル)
 
-[`%default-port-encoding`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025default_002dport_002dencoding)
+[`%default-port-encoding`](06_12_input_and_output.md#6123-エンコーディング)
 
-[エンコーディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Encoding)
+[エンコーディング](06_12_input_and_output.md#6123-エンコーディング)
 
-[`%global-locale`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025global_002dlocale)
+[`%global-locale`](06_25_support_for_internationalization.md#6251-guile-による国際化)
 
 [i18n の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#i18n- Introduction)
 
-[`%guile-build-info`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025guile_002dbuild_002dinfo)
+[`%guile-build-info`](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール)
 
-[ビルド設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Build-Config)
+[ビルド設定](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール)
 
-[`%host-type`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025host_002dtype)
+[`%host-type`](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール)
 
-[ビルド設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Build-Config)
+[ビルド設定](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール)
 
-[`%load-compiled-path`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025load_002dcompiled_002dpath)
+[`%load-compiled-path`](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[ロードパス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths)
+[ロードパス](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[`%load-extensions`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025load_002dextensions)
+[`%load-extensions`](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[ロードパス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths)
+[ロードパス](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[`%load-hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025load_002dhook)
+[`%load-hook`](06_16_reading_and_evaluating_scheme_code.md#6167-ファイルからのスキームコードの読み込み)
 
-[読み込み中](https://doc.guix.gnu.org/guile/latest/en/guile.html#Loading)
+[読み込み中](06_16_reading_and_evaluating_scheme_code.md#6167-ファイルからのスキームコードの読み込み)
 
-[`%load-path`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025load_002dpath)
+[`%load-path`](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[ロードパス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Load-Paths)
+[ロードパス](06_16_reading_and_evaluating_scheme_code.md#6168-ロードパス)
 
-[`%null-pointer`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025null_002dpointer)
+[`%null-pointer`](06_19_foreign_function_interface.md#6193-外部ポインタ)
 
-[外部ポインタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Pointers)
+[外部ポインタ](06_19_foreign_function_interface.md#6193-外部ポインタ)
 
 * * *
 
 <
 
-[`<standard-vtable>`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003cstandard_002dvtable_003e)
+[`<standard-vtable>`](06_06_18_structures.md#66184-meta-vtables)
 
-[メタVテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)
+[メタVテーブル](06_06_18_structures.md#66184-meta-vtables)
 
 * * *
 
 A
 
-[`accept`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-accept-1)
+[`accept`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`accept-charset`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-accept_002dcharset)
+[`accept-charset`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`accept-encoding`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-accept_002dencoding)
+[`accept-encoding`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`accept-language`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-accept_002dlanguage)
+[`accept-language`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`accept-ranges`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-accept_002dranges)
+[`accept-ranges`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`after-gc-hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-after_002dgc_002dhook)
+[`after-gc-hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`age`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-age)
+[`age`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`alist-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002dbindings)
+[`alist-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`all-pure-and-impure-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-all_002dpure_002dand_002dimpure_002dbindings)
+[`all-pure-and-impure-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`all-pure-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-all_002dpure_002dbindings)
+[`all-pure-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`allow`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-allow)
+[`allow`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`array-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-array_002dbindings)
+[`array-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 [`AT_SYMLINK_NOFOLLOW`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-AT_005fSYMLINK_005fNOFOLLOW)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`authorization`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-authorization)
+[`authorization`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 B
 
-[`bit-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bit_002dbindings)
+[`bit-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`bitvector-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-bitvector_002dbindings)
+[`bitvector-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`block-growth-factor`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-block_002dgrowth_002dfactor)
+[`block-growth-factor`](06_06_14_vlists.md#6614-vlists)
 
-[VLists](https://doc.guix.gnu.org/guile/latest/en/guile.html#VLists)
+[VLists](06_06_14_vlists.md#6614-vlists)
 
 * * *
 
 C
 
-[`cache-control`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cache_002dcontrol)
+[`cache-control`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`char-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dbindings)
+[`char-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`char-set-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dbindings)
+[`char-set-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`char-set:ascii`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aascii)
+[`char-set:ascii`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:blank`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003ablank)
+[`char-set:blank`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:designated`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003adesignated)
+[`char-set:designated`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003adigit)
+[`char-set:digit`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:empty`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aempty)
+[`char-set:empty`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:full`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003afull)
+[`char-set:full`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:graphic`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003agraphic)
+[`char-set:graphic`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:hex-digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003ahex_002ddigit)
+[`char-set:hex-digit`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:iso-control`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aiso_002dcontrol)
+[`char-set:iso-control`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:letter`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aletter)
+[`char-set:letter`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:letter+digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aletter_002bdigit)
+[`char-set:letter+digit`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:lower-case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003alower_002dcase)
+[`char-set:lower-case`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:printing`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aprinting)
+[`char-set:printing`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:punctuation`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003apunctuation)
+[`char-set:punctuation`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:symbol`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003asymbol)
+[`char-set:symbol`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:title-case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003atitle_002dcase)
+[`char-set:title-case`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:upper-case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aupper_002dcase)
+[`char-set:upper-case`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`char-set:whitespace`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003awhitespace)
+[`char-set:whitespace`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`clock-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-clock_002dbindings)
+[`clock-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`complex-double`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_002ddouble)
+[`complex-double`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`complex-float`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_002dfloat)
+[`complex-float`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`connection`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-connection)
+[`connection`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-encoding`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dencoding)
+[`content-encoding`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-language`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dlanguage)
+[`content-language`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-length`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dlength)
+[`content-length`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-location`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dlocation)
+[`content-location`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-md5`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dmd5)
+[`content-md5`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-range`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002drange)
+[`content-range`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`content-type`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-content_002dtype)
+[`content-type`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`core-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-core_002dbindings)
+[`core-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`current-reader`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dreader)
+[`current-reader`](06_16_reading_and_evaluating_scheme_code.md#6167-ファイルからのスキームコードの読み込み)
 
-[読み込み中](https://doc.guix.gnu.org/guile/latest/en/guile.html#Loading)
+[読み込み中](06_16_reading_and_evaluating_scheme_code.md#6167-ファイルからのスキームコードの読み込み)
 
 * * *
 
 D
 
-[`date`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-date-2)
+[`date`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`double`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-double)
+[`double`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
 * * *
 
 E
 
-[`error-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error_002dbindings)
+[`error-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`etag`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-etag)
+[`etag`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`EXIT_FAILURE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-EXIT_005fFAILURE)
+[`EXIT_FAILURE`](07_02_07_processes.md#727-プロセス)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`EXIT_SUCCESS`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-EXIT_005fSUCCESS)
+[`EXIT_SUCCESS`](07_02_07_processes.md#727-プロセス)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`expect`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-expect-1)
+[`expect`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`expires`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-expires)
+[`expires`](07_03_http_the_web_and_all_that.md#7343-エンティティヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
@@ -368,255 +368,255 @@ F
 
 [`F_DUPFD`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fDUPFD)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_GETFD`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETFD)
+[`F_GETFD`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_GETFL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETFL)
+[`F_GETFL`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_GETOWN`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fGETOWN)
+[`F_GETOWN`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_OK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fOK)
+[`F_OK`](07_02_03_file_system.md#723-ファイルシステム)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`F_SETFD`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETFD)
+[`F_SETFD`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_SETFL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETFL)
+[`F_SETFL`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`F_SETOWN`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-F_005fSETOWN)
+[`F_SETOWN`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`FD_CLOEXEC`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-FD_005fCLOEXEC)
+[`FD_CLOEXEC`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`ファイル名区切り文字列`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-file_002dname_002dseparator_002dstring)
+[`ファイル名区切り文字列`](07_02_03_file_system.md#723-ファイルシステム)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`float`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-float)
+[`float`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`fluid-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dbindings)
+[`fluid-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`from`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-from)
+[`from`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 G
 
-[`GUILE_AUTO_COMPILE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fAUTO_005fCOMPILE)
+[`GUILE_AUTO_COMPILE`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_EXTENSIONS_PATH`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fEXTENSIONS_005fPATH)
+[`GUILE_EXTENSIONS_PATH`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_HISTORY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fHISTORY-1)
+[`GUILE_HISTORY`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_INSTALL_LOCALE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fINSTALL_005fLOCALE)
+[`GUILE_INSTALL_LOCALE`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_JIT_LOG`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fJIT_005fLOG)
+[`GUILE_JIT_LOG`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_JIT_PAUSE_WHEN_STOPPING`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fJIT_005fPAUSE_005fWHEN_005fSTOPPING)
+[`GUILE_JIT_PAUSE_WHEN_STOPPING`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
 [`GUILE_JIT_STOP_AFTER`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fJIT_005fSTOP_005fAFTER)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_JIT_THRESHOLD`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fJIT_005fTHRESHOLD)
+[`GUILE_JIT_THRESHOLD`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_LOAD_COMPILED_PATH`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fLOAD_005fCOMPILED_005fPATH)
+[`GUILE_LOAD_COMPILED_PATH`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`GUILE_LOAD_PATH`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fLOAD_005fPATH)
+[`GUILE_LOAD_PATH`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
 [`GUILE_TLS_CERTIFICATE_DIRECTORY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fTLS_005fCERTIFICATE_005fDIRECTORY)
 
-[Webクライアント](https://doc.guix.gnu.org/guile/latest/en/guile.html#Web-Client)
+[Webクライアント](07_03_http_the_web_and_all_that.md#738-webクライアント)
 
 [`GUILE_WARN_DEPRECATED`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fWARN_005fDEPRECATED)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
 * * *
 
 H
 
-[`hash-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-hash_002dbindings)
+[`hash-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`HOME`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-HOME)
+[`HOME`](04_programming_in_scheme.md#422-環境変数)
 
-[環境変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Environment-Variables)
+[環境変数](04_programming_in_scheme.md#422-環境変数)
 
-[`host`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-host)
+[`host`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 私
 
-[`if-match`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if_002dmatch)
+[`if-match`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`if-modified-since`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if_002dmodified_002dsince)
+[`if-modified-since`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`if-none-match`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if_002dnone_002dmatch)
+[`if-none-match`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`if-range`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if_002drange)
+[`if-range`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`if-unmodified-since`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if_002dunmodified_002dsince)
+[`if-unmodified-since`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`IN6ADDR_ANY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IN6ADDR_005fANY)
+[`IN6ADDR_ANY`](07_02_11_networking.md#ipv6アドレス変換)
 
-[ネットワークアドレス変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Address-Conversion)
+[ネットワークアドレス変換](07_02_11_networking.md#72111-ネットワークアドレス変換)
 
-[`IN6ADDR_LOOPBACK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IN6ADDR_005fLOOPBACK)
+[`IN6ADDR_LOOPBACK`](07_02_11_networking.md#ipv6アドレス変換)
 
-[ネットワークアドレス変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Address-Conversion)
+[ネットワークアドレス変換](07_02_11_networking.md#72111-ネットワークアドレス変換)
 
-[`INADDR_ANY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-INADDR_005fANY)
+[`INADDR_ANY`](07_02_11_networking.md#ipv4アドレス変換)
 
-[ネットワークアドレス変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Address-Conversion)
+[ネットワークアドレス変換](07_02_11_networking.md#72111-ネットワークアドレス変換)
 
-[`INADDR_BROADCAST`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-INADDR_005fBROADCAST)
+[`INADDR_BROADCAST`](07_02_11_networking.md#ipv4アドレス変換)
 
-[ネットワークアドレス変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Address-Conversion)
+[ネットワークアドレス変換](07_02_11_networking.md#72111-ネットワークアドレス変換)
 
-[`INADDR_LOOPBACK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-INADDR_005fLOOPBACK)
+[`INADDR_LOOPBACK`](07_02_11_networking.md#ipv4アドレス変換)
 
-[ネットワークアドレス変換](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Address-Conversion)
+[ネットワークアドレス変換](07_02_11_networking.md#72111-ネットワークアドレス変換)
 
-[`int`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int)
+[`int`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`int16`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int16)
+[`int16`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`int32`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int32)
+[`int32`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`int64`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int64)
+[`int64`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`int8`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-int8)
+[`int8`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`internal-time-units-per- second`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-internal_002dtime_002dunits_002dper_002dsecond)
+[`internal-time-units-per- second`](07_02_05_time.md#725-時間)
 
-[時間](https://doc.guix.gnu.org/guile/latest/en/guile.html#Time)
+[時間](07_02_05_time.md#725-時間)
 
-[`intptr_t`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-intptr_005ft)
+[`intptr_t`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`IP_ADD_MEMBERSHIP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IP_005fADD_005fMEMBERSHIP)
+[`IP_ADD_MEMBERSHIP`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IP_DROP_MEMBERSHIP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IP_005fDROP_005fMEMBERSHIP)
+[`IP_DROP_MEMBERSHIP`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IP_MULTICAST_IF`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IP_005fMULTICAST_005fIF)
+[`IP_MULTICAST_IF`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IP_MULTICAST_TTL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IP_005fMULTICAST_005fTTL)
+[`IP_MULTICAST_TTL`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IPPROTO_IP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IPPROTO_005fIP)
+[`IPPROTO_IP`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IPPROTO_IPV6`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IPPROTO_005fIPV6)
+[`IPPROTO_IPV6`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IPPROTO_TCP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IPPROTO_005fTCP)
+[`IPPROTO_TCP`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IPPROTO_UDP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IPPROTO_005fUDP)
+[`IPPROTO_UDP`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`IPV6_V6ONLY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-IPV6_005fV6ONLY)
+[`IPV6_V6ONLY`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`iteration-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-iteration_002dbindings)
+[`iteration-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`ITIMER_PROF`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ITIMER_005fPROF)
+[`ITIMER_PROF`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`ITIMER_REAL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ITIMER_005fREAL)
+[`ITIMER_REAL`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`ITIMER_VIRTUAL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ITIMER_005fVIRTUAL)
+[`ITIMER_VIRTUAL`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
 * * *
 
 K
 
-[`keyword-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002dbindings)
+[`keyword-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 * * *
 
@@ -624,879 +624,879 @@ L
 
 [`last-modified`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-last_002dmodified )
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`LC_ALL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fALL)
+[`LC_ALL`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_COLLATE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fCOLLATE)
+[`LC_COLLATE`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_CTYPE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fCTYPE)
+[`LC_CTYPE`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_MESSAGES`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fMESSAGES)
+[`LC_MESSAGES`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_MONETARY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fMONETARY)
+[`LC_MONETARY`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_NUMERIC`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fNUMERIC)
+[`LC_NUMERIC`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`LC_TIME`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LC_005fTIME)
+[`LC_TIME`](07_02_13_locales.md#7213-ロケール)
 
-[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)
+[ロケール](07_02_13_locales.md#7213-ロケール)
 
-[`list-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002dbindings)
+[`list-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`location`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-location-1)
+[`location`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`LOCK_EX`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fEX)
+[`LOCK_EX`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
 [`LOCK_NB`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fNB)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`LOCK_SH`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fSH)
+[`LOCK_SH`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`LOCK_UN`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-LOCK_005fUN)
+[`LOCK_UN`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`long`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-long)
+[`long`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
 * * *
 
 M
 
-[`macro-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-macro_002dbindings)
+[`macro-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`max-forwards`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-max_002dforwards)
+[`max-forwards`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 [`MSG_DONTROUTE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fDONTROUTE)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_DONTROUTE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fDONTROUTE-1)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_DONTROUTE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fDONTROUTE-2)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_OOB`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fOOB)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_OOB`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fOOB-1)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_OOB`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fOOB-2)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_PEEK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fPEEK)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_PEEK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fPEEK-1)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`MSG_PEEK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-MSG_005fPEEK-2)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`mutating-alist-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dalist_002dbindings)
+[`mutating-alist-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`mutating-array-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002darray_002dbindings)
+[`mutating-array-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`mutating-bitvector-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dbitvector_002dbindings)
+[`mutating-bitvector-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`mutating-fluid-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dfluid_002dbindings)
+[`mutating-fluid-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`mutating-hash-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dhash_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation )
-
-[`mutating-list-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dlist_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
-
-[`mutating-pair-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dpair_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
-
-[`mutating-sort-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dsort_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
-
-[`mutating-srfi-4-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dsrfi_002d4_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
-
-[`mutating-string-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dstring_002dbindings)
-
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
-
-[`mutating-variable-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dvariable_002dbindings)
+[`mutating-hash-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 [サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation )
 
-[`mutating-vector-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutating_002dvector_002dbindings)
+[`mutating-list-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[`mutating-pair-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[`mutating-sort-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[`mutating-srfi-4-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[`mutating-string-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[`mutating-variable-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation )
+
+[`mutating-vector-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
+
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 * * *
 
 N
 
-[`nil-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_002dbindings)
+[`nil-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`number-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_002dbindings)
+[`number-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 * * *
 
 O
 
-[`O_APPEND`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fAPPEND)
+[`O_APPEND`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`O_CREAT`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fCREAT)
+[`O_CREAT`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`O_RDONLY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fRDONLY)
+[`O_RDONLY`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`O_RDWR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fRDWR)
+[`O_RDWR`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`O_WRONLY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-O_005fWRONLY)
+[`O_WRONLY`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`OPEN_BOTH`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-OPEN_005fBOTH)
+[`OPEN_BOTH`](07_02_10_pipes.md#7210-パイプ)
 
-[パイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pipes)
+[パイプ](07_02_10_pipes.md#7210-パイプ)
 
-[`OPEN_READ`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-OPEN_005fREAD)
+[`OPEN_READ`](07_02_10_pipes.md#7210-パイプ)
 
-[パイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pipes)
+[パイプ](07_02_10_pipes.md#7210-パイプ)
 
-[`OPEN_WRITE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-OPEN_005fWRITE)
+[`OPEN_WRITE`](07_02_10_pipes.md#7210-パイプ)
 
-[パイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pipes)
+[パイプ](07_02_10_pipes.md#7210-パイプ)
 
 * * *
 
 P
 
-[`pair-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pair_002dbindings)
+[`pair-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`PF_INET`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PF_005fINET)
+[`PF_INET`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`PF_INET6`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PF_005fINET6)
+[`PF_INET6`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`PF_UNIX`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PF_005fUNIX)
+[`PF_UNIX`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`PIPE_BUF`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PIPE_005fBUF)
+[`PIPE_BUF`](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[ポートとファイルディスクリプタ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Ports-and-File-Descriptors)
+[ポートとファイルディスクリプタ](07_02_02_ports_and_file_descriptors.md#722-ポートとファイルディスクリプタ)
 
-[`pragma`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pragma)
+[`pragma`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`predicate-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-predicate_002dbindings)
+[`predicate-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 [`PRIO_PGRP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fPGRP)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
 [`PRIO_PGRP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fPGRP-1)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
 [`PRIO_PROCESS`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fPROCESS)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
 [`PRIO_PROCESS`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fPROCESS-1)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
 [`PRIO_USER`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fUSER)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
 [`PRIO_USER`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-PRIO_005fUSER-1)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`procedure-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-procedure_002dbindings)
+[`procedure-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`promise-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-promise_002dbindings)
+[`promise-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`prompt-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-prompt_002dbindings)
+[`prompt-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`proxy-authenticate`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-proxy_002dauthenticate)
+[`proxy-authenticate`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`proxy-authorization`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-proxy_002dauthorization)
+[`proxy-authorization`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`ptrdiff_t`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ptrdiff_005ft)
+[`ptrdiff_t`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
 * * *
 
 R
 
-[`R_OK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-R_005fOK)
+[`R_OK`](07_02_03_file_system.md#723-ファイルシステム)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`range`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-range)
+[`range`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`referer`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-referer)
+[`referer`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`regexp-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002dbindings)
+[`regexp-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`regexp/basic`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fbasic)
+[`regexp/basic`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`regexp/extended`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fextended)
+[`regexp/extended`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`regexp/icase`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002ficase)
+[`regexp/icase`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`regexp/newline`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnewline)
+[`regexp/newline`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`regexp/notbol`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnotbol)
+[`regexp/notbol`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`regexp/noteol`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-regexp_002fnoteol)
+[`regexp/noteol`](06_13_regular_expressions.md#6131-正規表現関数)
 
-[正規表現関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regexp-Functions)
+[正規表現関数](06_13_regular_expressions.md#6131-正規表現関数)
 
-[`retry-after`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-retry_002dafter)
+[`retry-after`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 S
 
-[`SA_NOCLDSTOP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SA_005fNOCLDSTOP)
+[`SA_NOCLDSTOP`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`SA_RESTART`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SA_005fRESTART)
+[`SA_RESTART`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`scm_after_gc_c_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fafter_005fgc_005fc_005fhook)
+[`scm_after_gc_c_hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
 [`scm_after_gc_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fafter_005fgc_005fhook)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`scm_after_sweep_c_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fafter_005fsweep_005fc_005fhook)
+[`scm_after_sweep_c_hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`scm_before_gc_c_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbefore_005fgc_005fc_005fhook)
+[`scm_before_gc_c_hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`scm_before_mark_c_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbefore_005fmark_005fc_005fhook)
+[`scm_before_mark_c_hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`scm_before_sweep_c_hook`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbefore_005fsweep_005fc_005fhook)
+[`scm_before_sweep_c_hook`](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[GCフック](https://doc.guix.gnu.org/guile/latest/en/guile.html#GC-Hooks)
+[GCフック](06_09_general_utility_functions.md#6964-ガベージコレクションのフック)
 
-[`SCM_BOOL_F`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fBOOL_005fF)
+[`SCM_BOOL_F`](06_06_01_booleans.md#661-ブール値)
 
-[ブール値](https://doc.guix.gnu.org/guile/latest/en/guile.html#Booleans)
+[ブール値](06_06_01_booleans.md#661-ブール値)
 
-[`SCM_BOOL_T`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fBOOL_005fT)
+[`SCM_BOOL_T`](06_06_01_booleans.md#661-ブール値)
 
-[ブール値](https://doc.guix.gnu.org/guile/latest/en/guile.html#Booleans)
+[ブール値](06_06_01_booleans.md#661-ブール値)
 
-[`SCM_C_HOOK_AND`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fC_005fHOOK_005fAND)
+[`SCM_C_HOOK_AND`](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[C フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Hooks)
+[C フック](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[`SCM_C_HOOK_NORMAL`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fC_005fHOOK_005fNORMAL)
+[`SCM_C_HOOK_NORMAL`](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[C フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Hooks)
+[C フック](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[`SCM_C_HOOK_OR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fC_005fHOOK_005fOR)
+[`SCM_C_HOOK_OR`](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[C フック](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Hooks)
+[C フック](06_09_general_utility_functions.md#6963-cコード用のフック)
 
-[`scm_char_set_ascii`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fascii)
+[`scm_char_set_ascii`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_blank`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fblank)
+[`scm_char_set_blank`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_designated`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdesignated)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets )
-
-[`scm_char_set_digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdigit)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
-
-[`scm_char_set_empty`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fempty)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
-
-[`scm_char_set_full`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffull)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
-
-[`scm_char_set_graphic`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fgraphic)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
-
-[`scm_char_set_hex_digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fhex_005fdigit)
-
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
-
-[`scm_char_set_iso_control`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fiso_005fcontrol)
+[`scm_char_set_designated`](06_06_04_character_sets.md#6646-標準文字セット)
 
 [標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets )
 
-[`scm_char_set_letter`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fletter)
+[`scm_char_set_digit`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_letter_and_digit`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fletter_005fand_005fdigit)
+[`scm_char_set_empty`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
+
+[`scm_char_set_full`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
+
+[`scm_char_set_graphic`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
+
+[`scm_char_set_hex_digit`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
+
+[`scm_char_set_iso_control`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets )
+
+[`scm_char_set_letter`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
+
+[`scm_char_set_letter_and_digit`](06_06_04_character_sets.md#6646-標準文字セット)
+
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
 [`scm_char_set_lower_case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005flower_005fcase)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_printing`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fprinting)
+[`scm_char_set_printing`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_punctuation`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fpunctuation)
+[`scm_char_set_punctuation`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_symbol`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fsymbol)
+[`scm_char_set_symbol`](06_06_04_character_sets.md#6646-標準文字セット)
 
 [標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets )
 
-[`scm_char_set_title_case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ftitle_005fcase)
+[`scm_char_set_title_case`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_upper_case`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fupper_005fcase)
+[`scm_char_set_upper_case`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_char_set_whitespace`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fwhitespace)
+[`scm_char_set_whitespace`](06_06_04_character_sets.md#6646-標準文字セット)
 
-[標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
+[標準文字セット](06_06_04_character_sets.md#6646-標準文字セット)
 
-[`scm_endianness_big`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fendianness_005fbig)
+[`scm_endianness_big`](06_06_12_bytevectors.md#66121-エンディアン)
 
-[Bytevector エンディアンネス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevector-Endianness)
+[Bytevector エンディアンネス](06_06_12_bytevectors.md#66121-エンディアン)
 
-[`scm_endianness_little`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fendianness_005flittle)
+[`scm_endianness_little`](06_06_12_bytevectors.md#66121-エンディアン)
 
-[Bytevector エンディアンネス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Bytevector-Endianness)
+[Bytevector エンディアンネス](06_06_12_bytevectors.md#66121-エンディアン)
 
-[`SCM_F_WIND_EXPLICITLY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fF_005fWIND_005fEXPLICITLY)
+[`SCM_F_WIND_EXPLICITLY`](06_11_controlling_the_flow_of_program_execution.md#61110-ダイナミックウィンド)
 
-[ダイナミックウィンド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind)
+[ダイナミックウィンド](06_11_controlling_the_flow_of_program_execution.md#61110-ダイナミックウィンド)
 
-[`scm_global_locale`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fglobal_005flocale)
+[`scm_global_locale`](06_25_support_for_internationalization.md#6251-guile-による国際化)
 
 [i18n の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#i18n- Introduction)
 
-[`scm_t_int16`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fint16)
+[`scm_t_int16`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_int32`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fint32)
+[`scm_t_int32`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_int64`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fint64)
+[`scm_t_int64`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_int8`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fint8)
+[`scm_t_int8`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_intmax`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fintmax)
+[`scm_t_intmax`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_uint16`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fuint16)
+[`scm_t_uint16`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_uint32`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fuint32)
+[`scm_t_uint32`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_uint64`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fuint64)
+[`scm_t_uint64`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_uint8`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fuint8)
+[`scm_t_uint8`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_t_uintmax`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fuintmax)
+[`scm_t_uintmax`](06_06_02_numerical_data_types.md#6622-整数)
 
-[整数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Integers)
+[整数](06_06_02_numerical_data_types.md#6622-整数)
 
-[`scm_vtable_index_layout`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvtable_005findex_005flayout)
+[`scm_vtable_index_layout`](06_06_18_structures.md#66183-vtable-の内容)
 
-[Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)
+[Vtable の内容](06_06_18_structures.md#66183-vtable-の内容)
 
 [`scm_vtable_index_printer`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvtable_005findex_005fprinter)
 
-[Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)
+[Vtable の内容](06_06_18_structures.md#66183-vtable-の内容)
 
-[`SEEK_CUR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SEEK_005fCUR)
+[`SEEK_CUR`](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[ランダムアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random-Access)
+[ランダムアクセス](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[`SEEK_DATA`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SEEK_005fDATA)
+[`SEEK_DATA`](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[ランダムアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random-Access)
+[ランダムアクセス](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[`SEEK_END`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SEEK_005fEND)
+[`SEEK_END`](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[ランダムアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random-Access)
+[ランダムアクセス](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[`SEEK_HOLE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SEEK_005fHOLE)
+[`SEEK_HOLE`](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[ランダムアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random-Access)
+[ランダムアクセス](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[`SEEK_SET`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SEEK_005fSET)
+[`SEEK_SET`](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[ランダムアクセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Random-Access)
+[ランダムアクセス](06_12_input_and_output.md#6127-ランダムアクセス)
 
-[`server`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-server)
+[`server`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`short`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-short)
+[`short`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`SIGHUP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SIGHUP)
+[`SIGHUP`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`SIGINT`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SIGINT)
+[`SIGINT`](07_02_08_signals.md#728-シグナル)
 
-[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals)
+[シグナル](07_02_08_signals.md#728-シグナル)
 
-[`size_t`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-size_005ft-1)
+[`size_t`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`SO_BROADCAST`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fBROADCAST)
+[`SO_BROADCAST`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_DEBUG`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fDEBUG)
+[`SO_DEBUG`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_DONTROUTE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fDONTROUTE)
+[`SO_DONTROUTE`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_ERROR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fERROR)
+[`SO_ERROR`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_KEEPALIVE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fKEEPALIVE)
+[`SO_KEEPALIVE`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_LINGER`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fLINGER)
+[`SO_LINGER`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_NO_CHECK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fNO_005fCHECK)
+[`SO_NO_CHECK`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_OOBINLINE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fOOBINLINE)
+[`SO_OOBINLINE`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_PRIORITY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fPRIORITY)
+[`SO_PRIORITY`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_RCVBUF`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fRCVBUF)
+[`SO_RCVBUF`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication )
 
-[`SO_RCVTIMEO`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fRCVTIMEO)
+[`SO_RCVTIMEO`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_REUSEADDR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fREUSEADDR)
+[`SO_REUSEADDR`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_REUSEPORT`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fREUSEPORT)
+[`SO_REUSEPORT`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_SNDBUF`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fSNDBUF)
+[`SO_SNDBUF`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_SNDTIMEO`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fSNDTIMEO)
+[`SO_SNDTIMEO`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_STYLE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fSTYLE)
+[`SO_STYLE`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SO_TYPE`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SO_005fTYPE)
+[`SO_TYPE`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SOCK_DGRAM`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOCK_005fDGRAM)
+[`SOCK_DGRAM`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SOCK_RAW`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOCK_005fRAW)
+[`SOCK_RAW`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SOCK_RDM`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOCK_005fRDM)
+[`SOCK_RDM`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
 [`SOCK_SEQPACKET`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOCK_005fSEQPACKET )
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SOCK_STREAM`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOCK_005fSTREAM)
+[`SOCK_STREAM`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`SOL_SOCKET`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SOL_005fSOCKET)
+[`SOL_SOCKET`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`sort-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sort_002dbindings)
+[`sort-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`srfi-4-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-srfi_002d4_002dbindings)
+[`srfi-4-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`ssize_t`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ssize_005ft)
+[`ssize_t`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
 [`SSL_CERT_DIR`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SSL_005fCERT_005fDIR)
 
-[Webクライアント](https://doc.guix.gnu.org/guile/latest/en/guile.html#Web-Client)
+[Webクライアント](07_03_http_the_web_and_all_that.md#738-webクライアント)
 
-[`standard-vtable-fields`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-standard_002dvtable_002dfields)
+[`standard-vtable-fields`](06_06_18_structures.md#66184-meta-vtables)
 
-[メタVテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)
+[メタVテーブル](06_06_18_structures.md#66184-meta-vtables)
 
-[`stream-null`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dnull)
+[`stream-null`](07_05_28_srfi41_streams.md#75282-srfi-41-ストリーム-プリミティブ)
 
-[SRFI-41 ストリーム プリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d41-Stream-Primitives)
+[SRFI-41 ストリーム プリミティブ](07_05_28_srfi41_streams.md#75282-srfi-41-ストリーム-プリミティブ)
 
-[`string-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dbindings)
+[`string-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`symbol-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002dbindings)
+[`symbol-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
 * * *
 
 T
 
-[`TCP_CORK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-TCP_005fCORK)
+[`TCP_CORK`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`TCP_NODELAY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-TCP_005fNODELAY)
+[`TCP_NODELAY`](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[ネットワークソケットと通信](https://doc.guix.gnu.org/guile/latest/en/guile.html#Network-Sockets-and-Communication)
+[ネットワークソケットと通信](07_02_11_networking.md#72114-ネットワークソケットと通信)
 
-[`te`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-te)
+[`te`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`texi-command-specs`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-texi_002dcommand_002dspecs)
+[`texi-command-specs`](07_22_texinfo_processing.md#72212-使用法)
 
-[texinfo](https://doc.guix.gnu.org/guile/latest/en/guile.html#texinfo)
+[texinfo](07_22_texinfo_processing.md#7221-texinfo)
 
-[`time-duration`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dduration)
+[`time-duration`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`time-monotonic`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dmonotonic)
+[`time-monotonic`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`time-process`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dprocess)
+[`time-process`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`time-tai`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dtai)
+[`time-tai`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`time-thread`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dthread)
+[`time-thread`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`time-utc`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-time_002dutc)
+[`time-utc`](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[SRFI-19 時刻](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d19-Time)
+[SRFI-19 時刻](07_05_16_srfi19_timedate_library.md#75162-srfi-19-時刻)
 
-[`トレーラー`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-trailer)
+[`トレーラー`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`transfer-encoding`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-transfer_002dencoding)
+[`transfer-encoding`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 U
 
-[`uint16`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint16)
+[`uint16`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`uint32`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint32)
+[`uint32`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`uint64`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint64)
+[`uint64`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`uint8`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uint8)
+[`uint8`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`uintptr_t`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-uintptr_005ft)
+[`uintptr_t`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`unsigned-int`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dint)
+[`unsigned-int`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`unsigned-long`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dlong)
+[`unsigned-long`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`unsigned-short`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unsigned_002dshort)
+[`unsigned-short`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`unspecified-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unspecified_002dbindings)
+[`unspecified-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`upgrade`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-upgrade)
+[`upgrade`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`user-agent`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-user_002dagent)
+[`user-agent`](07_03_http_the_web_and_all_that.md#7344-リクエストヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 V
 
-[`variable-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-variable_002dbindings)
+[`variable-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`vary`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vary)
+[`vary`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`vector-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vector_002dbindings)
+[`vector-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`version-bindings`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-version_002dbindings)
+[`version-bindings`](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[サンドボックス評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sandboxed-Evaluation)
+[サンドボックス評価](06_16_reading_and_evaluating_scheme_code.md#61613-サンドボックス評価)
 
-[`via`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-via)
+[`via`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
-[`vlist-null`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vlist_002dnull)
+[`vlist-null`](06_06_14_vlists.md#6614-vlists)
 
-[VLists](https://doc.guix.gnu.org/guile/latest/en/guile.html#VLists)
+[VLists](06_06_14_vlists.md#6614-vlists)
 
-[`void`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-void)
+[`void`](06_19_foreign_function_interface.md#6194-外部型)
 
-[外部型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Types)
+[外部型](06_19_foreign_function_interface.md#6194-外部型)
 
-[`vtable-index-layout`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002dindex_002dlayout)
+[`vtable-index-layout`](06_06_18_structures.md#66183-vtable-の内容)
 
-[Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)
+[Vtable の内容](06_06_18_structures.md#66183-vtable-の内容)
 
-[`vtable-index-printer`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002dindex_002dprinter)
+[`vtable-index-printer`](06_06_18_structures.md#66183-vtable-の内容)
 
-[Vtable の内容](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtable-Contents)
+[Vtable の内容](06_06_18_structures.md#66183-vtable-の内容)
 
-[`vtable-offset-user`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-vtable_002doffset_002duser)
+[`vtable-offset-user`](06_06_18_structures.md#66184-meta-vtables)
 
-[メタVテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Meta_002dVtables)
+[メタVテーブル](06_06_18_structures.md#66184-meta-vtables)
 
 * * *
 
 W
 
-[`W_OK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-W_005fOK)
+[`W_OK`](07_02_03_file_system.md#723-ファイルシステム)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`WAIT_ANY`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-WAIT_005fANY)
+[`WAIT_ANY`](07_02_07_processes.md#727-プロセス)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`WAIT_MYPGRP`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-WAIT_005fMYPGRP)
+[`WAIT_MYPGRP`](07_02_07_processes.md#727-プロセス)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`warning`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-warning)
+[`warning`](07_03_http_the_web_and_all_that.md#7342-一般的なヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 [`WNOHANG`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-WNOHANG)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`WUNTRACED`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-WUNTRACED)
+[`WUNTRACED`](07_02_07_processes.md#727-プロセス)
 
-[プロセス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)
+[プロセス](07_02_07_processes.md#727-プロセス)
 
-[`www-authenticate`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-www_002dauthenticate)
+[`www-authenticate`](07_03_http_the_web_and_all_that.md#7345-レスポンスヘッダー)
 
-[HTTPヘッダー](https://doc.guix.gnu.org/guile/latest/en/guile.html#HTTP-Headers)
+[HTTPヘッダー](07_03_http_the_web_and_all_that.md#734-http-ヘッダー)
 
 * * *
 
 X
 
-[`X_OK`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-X_005fOK)
+[`X_OK`](07_02_03_file_system.md#723-ファイルシステム)
 
-[ファイルシステム](https://doc.guix.gnu.org/guile/latest/en/guile.html#File-System)
+[ファイルシステム](07_02_03_file_system.md#723-ファイルシステム)
 
-[`x509-certificate-directory`](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-x509_002dcertificate_002ddirectory)
+[`x509-certificate-directory`](07_03_http_the_web_and_all_that.md#738-webクライアント)
 
-[Webクライアント](https://doc.guix.gnu.org/guile/latest/en/guile.html#Web-Client)
+[Webクライアント](07_03_http_the_web_and_all_that.md#738-webクライアント)
 
 * * *
 
@@ -1507,4 +1507,4 @@ X
 
 * * *
 
-次へ: [R5RS インデックス](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index)、前へ: [変数インデックス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Variable-Index)、上へ: [Guile リファレンス マニュアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[インデックス](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "インデックス")\]
+次へ: [R5RS インデックス](index_r5rs.md)、前へ: [変数インデックス](#変数インデックス)、上へ: [Guile リファレンス マニュアル](00_contents.md) \[[目次](00_contents.md "目次")\]\[[インデックス](index_r5rs.md "インデックス")\]

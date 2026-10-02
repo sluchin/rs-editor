@@ -1,4 +1,4 @@
-5 C言語によるプログラミング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C-1)
+5 C言語によるプログラミング
 ----------------------------------------------------------------------------------------------
 
 このマニュアルのこの部分では、C言語からGuileと連携する際に理解しておくべき一般的な概念について説明します。Schemeの潜在型付けがC言語の静的型付けにどのように組み込まれているか、GuileのガベージコレクションがCコードでどのように利用できるようになっているか、そして継続がCプログラムの制御フローにどのように影響するかについて学びます。
@@ -7,24 +7,24 @@
 
 このパートの「Guileプログラミングの概要」セクションでは、Guileを使ったプログラミングに関する一般的な考察とガイドラインを紹介しています。Guileを中心としたプログラム設計の方法や、既存のプログラムにGuileを組み込む方法などについて解説しています。
 
-Guile のデータ表現がどのように実装されているかについて、教育的かつ詳細な説明については、[データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) を参照してください。C 言語から Guile を使用するために、そこに記載されている詳細を知る必要はありませんが、Guile 自体を変更したい場合や、単にその仕組みに興味がある場合に役立ちます。
+Guile のデータ表現がどのように実装されているかについて、教育的かつ詳細な説明については、[データ表現](09_02_data_representation.md#92-データ表現) を参照してください。C 言語から Guile を使用するために、そこに記載されている詳細を知る必要はありませんが、Guile 自体を変更したい場合や、単にその仕組みに興味がある場合に役立ちます。
 
-Guileのアプリケーションプログラミングインターフェース（API）を構成する変数、関数などの詳細なリファレンス情報については、[APIリファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference)を参照してください。
+Guileのアプリケーションプログラミングインターフェース（API）を構成する変数、関数などの詳細なリファレンス情報については、[APIリファレンス](06_00_api_reference.md#6-apiリファレンス)を参照してください。
 
-* [並列インストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Installations)
-* [Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile)
-* [Guileとライブラリのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-with-Libraries)
-* [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts)
-* [新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types)
-* [関数スナーフィング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Function-Snarfing)
-* [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview)
+* [並列インストール](#51-並列インストール)
+* [Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク)
+* [Guileとライブラリのリンク](#53-guile-とライブラリのリンク)
+* [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念)
+* [新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義)
+* [関数スナーフィング](#56-関数スナーフィング)
+* [Guileプログラミングの概要](#57-guileプログラミングの概要)
 * [Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support )
 
 * * *
 
-次へ: [Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.1 並列インストール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Installations-1)
+### 5.1 並列インストール
 
 Guile は安定版シリーズにおいて強力な API および ABI の安定性保証を提供するため、ユーザーが Guile バージョン 2.2.3 に対してプログラムを作成した場合、将来のバージョン 2.2.7 と互換性があります。この場合、2.2 はメジャー バージョンとマイナー バージョン (この場合は 2 と 2) で構成される _実効バージョン_ であると言えます。
 
@@ -36,29 +36,29 @@ Guile は安定版シリーズにおいて強力な API および ABI の安定�
 
 Guileの`pkg-config`ファイルであるguile-3.0.pcは、以下の便利な変数を定義しています。
 
-`sitedir` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sitedir)
+`sitedir`
 
-Guile が Scheme ソースファイルとコンパイル済みファイルを探すデフォルトのディレクトリです ([%site-dir](https://doc.guix.gnu.org/guile/latest/en/guile.html#Installing-Site-Packages) を参照)。その値を確認するには、`pkg-config guile-3.0 --variable=sitedir` を実行してください。Autoconf からの使用方法の詳細については、[GUILE\_SITE\_DIR](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Macros) を参照してください。
+Guile が Scheme ソースファイルとコンパイル済みファイルを探すデフォルトのディレクトリです ([%site-dir](04_programming_in_scheme.md#47-サイトパッケージのインストール) を参照)。その値を確認するには、`pkg-config guile-3.0 --variable=sitedir` を実行してください。Autoconf からの使用方法の詳細については、[GUILE\_SITE\_DIR](#582-autoconf-マクロ) を参照してください。
 
-`extensiondir` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-extensiondir)
+`extensiondir`
 
-Guile が拡張機能（追加機能を提供する共有ライブラリ）を探すデフォルトのディレクトリです（[外部拡張機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Extensions)を参照）。値を確認するには、`pkg-config guile-3.0 --variable=extensiondir` を実行してください。
+Guile が拡張機能（追加機能を提供する共有ライブラリ）を探すデフォルトのディレクトリです（[外部拡張機能](06_19_foreign_function_interface.md#6192-外部拡張機能)を参照）。値を確認するには、`pkg-config guile-3.0 --variable=extensiondir` を実行してください。
 
-`guile` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-program-name-transformations_002c-dealing-with)
+`guile`
 
 ギルド
 
-`guile` コマンドと `guild` コマンドの絶対ファイル名[4](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT4)。値を確認するには、`pkg-config guile-3.0 --variable=guile` または `--variable=guild` を実行してください。
+`guile` コマンドと `guild` コマンドの絶対ファイル名[4](99_footnotes.md#4)。値を確認するには、`pkg-config guile-3.0 --variable=guile` または `--variable=guild` を実行してください。
 
 これらの変数を使用すると、ユーザーは、`--program-transform-name`、`--program-suffix`、または`--program-prefix`を使用してGuileを設定する際に指定される可能性のあるプログラム名の変換を処理できます（GNU Autoconfマニュアルの[変換オプション](https://www.gnu.org/software/autoconf/manual/autoconf.html#Transformation-Options)を参照）。
 
-詳しくは、`pkg-config` のマニュアルページ、または Web サイト [http://pkg-config.freedesktop.org/](http://pkg-config.freedesktop.org/) を参照してください。`configure.ac`ファイル内から Guile を確認する方法については、[Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support) を参照してください。
+詳しくは、`pkg-config` のマニュアルページ、または Web サイト [http://pkg-config.freedesktop.org/](http://pkg-config.freedesktop.org/) を参照してください。`configure.ac`ファイル内から Guile を確認する方法については、[Autoconf サポート](#58-autoconf-サポート) を参照してください。
 
 * * *
 
-次へ: [Guile とライブラリのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-with-Libraries)、前: [並列インストール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Installations)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile とライブラリのリンク](#53-guile-とライブラリのリンク)、前: [並列インストール](#51-並列インストール)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.2 Guile を使用したプログラムのリンク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile-1)
+### 5.2 Guile を使用したプログラムのリンク
 
 このセクションでは、一般的なPOSIXシステム上でプログラムをGuileにリンクする手順について説明します。
 
@@ -70,15 +70,15 @@ pkg-config guile-3.0 --cflags
 pkg-config guile-3.0 --libs
 
 * [Guile 初期化関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Initialization-Functions )
-* [Guileのメインプログラムのサンプル](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Sample-Guile-Main-Program)
-* [Make を使用したサンプルの構築](https://doc.guix.gnu.org/guile/latest/en/guile.html#Building-the-Example-with-Make)
-* [Autoconf を使用したサンプルの構築](https://doc.guix.gnu.org/guile/latest/en/guile.html#Building-the-Example-with-Autoconf)
+* [Guileのメインプログラムのサンプル](#522-guile-のメインプログラムのサンプル)
+* [Make を使用したサンプルの構築](#523-make-を使用したサンプルの構築)
+* [Autoconf を使用したサンプルの構築](#524-autoconf-を使用したサンプルの構築)
 
 * * *
 
-次へ: [Guile のメイン プログラムの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Sample-Guile-Main-Program)、上へ: [Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile のメイン プログラムの例](#522-guile-のメインプログラムのサンプル)、上へ: [Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.2.1 Guile 初期化関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Initialization-Functions-1)
+#### 5.2.1 Guile 初期化関数
 
 Guile を初期化するには、いくつかの関数を使用できます。最初の関数である `scm_with_guile` は、Guile を初期化する最も移植性の高い方法です。必要に応じて Guile を初期化し、指定した関数を呼び出します。複数のスレッドが `scm_with_guile` を同時に呼び出すことができ、また、1 つのスレッド内で複数回呼び出すこともできます。Guile のグローバル状態は、`scm_with_guile` の呼び出しから次の呼び出しまで保持されます。Guile のガベージコレクタは各スレッドのスタックの位置を知る必要があるため、`scm_with_guile` 内から関数が呼び出されます。
 
@@ -88,13 +88,13 @@ Guile の一般的な使い方の 1 つは、何らかの有用なタスクを�
 
 このような状況では、アプリケーションは標準のGuileインタープリタと同様の方法でコマンドライン引数を処理するのが適切でしょう。それを容易にするために、Guileは`scm_boot_guile`関数と`scm_shell`関数を提供しています。
 
-これらの関数の詳細については、[Guile の初期化](https://doc.guix.gnu.org/guile/latest/en/guile.html#Initialization) を参照してください。
+これらの関数の詳細については、[Guile の初期化](06_04_initializing_guile.md#64-guile-の初期化) を参照してください。
 
 * * *
 
-前へ: [Guile 初期化関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Initialization-Functions)、上へ: [Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guile 初期化関数](#521-guile-初期化関数)、上へ: [Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.2.2 Guile のメインプログラムのサンプル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Sample-Guile-Main-Program-1)
+#### 5.2.2 Guile のメインプログラムのサンプル
 
 ここにsimple-guile.cというファイルがあります。これは、完全なGuileインタープリタを生成する`main`関数と`inner_main`関数のソースコードです。
 
@@ -119,7 +119,7 @@ return 0; /\* 到達しない。inner\_main を参照 */
 
 `main`関数は`scm_boot_guile`を呼び出してGuileを初期化し、`inner_main`を渡します。`scm_boot_guile`の準備が完了すると、`inner_main`が呼び出され、`inner_main`は`scm_shell`を呼び出して、通常の方法でコマンドライン引数を処理します。
 
-#### 5.2.3 Make を使用したサンプルの構築 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Building-the-Example-with-Make)
+#### 5.2.3 Make を使用したサンプルの構築
 
 以下に、サンプルプログラムをコンパイルするために使用できるMakefileを示します。このMakefileは、必要なコンパイラおよびリンカーのフラグを取得するために`pkg-config`を使用します。
 
@@ -138,7 +138,7 @@ ${CC} simple-guile.o ${LIBS} -o simple-guile
 simple-guile.o: simple-guile.c
 ${CC} -c ${CFLAGS} simple-guile.c
 
-#### 5.2.4 Autoconf を使用したサンプルの構築 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Building-the-Example-with-Autoconf)
+#### 5.2.4 Autoconf を使用したサンプルの構築
 
 アプリケーションの移植性を高めるために GNU Autoconf パッケージを使用している場合、Autoconf は Makefile の詳細の多くを自動的に処理するため、Makefile がはるかにシンプルで移植性が高くなります。Guile と Autoconf を併用することをお勧めします。以下は、標準の `PKG_CHECK_MODULES` マクロを使用して Guile をチェックする `simple-guile` 用の configure.ac ファイルです。Autoconf はこのファイルを `configure` スクリプトに処理します。Autoconf は `autoreconf` ユーティリティ経由で起動することをお勧めします。
 
@@ -199,9 +199,9 @@ $
 
 * * *
 
-次へ: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts)、前: [Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念)、前: [Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.3 Guile とライブラリのリンク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-with-Libraries-1)
+### 5.3 Guile とライブラリのリンク
 
 前のセクションでは、組み込みの Guile インタプリタを利用するプログラムの書き方について簡単に説明しました。しかし、時には、新しいプリミティブな手続きやデータ型を Scheme プログラマーに提供したいだけの場合もあります。このような場合、`guile` の新しいバージョンを作成するのは不便であり、実際には、新しい機能を利用するユーザーの作業を不必要に困難にしてしまうでしょう。
 
@@ -211,13 +211,13 @@ $
 
 新しいプリミティブプロシージャとデータ型は通常どおり記述し、スタンドアロンプログラムではなく共有ライブラリにリンクします。その後、共有ライブラリはGuileによって動的にロードできます。
 
-* [Guile拡張機能のサンプル](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Sample-Guile-Extension)
+* [Guile拡張機能のサンプル](#531-guile拡張機能のサンプル)
 
 * * *
 
-上へ: [Guileとライブラリのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-with-Libraries) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+上へ: [Guileとライブラリのリンク](#53-guile-とライブラリのリンク) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.3.1 Guile拡張機能のサンプル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Sample-Guile-Extension-1)
+#### 5.3.1 Guile拡張機能のサンプル
 
 このセクションでは、Cライブラリのベッセル関数をSchemeで使用できるようにする方法を説明します。まず、関数の引数と戻り値をSchemeからCへ、そしてCからSchemeへと変換するための適切なグルーコードを記述する必要があります。さらに、それらをGuileのプリミティブセットに追加する関数も必要です。これは単なる例なので、`j0`関数のみを実装します。
 
@@ -247,21 +247,21 @@ gcc \`pkg-config --cflags guile-3.0\` \\
 
 共有ライブラリは、`load-extension` 関数を使用して実行中の Guile プロセスにロードできます。この関数は、ロードするライブラリ名に加えて、そのライブラリを初期化するために呼び出される関数名も必要とします。この例では、`init_bessel` 関数を呼び出します。これにより、`j0_wrapper` が `j0` という名前の Scheme プログラムで使用できるようになります。`load-extension` を呼び出す際に、.so などのファイル名拡張子を指定しないことに注意してください。ホストプラットフォームに適した拡張子は自動的に提供されます。
 
-([load-extension](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-load_002dextension) "libguile-bessel" "init\_bessel")
+([load-extension](06_19_foreign_function_interface.md#6192-外部拡張機能) "libguile-bessel" "init\_bessel")
 (j0 2)
 ⇒ 0.223890779141236
 
 この機能が正しく動作するためには、当然ながら`load-extension`がlibguile-besselを見つけられる必要があります。`load-extension`は、お使いのオペレーティングシステムで通常検索される場所に加え、環境変数`LTDL_LIBRARY_PATH`にリストされているディレクトリも検索します。
 
-共有ライブラリを介したこれらの Guile 拡張機能がモジュール システムとどのように関連しているかを確認するには、[拡張機能をモジュールに組み込む](https://doc.guix.gnu.org/guile/latest/en/guile.html#Putting-Extensions-into-Modules) を参照してください。
+共有ライブラリを介したこれらの Guile 拡張機能がモジュール システムとどのように関連しているかを確認するには、[拡張機能をモジュールに組み込む](02_hello_guile.md#253-拡張機能をモジュールに組み込む) を参照してください。
 
 * * *
 
-次へ: [新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types)、前: [Guile とライブラリのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Guile-with-Libraries)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義)、前: [Guile とライブラリのリンク](#53-guile-とライブラリのリンク)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.4 libguile を使用するための一般的な概念 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-concepts-for-using-libguile)
+### 5.4 libguile を使用するための一般的な概念
 
-Guile Scheme インタプリタをプログラムやライブラリに組み込む場合は、libguile ライブラリにリンクする必要があります ([Guile を使用したプログラムのリンク](https://doc.guix.gnu.org/guile/latest/en/guile.html#Linking-Programs-With-Guile) を参照)。リンクが完了すると、C コードから、インタプリタの呼び出しや、C で記述した新しい関数を Scheme コードから呼び出せるようにするなど、さまざまな用途に使用できるデータ型や関数にアクセスできるようになります。
+Guile Scheme インタプリタをプログラムやライブラリに組み込む場合は、libguile ライブラリにリンクする必要があります ([Guile を使用したプログラムのリンク](#52-guile-を使用したプログラムのリンク) を参照)。リンクが完了すると、C コードから、インタプリタの呼び出しや、C で記述した新しい関数を Scheme コードから呼び出せるようにするなど、さまざまな用途に使用できるデータ型や関数にアクセスできるようになります。
 
 SchemeはC言語とは多くの点で大きく異なり、GuileはSchemeの利点をC言語でも利用できるようにしようと試みています。そのため、libguileはSchemeインタープリタに加えて、動的型、ガベージコレクション、継続、任意のサイズの数値に対する算術演算など、さまざまな機能を提供しています。
 
@@ -269,17 +269,17 @@ SchemeはC言語とは多くの点で大きく異なり、GuileはSchemeの利�
 
 非同期シグナルハンドラの実行やマルチスレッド処理はC言語では既に知られている機能ですが、libguileと組み合わせて使用する場合には、もちろんいくつかの追加ルールがあります。
 
-* [動的型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Types)
-* [ガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection)
-* [制御フロー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Flow)
-* [非同期シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asynchronous-Signals)
-* [マルチスレッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multi_002dThreading)
+* [動的型](#541-動的型)
+* [ガベージコレクション](#542-ガベージコレクション)
+* [制御フロー](#543-制御フロー)
+* [非同期シグナル](#544-非同期シグナル)
+* [マルチスレッド](#545-マルチスレッド)
 
 * * *
 
-次へ: [ガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection)、上: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ガベージコレクション](#542-ガベージコレクション)、上: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.4.1 動的型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Types-1)
+#### 5.4.1 動的型
 
 Schemeは動的型付け言語です。つまり、システムは一般的に、コンパイル時に特定の式の型を判別できません。型は実行時にのみ明らかになります。変数には固定型がなく、ある時点ではペアを、次の時点では整数を、さらに後には1000個の要素を持つベクトルを保持する可能性があります。固定型を持つのは変数ではなく値です。
 
@@ -337,7 +337,7 @@ return scm_from_int (result);
 
 このバージョンはオリジナル版に比べて汎用性が低く、`int` 型に収まる値 A に対してのみ機能します。オリジナル版の関数は、Guile が表現でき、`scm_sum` が理解できるすべての値に対して機能します。これには、`long long` より大きい整数、浮動小数点数、複素数、およびサードパーティライブラリによって Guile に追加された新しい数値型が含まれます。
 
-また、`SCM` を用いた計算は必ずしも非効率的ではありません。例えば、小さな整数は `SCM` 値に直接エンコードされるため、ヒープ上に追加のメモリを必要としません。詳細については、[データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) を参照してください。
+また、`SCM` を用いた計算は必ずしも非効率的ではありません。例えば、小さな整数は `SCM` 値に直接エンコードされるため、ヒープ上に追加のメモリを必要としません。詳細については、[データ表現](09_02_data_representation.md#92-データ表現) を参照してください。
 
 一部の特別な`SCM`値は、C言語の値から変換することなくCコードで使用できます。
 
@@ -357,13 +357,13 @@ C言語表現
 
 `SCM_EOL`
 
-Guile は `SCM` に加えて、関連する型 `scm_t_bits` も定義しています。これは、`SCM` 値に直接含まれるすべての情報を保持するのに十分なサイズの符号なし整数型です。`scm_t_bits` 型は、[データ表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Representation) で説明されているすべてのビット操作を Guile が内部的に実行するために使用しますが、低レベルのユーザー コードでも時折見かけることがあります。
+Guile は `SCM` に加えて、関連する型 `scm_t_bits` も定義しています。これは、`SCM` 値に直接含まれるすべての情報を保持するのに十分なサイズの符号なし整数型です。`scm_t_bits` 型は、[データ表現](09_02_data_representation.md#92-データ表現) で説明されているすべてのビット操作を Guile が内部的に実行するために使用しますが、低レベルのユーザー コードでも時折見かけることがあります。
 
 * * *
 
-次へ: [制御フロー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Flow)、前: [動的型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Types)、上: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [制御フロー](#543-制御フロー)、前: [動的型](#541-動的型)、上: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.4.2 ガベージコレクション [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection-1)
+#### 5.4.2 ガベージコレクション
 
 前述のとおり、`SCM`型はすべてのScheme値を表現できます。一部の値（小さな整数など）は`SCM`値に完全に収まりますが、その他の値（文字列やベクトルなど）はヒープに追加のストレージを必要とします。この追加ストレージはGuileによって自動的に管理されます。`SCM`値が不要になった場合でも、明示的に解放する必要はありません。
 
@@ -373,7 +373,7 @@ Guile のガベージ コレクタは、グローバル変数、静的データ 
 
 Guile では、ガベージ コレクションには 2 つの論理フェーズがあります。1 つは「マーク フェーズ」で、コレクターがすべての生存オブジェクトのセットを検出します。もう 1 つは「スイープ フェーズ」で、コレクターが不要になったオブジェクトに関連付けられたリソースを解放します。マーク フェーズでは、プログラムが一時停止し、ルート セットから始めてすべての `SCM` オブジェクト参照をトレースします。スイープ フェーズは、実際にはメイン プログラムと並行して実行され、割り当てに応じてメモリを段階的に解放します。
 
-マークフェーズでは、ガベージコレクタは Scheme スタックとヒープを _正確に_トレースします。Scheme スタックとヒープは Guile によって管理されているため、Guile はこれらのデータ構造のどこに他のヒープ オブジェクトへの参照があるかを正確に把握できます。残念ながら、C スタックと静的データ セグメント上のポインタについてはそうではありません。ユーザーがヒープ オブジェクトを指す可能性のある C のすべての変数を Guile に通知する代わりに、Guile は C スタックと静的データ セグメントを _保守的に_トレースします。つまり、Guile は C スタック上のすべてのワードとすべての C グローバル変数を Scheme ヒープへの潜在的な参照として扱います [5](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT5)。GC 管理オブジェクトへのポインタのように見える値は、実際に参照であるかどうかに関わらず、そのように扱われます。したがって、Cスタックと静的データセグメントをスキャンすることで、実際の参照はすべて確実に見つかりますが、参照のように見えるだけのワードも偶然見つかる可能性があります。これらの「誤検出」によって、本来であれば不要とみなされる`SCM`オブジェクトが生き残ってしまうことがあります。これはメモリの無駄遣いになるかもしれませんが、オブジェクトを必要以上に長く保持しても害はありません。これが、この手法が「保守的なガベージコレクション」と呼ばれる理由です。実際には、SchemeスタックはCスタックとは別個のものであるため、静的Cルートセットはほぼ常に有限で小さいため、メモリの無駄遣いは問題にならないようです。
+マークフェーズでは、ガベージコレクタは Scheme スタックとヒープを _正確に_トレースします。Scheme スタックとヒープは Guile によって管理されているため、Guile はこれらのデータ構造のどこに他のヒープ オブジェクトへの参照があるかを正確に把握できます。残念ながら、C スタックと静的データ セグメント上のポインタについてはそうではありません。ユーザーがヒープ オブジェクトを指す可能性のある C のすべての変数を Guile に通知する代わりに、Guile は C スタックと静的データ セグメントを _保守的に_トレースします。つまり、Guile は C スタック上のすべてのワードとすべての C グローバル変数を Scheme ヒープへの潜在的な参照として扱います [5](99_footnotes.md#5)。GC 管理オブジェクトへのポインタのように見える値は、実際に参照であるかどうかに関わらず、そのように扱われます。したがって、Cスタックと静的データセグメントをスキャンすることで、実際の参照はすべて確実に見つかりますが、参照のように見えるだけのワードも偶然見つかる可能性があります。これらの「誤検出」によって、本来であれば不要とみなされる`SCM`オブジェクトが生き残ってしまうことがあります。これはメモリの無駄遣いになるかもしれませんが、オブジェクトを必要以上に長く保持しても害はありません。これが、この手法が「保守的なガベージコレクション」と呼ばれる理由です。実際には、SchemeスタックはCスタックとは別個のものであるため、静的Cルートセットはほぼ常に有限で小さいため、メモリの無駄遣いは問題にならないようです。
 
 この方法で各スレッドのスタックがスキャンされ、CPUのレジスタや、ローカル変数や関数パラメータが現れる可能性のあるその他のすべてのメモリ位置もこのスキャンに含まれます。
 
@@ -383,13 +383,13 @@ Guile では、ガベージ コレクションには 2 つの論理フェーズ�
 
 しかし、ローカル変数や関数パラメータからの参照よりも長く `SCM` オブジェクトを保持する必要がある状況もあります。これは、たとえば外部オブジェクトからポインタを取得し、そのポインタを直接操作する場合に発生します。ポインタが取得された後、`SCM` 外部オブジェクトへの参照は無効になっている可能性がありますが、ポインタ自体（およびポインタが指すメモリ）はまだ使用されているため、外部オブジェクトは保護される必要があります。コンパイラはこの関連性を認識していないため、`SCM` 参照を早すぎるタイミングで上書きしてしまう可能性があります。
 
-この問題を回避するには、`scm_remember_upto_here_1` とその類似関数を使用できます。これにより、コンパイラが参照を上書きするのを防ぐことができます。[外部オブジェクトメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management) を参照してください。
+この問題を回避するには、`scm_remember_upto_here_1` とその類似関数を使用できます。これにより、コンパイラが参照を上書きするのを防ぐことができます。[外部オブジェクトメモリ管理](#554-外部オブジェクトメモリ管理) を参照してください。
 
 * * *
 
-次へ: [非同期シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asynchronous-Signals)、前: [ガベージコレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection)、上: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [非同期シグナル](#544-非同期シグナル)、前: [ガベージコレクション](#542-ガベージコレクション)、上: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.4.3 制御フロー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Flow-1)
+#### 5.4.3 制御フロー
 
 Schemeは、C言語よりもプログラムの流れを、局所的にも非局所的にも、より包括的に捉えることができる。
 
@@ -397,15 +397,15 @@ Schemeは、C言語よりもプログラムの流れを、局所的にも非局�
 
 C言語におけるローカル制御フローの基本的な手段は、`goto`文と`if`文です。`for`、`while`、`do`で行われるループは、原理的には`goto`と`if`だけで書き直すことができます。Schemeでは、ローカル制御フローの基本的な手段は、`if`文とともに関数呼び出しです。したがって、ループ内での計算の繰り返しは、最終的には自身を呼び出す関数、つまり再帰によって実現されます。
 
-このアプローチは、goto文よりも再帰について形式的に推論する方が容易であるため、理論的には非常に強力です。ただし、C言語では、再帰のみを使用するとスタックがすぐに消費されてしまうため、実用的ではありません。しかし、Schemeでは実用的です。末尾に現れる関数呼び出しは、追加のスタック領域を使用しません（[末尾呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Tail-Calls)を参照）。
+このアプローチは、goto文よりも再帰について形式的に推論する方が容易であるため、理論的には非常に強力です。ただし、C言語では、再帰のみを使用するとスタックがすぐに消費されてしまうため、実用的ではありません。しかし、Schemeでは実用的です。末尾に現れる関数呼び出しは、追加のスタック領域を使用しません（[末尾呼び出し](03_hello_scheme.md#332-末尾呼び出し)を参照）。
 
 関数呼び出しが末尾にあるとは、呼び出し元の関数が最後に実行する処理である場合を指します。呼び出された関数が返す値は、呼び出し元の関数からすぐに返されます。次の例では、`bar-1` の呼び出しは末尾にありますが、`bar-2` の呼び出しは末尾ではありません。（ただし、`foo-2` 内の `1-` の呼び出しは末尾にあります。）
 
 (define (foo-1 x)
-(bar-1 ([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) x)))
+(bar-1 ([1-](06_06_02_numerical_data_types.md#66211-算術関数) x)))
 
 (define (foo-2 x)
-([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) (bar-2 x)))
+([1-](06_06_02_numerical_data_types.md#66211-算術関数) (bar-2 x)))
 
 したがって、末尾の位置でのみ再帰を実行するように注意すれば、再帰は定数スタック領域しか使用せず、goto文で構成されたループと同等の効率になります。
 
@@ -414,12 +414,12 @@ Schemeには、ループの記述を少し容易にする構文上の抽象化�
 しかし、Scheme 関数だけが末尾で他の関数を呼び出すことができ、C 関数はできません。これは、たとえば、共通のループを形成するために互いに再帰的に呼び出す 2 つの関数がある場合に重要になります。次の (非現実的な) 例は、非負の整数 n が偶数か奇数かを判定する方法を示しています。
 
 (define (my-even? n)
-(cond (([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n) #t)
-(else (my-odd? ([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) n)))))
+(cond (([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n) #t)
+(else (my-odd? ([1-](06_06_02_numerical_data_types.md#66211-算術関数) n)))))
 
 (define (my-odd? n)
-(cond (([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n) #f)
-(else (my-even? ([1-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-1_002d-1) n)))))
+(cond (([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n) #f)
+(else (my-even? ([1-](06_06_02_numerical_data_types.md#66211-算術関数) n)))))
 
 `my-even?`と`my-odd?`の呼び出しは末尾にあるため、これらの2つの手続きはスタックオーバーフローを起こすことなく、任意の大きな整数に適用できます。（もちろん、それでもかなりの時間がかかります。）
 
@@ -437,21 +437,21 @@ Scheme関数はC関数を呼び出すことができ、またその逆も可能�
 
 制御が関数から非ローカルに抜ける場合、多くの場合、クリーンアップ処理が必要になります。また、制御が非ローカルに戻る場合、いくつかのセットアップ処理が必要になることがあります。たとえば、Scheme 関数 `with-output-to-port` は、`current-output-port` が `with-output-to-port` に渡されたポートを返すように、グローバル状態を変更する必要があります。`with-output-to-port` が正常に戻るか、非ローカルに終了した場合、グローバル出力ポートは以前の値にリセットする必要があります。同様に、制御が非ローカルに入るときにも、ポートを再度設定する必要があります。
 
-Scheme コードでは、`dynamic-wind` 関数を使用してグローバル状態の設定とリセットを行うことができます。C コードでは、対応する `scm_internal_dynamic_wind` 関数、または適切な 'dynwind アクション' と組み合わせた `scm_dynwind_begin`/`scm_dynwind_end` ペアを使用できます ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)。
+Scheme コードでは、`dynamic-wind` 関数を使用してグローバル状態の設定とリセットを行うことができます。C コードでは、対応する `scm_internal_dynamic_wind` 関数、または適切な 'dynwind アクション' と組み合わせた `scm_dynwind_begin`/`scm_dynwind_end` ペアを使用できます ([Dynamic Wind](06_11_controlling_the_flow_of_program_execution.md#61110-ダイナミックウィンド) を参照)。
 
-非ローカルな制御フローに対処する代わりに、_継続バリア_を構築することでそれを防ぐこともできます。[継続バリア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuation-Barriers)を参照してください。たとえば、関数`scm_c_with_continuation_barrier`は、必ず1回だけ戻ります。
+非ローカルな制御フローに対処する代わりに、_継続バリア_を構築することでそれを防ぐこともできます。[継続バリア](06_11_controlling_the_flow_of_program_execution.md#61114-継続の障壁)を参照してください。たとえば、関数`scm_c_with_continuation_barrier`は、必ず1回だけ戻ります。
 
 * * *
 
-次へ: [マルチスレッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multi_002dThreading)、前: [制御フロー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Flow)、上: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [マルチスレッド](#545-マルチスレッド)、前: [制御フロー](#543-制御フロー)、上: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.4.4 非同期シグナル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asynchronous-Signals-1)
+#### 5.4.4 非同期シグナル
 
 POSIXシグナルのハンドラからlibguile関数を呼び出すことはできませんが、`SIGINT`などのPOSIXシグナル用のSchemeハンドラを登録することは可能です。これらのハンドラは、実際のシグナル配信時には実行されません。代わりに、プログラム（より正確には、ハンドラが登録されているスレッド）が次のセーフポイントに到達したときに実行されます。
 
 libguileの関数自体にも、このようなセーフポイントが多数存在します。そのため、libguileの関数を呼び出す際には、常に予期せぬ動作が発生する可能性があることを覚悟しておく必要があります。例えば、`scm_cons`関数にもセーフポイントが存在する可能性があり、スレッドのシグナルハンドラが保留状態にある場合、`scm_cons`を呼び出すとこのハンドラが実行され、通常`scm_cons`関数自体では発生しない非ローカル終了など、あらゆる事態が発生する可能性があります。
 
-非同期シグナルハンドラの実行を許可したくない場合は、たとえば `scm_dynwind_block_asyncs` を使用して一時的にブロックできます。[非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs) を参照してください。
+非同期シグナルハンドラの実行を許可したくない場合は、たとえば `scm_dynwind_block_asyncs` を使用して一時的にブロックできます。[非同期割り込み](06_22_threads_mutexes_asyncs_and_dynamic_roots.md#6223-非同期割り込み) を参照してください。
 
 Guile のシグナル処理はセーフポイントに依存しているため、関数に十分なセーフポイントが用意されていることを確認する必要があります。通常、通常の処理の流れの中で libguile 関数を呼び出すだけで十分です。しかし、スレッドが libguile 関数を呼び出さないコードセクションで長時間処理を行う場合は、明示的なセーフポイントを含めるのが良いでしょう。これにより、例えばユーザーが Cc コマンドでコードを中断できるようになります。
 
@@ -463,13 +463,13 @@ SCM_TICK;
 何らかの作業を行う（）
 }
 
-マルチスレッドプログラムでは、セーフポイントの頻繁な実行がさらに重要になります。[マルチスレッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multi_002dThreading)を参照してください。
+マルチスレッドプログラムでは、セーフポイントの頻繁な実行がさらに重要になります。[マルチスレッド](#545-マルチスレッド)を参照してください。
 
 * * *
 
-前へ: [非同期信号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asynchronous-Signals)、上へ: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [非同期信号](#544-非同期シグナル)、上へ: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.4.5 マルチスレッド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multi_002dThreading-1)
+#### 5.4.5 マルチスレッド
 
 Guileは、シングルスレッドプログラムと同様に、マルチスレッドプログラムでも使用できます。
 
@@ -477,7 +477,7 @@ libguileの関数を使用したいスレッドは、自身を_guileモード_�
 
 スレッドは、`scm_with_guile`、`scm_boot_guile`、または`scm_init_guile`を呼び出すことでGuileモードに入ります。これらの関数のリファレンスドキュメントで説明されているように、Guileはスレッドのスタック境界を学習し、ローカル変数に格納されている`SCM`値を保護できます。スレッドが初めてGuileモードに入ると、Scheme表現が取得され、たとえば`all-threads`で一覧表示されます。
 
-Guile モードのスレッドは、問題を引き起こすことなくブロック (たとえば、ブロッキング I/O を実行) できます [6](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT6)。ただし、ブロックする前に `scm_without_guile` を使用して一時的に Guile モードを終了すると、GC のパフォーマンスがわずかに向上します。一般的なブロッキング操作のために、Guile は便利な関数を提供します。たとえば、Guile モード中に pthread ミューテックスをロックしたい場合は、`scm_pthread_mutex_lock` を使用すると良いでしょう。これは、ブロック中に Guile モードを終了する点を除いて `pthread_mutex_lock` とほぼ同じです。
+Guile モードのスレッドは、問題を引き起こすことなくブロック (たとえば、ブロッキング I/O を実行) できます [6](99_footnotes.md#6)。ただし、ブロックする前に `scm_without_guile` を使用して一時的に Guile モードを終了すると、GC のパフォーマンスがわずかに向上します。一般的なブロッキング操作のために、Guile は便利な関数を提供します。たとえば、Guile モード中に pthread ミューテックスをロックしたい場合は、`scm_pthread_mutex_lock` を使用すると良いでしょう。これは、ブロック中に Guile モードを終了する点を除いて `pthread_mutex_lock` とほぼ同じです。
 
 libguileのすべての関数は、複数のスレッドが同時に使用しても（意図的に）堅牢に動作します。つまり、libguileの内部データ構造が破損してプロセスがクラッシュするリスクはありません。
 
@@ -549,25 +549,25 @@ Guile は、上記のようにクリティカル セクションをサポート�
 
 * * *
 
-次へ: [関数スナーフィング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Function-Snarfing)、前: [libguile の使用に関する一般的な概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#General-Libguile-Concepts)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [関数スナーフィング](#56-関数スナーフィング)、前: [libguile の使用に関する一般的な概念](#54-libguile-を使用するための一般的な概念)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.5 新しい外部オブジェクト型の定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types-1)
+### 5.5 新しい外部オブジェクト型の定義
 
 _外部オブジェクト型_機能は、C言語やその他の言語からオブジェクトや型をGuileのシステムにインポートするためのGuileの仕組みです。例えば、C言語の`struct foo`型がある場合、対応するGuileの外部オブジェクト型を定義することで、Schemeコードが`struct foo *`オブジェクトを処理できるようになります。
 
 新しい外部オブジェクト型を定義するには、プログラマは型に関するいくつかの重要な情報（型名、フィールド数、ファイナライザ（存在する場合））をGuileに提供し、Guileはそれに対応する新しい型を割り当てます。外部オブジェクトはSchemeまたはCからアクセスできます。
 
-* [外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Foreign-Object-Types)
-* [外部オブジェクトの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Foreign-Objects)
-* [外部オブジェクトの型チェック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-Checking-of-Foreign-Objects)
-* [外部オブジェクトメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management)
-* [外部オブジェクトとScheme](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects-and-Scheme)
+* [外部オブジェクト型の定義](#551-外部オブジェクト型の定義)
+* [外部オブジェクトの作成](#552-外部オブジェクトの作成)
+* [外部オブジェクトの型チェック](#553-外部オブジェクトの型チェック)
+* [外部オブジェクトメモリ管理](#554-外部オブジェクトメモリ管理)
+* [外部オブジェクトとScheme](#555-外部オブジェクトとスキーム)
 
 * * *
 
-次へ: [外部オブジェクトの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Foreign-Objects)、上: [新しい外部オブジェクトタイプの定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部オブジェクトの作成](#552-外部オブジェクトの作成)、上: [新しい外部オブジェクトタイプの定義](#55-新しい外部オブジェクト型の定義) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.5.1 外部オブジェクト型の定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Foreign-Object-Types-1)
+#### 5.5.1 外部オブジェクト型の定義
 
 C言語から新しい外部オブジェクト型を作成するには、`scm_make_foreign_object_type`を呼び出します。この関数は、新しい型を識別する`SCM`型の値を返します。
 
@@ -608,19 +608,19 @@ scm_make_foreign_object_type (名前、スロット、ファイナライザー);
 
 * * *
 
-次へ: [外部オブジェクトの型チェック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-Checking-of-Foreign-Objects)、前: [外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-Foreign-Object-Types)、上: [新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部オブジェクトの型チェック](#553-外部オブジェクトの型チェック)、前: [外部オブジェクト型の定義](#551-外部オブジェクト型の定義)、上: [新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.5.2 外部オブジェクトの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Foreign-Objects-1)
+#### 5.5.2 外部オブジェクトの作成
 
 外部オブジェクトには、0個以上の「スロット」と呼ばれるデータが格納されます。スロットには、ポインタ、`size_t`または`ssize_t`に収まる整数、あるいは`SCM`値が格納されます。
 
 特定の外部型を持つオブジェクトはすべて、同じ数のスロットを持ちます。前のセクションの例では、`scm_make_foreign_object_type` に渡されるスロットリストの長さが 1 であるため、`image` 型には 1 つのスロットがあります。（スロットに付けられる実際の名前は、 C インターフェースのほとんどのユーザーにとって重要ではありませんが、Scheme 側で外部オブジェクトを内省するために使用できます。）
 
-外部オブジェクトを構築し、その最初のスロットを初期化するには、`scm_make_foreign_object_1 (type, first_slot_value)` を呼び出します。0、1、2、または 3 つのスロットを初期化したり、配列を使用して n 個のスロットを初期化したりするための、同様の名前のコンストラクタがあります。詳細については、[外部オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects) を参照してください。明示的に初期化されていないフィールドはすべて 0 に設定されます。
+外部オブジェクトを構築し、その最初のスロットを初期化するには、`scm_make_foreign_object_1 (type, first_slot_value)` を呼び出します。0、1、2、または 3 つのスロットを初期化したり、配列を使用して n 個のスロットを初期化したりするための、同様の名前のコンストラクタがあります。詳細については、[外部オブジェクト](06_20_foreign_objects.md#620-外部オブジェクト) を参照してください。明示的に初期化されていないフィールドはすべて 0 に設定されます。
 
 インデックスによってスロットの値を取得または設定するには、`scm_foreign_object_ref` 関数と `scm_foreign_object_set_x` 関数を使用できます。これらの関数は、値を `void *` ポインタとして受け取り、返します。符号付きまたは符号なし整数としてスロットを扱うための対応する便利な手順として、`_signed_ref`、`_unsigned_set_x` などがあります。
 
-ポインタである外部オブジェクトのフィールドは、管理が難しい場合があります。可能であれば、外部オブジェクトによって参照されるすべてのメモリはガベージコレクタによって管理されるのが最善です。そうすることで、GCはメモリが必要なときにアクセス可能であり、アクセスできなくなったときに解放されることを自動的に保証できます。プログラムでこれが当てはまらない場合（たとえば、プログラムの他のGuileを認識しない部分によって割り当てられたオブジェクトをSchemeに公開している場合）、ファイナライザを実装する必要があるでしょう。詳細については、[外部オブジェクトのメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management)を参照してください。
+ポインタである外部オブジェクトのフィールドは、管理が難しい場合があります。可能であれば、外部オブジェクトによって参照されるすべてのメモリはガベージコレクタによって管理されるのが最善です。そうすることで、GCはメモリが必要なときにアクセス可能であり、アクセスできなくなったときに解放されることを自動的に保証できます。プログラムでこれが当てはまらない場合（たとえば、プログラムの他のGuileを認識しない部分によって割り当てられたオブジェクトをSchemeに公開している場合）、ファイナライザを実装する必要があるでしょう。詳細については、[外部オブジェクトのメモリ管理](#554-外部オブジェクトメモリ管理)を参照してください。
 
 前のセクションの例を続けて説明すると、グローバル変数 `image_type` に `scm_make_foreign_object_type` によって返される型が含まれている場合、新しく割り当てられた `struct image` へのポインタを「data」フィールドに含む外部オブジェクトを構築するには、次のようにします。
 
@@ -663,9 +663,9 @@ return scm\_make\_foreign\_object\_1 (image\_type, image);
 
 * * *
 
-次へ: [外部オブジェクトメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management )、前: [外部オブジェクトの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Foreign-Objects)、上: [新しい外部オブジェクトタイプの定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [外部オブジェクトメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management )、前: [外部オブジェクトの作成](#552-外部オブジェクトの作成)、上: [新しい外部オブジェクトタイプの定義](#55-新しい外部オブジェクト型の定義) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.5.3 外部オブジェクトの型チェック [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-Checking-of-Foreign-Objects-1)
+#### 5.5.3 外部オブジェクトの型チェック
 
 外部オブジェクトを操作する関数は、渡された `SCM` 値が正しい型であることを、そのデータにアクセスする前に確認する必要があります。これは `scm_assert_foreign_object_type` を使用して行うことができます。
 
@@ -692,15 +692,15 @@ return SCM\_UNSPECIFIED;
 
 * * *
 
-次へ: [外部オブジェクトとスキーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects-and-Scheme)、前: [外部オブジェクトの型チェック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-Checking-of-Foreign-Objects)、上: [新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
+次へ: [外部オブジェクトとスキーム](#555-外部オブジェクトとスキーム)、前: [外部オブジェクトの型チェック](#553-外部オブジェクトの型チェック)、上: [新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義) \[[目次](00_contents.md "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引"）\]
 
-#### 5.5.4 外部オブジェクトメモリ管理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management-1)
+#### 5.5.4 外部オブジェクトメモリ管理
 
 いったん外部オブジェクトがSchemeシステムの管理下に置かれた後は、ガベージコレクションを生き延びるための準備が必要です。上記の例では、`scm_gc_`割り当て関数を使用しているため、外部オブジェクトに関連付けられたすべてのメモリはガベージコレクタによって管理されます。したがって、特別な注意を払う必要はありません。ガベージコレクタが自動的にそれらをスキャンし、未使用のメモリを回収します。
 
 ただし、外部オブジェクトに関連付けられたデータが、例えば `malloc` で確保されたメモリやファイルディスクリプタなど、他の方法で管理されている場合は、外部オブジェクトが解放されるときにそれらのリソースを解放する _finalizer_ 関数を指定できます。
 
-[ガベージ コレクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection)で説明されているように、Guile のガベージ コレクタは、必要に応じてアクセスできないメモリを解放します。この解放プロセスは、メイン プログラムと並行して実行されます。Guile がヒープを分析し、オブジェクトのメモリを解放できると判断すると、そのメモリは解放可能なオブジェクトの「フリー リスト」に追加されます。通常はこれで完了です。オブジェクトはすぐに再利用できます。ただし、一部のオブジェクトには「ファイナライザ」が関連付けられている場合があります。ファイナライザは、解放可能なオブジェクトに対して呼び出され、外部のクリーンアップ アクションを実行する関数です。
+[ガベージ コレクション](#542-ガベージコレクション)で説明されているように、Guile のガベージ コレクタは、必要に応じてアクセスできないメモリを解放します。この解放プロセスは、メイン プログラムと並行して実行されます。Guile がヒープを分析し、オブジェクトのメモリを解放できると判断すると、そのメモリは解放可能なオブジェクトの「フリー リスト」に追加されます。通常はこれで完了です。オブジェクトはすぐに再利用できます。ただし、一部のオブジェクトには「ファイナライザ」が関連付けられている場合があります。ファイナライザは、解放可能なオブジェクトに対して呼び出され、外部のクリーンアップ アクションを実行する関数です。
 
 ファイナライザは扱いが難しいため、使用を避けるのが最善です。ファイナライザは予期しないタイミングで呼び出されたり、まったく呼び出されなかったりする可能性があります。例えば、プロセス終了時には呼び出されません。ファイナライザはガベージコレクタの作業を助けるどころか、むしろ妨げとなります。さらに、ガベージコレクタの内部的な計算を混乱させます。ガベージコレクタは、一定量のメモリ割り当てが行われた後に、必要だと判断したときにヒープをスキャンします。ファイナライザ可能なオブジェクトは、ほとんどの場合、ガベージコレクタには見えない量のメモリ割り当てを表します。その結果、ファイナライザ可能なオブジェクトを持つシステムの実際のリソース使用量は、ガベージコレクタが想定するよりも高くなる可能性があります。
 
@@ -739,9 +739,9 @@ make_file (int fd)
 return scm\_make\_foreign\_object\_1 (file\_type, (void \*) fd);
 }
 
-ファイナライザは、予期しない方法やタイミングで呼び出される場合があることに注意してください。スレッドサポートなしでビルドされた Guile では、ファイナライザは「asyncs」を介して呼び出され、実行中の Scheme コードと交互に実行されます。詳細については、[非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs) を参照してください。ユーザーの Guile がスレッドサポート付きでビルドされている場合、ユーザーが `scm_run_finalizers ()` を明示的に呼び出さない限り、ファイナライザは専用のファイナライゼーション スレッドによって呼び出される可能性が高いです。
+ファイナライザは、予期しない方法やタイミングで呼び出される場合があることに注意してください。スレッドサポートなしでビルドされた Guile では、ファイナライザは「asyncs」を介して呼び出され、実行中の Scheme コードと交互に実行されます。詳細については、[非同期割り込み](06_22_threads_mutexes_asyncs_and_dynamic_roots.md#6223-非同期割り込み) を参照してください。ユーザーの Guile がスレッドサポート付きでビルドされている場合、ユーザーが `scm_run_finalizers ()` を明示的に呼び出さない限り、ファイナライザは専用のファイナライゼーション スレッドによって呼び出される可能性が高いです。
 
-いずれの場合も、ファイナライザはメインプログラムと並行して実行されるため、非同期セーフかつスレッドセーフである必要があります。何らかの理由でこれが不可能な場合（例えば、スレッドセーフではないアプリケーションに Guile を組み込んでいる場合など）、いくつかの選択肢があります。1 つの方法は、ファイナライザの代わりにガーディアンを使用し、ガーディアンからファイナライズ可能なオブジェクトを取得するようにすることです。詳細については、[ガーディアン](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guardians) を参照してください。もう 1 つの方法は、自動ファイナライズを完全に無効にし、適切なタイミングで `scm_run_finalizers()` を呼び出すようにすることです。これらのインターフェイスの詳細については、[外部オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects) を参照してください。
+いずれの場合も、ファイナライザはメインプログラムと並行して実行されるため、非同期セーフかつスレッドセーフである必要があります。何らかの理由でこれが不可能な場合（例えば、スレッドセーフではないアプリケーションに Guile を組み込んでいる場合など）、いくつかの選択肢があります。1 つの方法は、ファイナライザの代わりにガーディアンを使用し、ガーディアンからファイナライズ可能なオブジェクトを取得するようにすることです。詳細については、[ガーディアン](06_17_memory_management_and_garbage_collection.md#6174-ガーディアン) を参照してください。もう 1 つの方法は、自動ファイナライズを完全に無効にし、適切なタイミングで `scm_run_finalizers()` を呼び出すようにすることです。これらのインターフェイスの詳細については、[外部オブジェクト](06_20_foreign_objects.md#620-外部オブジェクト) を参照してください。
 
 ファイナライザは、メモリの割り当て、GC管理メモリへのアクセスなど、一般的にGuileユーザーコードが実行できるすべての操作を実行できます。これはGuile 1.8では当てはまらず、ファイナライザははるかに制限されていました。特にGuile 2.0では、ファイナライザはオブジェクトを復活させることができます。ただし、復活したオブジェクトが、既にファイナライズされている他のファイナライズ可能なオブジェクトをSchemeに再び公開してしまう可能性があるため、ユーザーがこの機能を利用することは推奨しません。これらのオブジェクトは再びファイナライズされることはありませんが、その特定の外部オブジェクト型のオブジェクトを扱うコードにuse-after-freeの問題を引き起こす可能性があります。このような事態を防ぐため、堅牢なファイナライズルーチンは、上記の`free_file`の例のように、外部オブジェクトから状態をクリアする必要があります。
 
@@ -783,15 +783,15 @@ scm\_remember\_upto\_here\_1 (ファイル);
 return scm_values (scm_list_2 (buf, scm_from_size_t (pos)));
 }
 
-前奏の後、`fd` の値のみが使用され、C コンパイラが `file` オブジェクトを保持する理由はありません。`scm_c_make_bytevector` がガベージ コレクションの結果になった場合、`file` はスタック上または他の場所に存在せず、ファイナライズされる可能性があり、その結果 `read` は閉じられた (またはマルチスレッド プログラムでは再利用される可能性のある) ファイル ディスクリプタを読み取ることになります。`scm_remember_upto_here_1` を使用すると、すべてのデータ アクセス後に `file` への参照が作成されるため、この問題を回避できます。[ガベージ コレクションに関連する関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Garbage-Collection-Functions) を参照してください。
+前奏の後、`fd` の値のみが使用され、C コンパイラが `file` オブジェクトを保持する理由はありません。`scm_c_make_bytevector` がガベージ コレクションの結果になった場合、`file` はスタック上または他の場所に存在せず、ファイナライズされる可能性があり、その結果 `read` は閉じられた (またはマルチスレッド プログラムでは再利用される可能性のある) ファイル ディスクリプタを読み取ることになります。`scm_remember_upto_here_1` を使用すると、すべてのデータ アクセス後に `file` への参照が作成されるため、この問題を回避できます。[ガベージ コレクションに関連する関数](06_17_memory_management_and_garbage_collection.md#6171-ガベージコレクションに関連する機能-) を参照してください。
 
 `scm_remember_upto_here_1` はファイナライズ可能なオブジェクトに対してのみ必要です。なぜなら、その他の値のガベージコレクションはプログラムからは見えないからです。ガベージコレクションは必要なときに発生し、監視することはできません。しかし、可能であれば、ファイナライズを必要としないプログラムを構築することで、面倒な問題を回避できます。
 
 * * *
 
-前へ: [外部オブジェクトメモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management)、上へ: [新しい外部オブジェクトタイプの定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [外部オブジェクトメモリ管理](#554-外部オブジェクトメモリ管理)、上へ: [新しい外部オブジェクトタイプの定義](#55-新しい外部オブジェクト型の定義) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.5.5 外部オブジェクトとスキーム[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects-and-Scheme-1)
+#### 5.5.5 外部オブジェクトとスキーム
 
 Schemeから外部オブジェクトやオブジェクト型を作成したり、Schemeから外部オブジェクトのフィールドにアクセスしたりすることも可能です。例えば、前のセクションのファイル例は、以下のように同等に表現できます。
 
@@ -813,7 +813,7 @@ Schemeから外部オブジェクトやオブジェクト型を作成したり�
 (define (make-file fd)
 (make <file> #:fd fd))
 
-ここで、`scm_make_foreign_object_type` と同等の `make-foreign-object-type` の結果が struct vtable であることがわかります。詳細については、[Vtables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Vtables) を参照してください。実際には Guile の構造体である外部オブジェクトをインスタンス化するには、`make` を使用します。(`make-struct/no-tail` を使用することもできますが、実装の詳細として、`make` によって呼び出される `initialize` メソッドにファイナライザが付加されます)。フィールドにアクセスするには、`struct-ref` と `struct-set!` を使用します。[Structure Basics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structure-Basics) を参照してください。
+ここで、`scm_make_foreign_object_type` と同等の `make-foreign-object-type` の結果が struct vtable であることがわかります。詳細については、[Vtables](06_06_18_structures.md#66181-vtables) を参照してください。実際には Guile の構造体である外部オブジェクトをインスタンス化するには、`make` を使用します。(`make-struct/no-tail` を使用することもできますが、実装の詳細として、`make` によって呼び出される `initialize` メソッドにファイナライザが付加されます)。フィールドにアクセスするには、`struct-ref` と `struct-set!` を使用します。[Structure Basics](06_06_18_structures.md#66182-構造体の基本) を参照してください。
 
 型とコンストラクタ、およびフィールドのゲッターを定義する便利な構文 `define-foreign-object-type` があります。ファイルオブジェクト型に対する `define-foreign-object-type` の適切な呼び出しは次のようになります。
 
@@ -826,7 +826,7 @@ Schemeから外部オブジェクトやオブジェクト型を作成したり�
 
 これは、1 つのフィールド、`make-file` コンストラクタ、および `fd` にバインドされた `fd` フィールドのゲッターを持つ `<file>` 型を定義します。
 
-外部オブジェクト型は、vtable であるだけでなく、上記で示唆したように、実際には GOOPS クラスです。Guile のオブジェクト指向プログラミングシステムの詳細については、[GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) を参照してください。したがって、GOOPS を使用して、print メソッドと等価性メソッドを定義できます。
+外部オブジェクト型は、vtable であるだけでなく、上記で示唆したように、実際には GOOPS クラスです。Guile のオブジェクト指向プログラミングシステムの詳細については、[GOOPS](08_00_goops.md#8-goops) を参照してください。したがって、GOOPS を使用して、print メソッドと等価性メソッドを定義できます。
 
 (use-modules (oop goops))
 
@@ -850,7 +850,7 @@ Schemeから外部オブジェクトやオブジェクト型を作成したり�
 (define-method (write (file <named-file>) port)
 (フォーマット ポート "#<<ファイル> ~s ~a>" (ファイル名) (ファイルディスクリプタ)))
 
-外部オブジェクトに対する Scheme インターフェースの詳細なドキュメントについては、[Foreign Objects](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Objects) を参照してください。GOOPS の詳細については、[GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) を参照してください。
+外部オブジェクトに対する Scheme インターフェースの詳細なドキュメントについては、[Foreign Objects](06_20_foreign_objects.md#620-外部オブジェクト) を参照してください。GOOPS の詳細については、[GOOPS](08_00_goops.md#8-goops) を参照してください。
 
 最後に、このシステムが機密値のカプセル化をどのようにサポートしているのか疑問に思うかもしれません。まず、一部の機能は本質的に安全ではなく、グローバルなスコープを持つことを認識する必要があります。たとえば、C言語では、プログラムの一部の完全性と機密性は、そのプログラムの他のすべての部分に依存します。なぜなら、プログラムのどの部分でも、そのアドレス空間内のあらゆるものを読み書きできるからです。同時に、C言語では、構造化データへの原則に基づいたアクセスは、字句境界に基づいて構成されています。オブジェクトへのアクセサを公開しない場合、プログラムの他の部分がその境界を回避しないことを信頼することになります。
 
@@ -860,15 +860,15 @@ Schemeでも状況は似ています。Schemeの安全でない構造はC言語�
 
 * * *
 
-次へ: [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview)、前: [新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types)、上: [C言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guileプログラミングの概要](#57-guileプログラミングの概要)、前: [新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義)、上: [C言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.6 関数スナーフィング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Function-Snarfing-1)
+### 5.6 関数スナーフィング
 
 Guileで使用するCコードを書く場合、通常は一連のC関数を定義し、`scm_c_define_gsubr`または関連関数を呼び出すことで、それらの関数の一部をSchemeの世界から見えるようにします。公開する関数が多数ある場合、`scm_c_define_gsubr`の呼び出しリストと関数定義リストを同期させるのは、時に面倒になることがあります。
 
 Guile は、この問題を解決するための `guile-snarf` プログラムを提供しています。このツールを使用すると、関数定義自体と並行して、関数を定義するために必要なすべての情報を保持できます。`guile-snarf` はソースコードからこの情報を抽出し、初期化関数に `#include` できる `scm_c_define_gsubr` への呼び出しのファイルを自動的に生成します。
 
-スナーフィングメカニズムは、`scm_c_define_gsubr` への呼び出しを収集するだけでなく、多くの種類の初期化アクションに対して機能します。実行可能な操作の完全なリストについては、[マクロのスナーフィング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Snarfing-Macros) を参照してください。
+スナーフィングメカニズムは、`scm_c_define_gsubr` への呼び出しを収集するだけでなく、多くの種類の初期化アクションに対して機能します。実行可能な操作の完全なリストについては、[マクロのスナーフィング](06_05_snarfing_macros.md#65-マクロのスナーフィング) を参照してください。
 
 `guile-snarf`プログラムは次のように起動します。
 
@@ -930,41 +930,41 @@ snarfcppopts = $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 
 * * *
 
-次へ: [Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support)、前: [関数スナーフィング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Function-Snarfing)、上: [C 言語でのプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Autoconf サポート](#58-autoconf-サポート)、前: [関数スナーフィング](#56-関数スナーフィング)、上: [C 言語でのプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.7 Guileプログラミングの概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#An-Overview-of-Guile-Programming)
+### 5.7 Guileプログラミングの概要
 
 Guileは、C（およびC++）で書かれたアプリケーションに簡単に統合できる拡張言語インタープリタとして設計されています。アプリケーション開発者にとっての大きなメリットは、GuileのWebページにあるように、「プロジェクトのハッキングエネルギーを低下させる」ことです。ハッキングエネルギーが低下するということは、アプリケーション開発者であるあなた自身とユーザーが、従来のC言語ではなく、高水準の拡張言語でアプリケーションを拡張できることから得られるメリットを享受できるということです。
 
 抽象的に説明すると、これが実際に何を意味するのか、統合プロセスにはどのようなことが含まれるのかを説明するのは難しいので、まずはGuileを既存のプログラムに統合する方法と、そうすることで得られるメリットを具体例で見ていきましょう。その例を踏まえた上で、関連する引数と利用可能なプログラミングオプションの範囲について、より一般的な分析に戻ります。
 
-* [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia)
-* [SchemeがCよりもハッキングしやすい理由](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-vs-C)
-* [例: Guile を使用したアプリケーション テストベッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Testbed-Example)
-* [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options)
-* [アプリケーションユーザーについてはどうでしょうか？](https://doc.guix.gnu.org/guile/latest/en/guile.html#User-Programming)
+* [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法)
+* [SchemeがCよりもハッキングしやすい理由](#572-schemeがcよりもハッキングしやすい理由)
+* [例: Guile を使用したアプリケーション テストベッド](#573-例-アプリケーション-テストベッドに-guile-を使用する)
+* [プログラミングオプションの選択](#574-プログラミングオプションの選択)
+* [アプリケーションユーザーについてはどうでしょうか？](#575-アプリケーションユーザーについて)
 
 * * *
 
-次へ: [SchemeがCよりもハッキングしやすい理由](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-vs-C)、上へ: [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SchemeがCよりもハッキングしやすい理由](#572-schemeがcよりもハッキングしやすい理由)、上へ: [Guileプログラミングの概要](#57-guileプログラミングの概要) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1 Guile を使用して Dia を拡張する方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#How-One-Might-Extend-Dia-Using-Guile)
+#### 5.7.1 Guile を使用して Dia を拡張する方法
 
 Diaは、フローチャートやフロアプランなどの概略図を作成するための無料ソフトウェアプログラムです（[http://www.gnome.org/projects/dia/](http://www.gnome.org/projects/dia/)）。このセクションでは、GuileをDiaに追加するという思考実験を行います。そうすることで、Guileを一般的なアプリケーションに追加する際に必要となるいくつかの手順と考慮事項を説明することを目的としています。
 
-* [Guileを追加する理由を決定する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Objective)
-* [Guileを追加するために必要な4つのステップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Steps)
-* [SchemeでDiaデータを表現する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Objects)
-* [Dia 用の Guile プリミティブの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Primitives)
-* [Schemeコードの評価のためのフックの提供](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Hook)
-* [Guile対応Diaの最上位構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Structure)
-* [DiaとGuileをさらに活用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Advanced)
+* [Guileを追加する理由を決定する](#5711-guile-を追加する理由を決定する)
+* [Guileを追加するために必要な4つのステップ](#5712-guile-を追加するために必要な-4-つのステップ)
+* [SchemeでDiaデータを表現する方法](#5713-scheme-で-dia-データを表現する方法)
+* [Dia 用の Guile プリミティブの作成](#5714-dia-用の-guile-プリミティブの作成)
+* [Schemeコードの評価のためのフックの提供](#5715-schemeコードの評価のためのフックの提供)
+* [Guile対応Diaの最上位構造](#5716-guile-が有効な-dia-のトップレベル構造)
+* [DiaとGuileをさらに活用する](#5717-diaとguileをさらに活用する)
 
 * * *
 
-次へ: [Guile を追加するために必要な 4 つのステップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Steps)、上へ: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile を追加するために必要な 4 つのステップ](#5712-guile-を追加するために必要な-4-つのステップ)、上へ: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.1 Guile を追加する理由を決定する [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Deciding-Why-You-Want-to-Add-Guile)
+#### 5.7.1.1 Guile を追加する理由を決定する
 
 まず最初に、なぜGuileをDiaに追加したいのかを理解する必要があります。そのためには、Diaが何をするのか、そしてどのようにそれを行うのかを把握する必要があります。では、Diaアプリケーションの構成要素は何でしょうか？
 
@@ -986,9 +986,9 @@ Diaが、図形やコネクタなどのオブジェクトに対する最も基�
 
 * * *
 
-次へ: [Scheme で Dia データを表現する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Objects)、前: [Guile を追加する理由を決定する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Objective)、上: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Scheme で Dia データを表現する方法](#5713-scheme-で-dia-データを表現する方法)、前: [Guile を追加する理由を決定する](#5711-guile-を追加する理由を決定する)、上: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.2 Guile を追加するために必要な 4 つのステップ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Four-Steps-Required-to-Add-Guile)
+#### 5.7.1.2 Guile を追加するために必要な 4 つのステップ
 
 この目標を前提とすると、それを達成するには4つのステップが必要となる。
 
@@ -1004,9 +1004,9 @@ Diaが、図形やコネクタなどのオブジェクトに対する最も基�
 
 * * *
 
-次へ: [Dia 用の Guile プリミティブの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Primitives)、前: [Guile を追加するために必要な 4 つのステップ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Steps)、上: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Dia 用の Guile プリミティブの作成](#5714-dia-用の-guile-プリミティブの作成)、前: [Guile を追加するために必要な 4 つのステップ](#5712-guile-を追加するために必要な-4-つのステップ)、上: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.3 Scheme で Dia データを表現する方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#How-to-Represent-Dia-Data-in-Scheme)
+#### 5.7.1.3 Scheme で Dia データを表現する方法
 
 ごく単純なアプリケーションを除けば、ドメインオブジェクトの何らかの表現をSchemeレベルで存在させたいと考えるのが一般的でしょう。ここで外部オブジェクトが登場し、それに伴うライフタイム管理やガベージコレクションといった問題が生じます。
 
@@ -1034,15 +1034,15 @@ Scheme コードが Scheme シェイプ値を保持している間に基とな�
     
 構造体 dia_guile_shape
 {
-struct dia\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) c\_shape; /\* NULL [\=>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e) deleted \*/
+struct dia\_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) c\_shape; /\* NULL [\=>](06_08_macros.md#6821-パターン) deleted \*/
 }
     
 * `struct dia_shape` に、`struct dia_guile_shape` が存在する場合は、それを指すフィールドを追加する。
     
 構造体 dia_shape
 {
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
-struct dia\_guile\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) guile\_shape;
+[...](06_08_macros.md#6821-パターン)
+struct dia\_guile\_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) guile\_shape;
 }
     
 — 基となるシェイプが削除されたときに、C コードが `guile_shape->c_shape` を NULL に設定できるようにするため。
@@ -1055,27 +1055,27 @@ struct dia\_guile\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.htm
 
 ガベージコレクタがシェイプ外部オブジェクトの値を解放すると決定した場合、シェイプ外部オブジェクト型を定義する際に指定された_finalizer_関数が呼び出されます。基となるC構造体の`guile_shape`フィールドの正確性を維持するために、この関数は基となるC構造体（存在する場合）に処理を繋ぎ、その`guile_shape`フィールドをNULLに設定する必要があります。
 
-外部オブジェクト型の定義と使用に関する詳細なドキュメントについては、[新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types)を参照してください。
+外部オブジェクト型の定義と使用に関する詳細なドキュメントについては、[新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義)を参照してください。
 
 * * *
 
-次へ: [Scheme コードの評価のためのフックの提供](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Hook)、前: [Scheme で Dia データを表現する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Objects)、上: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Scheme コードの評価のためのフックの提供](#5715-schemeコードの評価のためのフックの提供)、前: [Scheme で Dia データを表現する方法](#5713-scheme-で-dia-データを表現する方法)、上: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.4 Dia 用の Guile プリミティブの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Writing-Guile-Primitives-for-Dia)
+#### 5.7.1.4 Dia 用の Guile プリミティブの作成
 
 オブジェクト表現の詳細が決定すれば、必要な基本関数のコードを記述するのは通常は簡単です。
 
 プリミティブとは、引数と戻り値がすべて `SCM` 型であり、本体が任意の処理を実行する C 関数のことです。例として、`square?` プリミティブの実装例を以下に示します。
 
-static [SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) square\_p ([SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) shape)
+static [SCM](06_03_the_scm_type.md#63-scmタイプ) square\_p ([SCM](06_03_the_scm_type.md#63-scmタイプ) shape)
 {
-struct dia\_guile\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) guile\_shape;
+struct dia\_guile\_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) guile\_shape;
 
 /\* 引数が本当にシェイプオブジェクトであることを確認します。\*/
 scm_assert_foreign_object_type (shape_type, shape);
 /\* スキーム固有のシェイプ構造にアクセスします。\*/
-guile_shape [\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) scm_foreign_object_ref (shape, 0);
-/\* 基となるシェイプが[存在する](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exists)かどうかを調べ、
+guile_shape [\=](06_06_02_numerical_data_types.md#6628-比較述語) scm_foreign_object_ref (shape, 0);
+/\* 基となるシェイプが[存在する](07_06_r6rs_support.md#7625-rnrs-リスト)かどうかを調べ、
 二乗する。答えをSchemeのブール値として返す。*/
 return scm_from_bool (guile_shape->c_shape &&
 (guile_shape->c_shape->type \== DIA_SQUARE));
@@ -1085,17 +1085,17 @@ return scm_from_bool (guile_shape->c_shape &&
 
 このコードでは、`scm_assert_foreign_object_type`、`scm_foreign_object_ref`、および`scm_from_bool`は標準のGuile APIからのものです。`scm_make_foreign_object_type`を使用してshape外部オブジェクト型を作成した際に`shape_type`が渡されたことを前提としています。`scm_assert_foreign_object_type`の呼び出しは、shapeが実際にshapeであることを保証します。これは、`(square? "hello")`のように`square?`プロシージャを誤って使用するSchemeコードを防ぐために必要です。Schemeの潜在型付けにより、このような使用エラーは実行時に捕捉する必要があります。
 
-プリミティブの C コードを記述したら、`scm_c_define_gsubr` 関数を呼び出して、それらを Scheme プロシージャとして利用できるようにする必要があります。`scm_c_define_gsubr` ([プリミティブプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures) を参照) は、プリミティブの Scheme レベル名と、受け入れ可能な必須引数、オプション引数、および残りの引数の数を指定する引数を取ります。`square?` プリミティブは常に引数を 1 つだけ必要とするため、Scheme で利用できるようにするための呼び出しは次のようになります。
+プリミティブの C コードを記述したら、`scm_c_define_gsubr` 関数を呼び出して、それらを Scheme プロシージャとして利用できるようにする必要があります。`scm_c_define_gsubr` ([プリミティブプロシージャ](06_07_procedures.md#672-プリミティブプロシージャ) を参照) は、プリミティブの Scheme レベル名と、受け入れ可能な必須引数、オプション引数、および残りの引数の数を指定する引数を取ります。`square?` プリミティブは常に引数を 1 つだけ必要とするため、Scheme で利用できるようにするための呼び出しは次のようになります。
 
 scm\_c\_define\_gsubr ("square?", 1, 0, 0, square\_p);
 
-この呼び出しをどこに配置するかについては、Guile 対応コードの構造に関する次のサブセクションを参照してください ([Guile 対応 Dia のトップレベル構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Structure) を参照)。
+この呼び出しをどこに配置するかについては、Guile 対応コードの構造に関する次のサブセクションを参照してください ([Guile 対応 Dia のトップレベル構造](#5716-guile-が有効な-dia-のトップレベル構造) を参照)。
 
 * * *
 
-次へ: [Guile 対応 Dia のトップレベル構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Structure)、前: [Dia 用の Guile プリミティブの記述](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Primitives)、上: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile 対応 Dia のトップレベル構造](#5716-guile-が有効な-dia-のトップレベル構造)、前: [Dia 用の Guile プリミティブの記述](#5714-dia-用の-guile-プリミティブの作成)、上: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.5 Schemeコードの評価のためのフックの提供 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Providing-a-Hook-for-the-Evaluation-of-Scheme-Code)
+#### 5.7.1.5 Schemeコードの評価のためのフックの提供
 
 Guileとの連携を有効活用するには、アプリケーションユーザーがSchemeコードを評価させるために使用できるような、何らかのフックをアプリケーションに組み込む必要があります。
 
@@ -1105,9 +1105,9 @@ Guileとの連携を有効活用するには、アプリケーションユーザ
 
 * * *
 
-次へ: [DiaとGuileをさらに活用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Advanced)、前: [スキームコードの評価のためのフックを提供する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Hook)、上: [Guileを使用してDiaを拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [DiaとGuileをさらに活用する](#5717-diaとguileをさらに活用する)、前: [スキームコードの評価のためのフックを提供する](#5715-schemeコードの評価のためのフックの提供)、上: [Guileを使用してDiaを拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.6 Guile が有効な Dia のトップレベル構造 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top_002dlevel-Structure-of-Guile_002denabled-Dia)
+#### 5.7.1.6 Guile が有効な Dia のトップレベル構造
 
 Guile導入前のDiaのコードの構造は、おそらく以下のようになっていると仮定しましょう。
 
@@ -1131,9 +1131,9 @@ Guile導入前のDiaのコードの構造は、おそらく以下のようにな
 
 * * *
 
-前へ: [Guile 対応 Dia のトップレベル構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dia-Structure)、上へ: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guile 対応 Dia のトップレベル構造](#5716-guile-が有効な-dia-のトップレベル構造)、上へ: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.1.7 DiaとGuileをさらに活用する [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Going-Further-with-Dia-and-Guile)
+#### 5.7.1.7 DiaとGuileをさらに活用する
 
 これまで説明した手順は、Diaアプリケーションのユーザーに多くの追加機能を提供するGuileとの基本的な統合を実現するものです。しかし、さらにいくつかの手順を踏むことも可能であり、それらを検討してみるのも興味深いでしょう。
 
@@ -1145,20 +1145,20 @@ Guile導入前のDiaのコードの構造は、おそらく以下のようにな
 
 例えば、元のソースコードに`dia_change_fill_pattern`関数があったとします。
 
-[void](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-void) dia_change_fill_pattern (struct dia_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) shape,
-struct dia\_pattern [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) pattern)
+[void](06_19_foreign_function_interface.md#6194-外部型) dia_change_fill_pattern (struct dia_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) shape,
+struct dia\_pattern [\*](06_06_02_numerical_data_types.md#66211-算術関数) pattern)
 {
 /\* 実際のパターン変更作業 \*/
 }
 
 Guileの初期統合時に、Scheme用に`change_fill_pattern`プリミティブを追加します。これは、外部オブジェクト値から基となる構造にアクセスし、`dia_change_fill_pattern`を使用して実際の処理を実行します。
 
-[SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) change\_fill\_pattern ([SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) shape, [SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) pattern)
+[SCM](06_03_the_scm_type.md#63-scmタイプ) change\_fill\_pattern ([SCM](06_03_the_scm_type.md#63-scmタイプ) shape, [SCM](06_03_the_scm_type.md#63-scmタイプ) pattern)
 {
-struct dia\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) d\_shape;
-struct dia\_pattern [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) d\_pattern;
+struct dia\_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) d\_shape;
+struct dia\_pattern [\*](06_06_02_numerical_data_types.md#66211-算術関数) d\_pattern;
 
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+[...](06_08_macros.md#6821-パターン)
 
 dia\_change\_fill\_pattern (d\_shape, d\_pattern);
 return SCM\_UNSPECIFIED;
@@ -1168,12 +1168,12 @@ return SCM\_UNSPECIFIED;
 
 しかし、ボタンの作成とコールバックの登録を行うコードを（guile-gtkを使用して）Schemeに移動すると、`dia_change_fill_pattern`はScheme以外では呼び出せなくなる可能性があります。その場合は、`dia_change_fill_pattern`を廃止し、その内容を次のように`change_fill_pattern`に直接移動するのが妥当です。
 
-[SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) change\_fill\_pattern ([SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) shape, [SCM](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM) pattern)
+[SCM](06_03_the_scm_type.md#63-scmタイプ) change\_fill\_pattern ([SCM](06_03_the_scm_type.md#63-scmタイプ) shape, [SCM](06_03_the_scm_type.md#63-scmタイプ) pattern)
 {
-struct dia\_shape [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) d\_shape;
-struct dia\_pattern [\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) d\_pattern;
+struct dia\_shape [\*](06_06_02_numerical_data_types.md#66211-算術関数) d\_shape;
+struct dia\_pattern [\*](06_06_02_numerical_data_types.md#66211-算術関数) d\_pattern;
 
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+[...](06_08_macros.md#6821-パターン)
 
 /\* 実際のパターン変更作業 \*/
 
@@ -1192,9 +1192,9 @@ return SCM\_UNSPECIFIED;
 
 * * *
 
-次へ: [例: アプリケーション テストベッドに Guile を使用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Testbed-Example)、前: [Guile を使用して Dia を拡張する方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Dia)、上: [Guile プログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [例: アプリケーション テストベッドに Guile を使用する](#573-例-アプリケーション-テストベッドに-guile-を使用する)、前: [Guile を使用して Dia を拡張する方法](#571-guile-を使用して-dia-を拡張する方法)、上: [Guile プログラミングの概要](#57-guileプログラミングの概要) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.2 SchemeがCよりもハッキングしやすい理由 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-Scheme-is-More-Hackable-Than-C)
+#### 5.7.2 SchemeがCよりもハッキングしやすい理由
 
 Guileの価値提案の根底にあるのは、高水準言語、具体的にはGuileが実装したSchemeでのプログラミングは、C言語でのプログラミングよりも何らかの点で優れているという前提です。この主張は何を意味しているのでしょうか？そして、なぜ私たちはそう確信できるのでしょうか？
 
@@ -1204,17 +1204,17 @@ Guileの価値提案の根底にあるのは、高水準言語、具体的には
 * これらは、開発者をC言語プログラミングに伴う低レベルの管理作業、特にメモリ管理から解放します。
 * コンテナオブジェクトや例外処理などの高度な機能を提供し、一般的なプログラミング作業を容易にします。
 
-Scheme の場合、プログラミングをより簡単に、そしてより楽しくする特別な機能は、プログラムの一部を抽象化するための強力なメカニズム (クロージャ - [クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) と反復処理 ([反復処理のメカニズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do) を参照) です。
+Scheme の場合、プログラミングをより簡単に、そしてより楽しくする特別な機能は、プログラムの一部を抽象化するための強力なメカニズム (クロージャ - [クロージャの概念](03_hello_scheme.md#34-クロージャの概念) と反復処理 ([反復処理のメカニズム](06_11_controlling_the_flow_of_program_execution.md#6114-反復メカニズム) を参照) です。
 
 この主張を裏付ける証拠は経験的なものです。それは、このメカニズムをサポートするアプリケーション向けに拡張言語で書かれた膨大な量のコードです。特に注目すべきは、GNU Emacs 用の Emacs Lisp、TeX 用の TeX マクロ言語、GIMP 用の Script-Fu で書かれた拡張機能ですが、Lilypond や GnuCash など、Guile ベースのアプリケーション向けにも、近年、重要なコードエコシステムが構築されつつあります。これらのアプリケーションに、基本実装言語で新しいコードを書くだけで、これほど多くの機能を追加できたとは考えにくいでしょう。
 
 * * *
 
-次へ: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options)、前へ: [SchemeがCよりもハッキングしやすい理由](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-vs-C)、上へ: [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プログラミングオプションの選択](#574-プログラミングオプションの選択)、前へ: [SchemeがCよりもハッキングしやすい理由](#572-schemeがcよりもハッキングしやすい理由)、上へ: [Guileプログラミングの概要](#57-guileプログラミングの概要) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.3 例: アプリケーション テストベッドに Guile を使用する [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Example_003a-Using-Guile-for-an-Application-Testbed)
+#### 5.7.3 例: アプリケーション テストベッドに Guile を使用する
 
-これが実際に何を意味するのかの例として、さまざまなリクエスト（C インターフェース経由）を送信して受信した出力を検証することでテストされるアプリケーションのテストベッドを作成することを考えてみましょう。さらに、アプリケーションが現在の状態を把握しており、特定のリクエストに対する「正しい」出力が現在のアプリケーションの状態に依存する可能性があるとします。このアプリケーションの完全な「ホワイトボックス」[7](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT7) テスト計画では、区別可能な各状態で考えられるすべてのリクエストを送信し、すべてのリクエスト/状態の組み合わせに対して出力を検証することを目指します。
+これが実際に何を意味するのかの例として、さまざまなリクエスト（C インターフェース経由）を送信して受信した出力を検証することでテストされるアプリケーションのテストベッドを作成することを考えてみましょう。さらに、アプリケーションが現在の状態を把握しており、特定のリクエストに対する「正しい」出力が現在のアプリケーションの状態に依存する可能性があるとします。このアプリケーションの完全な「ホワイトボックス」[7](99_footnotes.md#7) テスト計画では、区別可能な各状態で考えられるすべてのリクエストを送信し、すべてのリクエスト/状態の組み合わせに対して出力を検証することを目指します。
 
 このテストコードをすべてC言語で記述するのは非常に面倒です。そこで、テストベッドのコードに、任意の要求を送信して応答を返す新しいC言語関数を1つ追加し、Guileを使ってこの関数をSchemeプロシージャとしてエクスポートするとします。そうすれば、テストベッドの残りの部分をSchemeで記述でき、前のセクションで説明したSchemeプログラミングのあらゆる利点を享受できます。
 
@@ -1222,9 +1222,9 @@ Scheme の場合、プログラミングをより簡単に、そしてより楽�
 
 * * *
 
-次へ: [アプリケーションユーザーについて](https://doc.guix.gnu.org/guile/latest/en/guile.html#User-Programming)、前: [例: アプリケーションテストベッドに Guile を使用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Testbed-Example)、上: [Guile プログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [アプリケーションユーザーについて](#575-アプリケーションユーザーについて)、前: [例: アプリケーションテストベッドに Guile を使用する](#573-例-アプリケーション-テストベッドに-guile-を使用する)、上: [Guile プログラミングの概要](#57-guileプログラミングの概要) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.4 プログラミングオプションの選択 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Choice-of-Programming-Options)
+#### 5.7.4 プログラミングオプションの選択
 
 以上の議論と例は、多くのケースに適用可能なGuileプログラミングのモデルを示している。このモデルによれば、GuileプログラミングはC言語とScheme言語のバランスを取ることを目的としており、C言語レベルの作業を最小限に抑えつつ、Scheme言語レベルのメリットを最大限に引き出すことを目指している。
 
@@ -1237,16 +1237,16 @@ Scheme の場合、プログラミングをより簡単に、そしてより楽�
 
 これらはもちろん設計上の問題であり、特定のアプリケーションに最適な設計は、満たそうとしている具体的な要件によって常に異なります。しかし、Guile の文脈においては、回答を設計する際に役立つ、一般的に適用可能な考慮事項がいくつかあります。
 
-* [既に利用可能な機能は何ですか？](https://doc.guix.gnu.org/guile/latest/en/guile.html#Available-Functionality)
-* [機能およびパフォーマンスの制約](https://doc.guix.gnu.org/guile/latest/en/guile.html#Basic-Constraints)
-* [お好みのプログラミングスタイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Style-Choices)
-* [プログラムの実行を制御するものは何ですか？](https://doc.guix.gnu.org/guile/latest/en/guile.html#Program-Control)
+* [既に利用可能な機能は何ですか？](#5741-既に利用可能な機能は何ですか)
+* [機能およびパフォーマンスの制約](#5742-機能およびパフォーマンスの制約)
+* [お好みのプログラミングスタイル](#5743-好みのプログラミングスタイル)
+* [プログラムの実行を制御するものは何ですか？](#5744-プログラム実行を制御するものは何か)
 
 * * *
 
-次へ: [機能とパフォーマンスの制約](https://doc.guix.gnu.org/guile/latest/en/guile.html#Basic-Constraints)、上へ: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [機能とパフォーマンスの制約](#5742-機能およびパフォーマンスの制約)、上へ: [プログラミングオプションの選択](#574-プログラミングオプションの選択) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.4.1 既に利用可能な機能は何ですか？ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#What-Functionality-is-Already-Available_003f)
+#### 5.7.4.1 既に利用可能な機能は何ですか？
 
 仮に、アプリケーション全体をSchemeで記述したいとしましょう。その場合、利用可能なAPIは以下のとおりです。
 
@@ -1262,35 +1262,35 @@ Scheme の場合、プログラミングをより簡単に、そしてより楽�
 
 いずれの場合も、2つの一般的な考慮事項が重要です。まず、その機能がSchemeの世界に提示されるインターフェースはどのようなものか。インターフェースは関数呼び出しのみで構成されるのか（例えば、単純な描画インターフェース）、それともCとSchemeの間で受け渡し、両方の世界から操作できる何らかのオブジェクトを含む必要があるのか。次に、Cコード内のオブジェクトのライフタイムとメモリ管理は、Schemeオブジェクトのガベージコレクションによる管理アプローチとどのように関連するのか。基本的なCコードがまだ記述されていない場合は、GuileのCインターフェース機能を最初から使用することで、メモリ管理のほとんどの問題を回避できます。
 
-Guile 用の C コードの記述方法と、既存の C コードを Guile の世界に接続する方法に関する完全なドキュメントについては、[新しい外部オブジェクト型の定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Defining-New-Foreign-Object-Types)、[プリミティブ プロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Primitive-Procedures)、および [外部関数インターフェース](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Function-Interface) を参照してください。
+Guile 用の C コードの記述方法と、既存の C コードを Guile の世界に接続する方法に関する完全なドキュメントについては、[新しい外部オブジェクト型の定義](#55-新しい外部オブジェクト型の定義)、[プリミティブ プロシージャ](06_07_procedures.md#672-プリミティブプロシージャ)、および [外部関数インターフェース](06_19_foreign_function_interface.md#619-外部関数インターフェース) を参照してください。
 
 * * *
 
-次へ: [お好みのプログラミングスタイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Style-Choices)、前へ: [既に利用可能な機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Available-Functionality)、上へ: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [お好みのプログラミングスタイル](#5743-好みのプログラミングスタイル)、前へ: [既に利用可能な機能](#5741-既に利用可能な機能は何ですか)、上へ: [プログラミングオプションの選択](#574-プログラミングオプションの選択) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.4.2 機能およびパフォーマンスの制約 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Functional-and-Performance-Constraints)
-
-* * *
-
-次へ: [プログラム実行を制御するもの](https://doc.guix.gnu.org/guile/latest/en/guile.html#Program-Control)、前: [機能的およびパフォーマンス上の制約](https://doc.guix.gnu.org/guile/latest/en/guile.html#Basic-Constraints)、上: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
-
-#### 5.7.4.3 好みのプログラミングスタイル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Your-Preferred-Programming-Style)
+#### 5.7.4.2 機能およびパフォーマンスの制約
 
 * * *
 
-前へ: [お好みのプログラミングスタイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Style-Choices)、上へ: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プログラム実行を制御するもの](#5744-プログラム実行を制御するものは何か)、前: [機能的およびパフォーマンス上の制約](#5742-機能およびパフォーマンスの制約)、上: [プログラミングオプションの選択](#574-プログラミングオプションの選択) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.4.4 プログラム実行を制御するものは何か？ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#What-Controls-Program-Execution_003f)
+#### 5.7.4.3 好みのプログラミングスタイル
 
 * * *
 
-前へ: [プログラミングオプションの選択](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Options)、上へ: [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [お好みのプログラミングスタイル](#5743-好みのプログラミングスタイル)、上へ: [プログラミングオプションの選択](#574-プログラミングオプションの選択) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.7.5 アプリケーションユーザーについて [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#How-About-Application-Users_003f)
+#### 5.7.4.4 プログラム実行を制御するものは何か？
+
+* * *
+
+前へ: [プログラミングオプションの選択](#574-プログラミングオプションの選択)、上へ: [Guileプログラミングの概要](#57-guileプログラミングの概要) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
+
+#### 5.7.5 アプリケーションユーザーについて
 
 これまで、アプリケーション開発者にとってGuileプログラミングが何を意味するのかを考察してきました。しかし、既存のGuileベースのアプリケーションを「利用」している場合、そのアプリケーションをプログラミングしたり拡張したりするための選択肢を知りたい場合はどうでしょうか？
 
-この質問に対する答えはアプリケーションごとに異なります。なぜなら、利用可能なオプションは、アプリケーション開発者が独自のコードを組み込むためのフックを提供しているかどうか、そしてそのようなフックがある場合、それによって何ができるかに必然的に依存するからです。[8](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT8) 例えば…
+この質問に対する答えはアプリケーションごとに異なります。なぜなら、利用可能なオプションは、アプリケーション開発者が独自のコードを組み込むためのフックを提供しているかどうか、そしてそのようなフックがある場合、それによって何ができるかに必然的に依存するからです。[8](99_footnotes.md#8) 例えば…
 
 アプリケーションがGuileコードの読み込みと実行を許可している場合、可能性は無限大です。アプリケーションを好きなように拡張できます。
 * より慎重なアプリケーションでは、Guile コードのロードと実行を許可しますが、それは _安全な_ 環境でのみであり、利用可能なインターフェースはアプリケーションによって標準の Guile API から制限されます。
@@ -1306,21 +1306,21 @@ Guile 用の C コードの記述方法と、既存の C コードを Guile の�
 
 * * *
 
-前へ: [Guileプログラミングの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-Overview)、上へ: [C言語によるプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Guileプログラミングの概要](#57-guileプログラミングの概要)、上へ: [C言語によるプログラミング](#5-c言語によるプログラミング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### 5.8 Autoconf サポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support-1)
+### 5.8 Autoconf サポート
 
 GNUビルドシステムの一部であるAutoconfは、ユーザーがパッケージを簡単にビルドできるようにするツールです。このセクションでは、GuileのAutoconfサポートについて説明します。
 
-* [Autoconf の背景](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Background)
-* [Autoconf マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Macros)
-* [Autoconf マクロの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Autoconf-Macros)
+* [Autoconf の背景](#581-autoconf-の背景)
+* [Autoconf マクロ](#582-autoconf-マクロ)
+* [Autoconf マクロの使用](#583-autoconf-マクロの使用)
 
 * * *
 
-次へ: [Autoconf マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Macros)、上へ: [Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support ) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Autoconf マクロ](#582-autoconf-マクロ)、上へ: [Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.8.1 Autoconf の背景 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Background-1)
+#### 5.8.1 Autoconf の背景
 
 GNU Autoconf マニュアルで説明されているように、どのパッケージもビルド時に設定が必要です (GNU Autoconf マニュアルの [はじめに](https://www.gnu.org/software/autoconf/manual/autoconf.html#Top) を参照)。パッケージが Guile を使用している場合 (または Guile を使用しているパッケージを使用している場合) は、利用可能な Guile の具体的な機能とその詳細を知っておく必要があるでしょう。
 
@@ -1330,9 +1330,9 @@ GNU Autoconf マニュアルで説明されているように、どのパッケ�
 
 * * *
 
-次へ: [Autoconf マクロの使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Autoconf-Macros)、前: [Autoconf の背景](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Background)、上: [Autoconf のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Autoconf マクロの使用](#583-autoconf-マクロの使用)、前: [Autoconf の背景](#581-autoconf-の背景)、上: [Autoconf のサポート](#58-autoconf-サポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.8.2 Autoconf マクロ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Macros-1)
+#### 5.8.2 Autoconf マクロ
 
 この章で既に述べたように、Guile は並列インストールをサポートしており、`pkg-config` を使用してユーザーがどのバージョンの Guile を使用するかを選択できるようにしています。`pkg-config` には独自の Autoconf マクロセットがあり、おそらくほとんどすべての開発システムにインストールされています。これらのマクロの中で最も便利なのは `PKG_CHECK_MODULES` です。
 
@@ -1342,7 +1342,7 @@ PKG_CHECK_MODULES(\[GUILE\], \[guile-3.0\])
 
 Guileには、より詳細な情報を提供する追加のAutoconfマクロが付属しており、prefix/share/aclocal/guile.m4としてインストールされます。これらのマクロの名前はすべて`GUILE_`で始まります。
 
-Autoconf マクロ: **GUILE\_PKG** \[VERSIONS\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fPKG)
+Autoconf マクロ: **GUILE\_PKG** \[VERSIONS\]
 
 このマクロは、`pkg-config`ツールを実行して、利用可能なバージョンのGuileの開発ファイルを検索します。
 
@@ -1352,7 +1352,7 @@ Autoconf マクロ: **GUILE\_PKG** \[VERSIONS\] [¶](https://doc.guix.gnu.org/gu
 
 GUILE\_EFFECTIVE\_VERSION は、`AC_SUBST` によって置換対象としてマークされています。
 
-Autoconf マクロ: **GUILE\_FLAGS** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fFLAGS)
+Autoconf マクロ: **GUILE\_FLAGS**
 
 このマクロは、`pkg-config`ツールを実行して、Guileに対してプログラムをコンパイルおよびリンクする方法を調べます。そして、GUILE\_CFLAGS、GUILE\_LDFLAGS、GUILE\_LIBS、GUILE\_LTLIBSの4つの変数を設定します。
 
@@ -1364,13 +1364,13 @@ GUILE_LIBS および GUILE_LTLIBS: プログラムを Guile にリンクする�
 
 変数は、`AC_SUBST` のように置換対象としてマークされます。
 
-Autoconf マクロ: **GUILE\_SITE\_DIR** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fSITE_005fDIR)
+Autoconf マクロ: **GUILE\_SITE\_DIR**
 
 これは Guile の「サイト」ディレクトリを探します。変数 GUILE\_SITE には、Scheme ソース ファイルの Guile の「サイト」ディレクトリ (通常は PREFIX/share/guile/site のようなパス) が設定されます。 GUILE\_SITE\_CCACHE には、コンパイル済みの Scheme ファイル (`.go` ファイルとも呼ばれる) のディレクトリ (通常は PREFIX/lib/guile/GUILE\_EFFECTIVE\_VERSION/site-ccache のようなパス) が設定されます。 GUILE\_EXTENSION には、コンパイル済みの C 拡張機能のディレクトリ (通常は PREFIX/lib/guile/GUILE\_EFFECTIVE\_VERSION/extensions のようなパス) が設定されます。 後者の 2 つのパスは、特定のバージョンの Guile がサポートしていない場合は空白に設定されます。このマクロは、まだ実行されていない場合は、マクロ `GUILE_PKG` と `GUILE_PROGS` を実行することに注意してください。
 
 変数は、`AC_SUBST`のように置換対象としてマークされます。
 
-Autoconf マクロ: **GUILE\_PROGS** \[VERSION\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fPROGS)
+Autoconf マクロ: **GUILE\_PROGS** \[VERSION\]
 
 このマクロは、プログラム `guile` と `guild` を検索し、それぞれのパスを変数 GUILE と GUILD に設定します。マクロは、まずサフィックス `-XY` を付けて `guile` を検索し、次にサフィックス `XY` を付けて検索し、それでも見つからない場合はサフィックスなしで `guile` を検索します。それでも `guile` が見つからない場合は、エラーを通知します。`guile` の検索に必要だったサフィックスがあれば、`guild` の検索にも使用されます。
 
@@ -1382,35 +1382,35 @@ Autoconf マクロ: **GUILE\_PROGS** \[VERSION\] [¶](https://doc.guix.gnu.org/g
 
 変数は、`AC_SUBST` のように置換対象としてマークされます。
 
-Autoconf マクロ: **GUILE\_CHECK\_RETVAL** var check [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fCHECK_005fRETVAL)
+Autoconf マクロ: **GUILE\_CHECK\_RETVAL** var check
 
 var は、戻り値に設定されるシェル変数名です。check は Guile Scheme 式で、「$GUILE -c」で評価され、チェックが成功した場合は 0 または #f 以外の値を返します。0 以外の数値または #f は失敗を示します。autoconf が混乱するため、文字「#」の使用は避けてください。
 
-Autoconf マクロ: **GUILE\_MODULE\_CHECK** var module featuretest description [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fMODULE_005fCHECK)
+Autoconf マクロ: **GUILE\_MODULE\_CHECK** var module featuretest description
 
 var は「yes」または「no」に設定するシェル変数名です。 module は、(ice-9 common-list) のようなシンボルのリストです。 featuretest は GUILE\_CHECK で受け入れられる式です。 qv description は現在形の動詞句です (AC\_MSG\_CHECKING に渡されます)。
 
-Autoconf マクロ: **GUILE\_MODULE\_AVAILABLE** var module [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fMODULE_005fAVAILABLE)
+Autoconf マクロ: **GUILE\_MODULE\_AVAILABLE** var module
 
 var は「yes」または「no」に設定するシェル変数名です。module は、(ice-9 common-list) のようなシンボルのリストです。
 
-Autoconf マクロ: **GUILE\_MODULE\_REQUIRED** symlist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fMODULE_005fREQUIRED)
+Autoconf マクロ: **GUILE\_MODULE\_REQUIRED** symlist
 
 symlist は、括弧のないシンボルのリストです。例: ice-9 common-list。
 
-Autoconf マクロ: **GUILE\_MODULE\_EXPORTS** var module modvar [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fMODULE_005fEXPORTS)
+Autoconf マクロ: **GUILE\_MODULE\_EXPORTS** var module modvar
 
 var は「yes」または「no」に設定するシェル変数です。module は、(ice-9 common-list) のようなシンボルのリストです。modvar は、チェックする Guile Scheme 変数です。
 
-Autoconf マクロ: **GUILE\_MODULE\_REQUIRED\_EXPORT** モジュール modvar [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-GUILE_005fMODULE_005fREQUIRED_005fEXPORT)
+Autoconf マクロ: **GUILE\_MODULE\_REQUIRED\_EXPORT** モジュール modvar
 
 module は、(ice-9 common-list) のようなシンボルのリストです。modvar は、チェックする Guile Scheme 変数です。
 
 * * *
 
-前へ: [Autoconf マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Macros)、上へ: [Autoconf サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Autoconf-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Autoconf マクロ](#582-autoconf-マクロ)、上へ: [Autoconf サポート](#58-autoconf-サポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 5.8.3 Autoconf マクロの使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Autoconf-Macros-1)
+#### 5.8.3 Autoconf マクロの使用
 
 autoconf マクロの使い方は簡単です。configure.ac にマクロの「呼び出し」（実際にはインスタンス化）を追加し、`aclocal` を実行してから、最後に `autoconf` を実行します。システムに guile.m4 がインストールされていない場合は、必要なマクロ定義（`AC_DEFUN` 形式）を acinclude.m4 に記述すれば、`aclocal` が正しく処理します。
 
@@ -1474,4 +1474,4 @@ $(INSTALL) my/\*.scm $(instdir)
 
 * * *
 
-次へ: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules)、前: [C 言語によるプログラミング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Programming-in-C)、上: [Guile リファレンス マニュアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール)、前: [C 言語によるプログラミング](#5-c言語によるプログラミング)、上: [Guile リファレンス マニュアル](00_contents.md) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

@@ -1,4 +1,4 @@
-### 7.18 Schemeシェル (scsh) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Scheme-shell-_0028scsh_0029-1)
+### 7.18 Schemeシェル (scsh)
 
 かつては、Guile 用の Scheme シェル (scsh) の不完全な移植版が別パッケージとして提供されていました。しかし、このコードはやや劣化しています。その断片は Guile の旧 CVS リポジトリにあり、[http://cvs.savannah.gnu.org/viewvc/guile/guile-scsh/?root=guile](http://cvs.savannah.gnu.org/viewvc/guile/guile-scsh/?root=guile) で閲覧できます。
 
@@ -8,4 +8,4 @@ scshには質の高いSchemeコードが数多く含まれているため、こ�
 
 * * *
 
-次へ: [Statprof](https://doc.guix.gnu.org/guile/latest/en/guile.html#Statprof)、前: [The Scheme shell (scsh)](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Scheme-shell-_0028scsh_0029)、上: [Guile Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Statprof](07_20_statprof.md#720-statprof)、前: [The Scheme shell (scsh)](#718-schemeシェル-scsh)、上: [Guile Modules](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

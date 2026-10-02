@@ -1,8 +1,8 @@
-#### 7.5.27 SRFI-39 - パラメータ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d39-_002d-Parameters)
+#### 7.5.27 SRFI-39 - パラメータ
 
-この SRFI は、動的スコープのパラメータのサポートを追加します。SRFI 39 は Guile コアに実装されているため、SRFI-39 自体を取得するためのモジュールは必要ありません。パラメータについては、[Parameters](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters) を参照してください。
+この SRFI は、動的スコープのパラメータのサポートを追加します。SRFI 39 は Guile コアに実装されているため、SRFI-39 自体を取得するためのモジュールは必要ありません。パラメータについては、[Parameters](06_11_controlling_the_flow_of_program_execution.md#61112-パラメータ) を参照してください。
 
-このモジュールは、`with-parameters*`という追加関数を1つエクスポートします。これは、コアの`with-fluids*`（[流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States)を参照）と同様に、SRFIへのGuile固有の追加機能です。
+このモジュールは、`with-parameters*`という追加関数を1つエクスポートします。これは、コアの`with-fluids*`（[流体と動的状態](06_11_controlling_the_flow_of_program_execution.md#61111-流体と動的状態)を参照）と同様に、SRFIへのGuile固有の追加機能です。
 
 関数: **with-parameters\*** param-list value-list thunk [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- with_002dparameters_002a)
 
@@ -10,4 +10,4 @@
 
 * * *
 
-次へ: [SRFI-42 - Eager Comprehensions](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d42)、前: [SRFI-39 - Parameters](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d39)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-42 - Eager Comprehensions](07_05_29_srfi42_eager_comprehensions.md#7529-srfi-42---積極的な理解)、前: [SRFI-39 - Parameters](#7527-srfi-39---パラメータ)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

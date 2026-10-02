@@ -1,4 +1,4 @@
-### 8.11 メタオブジェクトプロトコル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol-1)
+### 8.11 メタオブジェクトプロトコル
 
 ここまでで、メタオブジェクトプロトコルの概念に触れることなくGOOPSについて説明できることはほぼ全てです。クラスの再定義や既存インスタンスのクラス変更など、個別に議論できるトピックは他にもいくつかありますが、実際には、これらのトピックを使用する開発者はメタオブジェクトプロトコルについても理解したいと考えるほど高度なスキルを持っているでしょうし、おそらくプロトコルを使ってこれらのイベント中に何が起こるかを正確にカスタマイズするでしょう。
 
@@ -7,21 +7,21 @@
 MOPは、アプリケーション定義クラスのインスタンスの初期化をカスタマイズするための`initialize`メソッドの定義など、GOOPSの多くのカスタマイズの基盤となっており、MOPを理解することで、こうしたカスタマイズをより正確に説明できるようになります。さらに深いレベルでは、MOPを理解することは、GOOPSを理解し、GOOPS自体の動作をカスタマイズすることでGOOPSの力を最大限に活用するための重要な要素となります。
 
 * [メタオブジェクトとメタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaobjects-and-the-Metaobject-Protocol )
-* [メタクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaclasses)
-* [MOP仕様](https://doc.guix.gnu.org/guile/latest/en/guile.html#MOP-Specification)
-* [インスタンス作成プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation-Protocol)
-* [クラス定義プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol)
-* [クラス定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Definition)
-* [メソッド定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition)
-* [メソッド定義内部](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition-Internals)
-* [汎用関数の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Internals)
-* [汎用関数呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Invocation)
+* [メタクラス](#8112-メタクラス)
+* [MOP仕様](#8113-mop仕様)
+* [インスタンス作成プロトコル](#8114-インスタンス作成プロトコル)
+* [クラス定義プロトコル](#8115-クラス定義プロトコル)
+* [クラス定義のカスタマイズ](#8116-クラス定義のカスタマイズ)
+* [メソッド定義](#8117-メソッド定義)
+* [メソッド定義内部](#8118-メソッド定義の内部)
+* [汎用関数の内部構造](#8119-汎用関数の内部構造)
+* [汎用関数呼び出し](#81110-汎用関数呼び出し)
 
 * * *
 
-次へ: [メタクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaclasses)、上へ: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メタクラス](#8112-メタクラス)、上へ: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.1 メタオブジェクトとメタオブジェクトプロトコル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaobjects-and-the-Metaobject-Protocol-1)
+#### 8.11.1 メタオブジェクトとメタオブジェクトプロトコル
 
 GOOPSの構成要素は、クラス、スロット定義、インスタンス、ジェネリック関数、およびメソッドです。クラスは、継承関係とスロット定義の集合です。インスタンスは、そのクラスのスーパークラスとスロット定義によって示される規則に従ってスロットが割り当てられるオブジェクトです。ジェネリック関数は、メソッドの集合と、ジェネリック関数が呼び出されたときにどのメソッドを適用するかを決定するための規則です。メソッドは、手続きと、その手続きが適用可能な引数の型を指定する特殊化子のセットです。
 
@@ -51,9 +51,9 @@ GOOPSの構成要素は、クラス、スロット定義、インスタンス、
 
 * * *
 
-次へ: [MOP仕様](https://doc.guix.gnu.org/guile/latest/en/guile.html#MOP-Specification)、前: [メタオブジェクトとメタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaobjects-and-the-Metaobject-Protocol)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [MOP仕様](#8113-mop仕様)、前: [メタオブジェクトとメタオブジェクトプロトコル](#8111-メタオブジェクトとメタオブジェクトプロトコル)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.2 メタクラス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaclasses-1)
+#### 8.11.2 メタクラス
 
 メタクラスとは、GOOPSクラスを表すオブジェクトのクラスのことです。より簡潔に言うと、メタクラスとはクラスのクラスです。
 
@@ -85,7 +85,7 @@ GOOPSの構成要素は、クラス、スロット定義、インスタンス、
 (define <my-class2>
 (make <my-metaclass> #:dsupers (list <object>) #:slots slots))
 
-この場合、`<my-class2>` の値は、より特殊化されたクラス `<my-metaclass>` のインスタンスです。`<my-metaclass>` 自体は、事前に `<class>` のサブクラスとして定義されている必要があることに注意してください。新しいメタクラスを定義することがいつ、どのように役立つかについての詳細は、[MOP 仕様](https://doc.guix.gnu.org/guile/latest/en/guile.html#MOP-Specification) を参照してください。
+この場合、`<my-class2>` の値は、より特殊化されたクラス `<my-metaclass>` のインスタンスです。`<my-metaclass>` 自体は、事前に `<class>` のサブクラスとして定義されている必要があることに注意してください。新しいメタクラスを定義することがいつ、どのように役立つかについての詳細は、[MOP 仕様](#8113-mop仕様) を参照してください。
 
 それでは、`<my-class2>`のインスタンスを作成しましょう。
 
@@ -102,9 +102,9 @@ GOOPSの構成要素は、クラス、スロット定義、インスタンス、
 
 * * *
 
-次へ: [インスタンス作成プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation-Protocol)、前: [メタクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaclasses)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [インスタンス作成プロトコル](#8114-インスタンス作成プロトコル)、前: [メタクラス](#8112-メタクラス)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.3 MOP仕様 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#MOP-Specification-1)
+#### 8.11.3 MOP仕様
 
 本章におけるMOP仕様の目的は、標準GOOPS構文、プロシージャ、メソッドによって実行可能な、カスタマイズ可能な汎用関数呼び出しをすべて規定し、そのような呼び出しをカスタマイズするためのプロトコルを説明することである。
 
@@ -122,9 +122,9 @@ GOOPSの構成要素は、クラス、スロット定義、インスタンス、
 
 * * *
 
-次へ: [クラス定義プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol)、前: [MOP仕様](https://doc.guix.gnu.org/guile/latest/en/guile.html#MOP-Specification)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [クラス定義プロトコル](#8115-クラス定義プロトコル)、前: [MOP仕様](#8113-mop仕様)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.4 インスタンス作成プロトコル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation-Protocol-1)
+#### 8.11.4 インスタンス作成プロトコル
 
 `make <class> . initargs` (メソッド)
 
@@ -153,7 +153,7 @@ instance は、`allocate-instance` によって返される初期化されてい
 `initialize`は、`allocate-instance`によって返されるインスタンスを初期化します。標準のGOOPSメソッドは、インスタンスクラスに適した初期化を実行します。
 
 * 最も特殊化されていないレベルでは、型 `<object>` のインスタンスのメソッドは、内部 GOOPS インスタンスの初期化を実行し、スロット定義と initargs に現れるスロット初期化キーワードに従ってインスタンスのスロットを初期化します。
-* 型 `<class>` のインスタンスのメソッドは `(next-method)` を呼び出し、その後 [クラス定義プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol) で説明されているクラスの初期化を実行します。
+* 型 `<class>` のインスタンスのメソッドは `(next-method)` を呼び出し、その後 [クラス定義プロトコル](#8115-クラス定義プロトコル) で説明されているクラスの初期化を実行します。
 * 一般的な関数、メソッド、演算子クラスなどについても同様です。
 
 同様に、アプリケーションで定義されたクラスのインスタンスの初期化をカスタマイズするには、そのクラス専用の `initialize` メソッドを定義します。
@@ -162,9 +162,9 @@ instance は、`allocate-instance` によって返される初期化されてい
 
 * * *
 
-次へ: [クラス定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Definition)、前: [インスタンス作成プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation-Protocol)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [クラス定義のカスタマイズ](#8116-クラス定義のカスタマイズ)、前: [インスタンス作成プロトコル](#8114-インスタンス作成プロトコル)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.5 クラス定義プロトコル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol-1)
+#### 8.11.5 クラス定義プロトコル
 
 以下は、クラス定義に関わる可能性のある構文、手順、および汎用関数の概要図です。
 
@@ -189,25 +189,25 @@ instance は、`allocate-instance` によって返される初期化されてい
 
 上のステップが「汎用」とマークされている場合、それはカスタマイズ可能であり、その下に示されている詳細は、その汎用関数のデフォルトメソッドの動作を説明する限りにおいてのみ「正しい」と言えます。たとえば、あるメタクラスに対して、`next-method` も `compute-cpl` も呼び出さない `initialize` メソッドを作成した場合、そのメタクラスでクラスが定義されたときに `compute-cpl` は呼び出されません。
 
-`(define-class ...)` 形式 ([クラス定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition) を参照) は、次の式に展開されます。
+`(define-class ...)` 形式 ([クラス定義](08_02_class_definition.md#82-クラス定義) を参照) は、次の式に展開されます。
 
 * トップレベルでのみ評価されていることを確認します。
 * スロット定義によって暗黙的に示されるアクセサーを定義します
 * `class` を使用して新しいクラスを作成します
-* 名前の以前のクラス定義をチェックし、見つかった場合は、`class-redefinition` を呼び出して再定義を処理します ([クラスの再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class) を参照)。
+* 名前の以前のクラス定義をチェックし、見つかった場合は、`class-redefinition` を呼び出して再定義を処理します ([クラスの再定義](08_12_redefining_a_class.md#812-クラスの再定義) を参照)。
 
-構文: **クラス**名 (スーパークラス …) スロット定義 … クラスオプション … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class-1)
+構文: **クラス**名 (スーパークラス …) スロット定義 … クラスオプション …
 
-スーパークラスを継承し、スロット定義とクラスオプションで直接スロットが定義された、新しく作成されたクラスを返します。スロット定義とクラスオプションの形式については、[define-class](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition)を参照してください。
+スーパークラスを継承し、スロット定義とクラスオプションで直接スロットが定義された、新しく作成されたクラスを返します。スロット定義とクラスオプションの形式については、[define-class](08_02_class_definition.md#82-クラス定義)を参照してください。
 
 `class` は、
 
 * クラスとスロットの定義オプションを処理し、それらが整形式であることを確認し、`#:init-form` オプションを `#:init-thunk` オプションに変換し、デフォルトの環境パラメータ (現在のトップレベル環境) を提供し、評価が必要なすべてのビットを評価します。
 * 処理および評価されたパラメータを使用してクラスを作成するために `make-class` を呼び出します。
 
-手順: **make-class** supers slots class-option … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dclass)
+手順: **make-class** supers slots class-option …
 
-スーパークラスを継承し、スロットとクラスオプションで直接スロットが定義された、新しく作成されたクラスを返します。スロットとクラスオプションの形式については、[define-class](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition)を参照してください。ただし、`make-class` の場合、スロットはスロット定義の別のリストであることに注意してください。
+スーパークラスを継承し、スロットとクラスオプションで直接スロットが定義された、新しく作成されたクラスを返します。スロットとクラスオプションの形式については、[define-class](08_02_class_definition.md#82-クラス定義)を参照してください。ただし、`make-class` の場合、スロットはスロット定義の別のリストであることに注意してください。
 
 `make-class`
 
@@ -216,7 +216,7 @@ instance は、`allocate-instance` によって返される初期化されてい
 * スーパークラス内の重複クラスとスロット内の重複スロット名をチェックし、重複がある場合はエラーを通知します。
 * `make` を呼び出し、メタクラスを最初のパラメータとして、その他のすべてのパラメータを値を持つオプションキーワードとして渡します。
 
-手順: **ensure-metaclass** supers env [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ensure_002dmetaclass)
+手順: **ensure-metaclass** supers env
 
 スーパークラスで指定されたクラスを継承するクラスに適したメタクラスを返します。返されるメタクラスは、スーパークラスで指定されたクラスのメタクラスを継承によって結合したものです。
 
@@ -230,7 +230,7 @@ GOOPSは`ensure-metaclass`によって作成されたメタクラスのリスト
 
 `env` パラメータは無視されます。
 
-汎用: **make** メタクラス初期化… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make-3)
+汎用: **make** メタクラス初期化…
 
 metaclass は、定義対象のクラスのメタクラスであり、`#:metaclass` クラスオプションから取得するか、`ensure-metaclass` によって計算されます。適用されたメソッドは、新しいクラス定義に対して完全に初期化されたクラスメタオブジェクトを作成して返す必要があります。
 
@@ -273,25 +273,25 @@ get クロージャと set クロージャが index に置き換えられてい�
 
 * * *
 
-次へ: [メソッド定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition)、前: [クラス定義プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メソッド定義](#8117-メソッド定義)、前: [クラス定義プロトコル](#8115-クラス定義プロトコル)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.6 クラス定義のカスタマイズ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Definition-1)
+#### 8.11.6 クラス定義のカスタマイズ
 
 新しいクラスのメタクラスがデフォルトの`<class>`よりも特殊化されている場合、上記の呼び出しにおけるクラスの型は`<class>`よりも特殊化され、その結果、新しいクラスのメタクラスに特化した汎用関数メソッドを定義することが可能になり、`initialize`、`compute-cpl`、または`compute-get-n-set`のデフォルトの動作を変更またはオーバーライドできるようになります。
 
-`compute-cpl` は、新しいクラスのクラス優先順位リスト (「CPL」) を計算し ([クラス優先順位リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Precedence-List) を参照)、クラスオブジェクトのリストとして返します。CPL は、クラスのインスタンスに対して汎用関数が呼び出されたときに、利用可能な汎用関数メソッドのうちどれが最も具体的かを決定するために使用されるスーパークラスの順序を定義するため重要です。したがって、`compute-cpl` は、特別なメタクラスを持つすべてのクラスの CPL 順序付けアルゴリズムを変更するようにカスタマイズできます。
+`compute-cpl` は、新しいクラスのクラス優先順位リスト (「CPL」) を計算し ([クラス優先順位リスト](08_07_inheritance.md#871-クラス優先順位リスト) を参照)、クラスオブジェクトのリストとして返します。CPL は、クラスのインスタンスに対して汎用関数が呼び出されたときに、利用可能な汎用関数メソッドのうちどれが最も具体的かを決定するために使用されるスーパークラスの順序を定義するため重要です。したがって、`compute-cpl` は、特別なメタクラスを持つすべてのクラスの CPL 順序付けアルゴリズムを変更するようにカスタマイズできます。
 
 デフォルトのCPLアルゴリズムは、デフォルトの`compute-cpl`メソッドによって呼び出される`compute-std-cpl`プロシージャによってカプセル化されています。
 
-手順: **compute-std-cpl** クラス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-compute_002dstd_002dcpl)
+手順: **compute-std-cpl** クラス
 
-[クラス優先順位リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Precedence-List)で説明されているアルゴリズムに従って、クラスのクラス優先順位リストを計算して返します。
+[クラス優先順位リスト](08_07_inheritance.md#871-クラス優先順位リスト)で説明されているアルゴリズムに従って、クラスのクラス優先順位リストを計算して返します。
 
 `compute-slots` は、新しいクラスのすべてのスロット定義のリストを計算して返します。デフォルトでは、このリストには `define-class` フォームからの直接のスロット定義と、新しいクラスのスーパークラスから継承されたスロット定義が含まれます。デフォルトの `compute-slots` メソッドは、`compute-cpl` によって計算された CPL を使用して、このスロット定義の和集合を計算します。このとき、スーパークラスから継承されたスロットは、同じ名前の直接のスロットによって隠蔽されるというルールが適用されます。`compute-slots` をカスタマイズする理由の 1 つは、スロット名の競合に対する別の解決戦略を実装することです。
 
 `compute-get-n-set` は、特定のスロットの値を取得および設定するために使用される低レベルのクロージャを計算し、2 つの要素を持つリストとして返します。
 
-返されるクロージャは、そのスロットのストレージがどのように割り当てられるかによって異なります。標準の `compute-get-n-set` メソッドは、型 `<class>` のクラスに特化されており、`#:allocation` スロットオプションの標準 GOOPS 値を処理します ([allocation](https://doc.guix.gnu.org/guile/latest/en/guile.html#Slot-Options) を参照)。より特化したメタクラス用に新しい `compute-get-n-set` メソッドを定義することで、新しいタイプのスロット割り当てをサポートできます。
+返されるクロージャは、そのスロットのストレージがどのように割り当てられるかによって異なります。標準の `compute-get-n-set` メソッドは、型 `<class>` のクラスに特化されており、`#:allocation` スロットオプションの標準 GOOPS 値を処理します ([allocation](08_04_slot_options.md#84-スロットオプション) を参照)。より特化したメタクラス用に新しい `compute-get-n-set` メソッドを定義することで、新しいタイプのスロット割り当てをサポートできます。
 
 あるクラスのインスタンスを多数作成する場合、そのクラスのインスタンスの一部（例えば、10個のインスタンスごとに1つ）でスロットを共有したいとします。次の例では、これを実現するために新しいタイプのスロット割り当てを実装および使用する方法を示します。
 
@@ -327,15 +327,15 @@ get クロージャと set クロージャが index に置き換えられてい�
 ...
 #:metaclass <batched-allocation-metaclass>)
 
-`compute-getter-method` と `compute-setter-method` の使用方法については、[クラス定義プロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol) に記載されています。
+`compute-getter-method` と `compute-setter-method` の使用方法については、[クラス定義プロトコル](#8115-クラス定義プロトコル) に記載されています。
 
 `compute-cpl` と `compute-get-n-set` は、メタクラスが `<class>` であるクラスの標準の `initialize` メソッドによって呼び出されます。しかし、`initialize` メソッド自体も、新しいクラスのメタクラスに特化した `initialize` メソッドを定義することで変更できます。このようなメソッドは、`(next-method)` をまったく呼び出さないことで標準の動作を完全にオーバーライドできますが、より一般的には、標準の動作のために `(next-method)` を呼び出す前や後に、追加のクラス初期化手順を実行します。
 
 * * *
 
-次へ: [メソッド定義の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition-Internals)、前: [クラス定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Definition)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メソッド定義の内部構造](#8118-メソッド定義の内部)、前: [クラス定義のカスタマイズ](#8116-クラス定義のカスタマイズ)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.7 メソッド定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition-1)
+#### 8.11.7 メソッド定義
 
 `define-method`（構文）
 
@@ -345,15 +345,15 @@ get クロージャと set クロージャが index に置き換えられてい�
 
 * 汎用関数（最も一般的なケース）
 * 手順
-* プリミティブジェネリック（[Extending Primitives](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives)を参照）
+* プリミティブジェネリック（[Extending Primitives](08_06_methods_and_generic_functions.md#862-プリミティブの拡張)を参照）
 
 `add-method!` にさらにメソッドを定義することで、理論的には、より多くの種類のターゲットにメソッドを追加する処理を処理できるようになります。
 
 * * *
 
-次へ: [汎用関数の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Internals)、前: [メソッド定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [汎用関数の内部構造](#8119-汎用関数の内部構造)、前: [メソッド定義](#8117-メソッド定義)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.8 メソッド定義の内部 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition-Internals-1)
+#### 8.11.8 メソッド定義の内部
 
 `define-method`:
 
@@ -362,11 +362,11 @@ get クロージャと set クロージャが index に置き換えられてい�
 * パラメータと本体を指定して `method` を呼び出し、新しいメソッドインスタンスを作成します。
 * `add-method!` を呼び出して、このメソッドを関連する汎用関数に追加します。
 
-構文: **メソッド** (パラメータ …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-method)
+構文: **メソッド** (パラメータ …) 本体 …
 
 パラメータ内のクラスによって特殊化が定義され、パラメータシンボルと本体形式からプロシージャ定義が構築されるメソッドを作成します。
 
-パラメータとボディパラメータは、`define-method` と同様である必要があります（[define-method](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) を参照）。
+パラメータとボディパラメータは、`define-method` と同様である必要があります（[define-method](08_06_methods_and_generic_functions.md#86-メソッドとジェネリック関数) を参照）。
 
 `メソッド`:
 
@@ -374,7 +374,7 @@ get クロージャと set クロージャが index に置き換えられてい�
 * 形式と本文形式を使用してクロージャを作成します
 * メタクラス `<method>` と、`#:specializers` および `#:procedure` キーワードを使用したスペシャライザとクロージャを使用して `make` を呼び出します。
 
-手順: **make-method** 特殊化手順 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dmethod)
+手順: **make-method** 特殊化手順
 
 専門家と手順を用いて方法を作成する。
 
@@ -384,39 +384,39 @@ get クロージャと set クロージャが index に置き換えられてい�
 
 `make-method` は、メタクラス `<method>` を持つ `make` のシンプルなラッパーです。
 
-汎用: **add-method!** 対象メソッド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dmethod_0021)
+汎用: **add-method!** 対象メソッド
 
 メソッドメソッドをターゲットに追加するための汎用関数。
 
-メソッド: **add-method!** (generic <generic>) (method <method>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dmethod_0021-1)
+メソッド: **add-method!** (generic <generic>) (method <method>)
 
 汎用関数 generic にメソッド method を追加します。
 
-メソッド: **add-method!** (proc <プロシージャ>) (method <メソッド>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dmethod_0021-2)
+メソッド: **add-method!** (proc <プロシージャ>) (method <メソッド>)
 
-proc がジェネリック機能を持つプロシージャである場合 ([generic-capability?](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives) を参照)、それをプリミティブジェネリックにアップグレードし、そのジェネリック関数定義にメソッドを追加します。
+proc がジェネリック機能を持つプロシージャである場合 ([generic-capability?](08_06_methods_and_generic_functions.md#862-プリミティブの拡張) を参照)、それをプリミティブジェネリックにアップグレードし、そのジェネリック関数定義にメソッドを追加します。
 
-メソッド: **add-method!** (pg <primitive-generic>) (method <method>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dmethod_0021-3)
+メソッド: **add-method!** (pg <primitive-generic>) (method <method>)
 
 pg の汎用関数定義にメソッド method を追加します。
 
 実装: `(add-method! (primitive-generic-generic pg) method)`。
 
-メソッド: **add-method!** (whatever <top>) (method <method>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-add_002dmethod_0021-4)
+メソッド: **add-method!** (whatever <top>) (method <method>)
 
 指定された関数が有効な汎用関数ではないことを示すエラーを発生させます。
 
 * * *
 
-次へ: [汎用関数呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Invocation)、前: [メソッド定義の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Method-Definition-Internals)、上: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [汎用関数呼び出し](#81110-汎用関数呼び出し)、前: [メソッド定義の内部構造](#8118-メソッド定義の内部)、上: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.9 汎用関数の内部構造[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Internals-1)
+#### 8.11.9 汎用関数の内部構造
 
 `define-generic` は、既存のプロシージャ値をアップグレードするために `ensure-generic` を呼び出すか、新しい汎用関数を作成するためにメタクラス `<generic>` を指定して `make` を呼び出します。
 
 `define-accessor` は、既存のプロシージャ値をアップグレードするために `ensure-accessor` を呼び出すか、新しいアクセサーを作成するために `make-accessor` を呼び出します。
 
-手順: **ensure-generic** 旧定義 \[name\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ensure_002dgeneric)
+手順: **ensure-generic** 旧定義 \[name\]
 
 可能であれば、old-definition を使用またはアップグレードして、name という名前の汎用関数を返します。指定されていない場合、name のデフォルト値は `#f` になります。
 
@@ -426,7 +426,7 @@ old-definitionがSchemeの手続きまたはセッター付き手続きである
 
 それ以外の場合、`ensure-generic`はデフォルト値もメソッドも持たない新しい汎用関数を返します。
 
-手順: **make-generic** \[name\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dgeneric)
+手順: **make-generic** \[name\]
 
 `(車名)` という名前の新しい汎用関数を返します。指定しない場合、デフォルトで `#f` になります。
 
@@ -434,7 +434,7 @@ old-definitionがSchemeの手続きまたはセッター付き手続きである
 
 `make-generic` は、メタクラス `<generic>` を持つ `make` のシンプルなラッパーです。
 
-プロシージャ: **ensure-accessor** proc \[name\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ensure_002daccessor)
+プロシージャ: **ensure-accessor** proc \[name\]
 
 可能であれば、proc を使用またはアップグレードして、name という名前のアクセサーを返します。指定されていない場合、name のデフォルト値は `#f` になります。
 
@@ -444,7 +444,7 @@ proc が Scheme プロシージャ、セッター付きプロシージャ、ま�
 
 それ以外の場合、`ensure-accessor` はデフォルト値もメソッドも持たない新しいアクセサーを返します。
 
-手順: **make-accessor** \[name\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002daccessor)
+手順: **make-accessor** \[name\]
 
 `(車名)` という名前の新しいアクセサーを返します。指定しない場合は、デフォルトで `#f` になります。
 
@@ -454,9 +454,9 @@ proc が Scheme プロシージャ、セッター付きプロシージャ、ま�
 
 * * *
 
-前へ: [汎用関数の内部構造](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Internals)、上へ: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [汎用関数の内部構造](#8119-汎用関数の内部構造)、上へ: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.11.10 汎用関数呼び出し [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-Invocation-1)
+#### 8.11.10 汎用関数呼び出し
 
 汎用関数を呼び出すプロセス、つまり、汎用関数のどのメソッドが現在の引数に適用可能か、そしてどのメソッドを適用するかを決定するプロセスには、詳細かつカスタマイズ可能なプロトコルが関わっています。以下に、関連する汎用関数の概要図を示します。
 
@@ -475,4 +475,4 @@ proc が Scheme プロシージャ、セッター付きプロシージャ、ま�
 
 * * *
 
-次へ: [インスタンスのクラスの変更](https://doc.guix.gnu.org/guile/latest/en/guile.html#Changing-the-Class-of-an-Instance)、前: [メタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Metaobject-Protocol)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [インスタンスのクラスの変更](08_13_changing_the_class_of_an_instance.md#813-インスタンスのクラスの変更)、前: [メタオブジェクトプロトコル](#811-メタオブジェクトプロトコル)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

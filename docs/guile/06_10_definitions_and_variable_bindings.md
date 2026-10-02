@@ -1,18 +1,18 @@
-### 6.10 定義と変数バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Definitions-and-Variable-Bindings)
+### 6.10 定義と変数バインディング
 
 Schemeは、さまざまなコンテキストでの変数定義をサポートしています。変数は最上位レベルで定義できるため、プログラム全体で参照できます。また、プロシージャや式に対してローカルに定義することも可能です。これは、モジュール性やデータ抽象化にとって重要です。
 
-* [トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)
-* [ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)
-* [内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions)
-* [変数バインディングのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Reflection)
-* [複数の戻り値のバインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Multiple-Values)
+* [トップレベル変数定義](#6101-トップレベル変数定義)
+* [ローカル変数バインディング](#6102-ローカル変数バインディング)
+* [内部定義](#6103-内部定義)
+* [変数バインディングのクエリ](#6104-変数バインディングのクエリ)
+* [複数の戻り値のバインディング](#6105-複数の戻り値のバインディング)
 
 * * *
 
-次へ: [ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)、上: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ローカル変数バインディング](#6102-ローカル変数バインディング)、上: [定義と変数バインディング](#610-定義と変数バインディング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.10.1 トップレベル変数定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level-Variable-Definitions)
+#### 6.10.1 トップレベル変数定義
 
 プログラムの最上位レベル（つまり、他の式の中にネストされていないレベル）では、次の形式の定義が記述されます。
 
@@ -22,31 +22,31 @@ Schemeは、さまざまなコンテキストでの変数定義をサポート�
 
 現在のモジュールに変数が既に存在する場合（同じ名前の以前の `define` 式によって既に作成されているため）、その値は新しい値に変更されます。この場合、上記の形式は完全に以下と同等です。
 
-([値を設定します!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 値を設定します)
+([値を設定します!](07_06_r6rs_support.md#7622-rnrs-ベース) 値を設定します)
 
 この等価性により、`define` は `set!` と互換的に使用して、REPL の最上位レベルまたは Scheme ソース ファイルで変数の値を変更することができます。これは、変更した Scheme ファイルを再読み込みする際の対話型開発において便利です。なぜなら、ファイル内の `define` 式が、ファイルの初回読み込み時とそれ以降の読み込み時の両方で期待どおりに機能するようになるからです。
 
 ただし、`define` と `set!` は必ずしも同等ではないことに注意してください。たとえば、指定された変数が既に存在しない場合、`set!` は使用できません。また、別のモジュールから参照可能なインポート変数がある場合、これら2つの式は異なる動作をする可能性があります。
 
-Scheme構文: **define** 名前 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define)
+Scheme構文: **define** 名前 値
 
 名前が name で値が value の最上位変数を作成します。名前が付けられた変数が既に存在する場合は、その値を変更します。`define` 式の戻り値は未定義です。
 
 `define` に相当する C API は `scm_define` と `scm_c_define` であり、これらは変数名を `SCM` シンボルとして指定するか、ヌル終端の C 文字列として指定するかという点で異なります。
 
-C 関数: **scm\_define** (sym, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdefine)
+C 関数: **scm\_define** (sym, value)
 
-C 関数: **scm\_c\_define** (const char \*name, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fdefine)
+C 関数: **scm\_c\_define** (const char \*name, value)
 
 `define` に相当するC言語の関数で、変数名は sym（シンボル）または name（ヌル終端のC言語文字列）で指定します。どちらの場合も、新規または既存の変数オブジェクトを返します。
 
 `define`（トップレベルで実行される場合）、`scm_define`、および`scm_c_define`はすべて、現在のモジュールのトップレベル環境内の変数を作成または値を設定します。現在のモジュールに指定された名前の変数がまだ存在せず、別のモジュールからインポートされた同様の名前の変数が可視状態であった場合、現在のモジュールで新しく作成された変数はインポートされた変数を上書きし、インポートされた変数は見えなくなります。
 
-注意: ローカルバインディング構造内の Scheme 定義 ([ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings) を参照) は、異なる動作をします ([内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions) を参照)。
+注意: ローカルバインディング構造内の Scheme 定義 ([ローカル変数バインディング](#6102-ローカル変数バインディング) を参照) は、異なる動作をします ([内部定義](#6103-内部定義) を参照)。
 
 多くの人は、実行時に定義を追加したり変更したりして、プログラムを再起動せずに構築していく開発スタイルに落ち着きます。（これは、`reload-module`、`reload` REPLコマンド、`load`プロシージャ、あるいは単にコードをREPLに貼り付けることでも可能です。）もしあなたがそのような開発者の一人であれば、常に再定義したくない変数があることに気づくでしょう。そのような変数には、`define-once`を使用してください。
 
-Scheme構文: **define-once** 名前 値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002donce)
+Scheme構文: **define-once** 名前 値
 
 現在のモジュールで既にnameがバインドされていない場合に限り、nameという名前のトップレベル変数をvalueという値で作成します。
 
@@ -54,9 +54,9 @@ Scheme構文: **define-once** 名前 値 [¶](https://doc.guix.gnu.org/guile/lat
 
 * * *
 
-次へ: [内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions)、前: [トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level)、上: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [内部定義](#6103-内部定義)、前: [トップレベル変数定義](#6101-トップレベル変数定義)、上: [定義と変数バインディング](#610-定義と変数バインディング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.10.2 ローカル変数バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Variable-Bindings)
+#### 6.10.2 ローカル変数バインディング
 
 モジュール内のすべてのコードから参照可能なバインディングを作成する最上位レベルでの定義とは対照的に、プログラムの特定の部分でのみ参照可能な変数を定義することも可能です。通常、このプログラムの部分は、プロシージャまたはプロシージャのサブ式になります。
 
@@ -64,11 +64,11 @@ Scheme構文: **define-once** 名前 値 [¶](https://doc.guix.gnu.org/guile/lat
 
 最も基本的なローカルバインディング構造は`let`です。
 
-構文: **let** バインディング本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let)
+構文: **let** バインディング本体
 
 バインディングは次の形式です
 
-((variable1 init1) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+((variable1 init1) [...](06_08_macros.md#6821-パターン))
 
 つまり、変数と任意の式からなる2要素リストが0個以上存在する。すべての変数名は重複してはならない。
 
@@ -79,13 +79,13 @@ Scheme構文: **define-once** 名前 値 [¶](https://doc.guix.gnu.org/guile/lat
 * すべての初期化式が評価されます。
 * 変数用に新しいストレージが割り当てられます。
 * 初期化式の値は変数に格納されます。
-* 本体内の式と定義は順番に評価され（[内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions)を参照）、最後の式の値が `let` 式の結果として返されます。
+* 本体内の式と定義は順番に評価され（[内部定義](#6103-内部定義)を参照）、最後の式の値が `let` 式の結果として返されます。
 
 初期化式では、いかなる変数も参照することはできません。
 
 その他の結合構造は、同じテーマのバリエーションである。すなわち、新しい値を作成し、それらを変数にバインドし、その新しい拡張された語彙的コンテキストで本体を実行する。
 
-構文: **let\*** バインディング本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002a)
+構文: **let\*** バインディング本体
 
 `let` と似ていますが、変数のバインディングは順次実行されます。つまり、すべての初期化式は、バインディングリストの左側で定義された変数を使用できます。
 
@@ -98,48 +98,48 @@ b)
 (let ((ba))
 b))
 
-構文: **letrec** バインディング本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec)
+構文: **letrec** バインディング本体
 
 `let`に似ていますが、初期化式で作成されたラムダ式から変数を参照できます。つまり、初期化式で作成されたプロシージャは、定義された変数を再帰的に参照できます。
 
-(letrec (([even?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-even_003f) (lambda (n)
-(if ([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n)
+(letrec (([even?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) (lambda (n)
+(if ([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n)
 #t
-([odd?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-odd_003f) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) n 1)))))
-([odd?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-odd_003f) (lambda (n)
-(if ([zero?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-zero_003f) n)
+([odd?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) n 1)))))
+([odd?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) (lambda (n)
+(if ([zero?](06_06_02_numerical_data_types.md#6628-比較述語) n)
 #f
-([even?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-even_003f) ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) n 1))))))
-([even?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-even_003f) 88))
+([even?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) ([\-](06_06_02_numerical_data_types.md#66211-算術関数) n 1))))))
+([even?](06_06_02_numerical_data_types.md#6627-整数値に対する演算) 88))
 ⇒
 #t
 
-初期化式は新しい変数を参照できますが、その値にはアクセスできないことに注意してください。たとえば、上記の `even?` 関数を作成すると、`odd?` 変数を参照するクロージャ ([クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure) が作成されます。しかし、`odd?` は実行が本体に入るまで呼び出すことができません。
+初期化式は新しい変数を参照できますが、その値にはアクセスできないことに注意してください。たとえば、上記の `even?` 関数を作成すると、`odd?` 変数を参照するクロージャ ([クロージャの概念](03_hello_scheme.md#34-クロージャの概念) が作成されます。しかし、`odd?` は実行が本体に入るまで呼び出すことができません。
 
-構文: **letrec\*** バインディング本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec_002a)
+構文: **letrec\*** バインディング本体
 
 `letrec` と似ていますが、初期化式が順番に変数にバインドされる点が異なります。
 
 `letrec*` は、letrec の制約を緩和し、後続の初期化式が以前にバインドされた変数の値を参照できるようにします。
 
 (letrec ((a 42)
-(b ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) a 10))) ;; 不正アクセス
-([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) ab))
+(b ([+](06_06_02_numerical_data_types.md#66211-算術関数) a 10))) ;; 不正アクセス
+([\*](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 ;; 上記の式の動作は未規定です
-([letrec\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec_002a) ((a 42)
-(b ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) a 10)))
-([\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002a) ab))
+([letrec\*](#6102-ローカル変数バインディング) ((a 42)
+(b ([+](06_06_02_numerical_data_types.md#66211-算術関数) a 10)))
+([\*](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 ⇒ 2184
 
-`let` 形式には、反復処理を表すための別の形式もあります。ループ構造として使用されるこの形式（名前付き let）は、反復処理に関するセクションで説明されています（[反復処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do)を参照）。
+`let` 形式には、反復処理を表すための別の形式もあります。ループ構造として使用されるこの形式（名前付き let）は、反復処理に関するセクションで説明されています（[反復処理](06_11_controlling_the_flow_of_program_execution.md#6114-反復メカニズム)を参照）。
 
 * * *
 
-次へ: [変数バインディングのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Reflection)、前: [ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)、上: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [変数バインディングのクエリ](#6104-変数バインディングのクエリ)、前: [ローカル変数バインディング](#6102-ローカル変数バインディング)、上: [定義と変数バインディング](#610-定義と変数バインディング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.10.3 内部定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-settings)
+#### 6.10.3 内部定義
 
-`lambda`、`let`、`let*`、`letrec`、`letrec*`、または同等の式の本体内に現れる `define` 形式は、_内部定義_ と呼ばれます。内部定義は、トップレベル定義 ([トップレベル変数定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top-Level) を参照) とは異なり、定義は囲んでいる形式の本体全体でのみ参照可能です。次の例を見てみましょう。
+`lambda`、`let`、`let*`、`letrec`、`letrec*`、または同等の式の本体内に現れる `define` 形式は、_内部定義_ と呼ばれます。内部定義は、トップレベル定義 ([トップレベル変数定義](#6101-トップレベル変数定義) を参照) とは異なり、定義は囲んでいる形式の本体全体でのみ参照可能です。次の例を見てみましょう。
 
 ((frumble "froz"))
 (define banana (lambda () (apple 'peach)))
@@ -153,13 +153,13 @@ b))
 （させて （）
 (1を定義する)
 (b 2 を定義する)
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 
 と同等
 
 （させて （）
-([letrec\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec_002a) ((a 1) (b 2))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab)))
+([letrec\*](#6102-ローカル変数バインディング) ((a 1) (b 2))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ab)))
 
 内部定義は、定義以外の式と混在させることができます。式が定義の前にある場合、それは参照されていない変数の定義であるかのように扱われます。したがって、次のようになります。
 
@@ -167,13 +167,13 @@ b))
 (1を定義する)
 (フー)
 (b 2 を定義する)
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 
 と同等
 
 （させて （）
-([letrec\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letrec_002a) ((a 1) ([\_](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_005f) (begin (foo) #f)) (b 2))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab)))
+([letrec\*](#6102-ローカル変数バインディング) ((a 1) ([\_](06_08_macros.md#6821-パターン) (begin (foo) #f)) (b 2))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ab)))
 
 トップレベルの定義とのもう一つの注目すべき違いは、内部定義のグループ内では、すべての変数名が一意でなければならないという点です。トップレベルでは、特定の変数に対する2つ目の定義は`set!`のように機能しますが、内部定義では、重複するバインドされた識別子はエラーとして扱われます。
 
@@ -181,32 +181,32 @@ b))
 
 （させて （）
 (1を定義する)
-(define b ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) aa))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab))
+(define b ([+](06_06_02_numerical_data_types.md#66211-算術関数) aa))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 
 Guileはこの点に関してR6RSに準拠することにし、内部定義を`letrec*`を使用して展開するようになりました。関連して、以前は内部定義は本体内のすべての式の前に記述する必要がありましたが、この制限はGuile 3.0で緩和されました。
 
 * * *
 
-次へ: [複数の戻り値のバインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Multiple-Values)、前: [内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions)、上: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs ) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [複数の戻り値のバインディング](#6105-複数の戻り値のバインディング)、前: [内部定義](#6103-内部定義)、上: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.10.4 変数バインディングのクエリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Querying-variable-bindings)
+#### 6.10.4 変数バインディングのクエリ
 
 Guileは、シンボルがトップレベル環境にバインドされているかどうかを確認する手順を提供します。
 
-Scheme 手順: **定義済み?** sym \[module\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-defined_003f)
+Scheme 手順: **定義済み?** sym \[module\]
 
-C 関数: **scm\_defined\_p** (sym, module) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdefined_005fp)
+C 関数: **scm\_defined\_p** (sym, module)
 
 symがモジュール module またはモジュールが指定されていない場合は現在のモジュールで定義されている場合は `#t` を返します。それ以外の場合は `#f` を返します。
 
 * * *
 
-前へ: [変数バインディングのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Reflection)、上へ: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [変数バインディングのクエリ](#6104-変数バインディングのクエリ)、上へ: [定義と変数バインディング](#610-定義と変数バインディング) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.10.5 複数の戻り値のバインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-multiple-return-values)
+#### 6.10.5 複数の戻り値のバインディング
 
-構文: **define-values** 形式式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dvalues)
+構文: **define-values** 形式式
 
 式が評価され、仮引数は戻り値にバインドされます。これは、ラムダ式の仮引数がプロシージャ呼び出しの引数に一致するのと同様の方法です。
 
@@ -222,4 +222,4 @@ x ⇒ (1 2 3)
 
 * * *
 
-次へ: [入力と出力](https://doc.guix.gnu.org/guile/latest/en/guile.html#Input-and-Output)、前: [定義と変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Binding-Constructs)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [入力と出力](06_12_input_and_output.md#612-入力と出力)、前: [定義と変数バインディング](#610-定義と変数バインディング)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

@@ -1,4 +1,4 @@
-#### 7.5.31 SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d45-_002d-Primitives-for-Expressing-Iterative-Lazy-Algorithms)
+#### 7.5.31 SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ
 
 このサブセクションは、André van Tonder によって書かれた [SRFI-45 の仕様](http://srfi.schemers.org/srfi-45/srfi-45.html) に基づいています。
 
@@ -10,23 +10,23 @@ Schemeでは、従来、遅延評価は`delay`と`force`を用いてシミュレ
 
 Guileはまた、公式のSRFI-45には含まれていない「promise?」をエクスポートリストに追加します。
 
-Scheme 手順: **promise?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-promise_003f-1)
+Scheme 手順: **promise?** obj
 
 objがSRFI-45プロミスであればtrueを返し、そうでなければfalseを返します。
 
-Scheme構文: **delay**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-delay-1)
+Scheme構文: **delay**式
 
 任意の型 a の式を受け取り、型 `(Promise a)` の Promise を返します。この Promise は、将来のある時点で (`force` プロシージャによって) 式を評価し、結果の値を返すように要求される可能性があります。
 
-Scheme構文: **lazy**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy)
+Scheme構文: **lazy**式
 
 型 `(Promise a)` の式を受け取り、型 `(Promise a)` のプロミスを返します。このプロミスは、将来のある時点で (`force` プロシージャによって) 式を評価し、結果として得られるプロミスを提供するように要求される可能性があります。
 
-Scheme手順: **force**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-force-1)
+Scheme手順: **force**式
 
 型 `(Promise a)` の引数を受け取り、型 a の値を返します。返される値は次のとおりです。プロミスに対して型 a の値が計算されている場合は、その値が返されます。そうでない場合は、まずプロミスが評価され、次に取得したプロミスまたは値によって上書きされ、その後、プロミスに対して再度強制が (繰り返し) 適用されます。
 
-Scheme手順: **eager**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager)
+Scheme手順: **eager**式
 
 型 a の引数を受け取り、型 `(Promise a)` の値を返します。`delay` とは異なり、引数は即座に評価されます。意味的には、`(eager expression)` と書くことは、次のように書くことと同じです。
 
@@ -34,36 +34,36 @@ Scheme手順: **eager**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.h
 
 しかし、前者はサンクの不要な作成と評価を必要としないため、より効率的です。また、等価性もあります。
 
-(遅延式) [\=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d) ([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy) ([eager](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager) 式))
+(遅延式) [\=](06_06_02_numerical_data_types.md#6628-比較述語) ([lazy](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ) ([eager](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ) 式))
 
 以下の還元規則は、これらのプリミティブについて推論する際に役立つ可能性があります。ただし、これらは上記で指定したメモ化とメモリ使用のセマンティクスを表現するものではありません。
 
 (強制 (遅延式)) \-> 式
-(force ([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy) expression)) \-> (force expression)
-(force ([eager](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eager) value)) \-> value
+(force ([lazy](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ) expression)) \-> (force expression)
+(force ([eager](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ) value)) \-> value
 
-#### 正しい使用法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Correct-usage)
+#### 正しい使用法
 
 ここでは、プリミティブ {`lazy`、`delay`、`force`} を使用して Scheme で遅延アルゴリズムを表現するための一般的な手順を示します。この変換は例で説明するのが最適です。ストリームフィルタアルゴリズムを、仮想的な遅延言語で表現すると次のようになります。
 
-(define ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? s)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) s) '()
-(let ((h ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) s))
-(t ([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) s)))
+(define ([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? s)
+(if ([null?](06_06_09_lists.md#6692-リスト述語) s) '()
+(let ((h ([car](06_06_08_pairs.md#668-ペア) s))
+(t ([cdr](06_06_08_pairs.md#668-ペア) s)))
 (もし(p? h)の場合)
-([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) h ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t))
-([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t)))))
+([cons](06_06_08_pairs.md#668-ペア) h ([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? t))
+([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? t)))))
 
 このアルゴリズムは、Schemeでは次のように表現できます。
 
-(define ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? s)
-([lazy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lazy)
-(if ([null?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-null_003f) (force s)) (delay '())
-(let ((h ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) (force s)))
-(t ([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) (force s))))
+(define ([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? s)
+([lazy](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ)
+(if ([null?](06_06_09_lists.md#6692-リスト述語) (force s)) (delay '())
+(let ((h ([car](06_06_08_pairs.md#668-ペア) (force s)))
+(t ([cdr](06_06_08_pairs.md#668-ペア) (force s))))
 (もし(p? h)の場合)
-(delay ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) h ([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t)))
-([stream-filter](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-stream_002dfilter) p? t))))))
+(delay ([cons](06_06_08_pairs.md#668-ペア) h ([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? t)))
+([stream-filter](07_05_28_srfi41_streams.md#75283-srfi-41-ストリームライブラリ) p? t))))))
 
 言い換えれば、私たちは
 
@@ -73,4 +73,4 @@ Scheme手順: **eager**式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.h
 
 * * *
 
-次へ: [SRFI-55 - 必須機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d55)、前: [SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d45)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-55 - 必須機能](07_05_33_srfi55_requiring_features.md#7533-srfi-55---必須機能)、前: [SRFI-45 - 反復遅延アルゴリズムを表現するためのプリミティブ](#7531-srfi-45---反復遅延アルゴリズムを表現するためのプリミティブ)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

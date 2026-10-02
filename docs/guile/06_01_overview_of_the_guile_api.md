@@ -1,4 +1,4 @@
-### 6.1 Guile API の概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Overview-of-the-Guile-API)
+### 6.1 Guile API の概要
 
 Guileのアプリケーションプログラミングインターフェース（API）は、アプリケーション開発者がC言語またはScheme言語のどちらでも使用できる機能を提供します。このインターフェースは、C言語ではマクロ、関数、変数、Scheme言語ではプロシージャ、変数、構文、その他のオブジェクトといった要素で構成されています。
 
@@ -30,4 +30,4 @@ Scheme関数に対応するC関数の戻り値の型は常に`SCM`です。そ�
 
 * * *
 
-次へ: [SCM タイプ](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-SCM-Type)、前: [Guile API の概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Overview)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SCM タイプ](06_03_the_scm_type.md#63-scmタイプ)、前: [Guile API の概要](#61-guile-api-の概要)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

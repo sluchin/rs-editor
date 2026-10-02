@@ -1,16 +1,16 @@
-序文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface-1)
+序文
 --------------------------------------------------------------------------
 
 このマニュアルでは、GNUのユビキタス・インテリジェント言語であるGuile（拡張機能のための言語）の使い方について説明します。特にGuileバージョン3.0.11に関する内容です。
 
-* [このマニュアルの貢献者](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors)
-* [Guileライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-License)
+* [このマニュアルの貢献者](00_preface.md)
+* [Guileライセンス](00_preface.md)
 
 * * *
 
-次へ: [Guile ライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-License)、上へ: [序文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Guile ライセンス](00_preface.md)、上へ: [序文](#序文) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### このマニュアルの貢献者 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors-to-this-Manual)
+### このマニュアルの貢献者
 
 ガイル自身と同様に、ガイルのリファレンスマニュアルも、長期間にわたり多くの人々によって管理されてきた生き物です。そのため、「このマニュアルを書いたのは間違いなくこの人物だ」と断言できる人物を特定するのは困難です。
 
@@ -20,7 +20,7 @@
 
 Martin Grabmueller氏は、Guile 1.6リリースに向けたマニュアル作成において、Schemeデータ型、制御機構、プロシージャに関するドキュメントの多くを執筆するなど、多大な貢献をしました。さらに、GuileのSRFIモジュールおよびGuile REPL関連モジュールのドキュメントも作成しました。
 
-2010年からGuileを共同でメンテナンスしているLudovic CourtèsとAndy Wingoは、Mark Weaverと共に、Guile 2.0で追加された新しいモジュールやサブシステムのドキュメントを作成するなど、マニュアルにも貢献しています。Ludovic、Andy、Markは、Guileの進化に伴い、既存のテキストが常に最新の状態を保つようにする責任も担っています。このマニュアルの問題報告方法については、[バグ報告](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Bugs)を参照してください。
+2010年からGuileを共同でメンテナンスしているLudovic CourtèsとAndy Wingoは、Mark Weaverと共に、Guile 2.0で追加された新しいモジュールやサブシステムのドキュメントを作成するなど、マニュアルにも貢献しています。Ludovic、Andy、Markは、Guileの進化に伴い、既存のテキストが常に最新の状態を保つようにする責任も担っています。このマニュアルの問題報告方法については、[バグ報告](02_hello_guile.md#26-バグの報告)を参照してください。
 
 このマニュアルの初期バージョンの内容は、Guileの基盤となったSCMシステムの開発者であるオーブリー・ジャファー氏と、Guileの初代メンテナーであるトム・ロード氏の文書を参考に作成され、またそれらから着想を得ています。これらの文書の大部分は書き直されましたが、いずれも重要な内容であり、その構造の一部はそのまま残されています。
 
@@ -30,15 +30,15 @@ Thien-Thi Nguyen、Kevin Ryde、Mikael Djurfeldt、Christian Lynbech、Julian Gr
 
 * * *
 
-前へ: [このマニュアルの貢献者](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors)、上へ: [序文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [このマニュアルの貢献者](00_preface.md)、上へ: [序文](#序文) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-### Guile ライセンス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Guile-License)
+### Guile ライセンス
 
 Guileはフリーソフトウェアです。Guileは著作権で保護されており、パブリックドメインではありません。配布や再配布には制限がありますが、これらの制限は、協力者が望むあらゆることを可能にするように設計されています。
 
 * Guileライブラリ（libguile）および関連ファイルは、GNU Lesser General Public Licenseバージョン3以降の条件に基づいて公開されています。COPYING.LESSERおよびCOPYINGファイルを参照してください。
 * Guileのreadlineモジュールは、GNU一般公衆利用許諾契約書バージョン3以降の条件に基づいて公開されています。詳細はCOPYINGファイルを参照してください。
-* このマニュアルは、GNU フリー文書ライセンスの条項に基づいて公開されています ([GNU フリー文書ライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#GNU-Free-Documentation-License) を参照)。
+* このマニュアルは、GNU フリー文書ライセンスの条項に基づいて公開されています ([GNU フリー文書ライセンス](a_gnu_free_documentation_license.md#付録a-gnuフリー文書ライセンス) を参照)。
 
 GuileライブラリにリンクするCコードは、当該ライブラリの利用規約に従う必要があります。基本的に、ユーザーがGuileの新しいバージョンまたは変更されたバージョンに再リンクできる限り、そのようなコードはどのような条件でも公開できます。
 
@@ -50,4 +50,4 @@ Guileには一切の保証がないことをご了承ください。詳細はラ
 
 * * *
 
-次へ: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021)、前: [Preface](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface)、上: [The Guile Reference Manual](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Hello Guile!](02_hello_guile.md#2-こんにちはguile)、前: [Preface](#序文)、上: [The Guile Reference Manual](00_contents.md) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

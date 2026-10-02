@@ -1,10 +1,10 @@
-#### 7.5.20 SRFI-28 - 基本フォーマット文字列[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d28-_002d-Basic-Format-Strings)
+#### 7.5.20 SRFI-28 - 基本フォーマット文字列
 
 SRFI-28 は、`~a`、`~s`、`~%`、および `~~` フォーマット指定子のみを提供する基本的な `format` プロシージャを提供します。このプロシージャは、次のようにインポートできます。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-28))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (srfi srfi-28))
 
-Scheme手順: **format** メッセージ引数 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-format)
+Scheme手順: **format** メッセージ引数 …
 
 指定されたメッセージをフォーマット文字列として使用し、フォーマットされたメッセージを返します。フォーマット文字列には、以下のフォーマット指定子を含めることができます。
 
@@ -24,8 +24,8 @@ Scheme手順: **format** メッセージ引数 … [¶](https://doc.guix.gnu.org
 
 チルダを挿入してください。
 
-この手順は、出力先として `#f` を指定して `simple-format` を呼び出すのと同じです ([Simple Textual Output](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Output) を参照)。
+この手順は、出力先として `#f` を指定して `simple-format` を呼び出すのと同じです ([Simple Textual Output](06_12_input_and_output.md#6125-シンプルなテキスト出力) を参照)。
 
 * * *
 
-次へ: [SRFI-31 - 再帰評価のための特殊形式 'rec'](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d31)、前: [SRFI-28 - 基本フォーマット文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d28)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-31 - 再帰評価のための特殊形式 'rec'](07_05_22_srfi31_a_special_form_rec_for_recursive_evaluation.md#7522-srfi-31---再帰評価のための特殊形式rec)、前: [SRFI-28 - 基本フォーマット文字列](#7520-srfi-28---基本フォーマット文字列)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

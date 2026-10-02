@@ -1,17 +1,17 @@
-#### 6.6.15 レコードの概要 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Record-Overview-1)
+#### 6.6.15 レコードの概要
 
 レコード（構造体とも呼ばれる）は、Scheme において新しい非連結型を定義するための主要なメカニズムです。レコード型は、その型のインスタンスを構成するフィールドのリストを定義します。これは C 言語の `struct` に相当します。
 
 歴史的に、Guileはレコード型を定義し、レコードを作成するためのさまざまな方法を提供してきました。それぞれ異なる機能とトレードオフを備えています。長年にわたり、それぞれの「標準」には独自の新しいレコードインターフェースが付属しており、レコードAPIの複雑な迷路のような状態になっています。
 
-最上位レベルは、ほとんどの Scheme 実装で実装されている高レベルレコードインターフェースである SRFI-9 です ([SRFI-9 Records](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records) を参照)。これは、レコード型とそれに関連付けられた型述語、フィールド、フィールドアクセサのシンプルで効率的な構文的抽象化を定義します。SRFI-9 はほとんどの用途に適しており、Guile でレコード型を作成する推奨方法です。同様の高レベルレコード API には、SRFI-35 ([SRFI-35 - Conditions](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d35) を参照) と R6RS レコード ([rnrs records syntactic](https://doc.guix.gnu.org/guile/latest/en/guile.html#rnrs-records-syntactic) を参照) があります。
+最上位レベルは、ほとんどの Scheme 実装で実装されている高レベルレコードインターフェースである SRFI-9 です ([SRFI-9 Records](06_06_16_srfi9_records.md#6616-srfi-9-レコード) を参照)。これは、レコード型とそれに関連付けられた型述語、フィールド、フィールドアクセサのシンプルで効率的な構文的抽象化を定義します。SRFI-9 はほとんどの用途に適しており、Guile でレコード型を作成する推奨方法です。同様の高レベルレコード API には、SRFI-35 ([SRFI-35 - Conditions](07_05_24_srfi35_conditions.md#7524-srfi-35---条件) を参照) と R6RS レコード ([rnrs records syntactic](07_06_r6rs_support.md#7629-rnrs-レコード構文) を参照) があります。
 
-次に、Guile の従来型の「レコード」API が登場します ([レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records) を参照)。このように定義されたレコード型は、第一級オブジェクトです。イントロスペクション機能が利用可能で、ユーザーは型を事前に知らなくても、実行時にフィールドのリストや特定のフィールドの値を照会できます。
+次に、Guile の従来型の「レコード」API が登場します ([レコード](06_06_17_records.md#6617-レコード) を参照)。このように定義されたレコード型は、第一級オブジェクトです。イントロスペクション機能が利用可能で、ユーザーは型を事前に知らなくても、実行時にフィールドのリストや特定のフィールドの値を照会できます。
 
-最後に、これらのインターフェースに共通する要素は、Guile の _structure_ API です ([Structures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Structures) を参照)。Guile の構造体は、他のすべてのレコード API の低レベルな構成要素です。アプリケーション開発者は通常、これを使用する必要はありません。
+最後に、これらのインターフェースに共通する要素は、Guile の _structure_ API です ([Structures](06_06_18_structures.md#6618-構造体) を参照)。Guile の構造体は、他のすべてのレコード API の低レベルな構成要素です。アプリケーション開発者は通常、これを使用する必要はありません。
 
-これらのAPIを使用して作成されたレコードはすべて、Guileの標準パターンマッチング機能を使用してパターンマッチングできます（[パターンマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pattern-Matching)を参照）。
+これらのAPIを使用して作成されたレコードはすべて、Guileの標準パターンマッチング機能を使用してパターンマッチングできます（[パターンマッチング](07_08_pattern_matching.md#78-パターンマッチング)を参照）。
 
 * * *
 
-次へ: [レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records)、前: [レコードの概要](https://doc.guix.gnu.org/guile/latest/en/guile.html#Record-Overview)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [レコード](06_06_17_records.md#6617-レコード)、前: [レコードの概要](#6615-レコードの概要)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

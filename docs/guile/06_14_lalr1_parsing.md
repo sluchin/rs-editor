@@ -1,8 +1,8 @@
-### 6.14 LALR(1) 構文解析 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#LALR_00281_0029-Parsing-1)
+### 6.14 LALR(1) 構文解析
 
 `(system base lalr)` モジュールは、Dominique Boucher 氏による LALR(1) パーサージェネレータである [`lalr-scm` を提供します](https://github.com/schemeway/lalr-scm/)。`lalr-scm` は、GNU Bison と同じアルゴリズムを使用します (Bison、Yacc 互換パーサージェネレータの [Bison 入門](https://www.gnu.org/software/bison/manual/bison.html#Introduction) を参照)。パーサーは `lalr-parser` マクロを使用して定義されます。
 
-Scheme構文: **lalr-parser** \[options\] トークンルール... [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lalr_002dparser)
+Scheme構文: **lalr-parser** \[options\] トークンルール...
 
 LALR(1)構文解析器を生成します。tokensは文法の終端記号を表す記号のリストです。rulesは文法生成規則です。
 
@@ -14,4 +14,4 @@ LALR(1)構文解析器を生成します。tokensは文法の終端記号を表�
 
 * * *
 
-次へ: [スキームコードの読み込みと評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Read_002fLoad_002fEval_002fCompile)、前: [LALR(1) 解析](https://doc.guix.gnu.org/guile/latest/en/guile.html#LALR_00281_0029-Parsing)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [スキームコードの読み込みと評価](06_16_reading_and_evaluating_scheme_code.md#616-scheme-コードの読み取りと評価)、前: [LALR(1) 解析](#614-lalr1-構文解析)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

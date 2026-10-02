@@ -1,14 +1,14 @@
-#### 7.5.4 SRFI-2 - and-let\* [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d2-_002d-and_002dlet_002a)
+#### 7.5.4 SRFI-2 - and-let\*
 
 以下の構文は、
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-2))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (srfi srfi-2))
 
 または別の方法として
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 and-let-star))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (ice-9 and-let-star))
 
-ライブラリ構文: **and-let\*** (句 …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-and_002dlet_002a)
+ライブラリ構文: **and-let\*** (句 …) 本体 …
 
 `and`と`let*`の組み合わせ。
 
@@ -49,4 +49,4 @@ exprを評価し、`#f`をチェックします。
 
 * * *
 
-次へ: [SRFI-6 - 基本文字列ポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d6)、前: [SRFI-2 - and-let\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d2)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-6 - 基本文字列ポート](07_05_06_srfi6_basic_string_ports.md#756-srfi-6---基本文字列ポート)、前: [SRFI-2 - and-let\*](#754-srfi-2---and-let)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

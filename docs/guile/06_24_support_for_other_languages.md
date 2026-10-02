@@ -1,24 +1,24 @@
-### 6.24 他の言語のサポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Support-for-Other-Languages)
+### 6.24 他の言語のサポート
 
 Schemeに加えて、ユーザーはますます多くの言語でGuileプログラムを作成できるようになっています。現在サポートされている言語には、Emacs LispとECMAScriptが含まれます。
 
 Guileは依然として基本的にはScheme言語ですが、多様な言語構成要素をサポートするように設計されているため、Guile上に他の言語を実装できます。これにより、ユーザーはScheme以外の言語でアプリケーションを作成したり、拡張したりすることも可能です。このセクションでは、実装されている言語について説明します。
 
-（言語の実装方法の詳細については、[仮想マシンへのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiling-to-the-Virtual-Machine)を参照してください。）
+（言語の実装方法の詳細については、[仮想マシンへのコンパイル](09_04_compiling_to_the_virtual_machine.md#94-仮想マシンへのコンパイル)を参照してください。）
 
-* [他の言語の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Other-Languages)
-* [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp)
-* [ECMAScript](https://doc.guix.gnu.org/guile/latest/en/guile.html#ECMAScript)
+* [他の言語の使用](#6241-他の言語の使用)
+* [Emacs Lisp](#6242-emacs-lisp)
+* [ECMAScript](#6243-ecmascript)
 
 * * *
 
-次へ: [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp)、上へ: [その他の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Languages) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [Emacs Lisp](#6242-emacs-lisp)、上へ: [その他の言語のサポート](#624-他の言語のサポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.24.1 他の言語の使用 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Other-Languages-1)
+#### 6.24.1 他の言語の使用
 
 現在、Guile 内から他の言語にアクセスする方法は 2 つしかありません。REPL を使用する方法と、`compile`、`read-and-compile`、`compile-file` を介してプログラム的にアクセスする方法です。
 
-REPLはGuileのコマンドプロンプトです（[Guileを対話的に使用する](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Guile-Interactively)を参照）。REPLには「現在の言語」という概念があり、デフォルトではSchemeになっています。ユーザーはメタコマンド`,language`を使用して言語を変更できます。
+REPLはGuileのコマンドプロンプトです（[Guileを対話的に使用する](04_programming_in_scheme.md#44-guile-を対話的に使用する)を参照）。REPLには「現在の言語」という概念があり、デフォルトではSchemeになっています。ユーザーはメタコマンド`,language`を使用して言語を変更できます。
 
 例えば、以下のメタコマンドはEmacs Lisp入力を有効にします。
 
@@ -36,15 +36,15 @@ $2 = #nil
 
 確かに、`compile`への入力はデータであるため、これはデータ表現が単純なLispy言語に最適です。より複雑な解析が必要な他の言語は、文字列として扱う方が適しています。
 
-構文が複雑な言語を扱う最も簡単な方法は、`compile-file`などのコマンドを使ってファイルを扱うことです。ただし、ポート上で言語のリーダーを呼び出し、結果として得られる式（その時点ではデータ）をコンパイルすることも可能です。詳細については、[Schemeコードのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compilation)を参照してください。
+構文が複雑な言語を扱う最も簡単な方法は、`compile-file`などのコマンドを使ってファイルを扱うことです。ただし、ポート上で言語のリーダーを呼び出し、結果として得られる式（その時点ではデータ）をコンパイルすることも可能です。詳細については、[Schemeコードのコンパイル](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル)を参照してください。
 
-さまざまな言語のアスペクトを内省する方法の詳細については、[コンパイラタワー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compiler-Tower)を参照してください。
+さまざまな言語のアスペクトを内省する方法の詳細については、[コンパイラタワー](09_04_compiling_to_the_virtual_machine.md#941-コンパイラタワー)を参照してください。
 
 * * *
 
-次へ: [ECMAScript](https://doc.guix.gnu.org/guile/latest/en/guile.html#ECMAScript)、前: [他の言語の使用](https://doc.guix.gnu.org/guile/latest/en/guile.html#Using-Other-Languages)、上: [他の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Languages) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ECMAScript](#6243-ecmascript)、前: [他の言語の使用](#6241-他の言語の使用)、上: [他の言語のサポート](#624-他の言語のサポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.24.2 Emacs Lisp [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp-1)
+#### 6.24.2 Emacs Lisp
 
 Emacs Lisp（Elisp）は、Emacsエディタで使用される動的スコープのLisp方言です。Emacs Lispの詳細については、Emacs Lispの[概要](https://www.gnu.org/software/emacs/manual/html_mono/elisp.html#Top)を参照してください。
 
@@ -52,15 +52,15 @@ Emacs Lisp（Elisp）は、Emacsエディタで使用される動的スコープ
 
 Emacs Lispに精通している読者は、Guileでこれらの様々なElisp機能が具体的にどのようにサポートされているのかに興味を持つかもしれません。このセクションの残りの部分では、Elisp愛好家のこうした疑問に答えることに焦点を当てます。
 
-* [Nil](https://doc.guix.gnu.org/guile/latest/en/guile.html#Nil)
-* [動的バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Binding)
-* [その他のElisp機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Elisp-Features)
+* [Nil](#62421-nil)
+* [動的バインディング](#62422-動的バインディング)
+* [その他のElisp機能](#62423-その他のelisp機能)
 
 * * *
 
-次へ: [Dynamic Binding](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Binding)、上へ: [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Dynamic Binding](#62422-動的バインディング)、上へ: [Emacs Lisp](#6242-emacs-lisp) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 6.24.2.1 Nil [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Nil-1)
+#### 6.24.2.1 Nil
 
 ELispにおける`nil`は、Schemeの`#f`と`'()`を組み合わせたものです。偽であり、リストの末尾を表します。つまり、ブール値であると同時にリストでもあります。
 
@@ -68,14 +68,14 @@ Guile は、`nil` を `#f` や `'()` とは別の値としてサポートする�
 
 Elisp コードでは、`#nil`、`#f`、および `'()` は `nil` と同じように動作します。つまり、Elisp の `if`、`cond`、`when`、`not`、`null` などによってすべて `nil` として解釈されます。Scheme コード内から Elisp がオブジェクトを `nil` として解釈するかどうかをテストするには、`nil?` を使用します。
 
-Scheme Procedure: **nil?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_003f)
+Scheme Procedure: **nil?** obj
 
 objがEmacs Lispコードによって`nil`と解釈される場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-([nil?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_003f) #nil) ⇒ #t
-([nil?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_003f) #f) ⇒ #t
-([nil?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_003f) '()) ⇒ #t
-([nil?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-nil_003f) 3) ⇒ #f
+([nil?](#62421-nil) #nil) ⇒ #t
+([nil?](#62421-nil) #f) ⇒ #t
+([nil?](#62421-nil) '()) ⇒ #t
+([nil?](#62421-nil) 3) ⇒ #f
 
 `nil`を低レベルの明確な値として扱うというこの決定は、2つの言語間の相互運用性を容易にします。Guileは、Schemeが`nil`を次のように扱うように選択しました。
 
@@ -93,7 +93,7 @@ scm_is_null (SCM_ELISP_NIL) ⇒ 1
 
 低レベルでは、`#f`、`#t`、`nil`、および`'()`のビット表現は、1ビットだけ異なるように作成されているため、例えば`#f`\-or-`nil`のテストを非常に効率的に行うことができます。詳細については、`libguile/boolean.h`を参照してください。
 
-#### 平等 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Equality-2)
+#### 平等
 
 Scheme の `equal?` は推移的でなければならず、`'()` は `#f` と `equal?` ではないため、Scheme では `nil` は `#f` または `'()` と `equal?` ではありません。
 
@@ -163,29 +163,29 @@ Scheme の `equal?` は推移的でなければならず、`'()` は `#f` と `e
 t
 なし))
 
-Guile は、`#f`、`'()`、または `nil` との等価比較を含むコードをコンパイルする際に警告を発することがあります。詳細については、[Scheme コードのコンパイル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Compilation) を参照してください。
+Guile は、`#f`、`'()`、または `nil` との等価比較を含むコードをコンパイルする際に警告を発することがあります。詳細については、[Scheme コードのコンパイル](06_16_reading_and_evaluating_scheme_code.md#6166-scheme-コードのコンパイル) を参照してください。
 
 * * *
 
-次へ: [その他のElisp機能](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Elisp-Features)、前: [なし](https://doc.guix.gnu.org/guile/latest/en/guile.html#Nil)、上: [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [その他のElisp機能](#62423-その他のelisp機能)、前: [なし](#62421-nil)、上: [Emacs Lisp](#6242-emacs-lisp) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.24.2.2 動的バインディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Binding-1)
+#### 6.24.2.2 動的バインディング
 
 「レキシカルスコープ」を使用するSchemeとは対照的に、Emacs Lispは変数のスコープを動的に制御します。Guileは「fluids」機能で動的スコープをサポートしています。詳細については、「Fluids and Dynamic States」を参照してください。
 
 * * *
 
-前へ: [Dynamic Binding](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Binding)、上へ: [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+前へ: [Dynamic Binding](#62422-動的バインディング)、上へ: [Emacs Lisp](#6242-emacs-lisp) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 6.24.2.3 その他のElisp機能 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Elisp-Features-1)
+#### 6.24.2.3 その他のElisp機能
 
 バッファローカル変数とモードローカル変数、文字のバッキービット、Emacsのプリミティブデータ型、ElispのLisp-2的な性質などについて、ここで触れておくべきでしょう。ドキュメントへの貢献は大歓迎です！
 
 * * *
 
-前へ: [Emacs Lisp](https://doc.guix.gnu.org/guile/latest/en/guile.html#Emacs-Lisp)、上へ: [その他の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Languages) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [Emacs Lisp](#6242-emacs-lisp)、上へ: [その他の言語のサポート](#624-他の言語のサポート) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.24.3 ECMAScript [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#ECMAScript-1)
+#### 6.24.3 ECMAScript
 
 [ECMAScript](http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf)は、Guileが実装した最初の非Scheme言語ではありませんでしたが、Guileのバイトコードコンパイラ向けに実装された最初の言語でした。目標は、比較的小規模な言語であるECMAScriptバージョン3.1をサポートすることでしたが、実装者は全く無責任で、標準ライブラリを完成させる前に、さらには構文の一部さえも完成させる前に、他のことに気を取られてしまいました。そのため、ECMAScriptはマニュアルに記載されるべきですが、実装が完了するまでは、おそらくもっと責任感のあるハッカーによって実装されるまでは、推奨されるべきではありません。
 
@@ -193,4 +193,4 @@ Guile は、`#f`、`'()`、または `nil` との等価比較を含むコード�
 
 * * *
 
-次へ: [デバッグインフラストラクチャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Debugging)、前: [他の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Languages)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [デバッグインフラストラクチャ](06_26_debugging_infrastructure.md#626-デバッグインフラストラクチャ)、前: [他の言語のサポート](#624-他の言語のサポート)、上: [API リファレンス](06_00_api_reference.md#6-apiリファレンス) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

@@ -1,19 +1,19 @@
-#### 6.6.7 キーワード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords-1)
+#### 6.6.7 キーワード
 
 キーワードは、入力しやすい便利な読み書き構文を備えた自己評価オブジェクトです。
 
 GuileのキーワードサポートはR5RSに準拠しており、キーワードが`:`や`#:`で始まること、または`:`で終わることを可能にする(切り替え可能な)読み取り構文拡張を追加しています。
 
-* [キーワードを使用する理由](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-Use-Keywords_003f)
-* [キーワードを使ったコーディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Coding-With-Keywords)
-* [キーワード読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Read-Syntax)
-* [キーワードプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Procedures)
+* [キーワードを使用する理由](#6671-キーワードを使用する理由)
+* [キーワードを使ったコーディング](#6672-キーワードを使用したコーディング)
+* [キーワード読み取り構文](#6673-キーワード読み取り構文)
+* [キーワードプロシージャ](#6674-キーワードプロシージャ)
 
 * * *
 
-次へ: [キーワードによるコーディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Coding-With-Keywords)、上へ: [キーワード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [キーワードによるコーディング](#6672-キーワードを使用したコーディング)、上へ: [キーワード](#667-キーワード) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.7.1 キーワードを使用する理由 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-Use-Keywords_003f-1)
+#### 6.6.7.1 キーワードを使用する理由
 
 キーワードは、プログラムやプロシージャが、インターフェースを管理不能にすることなく、多数のオプション引数を受け入れることができるようにしたい場合に役立ちます。
 
@@ -30,7 +30,7 @@ GuileのキーワードサポートはR5RSに準拠しており、キーワー�
 'default ;; 背景色
 800 ;; 幅
 100 ;; 高さ
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) ;; その他のmake-window引数
+[...](06_08_macros.md#6821-パターン)) ;; その他のmake-window引数
 
 一方、キーワードを使用すると、デフォルト値の引数は省略され、デフォルト値以外の引数は適切なキーワードによって明確に識別されます。その結果、呼び出しがはるかに分かりやすくなります。
 
@@ -38,74 +38,74 @@ GuileのキーワードサポートはR5RSに準拠しており、キーワー�
 
 一方、引数の少ない単純な手続きの場合、キーワードの使用は助けになるどころか妨げになるだろう。例えば、プリミティブ手続き `cons` は、次のように呼び出さなければならないとしても改善されないだろう。
 
-([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) #:car x #:cdr y)
+([cons](06_06_08_pairs.md#668-ペア) #:car x #:cdr y)
 
 したがって、キーワードを使用するかどうかの決定は、純粋に実用的なものです。呼び出し時にプロシージャの呼び出しを明確にするのであれば、キーワードを使用すべきです。
 
 * * *
 
-次へ: [キーワード読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Read-Syntax)、前: [キーワードを使用する理由](https://doc.guix.gnu.org/guile/latest/en/guile.html#Why-Use-Keywords_003f)、上: [キーワード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [キーワード読み取り構文](#6673-キーワード読み取り構文)、前: [キーワードを使用する理由](#6671-キーワードを使用する理由)、上: [キーワード](#667-キーワード) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.7.2 キーワードを使用したコーディング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Coding-With-Keywords-1)
+#### 6.6.7.2 キーワードを使用したコーディング
 
 プロシージャがキーワードをサポートしたい場合は、レスト引数を受け取り、そのレスト引数の内容からキーワードとその対応する引数を抽出するのに都合の良い手段を用いるべきです。
 
 次の例は、その原理を示しています。`make-window` のコードは、`get-keyword-value` というヘルパープロシージャを使用して、残りの引数から個々のキーワード引数を抽出します。
 
 (define (get-keyword-value args keyword default)
-(let ((kv ([memq](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-memq) キーワード引数)))
-(if (and kv ([\>=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e_003d) ([length](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-length) kv) 2))
-([cadr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cadr) kv)
+(let ((kv ([memq](06_06_09_lists.md#6697-リスト検索) キーワード引数)))
+(if (and kv ([\>=](06_06_02_numerical_data_types.md#6628-比較述語) ([length](06_06_09_lists.md#6694-リスト選択) kv) 2))
+([cadr](06_06_08_pairs.md#668-ペア) kv)
 デフォルト）））
 
 (define (make-window . args)
 (let ((depth (get-keyword-value args #:depth screen-depth))
 (bg (get-keyword-value args #:bg "white"))
-([width](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-width) (get-keyword-value args #:width 800))
+([width](04_programming_in_scheme.md#4446-デバッグコマンド) (get-keyword-value args #:width 800))
 (height (get-keyword-value args #:height 100))
 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- _002e_002e_002e))
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+[...](06_08_macros.md#6821-パターン)))
 
 しかし、`get-keyword-value` を記述する必要はありません。`(ice-9 optargs)` モジュールには、次のようなキーワードをサポートする手順を実装するために使用できる強力なマクロのセットが用意されています。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 optargs))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (ice-9 optargs))
 
 (define (make-window . args)
-([let-keywords](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002dkeywords) args #f ((depth screen-depth)
+([let-keywords](06_07_procedures.md#6742-ice-9-optargs) args #f ((depth screen-depth)
 (背景「白」)
-([width](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-width) 800)
+([width](04_programming_in_scheme.md#4446-デバッグコマンド) 800)
 (高さ100)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+[...](06_08_macros.md#6821-パターン)))
 
 あるいは、もっと経済的な言い方をすれば、こうなります。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 optargs))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (ice-9 optargs))
 
 (define\* (make-window #:key (depth screen-depth)
 (背景「白」)
-([width](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-width) 800)
+([width](04_programming_in_scheme.md#4446-デバッグコマンド) 800)
 (高さ100)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 
-`let-keywords`、`define*`、および`(ice-9 optargs)`モジュールによって提供されるその他の機能の詳細については、[Optional Arguments](https://doc.guix.gnu.org/guile/latest/en/guile.html#Optional-Arguments)を参照してください。
+`let-keywords`、`define*`、および`(ice-9 optargs)`モジュールによって提供されるその他の機能の詳細については、[Optional Arguments](06_07_procedures.md#674-オプションの引数)を参照してください。
 
-C言語で実装されたプロシージャからのキーワード引数を処理するには、 `scm_c_bind_keyword_arguments`を使用します（[キーワードプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Procedures)を参照）。
+C言語で実装されたプロシージャからのキーワード引数を処理するには、 `scm_c_bind_keyword_arguments`を使用します（[キーワードプロシージャ](#6674-キーワードプロシージャ)を参照）。
 
 * * *
 
-次へ: [キーワード手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Procedures)、前: [キーワードを使用したコーディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Coding-With-Keywords)、上: [キーワード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [キーワード手順](#6674-キーワードプロシージャ)、前: [キーワードを使用したコーディング](#6672-キーワードを使用したコーディング)、上: [キーワード](#667-キーワード) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.7.3 キーワード読み取り構文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Read-Syntax-1)
+#### 6.6.7.3 キーワード読み取り構文
 
-Guile はデフォルトでは R5RS と互換性のあるキーワード構文のみを認識します。`#:NAME` の形式のトークン（`NAME` は Scheme シンボルと同じ構文を持ちます ([シンボルの拡張読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbol-Read-Syntax) を参照)）は、`NAME` という名前のキーワードの外部表現です。キーワードオブジェクトもこの構文を使用して出力されるため、キーワードオブジェクトを含む値を Guile に読み戻すことができます。式内で使用される場合、キーワードは自己引用オブジェクトになります。
+Guile はデフォルトでは R5RS と互換性のあるキーワード構文のみを認識します。`#:NAME` の形式のトークン（`NAME` は Scheme シンボルと同じ構文を持ちます ([シンボルの拡張読み取り構文](06_06_06_symbols.md#6665-シンボルの拡張読み取り構文) を参照)）は、`NAME` という名前のキーワードの外部表現です。キーワードオブジェクトもこの構文を使用して出力されるため、キーワードオブジェクトを含む値を Guile に読み戻すことができます。式内で使用される場合、キーワードは自己引用オブジェクトになります。
 
 `keywords`の読み取りオプションが`'prefix`に設定されている場合、Guileは代替の読み取り構文`:NAME`も認識します。それ以外の場合は、R5RSの要件に従って、`:NAME`形式のトークンはシンボルとして読み取られます。
 
-`keywords` の読み取りオプションが `'postfix` に設定されている場合、Guile は SRFI-88 の読み取り構文 `NAME:` を認識します ([SRFI-88 キーワード オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d88) を参照)。それ以外の場合は、この形式のトークンはシンボルとして読み込まれます。
+`keywords` の読み取りオプションが `'postfix` に設定されている場合、Guile は SRFI-88 の読み取り構文 `NAME:` を認識します ([SRFI-88 キーワード オブジェクト](07_05_42_srfi88_keyword_objects.md#7542-srfi-88-キーワードオブジェクト) を参照)。それ以外の場合は、この形式のトークンはシンボルとして読み込まれます。
 
-代替の非R5RSキーワード構文を有効または無効にするには、 [Reading Scheme Code](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Read)に記載されている`read-set!`プロシージャを使用します。`prefix`構文と`postfix`構文は相互に排他的であることに注意してください。
+代替の非R5RSキーワード構文を有効または無効にするには、 [Reading Scheme Code](06_16_reading_and_evaluating_scheme_code.md#6162-リーディングスキームコード)に記載されている`read-set!`プロシージャを使用します。`prefix`構文と`postfix`構文は相互に排他的であることに注意してください。
 
-([read-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dset_0021) キーワード 'prefix)
+([read-set!](06_16_reading_and_evaluating_scheme_code.md#6162-リーディングスキームコード) キーワード 'prefix)
 
 ＃：タイプ
 ⇒
@@ -115,7 +115,7 @@ Guile はデフォルトでは R5RS と互換性のあるキーワード構文�
 ⇒
 ＃：タイプ
 
-([read-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dset_0021) キーワード 'postfix)
+([read-set!](06_16_reading_and_evaluating_scheme_code.md#6162-リーディングスキームコード) キーワード 'postfix)
 
 タイプ：
 ⇒
@@ -125,7 +125,7 @@ Guile はデフォルトでは R5RS と互換性のあるキーワード構文�
 ⇒
 ：タイプ
 
-([read-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-read_002dset_0021) キーワード #f)
+([read-set!](06_16_reading_and_evaluating_scheme_code.md#6162-リーディングスキームコード) キーワード #f)
 
 ＃：タイプ
 ⇒
@@ -139,47 +139,47 @@ Guile はデフォルトでは R5RS と互換性のあるキーワード構文�
 
 * * *
 
-前へ: [キーワード読み取り構文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Read-Syntax)、上へ: [キーワード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [キーワード読み取り構文](#6673-キーワード読み取り構文)、上へ: [キーワード](#667-キーワード) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 6.6.7.4 キーワードプロシージャ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keyword-Procedures-1)
+#### 6.6.7.4 キーワードプロシージャ
 
-Scheme手順: **キーワード?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_003f)
+Scheme手順: **キーワード?** obj
 
-C 関数: **scm\_keyword\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fkeyword_005fp)
+C 関数: **scm\_keyword\_p** (obj)
 
 引数 obj がキーワードの場合は `#t` を返し、そうでない場合は `#f` を返します。
 
-スキーム手順: **キーワード→シンボル** キーワード [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-keyword_002d_003esymbol)
+スキーム手順: **キーワード→シンボル** キーワード
 
-C 関数: **scm\_keyword\_to\_symbol** (keyword) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fkeyword_005fto_005fsymbol)
+C 関数: **scm\_keyword\_to\_symbol** (keyword)
 
 キーワードと同じ名前のシンボルを返します。
 
-Scheme手順: **symbol->keyword** symbol [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-symbol_002d_003ekeyword)
+Scheme手順: **symbol->keyword** symbol
 
-C 関数: **scm\_symbol\_to\_keyword** (symbol) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsymbol_005fto_005fkeyword)
+C 関数: **scm\_symbol\_to\_keyword** (symbol)
 
 シンボルと同じ名前のキーワードを返します。
 
-C 関数: `int` **scm\_is\_keyword** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005fkeyword)
+C 関数: `int` **scm\_is\_keyword** `(SCM obj)`
 
 `scm_is_true (scm_keyword_p (obj))` と同等です。
 
-C 関数: `SCM` **scm\_from\_locale\_keyword** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flocale_005fkeyword)
+C 関数: `SCM` **scm\_from\_locale\_keyword** `(const char *name)`
 
-C 関数: `SCM` **scm\_from\_locale\_keywordn** `(const char *name, size_t len)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flocale_005fkeywordn)
+C 関数: `SCM` **scm\_from\_locale\_keywordn** `(const char *name, size_t len)`
 
 それぞれ `scm_symbol_to_keyword (scm_from_locale_symbol (name))` および `scm_symbol_to_keyword (scm_from_locale_symboln (name, len))` と同等です。
 
 これらの関数は、name が C 文字列定数である場合は使用しないでください。現在のロケールが、文字列定数や文字定数に使用される実行文字セットと一致する保証がないためです。最新の C コンパイラのほとんどはデフォルトで UTF-8 を使用するため、そのような場合は `scm_from_utf8_keyword` の使用をお勧めします。
 
-C 関数: `SCM` **scm\_from\_latin1\_keyword** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005flatin1_005fkeyword)
+C 関数: `SCM` **scm\_from\_latin1\_keyword** `(const char *name)`
 
-C 関数: `SCM` **scm\_from\_utf8\_keyword** `(const char *name)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffrom_005futf8_005fkeyword)
+C 関数: `SCM` **scm\_from\_utf8\_keyword** `(const char *name)`
 
 それぞれ `scm_symbol_to_keyword (scm_from_latin1_symbol (name))` および `scm_symbol_to_keyword (scm_from_utf8_symbol (name))` と同等です。
 
-C 関数: `void` **scm\_c\_bind\_keyword\_arguments** ``(const char *subr, SCM rest, scm_t_keyword_arguments_flags flags, SCM keyword1, SCM *argp1, …, SCM keywordN, SCM *argpN, `SCM_UNDEFINED`)`` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fbind_005fkeyword_005farguments)
+C 関数: `void` **scm\_c\_bind\_keyword\_arguments** ``(const char *subr, SCM rest, scm_t_keyword_arguments_flags flags, SCM keyword1, SCM *argp1, …, SCM keywordN, SCM *argpN, `SCM_UNDEFINED`)``
 
 変更されないrestから、指定されたキーワード引数を抽出します。キーワード引数keyword1が関連値とともにrestに存在する場合、その値はargp1が指す変数に格納されます。そうでない場合、変数は変更されません。同様に、keywordNおよびargpNまでの他のキーワードと引数ポインタについても処理を行います。`scm_c_bind_keyword_arguments`への引数リストは、`SCM_UNDEFINED`で終了する必要があります。
 
@@ -219,4 +219,4 @@ scm\_c\_define\_gsubr ("my-string-join", 1, 0, 1, my\_string\_join);
 
 * * *
 
-次へ: [リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lists)、前: [キーワード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Keywords)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [リスト](06_06_09_lists.md#669-リスト)、前: [キーワード](#667-キーワード)、上: [データ型](06_06_00_data_types.md#66-データ型) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

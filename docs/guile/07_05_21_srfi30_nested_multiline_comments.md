@@ -1,7 +1,7 @@
-#### 7.5.21 SRFI-30 - ネストされた複数行コメント [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d30-_002d-Nested-Multi_002dline-Comments)
+#### 7.5.21 SRFI-30 - ネストされた複数行コメント
 
-バージョン 2.0 以降、Guile の `read` はデフォルトで SRFI-30/R6RS のネストされた複数行コメントをサポートしています。[ブロック コメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#Block-Comments)。
+バージョン 2.0 以降、Guile の `read` はデフォルトで SRFI-30/R6RS のネストされた複数行コメントをサポートしています。[ブロック コメント](06_16_reading_and_evaluating_scheme_code.md#61613-ブロックコメント)。
 
 * * *
 
-次へ: [SRFI-34 - プログラムの例外処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d34)、前: [SRFI-30 - ネストされた複数行コメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d30)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-34 - プログラムの例外処理](07_05_23_srfi34_exception_handling_for_programs.md#7523-srfi-34---プログラムの例外処理)、前: [SRFI-30 - ネストされた複数行コメント](#7521-srfi-30---ネストされた複数行コメント)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

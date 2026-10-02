@@ -1,4 +1,4 @@
-### 7.8 パターンマッチング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pattern-Matching-1)
+### 7.8 パターンマッチング
 
 `(ice-9 match)`モジュールは、Alex Shinnによって作成されたパターンマッチング機能を提供し、多くのScheme実装で使用されているAndrew K. Wrightのパターンマッチング機能と互換性があります。
 
@@ -35,7 +35,7 @@
 
 パターンマッチングは次のように定義されます。
 
-Scheme構文: **match** exp clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match)
+Scheme構文: **match** exp clause1 clause2 …
 
 オブジェクト exp を、clause1、clause2…のパターンと、出現順に照合します。最初に一致した句によって生成された値を返します。一致する句がない場合は、キー `match-error` を持つ例外をスローします。
 
@@ -127,7 +127,7 @@ qp ::= () 空のリスト
 
 `(ice-9 match)` モジュールは、`match` をラップする以下の便利な構文糖衣マクロも提供します。
 
-Scheme構文: **match-lambda** clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dlambda)
+Scheme構文: **match-lambda** clause1 clause2 …
 
 引数を1つだけ持ち、その引数を各句と照合し、対応する式の評価結果を返す手続きを作成します。
 
@@ -141,7 +141,7 @@ Scheme構文: **match-lambda** clause1 clause2 … [¶](https://doc.guix.gnu.org
 '（こんにちは世界）））
 ⇒世界
 
-Scheme構文: **match-lambda\*** clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dlambda_002a)
+Scheme構文: **match-lambda\*** clause1 clause2 …
 
 引数の数を任意に指定できる手続きを作成し、その手続きが引数リストを各句と照合し、対応する式の評価結果を返すようにします。
 
@@ -155,7 +155,7 @@ Scheme構文: **match-lambda\*** clause1 clause2 … [¶](https://doc.guix.gnu.o
 'こんにちは世界））
 ⇒世界
 
-Scheme構文: **match-let** ((パターン式) …) body [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dlet)
+Scheme構文: **match-let** ((パターン式) …) body
 
 各パターンを対応する式と照合し、一致したすべての変数をスコープ内に含めて本体を評価します。いずれかの式が一致しなかった場合はエラーを発生させます。`match-let` は名前付き let に類似しており、`match-lambda*` のように引数に基づいて照合する再帰関数にも使用できます。
 
@@ -165,11 +165,11 @@ Scheme構文: **match-let** ((パターン式) …) body [¶](https://doc.guix.g
 ⇒
 (3 4 1 2)
 
-Scheme構文: **match-let** 変数 ((パターン初期化) …) 本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dlet-1)
+Scheme構文: **match-let** 変数 ((パターン初期化) …) 本体
 
-`match-let` と同様ですが、_named let_ に類似しており、VARIABLE を INIT 式の数と同じ数の引数を受け入れる新しいプロシージャにローカルにバインドします。このプロシージャは、最初に INIT 式の評価結果に適用されます。呼び出されると、プロシージャは各引数を対応する PATTERN と照合し、BODY 式の評価結果を返します。_named let_ の詳細については、[Iteration](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do) を参照してください。
+`match-let` と同様ですが、_named let_ に類似しており、VARIABLE を INIT 式の数と同じ数の引数を受け入れる新しいプロシージャにローカルにバインドします。このプロシージャは、最初に INIT 式の評価結果に適用されます。呼び出されると、プロシージャは各引数を対応する PATTERN と照合し、BODY 式の評価結果を返します。_named let_ の詳細については、[Iteration](06_11_controlling_the_flow_of_program_execution.md#6114-反復メカニズム) を参照してください。
 
-Scheme構文: **match-let\*** ((変数式) …) body [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dlet_002a)
+Scheme構文: **match-let\*** ((変数式) …) body
 
 `match-let` に似ていますが、`let*` と類似しており、スコープ内の先行するマッチ変数を含めて、変数を順番にマッチさせてバインドします。
 
@@ -183,12 +183,12 @@ Scheme構文: **match-let\*** ((変数式) …) body [¶](https://doc.guix.gnu.o
 ⇒
 (1 4 1 2)
 
-Scheme構文: **match-letrec** ((変数式) …) body [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match_002dletrec)
+Scheme構文: **match-letrec** ((変数式) …) body
 
 `match-let` に似ていますが、`letrec` と類似しており、スコープ内のすべてのマッチ変数と変数をマッチさせてバインドします。
 
-Guileには、SXMLツリーに特化したパターンマッチング機能も付属しています。[`sxml-match`: SXMLのパターンマッチング](https://doc.guix.gnu.org/guile/latest/en/guile.html#sxml_002dmatch)を参照してください。
+Guileには、SXMLツリーに特化したパターンマッチング機能も付属しています。[`sxml-match`: SXMLのパターンマッチング](07_17_sxmlmatch_pattern_matching_of_sxml.md#717-sxml-match-sxml-のパターンマッチング)を参照してください。
 
 * * *
 
-次へ: [Pretty Printing](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pretty-Printing)、前: [Pattern Matching](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pattern-Matching)、上: [Guile Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Pretty Printing](07_10_pretty_printing.md#710-整形印刷)、前: [Pattern Matching](#78-パターンマッチング)、上: [Guile Modules](07_00_guile_modules.md#7つのguileモジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]

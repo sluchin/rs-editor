@@ -1,6 +1,6 @@
-### 7.4 (ice-9 getopt-long) モジュール [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-_0028ice_002d9-getopt_002dlong_0029-Module)
+### 7.4 (ice-9 getopt-long) モジュール
 
-`(ice-9 getopt-long)` 機能は、コマンドラインで Guile プログラムに渡される引数を解析するのに役立つように設計されており、C ライブラリの同名の機能をモデルにしています (GNU C ライブラリ リファレンス マニュアルの [Getopt](https://doc.guix.gnu.org/libc/latest/en/libc.html#Getopt) を参照)。コマンドライン引数解析のより低レベルなインターフェースについては、[SRFI-37 - args-fold](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d37) を参照してください。
+`(ice-9 getopt-long)` 機能は、コマンドラインで Guile プログラムに渡される引数を解析するのに役立つように設計されており、C ライブラリの同名の機能をモデルにしています (GNU C ライブラリ リファレンス マニュアルの [Getopt](https://doc.guix.gnu.org/libc/latest/en/libc.html#Getopt) を参照)。コマンドライン引数解析のより低レベルなインターフェースについては、[SRFI-37 - args-fold](07_05_25_srfi37_argsfold.md#7525-srfi-37---args-fold) を参照してください。
 
 `(ice-9 getopt-long)` モジュールは、`getopt-long` と `option-ref` という 2 つのプロシージャをエクスポートします。
 
@@ -9,69 +9,69 @@
 
 これらの手順を Guile スクリプトで使用できるようにするには、`getopt-long` または `option-ref` の最初の使用の前に、スクリプトの先頭付近に `(use-modules (ice-9 getopt-long))` という式を含めます。
 
-* [getopt-long の簡単な例](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong-Example)
-* [オプション仕様の書き方](https://doc.guix.gnu.org/guile/latest/en/guile.html#Option-Specification)
-* [想定されるコマンドライン形式](https://doc.guix.gnu.org/guile/latest/en/guile.html#Command-Line-Format)
-* [`getopt-long` のリファレンスドキュメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong-Reference)
-* [`option-ref` のリファレンスドキュメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#option_002dref-Reference)
+* [getopt-long の簡単な例](#741-getopt-long-の短い例)
+* [オプション仕様の書き方](#742-オプション仕様の書き方)
+* [想定されるコマンドライン形式](#743-想定されるコマンドライン形式)
+* [`getopt-long` のリファレンスドキュメント](#744-getopt-long-のリファレンスドキュメント)
+* [`option-ref` のリファレンスドキュメント](#745-option-ref-のリファレンスドキュメント)
 
 * * *
 
-次へ: [オプション仕様の書き方](https://doc.guix.gnu.org/guile/latest/en/guile.html#Option-Specification)、上へ: [(ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [オプション仕様の書き方](#742-オプション仕様の書き方)、上へ: [(ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.4.1 getopt-long の短い例 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#A-Short-getopt_002dlong-Example)
+#### 7.4.1 getopt-long の短い例
 
 このセクションでは、簡単な例を提示して分析することで、`getopt-long` の使い方を説明します。まず必要なのは、`getopt-long` がコマンドラインをどのように解析するかを指示する _オプション仕様_ です。この仕様は、長いオプション名をキーとする連想リストです。仕様は次のようになります。
 
 (オプション仕様を定義)
-'(([version](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-version) (single-char #\\v) (value #f))
-([help](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-help) (単一文字 #\\h) (値 #f))))
+'(([version](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール) (single-char #\\v) (value #f))
+([help](04_programming_in_scheme.md#4441-ヘルプコマンド) (単一文字 #\\h) (値 #f))))
 
 この alist は、`getopt-long` に対して、_version_ と _help_ という 2 つの長いオプションを受け入れること、そしてこれらのオプションはそれぞれ _v_ と _h_ という 1 文字の略語でも選択できることを指示します。`(value #f)` 句は、どちらのオプションも値を受け付けないことを示します。
 
 この仕様により、`getopt-long`を使用して指定されたコマンドラインを解析できます。
 
-(オプションを定義します ([getopt-long](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getopt_002dlong) ([command-line](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-command_002dline)) オプション仕様))
+(オプションを定義します ([getopt-long](#744-getopt-long-のリファレンスドキュメント) ([command-line](07_02_06_runtime_environment.md#726-ランタイム環境)) オプション仕様))
 
 この呼び出しの後、`options`には解析されたコマンドラインが格納され、`option-ref`による検査の準備が整います。`option-ref`は次のように呼び出されます。
 
-([option-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-option_002dref) options 'help #f)
+([option-ref](#745-option-ref-のリファレンスドキュメント) options 'help #f)
 
 `option-ref` は、解析されたコマンドライン、検査対象のオプションを示すシンボル、およびデフォルト値を受け取ります。コマンドラインにオプションが存在しない場合、またはオプションは存在するが値が指定されていない場合は、デフォルト値が返されます。それ以外の場合は、コマンドラインの値が返されます。通常、`option-ref` はスクリプトがサポートするオプションごとに一度呼び出されます。
 
 以下の例は、これらすべてを組み合わせてコマンドラインを解析し、ユーザーが何を求めているのかを判断するメインプログラムを示しています。
 
 (define (main args)
-(let\* ((option-spec '(([version](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-version) (single-char #\\v) (value #f))
-([help](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-help) (単一文字 #\\h) (値 #f))))
-(オプション ([getopt-long](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getopt_002dlong) 引数 オプション仕様))
-(help-wanted ([option-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-option_002dref) options 'help #f))
-(version-wanted ([option-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-option_002dref) options 'version #f)))
+(let\* ((option-spec '(([version](06_23_configuration_features_and_runtime_options.md#6231-設定ビルドおよびインストール) (single-char #\\v) (value #f))
+([help](04_programming_in_scheme.md#4441-ヘルプコマンド) (単一文字 #\\h) (値 #f))))
+(オプション ([getopt-long](#744-getopt-long-のリファレンスドキュメント) 引数 オプション仕様))
+(help-wanted ([option-ref](#745-option-ref-のリファレンスドキュメント) options 'help #f))
+(version-wanted ([option-ref](#745-option-ref-のリファレンスドキュメント) options 'version #f)))
 (もし (またはバージョン希望、ヘルプ希望)
 （始める
 （バージョン指定の場合）
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "getopt-long-example バージョン 0.3\n"))
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) "getopt-long-example バージョン 0.3\n"))
 （求人情報）
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "\\
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) "\\
 getopt-long-example [オプション]
 -v、--version バージョンを表示する
 -h、--help このヘルプを表示します
 ")))
 （始める
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "Hello, World!") ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))))))
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) "Hello, World!") ([newline](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース))))))
 
 * * *
 
-次へ: [想定されるコマンドライン形式](https://doc.guix.gnu.org/guile/latest/en/guile.html#Command-Line-Format)、前: [短い getopt-long の例](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong-Example)、上: [(ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [想定されるコマンドライン形式](#743-想定されるコマンドライン形式)、前: [短い getopt-long の例](#741-getopt-long-の短い例)、上: [(ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.4.2 オプション仕様の書き方 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#How-to-Write-an-Option-Specification)
+#### 7.4.2 オプション仕様の書き方
 
-オプション仕様は、サポートされているオプションごとに1つのリスト要素を持つ連想リストです（[連想リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists)を参照）。各リスト要素のキーはオプションの名前を表すシンボルであり、値はオプションのプロパティのリストです。
+オプション仕様は、サポートされているオプションごとに1つのリスト要素を持つ連想リストです（[連想リスト](06_06_20_association_lists.md#6620-関連付けリスト)を参照）。各リスト要素のキーはオプションの名前を表すシンボルであり、値はオプションのプロパティのリストです。
 
-OPTION-SPEC ::= '( (OPT-NAME1 (PROP-NAME PROP-VALUE) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(OPT-NAME2 (PROP-NAME PROP-VALUE) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(OPT-NAME3 (PROP-NAME PROP-VALUE) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+OPTION-SPEC ::= '( (OPT-NAME1 (PROP-NAME PROP-VALUE) [...](06_08_macros.md#6821-パターン))
+(OPT-NAME2 (PROP-NAME PROP-VALUE) [...](06_08_macros.md#6821-パターン))
+(OPT-NAME3 (PROP-NAME PROP-VALUE) [...](06_08_macros.md#6821-パターン))
+[...](06_08_macros.md#6821-パターン)
 ）
 
 各 opt-name は、そのオプションの長いオプション名を指定します。たとえば、opt-name が `background` のリスト要素は、コマンドラインで長いオプション `--background` を使用して指定できるオプションを指定します。オプションに関する詳細情報（値を取るかどうか、コマンドラインで必須かどうかなど）は、オプションのプロパティで指定されます。
@@ -88,9 +88,9 @@ OPTION-SPEC ::= '( (OPT-NAME1 (PROP-NAME PROP-VALUE) [...](https://doc.guix.gnu.
 
 * * *
 
-次へ: [`getopt-long` のリファレンス ドキュメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong-Reference)、前: [オプション仕様の書き方](https://doc.guix.gnu.org/guile/latest/en/guile.html#Option-Specification)、上: [(ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [`getopt-long` のリファレンス ドキュメント](#744-getopt-long-のリファレンスドキュメント)、前: [オプション仕様の書き方](#742-オプション仕様の書き方)、上: [(ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.4.3 想定されるコマンドライン形式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Expected-Command-Line-Format)
+#### 7.4.3 想定されるコマンドライン形式
 
 `getopt-long`がコマンドラインを正しく解析するためには、そのコマンドラインが、コマンドラインオプションの指定方法に関する標準的な規則に準拠している必要があります。このセクションでは、それらの規則について説明します。
 
@@ -133,11 +133,11 @@ $ ./foo.scm --apples "Granny Smith" -- --blimp Goodyear
 
 * * *
 
-次へ: [`option-ref` のリファレンス ドキュメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#option_002dref-Reference)、前: [想定されるコマンドライン フォーマット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Command-Line-Format)、上: [(ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [`option-ref` のリファレンス ドキュメント](#745-option-ref-のリファレンスドキュメント)、前: [想定されるコマンドライン フォーマット](#743-想定されるコマンドライン形式)、上: [(ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.4.4 `getopt-long` のリファレンスドキュメント [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reference-Documentation-for-getopt_002dlong)
+#### 7.4.4 `getopt-long` のリファレンスドキュメント
 
-Scheme 手順: **getopt-long** 引数文法 \[#:stop-at-first-non-option #f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-getopt_002dlong)
+Scheme 手順: **getopt-long** 引数文法 \[#:stop-at-first-non-option #f\]
 
 引数args（文字列のリストである必要があります）で指定されたコマンドラインを、オプション指定の文法に従って解析します。
 
@@ -182,11 +182,11 @@ bool型が`#t`の場合、オプションは値を受け入れます。`#f`の�
 
 * * *
 
-前へ: [`getopt-long` のリファレンス ドキュメント](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong-Reference)、上へ: [(ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [`getopt-long` のリファレンス ドキュメント](#744-getopt-long-のリファレンスドキュメント)、上へ: [(ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 7.4.5 `option-ref` のリファレンスドキュメント [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reference-Documentation-for-option_002dref)
+#### 7.4.5 `option-ref` のリファレンスドキュメント
 
-スキーム手順: **option-ref** オプションキー default [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-option_002dref)
+スキーム手順: **option-ref** オプションキー default
 
 指定されたキーという名前のコマンドラインオプションを検索し、見つかった場合はその値を返します。オプションに値が指定されていない場合は、`#t` を返します。オプションが指定されていない場合は、デフォルト値を返します。オプションは、`getopt-long` の呼び出し結果である必要があります。
 
@@ -196,4 +196,4 @@ bool型が`#t`の場合、オプションは値を受け入れます。`#f`の�
 
 * * *
 
-次へ: [R6RS サポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#R6RS-Support)、前: [ (ice-9 getopt-long) モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#getopt_002dlong)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [R6RS サポート](07_06_r6rs_support.md#76-r6rs-サポート)、前: [ (ice-9 getopt-long) モジュール](#74-ice-9-getopt-long-モジュール)、上: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

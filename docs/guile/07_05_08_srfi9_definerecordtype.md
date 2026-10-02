@@ -1,7 +1,7 @@
-#### 7.5.8 SRFI-9 - レコードタイプの定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-_002d-define_002drecord_002dtype)
+#### 7.5.8 SRFI-9 - レコードタイプの定義
 
-この SRFI は、新しいレコード型を定義し、述語、コンストラクタ、フィールドのゲッターおよびセッター関数を作成するための構文です。マニュアルの「データ型」セクションに記載されています ([SRFI-9 レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9-Records) を参照)。
+この SRFI は、新しいレコード型を定義し、述語、コンストラクタ、フィールドのゲッターおよびセッター関数を作成するための構文です。マニュアルの「データ型」セクションに記載されています ([SRFI-9 レコード](06_06_16_srfi9_records.md#6616-srfi-9-レコード) を参照)。
 
 * * *
 
-次へ: [SRFI-11 - let-values](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d11)、前: [SRFI-9 - define-record-type](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d9)、上: [SRFI サポート モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI-Support) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SRFI-11 - let-values](07_05_10_srfi11_letvalues.md#7510-srfi-11---let-values)、前: [SRFI-9 - define-record-type](#758-srfi-9---レコードタイプの定義)、上: [SRFI サポート モジュール](07_05_00_srfi_support_modules.md#75-srfi-サポート-モジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

@@ -1,14 +1,14 @@
-### 8.2 クラス定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-1)
+### 8.2 クラス定義
 
 新しいクラスは、`define-class`構文を使用して定義されます。
 
-(define-class [class](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class-1) (superclass [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-スロットの説明 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
-クラスオプション [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(define-class [class](08_11_the_metaobject_protocol.md#8115-クラス定義プロトコル) (superclass [...](06_08_macros.md#6821-パターン))
+スロットの説明 [...](06_08_macros.md#6821-パターン)
+クラスオプション [...](06_08_macros.md#6821-パターン))
 
-クラスは定義されるクラスです。スーパークラスのリストは、スロットとプロパティを継承する既存のクラス（存在する場合）を指定します。_スロット_は、そのクラスのインスタンスごとにデータを保持します[30](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT30)。これは、他のオブジェクト指向システムにおける「フィールド」や「メンバ変数」のようなものです。各スロットの説明には、スロットの名前と、オプションでそのスロットの「プロパティ」がいくつか指定されます。たとえば、初期値、その値にアクセスする関数の名前などです。クラスのオプション、スロットの説明、および継承については、以下で詳しく説明します。
+クラスは定義されるクラスです。スーパークラスのリストは、スロットとプロパティを継承する既存のクラス（存在する場合）を指定します。_スロット_は、そのクラスのインスタンスごとにデータを保持します[30](99_footnotes.md#30)。これは、他のオブジェクト指向システムにおける「フィールド」や「メンバ変数」のようなものです。各スロットの説明には、スロットの名前と、オプションでそのスロットの「プロパティ」がいくつか指定されます。たとえば、初期値、その値にアクセスする関数の名前などです。クラスのオプション、スロットの説明、および継承については、以下で詳しく説明します。
 
-構文: **define-class** 名前 (スーパークラス …) スロット定義 … クラスオプション … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dclass-1)
+構文: **define-class** 名前 (スーパークラス …) スロット定義 … クラスオプション …
 
 `name` という名前のクラスを定義します。このクラスは `super` を継承し、`slot-definitions` と `class-options` によって直接スロットを定義します。新しく作成されたクラスは、現在の環境の変数 `name` にバインドされます。
 
@@ -20,22 +20,22 @@
 
 各クラスオプションは、オプションキーワードとそれに対応する値で構成されます。
 
-例として、複素数を2つの実数で表現する型を定義してみましょう。[31](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT31) これは、次のクラス定義で実現できます。
+例として、複素数を2つの実数で表現する型を定義してみましょう。[31](99_footnotes.md#31) これは、次のクラス定義で実現できます。
 
 (define-class <my-complex> (<number>)
 ri)
 
-これにより、変数 `<my-complex>` が、インスタンスに 2 つのスロットが含まれる新しいクラスにバインドされます。これらのスロットは `r` と `i` と呼ばれ、複素数の実部と虚部を保持します。このクラスは、定義済みのクラスである `<number>` を継承していることに注意してください。[32](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT32)
+これにより、変数 `<my-complex>` が、インスタンスに 2 つのスロットが含まれる新しいクラスにバインドされます。これらのスロットは `r` と `i` と呼ばれ、複素数の実部と虚部を保持します。このクラスは、定義済みのクラスである `<number>` を継承していることに注意してください。[32](99_footnotes.md#32)
 
 スロットのオプションについては、次のセクションで説明します。選択可能なクラスオプションは以下のとおりです。
 
-クラスオプション: **#:metaclass** メタクラス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003ametaclass)
+クラスオプション: **#:metaclass** メタクラス
 
-`#:metaclass` クラスオプションは、定義するクラスのメタクラスを指定します。メタクラスは、`<class>` を継承するクラスである必要があります。メタクラスの使用方法については、[メタオブジェクトとメタオブジェクトプロトコル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaobjects-and-the-Metaobject-Protocol) および [メタクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Metaclasses) を参照してください。
+`#:metaclass` クラスオプションは、定義するクラスのメタクラスを指定します。メタクラスは、`<class>` を継承するクラスである必要があります。メタクラスの使用方法については、[メタオブジェクトとメタオブジェクトプロトコル](08_11_the_metaobject_protocol.md#8111-メタオブジェクトとメタオブジェクトプロトコル) および [メタクラス](08_11_the_metaobject_protocol.md#8112-メタクラス) を参照してください。
 
-`#:metaclass` オプションがない場合、GOOPS は `ensure-metaclass` を呼び出すことで新しいクラスのメタクラスを再利用または構築します ([ensure-metaclass](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition-Protocol) を参照)。
+`#:metaclass` オプションがない場合、GOOPS は `ensure-metaclass` を呼び出すことで新しいクラスのメタクラスを再利用または構築します ([ensure-metaclass](08_11_the_metaobject_protocol.md#8115-クラス定義プロトコル) を参照)。
 
-クラスオプション: **#:name** name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0023_003aname)
+クラスオプション: **#:name** name
 
 `#:name`クラスオプションは、新しいクラスの名前を指定します。この名前は、関連するオブジェクト（クラス自体、そのインスタンス、およびそのサブクラス）が出力される際に、クラスを識別するために使用されます。
 
@@ -43,4 +43,4 @@ ri)
 
 * * *
 
-次へ: [スロットオプション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Slot-Options)、前: [クラス定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [スロットオプション](08_04_slot_options.md#84-スロットオプション)、前: [クラス定義](#82-クラス定義)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

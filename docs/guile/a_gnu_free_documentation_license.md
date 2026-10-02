@@ -1,4 +1,4 @@
-付録A GNUフリー文書ライセンス[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#GNU-Free-Documentation-License-1)
+付録A GNUフリー文書ライセンス
 -----------------------------------------------------------------------------------------------------------------------------------
 
 バージョン1.3、2008年11月3日
@@ -140,7 +140,7 @@ MMCは、このライセンスに基づいてライセンスされている場�
 MMCサイトの運営者は、2009年8月1日より前であればいつでも、サイトに含まれるMMCをCC-BY-SAライセンスの下で同じサイトに再掲載することができる。ただし、当該MMCが再ライセンスの対象となる場合に限る。
     
 
-### 補足：このライセンスをドキュメントに使用する方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#ADDENDUM_003a-How-to-use-this-License-for-your-documents)
+### 補足：このライセンスをドキュメントに使用する方法
 
 作成した文書でこのライセンスを使用するには、文書内にライセンスのコピーを含め、タイトルページの直後に以下の著作権およびライセンスに関する通知を記載してください。
 
@@ -164,4 +164,4 @@ GNUフリー文書ライセンスバージョン1.3の条項に基づき
 
 * * *
 
-次へ: [手順索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedure-Index)、前: [GNU フリー文書ライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#GNU-Free-Documentation-License)、上: [Guile リファレンス マニュアル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [手順索引](index_procedure.md#プロシージャインデックス)、前: [GNU フリー文書ライセンス](#付録a-gnuフリー文書ライセンス)、上: [Guile リファレンス マニュアル](00_contents.md) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

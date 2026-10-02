@@ -1,25 +1,25 @@
-### 8.6 メソッドとジェネリック関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions-1)
+### 8.6 メソッドとジェネリック関数
 
 GOOPSメソッドはSchemeの手続きに似ていますが、特定の引数クラスのセットに特化しており、呼び出し時の実際の引数がメソッド定義内のクラスと一致する場合にのみ使用されます。
 
-(define-method ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (x <string>) (y <string>))
-([string-append](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002dappend) xy))
+(define-method ([+](06_06_02_numerical_data_types.md#66211-算術関数) (x <string>) (y <string>))
+([string-append](06_06_05_strings.md#66510-文字列の反転と追加) xy))
 
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) "abc" "de") ⇒ "abcde"
+([+](06_06_02_numerical_data_types.md#66211-算術関数) "abc" "de") ⇒ "abcde"
 
 メソッドは（他の多くのオブジェクト指向言語のように）特定のクラスに正式には関連付けられていません。なぜなら、メソッドは複数のクラスの組み合わせに特化できるからです。Lispy以外の言語でオブジェクト指向を学んだことがあるなら、グラフィック画像をサーフェスに沿って引き伸ばすメソッドは、サーフェスをパラメータとするイメージクラスのメソッドにするべきか、それとも画像をパラメータとするサーフェスクラスのメソッドにするべきかといった議論を覚えているかもしれません。GOOPSでは、単に次のように記述します。
 
 (define-method (stretch (im <image>) (sf <surface>))
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 
 そして、そのメソッドがどちらのクラスにより関連しているかという問いに答える必要はない。
 
 同じ名前でも、異なる引数クラスのセットを持つメソッドが複数同時に存在し得る。例えば、次のようになる。
 
-(define-method ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (x <string>) (y <string)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(define-method ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (x <matrix>) (y <matrix>)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(define-method ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (f <fish>) (b <bicycle>)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
-(define-method ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) (a <foo>) (b <bar>) (c <baz>)) [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(define-method ([+](06_06_02_numerical_data_types.md#66211-算術関数) (x <string>) (y <string)) [...](06_08_macros.md#6821-パターン))
+(define-method ([+](06_06_02_numerical_data_types.md#66211-算術関数) (x <matrix>) (y <matrix>)) [...](06_08_macros.md#6821-パターン))
+(define-method ([+](06_06_02_numerical_data_types.md#66211-算術関数) (f <fish>) (b <bicycle>)) [...](06_08_macros.md#6821-パターン))
+(define-method ([+](06_06_02_numerical_data_types.md#66211-算術関数) (a <foo>) (b <bar>) (c <baz>)) [...](06_08_macros.md#6821-パターン))
 
 汎用関数とは、プログラムが使用しようとする一連のメソッドを格納するコンテナのことである。
 
@@ -27,11 +27,11 @@ GOOPSメソッドはSchemeの手続きに似ていますが、特定の引数ク
 
 識別子を汎用関数として定義するには、`define-generic` マクロを使用します。新しいメソッドを定義するには、`define-method` マクロを使用します。`define-method` は、対象の識別子が既に汎用関数でない場合、自動的に `define-generic` を実行するため、多くの場合、明示的な `define-generic` 呼び出しは不要です。
 
-構文: **define-generic** シンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dgeneric-1)
+構文: **define-generic** シンボル
 
 シンボルという名前の汎用関数を作成し、それを変数シンボルにバインドします。シンボルが以前にSchemeプロシージャ（またはセッター付きプロシージャ）にバインドされていた場合、古いプロシージャ（およびセッター）は、新しい汎用関数のデフォルトプロシージャ（およびセッター）として組み込まれます。既存の汎用関数を含む、その他の以前の値はすべて破棄され、新しい空の汎用関数に置き換えられます。
 
-構文: **define-method** (汎用パラメータ …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dmethod-1)
+構文: **define-method** (汎用パラメータ …) 本体 …
 
 汎用関数またはアクセサのメソッドを定義します。パラメータ parameters と本体 body ....
 
@@ -51,47 +51,47 @@ body …はメソッド定義の本体です。
 
 例えば、汎用関数メソッドがパラメータ `(s1 <square>)` と `(n <number>)` で定義されている場合、そのメソッドは、最初のパラメータが `<square>` クラスのインスタンスであり、2 番目のパラメータが数値であるような、2 つのパラメータを持つ汎用関数の呼び出しにのみ適用されます。
 
-* [アクセサー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessors)
-* [プリミティブの拡張](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives)
-* [ジェネリクスのマージ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Merging-Generics)
-* [Next-method](https://doc.guix.gnu.org/guile/latest/en/guile.html#Next_002dmethod)
-* [method\* および define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a)
-* [汎用関数とメソッドの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-and-Method-Examples)
-* [呼び出しエラーの処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Invocation-Errors)
+* [アクセサー](#861-アクセサー)
+* [プリミティブの拡張](#862-プリミティブの拡張)
+* [ジェネリクスのマージ](#863-ジェネリクスのマージ)
+* [Next-method](#864-次のメソッド)
+* [method\* および define-method\*](#865-メソッドと定義メソッド)
+* [汎用関数とメソッドの例](#866-汎用関数とメソッドの例)
+* [呼び出しエラーの処理](#867-呼び出しエラーの処理)
 
 * * *
 
-次へ: [プリミティブの拡張](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives)、上: [メソッドとジェネリック関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [プリミティブの拡張](#862-プリミティブの拡張)、上: [メソッドとジェネリック関数](#86-メソッドとジェネリック関数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.1 アクセサー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessors-1)
+#### 8.6.1 アクセサー
 
-アクセサは汎用関数であり、汎用化された `set!` 構文でも使用できます ([セッターを使用したプロシージャ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-with-Setters) を参照)。Guile は次のような呼び出しを処理します。
+アクセサは汎用関数であり、汎用化された `set!` 構文でも使用できます ([セッターを使用したプロシージャ](06_07_procedures.md#678-セッター付きプロシージャ) を参照)。Guile は次のような呼び出しを処理します。
 
 (set! (アクセサ引数...)値)
 
 `args`と`value`のクラスに一致する`accessor`の最も特殊なメソッドを呼び出すことによって実現されます。`define-accessor`は、識別子をアクセサーにバインドするために使用されます。
 
-構文: **define-accessor** シンボル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002daccessor)
+構文: **define-accessor** シンボル
 
 シンボルという名前のアクセサを作成し、それを変数シンボルにバインドします。シンボルが以前にSchemeプロシージャ（またはセッター付きプロシージャ）にバインドされていた場合、古いプロシージャ（およびセッター）は、新しいアクセサのデフォルトプロシージャ（およびセッター）として組み込まれます。既存の汎用関数やアクセサなど、その他の以前の値はすべて破棄され、新しい空のアクセサに置き換えられます。
 
 * * *
 
-次へ: [ジェネリックのマージ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Merging-Generics)、前: [アクセサー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Accessors)、上: [メソッドとジェネリック関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [ジェネリックのマージ](#863-ジェネリクスのマージ)、前: [アクセサー](#861-アクセサー)、上: [メソッドとジェネリック関数](#86-メソッドとジェネリック関数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.2 プリミティブの拡張 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives-1)
+#### 8.6.2 プリミティブの拡張
 
 Guileの多くの基本プロシージャは、通常のC言語による実装と連携して動作する汎用関数定義を与えることで拡張できます。このようにして基本プロシージャが拡張されると、C言語による実装をデフォルトメソッドとする汎用関数のように動作します。
 
 この拡張機能は、現在の値がプリミティブである変数に対してメソッドが定義されている場合（`define-method`呼び出しによる）、自動的に実行されます。ただし、`enable-primitive-generic!`を呼び出すことで強制的に有効にすることもできます。
 
-プリミティブ手続き: **enable-primitive-generic!** プリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-enable_002dprimitive_002dgeneric_0021)
+プリミティブ手続き: **enable-primitive-generic!** プリミティブ
 
 プリミティブ型に対して汎用関数定義の作成を強制する。
 
 プリミティブの汎用関数定義が作成されると、`primitive-generic-generic` を使用して取得できます。
 
-プリミティブ手続き: **primitive-generic-generic** プリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-primitive_002dgeneric_002dgeneric)
+プリミティブ手続き: **primitive-generic-generic** プリミティブ
 
 プリミティブ型の汎用関数定義を返します。
 
@@ -99,23 +99,23 @@ Guileの多くの基本プロシージャは、通常のC言語による実装�
 
 * * *
 
-次へ: [Next-method](https://doc.guix.gnu.org/guile/latest/en/guile.html#Next_002dmethod)、前: [Extending Primitives](https://doc.guix.gnu.org/guile/latest/en/guile.html#Extending-Primitives)、上: [Methods and Generic Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Next-method](#864-次のメソッド)、前: [Extending Primitives](#862-プリミティブの拡張)、上: [Methods and Generic Functions](#86-メソッドとジェネリック関数) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
 
-#### 8.6.3 ジェネリクスのマージ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Merging-Generics-1)
+#### 8.6.3 ジェネリクスのマージ
 
 GOOPSの汎用関数やアクセサは、多くの場合、短く汎用的な名前を持ちます。たとえば、ベクトルパッケージがベクトルのX座標へのアクセサを提供する場合、そのアクセサは単に`x`と呼ばれることがあります。`vector:x`のように名前を付ける必要はありません。なぜなら、GOOPSは`(x obj)`のようなコードを見たときに、objがベクトルであれば`x`のベクトル固有のメソッドを呼び出すべきだと判断するからです。
 
 しかし、ここで疑問が生じます。異なるパッケージが同じ名前の汎用関数を定義した場合、どうなるのでしょうか。例えば、2Dベクトルと3Dベクトルそれぞれに独立した2つのベクトルパッケージを使用する必要があるグラフィックパッケージを扱っているとします。両方のパッケージが`x`をエクスポートする場合、それらのパッケージを使用するコードは最終的にどうなるのでしょうか。
 
-[重複バインディングハンドラ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Guile-Modules)では、競合するバインディングが一般的にどのように解決されるかが説明されています。ジェネリクスについては、特別な重複ハンドラ`merge-generics`があり、モジュールシステムに同じ名前のジェネリック関数をマージするように指示します。以下に例を示します。
+[重複バインディングハンドラ](06_18_modules.md#6183-guileモジュールの作成)では、競合するバインディングが一般的にどのように解決されるかが説明されています。ジェネリクスについては、特別な重複ハンドラ`merge-generics`があり、モジュールシステムに同じ名前のジェネリック関数をマージするように指示します。以下に例を示します。
 
 (define-module (math 2D-vectors)
 #:use-module (oop goops)
-#:export (xy [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+#:export (xy [...](06_08_macros.md#6821-パターン)))
 		  
 (define-module (math 3D-vectors)
 #:use-module (oop goops)
-#:export (xyz [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)))
+#:export (xyz [...](06_08_macros.md#6821-パターン)))
 
 (define-module (my-module)
 #:use-module (oop goops)
@@ -129,19 +129,19 @@ GOOPSの汎用関数やアクセサは、多くの場合、短く汎用的な名
 
 説明のために、インポートされた汎用関数（`(math 2D-vectors)` および `(math 3D-vectors)` 内）を _祖先_、マージされた汎用関数（`(my-module)` 内）を _子孫_ と呼びましょう。一般的なルールとして、任意の汎用関数 G に対して、適用可能なメソッドは、G の子孫関数のメソッド、G 自身のメソッド、および G の祖先関数のメソッドの和集合から選択されます。
 
-このように、祖先関数は子孫関数と効果的にメソッドを共有し、その逆もまた同様です。上記の例では、`(math 2D-vectors)` の `x` は `(my-module)` の `x` のメソッドを共有し、その逆もまた同様です。[33](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT33) 共有は動的であるため、子孫に新しいメソッドを追加すると、その子孫の祖先にも追加されます。
+このように、祖先関数は子孫関数と効果的にメソッドを共有し、その逆もまた同様です。上記の例では、`(math 2D-vectors)` の `x` は `(my-module)` の `x` のメソッドを共有し、その逆もまた同様です。[33](99_footnotes.md#33) 共有は動的であるため、子孫に新しいメソッドを追加すると、その子孫の祖先にも追加されます。
 
 * * *
 
-次へ: [method\* および define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a)、前: [Merging Generics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Merging-Generics)、上: [Methods and Generic Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "Table of内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [method\* および define-method\*](#865-メソッドと定義メソッド)、前: [Merging Generics](#863-ジェネリクスのマージ)、上: [Methods and Generic Functions](#86-メソッドとジェネリック関数) \[[Contents](00_contents.md "Table of内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.4 次のメソッド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Next_002dmethod-1)
+#### 8.6.4 次のメソッド
 
 汎用関数を特定の引数セットで呼び出すと、GOOPS はそれらの引数に適用可能なすべてのメソッドのリストを作成し、メソッド定義が実際の引数型とどれだけ一致するかに基づいて順序付けします。そして、このリストの先頭にあるメソッドを呼び出します。選択されたメソッドのコードが、このリストの次のメソッドを呼び出す場合は、`next-method` を使用できます。
 
-(define-method (test (a <integer>)) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) 'integer (next-method)))
-(define-method (test (a <number>)) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) 'number (next-method)))
-(define-method (test a) ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) 'top))
+(define-method (test (a <integer>)) ([cons](06_06_08_pairs.md#668-ペア) 'integer (next-method)))
+(define-method (test (a <number>)) ([cons](06_06_08_pairs.md#668-ペア) 'number (next-method)))
+(define-method (test a) ([list](06_06_09_lists.md#6693-リストコンストラクタ) 'top))
 
 これらの定義により、
 
@@ -153,22 +153,22 @@ GOOPSの汎用関数やアクセサは、多くの場合、短く汎用的な名
 
 同じ名前のメソッドを異なる引数で呼び出したい場合（例えば、C++ のオーバーロードされたメソッドのように）、`next-method` にカスタム引数を渡すことができます。
 
-(define-method (test (a <number>) [min](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-min) [max](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-max))
-(if (and ([\>=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e_003d) a [min](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-min)) ([<=](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003c_003d) a [max](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-max)))
-([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "数値は範囲内です\n"))
+(define-method (test (a <number>) [min](06_06_02_numerical_data_types.md#66211-算術関数) [max](06_06_02_numerical_data_types.md#66211-算術関数))
+(if (and ([\>=](06_06_02_numerical_data_types.md#6628-比較述語) a [min](06_06_02_numerical_data_types.md#66211-算術関数)) ([<=](06_06_02_numerical_data_types.md#6628-比較述語) a [max](06_06_02_numerical_data_types.md#66211-算術関数)))
+([display](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) "数値は範囲内です\n"))
 (次の方法 a)
 
 （テスト2 1 10）
 ⊣
-数値は[範囲内](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-in)です
+数値は[範囲内](04_programming_in_scheme.md#4442-モジュールコマンド)です
 ⇒
 （整数値）
 
 * * *
 
-次へ: [汎用関数とメソッドの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-and-Method-Examples)、前: [次のメソッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Next_002dmethod)、上: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [汎用関数とメソッドの例](#866-汎用関数とメソッドの例)、前: [次のメソッド](#864-次のメソッド)、上: [メソッドと汎用関数](#86-メソッドとジェネリック関数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.5 メソッド*と定義メソッド* [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a-1)
+#### 8.6.5 メソッド*と定義メソッド*
 
 `method*` と `define-method*` は、GOOPS における `lambda*` と `define*` のバージョンです。
 
@@ -176,18 +176,18 @@ GOOPSの汎用関数やアクセサは、多くの場合、短く汎用的な名
 [#:オプションの変数定義…]
 \[#:key vardef… \[#:allow-other-keys\]\]
 \[#:rest var | . var\])
-body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-method_002a)
+body1 body2 …
 
   
 
-`#:optional` および `#:key` で指定されたオプション引数および/またはキーワード引数を受け取るメソッドを作成します。[lambda\* および define\* ](https://doc.guix.gnu.org/guile/latest/en/guile.html#lambda_002a-and-define_002a) を参照してください。param… は、`method` および `define-method` と同様の通常のメソッドパラメータ、つまり var または (var typespec) のいずれかです。
+`#:optional` および `#:key` で指定されたオプション引数および/またはキーワード引数を受け取るメソッドを作成します。[lambda\* および define\* ](06_07_procedures.md#6741-lambda-と-define) を参照してください。param… は、`method` および `define-method` と同様の通常のメソッドパラメータ、つまり var または (var typespec) のいずれかです。
 
 `define-method*` は、`method*` を使用してメソッドを定義するための構文糖衣です。たとえば、
 
 (define-method\* (foo (a <整数>) b #:オプション c
 #:キー (d 2) e
 #:rest f)
-([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) abcdef))
+([list](06_06_09_lists.md#6693-リストコンストラクタ) abcdef))
 
 は、固定引数 a（型 `<integer>`）と b（型 `<top>`）、オプション引数 c、キーワード引数 d（デフォルト値 2）、e、および残りの引数 f を持つメソッドです。
 
@@ -199,16 +199,16 @@ body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-m
 
 cとeの値は、呼び出し時に指定されていないため、`#f`となります。指定されたキーワード引数は、`define*`と同様に、残りの引数に含まれます。
 
-* [メソッドおよび定義メソッドにおける高度な引数処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-in-method-and-define_002dmethod)
-* [高度な引数処理のための型ディスパッチと再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-dispatch-and-redefinition-for-advanced-argument-handling)
-* [メソッド内の次のメソッド呼び出し*](https://doc.guix.gnu.org/guile/latest/en/guile.html#next_002dmethod-call-in-method_002a)
-* [高度な引数処理設計の選択肢](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-design-choices)
+* [メソッドおよび定義メソッドにおける高度な引数処理](#8651-メソッドおよび定義メソッドにおける高度な引数処理)
+* [高度な引数処理のための型ディスパッチと再定義](#8652-高度な引数処理のための型ディスパッチと再定義)
+* [メソッド内の次のメソッド呼び出し*](#8653-メソッド内の-next-method-呼び出し)
+* [高度な引数処理設計の選択肢](#8654-高度な引数処理の設計上の選択肢)
 
 * * *
 
-次へ: [高度な引数処理のための型ディスパッチと再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-dispatch-and-redefinition-for-advanced-argument-handling)、上: [method\* と define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [高度な引数処理のための型ディスパッチと再定義](#8652-高度な引数処理のための型ディスパッチと再定義)、上: [method\* と define-method\*](#865-メソッドと定義メソッド) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.5.1 メソッドおよび定義メソッドにおける高度な引数処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-in-method-and-define_002dmethod-1)
+#### 8.6.5.1 メソッドおよび定義メソッドにおける高度な引数処理
 
 一部のユーザーは、コード内で`define-method`と`define-method*`のどちらかを選択する必要がない方が自然だと感じるかもしれません。
 
@@ -216,7 +216,7 @@ cとeの値は、呼び出し時に指定されていないため、`#f`とな�
 
 このため、標準の`method`および`define-method`バインディングを対応するキーワード形式に置き換えるモジュール（oop goops keyword-formals）を提供しています。これは次のように使用できます。
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (oop goops) (oop goops keyword-formals))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (oop goops) (oop goops keyword-formals))
 
 または
 
@@ -226,14 +226,14 @@ cとeの値は、呼び出し時に指定されていないため、`#f`とな�
 
 * * *
 
-次へ: [メソッド内の next-method 呼び出し *](https://doc.guix.gnu.org/guile/latest/en/guile.html#next_002dmethod-call-in-method_002a)、前: [メソッドおよび define-method における高度な引数処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-in-method-and-define_002dmethod)、上: [メソッド * および define-method *](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [メソッド内の next-method 呼び出し *](#8653-メソッド内の-next-method-呼び出し)、前: [メソッドおよび define-method における高度な引数処理](#8651-メソッドおよび定義メソッドにおける高度な引数処理)、上: [メソッド * および define-method *](#865-メソッドと定義メソッド) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.5.2 高度な引数処理のための型ディスパッチと再定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-dispatch-and-redefinition-for-advanced-argument-handling-1)
+#### 8.6.5.2 高度な引数処理のための型ディスパッチと再定義
 
 CLOSと同様に、GOOPSは必須引数に対してのみ型ディスパッチを行い、これはメソッド*についても同様です。キーワード仮引数を持つ`method*`の場合、特殊化子のリストは、同じ数の必須引数と末尾/レスト引数を持つ対応する`method`の場合と同じになります。たとえば、特殊化子のリストは次のようになります。
 
 (define-method\* (foo (a <整数>) b #:オプション c #:キー d)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 
 になる
 
@@ -244,17 +244,17 @@ CLOSと同様に、GOOPSは必須引数に対してのみ型ディスパッチ�
 同じ汎用関数の 2 つのメソッドは同じ特殊化リストを持つことはできません。つまり、
 
 (define-method\* (foo (a <整数>) b #:オプション c)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 (define-method\* (foo (a <integer>) b . rest)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+[...](06_08_macros.md#6821-パターン))
 
 2 番目の `define-method*` は再定義を引き起こし、2 番目のメソッドが最初のメソッドに置き換わります。
 
 * * *
 
-次へ: [高度な引数処理の設計上の選択肢](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-design-choices)、前: [高度な引数処理のための型ディスパッチと再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Type-dispatch-and-redefinition-for-advanced-argument-handling)、上: [method\* と define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and- define_002dmethod_002a) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [高度な引数処理の設計上の選択肢](#8654-高度な引数処理の設計上の選択肢)、前: [高度な引数処理のための型ディスパッチと再定義](#8652-高度な引数処理のための型ディスパッチと再定義)、上: [method\* と define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and- define_002dmethod_002a) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.5.3 メソッド内の next-method 呼び出し* [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#next_002dmethod-call-in-method_002a-1)
+#### 8.6.5.3 メソッド内の next-method 呼び出し*
 
 `method*` 内の `(next-method)` 呼び出しは、仮引数のリストにある必須引数、オプション引数、および残りの引数をすべて適用可能なメソッドのリストにある次のあまり特殊化されていないメソッドに渡します。また、`method*` の呼び出しで渡された実際のキーワード引数も渡されます。
 
@@ -281,9 +281,9 @@ CLOSと同様に、GOOPSは必須引数に対してのみ型ディスパッチ�
 
 * * *
 
-前へ: [メソッド*内のnext-method呼び出し](https://doc.guix.gnu.org/guile/latest/en/guile.html#next_002dmethod-call-in-method_002a)、上へ: [メソッド*とdefine-method*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a) [[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")] [[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")]
+前へ: [メソッド*内のnext-method呼び出し](#8653-メソッド内の-next-method-呼び出し)、上へ: [メソッド*とdefine-method*](#865-メソッドと定義メソッド) [[目次](00_contents.md "目次")] [[索引](index_r5rs.md "索引")]
 
-#### 8.6.5.4 高度な引数処理の設計上の選択肢 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-design-choices-1)
+#### 8.6.5.4 高度な引数処理の設計上の選択肢
 
 GOOPSメソッドにおける高度な引数処理に関して、説明に値する2つの設計上の選択肢がある。
 
@@ -298,7 +298,7 @@ GOOPSメソッドにおける高度な引数処理に関して、説明に値す
 3. `method` と `define-method` の概念的なシンプルさを維持します。
 4. これにより、他の実装（guile-hootなど）がよりシンプルな機能のみを提供する（`method`および`define-method`を介して）ことを選択しやすくなります。
 
-ただし、`define-method`のみを使用したいユーザーはそうすることも可能です。[メソッドとdefine-methodにおける高度な引数処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Advanced-argument-handling-in-method-and-define_002dmethod)を参照してください。
+ただし、`define-method`のみを使用したいユーザーはそうすることも可能です。[メソッドとdefine-methodにおける高度な引数処理](#8651-メソッドおよび定義メソッドにおける高度な引数処理)を参照してください。
 
 第二に、オプション引数またはキーワード引数に対して型ディスパッチを行わないことを選択しました。理由は以下のとおりです。
 
@@ -308,9 +308,9 @@ GOOPSメソッドにおける高度な引数処理に関して、説明に値す
 
 * * *
 
-次へ: [呼び出しエラーの処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Invocation-Errors)、前: [method\* および define-method\*](https://doc.guix.gnu.org/guile/latest/en/guile.html#method_002a-and-define_002dmethod_002a)、上: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次内容")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [呼び出しエラーの処理](#867-呼び出しエラーの処理)、前: [method\* および define-method\*](#865-メソッドと定義メソッド)、上: [メソッドと汎用関数](#86-メソッドとジェネリック関数) \[[目次](00_contents.md "目次内容")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.6 汎用関数とメソッドの例[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-and-Method-Examples-1)
+#### 8.6.6 汎用関数とメソッドの例
 
 以下の定義を考慮してください。
 
@@ -329,7 +329,7 @@ GOOPSメソッドにおける高度な引数処理に関して、説明に値す
 (G 2 #t) ⇒ 整数
 (G 1.2 'a) ⇒ 実在
 (G #t #f) ⇒ トップ
-(G 1 2 3) ⇒ [エラー](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) (3 つのパラメータに対して [メソッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-method) [exists](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exists) が存在しないため)
+(G 1 2 3) ⇒ [エラー](04_programming_in_scheme.md#4446-デバッグコマンド) (3 つのパラメータに対して [メソッド](08_11_the_metaobject_protocol.md#8118-メソッド定義の内部) [exists](07_06_r6rs_support.md#7625-rnrs-リスト) が存在しないため)
 
 上記のメソッドは、パラメータリストごとに1つの特殊化子のみを使用します。しかし一般に、メソッドのパラメータの全部または一部を特殊化することができます。ここで、次のように定義してみましょう。
 
@@ -348,87 +348,87 @@ GOOPSメソッドにおける高度な引数処理に関して、説明に値す
 さらに例として、`<my-complex>` クラスに対する演算の定義を続けましょう。複素数を完全に実装するためにこれを使用したいとします。たとえば、2 つの複素数の加算の定義は次のようになります。
 
 (define-method (new-+ (a <my-complex>) (b <my-complex>))
-([make-rectangular](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drectangular) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) a) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) b))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) a) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) b))))
+([make-rectangular](06_06_02_numerical_data_types.md#66210-複素数演算) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) b))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) b))))
 
 メソッド `new-+` で使用される `+` が標準的な加算であることを確認するには、次のようにします。
 
 (define-generic new-+)
 
-(let (([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) [+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b)))
+(let (([+](06_06_02_numerical_data_types.md#66211-算術関数) [+](06_06_02_numerical_data_types.md#66211-算術関数)))
 (define-method (new-+ (a <my-complex>) (b <my-complex>))
-([make-rectangular](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drectangular) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) a) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) b))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- imag_002dpart) a) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) b)))))
+([make-rectangular](06_06_02_numerical_data_types.md#66210-複素数演算) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) b))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- imag_002dpart) a) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) b)))))
 
 `define-generic` は、ここで `new-+` がグローバル環境で定義されることを保証します。これが完了すると、汎用関数 `new-+` に、`+` シンボルのクロージャを作成するメソッドを追加できます。`new-+` メソッドの完全な記述は、[図 8.1](https://doc.guix.gnu.org/guile/latest/en/guile.html#fig_003anewplus) に示されています。
 
 (define-generic new-+)
 
-(let (([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) [+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b)))
+(let (([+](06_06_02_numerical_data_types.md#66211-算術関数) [+](06_06_02_numerical_data_types.md#66211-算術関数)))
 
-(define-method (new-+ (a <real>) (b <real>)) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ab))
+(define-method (new-+ (a <real>) (b <real>)) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ab))
 
 (define-method (new-+ (a <real>) (b <my-complex>))
-([make-rectangular](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drectangular) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) a ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) b)) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) b)))
+([make-rectangular](06_06_02_numerical_data_types.md#66210-複素数演算) ([+](06_06_02_numerical_data_types.md#66211-算術関数) a ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) b)) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) b)))
 
 (define-method (new-+ (a <my-complex>) (b <real>))
-([make-rectangular](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drectangular) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) a) b) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) a)))
+([make-rectangular](06_06_02_numerical_data_types.md#66210-複素数演算) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) b) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) a)))
 
 (define-method (new-+ (a <my-complex>) (b <my-complex>))
-([make-rectangular](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drectangular) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) a) ([real-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-real_002dpart) b))
-([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) a) ([imag-part](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-imag_002dpart) b))))
+([make-rectangular](06_06_02_numerical_data_types.md#66210-複素数演算) ([+](06_06_02_numerical_data_types.md#66211-算術関数) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) ([real-part](06_06_02_numerical_data_types.md#66210-複素数演算) b))
+([+](06_06_02_numerical_data_types.md#66211-算術関数) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) a) ([imag-part](06_06_02_numerical_data_types.md#66210-複素数演算) b))))
 
 (define-method (new-+ (a <number>)) a)
   
 (define-method (new-+) 0)
 
 (define-method (new-+ . args)
-(new-+ ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) args)
-([apply](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-apply) new-+ ([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) args)))))
+(new-+ ([car](06_06_08_pairs.md#668-ペア) args)
+([apply](06_16_reading_and_evaluating_scheme_code.md#6165-オンザフライ評価の手順) new-+ ([cdr](06_06_08_pairs.md#668-ペア) args)))))
 
-([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) [+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) new-+)
+([set!](07_06_r6rs_support.md#7622-rnrs-ベース) [+](06_06_02_numerical_data_types.md#66211-算術関数) new-+)
 
 **図8.1:** 複素数を扱うための `+` の拡張
 
-ここでは、汎用関数は固定数のパラメータを持つ必要がないという事実を利用します。最初の 4 つのメソッドは、2 進加算を実装します。5 番目のメソッドは、単一要素の加算は、その要素自体であることを示します。6 番目のメソッドは、パラメータなしで加算を使用すると常に 0 が返されることを示します (プリミティブ `+` の場合も同様です)。最後のメソッドは、任意の数のパラメータを受け取ります [34](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT34)。このメソッドは、一種の `reduce` として機能します。リストの _car_ と、それを残りの部分に適用した結果に対して 2 進加算を呼び出します。最後に、`set!` を使用すると、`+` 記号を拡張加算に再定義できます。
+ここでは、汎用関数は固定数のパラメータを持つ必要がないという事実を利用します。最初の 4 つのメソッドは、2 進加算を実装します。5 番目のメソッドは、単一要素の加算は、その要素自体であることを示します。6 番目のメソッドは、パラメータなしで加算を使用すると常に 0 が返されることを示します (プリミティブ `+` の場合も同様です)。最後のメソッドは、任意の数のパラメータを受け取ります [34](99_footnotes.md#34)。このメソッドは、一種の `reduce` として機能します。リストの _car_ と、それを残りの部分に適用した結果に対して 2 進加算を呼び出します。最後に、`set!` を使用すると、`+` 記号を拡張加算に再定義できます。
 
 複素数の実装（統合？）を締めくくるにあたり、標準的なScheme述語を以下のように再定義することができます。
 
-(define-method ([complex?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_003f) c <my-complex>) #t)
-(define-method ([complex?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-complex_003f) c) #f)
+(define-method ([complex?](06_06_02_numerical_data_types.md#6624-複素数) c <my-complex>) #t)
+(define-method ([complex?](06_06_02_numerical_data_types.md#6624-複素数) c) #f)
 
-(define-method ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) n <number>) #t)
-(define-method ([number?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-number_003f) n) #f)
-[...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)
+(define-method ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) n <number>) #t)
+(define-method ([number?](06_06_02_numerical_data_types.md#6621-scheme-の数値タワー) n) #f)
+[...](06_08_macros.md#6821-パターン)
 
 複素数を含む標準的な基本要素も、同様の方法で再定義できる。
 
 * * *
 
-前へ: [汎用関数とメソッドの例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Generic-Function-and-Method-Examples)、上へ: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+前へ: [汎用関数とメソッドの例](#866-汎用関数とメソッドの例)、上へ: [メソッドと汎用関数](#86-メソッドとジェネリック関数) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]
 
-#### 8.6.7 呼び出しエラーの処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Invocation-Errors-1)
+#### 8.6.7 呼び出しエラーの処理
 
 汎用関数が、適用可能なメソッドが存在しないパラメータの組み合わせで呼び出された場合、GOOPS はエラーを発生させます。
 
-汎用: **no-method** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dmethod)
+汎用: **no-method**
 
-メソッド: **no-method** (gf <generic>) args [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dmethod-1)
+メソッド: **no-method** (gf <generic>) args
 
 アプリケーションが汎用関数を呼び出し、その汎用関数にメソッドが全く定義されていない場合、GOOPS は `no-method` 汎用関数を呼び出します。デフォルトのメソッドは、適切なメッセージとともに `goops-error` を呼び出します。
 
-汎用: **適用可能なメソッドなし** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dapplicable_002dmethod)
+汎用: **適用可能なメソッドなし**
 
-メソッド: **適用できないメソッド** (gf <generic>) 引数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dapplicable_002dmethod-1)
+メソッド: **適用できないメソッド** (gf <generic>) 引数
 
 アプリケーションが引数のセットに汎用関数を適用し、それらの引数型に対応するメソッドが定義されていない場合、GOOPS は汎用関数 `no-applicable-method` を呼び出します。デフォルトのメソッドは、適切なメッセージとともに `goops-error` を呼び出します。
 
-汎用: **no-next-method** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dnext_002dmethod)
+汎用: **no-next-method**
 
-メソッド: **no-next-method** (gf <generic>) 引数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-no_002dnext_002dmethod-1)
+メソッド: **no-next-method** (gf <generic>) 引数
 
 汎用関数メソッドが、その汎用関数の次の汎用性の低いメソッドを呼び出すために `(next-method)` を呼び出し、現在の汎用関数引数に対して、より汎用性の低いメソッドが定義されていない場合、GOOPS は `no-next-method` 汎用関数を呼び出します。デフォルトのメソッドは、適切なメッセージとともに `goops-error` を呼び出します。
 
 * * *
 
-次へ: [イントロスペクション](https://doc.guix.gnu.org/guile/latest/en/guile.html#Introspection)、前: [メソッドと汎用関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Methods-and-Generic-Functions)、上: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [イントロスペクション](08_08_introspection.md#88-イントロスペクション)、前: [メソッドと汎用関数](#86-メソッドとジェネリック関数)、上: [GOOPS](08_00_goops.md#8-goops) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

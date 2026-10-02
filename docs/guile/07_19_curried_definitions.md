@@ -1,8 +1,8 @@
-### 7.19 カリー定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Curried-Definitions-1)
+### 7.19 カリー定義
 
 このセクションのマクロは以下によって提供されています
 
-([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 curried-definitions))
+([use-modules](06_18_modules.md#6182-guileモジュールの使用) (ice-9 curried-definitions))
 
 そして、デフォルトで提供されているものを置き換えます。
 
@@ -20,15 +20,15 @@ Guile 2.0以前のGuileでは、「カリー化定義」と呼ばれる定義形
 (ラムダ (y)
 (リスト xy))))
 
-Scheme構文: **define** (… (name args …) …) body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define-2)
+Scheme構文: **define** (… (name args …) …) body …
 
-Scheme構文: **define\*** (… (name args …) …) body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002a-1)
+Scheme構文: **define\*** (… (name args …) …) body …
 
-Scheme構文: **define-public** (… (name args …) …) body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dpublic-1)
+Scheme構文: **define-public** (… (name args …) …) body …
 
 パラメータリストargsを持つプロシージャにバインドされたトップレベル変数nameを作成します。name自体が仮パラメータリストである場合、その仮パラメータリストを使用して高階プロシージャが作成され、パラメータリストargsを持つプロシージャが返されます。このネストは任意の深さまで可能です。
 
-`define*` も同様ですが、仮引数リストは [lambda\* および define\* ](https://doc.guix.gnu.org/guile/latest/en/guile.html#lambda_002a-and-define_002a) で説明されているように追加のオプションを受け取ります。たとえば、
+`define*` も同様ですが、仮引数リストは [lambda\* および define\* ](06_07_procedures.md#6741-lambda-と-define) で説明されているように追加のオプションを受け取ります。たとえば、
 
 (define\* ((foo #:keys (bar 'baz) (quux 'zot)) frotz #:rest rest)
 (リストバー quux frotz レスト)
@@ -40,4 +40,4 @@ Scheme構文: **define-public** (… (name args …) …) body … [¶](https://
 
 * * *
 
-次へ: [SXML](https://doc.guix.gnu.org/guile/latest/en/guile.html#SXML)、前: [カリー定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Curried-Definitions)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [SXML](07_21_sxml.md#721-sxml)、前: [カリー定義](#719-カリー定義)、上: [Guile モジュール](07_00_guile_modules.md#7つのguileモジュール) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

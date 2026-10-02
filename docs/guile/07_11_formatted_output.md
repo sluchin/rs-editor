@@ -1,4 +1,4 @@
-### 7.11 フォーマットされた出力 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Formatted-Output-1)
+### 7.11 フォーマットされた出力
 
 `format` 関数は、数値、文字列、その他のオブジェクトをリテラルテキストとともにフォーマット文字列の制御下で印刷するための強力な方法です。この関数は以下から利用できます。
 
@@ -12,9 +12,9 @@ C言語のプログラマーは、`format`と`printf`の類似性に気づくで
 
   
 
-Scheme手順: **format** dest fmt arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-format-1)
+Scheme手順: **format** dest fmt arg …
 
-fmt 文字列で指定された出力を dest に書き込みます。dest は出力ポート、`#t` で `current-output-port` を指定できます ([入力、出力、エラーのデフォルトポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Ports) を参照)。また、`#f` を指定すると出力が文字列として返されます。
+fmt 文字列で指定された出力を dest に書き込みます。dest は出力ポート、`#t` で `current-output-port` を指定できます ([入力、出力、エラーのデフォルトポート](06_12_input_and_output.md#6129-入力出力およびエラーのデフォルトポート) を参照)。また、`#f` を指定すると出力が文字列として返されます。
 
 fmt には出力するリテラルテキストと `~` エスケープ文字を含めることができます。各エスケープ文字の形式は次のとおりです。
 
@@ -50,7 +50,7 @@ fmt には出力するリテラルテキストと `~` エスケープ文字を�
 
 オブジェクト出力。パラメータ: minwidth、padinc、minpad、padchar。
 
-`~a` は `display` のような引数を出力し、`~s` は `write` のような引数を出力します ([スキーム値の書き込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheme-Write) を参照)。
+`~a` は `display` のような引数を出力し、`~s` は `write` のような引数を出力します ([スキーム値の書き込み](06_16_reading_and_evaluating_scheme_code.md#6164-scheme値の記述) を参照)。
 
 (フォーマット #t "~a" "foo") ⊣ foo
 (フォーマット #t "~s" "foo") ⊣ "foo"
@@ -72,13 +72,13 @@ minpadはパディングの最小値であり、それにpadincの倍数を加�
 
 キャラクター。パラメータ: charnum。
 
-文字を出力します。デフォルトでは、`write-char` に従って単純に出力します ([Venerable Port Interfaces](https://doc.guix.gnu.org/guile/latest/en/guile.html#Venerable-Port-Interfaces) を参照)。`~@c` は `write` スタイルで出力します。`~:c` は制御文字 (ASCII 0 ～ 31) を `^X` 形式で出力します。
+文字を出力します。デフォルトでは、`write-char` に従って単純に出力します ([Venerable Port Interfaces](06_12_input_and_output.md#61211-ヴェネラブルポートインターフェース) を参照)。`~@c` は `write` スタイルで出力します。`~:c` は制御文字 (ASCII 0 ～ 31) を `^X` 形式で出力します。
 
 (フォーマット #t "~c" #\\z) ⊣ z
 (フォーマット #t "~@c" #\\z) ⊣ #\\z
 (書式 #t "~:c" #\\改行) ⊣ ^J
 
-charnum パラメータが指定されている場合、引数は受け取られず、代わりに文字が `(integer->char charnum)` として渡されます ([Characters](https://doc.guix.gnu.org/guile/latest/en/guile.html#Characters) を参照)。これは、例えば ASCII コードで指定された文字を出力する場合に使用できます。
+charnum パラメータが指定されている場合、引数は受け取られず、代わりに文字が `(integer->char charnum)` として渡されます ([Characters](06_06_03_characters.md#663-文字) を参照)。これは、例えば ASCII コードで指定された文字を出力する場合に使用できます。
 
 (フォーマット #t "~65c") ⊣ A
 
@@ -173,9 +173,9 @@ overflowcharとwidthの両方が指定されていて、出力がwidthを超え�
 
 `~h`
 
-ローカライズされた数値[28](https://doc.guix.gnu.org/guile/latest/en/guile.html#FOOT28)。パラメータ: 幅、小数点、パディング文字。
+ローカライズされた数値[28](99_footnotes.md#28)。パラメータ: 幅、小数点、パディング文字。
 
-`~f` と同様に、正確な数値または浮動小数点数を出力しますが、現在のロケールに従って、または `:` 修飾子が使用されている場合は指定されたロケール オブジェクトに従って出力します ([`number->locale-string`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Number-Input-and-Output) を参照)。
+`~f` と同様に、正確な数値または浮動小数点数を出力しますが、現在のロケールに従って、または `:` 修飾子が使用されている場合は指定されたロケール オブジェクトに従って出力します ([`number->locale-string`](06_25_support_for_internationalization.md#6254-数値の入出力) を参照)。
 
 (フォーマット #t "~h" 12345.5678) ; 現在のロケールが "C" の場合
 ⊣ 12345.5678
@@ -301,15 +301,15 @@ intdigitsは、値の整数部分に表示する最小桁数です（デフォ�
 (フォーマット #t "~d cat~:p" 9) ⊣ 9匹の猫
 (フォーマット #t "~d pupp~:@p" 5) ⊣ 5匹の子犬
 
-`~p` は英語の複数形用に設計されており、他の言語をサポートする意図はありません。`~[` 条件式（下記参照）が役立つかもしれません。ただし、`gettext` を使用してメッセージを翻訳する場合は、`ngettext` を使用するのがおそらく最善です（[国際化のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internationalization) を参照）。
+`~p` は英語の複数形用に設計されており、他の言語をサポートする意図はありません。`~[` 条件式（下記参照）が役立つかもしれません。ただし、`gettext` を使用してメッセージを翻訳する場合は、`ngettext` を使用するのがおそらく最善です（[国際化のサポート](06_25_support_for_internationalization.md#625-国際化のサポート) を参照）。
 
 `~y`
 
 構造化印刷。パラメータ：幅。
 
-`~y` は `pretty-print` を使用して引数を出力します（[Pretty Printing](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pretty-Printing) を参照）。結果は、幅 79 列 (デフォルト) に収まるようにフォーマットされ、必要に応じて複数行になります。
+`~y` は `pretty-print` を使用して引数を出力します（[Pretty Printing](07_10_pretty_printing.md#710-整形印刷) を参照）。結果は、幅 79 列 (デフォルト) に収まるようにフォーマットされ、必要に応じて複数行になります。
 
-`~@y` は `truncated-print` を使用して引数を出力します（[Pretty Printing](https://doc.guix.gnu.org/guile/latest/en/guile.html#Pretty-Printing) を参照）。出力されたコードは、1 行に収まるように列幅 (デフォルトでは 79) にフォーマットされます。必要に応じて出力は切り詰められます。
+`~@y` は `truncated-print` を使用して引数を出力します（[Pretty Printing](07_10_pretty_printing.md#710-整形印刷) を参照）。出力されたコードは、1 行に収まるように列幅 (デフォルトでは 79) にフォーマットされます。必要に応じて出力は切り詰められます。
 
 `~:@y` は `~@y` と似ていますが、幅パラメータが出力先の最大列数として解釈される点が異なります。つまり、10 列目に `~60:@y` が表示された場合、データは50 列に切り詰められます。
 
@@ -366,7 +366,7 @@ intdigitsは、値の整数部分に表示する最小桁数です（デフォ�
 
 (format #f "a~3,5'\*@tx") ⇒ "a\*\*\*\*x"
 
-`~t` は `port-column` を使用して実装されているため ([Textual I/O](https://doc.guix.gnu.org/guile/latest/en/guile.html#Textual-I_002fO) を参照)、`format` の前に他の出力があっても機能します。
+`~t` は `port-column` を使用して実装されているため ([Textual I/O](06_12_input_and_output.md#6124-テキスト入出力) を参照)、`format` の前に他の出力があっても機能します。
 
 `~~`
 
@@ -412,7 +412,7 @@ intdigitsは、値の整数部分に表示する最小桁数です（デフォ�
 
 強制出力。パラメータなし。
 
-出力の最後に、出力先のバッファをフラッシュするために `force-output` を呼び出します ([バッファリング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Buffering) を参照)。`~!` はフォーマット文字列内のどこにでも出現できますが、強制フラッシュは出力の最後に実行されます。
+出力の最後に、出力先のバッファをフラッシュするために `force-output` を呼び出します ([バッファリング](06_12_input_and_output.md#6126-バッファリング) を参照)。`~!` はフォーマット文字列内のどこにでも出現できますが、強制フラッシュは出力の最後に実行されます。
 
 出力先が文字列（出力先が`#f`）の場合、`~!`は何もしません。
 
@@ -559,7 +559,7 @@ intdigitsは、値の整数部分に表示する最小桁数です（デフォ�
 
   
 
-Guile には、モジュール `(ice-9 format)` がロードされていない場合でも `format` プロシージャが含まれています。デフォルトの `format` は `simple-format` です ([Simple Textual Output](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Output) を参照)。このセクションで説明されているすべてのエスケープシーケンスをサポートしているわけではなく、いずれかのエスケープシーケンスを使用しようとするとエラーが発生します。2 つのバージョンが存在する理由は、完全な `format` はかなり大きく、ロードに時間がかかるためです。`simple-format` でも十分な場合が多いです。
+Guile には、モジュール `(ice-9 format)` がロードされていない場合でも `format` プロシージャが含まれています。デフォルトの `format` は `simple-format` です ([Simple Textual Output](06_12_input_and_output.md#6125-シンプルなテキスト出力) を参照)。このセクションで説明されているすべてのエスケープシーケンスをサポートしているわけではなく、いずれかのエスケープシーケンスを使用しようとするとエラーが発生します。2 つのバージョンが存在する理由は、完全な `format` はかなり大きく、ロードに時間がかかるためです。`simple-format` でも十分な場合が多いです。
 
 > **注意:** `(ice-9 format)` がロードされると、トップレベルの `format` のバインディングが置き換えられることに注意してください。モジュールが `(ice-9 format)` をロードする別のモジュールをロードする場合、モジュール自体が `(ice-9 format)` をインポートしていなくても、モジュールは `(ice-9 format)` の `format` 関数を参照することになります。
 >
@@ -567,4 +567,4 @@ Guile には、モジュール `(ice-9 format)` がロードされていない�
 
 * * *
 
-次へ: [キュー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Queues)、前: [フォーマット済み出力](https://doc.guix.gnu.org/guile/latest/en/guile.html#Formatted-Output)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules ) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+次へ: [キュー](07_13_queues.md#713-キュー)、前: [フォーマット済み出力](#711-フォーマットされた出力)、上: [Guile モジュール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules ) \[[目次](00_contents.md "目次")\]\[[索引](index_r5rs.md "索引")\]

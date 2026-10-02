@@ -1,4 +1,4 @@
-### 7.20 Statprof [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Statprof-1)
+### 7.20 Statprof
 
 StatprofはGuile用の統計プロファイラーです。
 
@@ -51,7 +51,7 @@ Statprofの主な動作モードは統計プロファイラとしてです。た
 
 ご覧のとおり、プロファイルが乱れています。以前のプロファイルではホットとしてマークされていなかった「1+」が最上位に表示されています。これは、呼び出し回数のオーバーヘッドが呼び出しに不当なペナルティを与えるためです。とはいえ、この正確なモードは、正確な呼び出し回数に基づいてアルゴリズムの最適化を行う際に役立つ場合があります。
 
-### 実装に関する注記 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Implementation-notes)
+### 実装に関する注記
 
 プロファイラは、`statprof-reset` の呼び出しで定義した間隔後に Unix プロファイリングシグナル `ITIMER_PROF` がオフになるように設定することで動作します。シグナルがオンになると、サンプリングルーチンが実行され、スタックを遡ってすべての命令ポインタをバッファに記録します。サンプリングが完了すると、プロファイラはプロファイリングタイマーをリセットし、適切な間隔後に再びオンになるようにします。
 
@@ -59,9 +59,9 @@ Statprofの主な動作モードは統計プロファイラとしてです。た
 
 プロファイラが実行中は、コードがプロファイラ内で実行されている間に経過したCPU時間（システム時間とユーザー時間。これは`ITIMER_PROF`が追跡する時間と同じです）を測定します。プロファイルにカウントされるのは実行時間のみで、実時間ではありません。たとえば、スリープ状態や入力/出力の待機状態では、タイマーのクロックは進みません。
 
-### 使用方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Usage-13)
+### 使用方法
 
-Scheme Procedure: **statprof** thunk \[#:loop loop=1\] \[#:hz hz=100\] \[#:port port=(current-output-port)\] \[#:count-calls? count-calls?=#f\] \[#:display-style display-style='flat\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof)
+Scheme Procedure: **statprof** thunk \[#:loop loop=1\] \[#:hz hz=100\] \[#:port port=(current-output-port)\] \[#:count-calls? count-calls?=#f\] \[#:display-style display-style='flat\]
 
 サンクの実行をプロファイリングし、その戻り値を返します。
 
@@ -75,27 +75,27 @@ count-calls? が true の場合、すべてのプロシージャ呼び出しが�
 
 プロファイリングは手動で有効化または無効化することもできます。
 
-スキーム手順: **statprof-active?** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dactive_003f)
+スキーム手順: **statprof-active?**
 
 `statprof-start` の呼び出し回数が `statprof-stop` の呼び出し回数より多い場合は `#t` を返し、そうでない場合は `#f` を返します。
 
-スキーム手順: **statprof-start** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstart)
+スキーム手順: **statprof-start**
 
-スキーム手順: **statprof-stop** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstop)
+スキーム手順: **statprof-stop**
 
 プロファイラを開始または停止します。
 
-スキーム手順: **statprof-reset** sample-seconds sample-microseconds count-calls? [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dreset)
+スキーム手順: **statprof-reset** sample-seconds sample-microseconds count-calls?
 
 プロファイリングのサンプリング間隔をサンプル秒とサンプルマイクロ秒にリセットします。count-calls? が true の場合、統計的プロファイリングデータの収集に加えて、プロシージャ呼び出しも計測するように設定してください。
 
 `statprof-start`/`statprof-stop` という手動インターフェースを使用する場合、`statprof-reset` の最後の呼び出し、または `statprof-start` の最初の呼び出しから始まる暗黙的な statprof 状態が保持されます。この暗黙的な状態から統計情報を取得するためのアクセサがいくつか用意されています。
 
-スキーム手順: **statprof-accumulated-time** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002daccumulated_002dtime)
+スキーム手順: **statprof-accumulated-time**
 
 前回のstatprof実行中に蓄積された時間を返します。
 
-スキーム手順: **statprof-sample-count** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dsample_002dcount)
+スキーム手順: **statprof-sample-count**
 
 前回のstatprof実行時に取得されたサンプル数を返します。
 
@@ -105,41 +105,41 @@ statprofによって蓄積された呼び出しデータに基づいて、この
 
 procは引数、呼び出しデータ、および以前の結果とともに呼び出されます。
 
-Scheme Procedure: **statprof-proc-call-data** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dproc_002dcall_002ddata)
+Scheme Procedure: **statprof-proc-call-data** proc
 
 procに関連付けられた呼び出しデータを返します。呼び出しデータがない場合は`#f`を返します。
 
-スキーム手順: **statprof-call-data-name** cd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dcall_002ddata_002dname)
+スキーム手順: **statprof-call-data-name** cd
 
-スキーム手順: **statprof-call-data-calls** cd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dcall_002ddata_002dcalls)
+スキーム手順: **statprof-call-data-calls** cd
 
-スキーム手順: **statprof-call-data-cum-samples** cd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dcall_002ddata_002dcum_002dsamples)
+スキーム手順: **statprof-call-data-cum-samples** cd
 
-スキーム手順: **statprof-call-data-self-samples** cd [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dcall_002ddata_002dself_002dsamples)
+スキーム手順: **statprof-call-data-self-samples** cd
 
 statprof の呼び出しデータオブジェクト内のフィールドへのアクセサー。
 
-スキーム手順: **statprof-call-data->stats** call-data [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dcall_002ddata_002d_003estats)
+スキーム手順: **statprof-call-data->stats** call-data
 
 `statprof-stats`型のオブジェクトを返します。
 
-Scheme Procedure: **statprof-stats-proc-name** stats [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dproc_002dname)
+Scheme Procedure: **statprof-stats-proc-name** stats
 
-Scheme Procedure: **statprof-stats-%-time-in-proc** stats [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002d_0025_002dtime_002din_002dproc)
+Scheme Procedure: **statprof-stats-%-time-in-proc** stats
 
-スキーム手順: **statprof-stats-cum-secs-in-proc** 統計 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dcum_002dsecs_002din_002dproc)
+スキーム手順: **statprof-stats-cum-secs-in-proc** 統計
 
-スキーム手順: **statprof-stats-self-secs-in-proc** stats [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dself_002dsecs_002din_002dproc)
+スキーム手順: **statprof-stats-self-secs-in-proc** stats
 
-Scheme Procedure: **statprof-stats-calls** stats [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dcalls)
+Scheme Procedure: **statprof-stats-calls** stats
 
-スキーム手順: **statprof-stats-self-secs-per-call** 統計 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dself_002dsecs_002dper_002dcall)
+スキーム手順: **statprof-stats-self-secs-per-call** 統計
 
-スキーム手順: **statprof-stats-cum-secs-per-call** 統計 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dstats_002dcum_002dsecs_002dper_002dcall)
+スキーム手順: **statprof-stats-cum-secs-per-call** 統計
 
 `statprof-stats`オブジェクトのフィールドへのアクセサー。
 
-Scheme Procedure: **statprof-display** \[port=(current-output-port)\] \[#:style style=flat\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002ddisplay)
+Scheme Procedure: **statprof-display** \[port=(current-output-port)\] \[#:style style=flat\]
 
 収集した統計情報の概要を表示します。スタイルに指定できる値は次のとおりです。
 
@@ -155,11 +155,11 @@ Scheme Procedure: **statprof-display** \[port=(current-output-port)\] \[#:style 
 
 樹木のプロファイルを表示します。
 
-Scheme Procedure: **statprof-fetch-stacks** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dfetch_002dstacks)
+Scheme Procedure: **statprof-fetch-stacks**
 
 `statprof-reset` の最後の呼び出し以降に取得されたスタックのリストを返します。
 
-Scheme Procedure: **statprof-fetch-call-tree** \[#:precise precise?=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-statprof_002dfetch_002dcall_002dtree)
+Scheme Procedure: **statprof-fetch-call-tree** \[#:precise precise?=#f\]
 
 前回のstatprof実行時のコールツリーを返します。
 
@@ -175,7 +175,7 @@ Scheme Procedure: **statprof-fetch-call-tree** \[#:precise precise?=#f\] [¶](ht
 #t} を使用すると、ユーザーはプロシージャ内の異なるソース行を区別できます。
 しかし、通常は詳細すぎるため、デフォルトではオフになっています。
 
-Scheme Procedure: **gcprof** thunk \[#:loop\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-gcprof)
+Scheme Procedure: **gcprof** thunk \[#:loop\]
 
 `statprof` 手順と同様ですが、CPU 時間をプロファイリングする代わりに、ガベージコレクションをプロファイリングします。
 
@@ -185,4 +185,4 @@ GC は頻繁には発生しないため、thunk がループ回数だけ呼び�
 
 * * *
 
-次へ: [Texinfo Processing](https://doc.guix.gnu.org/guile/latest/en/guile.html#Texinfo-Processing)、前: [Statprof](https://doc.guix.gnu.org/guile/latest/en/guile.html#Statprof)、上: [Guile Modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-Modules) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+次へ: [Texinfo Processing](07_22_texinfo_processing.md#722-texinfo処理)、前: [Statprof](#720-statprof)、上: [Guile Modules](07_00_guile_modules.md#7つのguileモジュール) \[[Contents](00_contents.md "目次")\]\[[Index](index_r5rs.md "Index")\]
