@@ -1,184 +1,435 @@
-# 6.6.3 文字
+#### 6.6.3 文字 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Characters-1)
 
-> **原文**: [Guile Reference Manual - Characters](https://www.gnu.org/software/guile/manual/html_node/Characters.html)
->
-> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
+Schemeには、単一の文字を表すデータ型があります。
 
-Scheme には、単一の文字を記述するためのデータ型があります。
+文字が一体何であるかを正確に定義するのは、見た目以上に複雑な場合があります。GuileはR6RSのアドバイスに従い、Unicode標準を使用して文字の定義を定めています。つまり、Guileにとって文字とは、Unicode文字データベースに含まれるすべてのものを指します。
 
-文字とは正確には何かを定義するのは、見かけよりも複雑なことがあります。Guile は R6RS の助言に従い、文字とは何かを定義するのに The Unicode Standard を使っています。そのため Guile にとって、文字とは Unicode 文字データベースにあるあらゆるものです。
+Unicode文字データベースは、基本的に「コードポイント」と呼ばれる整数を使用してインデックス付けされた文字のテーブルです。有効なコードポイントは、0から`#xD7FF`までの範囲、または`#xE000`から`#x10FFFF`までの範囲で、約110万個のコードポイントがあります。
 
-Unicode 文字データベースは、基本的に「コードポイント」と呼ばれる整数でインデックス付けされた文字の表です。有効なコードポイントは 0 から #xD7FF まで（両端を含む）または #xE000 から #x10FFFF まで（両端を含む）の範囲にあり、約110万個のコードポイントがあります。
+文字に割り当てられた、あるいはUnicodeによって何らかの意味が与えられたコードポイントは、「指定コードポイント」と呼ばれます。約20万個ある指定コードポイントのほとんどは、他の文字、記号、空白、制御文字を修飾する文字、アクセント記号、その他の結合記号を示します。中には文字ではなく、隣接する文字の書式設定や表示方法を示す指示記号もあります。
 
-文字に割り当てられたコードポイント、あるいはそれ以外の形で Unicode によって意味を与えられたコードポイントは、「指定済みコードポイント（designated code point）」と呼ばれます。指定済みコードポイントのほとんど、約20万個は、文字、アクセントや他の文字を修飾するその他の結合記号、シンボル、空白、制御文字を示しています。一部は文字ではなく、隣接する文字をどのように書式設定または表示するかを示唆する指示子です。
+コードポイントが指定コードポイントでない場合、つまりUnicode規格によって文字に割り当てられていない場合は、「予約コードポイント」と呼ばれます。これは、将来の使用のために予約されていることを意味します。コードポイントの大部分、約80万個は「予約コードポイント」です。
 
-コードポイントが指定済みコードポイントでない場合――The Unicode Standard によって文字に割り当てられていない場合――それは「予約済みコードポイント（reserved code point）」であり、将来の使用のために予約されていることを意味します。コードポイントのほとんど、約80万個は「予約済みコードポイント」です。
+慣例として、Unicodeコードポイントは「U+XXXX」と表記されます。ここで「XXXX」は16進数です。ただし、この表記法は有効なコードではありません。Guileは「U+XXXX」を文字として解釈しません。
 
-慣例として、Unicode のコードポイントは「U+XXXX」と書かれます。ここで「XXXX」は16進数です。この便利な表記は有効なコードではないことに注意してください。Guile は「U+XXXX」を文字として解釈しません。
+Schemeでは、文字リテラルは`#\name`と記述します。ここでnameは、使用したい文字の名前です。印刷可能な文字は、通常の1文字の名前を持ちます。たとえば、`#\a`は小文字の`a`です。
 
-Scheme では、文字リテラルは `#\name` と書かれます。ここで `name` は目的の文字の名前です。表示可能な文字は通常の単一文字の名前を持ちます。たとえば `#\a` は小文字の `a` です。
+コードポイントの中には、「結合文字」と呼ばれるものがあり、これらは単独で印刷されることを意図したものではなく、前の文字の外観を変更することを目的としています。結合文字の場合、文字リテラルの別の形式として、`#\` の後に U+25CC (小さな点線の円) が続き、その後に結合文字が続きます。これにより、結合文字は `#\` のバックスラッシュではなく、円の上に描画されます。
 
-コードポイントの一部は「結合文字（combining character）」であり、それ自体で表示されることを意図しておらず、前の文字の外観を修飾することを意図しています。結合文字に対しては、文字リテラルの代替形式として、`#\` の後に U+25CC（小さな点線の円）を続け、その後に結合文字を続けたものがあります。これにより、結合文字を `#\` のバックスラッシュの上ではなく、円の上に描くことができます。
+空白文字や制御文字など、印刷されない文字の多くにも名前が付けられています。
 
-空白文字や制御文字などの、表示されない文字の多くにも名前があります。
+最も一般的に使用される非印刷文字は、以下の表に示すように、長い文字名を持っています。
 
-最もよく使われる表示されない文字には、下の表で説明する長い文字名があります。
+キャラクター名
 
-| 文字名 | コードポイント |
-|---|---|
-| `#\nul` | U+0000 |
-| `#\alarm` | U+0007 |
-| `#\backspace` | U+0008 |
-| `#\tab` | U+0009 |
-| `#\linefeed` | U+000A |
-| `#\newline` | U+000A |
-| `#\vtab` | U+000B |
-| `#\page` | U+000C |
-| `#\return` | U+000D |
-| `#\esc` | U+001B |
-| `#\space` | U+0020 |
-| `#\delete` | U+007F |
+コードポイント
 
-すべての「C0 制御文字」（コードポイントが32未満のもの）にも短い名前があります。次の表は、各文字の短い名前を列挙しています。
+`#\nul`
 
-| | | | |
-|---|---|---|---|
-| 0 = `#\nul` | 1 = `#\soh` | 2 = `#\stx` | 3 = `#\etx` |
-| 4 = `#\eot` | 5 = `#\enq` | 6 = `#\ack` | 7 = `#\bel` |
-| 8 = `#\bs` | 9 = `#\ht` | 10 = `#\lf` | 11 = `#\vt` |
-| 12 = `#\ff` | 13 = `#\cr` | 14 = `#\so` | 15 = `#\si` |
-| 16 = `#\dle` | 17 = `#\dc1` | 18 = `#\dc2` | 19 = `#\dc3` |
-| 20 = `#\dc4` | 21 = `#\nak` | 22 = `#\syn` | 23 = `#\etb` |
-| 24 = `#\can` | 25 = `#\em` | 26 = `#\sub` | 27 = `#\esc` |
-| 28 = `#\fs` | 29 = `#\gs` | 30 = `#\rs` | 31 = `#\us` |
-| 32 = `#\sp` | | | |
+U+0000
 
-「delete」文字（コードポイント U+007F）の短い名前は `#\del` です。
+`#\alarm`
 
-「escape」文字（コードポイント U+001B）の R7RS での名前は `#\escape` です。
+U+0007
 
-以前のバージョンの Guile との互換性のために残されている代替名もいくつかあります。
+`#\backspace`
 
-| 代替名 | 標準名 |
-|---|---|
-| `#\nl` | `#\newline` |
-| `#\np` | `#\page` |
-| `#\null` | `#\nul` |
+U+0008
 
-文字はコードポイントの値を使って書くこともできます。`#\bs` に対する `#\10` や `#\del` に対する `#\177` のように、8進数で書くことができます。
+`#\tab`
 
-8進数より16進数を好む場合のために、文字のエスケープの追加の構文があります。`#\xHHHH` ――文字「x」の後に1桁から8桁の16進数を続けたものです。
+U+0009
 
-**Scheme 手続き: `char? x`**<br>**C 関数: `scm_char_p (x)`**
-: `x` が文字であれば `#t` を、そうでなければ `#f` を返します。
+`#\linefeed`
 
-基本的に、以下の文字比較操作は文字のコードポイントの数値比較です。
+U+000A
 
-**Scheme 手続き: `char=? x y`**
-: `x` のコードポイントが `y` のコードポイントと等しければ `#t` を、そうでなければ `#f` を返します。
+`#\newline`
 
-**Scheme 手続き: `char<? x y`**
-: `x` のコードポイントが `y` のコードポイントより小さければ `#t` を、そうでなければ `#f` を返します。
+U+000A
 
-**Scheme 手続き: `char<=? x y`**
-: `x` のコードポイントが `y` のコードポイント以下であれば `#t` を、そうでなければ `#f` を返します。
+`#\vtab`
 
-**Scheme 手続き: `char>? x y`**
-: `x` のコードポイントが `y` のコードポイントより大きければ `#t` を、そうでなければ `#f` を返します。
+U+000B
 
-**Scheme 手続き: `char>=? x y`**
-: `x` のコードポイントが `y` のコードポイント以上であれば `#t` を、そうでなければ `#f` を返します。
+`#\page`
 
-大文字と小文字を区別しない文字比較では、Unicode のケースフォールディングを使います。ケースフォールディングによる比較では、文字が小文字であり、単一の文字として表現できる大文字の形を持つ場合、比較の前に大文字に変換されます。それ以外のすべての文字は、比較が行われる前に変換されません。これにはドイツ語のシャープ S（エスツェット）が含まれ、その大文字の形は2文字なので、変換前に大文字化されません。Unicode のケースフォールディングは言語に依存しません。一般に正しい規則を使いますが、すべての言語のすべてのケースをカバーすることはできません。
+U+000C
 
-**Scheme 手続き: `char-ci=? x y`**
-: `x` のケースフォールディングされたコードポイントが `y` のケースフォールディングされたコードポイントと同じであれば `#t` を、そうでなければ `#f` を返します。
+`#\return`
 
-**Scheme 手続き: `char-ci<? x y`**
-: `x` のケースフォールディングされたコードポイントが `y` のケースフォールディングされたコードポイントより小さければ `#t` を、そうでなければ `#f` を返します。
+U+000D
 
-**Scheme 手続き: `char-ci<=? x y`**
-: `x` のケースフォールディングされたコードポイントが `y` のケースフォールディングされたコードポイント以下であれば `#t` を、そうでなければ `#f` を返します。
+`#\esc`
 
-**Scheme 手続き: `char-ci>? x y`**
-: `x` のケースフォールディングされたコードポイントが `y` のケースフォールディングされたコードポイントより大きければ `#t` を、そうでなければ `#f` を返します。
+U+001B
 
-**Scheme 手続き: `char-ci>=? x y`**
-: `x` のケースフォールディングされたコードポイントが `y` のケースフォールディングされたコードポイント以上であれば `#t` を、そうでなければ `#f` を返します。
+`#\space`
 
-**Scheme 手続き: `char-alphabetic? chr`**<br>**C 関数: `scm_char_alphabetic_p (chr)`**
-: `chr` がアルファベットであれば `#t` を、そうでなければ `#f` を返します。
+U+0020
 
-**Scheme 手続き: `char-numeric? chr`**<br>**C 関数: `scm_char_numeric_p (chr)`**
-: `chr` が数字であれば `#t` を、そうでなければ `#f` を返します。
+`#\delete`
 
-**Scheme 手続き: `char-whitespace? chr`**<br>**C 関数: `scm_char_whitespace_p (chr)`**
-: `chr` が空白であれば `#t` を、そうでなければ `#f` を返します。
+U+007F
 
-**Scheme 手続き: `char-upper-case? chr`**<br>**C 関数: `scm_char_upper_case_p (chr)`**
-: `chr` が大文字であれば `#t` を、そうでなければ `#f` を返します。
+「C0制御文字」（コードポイントが32未満の文字）には、それぞれ略称があります。以下の表に、各文字の略称を示します。
 
-**Scheme 手続き: `char-lower-case? chr`**<br>**C 関数: `scm_char_lower_case_p (chr)`**
-: `chr` が小文字であれば `#t` を、そうでなければ `#f` を返します。
+0 = `#\nul`
 
-**Scheme 手続き: `char-is-both? chr`**<br>**C 関数: `scm_char_is_both_p (chr)`**
-: `chr` が大文字または小文字のいずれかであれば `#t` を、そうでなければ `#f` を返します。
+1 = `#\soh`
 
-**Scheme 手続き: `char-general-category chr`**<br>**C 関数: `scm_char_general_category (chr)`**
-: `chr` に割り当てられた Unicode 一般カテゴリの2文字の名前を与えるシンボルを返します。名前付きのカテゴリが割り当てられていない場合は `#f` を返します。次の表は、カテゴリ名とその意味の一覧です。
+2 = `#\stx`
 
-  | カテゴリ | 意味 | カテゴリ | 意味 |
-  |---|---|---|---|
-  | Lu | 大文字 | Pf | 終わりの引用符の句読点 |
-  | Ll | 小文字 | Po | その他の句読点 |
-  | Lt | タイトルケース文字 | Sm | 数学記号 |
-  | Lm | 修飾文字 | Sc | 通貨記号 |
-  | Lo | その他の文字 | Sk | 修飾記号 |
-  | Mn | 非スペーシング記号 | So | その他の記号 |
-  | Mc | 結合スペーシング記号 | Zs | 空白区切り |
-  | Me | 囲み記号 | Zl | 行区切り |
-  | Nd | 10進数字 | Zp | 段落区切り |
-  | Nl | 文字としての数字 | Cc | 制御 |
-  | No | その他の数字 | Cf | 書式 |
-  | Pc | 接続句読点 | Cs | サロゲート |
-  | Pd | ダッシュ句読点 | Co | 私用 |
-  | Ps | 開き句読点 | Cn | 未割り当て |
-  | Pe | 閉じ句読点 | | |
-  | Pi | 始めの引用符の句読点 | | |
+3 = `#\etx`
 
-**Scheme 手続き: `char->integer chr`**<br>**C 関数: `scm_char_to_integer (chr)`**
-: `chr` のコードポイントを返します。
+4 = `#\eot`
 
-**Scheme 手続き: `integer->char n`**<br>**C 関数: `scm_integer_to_char (n)`**
-: コードポイント `n` を持つ文字を返します。整数 `n` は有効なコードポイントでなければなりません。有効なコードポイントは 0 から #xD7FF まで（両端を含む）または #xE000 から #x10FFFF まで（両端を含む）の範囲にあります。
+5 = `#\enq`
 
-**Scheme 手続き: `char-upcase chr`**<br>**C 関数: `scm_char_upcase (chr)`**
-: `chr` の大文字版の文字を返します。
+6 = `#\ack`
 
-**Scheme 手続き: `char-downcase chr`**<br>**C 関数: `scm_char_downcase (chr)`**
-: `chr` の小文字版の文字を返します。
+7 = `#\bel`
 
-**Scheme 手続き: `char-titlecase chr`**<br>**C 関数: `scm_char_titlecase (chr)`**
-: `chr` のタイトルケース版の文字があればそれを返し、そうでなければ大文字版を返します。
+8 = `#\bs`
 
-  ほとんどの文字ではこれらは同じになりますが、The Unicode Standard には、U+01F3「dz」のような特定の二重音字の互換文字が含まれており、これらについては大文字とタイトルケースの文字が異なります（この場合はそれぞれ U+01F1「DZ」と U+01F2「Dz」）。
+9 = `#\ht`
 
-**C 関数: `scm_t_wchar scm_c_upcase (scm_t_wchar c)`**<br>**C 関数: `scm_t_wchar scm_c_downcase (scm_t_wchar c)`**<br>**C 関数: `scm_t_wchar scm_c_titlecase (scm_t_wchar c)`**
-: これらの C 関数は Unicode のコードポイントの整数表現を受け取り、それぞれその大文字、小文字、タイトルケースの形に対応するコードポイントを返します。型 `scm_t_wchar` は符号付きの32ビット整数です。
+10 = `#\lf`
 
-文字には、Unicode によって定義された「正式名」もあります。これらの名前は、Guile では `(ice-9 unicode)` モジュールからアクセスできます。
+11 = `#\vt`
 
-```scheme
+12 = `#\ff`
+
+13 = `#\cr`
+
+14 = `#\so`
+
+15 = `#\si`
+
+16 = `#\dle`
+
+17 = `#\dc1`
+
+18 = `#\dc2`
+
+19 = `#\dc3`
+
+20 = `#\dc4`
+
+21 = `#\nak`
+
+22 = `#\syn`
+
+23 = `#\etb`
+
+24 = `#\can`
+
+25 = `#\em`
+
+26 = `#\sub`
+
+27 = `#\esc`
+
+28 = `#\fs`
+
+29 = `#\gs`
+
+30 = `#\rs`
+
+31 = `#\us`
+
+32 = `#\sp`
+
+「削除」文字（コードポイントU+007F）の略称は`#\del`です。
+
+R7RSにおける「エスケープ」文字（コードポイントU+001B）の名前は`#\escape`です。
+
+Guileとの互換性を保つために、いくつかの代替名も残されています。
+
+代替
+
+標準
+
+`#\nl`
+
+`#\newline`
+
+`#\np`
+
+`#\page`
+
+`#\null`
+
+`#\nul`
+
+文字は、コードポイント値を使用して記述することもできます。例えば、`#\bs` の場合は `#\10`、`#\del` の場合は `#\177` のように、8 進数で記述できます。
+
+8進数よりも16進数を好む場合は、文字エスケープのための追加の構文があります。`#\xHHHH` – 文字「x」の後に1～8桁の16進数が続きます。
+
+Scheme手順: **char?** x [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003f)
+
+C 関数: **scm\_char\_p** (x) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fp)
+
+xが文字の場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+基本的に、以下の文字比較演算は、文字のコードポイントの数値比較です。
+
+Scheme手順: **char=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003d_003f)
+
+xのコードポイントがyのコードポイントと等しい場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme手順: **char<?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003c_003f)
+
+xのコードポイントがyのコードポイントより小さい場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme手順: **char<=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003c_003d_003f)
+
+xのコードポイントがyのコードポイント以下の場合、`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme手順: **char>?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003e_003f)
+
+xのコードポイントがyのコードポイントより大きい場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme手順: **char>=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_003e_003d_003f)
+
+xのコードポイントがyのコードポイント以上であれば`#t`を返し、そうでなければ`#f`を返す。
+
+大文字小文字を区別しない文字比較では、Unicode の大文字小文字変換が使用されます。大文字小文字変換による比較では、小文字の文字が、1 文字で表現できる大文字の形を持つ場合、比較前に大文字に変換されます。その他の文字は、比較前に変換されません。これには、ドイツ語のシャープ S (エスツェット) も含まれます。この文字は、大文字の形が 2 文字であるため、変換前に大文字に変換されません。Unicode の大文字小文字変換は言語に依存しません。一般的に正しい規則を使用しますが、すべての言語のすべてのケースを網羅できるわけではありません。
+
+Scheme手順: **char-ci=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dci_003d_003f)
+
+x の大文字小文字を区別したコードポイントが y の大文字小文字を区別したコードポイントと同じ場合は `#t` を返し、そうでない場合は `#f` を返します。
+
+Scheme手順: **char-ci<?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dci_003c_003f)
+
+x の大文字小文字を区別したコードポイントが y の大文字小文字を区別したコードポイントより小さい場合は `#t` を返し、そうでない場合は `#f` を返します。
+
+Scheme手順: **char-ci<=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dci_003c_003d_003f)
+
+x の大文字小文字を区別したコードポイントが y の大文字小文字を区別したコードポイント以下の場合、`#t` を返し、そうでない場合は `#f` を返します。
+
+Scheme手順: **char-ci>?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dci_003e_003f)
+
+x の大文字小文字を区別したコードポイントが y の大文字小文字を区別したコードポイントより大きい場合は `#t` を返し、そうでない場合は `#f` を返します。
+
+Scheme手順: **char-ci>=?** xy [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dci_003e_003d_003f)
+
+x の大文字小文字を区別したコードポイントが y の大文字小文字を区別したコードポイント以上であれば `#t` を返し、そうでなければ `#f` を返します。
+
+スキーム手順: **char-alphabetic?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dalphabetic_003f)
+
+C 関数: **scm\_char\_alphabetic\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005falphabetic_005fp)
+
+文字がアルファベットの場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme Procedure: **char-numeric?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dnumeric_003f)
+
+C 関数: **scm\_char\_numeric\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fnumeric_005fp)
+
+文字が数値の場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme 手順: **char-whitespace?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dwhitespace_003f)
+
+C 関数: **scm\_char\_whitespace\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fwhitespace_005fp)
+
+文字が空白の場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme 手順: **char-upper-case?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dupper_002dcase_003f)
+
+C 関数: **scm\_char\_upper\_case\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fupper_005fcase_005fp)
+
+文字が大文字の場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme 手順: **char-lower-case?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dlower_002dcase_003f)
+
+C 関数: **scm\_char\_lower\_case\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005flower_005fcase_005fp )
+
+文字が小文字の場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme 手順: **char-is-both?** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dis_002dboth_003f)
+
+C 関数: **scm\_char\_is\_both\_p** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fis_005fboth_005fp)
+
+文字が大文字または小文字の場合は「#t」を返し、そうでない場合は「#f」を返します。
+
+Scheme Procedure: **char-general-category** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dgeneral_002dcategory)
+
+C 関数: **scm\_char\_general\_category** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fgeneral_005fcategory)
+
+chr に割り当てられている Unicode 一般カテゴリの 2 文字の名前を表す記号を返します。名前付きカテゴリが割り当てられていない場合は `#f` を返します。以下の表は、カテゴリ名とその意味の一覧です。
+
+ル
+
+大文字
+
+Pf
+
+最後の引用句読点
+
+Ll
+
+小文字
+
+ポ
+
+その他の句読点
+
+中尉
+
+タイトルケースの文字
+
+スモール
+
+数学記号
+
+Lm
+
+修飾文字
+
+Sc
+
+通貨記号
+
+ロ
+
+その他の手紙
+
+Sk
+
+修飾記号
+
+マンガン
+
+非間隔マーク
+
+それで
+
+その他のシンボル
+
+Mc
+
+結合間隔マーク
+
+Zs
+
+スペースセパレーター
+
+自分
+
+囲みマーク
+
+Zl
+
+区切り線
+
+Nd
+
+10進数
+
+Zp
+
+段落区切り
+
+オランダ
+
+文字番号
+
+cc
+
+コントロール
+
+いいえ
+
+その他の番号
+
+参照
+
+形式
+
+PC
+
+接続詞句読点
+
+Cs
+
+代理母
+
+Pd
+
+ダッシュ句読点
+
+株式会社
+
+私的使用
+
+追伸
+
+句読点を開く
+
+中国
+
+未割り当て
+
+ペ
+
+句読点を閉じる
+
+円周率
+
+引用符の先頭の句読点
+
+スキーム手順: **char->integer** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002d_003einteger)
+
+C 関数: **scm\_char\_to\_integer** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fto_005finteger)
+
+chrのコードポイントを返します。
+
+スキーム手順: **integer->char** n [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-integer_002d_003echar)
+
+C 関数: **scm\_integer\_to\_char** (n) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005finteger_005fto_005fchar)
+
+コードポイントnを持つ文字を返します。整数nは有効なコードポイントである必要があります。有効なコードポイントは、0から`#xD7FF`までの範囲、または`#xE000`から`#x10FFFF`までの範囲です。
+
+Scheme手順: **char-upcase** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dupcase)
+
+C 関数: **scm\_char\_upcase** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fupcase)
+
+chr の大文字バージョンを返します。
+
+Scheme 手順: **char-downcase** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002ddowncase)
+
+C 関数: **scm\_char\_downcase** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fdowncase)
+
+chr の小文字バージョンを返します。
+
+Scheme 手順: **char-titlecase** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dtitlecase)
+
+C 関数: **scm\_char\_titlecase** (chr) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005ftitlecase)
+
+chr のタイトルケース文字バージョンが存在する場合はそれを返し、存在しない場合は大文字バージョンを返します。
+
+ほとんどの文字ではこれらは同じですが、Unicode 標準には、`U+01F3` “dz” のような特定の二重音字互換性文字が含まれており、その大文字とタイトルケースの文字は異なります (この場合はそれぞれ `U+01F1` “DZ” と `U+01F2` “Dz” です)。
+
+C 関数: `scm_t_wchar` **scm\_c\_upcase** `(scm_t_wchar c)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fupcase)
+
+C 関数: `scm_t_wchar` **scm\_c\_downcase** `(scm_t_wchar c)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fdowncase)
+
+C 関数: `scm_t_wchar` **scm\_c\_titlecase** `(scm_t_wchar c)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005ftitlecase)
+
+これらのC関数は、Unicodeコードポイントの整数表現を受け取り、それぞれ大文字、小文字、タイトルケースに対応するコードポイントを返します。型`scm_t_wchar`は、符号付き32ビット整数です。
+
+文字にはUnicodeで定義された「正式名称」もあります。これらの名称は、Guileでは`(ice-9 unicode)`モジュールからアクセスできます。
+
 (use-modules (ice-9 unicode))
-```
 
-**Scheme 手続き: `char->formal-name chr`**
-: `ch` の、すべて大文字の正式な Unicode 名を文字列として返します。その文字に名前がない場合は `#f` を返します。
+Scheme手順: **char->formal-name** chr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002d_003eformal_002dname)
 
-**Scheme 手続き: `formal-name->char name`**
-: すべて大文字の正式な Unicode 名が `name` である文字を返します。そのような文字が知られていない場合は `#f` を返します。
+文字「ch」の正式なすべて大文字のUnicode名を文字列として返します。文字に名前がない場合は「#f」を返します。
 
----
+Scheme手順: **formal-name->char** name [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-formal_002dname_002d_003echar)
 
-> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
-> 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
+正式なUnicode名がすべて大文字でnameである文字を返します。そのような文字が見つからない場合は`#f`を返します。
+
+* * *
+
+次へ: [文字列](https://doc.guix.gnu.org/guile/latest/en/guile.html#Strings)、前: [文字](https://doc.guix.gnu.org/guile/latest/en/guile.html#Characters)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

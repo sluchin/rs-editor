@@ -1,0 +1,1511 @@
+### 6.11 プログラム実行フローの制御 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Controlling-the-Flow-of-Program-Execution)
+
+Scheme のより一般的な制御フローが C コードにどのように影響するかについては、[制御フロー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Flow) を参照してください。
+
+* [シーケンスとスプライシング](https://doc.guix.gnu.org/guile/latest/en/guile.html#begin)
+* [単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals)
+* [一連の式の条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)
+* [反復メカニズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do)
+* [プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts)
+* [続き](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuations)
+* [複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values)
+* [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)
+* [エラー通知の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Error-Reporting)
+* [ダイナミックウィンド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind)
+* [流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States)
+* [パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters)
+* [エラーの処理方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Errors)
+* [継続の障壁](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuation-Barriers)
+
+* * *
+
+次へ: [単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.1 シーケンスとスプライシング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sequencing-and-Splicing)
+
+式として、`begin`構文は一連の部分式を順番に評価するために使用されます。以下の条件式を考えてみましょう。
+
+(if ([\>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003e) x 0)
+(begin ([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) "greater") ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))))
+
+テストが真の場合、現在の出力ポートに「greater」を表示し、その後改行を表示します。この一連の部分式から複合式を形成するために、`begin`を使用します。
+
+構文: **begin** expr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-begin-1)
+
+式は左から右の順に評価され、最後の式の値が`begin`式の結果として返されます。この式タイプは、最後の式の前の式が副作用について評価される場合に使用されます。
+
+`begin`構文は定義コンテキストにおいて別の役割も果たします（[内部定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Internal-Definitions)を参照）。定義コンテキスト内の`begin`形式は、そのサブ形式をその場所に_スプライス_します。例えば、次の手順を考えてみましょう。
+
+(定義 (make-seal)
+(define-sealant seal [open](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open))
+([values](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-values) seal [open](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open)))
+
+次のような、`begin`で囲まれたいくつかの定義に展開される`define-sealant`マクロが存在すると仮定しましょう。
+
+(定義 (make-seal)
+（始める
+(シールタグを定義する)
+([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) 'seal))
+(define (seal x)
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) seal-tag x))
+(define (sealed? x)
+(and ([pair?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-pair_003f) x) ([eq?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-eq_003f) ([car](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-car) x) seal-tag)))
+(define ([open](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open) x)
+（もし（封印されているか？ x）
+([cdr](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cdr) x)
+([error](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error) "シールされた値が期待されていました:" x))))
+([values](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-values) seal [open](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-open)))
+
+ここでは、`begin`が定義コンテキスト内にあるため、そのサブフォームが`begin`の場所に_スプライス_されます。これにより、マクロによって作成された定義が、後続の式である`values`フォームから参照できるようになります。
+
+微妙な点ですが、スプライシングとシーケンスは異なります。ゼロ形式をスプライシングすることは理にかなっている場合があります。なぜなら、手続きや字句バインディング形式の式の前にゼロの内部定義があっても意味があるからです。しかし、ゼロ式のシーケンスを持つことは意味がありません。なぜなら、ゼロ式のシーケンスでは最後の値が存在しないため、シーケンスの値が何になるのかが明確にならないからです。ゼロ式のシーケンスはエラーです。
+
+Scheme言語からスプライシングをなくす方が、ある意味ではより洗練されていると言えるでしょう。マクロ（[マクロ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Macros)を参照）がなければ、それは良いアイデアです。しかし、上記の`define-sealant`のように、複数の定義に展開するマクロを記述できると便利なので、Schemeはこれら2つのタスクに`begin`形式を多用しています。
+
+* * *
+
+次へ: [式のシーケンスの条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)、前: [シーケンスとスプライシング](https://doc.guix.gnu.org/guile/latest/en/guile.html#begin)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.2 単純な条件評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Conditional-Evaluation)
+
+Guile は、条件評価のための 3 つの構文構造を提供します。`if` は通常の if-then-else 式 (オプションで else 分岐あり)、`cond` は複数の分岐を持つ条件式、`case` は式が定数値のいずれかを持つ場合に分岐します。
+
+構文: **if** test consequent \[alternate\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-if-1)
+
+引数はすべて任意の式にすることができます。まず、test が評価されます。test が真の値を返す場合、consequent 式が評価され、alternate は無視されます。test が `#f` と評価された場合、代わりに alternate が評価されます。評価された分岐 (consequent または alternate) の値が、`if` 式の値として返されます。
+
+alternate が省略され、テストが `#f` と評価された場合、式の値は指定されません。
+
+代替条件のない `if` 文（片側だけの `if` 文）を書く場合、表現していることの一つは、式の戻り値（または戻り値）には関心がないということです。つまり、結果式を評価することによる `効果` に関心があるということです。（慣例として、値ではなく効果のために評価される式を指すのに `statement` という言葉を使います。）
+
+このような場合、特別な形式である `when` と `unless` を使用してこれらの意図を表現する方がより明確であると考えられます。さらに、これらの形式は `let` 式のように _body_ を取ることができ、内部定義や評価する複数のステートメントを含めることができます ([ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings) を参照)。
+
+Scheme構文: **when** テスト本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-when-1)
+
+Scheme構文: **unless** テスト本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unless-1)
+
+これらの書式の実際の定義こそが、それらを最も明確に説明する文書と言えるでしょう。
+
+(define-syntax-rule (when test stmt stmt\* ...)
+(if test (let () stmt stmt\* ...)))
+
+(define-syntax-rule (unless test stmt stmt\* ...)
+(if (not test) (let () stmt stmt\* ...)))
+
+つまり、`when` は、test が真の場合に、後続のステートメントを順番に評価します。`unless` はその逆で、test が偽の場合にステートメントを評価します。
+
+構文: **cond** clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cond-1)
+
+各`cond`節は次のようになっている必要があります。
+
+（テストボディ）
+
+ここで、test は任意の式、または次のようなものです。
+
+(テスト式 [\=>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e))
+
+式は手続きに評価されなければならない。
+
+節のテストは順番に評価され、いずれかのテストが真と評価されるとすぐに、対応する本体が評価されて `cond` 式の結果が生成されます。`=>` 節タイプの場合、式が評価され、結果として得られたプロシージャがテストの値に適用されます。このプロシージャの適用結果が、`cond` 式の結果となります。
+
+標準Schemeの拡張機能として、追加の`cond`句が1つ利用可能です。
+
+(テスト [ガード](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-guard) [\=>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e) 式)
+
+ガードと式はプロシージャに評価される必要があります。この句タイプの場合、test は複数の値を返すことができ、`cond` はそのブール値の状態を無視します。代わりに、`cond` はガードを評価し、結果として得られたプロシージャを test の値に適用します。これは、ガードが `call-with-values` のコンシューマー引数であるかのように動作します。プロシージャ呼び出しの結果が真の値である場合、式を評価し、結果として得られたプロシージャを test の値に適用します。これは、ガードが呼び出されたときと同じ方法です。
+
+最後の節のテストは、記号「else」で行うことができます。そして、前のテストのいずれも真でない場合、「else」に続く本体が評価され、条件式「cond」の結果が生成されます。
+
+構文: **case** key clause1 clause2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-case-1)
+
+key は任意の式でよく、節は次の形式である必要があります。
+
+((datum1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) body)
+
+または
+
+((datum1 [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e)) [\=>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e) 式)
+
+そして最後の節は次のような形式をとることができる。
+
+（それ以外の場合）
+
+または
+
+(else [\=>](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_003d_003e)式)
+
+すべてのデータは一意である必要があります。まず、キーが評価されます。この評価結果は、`eqv?` を使用してすべてのデータ値と比較されます。この比較が成功した場合、データに続く本体が評価され、`case` 式の結果が生成されます。
+
+キーがどのデータとも一致せず、かつ `else` 句が存在する場合、`else` に続く本体が評価され、`case` 式の結果が生成されます。そのような句が存在しない場合、式の結果は未定義です。
+
+`=>`句型の場合、式が評価され、その結果得られたプロシージャがキーの値に適用されます。このプロシージャの適用結果が、`case`式の結果となります。
+
+* * *
+
+次へ: [反復メカニズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do)、前: [単純な条件評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditionals)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.3 式のシーケンスの条件付き評価 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Conditional-Evaluation-of-a-Sequence-of-Expressions)
+
+`and` と `or` は、`begin` と同様に、引数を順番に評価しますが、式のいずれかがそれぞれ false または true と評価されるとすぐに評価が停止します。
+
+構文: **and** 式 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-and)
+
+式を左から右に評価し、いずれかの式が「#f」と評価された時点で評価を停止します。残りの式は評価されません。最後に評価された式の値が返されます。どの式も「#f」と評価されない場合は、最後の式の値が返されます。
+
+式を指定せずに使用した場合、`#t` が返されます。
+
+構文: **or** 式 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-or)
+
+式を左から右に評価し、いずれかの式が真の値（つまり、`#f`とは異なる値）に評価された時点で評価を停止します。残りの式は評価されません。最後に評価された式の値が返されます。すべての式が`#f`に評価された場合は、`#f`が返されます。
+
+式を指定せずに使用した場合、`#f` が返されます。
+
+* * *
+
+次へ: [プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts)、前: [一連の式の条件付き評価](https://doc.guix.gnu.org/guile/latest/en/guile.html#and-or)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.4 反復メカニズム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Iteration-mechanisms)
+
+Schemeには反復処理の仕組みがほとんどありません。これは主に、Schemeプログラムにおける反復処理が通常再帰を用いて表現されるためです。しかしながら、R5RSでは`do`というループ構文が定義されています。さらに、Guileには`while`という明示的なループ構文があります。
+
+構文: **do** ((変数初期化 \[ステップ\]) …) (テスト式 …) 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-do)
+
+変数をバインドし、テストが真になるまで本体を評価します。戻り値は、テストの後の最後の式です（指定されている場合）。簡単な例で基本形式を説明します。
+
+(do ((i 1 (1+ i)))
+((> i 4))
+（iを表示）
+⊣ 1234
+
+または、2 つの変数と最終的な戻り値を使用する場合、
+
+(do ((i 1 (1+ i))
+(p 3 (\* 3 p)))
+((> i 4)
+p)
+(フォーマット #t "3\*\*~s は ~s\\n" ip))
+⊣
+3\*\*1 は 3 です
+3\*\*2は9です
+3\*\*3は27です
+3\*\*4は81です
+⇒
+243
+
+変数のバインディングは`let`と同様に確立され、式がすべて評価された後、すべてのバインディングが確立されます。反復処理では、オプションのステップ式は、スコープ内の以前のバインディングとともに評価され、その後、新しいバインディングがすべて確立されます。
+
+テスト式は終了条件です。テストが真になるとループは停止します。テスト式は毎回、本体を実行する前に評価されるため、初回に真であれば本体は全く実行されません。
+
+テスト後のオプションの式は、ループの最後に評価され、最終的な変数バインディングが利用可能になります。最後の式が戻り値を示します。式がない場合は、戻り値は未指定となります。
+
+各イテレーションでは、変数に対して新しい場所へのバインディングが確立されます。これは、各イテレーションごとに新しい `let` が作成されることと同様です。これは、ステップ式を持たない変数に対しても同様に行われます。以下では、各イテレーションで新しい `i` が `lambda` によってどのようにキャプチャされるかを示しています（[クロージャの概念](https://doc.guix.gnu.org/guile/latest/en/guile.html#About-Closure)を参照）。
+
+(define lst '())
+(do ((i 1 (1+ i)))
+((> i 4))
+(set! lst (cons (lambda () i) lst)))
+(map (lambda (proc) (proc)) lst)
+⇒
+（4 3 2 1）
+
+構文: **while** 条件 本体 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-while)
+
+condがtrueの間、bodyフォームを実行するループを実行します。condは各イテレーションの開始時にテストされるため、最初のイテレーションで`#f`だった場合は、bodyは全く実行されません。
+
+`while` 内では、2 つの追加のバインディングが提供され、これらは条件と本体の両方から使用できます。
+
+Scheme 手順: **break** break-arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-break-1)
+
+`while` の形式から抜け出す。
+
+スキーム手順: **続き** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-continue)
+
+現在のイテレーションを破棄し、最初に戻って条件を再度テストする、など。
+
+ループが条件式 `#f` で正常に終了した場合、`while` 式全体が `#f` と評価されます。ループが引数付き `break` の呼び出しで終了した場合、それらの引数は複数の値として `while` 式から返されます。それ以外の場合、引数なし `break` の呼び出しで終了した場合、戻り値は `#t` になります。
+
+(while #f (error "not reached")) ⇒ #f
+(while #t (break)) ⇒ #t
+(while #t (break 1 2 3)) ⇒ 1 2 3
+
+各 `while` 形式には、その `while` に対して動作する独自の `break` および `continue` 手順があります。つまり、ループがネストされている場合、外側の `break` を使用して完全に抜け出すことができます。たとえば、
+
+(テスト1の間)
+(let ((outer-break break))
+(テスト2の間)
+（もし（何か）
+(外側ブレーク #f))
+...)))
+
+`break` および `continue` プロシージャは、それぞれ対応する `while` の範囲内でのみ使用できることに注意してください。`while` の範囲外での動作は規定されていません。
+
+Scheme プログラムで反復を表現するもう 1 つの非常に一般的な方法は、いわゆる _名前付き let_ を使用することです。
+
+名前付きletは、プロシージャを作成して一度に呼び出す`let`の派生形です。新しく作成されたプロシージャのおかげで、名前付きletは`do`よりも強力で、反復処理だけでなく、任意の再帰処理にも使用できます。
+
+構文: **let** 変数バインディング本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let-1)
+
+バインディングの定義については、`let` に関するドキュメントを参照してください（[ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）。
+
+名前付き`let`は次のように動作します。
+
+* バインディングに含まれる引数の数と同じ数の引数を受け入れる新しいプロシージャが作成され、ローカル変数に（`let`を使用して）バインドされます。新しいプロシージャの仮引数名は、変数の名前になります。
+* 身体表現は、新しく作成された手順に挿入されます。
+* このプロシージャは、初期化式を仮引数として呼び出されます。
+
+次の例では、（再帰によって）1000回繰り返すループを実装します。
+
+(let lp ((x 1000))
+(if ([positive?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-positive_003f) x)
+(lp ([\-](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d) x 1))
+x))
+⇒
+0
+
+* * *
+
+次へ: [継続](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuations)、前: [反復メカニズム](https://doc.guix.gnu.org/guile/latest/en/guile.html#while-do)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.5 プロンプト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts-1)
+
+プロンプトは、プログラムの異なる部分間の制御フローの障壁です。ユーザーがシェルプロンプト（例えば、Bashプロンプト）をオペレーティングシステムとプログラム間の障壁と認識するのと同様に、Schemeプロンプトを使用することで、Schemeプログラマーはプログラムの一部を、あたかも異なるオペレーティングシステムで実行されているかのように扱うことができます。
+
+このような回りくどい説明をするのは、あなたが関数型プログラミングの熱狂的なファンでない限り、「区切り付き合成可能継続」という用語を聞いたことがない可能性が高いからです。それは問題ありません。これは比較的新しいトピックですが、知っておくと非常に役立つものです。
+
+* [プロンプトプリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompt-Primitives)
+* [Shift、Reset、その他すべて](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shift-and-Reset)
+
+* * *
+
+次へ: [Shift、Reset、その他](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shift-and-Reset)、上: [プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.5.1 プロンプトプリミティブ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompt-Primitives-1)
+
+Guileの基本的な区切り制御演算子は、`call-with-prompt`と`abort-to-prompt`です。
+
+Scheme 手順: **call-with-prompt** タグ サンク ハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dprompt)
+
+プロンプトを設定し、そのプロンプト内でthunkを呼び出します。
+
+thunk の呼び出しの動的な範囲内では、tag という名前のプロンプトが動的なコンテキストに存在し、ユーザーがそのタグを使用して `abort-to-prompt` (下記参照) を呼び出すと、制御がプロンプトに戻り、ハンドラが実行されます。
+
+ハンドラはプロシージャでなければなりません。ハンドラへの最初の引数は、thunkが呼び出されたときに開始され、`abort-to-prompt`の呼び出しで終了する計算の状態になります。ハンドラへの残りの引数は、`abort-to-prompt`に渡される引数です。
+
+Scheme 手順: **make-prompt-tag** \[stem\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dprompt_002dtag)
+
+新しいプロンプトタグを作成します。プロンプトタグとは、一意のオブジェクトです。現在、プロンプトタグは新しいペアです。これは将来のGuileバージョンで変更される可能性があります。
+
+Scheme Procedure: **default-prompt-tag** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-default_002dprompt_002dtag)
+
+デフォルトのプロンプト タグを返します。デフォルトのプロンプト タグを区別することで、次のセクションで説明するような、いくつかの便利なプロンプトおよび中止イディオムが可能になります。`default-prompt-tag` は実際にはパラメータであるため、`parameterize` を使用して動的に再バインドできることに注意してください。[パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters) を参照してください。
+
+Scheme Procedure: **abort-to-prompt** tag val1 val2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-abort_002dto_002dprompt)
+
+動的コンテキストと制御コンテキストを、指定された値も渡して、最も近い名前付きプロンプトタグまで展開します。
+
+C言語プログラマーであれば、`call-with-prompt`と`abort-to-prompt`を、それぞれ`setjmp`と`longjmp`の高度なバージョンだと認識するかもしれません。実際、プロンプトは非ローカルなエスケープメカニズムとして非常に便利です。Guileの`with-exception-handler`と`raise-exception`は、プロンプトを使って実装されています。プロンプトは、ジャンプ先に複数の値を渡すことができるため、`longjmp`よりも便利です。
+
+また、`longjmp`とは異なり、プロンプトハンドラには、中断されたプロセスの完全な状態が、プロンプトハンドラの最初の引数として渡されます。この状態は、プロンプトによってラップされた計算の_継続_です。これは_区切り継続_であり、プログラム全体の継続ではなく、`call-with-prompt`の呼び出しによって開始された計算のみを指します。
+
+継続は手続きであり、任意の数の値を指定して呼び出すだけで簡単に再開できます。ここからが面白く、そして複雑になります。プロンプトによって具体化された継続は、区切り文字で記述されるだけでなく、_合成可能_でもあります。なぜなら、プロンプトに保存された継続を呼び出すと、その継続が現在の継続と合成されるからです。
+
+プロンプト付き呼び出しによって継続を保存したと想像してください。
+
+(定義cont
+(プロンプト付き呼び出し)
+;; タグ
+'foo
+;; 考え込む
+(ラムダ()
+(+ 34 (abort-to-prompt 'foo)))
+;; ハンドラ
+(ラムダ (k) k)))
+
+その結果として、34が加算されます。これは、次のように書いたのと同じです。
+
+(定義cont
+(ラムダ (x)
+(+ 34 x)))
+
+つまり、`cont` 関数に数値を1つ渡して呼び出すと、その数値に34を加えた値が得られます。
+
+（続き8）
+⇒ 42
+(* 2 (続き 8))
+⇒ 84
+
+最後の例は、「現在の継続と合成する」とはどういう意味かを示しています。つまり、現在の継続（`(lambda (x) (* x 2))` のように計算すべき残りの処理）が存在し、保存された継続を呼び出しても現在の継続が消去されるのではなく、保存された継続が現在の継続と合成されるということです。
+
+ここでこの点を改めて強調するのは、次節で説明するように、従来のSchemeの継続は合成不可能であり、実際にはプロンプトによって表現される継続よりも表現力が劣るからです。しかし、どちらにもそれぞれの役割があります。
+
+先に進む前に、プロンプトのハンドラがラムダ式であり、最初の引数が参照されていない場合、そのプロンプトを中止しても継続は具体化されないことを述べておく必要があります。これは、効率性を考慮する上で重要な点です。
+
+この最適化が重要となる例の1つは、エスケープ継続です。エスケープ継続は、非ローカル終了、つまり現在の継続から脱出することのみに使用される、区切り付き継続です。エスケープ継続の一般的な使用例は、例外処理です（[例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)を参照）。
+
+以下の構文は、エスケープ継続の使用を簡素化するためにプロンプトの上に付加された構文糖衣です。
+
+Scheme Procedure: **call-with-escape-continuation** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002descape_002dcontinuation)
+
+スキーム手順: **call/ec** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002fec)
+
+エスケープ継続を使用してプロシージャを呼び出します。
+
+以下の例では、`fold` の呼び出しの継続をエスケープするために、戻り継続が使用されています。
+
+([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 コントロール)
+(srfi srfi-1))
+
+(define (prefix x lst)
+;; 最初の出現より前のすべての要素を返す
+LST の X の ;;
+([call/ec](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002fec)
+(ラムダ (戻り値)
+([fold](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fold) (lambda (要素の接頭辞)
+(if ([equal?](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-equal_003f) element x)
+(return ([reverse](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reverse) prefix)) ; escape \`fold'
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) 要素の接頭辞)))
+'()
+lst))))
+
+（接頭辞「a」（0 1 2 a 3 4 5））
+⇒ (0 1 2)
+
+Scheme構文: **let-escape-continuation** k body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002descape_002dcontinuation)
+
+Scheme構文: **let/ec** k body … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-let_002fec)
+
+本体内の k をエスケープ継続にバインドします。
+
+これは `(call/ec (lambda (k) body …))` と同等です。
+
+さらに、`(ice-9 control)` によってエクスポートされる別のヘルパープリミティブがあるので、`suspendable-continuation?` のためにそのモジュールをロードしてください。
+
+(use-modules (ice-9 control))
+
+Scheme Procedure: **suspendable-continuation?** タグ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-suspendable_002dcontinuation_003f)
+
+プロンプトタグ tag を指定して `abort-to-prompt` を呼び出すと、後で再開できる区切り文字付きの継続が生成される場合は、`#t` を返します。
+
+ほぼすべての継続はこの特性を持っています。例外は、`call-with-prompt` と `abort-to-prompt` の間のコードが何らかの理由で C 言語を再帰的に実行した場合です。この場合、`abort-to-prompt` は成功しますが、継続を再開しようとすると (呼び出しによって) 失敗します。これは、保存された継続を現在の継続と合成するには、古いスタックから保存されたスタック フレームを新しいスタック上の (場合によっては) 新しい位置に移動する必要があるためです。Guile は、Scheme コード用に作成したスタック フレームに対してのみこれを実行でき、C コンパイラによって作成されたスタック フレームに対しては実行できません。少し複雑ですが、Scheme を使い続ける限り、問題は発生しません。
+
+指定されたタグを持つプロンプトが見つからない場合、このプロシージャは単に `#f` を返します。
+
+* * *
+
+前へ: [プロンプトプリミティブ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompt-Primitives)、上へ: [プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.5.2 Shift、Reset、その他 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Shift_002c-Reset_002c-and-All-That)
+
+区切り制御演算子には実に多くの種類があり、それらは限定された集合ではないため、Guileはそれらを別のモジュールでサポートするように実装しています。
+
+(use-modules (ice-9 control))
+
+まず、`call-with-prompt`演算子には便利な略語があります。
+
+Scheme構文: **%** expr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025)
+
+Scheme構文: **%** 式ハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025-1)
+
+Scheme構文: **%** タグ式ハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025-2)
+
+プロンプト内で式を評価します。オプションでタグとハンドラを指定できます。タグが指定されていない場合は、デフォルトのプロンプトタグが使用されます。
+
+ハンドラが指定されていない場合は、デフォルトのハンドラがインストールされます。デフォルトのハンドラは、引数を1つ取るプロシージャを受け入れます。このプロシージャは、キャプチャされた継続処理において、プロンプト内で呼び出されます。
+
+場合によっては、コードを示す方が簡単なこともあります。例えば、このケースのように。
+
+(define (default-prompt-handler k proc)
+(% (default-prompt-tag)
+(プロシージャ k)
+デフォルトのプロンプトハンドラー))
+
+`%`記号が選ばれたのは、それがプロンプトのように見えるためです。
+
+同様に、デフォルトのプロンプトタグを前提とした`abort-to-prompt`の略語もあります。
+
+Scheme 手順: **abort** val1 val2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-abort)
+
+デフォルトのプロンプトタグに中断し、val1 val2 … をハンドラに渡します。
+
+前述のとおり、`(ice-9 control)` は他の区切り制御演算子も提供します。このセクションはやや技術的な内容なので、区切り継続を初めて使用する方は、`%` をある程度練習してからこのセクションに戻って読むことをお勧めします。
+
+まだ読んでいますか？それでは、`call-with-prompt` のような区切り制御演算子を実装する場合、 2 つの決定を行う必要があります。まず、ハンドラをプロンプト内で実行するか、プロンプト外で実行するかです。ハンドラをプロンプト内で実行すると、ハンドラ内での中止時に同じプロンプトハンドラに戻ることができるため、多くの場合便利です。ただし、ハンドラからの末尾呼び出しができなくなるため、汎用性は低くなります。
+
+同様に、キャプチャされた継続を呼び出すとプロンプトが復活するのでしょうか？ここでも、利便性と適切な末尾呼び出しのトレードオフが生じます。
+
+これらの決定は、Felleisen _F_ 演算子に反映されます。継続もハンドラも暗黙的にプロンプトを追加しない場合、この演算子は _–F–_ と呼ばれます。これは、Guile の `call-with-prompt` および `abort-to-prompt` の場合に該当します。
+
+継続とハンドラの両方が暗黙的にプロンプトを追加する場合、演算子は _+F+_ です。`shift` と `reset` はそのような演算子です。
+
+Scheme構文: **reset** body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-reset)
+
+プロンプトを設定し、そのプロンプト内で body1 body2 … を評価します。
+
+プロンプトハンドラは、以下に説明する`shift`キーと連携するように設計されています。
+
+Scheme構文: **shift** cont body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-shift)
+
+最も近い `reset` に中止し、キャプチャされた継続が cont にバインドされているコンテキストで body1 body2 … を評価します。
+
+前述のように、body1 body2 … 式と cont の呼び出しを合わせると、暗黙的にプロンプトが確立されます。
+
+興味のある読者は、これらのオペレーターに関する詳細情報については、オレグ・キセリョフの素晴らしいウェブサイト [http://okmij.org/ftp/](http://okmij.org/ftp/) をご覧ください。
+
+* * *
+
+次へ: [複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values)、前: [プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.6 継続 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuations-1)
+
+「継続」とは、特定の関数または式が戻り値を返したときに実行されるコードのことです。たとえば、次の例を考えてみましょう。
+
+(define (foo)
+(「こんにちは\n」と表示)
+（表示（バー））（改行）
+（出口））
+
+`bar`呼び出しから続く処理は、返された値の表示、改行、および終了から構成されます。これは、1つの引数の関数として表現できます。
+
+(ラムダ(r)
+(表示r) (改行)
+（出口））
+
+Schemeでは、継続はこのように特殊な手続きとして表現されます。その特殊な性質は、継続が呼び出されると、現在のプログラム位置を放棄し、継続によって表される位置に直接ジャンプすることです。
+
+継続とは、動的なラベルのようなもので、実行時にプログラム実行のある時点を捉え、そこに至るまでのすべてのネストされた呼び出し（あるいは、それらの呼び出しが戻ったときに実行されるコード）を含みます。
+
+継続は、以下の関数を使用して作成されます。
+
+Scheme Procedure: **call-with-current-continuation** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dcurrent_002dcontinuation)
+
+Scheme Procedure: **call/cc** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002fcc)
+
+現在の継続をキャプチャし、それを使って `(proc cont)` を呼び出します。戻り値は proc によって返される値、または後で `(cont value)` が呼び出された場合は渡された値になります。
+
+通常、cont は 1 つの引数で呼び出されますが、再開される場所が複数の値を期待している場合 ([複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values) を参照)、それらは複数の引数として渡される必要があります。たとえば、`(cont xyz)` のようになります。
+
+cont は、作成された継続バリアと同じ側からのみ使用できます ([継続バリア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuation-Barriers) を参照)。また、マルチスレッド プログラムでは、作成されたスレッドからのみ使用できます。
+
+proc の呼び出しはキャプチャされた継続の一部ではなく、継続が作成されたときにのみ実行されます。多くの場合、プログラムは後で使用するために cont をどこかに保存したいと考えます。これは proc 内で行うことができます。
+
+`call-with-current-continuation` という名前に含まれる `call` は、proc への呼び出しによって新しく作成された継続が渡される方法を指します。これは、後でその継続を呼び出すために呼び出しが使用される方法とは関係ありません。
+
+`call/cc`は`call-with-current-continuation`のエイリアスです。後者はやや長いため、こちらがよく使われます。
+
+  
+
+簡単な例を挙げます。
+
+(kont #f を定義)
+(書式 #t "戻り値は ~a\n")
+(call/cc (lambda (k)
+(セット! kont k)
+1)))
+⇒リターンは1です
+
+（コント2）
+⇒リターンは2です
+
+`call/cc` は、返された値が `format` によって表示される継続をキャプチャします。`lambda` はこの値を `kont` に格納し、初期値として `1` を返します。この `1` は表示されます。その後 `kont` が再度呼び出されると、キャプチャされたポイントが再開されますが、今度は `2` が返され、これも表示されます。
+
+Guileを対話的に実行する場合、このような`format`の呼び出しは、暗黙的に読み込み・評価・出力ループに戻ります。`call/cc`は他の戻り値と同様にそれをキャプチャするため、対話的に実行された場合、`kont`はさらに入力を読み込むために戻ってきます。
+
+  
+
+C言語プログラマーは、`call/cc`が実行時にプログラム実行中の特定の時点を記録するという点で`setjmp`に似ていることに気づくでしょう。継続呼び出しは、現在の場所を放棄して記録された場所へ移動するという点で`longjmp`に似ています。`longjmp`と同様に、継続に渡される値は、`call/cc`がそこで実行を再開したときに返される値です。ただし、`longjmp`はプログラムスタックを上方向にしか移動できませんが、継続メカニズムはどこへでも移動できます。
+
+継続が呼び出されると、`call/cc` とその後のコードは実質的に2回目の「戻り値」を返します。関数が呼び出された回数よりも多く戻り値を返すというのは、理解しにくいかもしれません。それよりも、関数が密かに再実行され、その後プログラムの流れが通常通り進むと考える方が分かりやすいでしょう。
+
+`dynamic-wind`（[Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind)を参照）を使用すると、継続メカニズムによってプログラムの実行箇所が再開または中断されたときに、セットアップおよびクリーンアップコードが実行されるようになります。
+
+  
+
+継続は強力なメカニズムであり、ループ、コルーチン、例外ハンドラなど、ほぼあらゆる種類の制御構造を実装するために使用できます。
+
+しかし、Guileにおける継続処理の実装は、期待されるほど効率的ではありません。なぜなら、GuileはC言語など、継続処理を知らない他の言語で書かれたプログラムと連携するように設計されているからです。基本的に、継続処理はスタックのブロックコピーによって捕捉され、コピーバックによって再開されます。
+
+このため、`call/cc` でキャプチャされる継続は、目的の結果を得るための他の簡単な方法がない場合、または継続メカニズムの優雅さがパフォーマンスの必要性を上回る場合にのみ使用すべきです。
+
+ループやネストされた関数から上位へエスケープする場合は、一般的にプロンプトを使用するのが最適です（[プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts)を参照）。コルーチンは、連携するスレッドを使用することで効率的に実装できます（スレッドはプログラムスタック全体を保持しますが、継続のようにスタックをコピーすることはありません）。
+
+* * *
+
+次へ: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)、前: [継続](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuations)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.7 複数の値の返却と受け入れ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Returning-and-Accepting-Multiple-Values)
+
+Schemeでは、プロシージャが呼び出し元に複数の値を返すことができます。これは、単一の値しか返せない他の言語とは大きく異なります。複数の値を返すことは、呼び出し元に値のリスト（またはペアやベクトル）を返すこととは異なります。なぜなら、概念的には、1つの複合オブジェクトではなく、複数の異なる値が返されるからです。
+
+複数の値を扱うための基本的な手続きは、`values` と `call-with-values` です。`values` は、手続きから複数の値を返すために使用されます。これは、手続き本体の末尾に `values` をゼロ個以上の引数とともに呼び出すことで実現します。`call-with-values` は、複数の値を返す手続きと、これらの値をパラメータとして受け取る手続きを組み合わせたものです。
+
+スキームプロシージャ: **values** arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-values)
+
+C 関数: **scm\_values** (args) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fvalues)
+
+引数をすべて継続に渡します。`call-with-values` プロシージャによって作成された継続を除き、すべての継続は正確に 1 つの値を受け取ります。`call-with-values` によって作成されていない継続に値を渡さない場合、または複数の値を渡した場合の影響は未定義です。
+
+`scm_values`の場合、argsは引数のリストであり、戻り値は呼び出し元が返すことができる複数値オブジェクトです。現在の実装では、このオブジェクトはargsと構造を共有しているため、argsは後から変更しないでください。
+
+C 関数: `SCM` **scm\_c\_values** `(SCM *base, size_t n)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fvalues)
+
+`scm_c_values`は`scm_values`の代替手段です。新しい値オブジェクトを作成し、基本値から始まるn個の値をそのオブジェクトにコピーします。
+
+現状では、これはリストを作成して`scm_values`に渡しますが、将来的にはより効率的な表現方法を使用できるようになることを期待しています。
+
+C 関数: `size_t` **scm\_c\_nvalues** `(SCM オブジェクト)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fnvalues)
+
+objが複数値オブジェクトの場合、そのオブジェクトに含まれる値の数を返します。それ以外の場合は1を返します。
+
+C 関数: `SCM` **scm\_c\_value\_ref** `(SCM obj, size_t idx)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fvalue_005fref)
+
+obj内のidxで指定された位置にある値を返します。objは通常、複数の値を持つオブジェクトですが、必ずしもそうである必要はありません。その他のオブジェクトは単一の値（それ自身）を表し、適切に処理されます。
+
+スキーム手順: **値付き呼び出し** プロデューサー コンシューマー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dvalues)
+
+値を引数として渡さずにプロデューサー引数を呼び出し、値が渡されると、その値を引数としてコンシューマープロシージャを呼び出す継続関数を呼び出します。コンシューマー呼び出しの継続関数は、`call-with-values`呼び出しの継続関数です。
+
+(call-with-values (lambda () (values 4 5))
+(ラムダ (ab) b))
+⇒ 5
+
+(値付き呼び出し \* -)
+⇒ -1
+
+上記で説明した基本的な手順に加えて、Guileには`receive`と呼ばれる構文をエクスポートするモジュールがあり、これははるかに便利です。これは`(ice-9 receive)`に含まれており、SRFI-8で規定されているものと同じです（[SRFI-8 - receive](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d8)を参照）。
+
+([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 [receive](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-receive-1)))
+
+ライブラリ構文: **receive** 形式式 式 本体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-receive-1)
+
+式 expr を評価し、結果の値 (0 個以上) を formals の仮引数にバインドします。formals は、`lambda` の引数リストと同様のシンボルのリストです ([Lambda: 基本プロシージャの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Lambda) を参照)。変数をバインドした後、本体が評価され、`receive` 式の結果が生成されます。
+
+例えば、SRFI-1 の `partition` から結果を取得する場合 ([SRFI-1 - リストライブラリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1) を参照)。
+
+（受け取る（奇数・偶数））
+(パーティションが奇数ですか? '(7 4 2 8 3))
+（オッズを表示）
+（「」と「」を表示する）
+(イベントを表示)
+⊣ (7 3) および (4 2 8)
+
+* * *
+
+次へ: [エラー通知の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Error-Reporting)、前: [複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.8 例外 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-1)
+
+問題が発生した場合はどうなるのでしょうか？Guileの例外処理機能は、この疑問に答えるために存在し、プログラムが問題を説明し、状況を柔軟に処理できるようにします。
+
+プログラムがゼロ除算などの問題に遭遇すると、例外が発生します。例外は、Guile がプログラムに代わって発生させる場合もあれば、プログラム自身が例外を発生させたい場合もあります。例外を発生させると、現在の計算が停止し、代わりに現在の例外ハンドラが呼び出され、予期しない状況を説明する例外オブジェクトが渡されます。
+
+通常、例外ハンドラは計算を何らかの安全な時点まで巻き戻します。たとえば、キー入力によって動作するアプリケーションの典型的なロジックは次のようになります。
+
+メインループ:
+次のキー入力を読み取り、dispatch-key を呼び出す
+
+ディスパッチキー:
+キーマップでキーを検索し、適切なプロシージャを呼び出す。
+ファイルを探すと言います
+
+ファイル検索:
+必要なファイル名を対話的に読み込み、次に
+指定されたファイルを探す
+
+指定されたファイルを探す:
+ファイルが存在するかどうかを確認し、存在しない場合は例外を発生させる。
+...
+
+この場合、`main-loop` は例外ハンドラをインストールすることができ、`dispatch-key` 内で発生した例外に対して警告を出力し、メインループに戻るようにすることができます。
+
+以下のサブセクションでは、例外オブジェクト、例外の発生、および例外処理についてさらに詳しく説明します。また、Guileの最初の25年間で使用されてきた、そして今後も当分廃止される予定のない歴史的なインターフェースについても紹介します。
+
+* [例外オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exception-Objects )
+* [例外の発生と処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions)
+* [投げてキャッチする](https://doc.guix.gnu.org/guile/latest/en/guile.html#Throw-and-Catch)
+* [例外とC言語](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-and-C)
+
+* * *
+
+次へ: [例外の発生と処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions)、上へ: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.8.1 例外オブジェクト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exception-Objects-1)
+
+Guile は例外的な状況に遭遇すると例外を発生させます。例外とは、その例外的な状況を記述するオブジェクトです。例外オブジェクトは、レコード機能に基づいて構築された構造化データです ([レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records) を参照)。
+
+例外タイプ: **&exception** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026exception)
+
+基本例外型。すべての例外オブジェクトは、`&exception` のサブタイプのインスタンスで構成されます。
+
+Scheme プロシージャ: **exception-type?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dtype_003f)
+
+objが例外型の場合はtrueを返します。
+
+例外タイプは階層構造で存在します。新しい例外タイプは`make-exception-type`コマンドを使用して定義できます。
+
+Scheme Procedure: **make-exception-type** id parent field-names [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexception_002dtype)
+
+親クラスを継承し、field-namesにリストされたフィールド名を持つ、idという名前の新しい例外型を返します。field-namesはシンボルのリストである必要があり、親クラスまたはそのスーパークラスですでに使用されている名前を含んではなりません。
+
+例外型オブジェクトはレコード型オブジェクトであるため、例外型に対して `record-constructor` を使用してコンストラクタを取得できます。コンストラクタは、例外が持つフィールドの数（スーパークラスを含む）と同じ数の引数を取ります。[レコード](https://doc.guix.gnu.org/guile/latest/en/guile.html#Records) を参照してください。
+
+しかし、例外型の述語やフィールドアクセサーとして、`record-predicate` や `record-accessor` を使用するのは一般的ではありません。その理由は、例外型のインスタンスは複合例外を構成することができるためです。例外アクセサーは、複合例外の特定の構成要素を選択し、その特定の構成要素のフィールドにアクセスする必要があります。
+
+Scheme 手順: **make-exception** 例外… [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexception)
+
+例外で構成される例外オブジェクトを返します。
+
+Scheme 手順: **例外?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_003f)
+
+objが例外オブジェクトである場合はtrueを返します。
+
+Scheme プロシージャ: **exception-predicate** 型 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dpredicate)
+
+引数が特定の型のインスタンスである単純例外、またはそのようなインスタンスで構成される複合例外である場合にtrueを返すプロシージャを返します。
+
+Scheme プロシージャ: **exception-accessor** rtd proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002daccessor)
+
+例外型 rtd のインスタンス、または rtd のインスタンスである複合例外のコンポーネントに対して proc を末尾で呼び出すプロシージャを返します。
+
+複合例外は、状況のさまざまな側面を個別に表現するのに役立ちます。たとえば、複合例外を使用すると、プログラマーは「これはプログラミングエラーであり、ユーザーに表示するのに役立つメッセージもここにあり、エラーに関する詳細情報を提供する関連オブジェクトもここにあります」と表現できます。このエラーは、`&programming-error`、`&message`、および`&irritants`例外タイプのインスタンスで構成できます。
+
+例外処理におけるサブタイピングの関係は、異なるが類似した状況を同じように扱うのに役立ちます。たとえば、プログラミングエラーには多くの種類がありますが（ゼロ除算や型不一致など）、ユーザーがそれらすべてを処理する共通の方法があるかもしれません。そして、その共通の方法は、プログラム外部で発生したエラー（たとえば、ファイルが見つからないエラー）を処理する方法とは異なる可能性があります。
+
+Guile の標準例外階層は R6RS を参考にしていますが、一部の型の名前は異なります。詳細については、[rnrs exceptions](https://doc.guix.gnu.org/guile/latest/en/guile.html#rnrs-exceptions) を参照してください。
+
+Guileの例外型階層にアクセスするには、`(ice-9 exceptions)`モジュールをインポートします。
+
+(use-modules (ice-9 例外))
+
+以下の図は、標準例外タイプの階層構造の概要を示しています。
+
+＆例外
+|- &警告
+|- &メッセージ
+刺激物
+|- &origin
+\\- ＆エラー
+|- &external-error
+\\- &プログラミングエラー
+|- &assertion-failure
+|- &継続不可能
+|- &実装制限
+|- &lexical
+|- &構文
+\\- &未定義変数
+
+例外タイプ: **&warning** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026warning-1)
+
+警告を示す例外タイプ。これらは通常、`#:continuable? #t` を使用して発生します。詳細については、`raise-exception` のドキュメントを参照してください。
+
+Scheme 手順: **make-warning** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dwarning)
+
+Scheme Procedure: **warning?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-warning_003f)
+
+`&warning`例外オブジェクトのコンストラクタと述語。
+
+例外タイプ: **&message** メッセージ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026message-1)
+
+ユーザーに表示するメッセージを提供する例外タイプ。通常は複合例外の構成要素として使用されます。
+
+Scheme 手順: **make-exception-with-message** メッセージ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexception_002dwith_002dmessage)
+
+Scheme プロシージャ: **exception-with-message?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dwith_002dmessage_003f)
+
+Scheme Procedure: **exception-message** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dmessage)
+
+`&message`例外オブジェクトのコンストラクタ、述語、およびアクセサ。
+
+例外タイプ: **&irritants** 刺激物 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026irritants-1)
+
+何らかの理由で予期せぬ動作をしたオブジェクトのリストを提供する例外タイプ。通常は複合例外の構成要素として使用されます。
+
+スキーム手順: **make-exception-with-irritants** irritants [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexception_002dwith_002dirritants)
+
+スキーム手順: **exception-with-irritants?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dwith_002dirritants_003f)
+
+スキーム手順: **Exception-irritants** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-Exception_002dirritants)
+
+`&irritants`例外オブジェクトのコンストラクタ、述語、およびアクセサ。
+
+例外タイプ: **&origin** origin [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026origin)
+
+例外の発生源を示す例外タイプ。通常はプロシージャ名をシンボルとして表現する。複合例外の構成要素としてよく使用される。
+
+Scheme Procedure: **make-exception-with-origin** origin [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- make_002dexception_002dwith_002dorigin)
+
+Scheme プロシージャ: **exception-with-origin?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dwith_002dorigin_003f)
+
+Scheme Procedure: **exception-origin** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dorigin)
+
+`&origin`例外オブジェクトのコンストラクタ、述語、およびアクセサ。
+
+例外タイプ: **&error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026error-1)
+
+エラーを示す例外タイプ：単に例外的な状況ではなく、間違っている状況。
+
+Scheme手順: **make-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002derror)
+
+Scheme手順: **エラー?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error_003f)
+
+`&error`例外オブジェクトのコンストラクタと述語。
+
+例外の種類: **&external-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026external_002derror)
+
+プログラムと外部環境との相互作用から生じるエラーを示す例外タイプ。例えば、「ファイルが見つかりません」エラーなど。
+
+Scheme手順: **make-external-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexternal_002derror)
+
+Scheme 手順: **外部エラー?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-external_002derror_003f)
+
+`&external-error`例外オブジェクトのコンストラクタと述語。
+
+例外タイプ: **&programming-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026programming_002derror)
+
+プログラム内部で発生するエラーを示す例外タイプ。型不一致など。
+
+Scheme手順: **make-programming-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dprogramming_002derror)
+
+Scheme 手順: **プログラミングエラー?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-programming_002derror_003f)
+
+`&programming-error`例外オブジェクトのコンストラクタと述語。
+
+例外タイプ: **&non-continuable** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026non_002dcontinuable-1)
+
+プログラム内部で発生するエラーを示す例外タイプ。型不一致など。
+
+Scheme 手順: **make-non-continuable-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dnon_002dcontinuable_002derror)
+
+Scheme Procedure: **non-continuable-error?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-non_002dcontinuable_002derror_003f)
+
+`&non-continuable`例外オブジェクトのコンストラクタと述語。
+
+例外タイプ: **&lexical** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026lexical-1)
+
+括弧の不均衡など、字句的なエラーを示す例外タイプ。
+
+Scheme手順: **make-lexical-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dlexical_002derror)
+
+Scheme 手順: **lexical-error?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lexical_002derror_003f)
+
+`&lexical`例外オブジェクトのコンストラクタと述語。
+
+例外タイプ: **&syntax** フォーム サブフォーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026syntax-1)
+
+構文エラーを示す例外タイプ。例えば、構文が無効な `cond` 式など。form フィールドはエラーを含むフォームを示し、subform は予期しないサブコンポーネントを示します。利用できない場合は `#f` が表示されます。
+
+Scheme 手順: **make-syntax-error** フォーム サブフォーム [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dsyntax_002derror)
+
+Scheme 手順: **構文エラー?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002derror_003f)
+
+Scheme手順: **syntax-error-form** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002derror_002dform)
+
+Scheme 手順: **syntax-error-subform** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-syntax_002derror_002dsubform)
+
+`&syntax`例外オブジェクトのコンストラクタ、述語、およびアクセサ。
+
+例外タイプ: **&undefined-variable** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0026undefined_002dvariable)
+
+未定義の変数を示す例外タイプ。
+
+Scheme手順: **make-undefine-variable-error** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dundefine_002dvariable_002derror)
+
+Scheme 手順: **undefined-variable-error?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-undefined_002dvariable_002derror_003f)
+
+`&undefined-variable`例外オブジェクトのコンストラクタと述語。
+
+ちなみに、`(ice-9 exceptions)`モジュールには、新しい例外タイプを階層に簡単に追加できる`define-exception-type`マクロも含まれています。
+
+構文: **define-exception-type** 名前 親 コンストラクタ 述語 (フィールド アクセサ) … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-define_002dexception_002dtype)
+
+名前を親クラスから継承する新しい例外型として定義します。コンストラクタと述語をそれぞれ例外コンストラクタと述語として定義し、各フィールドのアクセサを定義します。
+
+* * *
+
+次へ: [スローとキャッチ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Throw-and-Catch)、前: [例外オブジェクト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exception-Objects)、上: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.8.2 例外の発生と処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions-1)
+
+例外オブジェクトは、例外的な状況を記述します。その記述をユーザーに知らせたり、プログラムで状況を処理したりするには、まず例外を_発生_する必要があります。
+
+Scheme Procedure: **raise-exception** obj \[#:continuable?=#f\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-raise_002dexception)
+
+obj の現在の例外ハンドラを呼び出すことで例外を発生させます。ハンドラは、`raise` の呼び出し時と同じ動的環境を持つ継続とともに呼び出されますが、呼び出されるハンドラがインストールされた時点で存在していた現在の例外ハンドラが使用されます。
+
+continuable? が true の場合、ハンドラは `raise-exception` 呼び出しに対して末尾の位置で呼び出されます。そうでない場合、ハンドラが戻ると、ハンドラと同じ動的環境で `&non-continuable` 型の非継続可能例外が発生します。
+
+上記の説明にあるように、Guileには「現在の例外ハンドラ」という概念があります。REPLでは、この例外ハンドラは再帰デバッガに入ることができます。スタンドアロンプログラムでは、単にエラーの表現を出力して終了するだけです。
+
+呼び出しの動的な範囲内で例外ハンドラを設定するには、`with-exception-handler`を使用します。
+
+Scheme プロシージャ: **with-exception-handler** ハンドラ サンク \[#:unwind?=#f\] \[#:unwind-for-type=#t\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dexception_002dhandler)
+
+内で、引数を 1 つ取るプロシージャである handler を現在の例外ハンドラとして確立します。
+
+thunk の呼び出しの動的範囲内で `raise-exception` が呼び出された場合、`raise-exception` の引数に対してハンドラが呼び出されます。
+
+例外ハンドラには、アンワインド型と非アンワインド型の2種類があります。
+
+デフォルトでは、例外ハンドラはスタックを巻き戻しません。`with-exception-handler` が `#:unwind? #t` とともに呼び出されていない限り、例外ハンドラはスタックを巻き戻さずにエラーの継続内で呼び出されます。ハンドラ呼び出しの動的環境は `raise-exception` 呼び出しの動的環境と同じですが、現在の例外ハンドラは「外側の」ハンドラ（対応する `with-exception-handler` が呼び出されたときに存在していたハンドラ）に「巻き戻される」という点が異なります。
+
+しかし、例外を処理する際に、計算を以前の状態に巻き戻してそこでエラー ハンドラを実行したい場合がよくあります。結局のところ、`raise-exception` 呼び出しが継続可能でない限り、例外ハンドラは継続を中止する必要があります。このユース ケースをサポートするために、`with-exception-handler` が `#:unwind? #t` が true で呼び出された場合、`raise-exception` はまず _エスケープ継続_ を呼び出してスタックを巻き戻し ([`call/ec`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompt-Primitives) を参照)、次に `with-exception-handler` 呼び出しの継続を使用してハンドラを呼び出します。
+
+最後に、もう一つ注意点があります。例外ハンドラのアンワインド処理において、Guile が特定の例外を実際に処理するかどうかを判断できると便利です。これは特に、`stack-overflow` や `out-of-memory` のようなリソース枯渇シナリオで発生する例外の場合に当てはまります。このような場合、リソースの回復前にリソース使用量をすぐに削減したいからです。[Stack Overflow](https://doc.guix.gnu.org/guile/latest/en/guile.html#Stack-Overflow) を参照してください。この目的のために、`#:unwind-for-type` キーワード引数を使用すると、例外ハンドラで処理される例外の種類を指定できます。`#t` の場合はすべての例外が処理されます。例外型オブジェクトの場合は、その型の例外のみが処理されます。それ以外の場合は、シンボルの場合は、指定された `exception-kind` を持つ例外のみが処理されます。
+
+* * *
+
+次へ: [例外と C](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-and-C )、前: [例外の発生と処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Raising-and-Handling-Exceptions)、上: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.8.3 投げてキャッチする [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Throw-and-Catch-1)
+
+Guile が主要な例外処理機能として `with-exception-handler` と `raise-exception` を採用したのは 2019 年のことです。それ以前は、例外処理は基本的に、やや複雑なインターフェースを持つ `catch`、`with-throw-handler`、`throw` という 3 つのプリミティブに基づいていました。
+
+Scheme プロシージャ: **catch** キーサンクハンドラ \[pre-unwind-handler\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-catch)
+
+C 関数: **scm\_catch\_with\_pre\_unwind\_handler** (key、thunk、handler、pre\_unwind\_handler) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcatch_005fwith_005fpre_005funwind_005fhandler)
+
+C 関数: **scm\_catch** (キー、サンク、ハンドラー) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcatch)
+
+thunk の呼び出しの動的な範囲内で例外ハンドラを確立します。key は、すべての例外を処理する必要があることを示す `#t` か、例外の種類として key を持つ例外のみを処理するように制限するシンボルのいずれかです。
+
+thunk が正常に実行され、例外が発生しなかった場合、ハンドラプロシージャは一切呼び出されず、thunk 呼び出しの結果は catch の結果となります。それ以外の場合、キーに一致する例外が発生した場合は、catch 呼び出しの継続とともにハンドラが呼び出されます。
+
+前のセクションでの議論を踏まえると、 `catch` の動作を `with-exception-handler` の観点から表現するのが最も正確かつ簡潔です。3 つの引数で `catch` を呼び出すことは、以下と同じです。
+
+(define (catch key thunk handler)
+(with-exception-handler
+(ラムダ (exn)
+(ハンドラーを適用 (例外の種類 exn) (例外引数 exn)))
+ドスン
+#:リラックス？ #t
+#:unwind-for type key))
+
+`with-exception-handler` を `#:unwind? #t` とともに呼び出すことで、`catch` は例外的な状況でハンドラが呼び出される前に呼び出されるエスケープ継続を設定します。
+
+`catch`が4つの引数で呼び出された場合、thunkの使用は以下のように置き換える必要があります。
+
+(ラムダ()
+(with-throw-handler key thunk pre-unwind-handler))
+
+上記のように、`catch` にプリアンワインドハンドラが渡された場合、ボディサンク内で `with-throw-handler` を呼び出すのと同様になります。
+
+`with-throw-handler`は、古いプリミティブの2番目にあたり、スタックがアンワインドされる前にスローされた例外をインターセプトするために使用されます。これは、関連する状態をクリーンアップしたり、バックトレースを出力したり、例外に関する情報をデバッガに渡したりするために使用できます。
+
+Scheme プロシージャ: **with-throw-handler** キー thunk ハンドラ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dthrow_002dhandler)
+
+C 関数: **scm_with_throw_handler** (キー、サンク、ハンドラー) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005fthrow_005fhandler)
+
+動的コンテキストにキー key のスローハンドラーとしてハンドラーを追加し、thunk を呼び出します。
+
+`with-throw-handler`を`with-exception-handler`で完全に表現することはできませんが、それに近い表現は可能です。
+
+(define (with-throw-handler key thunk handler)
+(with-exception-handler
+(ラムダ (exn)
+(when (or (eq? key #t) (eq? key (exception-kind exn)))
+(ハンドラーを適用 (例外の種類 exn) (例外引数 exn)))
+(例外発生)
+ドスン))
+
+ご覧のとおり、`catch` の場合とは異なり、`with-throw-handler` のハンドラは、スタックを巻き戻す前に `raise-exception` の継続内で呼び出されます。スローハンドラが正常に戻った場合、例外は再発生し、次の例外ハンドラによって処理されます。
+
+`with-throw-handler` の特殊な点として、上記では示せませんが、ハンドラの呼び出しによって正常に完了せず `raise-exception` が発生した場合、例外は `raise-exception` の _元の_ 動的環境でスローされます。内部の例外ハンドラは、例外を処理する機会をもう一度得ることができます。この動作を示す例を以下に示します。
+
+([catch](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-catch) 'a
+(ラムダ()
+([with-throw-handler](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dthrow_002dhandler) 'b
+(ラムダ()
+([catch](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-catch) 'a
+(ラムダ()
+([throw](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-throw) 'b))
+内部ハンドラー))
+(lambda (key . args)
+([throw](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-throw) 'a))))
+外部ハンドラー）
+
+このコードは`inner-handler`を呼び出し、その後、内部の`catch`の継続処理を実行します。
+
+最後に、`throw` について説明します。これは、`raise-exception` の古いバージョンです。
+
+Scheme プロシージャ: **throw** キー引数 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-throw)
+
+C 関数: **scm\_throw** (key, args) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fthrow)
+
+種類 key と引数 args を指定して例外を発生させます。key はシンボルで、例外の「種類」を示します。
+
+ここでも、`throw` の動作を `raise-exception` という用語で表現することで、その動作を具体的に指定できます。
+
+(define (throw key . args)
+(raise-exception (make-exception-from-throw key args)))
+
+ここで、構造化された例外オブジェクト `throw` 間の関係を管理するプリミティブについて言及する必要があります。
+
+Scheme プロシージャ: **make-exception-from-throw** キー引数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dexception_002dfrom_002dthrow)
+
+指定されたキーと `throw` に渡された引数に対応する例外オブジェクトを作成します。これは、例えば `&programming-error` のような特定の種類の例外である可能性があります。Guile は、これまで使用されてきたさまざまなキー値に対応するカスタム トランスフォーマーのセットを保持しています。
+
+Scheme 手順: **exception-kind** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exception_002dkind)
+
+exn が `make-exception-from-throw` で作成された例外である場合は、その例外に対応するキーを返します。それ以外の場合、exn が`throw` への既知のマッピングを持つ型の例外でない限り、シンボル `%exception` を返します。
+
+スキームプロシージャ: **Exception-args** exn [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-Exception_002dargs)
+
+exn が `make-exception-from-throw` で作成された例外である場合は、その例外に対応する引数を返します。それ以外の場合、exn が `throw` への既知のマッピングを持つ型の例外でない限り、`(list exn)` を返します。
+
+* * *
+
+前へ: [スローとキャッチ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Throw-and-Catch)、上へ: [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.8.4 例外と C [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-and-C-1)
+
+GuileのC言語からの例外を処理する主要な関数は`scm_c_catch`です。
+
+C 関数: `SCM` **scm\_c\_catch** `(SCM タグ、scm_t_catch_body 本体、void *body_data、scm_t_catch_handler ハンドラー、void *handler_data、scm_t_catch_handler pre_unwind_handler、void *pre_unwind_handler_data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fcatch)
+
+C 関数: `SCM` **scm\_internal\_catch** `(SCM タグ、scm_t_catch_body 本体、void *body_data、scm_t_catch_handler ハンドラー、void *handler_data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005finternal_005fcatch)
+
+`scm_c_catch` は、C 関数を本体サンクおよび例外ハンドラとして登録できます。これは、Scheme プロシージャを本体サンクおよびハンドラ引数として受け取る `scm_catch_with_pre_unwind_handler` および `scm_catch` とは対照的です。`scm_internal_catch` は後方互換性のために残されており、プリアンワインドハンドラと対応するデータセットが `NULL` に設定された `scm_c_catch` の特殊化です。
+
+body は、指定されたタグタイプの例外をキャッチする `body (body_data)` として呼び出されます。例外がキャッチされた場合、pre\_unwind\_handler と handler は `handler (handler_data, key, args)` として呼び出されます。key と args は、`throw` からの `SCM` キーと引数リストです。
+
+bodyとhandlerには、以下のプロトタイプが必要です。`scm_t_catch_body`と`scm_t_catch_handler`は、これらのプロトタイプのポインタ型定義です。
+
+SCM本体（void \*data）
+SCMハンドラ（void \*data、SCMキー、SCM引数）
+
+body_data および handler_data パラメータは、それぞれの呼び出しに渡されるため、アプリケーションはこれらの関数に追加情報を伝えることができます。
+
+データが `SCM` オブジェクトで構成されている場合、必要な間はガベージコレクションされないように注意する必要があります。`SCM` がローカル C 変数である場合、その変数へのポインタをデータ パラメータとして渡すことで保護できます。C コンパイラは、その値がスタック上に保持される必要があることを認識します。別の方法として、`scm_remember_upto_here_1` を使用することもできます ([外部オブジェクト メモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management) を参照)。
+
+C 関数: `SCM` **scm\_c\_with\_throw\_handler** `(SCM タグ、scm_t_catch_body 本体、void *body_data、scm_t_catch_handler ハンドラー、void *handler_data、int lazy_catch_p)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwith_005fthrow_005fhandler)
+
+上記の `scm_with_throw_handler` は、本体 (サンク) として Scheme プロシージャを、ハンドラ引数としてそれを受け取ります。`scm_c_with_throw_handler` は、C 関数を受け取る同等の関数です。パラメータの説明については `scm_c_catch` を参照してください ([例外と C](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions-and-C))。ただし、動作は当然 `with-throw-handler` に従います。
+
+* * *
+
+次へ: [Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind)、前: [Exceptions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions)、上: [Controlling the Flow of Program Execution](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.11.9 エラー通知の手順 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Procedures-for-Signaling-Errors)
+
+Guileは、先ほど説明した例外プリミティブの上に実装された、エラー状態を通知するための便利な手順のセットを提供します。
+
+Scheme 手順: **error** msg arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-error-1)
+
+キー「misc-error」とメッセージを使用してエラーを発生させ、msgを表示しargを書き込むことでメッセージを作成します。
+
+Scheme Procedure: **scm-error** key subr message args data [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_002derror)
+
+C 関数: **scm\_error\_scm** (key, subr, message, args, data) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ferror_005fscm)
+
+キー key でエラーを発生させます。subr は、エラーに関連付けられたプロシージャの名前を示す文字列、または `#f` です。message はエラー メッセージ文字列で、`~S` および `~A` エスケープ文字が含まれる場合があります。エラーが報告されると、これらは args の対応するメンバーのフォーマットによって置き換えられます。`~A` (Guile の古いバージョンでは `%s` でした) は `display` を使用してフォーマットし、`~S` (以前は `%S` でした) は `write` を使用してフォーマットします。data は、キーに応じてリストまたは `#f` です。キーが `system-error` の場合は、Unix の `errno` 値を含むリストである必要があります。キーが `signal` の場合は、Unix のシグナル番号を含むリストである必要があります。キーが `out-of-range`、`wrong-type-arg`、または `keyword-argument-error` の場合は、不正な値を含むリストです。それ以外の場合は、通常は `#f` になります。
+
+スキーム手順: **strerror** err [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-strerror)
+
+C 関数: **scm\_strerror** (err) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstrerror)
+
+errに対応するUnixエラーメッセージと、整数値の`errno`を返します。
+
+`setlocale`が呼び出された場合（[ロケール](https://doc.guix.gnu.org/guile/latest/en/guile.html#Locales)を参照）、メッセージは`LC_MESSAGES`で指定された言語と文字セットになります。（これはCライブラリによって行われます。）
+
+構文: **false-if-exception** expr [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-false_002dif_002dexception)
+
+引数を評価した結果を返します。ただし、例外が発生した場合は代わりに`#f`が返されます。
+
+* * *
+
+次へ: [流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States)、前: [エラー通知の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Error-Reporting)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.10 ダイナミックウィンド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind-1)
+
+Scheme コードの場合、動的コンテキストの非ローカルなエントリとエグジットに対応するための基本的な手順は `dynamic-wind` です。C コードでは `scm_internal_dynamic_wind` を使用できますが、C では字句変数をクロージャする匿名プロシージャを簡単に構築できないため、これは不便です。
+
+そのため、Guile では、動的な範囲を区切るための関数 `scm_dynwind_begin` と `scm_dynwind_end` を提供しています。この動的な範囲は _dynwind コンテキスト_ と呼ばれ、その範囲内で、コンテキストに入ったときや抜けたときに何が起こるかを制御するさまざまな _dynwind アクション_ を実行できます。たとえば、コンテキストが抜けたときに実行されるクリーンアップルーチンを `scm_dynwind_unwind_handler` に登録できます。他にも、非同期処理の実行を一時的にブロックしたり、現在の出力ポートを一時的に変更したりするなど、より特殊な dynwind アクションがいくつかあります。これらについては、このマニュアルの別の箇所で説明しています。
+
+メモリリークを防ぐ方法を示す例を以下に示します。
+
+/\* あるライブラリに FOO という関数があるとします。
+Schemeコード（またはCコード）で利用できるようにしたい
+スキームの慣例に従う。
+
+FOO は 2 つの C 文字列を受け取り、新しい文字列を返します。エラーが発生した場合
+FOOで発生した場合、NULLを返します。
+*/
+
+char \*foo (char \*s1, char \*s2);
+
+/\* SCM\_FOO は、C 関数 FOO を Scheme のやり方にインターフェースします。
+次のような場合は、すべての一時的な弦を解放するように注意する必要があります。
+非ローカル出口。
+*/
+
+SCM
+scm\_foo (SCM s1、SCM s2)
+{
+char \*c\_s1, \*c\_s2, \*c\_res;
+
+scm_dynwind_begin (0);
+
+c_s1 = scm_to_locale_string (s1);
+
+/\* dynwind コンテキストを離れるときに 'free (c\_s1)' を呼び出します。
+*/
+scm_dynwind_unwind_handler (free, c_s1, SCM_F_WIND_EXPLICITLY);
+
+c_s2 = scm_to_locale_string (s2);
+
+/\* 上記と同じだが、より簡潔に。
+*/
+scm_dynwind_free (c_s2);
+
+c_res = foo (c_s1, c_s2);
+if (c\_res == NULL)
+scm_report_out_of_memory();
+
+scm_dynwind_end();
+
+return scm_take_locale_string (c_res);
+}
+
+スキーム手順: **dynamic-wind** in\_guard thunk out\_guard [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dynamic_002dwind)
+
+C 関数: **scm_dynamic_wind** (in_guard、thunk、out_guard) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynamic_005fwind)
+
+3 つの引数はすべて引数なしの手続きでなければなりません。in_guard が呼び出され、次に thunk が呼び出され、最後に out_guard が呼び出されます。
+
+thunk の実行中に、`dynamic-wind` 式の動的範囲が非ローカルにエスケープされた場合、out_guard が呼び出されます。dynamic-wind の動的範囲に再び入った場合は、in_guard が呼び出されます。したがって、in_guard と out_guard は任意の回数呼び出される可能性があります。
+
+(define x 'normal-binding)
+⇒ x
+(a-cont を定義する)
+（現在の継続を伴う呼び出し）
+(ラムダ (エスケープ)
+(let ((old-x x))
+([dynamic-wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dynamic_002dwind)
+;; インガード:
+;;
+(lambda () ([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x 'special-binding))
+
+;; 考え込む
+;;
+(lambda () ([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) x) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+（現在の継続を伴う呼び出しのエスケープ）
+([display](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display) x) ([newline](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-newline))
+x)
+
+;; アウトガード:
+;;
+(lambda () ([set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) x old-x)))))))
+;; プリント:
+特殊製本
+;; 評価結果:
+⇒ a-cont
+x
+⇒通常の結合
+(a-cont #f)
+;; プリント:
+特殊製本
+;; 評価結果:
+⇒ a-cont ;; (define a-cont...) の値
+x
+⇒通常の結合
+a-cont
+⇒特別製本
+
+C タイプ: **scm\_t\_dynwind\_flags** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fdynwind_005fflags)
+
+これは、`scm_dynwind_begin` の動作を変更するいくつかのフラグを列挙したものです。フラグは次の表に示されています。
+
+`SCM_F_DYNWIND_REWINDABLE`
+
+動的コンテキストは_巻き戻し可能_です。つまり、非ローカル（継続の呼び出しによる）から再入することができます。デフォルトでは、動的コンテキストは非ローカルから再入することはできません。
+
+C 関数: `void` **scm\_dynwind\_begin** `(scm_t_dynwind_flags flags)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005fbegin)
+
+関数 `scm_dynwind_begin` は新しい動的コンテキストを開始し、それを「現在の」コンテキストにします。
+
+flags引数は、コンテキストのデフォルトの動作を決定します。通常は0を使用します。これにより、キャプチャされた継続で再入できないコンテキストが作成されます。再入を処理する準備ができたら、flagsに`SCM_F_DYNWIND_REWINDABLE`を含めます。
+
+再入に備えているということは、アンワインドハンドラの効果を再入時に取り消せることを意味します。上記の例では、非ローカル終了時のメモリリークを防ぐために、メモリを解放するアンワインドハンドラを登録しています。しかし、一度メモリが解放されると、再入時にそのメモリを取り戻すことはできません。したがって、再入は許可されません。
+
+その結果、再入不可能なコンテキストがキャプチャされる場合、継続の有用性は低下しますが、それほど心配する必要はありません。
+
+コンテキストは、ローカル以外の終了が発生した場合に暗黙的に終了するか、`scm_dynwind_end` によって明示的に終了します。dynwind コンテキストが正しく終了していることを確認する必要があります。`scm_dynwind_begin` ごとに `scm_dynwind_end` を呼び出さなかった場合、動作は未定義となります。
+
+C 関数: `void` **scm\_dynwind\_end** `()` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005fend)
+
+現在の動的コンテキストを明示的に終了し、以前のコンテキストを現在のコンテキストにします。
+
+C タイプ: **scm\_t\_wind\_flags** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ft_005fwind_005fflags)
+
+これは、`scm_dynwind_unwind_handler` および `scm_dynwind_rewind_handler` の動作を変更するいくつかのフラグを列挙したものです。フラグは次の表に示されています。
+
+`SCM_F_WIND_EXPLICITLY` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fF_005fWIND_005fEXPLICITLY)
+
+登録されたアクションは、ローカルでdynwindコンテキストに入ったり出たりする際にも実行されます。
+
+C 関数: `void` **scm\_dynwind\_unwind\_handler** `(void (*func)(void *), void *data, scm_t_wind_flags flags)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005funwind_005fhandler)
+
+C 関数: `void` **scm\_dynwind\_unwind\_handler\_with\_scm** `(void (*func)(SCM), SCM データ, scm_t_wind_flags フラグ)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005funwind_005fhandler_005fwith_005fscm)
+
+現在のコンテキストが暗黙的に終了したときに、関数がデータ引数で呼び出されるように設定します。flagsに`SCM_F_WIND_EXPLICITLY`が含まれている場合、コンテキストが`scm_dynwind_end`で明示的に終了したときにも関数が呼び出されます。
+
+関数 `scm_dynwind_unwind_handler_with_scm` は、データがガベージコレクションから保護されるようにします。
+
+C 関数: `void` **scm\_dynwind\_rewind\_handler** `(void (*func)(void *), void *data, scm_t_wind_flags flags)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005frewind_005fhandler)
+
+C 関数: `void` **scm\_dynwind\_rewind\_handler\_with\_scm** `(void (*func)(SCM), SCM データ, scm_t_wind_flags フラグ)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005frewind_005fhandler_005fwith_005fscm)
+
+スタックを巻き戻して現在のコンテキストが再開されたときに、関数がデータ引数で呼び出されるように設定してください。フラグに`SCM_F_WIND_EXPLICITLY`が含まれている場合も、関数は即座に呼び出されます。
+
+関数 `scm_dynwind_rewind_handler_with_scm` は、データがガベージコレクションから保護されるようにします。
+
+C 関数: `void` **scm\_dynwind\_free** `(void *mem)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005ffree)
+
+現在のコンテキストが正常終了または非ローカル終了のいずれの場合でも、mem が自動的に解放されるように設定します。`scm_dynwind_free (mem)` は `scm_dynwind_unwind_handler (free, mem, SCM_F_WIND_EXPLICITLY)` と同等の省略形です。
+
+* * *
+
+次へ: [パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters)、前: [動的風](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.11 流体と動的状態 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States-1)
+
+_fluid_ とは、関数呼び出しの動的な範囲に関連付けられた値を持つ変数です。オペレーティングシステムが、指定された一連の現在の入力ポートと出力ポート（またはファイルディスクリプタ）を使用してプロセスを実行するのと同様に、Guile では、特定の値に流体をバインドしながら関数を呼び出すように設定できます。流体と値の関連付けは、関数呼び出しの動的な範囲内で有効になります。
+
+したがって、流体は動的スコープ変数を実装するための構成要素となります。動的スコープ変数は、プログラムの実行中の動的な範囲内で変数に値を設定し、制御フローがその動的範囲外になったときに元の値に戻す場合に便利です。詳細については、以下の `with-fluids` の説明を参照してください。流体、値、および動的範囲間のこの関連付けは、複数回のエントリ (キャプチャされた継続が複数回呼び出される場合など) や早期終了 (例外をスローする場合など) に対して堅牢です。
+
+Guileでは、パラメータを実装するために流体（fluid）を使用します（[Parameters](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters)を参照）。通常はパラメータを直接使用すれば十分ですが、流体とは何か、どのように動作するのかを知っておくと便利な場合もあります。そこで、このセクションではそれについて説明します。
+
+現在の流体値関連付けのセットは、_動的状態_オブジェクトにキャプチャできます。動的エクステントとは、まさに現在の流体値関連付けのスナップショットです。Guileユーザーは、`current-dynamic-state`を使用して現在の動的状態をキャプチャし、後で`with-dynamic-state`などの手順で復元できます。この機能は、軽量なスレッドのような抽象化を実装する際に特に役立ちます。
+
+新しい流体は`make-fluid`で作成され、`fluid?`はオブジェクトが実際に流体であるかどうかをテストするために使用されます。流体に格納されている値は、`fluid-ref`と`fluid-set!`でアクセスできます。
+
+流体、スレッド、パラメータ、および動的状態に関する詳細については、[スレッドローカル変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Thread-Local-Variables)を参照してください。
+
+スキーム手順: **make-fluid** \[dflt\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dfluid)
+
+C 関数: **scm\_make\_fluid** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005ffluid)
+
+C 関数: **scm\_make\_fluid\_with\_default** (dflt) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005ffluid_005fwith_005fdefault)
+
+dflt の初期値を持つ、新しく作成された流体を返します。dflt が指定されていない場合は `#f` を返します。流体は、動的状態ごとに 1 つの値を保持できるオブジェクトです。つまり、この値の変更は、変更元のコードと同じ動的状態で実行されるコードからのみ参照可能です。新しい動的状態が構築されると、親から値が継承されます。通常、各スレッドは独自の動的状態で実行されるため、流体をスレッドローカルストレージとして使用できます。
+
+スキーム手順: **make-unbound-fluid** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dunbound_002dfluid)
+
+C 関数: **scm\_make\_unbound\_fluid** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005funbound_005ffluid)
+
+初期状態では（暗黙的に何らかの確定値に束縛されるのではなく）束縛されていない新しい流体を返します。
+
+スキーム手順: **fluid?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_003f)
+
+C 関数: **scm\_fluid\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fp)
+
+objが流体の場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+スキーム手順: **fluid-ref** fluid [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dref)
+
+C 関数: **scm\_fluid\_ref** (fluid) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fref)
+
+現在の動的ルート内の流体に関連付けられた値を返します。流体が設定されていない場合は、そのデフォルト値を返します。バインドされていない流体に対して `fluid-ref` を呼び出すと、実行時エラーが発生します。
+
+スキーム手順: **fluid-set!** 流体値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dset_0021)
+
+C 関数: **scm\_fluid\_set\_x** (fluid, value) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fset_005fx)
+
+現在の動的ルート内の流体に関連付けられた値を設定します。
+
+スキーム手順: **fluid-ref\*** 流体深度 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dref_002a)
+
+C 関数: **scm\_fluid\_ref\_star** (fluid, depth) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fref_005fstar)
+
+現在のスレッドで流体に関連付けられている最も古い値の depth を返します。depth が流体に割り当てられている値の数以上である場合は、流体のデフォルト値を返します。`(fluid-ref* f 0)` は `(fluid-ref f)` と同等です。
+
+`fluid-ref*` は、現在の例外ハンドラのスタックなど、流体内でスタックのような構造を維持したい場合に便利です。明示的なスタックの代わりに `fluid-ref*` を使用すると、`call-with-prompt` でキャプチャされる部分的な継続は、継続全体ではなく、プロンプトの範囲内で行われたバインディングのみをキャプチャします。区切り継続の詳細については、[プロンプト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts) を参照してください。
+
+スキーム手順: **fluid-unset!** fluid [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dunset_0021)
+
+C 関数: **scm\_fluid\_unset\_x** (fluid) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005funset_005fx)
+
+与えられた流体をあらゆる値から切り離し、非結合状態にする。
+
+スキーム手順: **流体結合?** 流体 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dbound_003f)
+
+C 関数: **scm\_fluid\_bound\_p** (fluid) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fbound_005fp)
+
+指定された流体が値にバインドされている場合は `#t` を返し、そうでない場合は `#f` を返します。
+
+`with-fluids*` は、1つまたは複数の流体の値を一時的に変更し、指定されたプロシージャおよびそこから呼び出される各プロシージャが、指定された値にアクセスできるようにします。プロシージャが戻ると、元の値が復元されます。
+
+スキーム手順: **with-fluid\*** 流体値サンク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dfluid_002a)
+
+C 関数: **scm\_with\_fluid** (fluid, value, thunk) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005ffluid)
+
+一時的に流体をある値に設定し、thunk を呼び出します。thunk は引数を持たないプロシージャでなければなりません。
+
+スキーム手順: **with-fluids\*** 流体値のサンク [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dfluids_002a)
+
+C 関数: **scm\_with\_fluids** (流体、値、サンク) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005ffluids)
+
+流体を一時的に値に設定し、thunk を呼び出します。流体は流体のリストでなければならず、値は適用する流体の値と同じ数でなければなりません。各置換は指定された順序で実行されます。thunk は引数のないプロシージャでなければなりません。これは `dynamic-wind` 内で呼び出され、制御が確立された動的範囲に入るか出るときに流体が設定/復元されます。
+
+Scheme マクロ: **with-fluids** ((fluid value) …) body [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dfluids)
+
+各流体が対応する値に設定されている間、ボディを実行します（[ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings)を参照）。流体と値の両方が評価され、流体は流体を返さなければなりません。ボディは`dynamic-wind`内で実行され、制御が確立された動的範囲に入るか出るときに流体が設定/復元されます。
+
+C 関数: `SCM` **scm\_c\_with\_fluids** `(SCM fluids, SCM vals, SCM (*cproc)(void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwith_005ffluids)
+
+C 関数: `SCM` **scm\_c\_with\_fluid** `(SCM fluid, SCM val, SCM (*cproc)(void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwith_005ffluid)
+
+関数 `scm_c_with_fluids` は、Scheme のサンクではなく C 関数を呼び出す点を除いて、`scm_with_fluids` と似ています。
+
+関数 `scm_c_with_fluid` は似ていますが、リストではなく 1 つの流体のみを設定できます。
+
+C 関数: `void` **scm\_dynwind\_fluid** `(SCM fluid, SCM val)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005ffluid)
+
+この関数は、`scm_dynwind_begin` と `scm_dynwind_end` の呼び出しのペア内で使用する必要があります ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)。dynwind コンテキストでは、流体 fluid は val に設定されます。
+
+より正確には、dynwindコンテキストに入るとき、または抜けるときに、流体の値が「バックアップ」値と交換されます。バックアップ値は、val引数で初期化されます。
+
+Scheme Procedure: **dynamic-state?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-dynamic_002dstate_003f)
+
+C 関数: **scm\_dynamic\_state\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynamic_005fstate_005fp)
+
+objが動的状態オブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+C プロシージャ: `int` **scm\_is\_dynamic\_state** `(SCM obj)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fis_005fdynamic_005fstate)
+
+objが動的状態オブジェクトの場合はゼロ以外の値を返し、それ以外の場合はゼロを返します。
+
+スキーム手順: **current-dynamic-state** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index- current_002ddynamic_002dstate)
+
+C 関数: **scm\_current\_dynamic\_state** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcurrent_005fdynamic_005fstate)
+
+現在の流体値関連付けのスナップショットを、新しい動的状態オブジェクトとして返します。
+
+Scheme Procedure: **set-current-dynamic-state** state [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_002dcurrent_002ddynamic_002dstate)
+
+C 関数: **scm\_set\_current\_dynamic\_state** (state) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fset_005fcurrent_005fdynamic_005fstate)
+
+保存された流体値関連付けを状態から復元し、現在の流体値関連付けを置き換えます。現在の流体値関連付けを、`current-dynamic-state` のように動的状態オブジェクトとして返します。
+
+Scheme Procedure: **with-dynamic-state** state proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002ddynamic_002dstate)
+
+C 関数: **scm_with_dynamic_state** (state, proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005fdynamic_005fstate)
+
+状態から流体バインディングがカレントに設定されている間にprocを呼び出し、現在の流体バインディングを保存します。制御がprocの呼び出しから抜けるときは、保存されたバインディングを復元し、代わりに呼び出し内部の流体バインディングを保存します。その後、制御が再びprocに入ると、保存されたバインディングを復元し、現在のバインディングを保存します。これを繰り返します。
+
+C プロシージャ: `void` **scm\_dynwind\_current\_dynamic\_state** `(SCM 状態)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005fcurrent_005fdynamic_005fstate)
+
+現在の動的状態を、現在の dynwind コンテキストの状態に設定します。`with-dynamic-state` と同様ですが、Guile の「dynwind」 C API の用語を使用します。
+
+C プロシージャ: `void *` **scm\_c\_with\_dynamic\_state** `(SCM state, void *(*func)(void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwith_005fdynamic_005fstate)
+
+`scm_with_dynamic_state`と同様ですが、データ付きで関数を呼び出します。
+
+* * *
+
+次へ: [エラーの処理方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Errors)、前: [流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.12 パラメータ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters-1)
+
+パラメータとは、Guileが動的に変数をバインドするための機能のことです。
+
+最も基本的なレベルでは、パラメータオブジェクトは手続きです。引数なしで呼び出すと、その値が返されます。引数を1つ指定して呼び出すと、値が設定されます。
+
+(define my-param (make-parameter 123))
+(my-param) ⇒ 123
+(my-param 456)
+(my-param) ⇒ 456
+
+`parameterize` 特殊形式は、パラメータの新しい場所を設定します。これらの新しい場所は、`parameterize` 本体の動的な範囲内で有効になります。終了すると、以前の場所に戻ります。再度（保存された継続を介して）入ると、新しい場所が再び使用されます。
+
+(parameterize ((my-param 789))
+(my-param)) ⇒ 789
+(my-param) ⇒ 456
+
+パラメータは、他のLisp方言における動的にバインドされた変数に相当します。名前が示すように、アプリケーションは特定のコードの実行時のみパラメータ設定を行い、実行が完了したら元の設定に戻すことができます。このようなパラメータの例としては、検索における大文字小文字の区別や、ユーザー入力を促すプロンプトなどが挙げられます。
+
+グローバル変数は、このような用途にはパラメータオブジェクトほど適していません。グローバル変数の変更はすべてのスレッドから参照できますが、Guileではパラメータオブジェクトの場所はスレッドごとに異なるため、`parameterize`の効果は動的実行のみに限定されます。
+
+関数に引数を渡す方法はスレッドセーフですが、引数の数が多かったり、引数が影響を与えるべき箇所に到達するまでに複数の呼び出し階層を経由する必要がある場合は、すぐに面倒になります。既存のコードに新しい設定を追加するには、引数を追加するよりもパラメータオブジェクトを使用する方が簡単な場合が多いです。
+
+Scheme手順: **make-parameter** init \[converter\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dparameter)
+
+初期値 init を持つ新しいパラメータオブジェクトを返します。
+
+コンバータが指定されている場合、各値セットに対して`(converter val)`という呼び出しが行われ、その戻り値は格納された値です。初期値であるinitに対しても同様の呼び出しが行われます。
+
+コンバーターを使用すると、値を検証したり、正規の形式に変換したりできます。たとえば、
+
+(define my-param (make-parameter 123
+(ラムダ (val)
+(if (not (number? val))
+(エラー「数値である必要があります」)
+(不正確な値→正確な値))))
+(my-param 0.75)
+(my-param) ⇒ 3/4
+
+ライブラリ構文: **parameterize** ((param value) …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-parameterize)
+
+指定されたパラメータを新しい場所にバインドし、指定された値に設定した新しい動的スコープを確立します。 body1 body2 … はその環境で評価されます。返される値は、最後のボディフォームの値です。
+
+各パラメータは、パラメータオブジェクトを取得するために評価される式です。多くの場合、これはオブジェクトを保持する変数の名前になりますが、パラメータに評価されるものであれば何でも構いません。
+
+パラメータ式と値式はすべて、新しい動的バインディングを確立する前に評価され、評価順序は指定されていません。
+
+例えば、
+
+(define prompt (make-parameter "何か入力してください: "))
+(define (get-input)
+（表示（プロンプト））
+...)
+
+(parameterize ((prompt "数値を入力してください: "))
+(get-input)
+...)
+
+パラメータオブジェクトは流体を使用して実装されるため（[流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States)を参照）、各動的状態には独自のパラメータ位置があります。これには、`parameterize` フォームの外にある場合の個別の位置も含まれます。パラメータが作成されると、各動的状態において個別の初期位置が割り当てられ、すべて指定された初期値で初期化されます。
+
+新しいコードでは、インターフェースが優れているため、流体ではなくパラメータを使用する方がおそらく良いでしょう。しかし、古いコードを移行したり、相互運用性を確保したりするために、Guile は `fluid->parameter` プロシージャを提供しています。
+
+スキーム手順: **fluid->parameter** fluid \[conv\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002d_003eparameter)
+
+流体を包むパラメータを作成します。
+
+パラメータの値は流体の値と同じになります。パラメータが何らかの動的な方法で再バインドされた場合（例えば`parameterize`による場合）、新しい値は他のパラメータと同様に、オプションのconv処理によって処理されます。`make-parameter`とは異なり、convは初期値には適用されないことに注意してください。
+
+前述のとおり、各スレッドは通常、それぞれ独立した動的状態を持つため、各スレッドはパラメータオブジェクトの背後に独自の場所を持ち、あるスレッドでの変更は他のスレッドからは見えません。新しい動的状態またはスレッドが作成されると、元のコンテキストのパラメータの値が新しい場所にコピーされます。
+
+GuileのパラメータはSRFI-39に準拠しています（[SRFI-39 - パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d39)を参照）。
+
+* * *
+
+次へ: [継続バリア](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuation-Barriers)、前: [パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters)、上: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.13 エラーの処理方法 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#How-to-Handle-Errors)
+
+Guile は現在、従来の `catch` および `throw` エラー処理およびシグナル演算子から、新しい構造化例外機能への移行中です。詳細は [例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) を参照してください。ただし、それまでの間、エラーと古い `catch` および `throw` インターフェースに関するドキュメントを以下に示します。
+
+エラーは常にキーと4つの引数とともに発生します。
+
+* key: エラーの種類を示す記号。libguileで使用される記号は以下のとおりです。
+* subr: エラーが発生したプロシージャの名前、または `#f`。
+* message: エラーを説明する文字列 (言語やシステムによって異なる場合があります)。トークン `~A` と `~S` はメッセージ内に埋め込むことができます。メッセージが表示されるときに、これらは args リストのメンバーに置き換えられます。`~A` は `display` を使用して表示される引数を示し、`~S` は `write` を使用して表示される引数を示します。message は `#f` にすることもできます。これにより、エラー ハンドラによってキーからメッセージを導出できるようになります (キーが C と Scheme の両方からスローされる場合に役立ちます)。
+* args: メッセージ内の `~A` および `~S` トークンを展開するために使用する引数のリスト。引数が不要な場合は `#f` を指定することもできます。
+* rest: 必要な追加オブジェクトのリスト。たとえば、キーが「system-error」の場合、これには C errno 値が含まれます。追加オブジェクトが不要な場合は、「#f」にすることもできます。
+
+`catch`と`throw`に加えて、以下のScheme機能が利用可能です。
+
+スキーム手順: **display-error** フレーム ポート サブメッセージ 引数 残り [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-display_002derror)
+
+C 関数: **scm\_display\_error** (frame, port, subr, message, args, rest) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdisplay_005ferror)
+
+エラーメッセージを出力ポート port に表示します。frame はエラーが発生したフレーム、subr はエラーが発生したプロシージャ名、message は実際のエラーメッセージです。message には書式設定命令が含まれる場合があります。これらの命令は、リスト args 内の引数を適切に書式設定します。rest は現在無視されます。
+
+以下は、libguileで定義されているエラーキーと、それらが使用される状況です。
+
+* `error-signal`: SIGSEGV、SIGBUS、SIGFPEなどの未処理の致命的なシグナルを受信した後にスローされます。throw の rest 引数には、コード化されたシグナル番号が含まれます (現時点では、これは通常の Unix シグナル番号とは異なります)。
+* `system-error`: オペレーティングシステムがエラー状態を示した後にスローされます。throw の rest 引数には errno 値が含まれます。
+* `numerical-overflow`: 数値オーバーフロー。
+* `out-of-range`: プロシージャへの引数が許容されるドメイン内にありません。
+* `wrong-type-arg`: プロシージャへの引数の型が間違っています。
+* `wrong-number-of-args`: プロシージャが誤った数の引数で呼び出されました。
+* `memory-allocation-error`: メモリ割り当てエラー。
+* `stack-overflow`: スタックオーバーフローエラー。
+* `regular-expression-syntax`: 正規表現ライブラリによって生成されたエラー。
+* `misc-error`: その他のエラー。
+
+* [C言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Support)
+* [シグナリング型エラー](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signaling-Type-Errors)
+
+#### 6.11.13.1 C言語のサポート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#C-Support)
+
+以下のC関数では、SUBRおよびMESSAGEパラメータを`NULL`にすることで、上記で説明した`#f`と同じ効果を得ることができます。
+
+C 関数: `SCM` **scm\_error** `(SCM キー、const char *subr、const char *message、SCM 引数、SCM 残り)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ferror)
+
+`scm-error` に従ってエラーをスローします（[エラー通知の手順](https://doc.guix.gnu.org/guile/latest/en/guile.html#Error-Reporting) を参照）。
+
+C 関数: `void` **scm\_syserror** `(const char *subr)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsyserror)
+
+C 関数: `void` **scm\_syserror\_msg** `(const char *subr, const char *message, SCM args)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsyserror_005fmsg)
+
+キー「system-error」を指定してエラーを発生させ、残りの引数に「errno」を指定します。「scm_syserror」の場合、メッセージは「strerror」を使用して生成されます。
+
+失敗した操作とこれらのルーチンの呼び出しの間にあるコードが `errno` を変更しないように注意する必要があります。
+
+C 関数: `void` **scm\_num\_overflow** `(const char *subr)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fnum_005foverflow)
+
+C 関数: `void` **scm\_out\_of\_range** `(const char *subr, SCM bad_value)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fout_005fof_005frange)
+
+C 関数: `void` **scm\_wrong\_num\_args** `(SCM proc)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwrong_005fnum_005fargs)
+
+C 関数: `void` **scm\_wrong\_type\_arg** `(const char *subr, int argnum, SCM bad_value)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwrong_005ftype_005farg)
+
+C 関数: `void` **scm\_wrong\_type\_arg\_msg** `(const char *subr, int argnum, SCM bad_value, const char *expected)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwrong_005ftype_005farg_005fmsg)
+
+C 関数: `void` **scm\_misc\_error** `(const char *subr, const char *message, SCM args)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmisc_005ferror)
+
+上記で説明した様々なキーを使用してエラーを発生させます。
+
+`scm_wrong_num_args`では、procは誤って呼び出されたプロシージャの名前であるSchemeシンボルである必要があります。他のルーチンでは、呼び出されたプロシージャの名前をC文字列として受け取ります。
+
+`scm_wrong_type_arg_msg` では、expected は、期待された引数の型を記述する C 文字列です。
+
+`scm_misc_error` では、message はエラー メッセージ文字列であり、`simple-format` エスケープ ([Simple Textual Output](https://doc.guix.gnu.org/guile/latest/en/guile.html#Simple-Output) を参照) と、args リスト内の対応する引数が含まれます。
+
+#### 6.11.13.2 シグナリング型エラー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signaling-Type-Errors)
+
+Schemeレベルで見えるすべての関数は、引数の型を厳密にチェックし、値の誤解釈やセグメンテーション違反の発生を防ぐ必要があります。Guileは、これを容易にするためのマクロを提供しています。
+
+マクロ: `void` **SCM\_ASSERT** `(int test, SCM obj, unsigned int position, const char *subr)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fASSERT)
+
+マクロ: `void` **SCM\_ASSERT\_TYPE* `(int test, SCM obj, unsigned int position, const char *subr, const char *expected)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fASSERT_005fTYPE)
+
+test がゼロの場合、subr という名前のサブルーチンが、subr の位置 番目の引数である obj の値に対して操作を行っていることに起因する「型引数が間違っています」というエラーを通知します。
+
+`SCM_ASSERT_TYPE` では、expected は、期待される引数の型を記述する C 文字列です。
+
+マクロ: `int` **SCM\_ARG1** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG1)
+
+マクロ: `int` **SCM\_ARG2** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG2)
+
+マクロ: `int` **SCM\_ARG3** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG3)
+
+マクロ: `int` **SCM\_ARG4** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG4)
+
+マクロ: `int` **SCM\_ARG5** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG5)
+
+マクロ: `int` **SCM\_ARG6** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG6)
+
+マクロ: `int` **SCM\_ARG7** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARG7)
+
+上記の値のいずれかをpositionとして使用することで、subrの引数のうちチェック対象の番号を指定できます。あるいは、正の整数値を使用することで、7番目以降の引数をチェックすることも可能です。ただし、パラメータ番号が7までの場合は、対応する生の数値ではなく`SCM_ARGN`を使用する方がコードの可読性が高まるため、そちらを使用することをお勧めします。
+
+マクロ: `int` **SCM\_ARGn** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-SCM_005fARGn)
+
+positionにゼロまたは`SCM_ARGn`を渡すと、どの引数の型が間違っているかを特定せずに済みます。繰り返しになりますが、生のゼロ定数よりも`SCM_ARGn`を使用する方が望ましいです。
+
+* * *
+
+前へ: [エラーの処理方法](https://doc.guix.gnu.org/guile/latest/en/guile.html#Handling-Errors)、上へ: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.11.14 継続の障壁 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Continuation-Barriers-1)
+
+継続によって生じる非局所的な制御フローは、場合によっては望ましくないことがあります。継続が通過できないようにするには、`with-continuation-barrier` を使用できます。
+
+スキーム手順: **with-continuation-barrier** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dcontinuation_002dbarrier)
+
+C 関数: **scm_with_continuation_barrier** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwith_005fcontinuation_005fbarrier)
+
+proc を呼び出し、その結果を返します。`with-continuation-barrier` の呼び出しの動的範囲から外れたり、動的範囲に入ったりするような継続の呼び出しは許可しません。そのような試みはエラーを発生させます。
+
+proc 内で捕捉されなかった例外 (エラーなど) は、`with-continuation-barrier` によって捕捉されます。その場合、短いメッセージが現在のエラー ポートに出力され、`#f` が返されます。
+
+したがって、`with-continuation-barrier` は正確に 1 回だけ返します。
+
+C 関数: `void *` **scm\_c\_with\_continuation\_barrier** `(void *(*func) (void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwith_005fcontinuation_005fbarrier)
+
+`scm_with_continuation_barrier`と同様ですが、データに対して関数を呼び出します。エラーが発生した場合は、`NULL`が返されます。
+
+* * *
+
+次へ: [正規表現](https://doc.guix.gnu.org/guile/latest/en/guile.html#Regular-Expressions)、前: [プログラム実行フローの制御](https://doc.guix.gnu.org/guile/latest/en/guile.html#Control-Mechanisms)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

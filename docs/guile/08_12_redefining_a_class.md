@@ -1,0 +1,98 @@
+### 8.12 クラスの再定義 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class-1)
+
+`define-class` を使用してクラス `<my-class>` が定義され ([define-class](https://doc.guix.gnu.org/guile/latest/en/guile.html#Class-Definition) を参照)、アクセサ関数を持つスロットがあるとします。また、アプリケーションが `make` を使用して `<my-class>` のインスタンスを複数作成しました ([make](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation) を参照)。このとき、`define-class` を再度呼び出して `<my-class>` を再定義するとどうなりますか?
+
+* [再定義可能なクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefinable-Classes)
+* [デフォルトのクラス再定義動作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Class-Redefinition-Behavior)
+* [クラス再定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Redefinition)
+
+* * *
+
+次へ: [デフォルトのクラス再定義動作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Class-Redefinition-Behavior)、上: [クラスの再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 8.12.1 再定義可能なクラス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefinable-Classes-1)
+
+クラスを再定義できるかどうかは、クラス作成者が選択できます。デフォルトでは、GOOPS のクラスは再定義できません。再定義可能なクラスは `<redefinable-class>` のインスタンスです。つまり、メタクラスとして `<redefinable-class>` を持つクラスです。したがって、再定義可能なクラスを定義するには、クラス定義に `#:metaclass <redefinable-class>` を追加します。
+
+(define-class <foo> ()
+#:metaclass <再定義可能なクラス>)
+
+`<foo>` のサブクラスも、明示的に `#:metaclass` 引数を渡す必要なく再定義できるため、アプリケーションのクラス階層のルートに対してのみ `#:metaclass` を指定すればよいことに注意してください。
+
+(define-class <bar> (<foo>))
+(class-of <bar>) ⇒ <redefinable-class>
+
+Guile 3.0より前のバージョンでは、理論上はすべてのGOOPSクラスが再定義可能でした。しかし実際には、例えば`<class>`自体を再定義しようとしても、ほぼ確実に意図した動作は得られません。とはいえ、再定義は長期にわたって安定稼働するシステムを構築する上で興味深い機能であるため、GOOPSはこの機能を提供しています。
+
+* * *
+
+次へ: [クラスの再定義のカスタマイズ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Redefinition)、前: [再定義可能なクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefinable-Classes)、上: [クラスの再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 8.12.2 デフォルトクラスの再定義動作 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Class-Redefinition-Behavior-1)
+
+`define-class` を使用してクラスが定義され、そのクラス名が既に定義されている場合、デフォルトでは新しいバインディングが古いバインディングを置き換えます。これは `define` の通常の動作です。ただし、古いバインディングと新しいバインディングの両方が再定義可能なクラス (`<redefinable-class>` のインスタンス) である場合は、クラスがその場で更新され、インスタンスが遅延的に移行されます。
+
+クラスの更新方法とインスタンスの移行方法は、もちろんメタオブジェクトプロトコルの一部です。しかし、通常はデフォルトの動作で十分であり、その動作は以下のとおりです。
+
+* 既存の `<my-class>` の直接インスタンスはすべて、新しいクラスのインスタンスに変換されます。これは、古い定義と新しい定義の両方に存在するスロットの値を保持し、新しいスロットの値を通常の方法で初期化することによって実現されます ([make](https://doc.guix.gnu.org/guile/latest/en/guile.html#Instance-Creation) を参照)。
+* `<my-class>` の既存のすべてのサブクラスが再定義されます。これは、それらを定義した `define-class` 式が `<my-class>` の再定義後に再評価されたかのように行われ、ここで説明するクラスの再定義プロセスが再定義されたサブクラスに再帰的に適用されます。
+* すべてのインスタンスとサブクラスが更新されると、以前変数 `<my-class>` にバインドされていたクラスメタオブジェクトは不要になるため、ガベージコレクションの対象となります。
+
+整理整頓を保つために、GOOPSは再定義されたクラスに関連付けられたメソッドについても、少し整理する必要がある。
+
+* 旧定義のスロットに対するスロットアクセサメソッドは、汎用関数から削除する必要があります。これらは、新クラス定義のスロットに対するアクセサメソッドに置き換えられます。
+* 仮引数特殊化子の 1 つとして古い `<my-class>` メタオブジェクトを使用する汎用関数メソッドはすべて、新しい `<my-class>` メタオブジェクトを参照するように更新する必要があります。（新しい汎用関数メソッドが定義されるたびに、`define-method` は仮引数特殊化子として使用される各クラスのクラスメタオブジェクトに格納されているリストにそのメソッドを追加するため、クラスが再定義されたときに更新する必要のあるすべてのメソッドを簡単に特定できます。）
+
+このクラス再定義戦略が直感に反するように思えるかもしれませんが、これはCLOSなどの他のオブジェクトシステムにおける同様の動作から派生したものであり、それらのシステムでの経験から、実際には非常に有用であることが証明されていることを念頭に置いてください。
+
+また、GOOPSのデフォルト動作のほとんどと同様に、これもカスタマイズ可能であることを覚えておいてください。
+
+* * *
+
+前へ: [デフォルトのクラス再定義動作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Class-Redefinition-Behavior)、上へ: [クラスの再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 8.12.3 クラス再定義のカスタマイズ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Customizing-Class-Redefinition-1)
+
+`define-class` は、クラスが再定義されていることを検出すると、通常どおり新しいクラスのメタオブジェクトを構築し、古いクラスと新しいクラスを引数として `class-redefinition` 汎用関数を呼び出します。したがって、古いクラスまたは新しいクラスにデフォルトの `<redefinable-class>` 以外のメタクラスがある場合、関連するメタクラスに特化した `class-redefinition` メソッドを定義することで、クラスの再定義動作をカスタマイズできます。
+
+汎用: **クラス再定義** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dredefinition)
+
+古いクラス定義から新しいクラス定義への再定義を処理し、`define-class`の最初の引数で指定された変数にバインドされるべき新しいクラスメタオブジェクトを返します。
+
+メソッド: **クラス再定義** (旧 <top>) (新 <class>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dredefinition-1)
+
+すべてのクラスが再定義可能であるとは限らず、また、以前のすべてのバインディングがクラスであるとは限りません。[再定義可能なクラス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefinable-Classes)を参照してください。このデフォルトメソッドは単にnewを返します。
+
+メソッド: **クラス再定義** (旧 <再定義可能なクラス>) (新 <再定義可能なクラス>) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-class_002dredefinition-2)
+
+このメソッドは、[Default Class Redefinition Behavior](https://doc.guix.gnu.org/guile/latest/en/guile.html#Default-Class-Redefinition-Behavior)で説明されているGOOPSのデフォルトのクラス再定義動作を実装します。新しいクラス定義のメタオブジェクトを返します。
+
+メタクラス `<redefinable-class>` を持つクラスの `class-redefinition` メソッドは、以下の汎用関数を呼び出します。もちろん、これらの関数は個別にカスタマイズすることも可能です。
+
+汎用: **remove-class-accessors!** 古い [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-remove_002dclass_002daccessors_0021)
+
+デフォルトの `remove-class-accessors!` メソッドは、古いクラスのアクセサ メソッドを、それらが特殊化するすべてのクラスから削除します。
+
+汎用: **update-direct-method!** メソッド old new [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-update_002ddirect_002dmethod_0021)
+
+デフォルトの `update-direct-method!` メソッドは、古いクラスに特化したすべてのメソッドにおいて、古いクラスを新しいクラスに置き換えます。
+
+ジェネリック: **update-direct-subclass!** サブクラス old new [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-update_002ddirect_002dsubclass_0021)
+
+デフォルトの `update-direct-subclass!` メソッドは、サブクラスの再定義を処理するために `class-redefinition` を再帰的に呼び出します。
+
+別のクラス再定義戦略としては、既存のインスタンスをすべて旧クラスのインスタンスとして残しつつ、旧クラスの名前が新しい定義に引き継がれたため、旧クラスは「無名」になったとみなす方法が考えられます。この戦略では、既存のサブクラスも、無名のスーパークラスから継承しているという前提のもと、そのまま残しておくことができます。
+
+この戦略はGOOPSでは簡単に実装できます。まず、戦略を適用するすべてのクラスのメタクラスとして使用される新しいメタクラスを定義し、次にこのメタクラスに特化した`class-redefinition`メソッドを定義します。
+
+(define-class <名前なし可> (<再定義可能なクラス>))
+
+(メソッドの定義 (クラスの再定義 (古い <名前なしでも可>)
+(新しい<class>))
+新しい）
+
+カスタマイズがこれほど簡単にできるなら、GOOPSがはるかに難しい戦略をデフォルトとして実装しているのはありがたいと思いませんか！
+
+* * *
+
+前へ: [クラスの再定義](https://doc.guix.gnu.org/guile/latest/en/guile.html#Redefining-a-Class)、上へ: [GOOPS](https://doc.guix.gnu.org/guile/latest/en/guile.html#GOOPS) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

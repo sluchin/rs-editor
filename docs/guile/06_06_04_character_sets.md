@@ -1,278 +1,496 @@
-# 6.6.4 文字集合
+#### 6.6.4 文字セット [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets-1)
 
-> **原文**: [Guile Reference Manual - Character Sets](https://www.gnu.org/software/guile/manual/html_node/Character-Sets.html)
->
-> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
+本節で説明する機能は、SRFI-14に直接対応するものです。
 
-この節で説明する機能は、SRFI-14 に直接対応しています。
+データ型 _charset_ は文字セットを実装します（[文字](https://doc.guix.gnu.org/guile/latest/en/guile.html#Characters)を参照）。文字セットの内部表現はユーザーには見えないため、それらを処理するための多くの手順が提供されています。
 
-データ型 `charset` は文字の集合を実装します（「文字」を参照）。文字集合の内部表現はユーザーからは見えないため、それらを扱うための多くの手続きが提供されています。
+文字セットは作成、拡張、文字のメンバーシップのテスト、および他の文字セットとの比較が可能です。
 
-文字集合は、作成したり、拡張したり、文字の所属をテストしたり、他の文字集合と比較したりできます。
+* [文字セット述語/比較](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Set-Predicates_002fComparison)
+* [文字セットの反復処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Iterating-Over-Character-Sets)
+* [文字セットの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Character-Sets)
+* [文字セットのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Querying-Character-Sets)
+* [文字セット代数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character_002dSet-Algebra)
+* [標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)
 
-- 文字集合の述語/比較
-- 文字集合の反復
-- 文字集合の作成
-- 文字集合の照会
-- 文字集合の代数
-- 標準の文字集合
+* * *
 
-## 6.6.4.1 文字集合の述語/比較
+次へ: [文字セットの反復処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Iterating-Over-Character-Sets)、上へ: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-これらの手続きは、オブジェクトが文字集合であるかどうか、あるいは複数の文字集合が等しいか互いの部分集合であるかどうかをテストするために使います。`char-set-hash` は、高速な検索手続きで使うためなどに、ハッシュ値を計算するために使用できます。
+#### 6.6.4.1 文字セット述語/比較 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Set-Predicates_002fComparison-1)
 
-**Scheme 手続き: `char-set? obj`**<br>**C 関数: `scm_char_set_p (obj)`**
-: `obj` が文字集合であれば `#t` を、そうでなければ `#f` を返します。
+これらの手順は、オブジェクトが文字セットであるかどうか、または複数の文字セットが互いに等しいか部分集合であるかをテストするために使用します。`char-set-hash` はハッシュ値を計算するために使用でき、高速検索手順などで利用できます。
 
-**Scheme 手続き: `char-set= char_set …`**<br>**C 関数: `scm_char_set_eq (char_sets)`**
-: 与えられたすべての文字集合が等しければ `#t` を返します。
+Scheme手順: **char-set?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003f)
 
-**Scheme 手続き: `char-set<= char_set …`**<br>**C 関数: `scm_char_set_leq (char_sets)`**
-: すべての文字集合 char_set_i が文字集合 char_set_i+1 の部分集合であれば `#t` を返します。
+C 関数: **scm\_char\_set\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fp)
 
-**Scheme 手続き: `char-set-hash cs [bound]`**<br>**C 関数: `scm_char_set_hash (cs, bound)`**
-: 文字集合 `cs` のハッシュ値を計算します。`bound` が与えられてゼロでない場合、返される値を 0 … `bound` - 1 の範囲に制限します。
+objが文字セットの場合は`#t`を返し、そうでない場合は`#f`を返します。
 
-## 6.6.4.2 文字集合の反復
+Scheme手順: **char-set=** char\_set … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003d)
 
-文字集合カーソルは、文字集合のメンバーを反復するための手段です。`char-set-cursor` で文字集合カーソルを作成した後、カーソルは `char-set-ref` で参照外しでき、`char-set-cursor-next` で次のメンバーに進めることができます。カーソルが集合の最後の要素を過ぎたかどうかは、`end-of-char-set?` で確認できます。
+C 関数: **scm\_char\_set\_eq** (char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005feq)
 
-さらに、文字集合のための写像と畳み込み（およびその逆）の手続きも提供されています。
+指定された文字セットがすべて等しい場合は、`#t` を返します。
 
-**Scheme 手続き: `char-set-cursor cs`**<br>**C 関数: `scm_char_set_cursor (cs)`**
-: 文字集合 `cs` へのカーソルを返します。
+Scheme手順: **char-set<=** char\_set … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003c_003d)
 
-**Scheme 手続き: `char-set-ref cs cursor`**<br>**C 関数: `scm_char_set_ref (cs, cursor)`**
-: 文字集合 `cs` の中の現在のカーソル位置 `cursor` にある文字を返します。`end-of-char-set?` が真を返すカーソルを渡すのはエラーです。
+C 関数: **scm\_char\_set\_leq** (char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fleq)
 
-**Scheme 手続き: `char-set-cursor-next cs cursor`**<br>**C 関数: `scm_char_set_cursor_next (cs, cursor)`**
-: 文字集合カーソル `cursor` を、文字集合 `cs` の次の文字に進めます。与えられたカーソルが `end-of-char-set?` を満たす場合はエラーです。
+すべての文字セット char\_seti が文字セット char\_seti+1 の部分集合である場合は、`#t` を返します。
 
-**Scheme 手続き: `end-of-char-set? cursor`**<br>**C 関数: `scm_end_of_char_set_p (cursor)`**
-: `cursor` が文字集合の終わりに達していれば `#t` を、そうでなければ `#f` を返します。
+Scheme Procedure: **char-set-hash** cs \[bound\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dhash)
 
-**Scheme 手続き: `char-set-fold kons knil cs`**<br>**C 関数: `scm_char_set_fold (kons, knil, cs)`**
-: 手続き `kons` を文字集合 `cs` の上で畳み込みます。初期値は `knil` です。
+C 関数: **scm\_char\_set\_hash** (cs、bound) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fhash)
 
-**Scheme 手続き: `char-set-unfold p f g seed [base_cs]`**<br>**C 関数: `scm_char_set_unfold (p, f, g, seed, base_cs)`**
-: これは文字集合の基本的なコンストラクタです。
+文字セット cs のハッシュ値を計算します。bound が指定され、それがゼロ以外の場合、返される値は 0 … bound - 1 の範囲に制限されます。
 
-  - `g` は、初期シード `seed` から「シード」値の列を生成するために使われます: `seed`, (`g` `seed`), (`g`^2 `seed`), (`g`^3 `seed`), …
-  - `p` はいつ停止するかを伝えます――シード値の一つに適用されたときに真を返したときです。
-  - `f` は各シード値を文字に写像します。これらの文字は基本の文字集合 `base_cs` に追加されて結果を形成します。`base_cs` のデフォルトは空集合です。
+* * *
 
-**Scheme 手続き: `char-set-unfold! p f g seed base_cs`**<br>**C 関数: `scm_char_set_unfold_x (p, f, g, seed, base_cs)`**
-: これは文字集合の基本的なコンストラクタです。
+次へ: [文字セットの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Character-Sets)、前: [文字セット述語/比較](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Set-Predicates_002fComparison)、上: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-  - `g` は、初期シード `seed` から「シード」値の列を生成するために使われます: `seed`, (`g` `seed`), (`g`^2 `seed`), (`g`^3 `seed`), …
-  - `p` はいつ停止するかを伝えます――シード値の一つに適用されたときに真を返したときです。
-  - `f` は各シード値を文字に写像します。これらの文字は基本の文字集合 `base_cs` に追加されて結果を形成します。`base_cs` のデフォルトは空集合です。
+#### 6.6.4.2 文字セットの反復処理 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Iterating-Over-Character-Sets-1)
 
-**Scheme 手続き: `char-set-for-each proc cs`**<br>**C 関数: `scm_char_set_for_each (proc, cs)`**
-: 文字集合 `cs` のすべての文字に `proc` を適用します。戻り値は規定されていません。
+文字セットカーソルは、文字セットの要素を順に処理するための手段です。`char-set-cursor`で文字セットカーソルを作成した後、`char-set-ref`でカーソルを逆参照したり、`char-set-cursor-next`で次の要素に進んだりできます。カーソルがセットの最後の要素を通過したかどうかは、`end-of-char-set?`で確認できます。
 
-**Scheme 手続き: `char-set-map proc cs`**<br>**C 関数: `scm_char_set_map (proc, cs)`**
-: 手続き `proc` を `cs` のすべての文字に写像します。`proc` は文字から文字への手続きでなければなりません。
+さらに、文字セットのマッピングおよび（展開）手順も提供されます。
 
-## 6.6.4.3 文字集合の作成
+Scheme手順: **char-set-cursor** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcursor)
 
-新しい文字集合はこれらの手続きで生成されます。
+C 関数: **scm\_char\_set\_cursor** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcursor)
 
-**Scheme 手続き: `char-set-copy cs`**<br>**C 関数: `scm_char_set_copy (cs)`**
-: `cs` のすべての文字を含む、新しく割り当てられた文字集合を返します。
+カーソルを文字セットcsに戻します。
 
-**Scheme 手続き: `char-set chr …`**<br>**C 関数: `scm_char_set (chrs)`**
-: 与えられたすべての文字を含む文字集合を返します。
+Scheme手順: **char-set-ref** csカーソル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dref)
 
-**Scheme 手続き: `list->char-set list [base_cs]`**<br>**C 関数: `scm_list_to_char_set (list, base_cs)`**
-: 文字のリスト `list` を文字集合に変換します。文字集合 `base_cs` が与えられた場合、この集合の文字も結果に含まれます。
+C 関数: **scm\_char\_set\_ref** (cs, cursor) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fref)
 
-**Scheme 手続き: `list->char-set! list base_cs`**<br>**C 関数: `scm_list_to_char_set_x (list, base_cs)`**
-: 文字のリスト `list` を文字集合に変換します。文字は `base_cs` に追加され、`base_cs` が返されます。
+文字セットcs内の現在のカーソル位置cursorにある文字を返します。`end-of-char-set?`がtrueを返すカーソルを渡すとエラーになります。
 
-**Scheme 手続き: `string->char-set str [base_cs]`**<br>**C 関数: `scm_string_to_char_set (str, base_cs)`**
-: 文字列 `str` を文字集合に変換します。文字集合 `base_cs` が与えられた場合、この集合の文字も結果に含まれます。
+Scheme プロシージャ: **char-set-cursor-next** cs カーソル [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcursor_002dnext)
 
-**Scheme 手続き: `string->char-set! str base_cs`**<br>**C 関数: `scm_string_to_char_set_x (str, base_cs)`**
-: 文字列 `str` を文字集合に変換します。文字列の文字は `base_cs` に追加され、`base_cs` が返されます。
+C 関数: **scm\_char\_set\_cursor\_next** (cs, cursor) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcursor_005fnext)
 
-**Scheme 手続き: `char-set-filter pred cs [base_cs]`**<br>**C 関数: `scm_char_set_filter (pred, cs, base_cs)`**
-: `cs` の文字のうち `pred` を満たすすべての文字を含む文字集合を返します。与えられた場合、`base_cs` の文字が結果に追加されます。
+文字セットカーソルを文字セットcs内の次の文字まで進めます。指定されたカーソルが`end-of-char-set?`条件を満たす場合はエラーとなります。
 
-**Scheme 手続き: `char-set-filter! pred cs base_cs`**<br>**C 関数: `scm_char_set_filter_x (pred, cs, base_cs)`**
-: `cs` の文字のうち `pred` を満たすすべての文字を含む文字集合を返します。文字は `base_cs` に追加され、`base_cs` が返されます。
+Scheme手順: **end-of-char-set?**カーソル[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-end_002dof_002dchar_002dset_003f)
 
-**Scheme 手続き: `ucs-range->char-set lower upper [error [base_cs]]`**<br>**C 関数: `scm_ucs_range_to_char_set (lower, upper, error, base_cs)`**
-: 文字コードが半開区間 [`lower`,`upper`) にあるすべての文字を含む文字集合を返します。
+C 関数: **scm\_end\_of\_char\_set\_p** (カーソル) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fend_005fof_005fchar_005fset_005fp)
 
-  `error` が真の値の場合、指定された範囲に実装されている文字の範囲に含まれない文字が含まれていれば、エラーが通知されます。`error` が `#f` の場合、これらの文字は結果の文字集合から黙って除外されます。
+カーソルが文字セットの末尾に達した場合は「#t」を返し、そうでない場合は「#f」を返します。
 
-  与えられた場合、`base_cs` の文字が結果に追加されます。
+Scheme Procedure: **char-set-fold** kons knil cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dfold)
 
-**Scheme 手続き: `ucs-range->char-set! lower upper error base_cs`**<br>**C 関数: `scm_ucs_range_to_char_set_x (lower, upper, error, base_cs)`**
-: 文字コードが半開区間 [`lower`,`upper`) にあるすべての文字を含む文字集合を返します。
+C 関数: **scm\_char\_set\_fold** (kons, knil, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffold)
 
-  `error` が真の値の場合、指定された範囲に実装されている文字の範囲に含まれない文字が含まれていれば、エラーが通知されます。`error` が `#f` の場合、これらの文字は結果の文字集合から黙って除外されます。
+プロシージャkonsを文字セットcsに折り畳み、knilで初期化します。
 
-  文字は `base_cs` に追加され、`base_cs` が返されます。
+Scheme手順: **char-set-unfold** pfg seed \[base\_cs\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dunfold)
 
-**Scheme 手続き: `->char-set x`**<br>**C 関数: `scm_to_char_set (x)`**
-: `x` を文字集合に強制変換します。`x` は文字列、文字、または文字集合でかまいません。文字列はそれを構成する文字の集合に変換され、文字は要素が1つの集合に変換され、文字集合はそのまま返されます。
+C 関数: **scm\_char\_set\_unfold** (p, f, g, seed, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005funfold)
 
-## 6.6.4.4 文字集合の照会
+これは文字セットの基本的な構成要素です。
 
-これらの手続きで、文字集合の要素やその他の情報にアクセスします。
+* g は、初期シードから一連の「シード」値を生成するために使用されます: シード、(g シード)、(g^2 シード)、(g^3 シード)、…
+* p は停止するタイミングを示します。つまり、シード値のいずれかに適用したときに true が返されたときです。
+* f は各シード値を文字にマッピングします。これらの文字は基本文字セット base\_cs に追加され、結果が生成されます。base\_cs のデフォルト値は空セットです。
 
-**Scheme 手続き: `%char-set-dump cs`**
-: `cs` のデバッグ情報を含む連想リストを返します。連想リストには次のエントリがあります。
+Scheme手順: **char-set-unfold!** pfg seed base\_cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dunfold_0021)
 
-  `char-set`
-  : 文字集合そのもの
+C 関数: **scm\_char\_set\_unfold\_x** (p, f, g, seed, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005funfold_005fx)
 
-  `len`
-  : 文字集合が含む、連続したコードポイントのグループの数
+これは文字セットの基本的な構成要素です。
 
-  `ranges`
-  : リストのリストで、各サブリストはコードポイントの範囲とそれに関連する文字
+* g は、初期シードから一連の「シード」値を生成するために使用されます: シード、(g シード)、(g^2 シード)、(g^3 シード)、…
+* p は停止するタイミングを示します。つまり、シード値のいずれかに適用したときに true が返されたときです。
+* f は各シード値を文字にマッピングします。これらの文字は基本文字セット base\_cs に追加され、結果が生成されます。base\_cs のデフォルト値は空セットです。
 
-  この関数の戻り値は、Guile のバージョン間で一貫していることを当てにすることはできず、コードの中で使うべきではありません。
+Scheme プロシージャ: **char-set-for-each** proc cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dfor_002deach)
 
-**Scheme 手続き: `char-set-size cs`**<br>**C 関数: `scm_char_set_size (cs)`**
-: 文字集合 `cs` の要素数を返します。
+C 関数: **scm\_char\_set\_for\_each** (proc, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffor_005feach)
 
-**Scheme 手続き: `char-set-count pred cs`**<br>**C 関数: `scm_char_set_count (pred, cs)`**
-: 文字集合 `cs` の要素のうち、述語 `pred` を満たすものの数を返します。
+文字セットcs内のすべての文字にprocを適用します。戻り値は指定されていません。
 
-**Scheme 手続き: `char-set->list cs`**<br>**C 関数: `scm_char_set_to_list (cs)`**
-: 文字集合 `cs` の要素を含むリストを返します。
+Scheme プロシージャ: **char-set-map** proc cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dmap)
 
-**Scheme 手続き: `char-set->string cs`**<br>**C 関数: `scm_char_set_to_string (cs)`**
-: 文字集合 `cs` の要素を含む文字列を返します。文字が文字列に置かれる順序は定義されていません。
+C 関数: **scm\_char\_set\_map** (proc, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fmap)
 
-**Scheme 手続き: `char-set-contains? cs ch`**<br>**C 関数: `scm_char_set_contains_p (cs, ch)`**
-: 文字 `ch` が文字集合 `cs` に含まれていれば `#t` を、そうでなければ `#f` を返します。
+プロシージャ proc を cs 内のすべての文字にマッピングします。proc は文字から文字へのプロシージャである必要があります。
 
-**Scheme 手続き: `char-set-every pred cs`**<br>**C 関数: `scm_char_set_every (pred, cs)`**
-: 文字集合 `cs` のすべての文字が述語 `pred` を満たせば、真の値を返します。
+* * *
 
-**Scheme 手続き: `char-set-any pred cs`**<br>**C 関数: `scm_char_set_any (pred, cs)`**
-: 文字集合 `cs` のいずれかの文字が述語 `pred` を満たせば、真の値を返します。
+次へ: [文字セットのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Querying-Character-Sets)、前: [文字セットの反復処理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Iterating-Over-Character-Sets)、上: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-## 6.6.4.5 文字集合の代数
+#### 6.6.4.3 文字セットの作成 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Character-Sets-1)
 
-文字集合は、和集合、補集合、共通部分などの一般的な集合代数の操作で操作できます。これらの手続きはすべて、文字集合の引数を変更する副作用のある変形を提供しています。
+これらの手順によって新しい文字セットが生成されます。
 
-**Scheme 手続き: `char-set-adjoin cs chr …`**<br>**C 関数: `scm_char_set_adjoin (cs, chrs)`**
-: すべての文字の引数を最初の引数に追加します。最初の引数は文字集合でなければなりません。
+Scheme手順: **char-set-copy** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcopy)
 
-**Scheme 手続き: `char-set-delete cs chr …`**<br>**C 関数: `scm_char_set_delete (cs, chrs)`**
-: すべての文字の引数を最初の引数から削除します。最初の引数は文字集合でなければなりません。
+C 関数: **scm\_char\_set\_copy** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcopy)
 
-**Scheme 手続き: `char-set-adjoin! cs chr …`**<br>**C 関数: `scm_char_set_adjoin_x (cs, chrs)`**
-: すべての文字の引数を最初の引数に追加します。最初の引数は文字集合でなければなりません。
+csに含まれるすべての文字を含む、新たに割り当てられた文字セットを返します。
 
-**Scheme 手続き: `char-set-delete! cs chr …`**<br>**C 関数: `scm_char_set_delete_x (cs, chrs)`**
-: すべての文字の引数を最初の引数から削除します。最初の引数は文字集合でなければなりません。
+Scheme手順: **char-set** chr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset)
 
-**Scheme 手続き: `char-set-complement cs`**<br>**C 関数: `scm_char_set_complement (cs)`**
-: 文字集合 `cs` の補集合を返します。
+C 関数: **scm\_char\_set** (chrs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset)
 
-文字集合の補集合には、多くの予約済みコードポイント（文字に関連付けられていないコードポイント）が含まれる可能性が高いことに注意してください。`char-set-complement` の出力を、指定済みコードポイントの集合 `char-set:designated` との共通部分を計算することで修正すると役立つかもしれません。
+指定されたすべての文字を含む文字セットを返します。
 
-**Scheme 手続き: `char-set-union cs …`**<br>**C 関数: `scm_char_set_union (char_sets)`**
-: すべての引数の文字集合の和集合を返します。
+Scheme手順: **list->char-set** list \[base\_cs\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002d_003echar_002dset)
 
-**Scheme 手続き: `char-set-intersection cs …`**<br>**C 関数: `scm_char_set_intersection (char_sets)`**
-: すべての引数の文字集合の共通部分を返します。
+C 関数: **scm\_list\_to\_char\_set** (list, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005flist_005fto_005fchar_005fset)
 
-**Scheme 手続き: `char-set-difference cs1 cs …`**<br>**C 関数: `scm_char_set_difference (cs1, char_sets)`**
-: すべての引数の文字集合の差を返します。
+文字リストを文字セットに変換します。文字セット base\_cs が指定されている場合、このセットに含まれる文字も結果に含まれます。
 
-**Scheme 手続き: `char-set-xor cs …`**<br>**C 関数: `scm_char_set_xor (char_sets)`**
-: すべての引数の文字集合の排他的論理和を返します。
+Scheme手順: **list->char-set!** list base\_cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list_002d_003echar_002dset_0021)
 
-**Scheme 手続き: `char-set-diff+intersection cs1 cs …`**<br>**C 関数: `scm_char_set_diff_plus_intersection (cs1, char_sets)`**
-: すべての引数の文字集合の差と共通部分を返します。
+C 関数: **scm\_list\_to\_char\_set\_x** (list, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005flist_005fto_005fchar_005fset_005fx)
 
-**Scheme 手続き: `char-set-complement! cs`**<br>**C 関数: `scm_char_set_complement_x (cs)`**
-: 文字集合 `cs` の補集合を返します。
+文字リストを文字セットに変換します。文字はbase_csに追加され、base_csが返されます。
 
-**Scheme 手続き: `char-set-union! cs1 cs …`**<br>**C 関数: `scm_char_set_union_x (cs1, char_sets)`**
-: すべての引数の文字集合の和集合を返します。
+Scheme手順: **string->char-set** str \[base\_cs\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003echar_002dset)
 
-**Scheme 手続き: `char-set-intersection! cs1 cs …`**<br>**C 関数: `scm_char_set_intersection_x (cs1, char_sets)`**
-: すべての引数の文字集合の共通部分を返します。
+C 関数: **scm\_string\_to\_char\_set** (str, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstring_005fto_005fchar_005fset)
 
-**Scheme 手続き: `char-set-difference! cs1 cs …`**<br>**C 関数: `scm_char_set_difference_x (cs1, char_sets)`**
-: すべての引数の文字集合の差を返します。
+文字列strを文字セットに変換します。文字セットbase_csが指定された場合、そのセットに含まれる文字も結果に含まれます。
 
-**Scheme 手続き: `char-set-xor! cs1 cs …`**<br>**C 関数: `scm_char_set_xor_x (cs1, char_sets)`**
-: すべての引数の文字集合の排他的論理和を返します。
+Scheme手順: **string->char-set!** str base\_cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-string_002d_003echar_002dset_0021)
 
-**Scheme 手続き: `char-set-diff+intersection! cs1 cs2 cs …`**<br>**C 関数: `scm_char_set_diff_plus_intersection_x (cs1, cs2, char_sets)`**
-: すべての引数の文字集合の差と共通部分を返します。
+C 関数: **scm\_string\_to\_char\_set\_x** (str, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstring_005fto_005fchar_005fset_005fx)
 
-## 6.6.4.6 標準の文字集合
+文字列strを文字セットに変換します。文字列から文字を抽出し、base_csに追加して、base_csを返します。
 
-文字集合のデータ型と手続きの使用を有用なものにするために、定義済みの文字集合の変数がいくつか存在します。
+Scheme 手順: **char-set-filter** pred cs \[base\_cs\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dfilter)
 
-これらの文字集合はロケールに依存せず、`setlocale` の呼び出しによって再計算されることはありません。これらは Unicode のコードポイントの全範囲からの文字を含んでいます。たとえば、`char-set:letter` は約10万個の文字を含んでいます。
+C 関数: **scm\_char\_set\_filter** (pred, cs, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffilter)
 
-**Scheme 変数: `char-set:lower-case`**<br>**C 変数: `scm_char_set_lower_case`**
-: すべての小文字。
+csに含まれるすべての文字を含む文字セットを返します。この文字セットはpredを満たす必要があります。base\_csの文字が指定されている場合は、結果に追加されます。
 
-**Scheme 変数: `char-set:upper-case`**<br>**C 変数: `scm_char_set_upper_case`**
-: すべての大文字。
+Scheme 手順: **char-set-filter!** pred cs base\_cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dfilter_0021)
 
-**Scheme 変数: `char-set:title-case`**<br>**C 変数: `scm_char_set_title_case`**
-: 大文字の後に小文字が続いているかのように機能する、すべての単一の文字。
+C 関数: **scm\_char\_set\_filter\_x** (pred, cs, base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffilter_005fx)
 
-**Scheme 変数: `char-set:letter`**<br>**C 変数: `scm_char_set_letter`**
-: すべての文字（letter）。これには `char-set:lower-case`、`char-set:upper-case`、`char-set:title-case`、そして大文字と小文字の区別をまったく持たない多くの文字が含まれます。たとえば、中国語や日本語の文字には通常、大文字と小文字の概念がありません。
+csに含まれるすべての文字を含む文字セットを返し、predを満たすようにします。文字はbase_csに追加され、base_csが返されます。
 
-**Scheme 変数: `char-set:digit`**<br>**C 変数: `scm_char_set_digit`**
-: すべての数字。
+Scheme 手順: **ucs-range->char-set** lower upper \[error \[base\_cs\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ucs_002drange_002d_003echar_002dset)
 
-**Scheme 変数: `char-set:letter+digit`**<br>**C 変数: `scm_char_set_letter_and_digit`**
-: `char-set:letter` と `char-set:digit` の和集合。
+C 関数: **scm\_ucs\_range\_to\_char\_set** (lower、upper、error、base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fucs_005frange_005fto_005fchar_005fset)
 
-**Scheme 変数: `char-set:graphic`**<br>**C 変数: `scm_char_set_graphic`**
-: 紙にインクを付けるすべての文字。
+文字コードが半開区間 \[lower,upper] 内にあるすべての文字を含む文字セットを返します。
 
-**Scheme 変数: `char-set:printing`**<br>**C 変数: `scm_char_set_printing`**
-: `char-set:graphic` と `char-set:whitespace` の和集合。
+errorが真の値の場合、指定された範囲に実装された文字範囲に含まれていない文字が含まれていると、エラーが通知されます。errorが`#f`の場合、これらの文字は結果の文字セットから黙って除外されます。
 
-**Scheme 変数: `char-set:whitespace`**<br>**C 変数: `scm_char_set_whitespace`**
-: すべての空白文字。
+base\_cs に含まれる文字が指定されている場合は、結果に追加されます。
 
-**Scheme 変数: `char-set:blank`**<br>**C 変数: `scm_char_set_blank`**
-: すべての水平方向の空白文字。特に `#\space` と `#\tab` を含みます。
+Scheme 手順: **ucs-range->char-set!** lower upper error base\_cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-ucs_002drange_002d_003echar_002dset_0021)
 
-**Scheme 変数: `char-set:iso-control`**<br>**C 変数: `scm_char_set_iso_control`**
-: ISO 制御文字とは、C0 制御文字（U+0000 から U+001F）、delete（U+007F）、そして C1 制御文字（U+0080 から U+009F）です。
+C 関数: **scm\_ucs\_range\_to\_char\_set\_x** (lower、upper、error、base\_cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fucs_005frange_005fto_005fchar_005fset_005fx)
 
-**Scheme 変数: `char-set:punctuation`**<br>**C 変数: `scm_char_set_punctuation`**
-: `!"#%&'()*,-./:;?@[\\]_{}` のような、すべての句読点文字。
+文字コードが半開区間 \[lower,upper] 内にあるすべての文字を含む文字セットを返します。
 
-**Scheme 変数: `char-set:symbol`**<br>**C 変数: `scm_char_set_symbol`**
-: ``$+<=>^`|~`` のような、すべての記号文字。
+errorが真の値の場合、指定された範囲に実装された文字範囲に含まれていない文字が含まれていると、エラーが通知されます。errorが`#f`の場合、これらの文字は結果の文字セットから黙って除外されます。
 
-**Scheme 変数: `char-set:hex-digit`**<br>**C 変数: `scm_char_set_hex_digit`**
-: 16進数字 `0123456789abcdefABCDEF`。
+文字はbase_csに追加され、base_csが返されます。
 
-**Scheme 変数: `char-set:ascii`**<br>**C 変数: `scm_char_set_ascii`**
-: すべての ASCII 文字。
+Scheme手順: **\->char-set** x [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002d_003echar_002dset)
 
-**Scheme 変数: `char-set:empty`**<br>**C 変数: `scm_char_set_empty`**
-: 空の文字集合。
+C 関数: **scm\_to\_char\_set** (x) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fto_005fchar_005fset)
 
-**Scheme 変数: `char-set:designated`**<br>**C 変数: `scm_char_set_designated`**
-: この文字集合はすべての指定済みコードポイントを含みます。これには、Unicode が文字やその他の意味を割り当てたすべてのコードポイントが含まれます。
+x を文字セットに変換します。x は文字列、文字、または文字セットのいずれかです。文字列は構成文字のセットに変換され、文字は単一要素のセットに変換され、文字セットはそのまま返されます。
 
-**Scheme 変数: `char-set:full`**<br>**C 変数: `scm_char_set_full`**
-: この文字集合はすべての可能なコードポイントを含みます。これには指定済みと予約済みの両方のコードポイントが含まれます。
+* * *
 
----
+次へ: [文字セット代数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character_002dSet-Algebra)、前: [文字セットの作成](https://doc.guix.gnu.org/guile/latest/en/guile.html#Creating-Character-Sets)、上: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
-> 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
+#### 6.6.4.4 文字セットのクエリ [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Querying-Character-Sets-1)
+
+これらの手順を使用して、文字セットの要素やその他の情報にアクセスします。
+
+Scheme手順: **%char-set-dump** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_0025char_002dset_002ddump)
+
+cs のデバッグ情報を含む関連付けリストを返します。関連付けリストには、次のエントリが含まれます。
+
+`char-set`
+
+文字セット自体
+
+`len`
+
+文字セットに含まれる連続するコードポイントのグループの数
+
+`範囲`
+
+各サブリストがコードポイントの範囲とそれに関連付けられた文字であるリストのリスト
+
+この関数の戻り値は、Guile のバージョン間で一貫性が保証されないため、コード内で使用しないでください。
+
+Scheme手順: **char-set-size** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dsize)
+
+C 関数: **scm\_char\_set\_size** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fsize)
+
+文字セットcsに含まれる要素の数を返します。
+
+Scheme Procedure: **char-set-count** pred cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcount)
+
+C 関数: **scm\_char\_set\_count** (pred, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcount)
+
+文字セット cs 内の、述語 pred を満たす要素の数を返します。
+
+Scheme手順: **char-set->list** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002d_003elist)
+
+C 関数: **scm\_char\_set\_to\_list** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fto_005flist)
+
+文字セット cs の要素を含むリストを返します。
+
+Scheme手順: **char-set->string** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002d_003estring)
+
+C 関数: **scm\_char\_set\_to\_string** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fto_005fstring)
+
+文字セット cs の要素を含む文字列を返します。文字列内の文字の順序は定義されていません。
+
+Scheme 手順: **char-set-contains?** cs ch [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcontains_003f)
+
+C 関数: **scm\_char\_set\_contains\_p** (cs, ch) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcontains_005fp)
+
+文字chが文字セットcsに含まれている場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme Procedure: **char-set-every** pred cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002devery)
+
+C 関数: **scm\_char\_set\_every** (pred, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fevery)
+
+文字セット cs 内のすべての文字が述語 pred を満たす場合は、真の値を返します。
+
+Scheme 手順: **char-set-any** pred cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dany)
+
+C 関数: **scm\_char\_set\_any** (pred, cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fany)
+
+文字セット cs 内のいずれかの文字が述語 pred を満たす場合は、真の値を返します。
+
+* * *
+
+次へ: [標準文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets)、前: [文字セットのクエリ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Querying-Character-Sets)、上: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.4.5 文字セット代数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character_002dSet-Algebra-1)
+
+文字セットは、和集合、補集合、積集合などの一般的な集合代数演算を用いて操作できます。これらの操作はすべて、文字セット引数を変更する副作用のあるバリアントを提供します。
+
+スキーム手順: **char-set-adjoin** cs chr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dadjoin)
+
+C 関数: **scm\_char\_set\_adjoin** (cs, chrs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fadjoin)
+
+すべての文字引数を、文字セットである最初の引数に追加します。
+
+Scheme手順: **char-set-delete** cs chr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddelete)
+
+C 関数: **scm\_char\_set\_delete** (cs, chrs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdelete)
+
+最初の引数（文字セットである必要があります）から、すべての文字引数を削除します。
+
+スキーム手順: **char-set-adjoin!** cs chr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dadjoin_0021)
+
+C 関数: **scm\_char\_set\_adjoin\_x** (cs, chrs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fadjoin_005fx)
+
+すべての文字引数を、文字セットである最初の引数に追加します。
+
+Scheme手順: **char-set-delete!** cs chr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddelete_0021)
+
+C 関数: **scm\_char\_set\_delete\_x** (cs, chrs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdelete_005fx)
+
+最初の引数（文字セットである必要があります）から、すべての文字引数を削除します。
+
+Scheme手順: **char-set-complement** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcomplement)
+
+C 関数: **scm\_char\_set\_complement** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcomplement)
+
+文字セットcsの補数を返します。
+
+文字セットの補集合には、予約済みコードポイント（文字に関連付けられていないコードポイント）が多数含まれる可能性があることに注意してください。`char-set-complement` の出力と指定コードポイントの集合 `char-set:designated` との共通部分を計算することで、出力結果を修正すると役立つ場合があります。
+
+Scheme手順: **char-set-union** cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dunion)
+
+C 関数: **scm\_char\_set\_union** (char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005funion)
+
+引数として渡されたすべての文字セットの和集合を返します。
+
+Scheme手順: **char-set-intersection** cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dintersection)
+
+C 関数: **scm\_char\_set\_intersection** (char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fintersection)
+
+引数として指定されたすべての文字セットの共通部分を返します。
+
+Scheme手順: **char-set-difference** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddifference)
+
+C 関数: **scm\_char\_set\_difference** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdifference)
+
+引数として指定されたすべての文字セットの差を返します。
+
+Scheme手順: **char-set-xor** cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dxor)
+
+C 関数: **scm\_char\_set\_xor** (char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fxor)
+
+引数として指定されたすべての文字セットの排他的論理和を返します。
+
+Scheme手順: **char-set-diff+intersection** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddiff_002bintersection)
+
+C 関数: **scm\_char\_set\_diff\_plus\_intersection** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdiff_005fplus_005fintersection)
+
+引数として指定されたすべての文字セットの差と共通部分を返します。
+
+Scheme 手順: **char-set-complement!** cs [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dcomplement_0021)
+
+C 関数: **scm\_char\_set\_complement\_x** (cs) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fcomplement_005fx)
+
+文字セットcsの補数を返します。
+
+Scheme プロシージャ: **char-set-union!** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dunion_0021)
+
+C 関数: **scm\_char\_set\_union\_x** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005funion_005fx)
+
+引数として渡されたすべての文字セットの和集合を返します。
+
+Scheme手順: **char-set-intersection!** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dintersection_0021)
+
+C 関数: **scm\_char\_set\_intersection\_x** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fintersection_005fx)
+
+引数として指定されたすべての文字セットの共通部分を返します。
+
+Scheme手順: **文字セットの差分!** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddifference_0021)
+
+C 関数: **scm\_char\_set\_difference\_x** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdifference_005fx)
+
+引数として指定されたすべての文字セットの差を返します。
+
+Scheme手順: **char-set-xor!** cs1 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002dxor_0021)
+
+C 関数: **scm\_char\_set\_xor\_x** (cs1, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fxor_005fx)
+
+引数として指定されたすべての文字セットの排他的論理和を返します。
+
+Scheme手順: **char-set-diff+intersection!** cs1 cs2 cs … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_002ddiff_002bintersection_0021)
+
+C 関数: **scm\_char\_set\_diff\_plus\_intersection\_x** (cs1, cs2, char\_sets) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdiff_005fplus_005fintersection_005fx)
+
+引数として指定されたすべての文字セットの差と共通部分を返します。
+
+* * *
+
+前へ: [文字集合代数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character_002dSet-Algebra)、上へ: [文字集合](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.4.6 標準文字セット [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Standard-Character-Sets-1)
+
+文字セットデータ型とプロシージャを有効活用するために、いくつかの事前定義された文字セット変数が存在する。
+
+これらの文字セットはロケールに依存せず、`setlocale` 呼び出しによって再計算されることはありません。Unicode コードポイントの全範囲の文字が含まれています。たとえば、`char-set:letter` には約 10 万文字が含まれています。
+
+Scheme変数: **char-set:lower-case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003alower_002dcase)
+
+C 変数: **scm\_char\_set\_lower\_case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005flower_005fcase )
+
+すべて小文字。
+
+Scheme変数: **char-set:upper-case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aupper_002dcase)
+
+C 変数: **scm\_char\_set\_upper\_case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fupper_005fcase)
+
+すべて大文字。
+
+Scheme変数: **char-set:title-case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003atitle_002dcase)
+
+C 変数: **scm\_char\_set\_title\_case** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ftitle_005fcase)
+
+大文字の後に小文字が続くように機能する、すべての単一文字。
+
+Scheme変数: **char-set:letter** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aletter)
+
+C 変数: **scm\_char\_set\_letter** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fletter)
+
+すべての文字。これには、`char-set:lower-case`、`char-set:upper-case`、`char-set:title-case`、および大文字と小文字の区別がない多くの文字が含まれます。たとえば、中国語や日本語の文字には、通常、大文字と小文字の概念がありません。
+
+スキーム変数: **char-set:digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003adigit)
+
+C 変数: **scm\_char\_set\_digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdigit)
+
+すべて数字です。
+
+スキーム変数: **char-set:letter+digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aletter_002bdigit)
+
+C 変数: **scm\_char\_set\_letter\_and\_digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fletter_005fand_005fdigit)
+
+`char-set:letter`と`char-set:digit`の和集合。
+
+Scheme変数: **char-set:graphic** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003agraphic)
+
+C 変数: **scm\_char\_set\_graphic** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fgraphic)
+
+紙にインクを付けるすべての文字。
+
+Scheme変数: **char-set:printing** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aprinting)
+
+C 変数: **scm\_char\_set\_printing** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fprinting)
+
+`char-set:graphic`と`char-set:whitespace`の和集合。
+
+Scheme変数: **char-set:whitespace** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003awhitespace)
+
+C 変数: **scm\_char\_set\_whitespace** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fwhitespace)
+
+すべて空白文字。
+
+Scheme変数: **char-set:blank** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003ablank)
+
+C 変数: **scm\_char\_set\_blank** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fblank)
+
+すべての水平方向の空白文字。特に`#\space`と`#\tab`が含まれます。
+
+スキーム変数: **char-set:iso-control** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aiso_002dcontrol)
+
+C 変数: **scm\_char\_set\_iso\_control** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fiso_005fcontrol)
+
+ISO制御文字は、C0制御文字（U+0000～U+001F）、削除文字（U+007F）、およびC1制御文字（U+0080～U+009F）です。
+
+Scheme変数: **char-set:punctuation** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003apunctuation)
+
+C 変数: **scm\_char\_set\_punctuation** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fpunctuation)
+
+`!"#%&'()*,-./:;?@[\\]_{}` などの句読点文字すべて
+
+Scheme変数: **char-set:symbol** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003asymbol)
+
+C 変数: **scm\_char\_set\_symbol** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fsymbol)
+
+``$+<=>^`|~`` のようなすべての記号文字。
+
+スキーム変数: **char-set:hex-digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003ahex_002ddigit)
+
+C 変数: **scm\_char\_set\_hex\_digit** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fhex_005fdigit)
+
+16進数で「0123456789abcdefABCDEF」です。
+
+Scheme変数: **char-set:ascii** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aascii)
+
+C 変数: **scm\_char\_set\_ascii** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fascii)
+
+すべてASCII文字。
+
+Scheme変数: **char-set:empty** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003aempty)
+
+C 変数: **scm\_char\_set\_empty** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fempty)
+
+空の文字セット。
+
+スキーム変数: **char-set:designated** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003adesignated)
+
+C 変数: **scm\_char\_set\_designated** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005fdesignated)
+
+この文字セットには、指定されたすべてのコードポイントが含まれています。これには、Unicodeによって文字またはその他の意味が割り当てられたすべてのコードポイントが含まれます。
+
+Scheme変数: **char-set:full** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-char_002dset_003afull)
+
+C 変数: **scm\_char\_set\_full** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fchar_005fset_005ffull)
+
+この文字セットには、使用可能なすべてのコードポイントが含まれています。これには、指定コードポイントと予約コードポイントの両方が含まれます。
+
+* * *
+
+次へ: [記号](https://doc.guix.gnu.org/guile/latest/en/guile.html#Symbols)、前: [文字セット](https://doc.guix.gnu.org/guile/latest/en/guile.html#Character-Sets)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

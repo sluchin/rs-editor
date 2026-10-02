@@ -1,49 +1,53 @@
-# 序文
+序文 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface-1)
+--------------------------------------------------------------------------
 
-> **原文**: [Guile Reference Manual - Preface](https://www.gnu.org/software/guile/manual/html_node/Preface.html)
->
-> このドキュメントは GNU Free Documentation License の下で公開されている原文の翻訳です。
+このマニュアルでは、GNUのユビキタス・インテリジェント言語であるGuile（拡張機能のための言語）の使い方について説明します。特にGuileバージョン3.0.11に関する内容です。
 
-このマニュアルでは、GNU の拡張用ユビキタス知的言語（GNU's Ubiquitous Intelligent Language for Extensions）である Guile の使い方を説明します。特に Guile バージョン 3.0.11 に関するものです。
+* [このマニュアルの貢献者](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors)
+* [Guileライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-License)
 
-- このマニュアルの貢献者
-- Guile のライセンス
+* * *
 
-## このマニュアルの貢献者
+次へ: [Guile ライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#Guile-License)、上へ: [序文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-Guile 自体と同様に、Guile リファレンスマニュアルも生き物のような存在であり、長い期間にわたって多くの人々によって手入れされてきました。そのため、「そう、この一人の人物がこのマニュアルを書いた」と言えるような個人を特定するのは困難です。
+### このマニュアルの貢献者 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors-to-this-Manual)
 
-それでも、多くの貢献の中で、際立った世話役が何人かいます。まず第一に挙げるべきは Neil Jerram で、彼は10年以上にわたってこの文書に取り組んできました。細部と全体像の両方に対する Neil の注意力は、一世代の Guile ハッカーたちの理解に真の違いをもたらしました。
+ガイル自身と同様に、ガイルのリファレンスマニュアルも、長期間にわたり多くの人々によって管理されてきた生き物です。そのため、「このマニュアルを書いたのは間違いなくこの人物だ」と断言できる人物を特定するのは困難です。
 
-次に、この文書に対する Marius Vollmer の影響に触れておくべきでしょう。Marius は Guile の API が明確化された――いわば火にかけられて鍛えられた――時期に Guile のメンテナを務めており、マニュアルにも同じ変化をもたらすという良識を持っていました。
+しかし、数多くの貢献の中でも、特に際立った貢献者が何人かいる。その筆頭は、10年以上にわたりこの文書に取り組んできたニール・ジェラム氏だ。ニール氏の細部へのこだわりと全体像への着目は、一世代のGuileハッカーたちの理解に真に大きな影響を与えた。
 
-Martin Grabmueller は Guile 1.6 リリースの準備としてマニュアル全体にわたり多大な貢献をしました。その中には、Scheme のデータ型、制御機構、手続きに関するドキュメントの多くを充実させたことが含まれます。さらに、彼は Guile の SRFI モジュールと、Guile REPL に関連するモジュールのドキュメントも執筆しました。
+次に、マリウス・フォルマーがこの文書に与えた影響について触れておくべきでしょう。マリウスは、GuileのAPIが明確化され、いわば試練にさらされた時期にGuileのメンテナンスを担当しており、マニュアルにも同じ変更を加えるという賢明な判断を下しました。
 
-2010年から Guile を共同でメンテナンスしている Ludovic Courtès と Andy Wingo、そして Mark Weaver もまた、Guile 2.0 とともに登場した新しいモジュールやサブシステムのドキュメントを書くことで、マニュアルに足跡を残しました。Ludovic、Andy、Mark は、Guile が進化する中で既存の文章が妥当性を保つようにする責任も負っています。このマニュアルの問題を報告する方法の詳細については、「バグの報告」を参照してください。
+Martin Grabmueller氏は、Guile 1.6リリースに向けたマニュアル作成において、Schemeデータ型、制御機構、プロシージャに関するドキュメントの多くを執筆するなど、多大な貢献をしました。さらに、GuileのSRFIモジュールおよびGuile REPL関連モジュールのドキュメントも作成しました。
 
-このマニュアルの最初のバージョンの内容は、Guile の基盤となった SCM システムの作者である Aubrey Jaffer の文書と、Guile の最初のメンテナである Tom Lord の文書を取り入れ、またそれらから着想を得ていました。この文章の大部分は書き直されましたが、そのすべてが重要であり、構成の一部は今も残っています。
+2010年からGuileを共同でメンテナンスしているLudovic CourtèsとAndy Wingoは、Mark Weaverと共に、Guile 2.0で追加された新しいモジュールやサブシステムのドキュメントを作成するなど、マニュアルにも貢献しています。Ludovic、Andy、Markは、Guileの進化に伴い、既存のテキストが常に最新の状態を保つようにする責任も担っています。このマニュアルの問題報告方法については、[バグ報告](https://doc.guix.gnu.org/guile/latest/en/guile.html#Reporting-Bugs)を参照してください。
 
-Guile の最初のバージョンのマニュアルは、主に Mark Galassi と Jim Blandy によって執筆、編集、編纂されました。特に Jim は、Guile のデータ表現と、Guile オブジェクトにアクセスするための C API に関する元のチュートリアルを書きました。
+このマニュアルの初期バージョンの内容は、Guileの基盤となったSCMシステムの開発者であるオーブリー・ジャファー氏と、Guileの初代メンテナーであるトム・ロード氏の文書を参考に作成され、またそれらから着想を得ています。これらの文書の大部分は書き直されましたが、いずれも重要な内容であり、その構造の一部はそのまま残されています。
 
-Thien-Thi Nguyen、Kevin Ryde、Mikael Djurfeldt、Christian Lynbech、Julian Graham、Gary Houston、Tim Pierce、その他数十名の人々からも、相当な部分が寄稿されました。読者であるあなたも、この尊敬すべき人々の仲間に加わることを大歓迎します。参加方法については、Guile のウェブサイト http://www.gnu.org/software/guile/ を訪れてください。
+Guileの初期バージョンのマニュアルは、主にマーク・ガラッシとジム・ブランディによって執筆、編集、コンパイルされました。特に、ジムはGuileのデータ表現とGuileオブジェクトにアクセスするためのC APIに関する最初のチュートリアルを執筆しました。
 
-## Guile のライセンス
+Thien-Thi Nguyen、Kevin Ryde、Mikael Djurfeldt、Christian Lynbech、Julian Graham、Gary Houston、Tim Pierceをはじめとする数十名の方々にも多大な貢献をいただきました。読者の皆様も、ぜひ彼らの仲間入りをしてください。参加方法については、Guileのウェブサイト[http://www.gnu.org/software/guile/](http://www.gnu.org/software/guile/)をご覧ください。
 
-Guile はフリーソフトウェアです。Guile は著作権で保護されており、パブリックドメインではありません。その配布や再配布には制限がありますが、これらの制限は、協力的な人が行いたいと思うことはすべて許可するように設計されています。
+* * *
 
-- Guile ライブラリ（libguile）とそのサポートファイルは、GNU Lesser General Public License バージョン3以降の条件の下で公開されています。ファイル `COPYING.LESSER` と `COPYING` を参照してください。
-- Guile の readline モジュールは、GNU General Public License バージョン3以降の条件の下で公開されています。ファイル `COPYING` を参照してください。
-- あなたが今読んでいるマニュアルは、GNU Free Documentation License の条件の下で公開されています（「GNU Free Documentation License」を参照）。
+前へ: [このマニュアルの貢献者](https://doc.guix.gnu.org/guile/latest/en/guile.html#Contributors)、上へ: [序文](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
 
-Guile ライブラリにリンクする C コードは、そのライブラリの条件に従います。基本的に、そのようなコードは、ユーザーが新しいバージョンまたは変更されたバージョンの Guile に対して再リンクできる限り、どのような条件でも公開できます。
+### Guile ライセンス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#The-Guile-License)
 
-Guile readline モジュールにリンクする C コードは、そのモジュールの条件に従います。基本的に、そのようなコードはフリーな条件で公開しなければなりません。
+Guileはフリーソフトウェアです。Guileは著作権で保護されており、パブリックドメインではありません。配布や再配布には制限がありますが、これらの制限は、協力者が望むあらゆることを可能にするように設計されています。
 
-Guile で実行されるために書かれた（ただし Guile 自体から派生したものではない）Scheme レベルのコードは、いかなる制限も受けず、どのような条件でも公開できます。私たちは、作者がフリーな条件で公開することを推奨します。
+* Guileライブラリ（libguile）および関連ファイルは、GNU Lesser General Public Licenseバージョン3以降の条件に基づいて公開されています。COPYING.LESSERおよびCOPYINGファイルを参照してください。
+* Guileのreadlineモジュールは、GNU一般公衆利用許諾契約書バージョン3以降の条件に基づいて公開されています。詳細はCOPYINGファイルを参照してください。
+* このマニュアルは、GNU フリー文書ライセンスの条項に基づいて公開されています ([GNU フリー文書ライセンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#GNU-Free-Documentation-License) を参照)。
 
-Guile には一切の保証がないことを認識しておく必要があります。このことはライセンスの中で詳しく説明されています。
+GuileライブラリにリンクするCコードは、当該ライブラリの利用規約に従う必要があります。基本的に、ユーザーがGuileの新しいバージョンまたは変更されたバージョンに再リンクできる限り、そのようなコードはどのような条件でも公開できます。
 
----
+GuileのreadlineモジュールにリンクするCコードは、当該モジュールの利用規約に従う必要があります。基本的に、そのようなコードはフリーライセンスで公開されなければなりません。
 
-> **ライセンス**: この翻訳は GNU Free Documentation License v1.3 以降に基づいて作成されています。
-> 原文の著作権: Copyright (C) 1996-2023 Free Software Foundation, Inc.
+Guileで実行するために記述されたSchemeレベルのコード（ただし、Guile自体から派生したものではないもの）は、いかなる制限も受けず、どのような条件でも公開できます。著者の皆様には、自由な条件で公開することを推奨します。
+
+Guileには一切の保証がないことをご了承ください。詳細はライセンスに記載されています。
+
+* * *
+
+次へ: [Hello Guile!](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hello-Guile_0021)、前: [Preface](https://doc.guix.gnu.org/guile/latest/en/guile.html#Preface)、上: [The Guile Reference Manual](https://doc.guix.gnu.org/guile/latest/en/guile.html#Top) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]

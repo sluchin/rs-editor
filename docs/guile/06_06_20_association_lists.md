@@ -1,0 +1,332 @@
+#### 6.6.20 関連付けリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists-1)
+
+連想リストは、シンプルなキーバリューデータベースを実装する際によく用いられる、一般的なデータ構造です。連想リストは、各エントリがペアであるエントリのリストで構成されます。各エントリの_キー_はペアの`car`であり、各エントリの_値_は`cdr`です。
+
+関連付けリスト ::= '( (KEY1 . VALUE1)
+(KEY2 . VALUE2)
+(KEY3 . VALUE3)
+...
+）
+
+連想リストは、略して「連想リスト」とも呼ばれます。
+
+連想リストの構造は、ペアとリストを使って構築できる無数の構造の一例にすぎません。そのため、連想リストのキーと値は、一般的なリスト構造の手順である`cons`、`car`、`cdr`、`set-car!`、`set-cdr!`などを使って操作できます。しかし、連想リストは非常に便利なので、Guileは連想リストを操作するための専用の手順も提供しています。
+
+* [Alistキーの等価性](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Key-Equality)
+* [Alistエントリの追加または設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Adding-or-Setting-Alist-Entries )
+* [Alistエントリの取得](https://doc.guix.gnu.org/guile/latest/en/guile.html#Retrieving-Alist-Entries)
+* [Alistエントリの削除](https://doc.guix.gnu.org/guile/latest/en/guile.html#Removing-Alist-Entries)
+* [不適切なAリスト関数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sloppy-Alist-Functions)
+* [Alist の例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Example)
+
+* * *
+
+次へ: [Alistエントリの追加または設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Adding-or-Setting-Alist-Entries)、上: [関連付けリスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.20.1 Alistキーの等価性 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Key-Equality-1)
+
+Guileの専用のアソシエーションリストプロシージャは、`acons`を除き、アソシエーションリスト内の既存のキーが、プロシージャ呼び出しで必要なエントリを識別するために使用するキーと同じかどうかを判断するために必要な等価性のレベルに応じて、3つの種類があります。
+
+* 名前に _assq_ が含まれるプロシージャは、キーの等価性を判断するために `eq?` を使用します。
+* 名前に _assv_ が含まれるプロシージャは、キーの等価性を判断するために `eqv?` を使用します。
+* 名前に _assoc_ が含まれるプロシージャは、キーの等価性を判断するために `equal?` を使用します。
+
+`acons`は例外で、エントリのキーが一意である必要のない関連付けリストを作成するために使用されます。
+
+* * *
+
+次へ: [Alistエントリの取得](https://doc.guix.gnu.org/guile/latest/en/guile.html#Retrieving-Alist-Entries)、前: [Alistキーの等価性](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Key-Equality)、上: [関連リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.20.2 Alistエントリの追加または設定 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Adding-or-Setting-Alist-Entries-1)
+
+`acons` は、関連付けリストに新しいエントリを追加し、結合された関連付けリストを返します。結合された関連付けリストは、`acons` プロシージャ呼び出しで指定された関連付けリストの先頭に新しいエントリを追加することによって作成されます。したがって、指定された関連付けリストは変更されませんが、その内容は `acons` が返す結合された関連付けリストの末尾と共有されます。
+
+`acons`の最も一般的な使い方では、元の関連付けリストを保持する変数が、結合されたalistで更新されます。
+
+(set! address-list (acons name address address-list))
+
+このような場合、`address-list` の古い値と新しい値が内容の一部を共有していても問題ありません。なぜなら、古い値は通常、独立してアクセスできなくなるからです。
+
+`acons` は、既存の alist に、新しいエントリのキーと何らかの意味で同じキーを持つエントリが既に存在するかどうかに関わらず、指定された新しいエントリを追加します。したがって、`acons` は、キーの一意性という概念が存在しない alist を作成するのに最適です。
+
+(set! タスクリスト (acons 3 "ガス料金を支払う" '()))
+タスクリスト
+⇒
+（（３．ガス料金を支払う））
+
+(設定! タスクリスト (acons 3 "寝室の整理" タスクリスト))
+タスクリスト
+⇒
+（（３．「寝室を片付ける」） （３．「ガス料金を支払う」）
+
+`assq-set!`、`assv-set!`、および`assoc-set!`は、キーの一意性の概念が存在する関連リストにエントリを追加または置換するために使用されます。指定された関連リストに、プロシージャ呼び出しで指定されたキーと同じキーを持つエントリが既に存在する場合、既存のエントリは新しいエントリに置き換えられます。そうでない場合は、新しいエントリが古い関連リストの先頭に追加され、結合された関連リストが作成されます。いずれの場合も、これらのプロシージャは結合された関連リストを返します。
+
+`assq-set!` および関連関数は、既存の変数を返された値に `set!` しなくても正しく更新されるように、古い連想リストの構造を破壊的に変更する場合があります。
+
+アドレス一覧
+⇒
+(("メアリー" . "エルムロード34番地") ("ジェームズ" . "ボウストリート16番地"))
+
+(assoc-set! address-list "james" "1a London Road")
+⇒
+(("メアリー" . "エルムロード34") ("ジェームズ" . "ロンドンロード1a"))
+
+アドレス一覧
+⇒
+(("メアリー" . "エルムロード34") ("ジェームズ" . "ロンドンロード1a"))
+
+あるいは、そうならない可能性もある。
+
+(assoc-set! address-list "bob" "11 Newington Avenue")
+⇒
+(("ボブ" . "ニューイントン通り11番地") ("メアリー" . "エルム通り34番地")
+（「ジェームズ」 . 「ロンドンロード1a」）
+
+アドレス一覧
+⇒
+(("メアリー" . "エルムロード34") ("ジェームズ" . "ロンドンロード1a"))
+
+このようなエントリの追加や置換を行う際に、関連付けリスト変数を安全に更新する唯一の方法は、変数を返された値に `set!` することです。
+
+(設定! アドレスリスト)
+(assoc-set! address-list "bob" "11 Newington Avenue"))
+アドレス一覧
+⇒
+(("ボブ" . "ニューイントン通り11番地") ("メアリー" . "エルム通り34番地")
+（「ジェームズ」 . 「ロンドンロード1a」）
+
+このわずかな不便さのため、辞書データを格納するにはハッシュテーブルを使用する方が便利な場合があります。アプリケーションで alist の内容を頻繁に変更しない場合は、この点は大きな違いにならないかもしれません。
+
+`acons`、`assq-set!`、`assv-set!`、または`assoc-set!`による変更によって生成されるリストとは独立した形式で、関連付けリストの古い値を保持する必要がある場合は、変更する前に`alist-copy`を使用して古い関連付けリストをコピーしてください。
+
+スキーム手順: **acons** キー値リスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-acons)
+
+C 関数: **scm\_acons** (キー、値、リスト) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005facons)
+
+alistに新しいキーと値のペアを追加します。carがキー、cdrが値となる新しいペアが作成され、そのペアがalistにcons結合され、新しいリストが返されます。この関数は破壊的ではありません。alistは変更されません。
+
+Scheme Procedure: **assq-set!** alist key val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dset_0021)
+
+スキームプロシージャ: **assv-set!** alist キー値[¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assv_002dset_0021)
+
+スキーム手順: **assoc-set!** alist キー値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dset_0021)
+
+C 関数: **scm\_assq\_set\_x** (alist, key, val) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassq_005fset_005fx)
+
+C 関数: **scm\_assv\_set\_x** (alist, key, val) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassv_005fset_005fx)
+
+C 関数: **scm\_assoc\_set\_x** (alist, key, val) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassoc_005fset_005fx)
+
+alist内のキーと値を再関連付けます。既存のalistエントリの中からキーに対応するものを見つけ、新しい値と関連付けます。alistにキーに対応するエントリがない場合は、新しいエントリを追加します。最後に、（場合によっては新しい）alistを返します。
+
+これらの関数は alist の構造を検証しようとしないため、連想リストではないオブジェクトが渡された場合、予期しない結果が生じる可能性があります。
+
+* * *
+
+次へ: [Alist エントリの削除](https://doc.guix.gnu.org/guile/latest/en/guile.html#Removing-Alist-Entries)、前: [Alist エントリの追加または設定](https://doc.guix.gnu.org/guile/latest/en/guile.html#Adding-or-Setting-Alist-Entries)、上: [関連付けリスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.20.3 Alistエントリの取得 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Retrieving-Alist-Entries-1)
+
+`assq`、`assv`、`assoc`は、指定されたキーに対応するエントリをalist内で検索し、`(キー.値)`のペアを返します。`assq-ref`、`assv-ref`、`assoc-ref`も同様の検索を行いますが、値のみを返します。
+
+Scheme Procedure: **assq** key alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq)
+
+Scheme Procedure: **assv** key alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assv)
+
+スキーム手順: **assoc** キーリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc)
+
+C 関数: **scm\_assq** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassq)
+
+C 関数: **scm\_assv** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassv)
+
+C 関数: **scm\_assoc** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassoc)
+
+指定されたキーを持つ alist の最初のエントリを返します。返されるのは、alist から取得したキーと値のペア `(KEY . VALUE)` です。一致するエントリがない場合は、`#f` が返されます。
+
+`assq` はキーを `eq?` と比較し、`assv` は `eqv?` を使用し、`assoc` は `equal?` を使用します。拡張された `assoc` を持つ SRFI-1 も参照してください ([連想リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#SRFI_002d1-Association-Lists))。
+
+Scheme Procedure: **assq-ref** alist key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dref)
+
+Scheme Procedure: **assv-ref** alist key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assv_002dref)
+
+スキーム手順: **assoc-ref** alist キー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dref)
+
+C 関数: **scm\_assq\_ref** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassq_005fref)
+
+C 関数: **scm\_assv\_ref** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassv_005fref)
+
+C 関数: **scm\_assoc\_ref** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassoc_005fref)
+
+指定されたキーを持つ alist の最初のエントリの値を返します。そのようなエントリがない場合は `#f` を返します。
+
+`assq-ref` は `eq?` を使用してキーを比較し、`assv-ref` は `eqv?` を使用して比較し、`assoc-ref` は `equal?` を使用して比較します。
+
+これらの関数は、他の `-ref` 関数と同様に、キー引数が最後に来ることに注意してください。ただし、これは上記の `assq` などが使用するものとは逆です。
+
+戻り値が `#f` の場合、キーが見つからないか、`cdr` 内のエントリの値がたまたま `#f` であるかのいずれかです。これらのケースを区別する必要がある場合は、上記の `assq` などを使用してください。
+
+* * *
+
+次へ: [Sloppy Alist Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sloppy-Alist-Functions)、前: [Retrieving Alist Entries](https://doc.guix.gnu.org/guile/latest/en/guile.html#Retrieving-Alist-Entries)、上: [Association Lists](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.6.20.4 Alistエントリの削除 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Removing-Alist-Entries-1)
+
+指定されたキーと一致するキーを持つ要素を関連付けリストから削除するには、`assq-remove!`、`assv-remove!`、または`assoc-remove!`を使用します（通常どおり、指定したキーと関連付けリスト内のキーとの間で要求される一致レベルに応じて選択します）。
+
+`assq-set!` や類似のコマンドと同様に、指定された alist は破壊的に変更される場合とされない場合があり、alist を含む変数を安全に更新する唯一の方法は、`assq-remove!` や類似のコマンドが返す値に `set!` することです。
+
+アドレス一覧
+⇒
+(("ボブ" . "ニューイントン通り11番地") ("メアリー" . "エルム通り34番地")
+（「ジェームズ」 . 「ロンドンロード1a」）
+
+(set! address-list (assoc-remove! address-list "mary"))
+アドレス一覧
+⇒
+(("ボブ" . "ニューイントン・アベニュー11") ("ジェームズ" . "ロンドン・ロード1a"))
+
+`assq/v/oc-remove!` を使用して、対応する `assq/v/oc-set!` のみを使用して構築された連想リストを変更する場合、alist には一致するエントリが最大で 1 つしか存在しないため、複数のエントリが一度に削除されるという問題は発生しません。`assq/v/oc-remove!` を `acons` または異なる等価レベルの `assq/v/oc-set!`、あるいはこれらの任意の組み合わせを使用して構築された連想リストに適用した場合、alist にさらに一致するエントリが含まれている場合でも、alist から最初の一致するエントリのみが削除されます。例:
+
+(アドレスリスト '() を定義)
+(set! address-list (assq-set! address-list "mary" "11 Elm Street"))
+(set! address-list (assq-set! address-list "mary" "57 Pine Drive"))
+アドレス一覧
+⇒
+(("mary" . "57 Pine Drive") ("mary" . "11 Elm Street"))
+
+(set! address-list (assoc-remove! address-list "mary"))
+アドレス一覧
+⇒
+（（「メアリー」 . 「エルム通り11番地」））
+
+この例では、`eq?` を使用して比較すると、文字列「mary」の 2 つのインスタンスは同じではないため、2 つの `assq-set!` 呼び出しによって `address-list` に 2 つの異なるエントリが追加されます。`equal?` を使用して比較すると、`address-list` 内の 2 つの「mary」は `assoc-remove!` 呼び出し内の「mary」と同じですが、`assoc-remove!` は最初に見つかった一致するエントリを削除した後に停止するため、「mary」エントリの 1 つがそのまま残ります。
+
+Scheme Procedure: **assq-remove!** alist key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assq_002dremove_0021)
+
+Scheme Procedure: **assv-remove!** alist key [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assv_002dremove_0021)
+
+スキーム手順: **assoc-remove!** alist キー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dremove_0021)
+
+C 関数: **scm\_assq\_remove\_x** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassq_005fremove_005fx)
+
+C 関数: **scm\_assv\_remove\_x** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassv_005fremove_005fx)
+
+C 関数: **scm\_assoc\_remove\_x** (alist, key) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fassoc_005fremove_005fx)
+
+指定されたキーに関連付けられたalistの最初のエントリを削除し、結果として得られるalistを返します。
+
+* * *
+
+次へ: [Alist の例](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Example)、前: [Alist エントリの削除](https://doc.guix.gnu.org/guile/latest/en/guile.html#Removing-Alist-Entries)、上: [関連付けリスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.6.20.5 不適切な Alist 関数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sloppy-Alist-Functions-1)
+
+`sloppy-assq`、`sloppy-assv`、`sloppy-assoc` は、対応する `sloppy-` 以外のプロシージャと同様に動作しますが、指定された連想リストが整形式でない場合、`#f` を返します。`sloppy-` 以外のバージョンではエラーが通知されます。
+
+具体的には、非`sloppy-`プロシージャがエラーを通知する条件が2つあり、`sloppy-`プロシージャは代わりに`#f`を返すことでこれらの条件を処理します。1つ目は、指定されたalist全体が適切なリストでない場合です。
+
+(assoc "mary" '((1 . 2) ("key" . "door") . "open sesame"))
+⇒
+エラー: プロシージャ assoc の式 (assoc "mary" (quote #)) 内:
+エラー: 位置 2 の引数の型が間違っています (
+連想リスト): ((1 . 2) ("key" . "door") . "open sesame")
+
+(sloppy-assoc "mary" '((1 . 2) ("key" . "door") . "open sesame"))
+⇒
+#f
+
+第二に、指定された alist のエントリのいずれかがペアでない場合:
+
+(assoc 2 '((1 . 1) 2 (3 . 9)))
+⇒
+エラー: プロシージャ assoc の式 (assoc 2 (quote #)) 内:
+エラー: 位置 2 の引数の型が間違っています (
+関連付けリスト): ((1 . 1) 2 (3 . 9))
+
+(sloppy-assoc 2 '((1 . 1) 2 (3 . 9)))
+⇒
+#f
+
+意図的に不適切な形式の連想リストを扱っていない限り、不適切な手順ではない方法を使用する方がはるかに安全です。なぜなら、不適切な手順は、不適切な手順では隠蔽されてしまうコーディングエラーやデータエラーを浮き彫りにするのに役立つからです。
+
+Scheme Procedure: **sloppy-assq** key alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sloppy_002dassq)
+
+C 関数: **scm\_sloppy\_assq** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsloppy_005fassq)
+
+`assq`と同様の動作をしますが、エラーチェックは一切行いません。Guileの内部処理でのみ使用することを推奨します。
+
+Scheme Procedure: **sloppy-assv** key alist [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sloppy_002dassv)
+
+C 関数: **scm\_sloppy\_assv** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsloppy_005fassv)
+
+`assv`と同様の動作をしますが、エラーチェックは一切行いません。Guileの内部処理でのみ使用することを推奨します。
+
+スキーム手順: **sloppy-assoc** キーリスト [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-sloppy_002dassoc)
+
+C 関数: **scm\_sloppy\_assoc** (key, alist) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsloppy_005fassoc)
+
+`assoc` と同様の動作をしますが、エラーチェックは一切行いません。Guile の内部処理でのみ使用することを推奨します。
+
+* * *
+
+前へ: [Sloppy Alist Functions](https://doc.guix.gnu.org/guile/latest/en/guile.html#Sloppy-Alist-Functions)、上へ: [Association Lists](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.6.20.6 Alist の例 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Alist-Example-1)
+
+以下の例は、アリリストが実際にどのように使用されるかを示しています。
+
+(define capitals ([list](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-list-1) ([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "New York" "Albany")
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "オレゴン" "セーラム")
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) "フロリダ" "マイアミ")))
+
+alistを作成するその他の方法は
+
+(大文字の定義 ([acons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-acons) "New York" "Albany"
+([acons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-acons) "オレゴン" "セーラム"
+([acons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-acons) "フロリダ" "マイアミ" '()))))
+
+または
+
+([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (srfi srfi-1)) ; alist-copy 用
+(大文字を定義する ([alist-copy](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-alist_002dcopy)
+'(("ニューヨーク" . "アルバニー")
+（「オレゴン州」・「セーラム」）
+（「フロリダ」・「マイアミ」）））
+
+ここで、alist を変更する場合は `alist-copy` が必要です。なぜなら、`'(("New York" . "Albany") ...)` のようなリテラルは変更できないからです。
+
+これでALISに対して操作を行うことができます。
+
+;; オレゴン州の州都はどこですか？
+([assoc](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc) "オレゴン" の大文字) ⇒ ("オレゴン" . "セイラム")
+([assoc-ref](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dref) 大文字 "オレゴン") ⇒ "セーラム"
+
+;; サウスダコタ州は除外しました。
+([セット!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 大文字
+([assoc-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dset_0021) capitals "South Dakota" "Pierre"))
+首都
+⇒ (("サウスダコタ" . "ピエール")
+（「ニューヨーク」・「オールバニー」）
+（「オレゴン州」・「セーラム」）
+（「フロリダ」.「マイアミ」）
+
+;; そして、フロリダの予測は間違っていた。
+([セット!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 大文字
+([assoc-set!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dset_0021) capitals "Florida" "Tallahassee"))
+首都
+⇒ (("サウスダコタ" . "ピエール")
+（「ニューヨーク」・「オールバニー」）
+（「オレゴン州」・「セーラム」）
+（「フロリダ州」「タラハシー」）
+
+;; オレゴン州が脱退したら、それを削除できます。
+([セット!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-set_0021) 大文字
+([assoc-remove!](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-assoc_002dremove_0021) capitals "Oregon"))
+首都
+⇒ (("サウスダコタ" . "ピエール")
+（「ニューヨーク」・「オールバニー」）
+（「フロリダ州」「タラハシー」）
+
+* * *
+
+次へ: [ハッシュテーブル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Hash-Tables)、前: [連想リスト](https://doc.guix.gnu.org/guile/latest/en/guile.html#Association-Lists)、上: [データ型](https://doc.guix.gnu.org/guile/latest/en/guile.html#Data-Types) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]

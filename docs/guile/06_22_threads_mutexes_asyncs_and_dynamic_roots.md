@@ -1,0 +1,604 @@
+### 6.22 スレッド、ミューテックス、非同期処理、および動的ルート [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Threads_002c-Mutexes_002c-Asyncs-and-Dynamic-Roots)
+
+* [スレッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Threads)
+* [スレッドローカル変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Thread-Local-Variables)
+* [非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs)
+* [アトミック操作](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics)
+* [ミューテックスと条件変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Mutexes-and-Condition-Variables)
+* [Guileモードにおけるブロッキング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Blocking)
+* [Futures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures)
+* [並列形式](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Forms)
+
+* * *
+
+次へ: [スレッドローカル変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Thread-Local-Variables)、上: [スレッド、ミューテックス、非同期処理、動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.22.1 スレッド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Threads-1)
+
+Guile は POSIX スレッドをサポートしますが、`--without-threads` オプションで設定されている場合、またはホストが POSIX スレッドをサポートしていない場合は例外です。スレッドサポートが利用可能な場合は、`threads` 機能が提供されます ([`provided?`](https://doc.guix.gnu.org/guile/latest/en/guile.html#Feature-Manipulation) を参照)。
+
+以下の手順では、システムのPOSIXスレッドをラップしたGuileスレッドを操作します。アプリケーションレベルの並列処理には、フューチャーなどのより高レベルの構造を使用することをお勧めします（[Futures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures)を参照）。
+
+これらの機能を使用するには、`(ice-9 threads)`モジュールをロードしてください。
+
+(use-modules (ice-9 threads))
+
+Scheme Procedure: **all-threads** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-all_002dthreads)
+
+C 関数: **scm\_all\_threads** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fall_005fthreads)
+
+すべてのスレッドのリストを返します。
+
+Scheme Procedure: **current-thread** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dthread)
+
+C 関数: **scm\_current\_thread** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcurrent_005fthread)
+
+この関数を呼び出したスレッドを返します。
+
+Scheme プロシージャ: **call-with-new-thread** thunk \[handler\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dnew_002dthread)
+
+新しいスレッドで新しい動的状態を使用して `thunk` を呼び出し、新しいスレッドを返します。プロシージャ `thunk` は `with-continuation-barrier` を介して呼び出されます。
+
+ハンドラが指定されている場合、ハンドラをハンドラとして持つタグ「#t」を持つ「catch」内からサンクが呼び出されます。このcatchは継続バリア内で確立されます。
+
+サンクまたはハンドラが戻ると、戻り値がスレッドの終了値となり、スレッドが終了します。
+
+C 関数: `SCM` **scm\_spawn\_thread** `(scm_t_catch_body body, void *body_data, scm_t_catch_handler handler, void *handler_data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fspawn_005fthread)
+
+関数 body を新しいスレッドで呼び出し、body\_data を渡して、新しいスレッドを返します。関数 body は `scm_c_with_continuation_barrier` を介して呼び出されます。
+
+ハンドラが`NULL`でない場合、ハンドラとそのデータとしてhandlerとhandler\_dataを持つタグ`SCM_BOOL_T`を介して`scm_internal_catch`が呼び出されます。このcatchは継続バリア内で確立されます。
+
+本体またはハンドラが戻り値を返すと、その戻り値がスレッドの終了値となり、スレッドは終了します。
+
+Scheme 手順: **thread?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-thread_003f)
+
+C 関数: **scm\_thread\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fthread_005fp)
+
+objがスレッドの場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme Procedure: **join-thread** thread \[timeout \[timeoutval\]\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-join_002dthread)
+
+C 関数: **scm\_join\_thread** (スレッド) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fjoin_005fthread)
+
+C 関数: **scm\_join\_thread\_timed** (thread, timeout, timeoutval) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fjoin_005fthread_005ftimed)
+
+スレッドが終了するまで待機し、終了値を返します。`call-with-new-thread` または `scm_spawn_thread` を使用して作成されたスレッドのみが参加可能です。外部スレッドへの参加を試みるとエラーが発生します。
+
+タイムアウトを指定すると、待機を中止する時点を指定します。これは、`current-time` が返す整数、または `gettimeofday` が返す時刻のペアのいずれかになります。待機が中止されると、timeoutval が指定されている場合はそれが返され、指定されていない場合は `#f` が返されます。
+
+Scheme 手順: **スレッド終了?** スレッド [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-thread_002dexited_003f)
+
+C 関数: **scm\_thread\_exited\_p** (スレッド) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fthread_005fexited_005fp)
+
+スレッドが終了した場合は「#t」を返し、それ以外の場合は「#f」を返します。
+
+スキーム手順: **yield** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-yield)
+
+C 関数: **scm\_yield** (スレッド) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fyield)
+
+1つ以上のスレッドが実行待ち状態にある場合、yieldを呼び出すと、それらのスレッドのいずれかに即座にコンテキストスイッチが実行されます。それ以外の場合は、yieldは効果がありません。
+
+Scheme Procedure: **cancel-thread** thread . values [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cancel_002dthread)
+
+C 関数: **scm\_cancel\_thread** (スレッド) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcancel_005fthread)
+
+スレッドを非同期的に中断し、終了を要求します。`dynamic-wind` のポストサンクは実行されますが、例外ハンドラは実行されません。スレッドが既に終了しているか、終了するようにシグナルされている場合、この関数は何もしません。キャンセルが成功した場合、スレッドに対して `join-thread` を呼び出すと、指定された値が返されます。
+
+内部的には、スレッドのキャンセルには `system-async-mark` と `abort-to-prompt` が使用されます。非同期割り込みの詳細については、[非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs) を参照してください。
+
+マクロ: **make-thread** proc arg … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dthread)
+
+`call-with-new-thread` によって作成された新しいスレッドで、デフォルトのエラーハンドラを使用して、引数 arg … に proc を適用します。このエラーハンドラは、現在のエラーポートにエラーを表示します。引数 arg … の式は、新しいスレッドで評価されます。
+
+マクロ: **begin-thread** expr1 expr2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-begin_002dthread)
+
+`call-with-new-thread` によって作成された新しいスレッドで、デフォルトのエラーハンドラを使用して形式 expr1 expr2 … を評価し、エラーを現在のエラーポートに表示します。
+
+実行中のスレッド数を、利用可能なプロセッサ数に比例するように制限したい場合がよくあります。そのため、これらのインターフェースは (ice-9 スレッド) によってもエクスポートされます。
+
+スキーム手順: **total-processor-count** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-total_002dprocessor_002dcount)
+
+C 関数: **scm\_total\_processor\_count** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ftotal_005fprocessor_005fcount)
+
+マシンのプロセッサの総数を返します。これは少なくとも 1 であることが保証されています。ここでいう「プロセッサ」とは、スレッド実行ユニットのことで、以下のいずれかです。
+
+* （マルチコアの場合もある）チップ、（マルチチップの場合もある）モジュール、単一のコンピュータ、または
+* ハイパースレッディングCPUの場合、コア内部のスレッド実行ユニット。
+
+どちらの定義が用いられるかは明記されていない。
+
+スキーム手順: **current-processor-count** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-current_002dprocessor_002dcount)
+
+C 関数: **scm\_current\_processor\_count** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcurrent_005fprocessor_005fcount)
+
+`total-processor-count`と同様ですが、現在のプロセスで使用可能なプロセッサ数を返します。詳細については、`setaffinity`および`getaffinity`を参照してください。
+
+* * *
+
+次へ: [非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs)、前: [スレッド](https://doc.guix.gnu.org/guile/latest/en/guile.html#Threads)、上: [スレッド、ミューテックス、非同期、および動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.22.2 スレッドローカル変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Thread_002dLocal-Variables)
+
+特定のスレッドでのみ有効な変数バインディング、つまり「スレッドローカル変数」を設定したい場合があります。
+
+流体またはパラメータは、スレッドローカル変数に対する Guile の解決策であるように思われるかもしれません。なぜなら、新しい流体バインディングを確立しても、他のスレッドのバインディングには影響しないからです。[流体と動的状態](https://doc.guix.gnu.org/guile/latest/en/guile.html#Fluids-and-Dynamic-States) または [パラメータ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parameters) を参照してください。しかし、新しいスレッドは、作成元のスレッドで設定されていた流体バインディングを継承します。このようにして、あるスレッドで流体 (またはパラメータ) を使用して確立されたバインディングが他のスレッドに漏れ出す可能性があり、これは望ましくない場合があります。あるいは、`current-dynamic-state` を介した明示的な再具体化によって漏れ出す可能性もあります。
+
+もちろん、このような動的なスコープ設定はまさにあなたが望むものかもしれません。流体やパラメータがこのように動作する理由はまさにそこにあり、現在の入出力ポート、現在のロケール変換パラメータなど、多くの一般的なパラメータに対して望ましい動作です。おそらく、ほとんどのパラメータに当てはまるでしょう。スレッドローカルバインディングを使用する目的が、関連性のないスレッドでバインディングをその設定から分離することであれば、流体やパラメータはうまく適用できます。
+
+一方、複数のスレッドからの値への同時アクセスを防止することがユースケースである場合、通常の流体やパラメータを使用するのは適切ではありません。この目的のために、Guile には _スレッドローカル流体_ があります。`make-thread-local-fluid` で作成された流体は `current-dynamic-state` によってキャプチャされず、新しいスレッドに伝播されません。
+
+Scheme Procedure: **make-thread-local-fluid** \[dflt\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dthread_002dlocal_002dfluid)
+
+C 関数: **scm\_make\_thread\_local\_fluid** (dflt) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fthread_005flocal_005ffluid)
+
+dflt の初期値を持つ、新しく作成された流体を返します。dflt が指定されていない場合は `#f` を返します。`make-fluid` で作成された流体とは異なり、スレッドローカル流体は `make-dynamic-state` ではキャプチャされません。同様に、新しく生成された子スレッドは、親スレッドからスレッドローカル流体の値を継承しません。
+
+スキーム手順: **fluid-thread-local?** fluid [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-fluid_002dthread_002dlocal_003f)
+
+C 関数: **scm\_fluid\_thread\_local\_p** (fluid) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ffluid_005fthread_005flocal_005fp)
+
+流体がスレッドローカルな場合は `#t` を返し、そうでない場合は `#f` を返します。
+
+例えば：
+
+(define %thread-local (make-thread-local-fluid))
+
+(with-fluids ((%thread-local (compute-data)))
+... (fluid-ref %thread-local) ...)
+
+通常の `fluid->parameter` を使用して、スレッドローカル流体からスレッドローカルパラメータを作成することもできます。
+
+(define param (fluid->parameter (make-thread-local-fluid)))
+
+(parameterize ((param (compute-data)))
+...（パラメータ）...）
+
+* * *
+
+次へ: [Atomics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics)、前: [Thread-Local Variables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Thread-Local-Variables)、上: [Threads, Mutexes, Asyncs and Dynamic Roots](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.22.3 非同期割り込み [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asynchronous-Interrupts)
+
+Guile のすべてのスレッドは中断可能です。Guile コードを実行するスレッドは、定期的に保留中の割り込みがあるかどうかを確認し、必要に応じて実行します。スレッドを中断するには、そのスレッドに対して `system-async-mark` を呼び出します。
+
+Scheme Procedure: **system-async-mark** proc \[thread\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-system_002dasync_002dmark)
+
+C 関数: **scm\_system\_async\_mark** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsystem_005fasync_005fmark)
+
+C 関数: **scm\_system\_async\_mark\_for\_thread** (proc, thread) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsystem_005fasync_005fmark_005ffor_005fthread)
+
+スレッドで後続の実行のために、proc（引数なしのプロシージャ）をキューに追加します。procが既にスレッドにキューに追加されているがまだ実行されていない場合、この呼び出しは効果がありません。threadが省略された場合、`system-async-mark`を呼び出したスレッドが使用されます。
+
+`scm_system_async_mark_for_thread` は「非同期シグナルセーフ」ではないため、C シグナルハンドラから呼び出すことはできません。（実際、一般的に `libguile` の関数は C シグナルハンドラから呼び出すと安全ではありません。）
+
+割り込み処理は Guile コードで許可されているあらゆる副作用を持つことができますが、非同期割り込みは一般的に、プロファイリングまたは計算の早期キャンセルに使用されます。前者の場合、設計上、実行中のプログラムに対してほとんど透過的ですが、後者の場合、バグが発生する可能性があります。ファイナライザ ([外部オブジェクト メモリ管理](https://doc.guix.gnu.org/guile/latest/en/guile.html#Foreign-Object-Memory-Management) を参照) と同様に、非同期割り込みはプログラムに並行性をもたらします。たとえば、非同期割り込みはミューテックスで保護された操作の途中で実行され、プログラムの状態を破損する可能性があります。
+
+Guileコードの一部で割り込みを一時的に抑制する必要がある場合は、`call-with-blocked-asyncs`関数を使用できます。この関数は、指定されたプロシージャの実行中に、現在のスレッドの非同期ブロッキングレベルを一時的に増加させることで機能します。ブロッキングレベルは最初はゼロから始まり、安全なポイントに達すると、ゼロより大きいブロッキングレベルによってキューに入れられた非同期処理の実行が阻止されます。
+
+同様に、`call-with-unblocked-asyncs` というプロシージャは、現在のスレッドのブロッキングレベルを一時的に下げます。これは、非同期処理をデフォルトで無効にし、一時的にのみ許可したい場合に使用できます。
+
+`call-with-blocked-asyncs` および `call-with-unblocked-asyncs` の C 版に加えて、C コードでは _dynamic context_ ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照) 内で `scm_dynwind_block_asyncs` および `scm_dynwind_unblock_asyncs` を使用して、非同期処理を一時的にブロックまたはブロック解除できます。
+
+Scheme Procedure: **call-with-blocked-asyncs** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dblocked_002dasyncs)
+
+C 関数: **scm\_call\_with\_blocked\_asyncs** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcall_005fwith_005fblocked_005fasyncs)
+
+proc を呼び出し、実行中の現在のスレッドにおける非同期処理の実行を 1 レベルブロックします。proc が返した値を返します。最初の 2 つのバリアントでは、引数なしで proc を呼び出します。3 番目のバリアントでは、データを指定して proc を呼び出します。
+
+C 関数: `void *` **scm\_c\_call\_with\_blocked\_asyncs** `(void * (*proc) (void *data), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fcall_005fwith_005fblocked_005fasyncs)
+
+同じだが、Schemeのサンクの代わりにC言語の関数プロシージャを使用する。
+
+Scheme Procedure: **call-with-unblocked-asyncs** proc [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-call_002dwith_002dunblocked_002dasyncs)
+
+C 関数: **scm\_call\_with\_unblocked\_asyncs** (proc) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcall_005fwith_005funblocked_005fasyncs)
+
+proc を呼び出し、実行中の現在のスレッドの非同期処理の実行を 1 レベルだけブロック解除します。proc が返した値を返します。最初の 2 つのバリアントでは、引数なしで proc を呼び出します。3 番目のバリアントでは、データを指定して proc を呼び出します。
+
+C 関数: `void *` **scm\_c\_call\_with\_unblocked\_asyncs** `(void *(*proc) (void *data), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fcall_005fwith_005funblocked_005fasyncs)
+
+同じだが、Schemeのサンクの代わりにC言語の関数プロシージャを使用する。
+
+C 関数: `void` **scm\_dynwind\_block\_asyncs** `()` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005fblock_005fasyncs)
+
+現在の dynwind コンテキストでは、非同期処理のブロッキングを 1 レベル増やします。この関数は、`scm_dynwind_begin` と `scm_dynwind_end` の呼び出しのペア内で使用する必要があります ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)。
+
+C 関数: `void` **scm\_dynwind\_unblock\_asyncs** `()` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005funblock_005fasyncs)
+
+現在の dynwind コンテキストでは、非同期処理のブロッキングを 1 レベル減らします。この関数は、`scm_dynwind_begin` と `scm_dynwind_end` の呼び出しのペア内で使用する必要があります ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)。
+
+ファイルディスクリプタや条件変数など、何らかのイベントを待機しているスレッドを中断したい場合があります。そのような場合は、以下の手順を使用して、待機を中断する方法をGuileに指示できます。
+
+C 関数: `int` **scm\_c\_prepare\_to\_wait\_on\_fd** `(int fd)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fprepare_005fto_005fwait_005fon_005ffd)
+
+現在のスレッドがスリープ状態になること、およびこのスレッドで非同期割り込みが通知された場合は、ファイルディスクリプタにゼロバイトを書き込んでスレッドをウェイクアップする必要があることをGuileに通知します。準備が成功した場合はゼロを返し、スレッドに既に保留中の非同期処理があり、待機を回避する必要がある場合はゼロ以外の値を返します。
+
+C 関数: `int` **scm\_c\_prepare\_to\_wait\_on\_cond** `(scm_i_pthread_mutex_t *mutex, scm_i_pthread_cond_t *cond)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fprepare_005fto_005fwait_005fon_005fcond)
+
+現在のスレッドがスリープ状態になること、およびこのスレッドで非同期割り込みが通知された場合は、Guile がミューテックスを取得して cond にシグナルを送ることでスレッドをウェイクアップする必要があることを Guile に通知します。呼び出し元は既にミューテックスを保持しており、`pthread_cond_wait` 呼び出しの一部としてのみミューテックスを解放する必要があります。準備が成功した場合はゼロを返し、スレッドに既に保留中の非同期処理があり、待機を回避する必要がある場合はゼロ以外の値を返します。
+
+C 関数: `void` **scm\_c\_wait\_finished** `(void)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fc_005fwait_005ffinished)
+
+現在のスレッドが待機を終え、非同期割り込みに対して特別な起動処理が不要になったことをGuileに通知します。現在のスレッドは代わりに定期的に内部キューをポーリングします。
+
+Guile の `sleep`、`wait-condition-variable`、`select` などのインターフェースはすべて、必要に応じて上記のルーチンを呼び出します。
+
+最後に、スレッドは POSIX シグナルによって中断される場合もあることに注意してください。[シグナル](https://doc.guix.gnu.org/guile/latest/en/guile.html#Signals) を参照してください。実装の詳細として、シグナル ハンドラはシグナル セーフな方法で `system-async-mark` を呼び出し、最終的に同じ非同期メカニズムを使用してシグナル ハンドラを実行します。このようにして、上記のインターフェースを使用してシグナル ハンドラの実行を一時的に抑制できます。
+
+* * *
+
+次へ: [ミューテックスと条件変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Mutexes-and-Condition-Variables)、前: [非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs)、上: [スレッド、ミューテックス、非同期、および動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.22.4 アトミック [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics-1)
+
+複数のスレッドから並列にデータにアクセスする場合、あるスレッドによる更新が別のスレッドから確実に反映されるとは限りません。ハードウェアによっては、あるCPUコアから別のCPUコアへ変更を伝播させるために特別な命令が必要となる場合があります。あるいは、ハードウェアが一連の命令で値を更新する場合、並列スレッドは更新処理中の値を参照するものの、その値が完全に更新されていない状態になる可能性があります。
+
+アトミック参照はこの問題を解決します。アトミックは、複数のスレッドから可変変数への同時アクセスと更新を可能にする標準的で基本的な機能であり、処理の進行が保証され、中間状態が明確に定義されています。
+
+アトミック参照は、ハードウェアのメモリバリアとしてだけでなく、コンパイラのバリアとしても機能します。通常、コンパイラは共通部分式の削除などの最適化のために、特定のメモリアクセスを並べ替えたり省略したりすることがあります。しかし、アトミックアクセスは互いに並べ替えられることはなく、通常のメモリアクセスもアトミックアクセスをまたいで並べ替えられることはありません。
+
+実装の詳細として、現在、すべてのアトミックアクセスと更新はC11のシーケンシャル一貫性メモリモデルを使用しています。将来的には、取得/解放セマンティクスに緩和する可能性があります。このセマンティクスでもメモリバリアが発行されるため、非アトミックな更新がアトミックアクセスや更新をまたいで順序変更されることはありません。
+
+Guileのアトミック操作を使用するには、`(ice-9 atomic)`モジュールをロードします。
+
+(use-modules (ice-9 atomic))
+
+Scheme手順: **make-atomic-box** init [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002datomic_002dbox)
+
+初期値 init で初期化されたアトミックボックスを返します。
+
+Scheme Procedure: **atomic-box?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-atomic_002dbox_003f)
+
+objがアトミックボックスオブジェクトの場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+スキーム手順: **atomic-box-ref** ボックス [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-atomic_002dbox_002dref)
+
+アトミックボックスboxに格納されている値を取得して返します。
+
+Scheme Procedure: **atomic-box-set!** box val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-atomic_002dbox_002dset_0021)
+
+valをアトミックボックスboxに格納します。
+
+Scheme Procedure: **atomic-box-swap!** box val [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-atomic_002dbox_002dswap_0021)
+
+valをアトミックボックスboxに格納し、以前にボックスに格納されていた値を返します。
+
+スキーム手順: **atomic-box-compare-and-swap!** ボックス 期待値 希望値 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-atomic_002dbox_002dcompare_002dand_002dswap_0021)
+
+アトミックボックス box の値が期待値 (`eq?` の意味において) と同じであれば、ボックスの内容を希望の値に置き換えます。そうでない場合は、ボックスを更新しません。どちらの場合もボックスの以前の値を返すため、戻り値が期待値と `eq?` であるかどうかを確認することで、スワップが成功したかどうかを知ることができます。
+
+* * *
+
+次へ: [Guile モードのブロッキング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Blocking)、前: [アトミック](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics)、上: [スレッド、ミューテックス、非同期処理、動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.22.5 ミューテックスと条件変数 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Mutexes-and-Condition-Variables-1)
+
+ミューテックスは、可変データへの同時アクセスを調整するために使用される低レベルのプリミティブです。「相互排他」の略である「ミューテックス」という名前は、ミューテックスによって保護されたデータにアクセスできるのは一度に1つのスレッドのみであることを示しています。つまり、複数のスレッドが同時にデータにアクセスすることはできません。あるスレッドがミューテックスをロックした場合、同じミューテックスをロックしようとする別のスレッドは、最初のスレッドの処理が完了するまで待機します。
+
+ミューテックスは、マルチコアを活用する堅牢なマルチスレッドプログラムを構築するために使用できます。しかし、ミューテックスは非常に低レベルの機能しか提供せず、やや危険です。通常、複数のオブジェクトにアクセスするために複数のミューテックスを同時に取得する必要が生じますが、プログラムが慎重に記述されていないと、デッドロックが発生しやすくなります。たとえば、オブジェクトAとBがそれぞれ関連付けられたミューテックスMとNによって保護されている場合、両方にアクセスするには両方のミューテックスを取得する必要があります。しかし、あるスレッドが先にMを取得し、次にNを取得し、同時に別のスレッドがNを取得し、次にMを取得した場合、どうなるでしょうか？一方のスレッドが他方のスレッドを待機する状況に陥りやすくなります。
+
+言語レベルでは、この問題を簡単に回避する方法はありません。ミューテックスを使用する関数Aは、ミューテックスを使用する関数Bと必ずしもうまく合成できるとは限りません。そのため、可能な限りアトミック変数を使用することをお勧めします（[Atomics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics)を参照）。アトミック変数にはこの問題がないためです。
+
+とはいえ、プログラマとしてシステム全体を担当している場合は、ミューテックスをプリミティブとして使用して、ユーザーに安全な並行処理の抽象化を提供できます。（例えば、システム内のすべてのロックが与えられた場合、MがNより先に取得されるように順序を確立すれば、前述の「デッドリーエンブレイス」デッドロックを回避できます。問題は、すべてのミューテックスを列挙し、システムの観点からこの順序を確立することです。）Guileは、このようなシステムを構築するための低レベルの機能を提供します。
+
+Guile では、他のプログラミング言語で通常考慮される事項に加えて、非ローカル制御フローや非同期割り込みといった追加の考慮事項があります。ミューテックスを保持している状態で、何らかの理由で例外がスローされた場合はどうなるでしょうか。正解は一つではありません。他のコードがそのクリティカル セクションに再び進入できないように、ミューテックスをロックしたままにしておきたい場合もあるでしょう。あるいは、例外ハンドラや `dynamic-wind` を使って「終了時に」ミューテックスをロック解除すれば、クリティカル セクションは問題なく動作するかもしれません。[例外](https://doc.guix.gnu.org/guile/latest/en/guile.html#Exceptions) および[Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照してください。
+
+しかし、`dynamic-wind` を介して動的エクステントから出るときにミューテックスのロックを解除するように設定した場合、継続呼び出しを介して制御がその動的エクステントに再び入った場合はどうすればよいでしょうか? ロックなしで動的エクステントに再び入ることは明らかに良くないので、2 つの選択肢があります。1 つは `with-continuation-barrier` などを介して再入を防止するか、`dynamic-wind` のエントリ サンクでロックを再取得するかです。
+
+継続を使用しないのであれば、この点について考える必要はないと思うかもしれませんが、それは正しいかもしれません。システム全体を制御できるのであれば、継続の使用についてグローバルに検討できます。あるいは、動的範囲で呼び出し可能なすべてのコードを把握していて、それらのコードが継続を呼び出すことができないのであれば、再入について心配する必要はなく、早期終了についても心配する必要がないかもしれません。
+
+ただし、非同期割り込みの可能性も考慮してください（[非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs)を参照）。ユーザーが対話的にコードを中断すると、例外が発生する可能性があります。また、スレッドがキャンセルされても同様です。あるいは、ユーザーが定期的に軽量タスク切り替えを行うプリエンプティブシステムの下でコードを実行している可能性もあります。（Guileには現在そのようなシステムは含まれていませんが、ライブラリとして実装することは可能です。）おそらく、ミューテックスを保持している間は非同期割り込み処理を延期したいでしょうし、それはおそらく、ミューテックスを長時間保持すべきではないことも意味します。
+
+これらのGuile固有の考慮事項すべてを考慮すると、システムの観点からは、ミューテックスを必要としないことで、可能であればこれらの危険を回避するのが賢明です。代わりに、スレッド間で危険なく共有できる不変データを使用するか、アトミック変数ライブラリに基づくアトミック更新を備えた永続データ構造を使用してください（[Atomics](https://doc.guix.gnu.org/guile/latest/en/guile.html#Atomics)を参照）。
+
+Guileには、「標準」、「再帰的」、「非所有」の3種類のミューテックスがあります。
+
+引数なしで `make-mutex` を呼び出すと、標準ミューテックスが作成されます。標準ミューテックスは一度しかロックできません。最初にロックしたスレッド（「所有者」スレッド）から再度ロックしようとすると、エラーが発生します。ロックを解除できるのは、最初にロックしたスレッドのみです。
+
+`make-mutex` を引数としてシンボル `recursive` を指定して呼び出すか、`make-recursive-mutex` を呼び出すと、再帰ミューテックスが作成されます。再帰ミューテックスは、所有者によって複数回ロックできます。その後、対応する回数だけロックを解除する必要があります。標準のミューテックスと同様に、ロックを解除できるのは所有者スレッドのみです。
+
+最後に、シンボル `allow-external-unlock` を指定して `make-mutex` を呼び出すと、所有者のいないミューテックスが作成されます。所有者のいないミューテックスは、標準のミューテックスと同様ですが、どのスレッドでもロックを解除できる点が異なります。この動作の必然的な結果として、スレッドが既に所有しているミューテックスをロックしようとすると、エラーを通知するのではなくブロックされます。これは、他のスレッドがミューテックスをロック解除し、所有者スレッドが処理を続行できる可能性があるためです。この種のミューテックスは少し特殊で、SRFI-18 で使用するために用意されています。
+
+Guileのミューテックス手続きは、3種類のミューテックスすべてに対して操作を実行できます。
+
+これらの機能を使用するには、`(ice-9 threads)`モジュールをロードしてください。
+
+(use-modules (ice-9 threads))
+
+  
+
+Scheme手順: **make-mutex** \[kind\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dmutex)
+
+C 関数: **scm\_make\_mutex** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fmutex)
+
+C 関数: **scm\_make\_mutex\_with\_kind** (SCM の種類) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fmutex_005fwith_005fkind)
+
+新しいミューテックスを返します。オプションのkind引数として`recursive`シンボルが渡されない限り、標準的な非再帰ミューテックスになります。`recursive`シンボルが渡された場合は、再帰ミューテックスになります。また、SRFI-18のユースケースに合わせたセマンティクスを実現するために`unowned`を渡すことも可能です。詳細は上記を参照してください。
+
+Scheme手順: **mutex?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutex_003f)
+
+C 関数: **scm\_mutex\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmutex_005fp)
+
+objがミューテックスの場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme手順: **make-recursive-mutex** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002drecursive_002dmutex)
+
+C 関数: **scm\_make\_recursive\_mutex** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005frecursive_005fmutex)
+
+新しい再帰ミューテックスを作成します。初期状態ではロックされていません。この関数を呼び出すことは、`make-mutex` 関数を `recursive` オプション付きで呼び出すことと同じです。
+
+Scheme Procedure: **lock-mutex** mutex \[timeout\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-lock_002dmutex)
+
+C 関数: **scm\_lock\_mutex** (mutex) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005flock_005fmutex)
+
+C 関数: **scm\_timed\_lock\_mutex** (mutex、timeout) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ftimed_005flock_005fmutex)
+
+ミューテックスをロックし、`#t` を返します。ミューテックスが既にロックされている場合は、ブロックして、ミューテックスが取得されるまで待機します。
+
+タイムアウトを指定すると、待機を中止する時点を指定します。これは、`current-time` が返す整数、または `gettimeofday` が返す時刻のペアのいずれかになります。待機が中止されると、`#f` が返されます。
+
+標準ミューテックス（`make-mutex`）の場合、スレッド自身が既にミューテックスをロックしている場合はエラーが通知されます。
+
+再帰的なミューテックス（`make-recursive-mutex`）の場合、スレッド自身が既にミューテックスをロックしている場合は、さらに`lock-mutex`を呼び出すとロックカウントが増加します。最終的に解放するには、追加の`unlock-mutex`が必要になります。
+
+`lock-mutex` でブロックされているスレッドに対して非同期割り込み ([非同期割り込み](https://doc.guix.gnu.org/guile/latest/en/guile.html#Asyncs) を参照) がスケジュールされると、Guile は待機を中断し、割り込みを実行してから待機を再開します。
+
+C 関数: `void` **scm\_dynwind\_lock\_mutex** `(SCM ミューテックス)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fdynwind_005flock_005fmutex)
+
+現在の dynwind コンテキストに入るときは常にミューテックスをロックし、終了するときはロックを解除するように設定してください。
+
+Scheme Procedure: **try-mutex** mx [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-try_002dmutex)
+
+C 関数: **scm\_try\_mutex** (mx) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005ftry_005fmutex)
+
+ミューテックスのロックを試み、成功した場合は`#t`を、失敗した場合は`#f`を返します。これは、タイムアウトが発生した状態で`lock-mutex`を呼び出すのと同様です。
+
+Scheme Procedure: **unlock-mutex** mutex [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-unlock_002dmutex)
+
+C 関数: **scm\_unlock\_mutex** (mutex) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005funlock_005fmutex)
+
+ミューテックスのロックを解除してください。ミューテックスがロックされていない場合はエラーが通知されます。
+
+「標準」および「再帰的」ミューテックスは、ロックしたスレッドのみがロックを解除できます。Guileはこの状況を検知し、エラーを通知します。「所有者なし」ミューテックスは、どのスレッドでもロックを解除できます。
+
+スキーム手順: **mutex-owner** mutex [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutex_002downer)
+
+C 関数: **scm\_mutex\_owner** (mutex) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmutex_005fowner)
+
+ミューテックスの現在の所有者を、スレッドの形式、または所有者がいない場合は `#f` の形式で返します。ミューテックスは所有者がいなくてもロックされている場合があることに注意してください。
+
+Scheme Procedure: **mutex-level** mutex [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutex_002dlevel)
+
+C 関数: **scm\_mutex\_level** (mutex) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmutex_005flevel)
+
+ミューテックスの現在のロックレベルを返します。ミューテックスが現在ロックされていない場合は、この値は0になります。そうでない場合は、現在の所有者によってミューテックスが再帰的にロックされた回数になります。
+
+Scheme手順: **mutexロックされていますか？** mutex [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-mutex_002dlocked_003f)
+
+C 関数: **scm\_mutex\_locked\_p** (mutex) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmutex_005flocked_005fp)
+
+ミューテックスがロックされている場合は、所有権に関係なく`#t`を返します。そうでない場合は、`#f`を返します。
+
+Scheme手順: **make-condition-variable** [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dcondition_002dvariable)
+
+C 関数: **scm\_make\_condition\_variable** () [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fmake_005fcondition_005fvariable)
+
+新しい条件変数を返します。
+
+Scheme Procedure: **condition-variable?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-condition_002dvariable_003f)
+
+C 関数: **scm\_condition\_variable\_p** (obj) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fcondition_005fvariable_005fp)
+
+objが条件変数である場合は`#t`を返し、そうでない場合は`#f`を返します。
+
+Scheme Procedure: **wait-condition-variable** condvar mutex \[time\] [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-wait_002dcondition_002dvariable)
+
+C 関数: **scm\_wait\_condition\_variable** (condvar、mutex、time) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwait_005fcondition_005fvariable)
+
+条件変数がシグナルされるまで待機します。待機中は、ミューテックスはアトミックにロック解除され（`unlock-mutex`と同様）、この関数が戻るときに再びロックされます。時間を指定すると、待機を中止する時点を指定します。これは、`current-time`が返す整数、または`gettimeofday`が返すペアのいずれかです。待機が中止されると、`#f`が返されます。条件変数が実際にシグナルされた場合は、`#t`が返されます。いずれの場合も、`wait-condition-variable`が戻る前にミューテックスは再ロックされます。
+
+`wait-condition-variable` の呼び出しでブロックされているスレッドに対して非同期処理がアクティブ化されると、待機が中断され、ミューテックスがロックされ、非同期処理が実行されます。非同期処理が戻ると、ミューテックスは再びロック解除され、待機が再開されます。スレッドがミューテックスの再取得中にブロックされると、非同期処理の実行もブロックされます。
+
+スキーム手順: **signal-condition-variable** condvar [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-signal_002dcondition_002dvariable)
+
+C 関数: **scm\_signal\_condition\_variable** (condvar) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fsignal_005fcondition_005fvariable)
+
+condvar を待機しているスレッドを 1 つ起動します。
+
+スキーム手順: **broadcast-condition-variable** condvar [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-broadcast_002dcondition_002dvariable)
+
+C 関数: **scm\_broadcast\_condition\_variable** (condvar) [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fbroadcast_005fcondition_005fvariable)
+
+condvar を待機しているすべてのスレッドを起動します。
+
+Guileには、ミューテックスを扱うためのより高レベルの抽象化機能もいくつか含まれています。
+
+マクロ: **with-mutex** mutex body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-with_002dmutex)
+
+ミューテックスをロックし、ボディ body1 body2 … を評価した後、ミューテックスのロックを解除します。戻り値は、最後のボディフォームによって返された値です。
+
+ロック、ボディ、アンロックは `dynamic-wind` のブランチを形成するため ([Dynamic Wind](https://doc.guix.gnu.org/guile/latest/en/guile.html#Dynamic-Wind) を参照)、エラーまたは新しい継続がボディから出るとミューテックスは自動的にアンロックされ、キャプチャされた継続によってボディに再び入ると再びロックされます。
+
+マクロ: **monitor** body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-monitor)
+
+ミューテックスをロックした状態で、body1、body2…というボディフォームを評価します。これにより、一度に1つのスレッドのみがそのコードを実行できます。戻り値は、最後のボディフォームからの戻り値です。
+
+各`monitor`フォームは独自のプライベートミューテックスを持ち、ロックと評価は上記の`with-mutex`と同様です。標準のミューテックス（`make-mutex`）が使用されるため、本体は再帰的に`monitor`フォームに再入してはなりません。
+
+「モニター」という用語はオペレーティングシステム理論に由来し、特定のリソースへのアクセスを管理するコードの一部を意味し、一度に1つのプロセスのみに代わって実行される。
+
+* * *
+
+次へ: [Futures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures)、前: [Mutexes and Condition Variables](https://doc.guix.gnu.org/guile/latest/en/guile.html#Mutexes-and-Condition-Variables)、上: [Threads, Mutexes, Asyncs and Dynamic Roots](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.22.6 Guile モードでのブロッキング [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Blocking-in-Guile-Mode)
+
+Guile バージョン 1.8 までは、Guile モードでブロックされたスレッドはガベージ コレクタの実行を妨げていました。そのため、スレッドはミューテックス ロックや `select()` システム コールなど、ブロックする可能性のある呼び出しを行う前に、`scm_without_guile()` を使用して明示的に Guile モードを終了する必要がありました。以下の関数を使用すると、一時的に Guile モードを終了したり、一般的なブロック操作をサポートされた方法で実行したりできます。
+
+Guile 2.0以降、ブロックされたスレッドはガベージコレクションを妨げなくなりました。そのため、以下の関数は不要になりました。ただし、スレッドがブロックされようとしていることをGCに通知するために引き続き使用できます。これにより、スレッドがブロックされている間に「ストップ・ザ・ワールド」ガベージコレクションが発生した場合に、GCが（わずかながら）最適化の機会を得ることができます。
+
+C 関数: `void *` **scm\_without\_guile** `(void *(*func) (void *), void *data)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fwithout_005fguile)
+
+ガイルモードを終了し、データに対して関数を呼び出し、ガイルモードに入り、関数呼び出しの結果を返します。
+
+スレッドがGuileモードを終了している間は、`scm_with_guile`または`scm_without_guile`以外のlibguile関数を呼び出したり、libguileマクロを使用したりしてはなりません。また、Guileモードではないときに割り当てられた`SCM`型のローカル変数は、ガベージコレクタから保護されません。
+
+非Guileモードから使用する場合でも、`scm_without_guile`の呼び出しは可能です。これは単にfuncを呼び出すだけです。このようにして、現在のスレッドがGuileモードであるかどうかを知ることなく、Guileモードから抜け出すことができます。
+
+C 関数: `int` **scm\_pthread\_mutex\_lock** `(pthread_mutex_t *mutex)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpthread_005fmutex_005flock)
+
+`pthread_mutex_lock`と同様ですが、ミューテックスを待機している間はGuileモードを終了します。
+
+C 関数: `int` **scm\_pthread\_cond\_wait** `(pthread_cond_t *cond, pthread_mutex_t *mutex)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpthread_005fcond_005fwait)
+
+C 関数: `int` **scm\_pthread\_cond\_timedwait** `(pthread_cond_t *cond, pthread_mutex_t *mutex, struct timespec *abstime)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fpthread_005fcond_005ftimedwait)
+
+`pthread_cond_wait` や `pthread_cond_timedwait` と同様ですが、条件変数を待機している間は Guile モードを終了します。
+
+C 関数: `int` **scm\_std\_select** `(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstd_005fselect)
+
+`select`と同様ですが、待機中はGuileモードを終了します。また、非同期処理の配信により、この関数はエラーコード`EINTR`で中断されます。
+
+C 関数: `unsigned int` **scm\_std\_sleep** `(unsigned int seconds)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstd_005fsleep)
+
+`sleep`と同様ですが、スリープ中はGuileモードを終了します。また、非同期処理の配信によってこの関数は中断されます。
+
+C 関数: `unsigned long` **scm\_std\_usleep** `(unsigned long usecs)` [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-scm_005fstd_005fusleep)
+
+`usleep`と同様ですが、スリープ中はGuileモードを終了します。また、非同期処理の配信によってこの関数は中断されます。
+
+* * *
+
+次へ: [並列フォーム](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-Forms)、前: [Guile モードのブロッキング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Blocking)、上: [スレッド、ミューテックス、非同期処理、動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
+
+#### 6.22.7 フューチャー [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures-1)
+
+`(ice-9 futures)`モジュールは、きめ細かな並列処理のための構成要素である_futures_を提供します。futureは、呼び出し元のスレッドのコードと並行して、場合によっては他のfuturesとも並行して計算される式をラップしたものです。promiseと同様に、futuresは基本的にプロキシであり、クエリを実行することで囲まれた式の値を取得できます。
+
+([touch](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-touch) ([future](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-future) ([+](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002b) 2 3)))
+⇒ 5
+
+しかし、プロミスとは異なり、フューチャーに関連付けられた式は、利用可能な別のCPUコアがあれば、そのコアで評価される可能性があります。これは、比較的小さな計算でもフューチャーに埋め込むことができるため、_きめ細かい並列処理_をサポートします。次の逐次コードを考えてみましょう。
+
+(define (find-prime lst1 lst2)
+(または ([find](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find) prime? lst1)
+([find](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find) prime? lst2)))
+
+`or` の 2 つの部分は、計算負荷が高い可能性があります。これらは互いに独立していますが、最初の部分が `#f` を返すと、順次評価されます。future を使用すると、次のように書き換えることができます。
+
+(define (find-prime lst1 lst2)
+(let ((f ([future](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-future) ([find](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find) prime? lst2))))
+(または ([find](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-find) prime? lst1)
+([touch](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-touch) f))))
+
+これにより、`find-prime` の意味論が維持されます。ただし、マルチコアマシンでは、`(find prime? lst2)` の計算が他の `find` 呼び出しと並列に実行される場合があり、これにより `find-prime` の実行時間が短縮される可能性があります。
+
+フューチャーはネストされる可能性があります。フューチャー自体が他のフューチャーを生成し、さらに他のフューチャーに「接触」することで、フューチャーの有向非巡回グラフが形成されます。この機能を利用して、次のような並列マップ手順を定義できます。
+
+([use-modules](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-use_002dmodules) (ice-9 futures) (ice-9 [match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match)))
+
+(define ([par-map](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-par_002dmap) proc lst)
+([match](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-match) lst
+(()
+'())
+((head tail [...](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-_002e_002e_002e))
+(let ((tail ([future](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-future) ([par-map](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-par_002dmap) proc tail)))
+(head (proc head)))
+([cons](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-cons) head ([touch](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-touch) tail))))))
+
+フューチャーは純粋に関数的な式を評価するために設計されていることに注意してください。副作用のある式や入出力に依存する式は、明示的な同期などの追加の注意が必要になる場合があります（[ミューテックスと条件変数](https://doc.guix.gnu.org/guile/latest/en/guile.html#Mutexes-and-Condition-Variables)を参照）。
+
+Guile の futures は POSIX スレッド上に実装されています ([Threads](https://doc.guix.gnu.org/guile/latest/en/guile.html#Threads) を参照)。内部的には、固定サイズのスレッド プールを使用して futures を評価するため、式の評価を別のスレッドにオフロードしてもスレッド作成のコストは発生しません。デフォルトでは、プールには利用可能な CPU コアごとに 1 つのスレッドが含まれますが、メイン スレッド用に 1 つが減っています。利用可能な CPU コアの数は、`current-processor-count` を使用して決定されます ([Processes](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes) を参照)。
+
+スレッドがまだ完了していないフューチャーに触れると、そのフューチャーが完了するまで待機している間に保留中のフューチャーを処理し、保留中のフューチャーがない場合は待機します。`touch` がフューチャー内から呼び出されると、呼び出し元のフューチャーの実行が中断され、ホストスレッドが他のフューチャーを処理できるようになります。そして、触れられたフューチャーが完了すると、実行が再開されます。この中断/再開は、呼び出し元のフューチャーの継続をキャプチャし、後でそれを復元することによって実現されます ([区切り継続](https://doc.guix.gnu.org/guile/latest/en/guile.html#Prompts) を参照)。
+
+Scheme構文: **future** exp [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-future)
+
+式 exp の先物を返します。これは以下と同等です。
+
+([make-future](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dfuture) (lambda () [exp](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-exp)))
+
+Scheme 手順: **make-future** thunk [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-make_002dfuture)
+
+引数なしの手続きであるthunkのFutureを返します。
+
+このプロシージャはすぐに戻ります。thunk の実行は、アイドル状態の CPU コアが利用可能な場合は呼び出し元のスレッドの計算と並行して開始される場合もあれば、返された future に対して `touch` が呼び出されたときに開始される場合もあります。
+
+thunk の実行中に例外が発生した場合、返された future に対して `touch` が呼び出されたときに、その例外が再度スローされます。
+
+Scheme Procedure: **future?** obj [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-future_003f)
+
+objがFutureの場合は`#t`を返します。
+
+Scheme手順: **touch** f [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-touch)
+
+将来関数 f に埋め込まれた式の結果を返します。
+
+結果が既に並列処理で計算されている場合、`touch` は即座に戻り値を返します。そうでない場合は、既に開始されている場合は計算が完了するまで待機し、そうでない場合は計算を開始します。前者の場合、呼び出し元のスレッドはその間に他のフューチャーを処理する可能性があります。
+
+* * *
+
+前へ: [Futures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures)、上へ: [Threads, Mutexes, Asyncs and Dynamic Roots](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling) \[[Contents](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[Index](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "Index")\]
+
+#### 6.22.8 並列形式 [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#Parallel-forms)
+
+このセクションで説明する関数は以下から入手できます。
+
+(use-modules (ice-9 threads))
+
+これらは高レベルの並列処理構造を提供します。以下の関数はフューチャー（[Futures](https://doc.guix.gnu.org/guile/latest/en/guile.html#Futures)を参照）に基づいて実装されています。そのため、既存のスレッドを再利用するため比較的コストが低く、利用可能なCPUコアごとに1つのスレッドを自動的に使用するため移植性にも優れています。
+
+構文: **parallel** expr … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-parallel)
+
+各 expr 式をそれぞれ別のスレッドで並列に評価します。n 個の式の結果を n 個の複数の値のセットとして返します ([複数の値の返却と受け入れ](https://doc.guix.gnu.org/guile/latest/en/guile.html#Multiple-Values) を参照)。
+
+構文: **letpar** ((var expr) …) body1 body2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-letpar)
+
+各式をそれぞれ別のスレッドで並列に評価し、結果を対応する変数にバインドしてから、body1 body2 を評価します...
+
+`letpar` は `let` に似ています ([ローカル変数バインディング](https://doc.guix.gnu.org/guile/latest/en/guile.html#Local-Bindings) を参照) が、バインディングのすべての式が並列で評価されます。
+
+スキーム手順: **par-map** proc lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-par_002dmap)
+
+スキーム手順: **par-for-each** proc lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-par_002dfor_002deach)
+
+指定されたリストの要素に対して proc を呼び出します。`par-map` は proc の戻り値を含むリストを返します。`par-for-each` は未指定の値を返しますが、すべての呼び出しが完了するまで待機します。
+
+proc呼び出しは`(proc elem1 elem2 …)`の形式で行われ、各elemは対応するlstから取得されます。各lstは同じ長さでなければなりません。呼び出しは、利用可能なCPUコア数に応じて並列実行される可能性があります。
+
+これらの関数は `map` や `for-each` に似ています ([リスト マッピング](https://doc.guix.gnu.org/guile/latest/en/guile.html#List-Mapping) を参照) が、proc 呼び出しを並列で行います。
+
+上記の関数とは異なり、以下に説明する関数は引数としてスレッド数を受け取ります。そのため、指定されたスレッド数が`current-processor-count`によって返される利用可能なCPUコア数と異なる場合があるため、これらの関数は本質的に移植性がありません（[Processes](https://doc.guix.gnu.org/guile/latest/en/guile.html#Processes)を参照）。さらに、これらの関数は呼び出し時に指定された数のスレッドを作成し、完了時にそれらを終了させるため、処理コストが非常に高くなります。
+
+したがって、それらは避けるべきである。
+
+スキームプロシージャ: **n-par-map** n proc lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-n_002dpar_002dmap)
+
+スキーム手順: **n-par-for-each** n proc lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-n_002dpar_002dfor_002deach)
+
+指定されたリストの要素に対して、上記の`par-map`および`par-for-each`と同様の方法でprocを呼び出しますが、同時に使用できるスレッド数はn個までです。このスレッド数の制限内で呼び出しが開始される順序は指定されていません。
+
+これらの関数は、proc呼び出しのコストが高い場合や、呼び出し回数が多い場合に、リソース消費を制御するのに役立ちます。たとえば、デュアルCPUシステムでは、_n\=4_でCPUの利用率を維持しつつ、メモリ消費を抑えるのに十分かもしれません。
+
+Scheme Procedure: **n-for-each-par-map** n sproc pproc lst1 lst2 … [¶](https://doc.guix.gnu.org/guile/latest/en/guile.html#index-n_002dfor_002deach_002dpar_002dmap)
+
+指定されたリストの要素にpprocを適用し、pprocが返した各結果にsprocを適用します。最終的な戻り値は未指定ですが、戻り値を返す前にすべての呼び出しが完了します。
+
+呼び出しは `(sproc (pproc elem1 … elemN))` で、各 elem は対応する lst から取得されます。各 lst は同じ数の要素を持つ必要があります。
+
+pproc呼び出しは、別々のスレッドで並列に実行されます。同時に使用されるスレッド数はn個以下です。その制限内でpproc呼び出しが開始される順序は規定されていません。
+
+ストアドプロシージャの呼び出しは、リスト要素の順序で、一度に1つずつ順番に実行されます。後続の要素に対するプロセスプロシージャの呼び出しは、ストアドプロシージャの呼び出しと並行して実行される場合があります。各ストアドプロシージャの呼び出しをどのスレッドが行うかは、明確に規定されていません。
+
+この関数は、並列処理が可能な個々の計算を対象としていますが、結果をファイルに書き込むなど、逐次的に処理する必要がある場合に使用します。スレッド数の制限値nは、計算量が多い場合や計算コストが高い場合に、システムリソースの使用量を制御します。
+
+`n-for-each-par-map`は`n-par-map`と`for-each`の組み合わせのようなものだとわかるでしょう。
+
+(for-each sproc (n-par-map n pproc lst1 ... lstN))
+
+しかし、実際の実装では、関連するプロセスプロシージャの呼び出しが完了すると、各ストアプロシージャの呼び出しを順次開始できるため、すべてのプロセスプロシージャの終了を待つ必要がないため、より効率的です。
+
+* * *
+
+次へ: [他の言語のサポート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Other-Languages)、前: [スレッド、ミューテックス、非同期処理、動的ルート](https://doc.guix.gnu.org/guile/latest/en/guile.html#Scheduling)、上: [API リファレンス](https://doc.guix.gnu.org/guile/latest/en/guile.html#API-Reference) \[[目次](https://doc.guix.gnu.org/guile/latest/en/guile.html#SEC_Contents "目次")\]\[[索引](https://doc.guix.gnu.org/guile/latest/en/guile.html#R5RS-Index "索引")\]
