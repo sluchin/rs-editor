@@ -2244,4 +2244,4 @@ Fnキーを搭載したノートパソコンを使用している場合は、Fn�
 
 次の章では、縦横スクロールとステータスバーを備えたテキストファイルを表示するプログラムを作成します。
 
-[ページの先頭](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#)
+[ページの先頭](03_raw_input_and_output.md)

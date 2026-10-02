@@ -2963,4 +2963,4 @@ Endキーを押すと、カーソルが現在の行の末尾に移動します�
 
 次の章では、テキストビューアをテキストエディタに変え、ユーザーが文字を挿入したり削除したり、変更内容をディスクに保存できるようにします。
 
-[ページの先頭](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#)
+[ページの先頭](04_a_text_viewer.md)

@@ -71,7 +71,7 @@
 
 それ以外の場合は、ファイルのすべての行をループします。`strstr()` を使用して、`query` が現在の行の部分文字列であるかどうかを確認します。一致するものがない場合は `NULL` を返し、一致する場合は一致する部分文字列へのポインタを返します。これを `E.cx` に設定できるインデックスに変換するには、`match` が `row->render` 文字列へのポインタであるため、`match` ポインタから `row->render` ポインタを減算します。最後に、`E.rowoff` を設定してファイルの一番下までスクロールします。これにより、次の画面更新時に `editorScroll()` が上方向にスクロールし、一致する行が画面の一番上に表示されます。このようにして、ユーザーはカーソルが移動した場所や一致する行を探すために画面全体を見渡す必要がなくなります。
 
-ここに問題が1つあります。今、何が間違っていたかお気づきでしょうか？ `render` インデックスを `E.cx` に割り当てましたが、`E.cx` は `chars` のインデックスです。一致するものの左側にタブがある場合、カーソルは間違った位置になります。`render` インデックスを `chars` インデックスに変換してから `E.cx` に割り当てる必要があります。そこで、[第 4 章](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#tabs-and-the-cursor) で書いた `editorRowCxToRx()` 関数の逆の `editorRowRxToCx()` 関数を作成しましょう。この関数には、同じコードが多数含まれています。
+ここに問題が1つあります。今、何が間違っていたかお気づきでしょうか？ `render` インデックスを `E.cx` に割り当てましたが、`E.cx` は `chars` のインデックスです。一致するものの左側にタブがある場合、カーソルは間違った位置になります。`render` インデックスを `chars` インデックスに変換してから `E.cx` に割り当てる必要があります。そこで、[第 4 章](04_a_text_viewer.md#タブとカーソル) で書いた `editorRowCxToRx()` 関数の逆の `editorRowRxToCx()` 関数を作成しましょう。この関数には、同じコードが多数含まれています。
 
 **ステップ 132** ([kilo.c](https://github.com/snaptoken/kilo-src/blob/rx-to-cx/kilo.c) / [rx-to-cx](https://github.com/snaptoken/kilo-src/tree/rx-to-cx))
 
