@@ -37,6 +37,8 @@ function App() {
     text: '',
   })
   const [highlightRange, setHighlightRange] = useState<{ start: number; end: number } | null>(null)
+  const [undoStack, setUndoStack] = useState<{ text: string; cursorPos: number }[]>([])
+  const [redoStack, setRedoStack] = useState<{ text: string; cursorPos: number }[]>([])
 
   useEffect(() => {
     getHomeDir()
@@ -47,6 +49,40 @@ function App() {
   const handleEditorChange = (value: string) => {
     setCode(value)
     setModified(true)
+    setRedoStack([])
+  }
+
+  const handlePushUndo = (currentCode: string, currentCursorPos: number) => {
+    setUndoStack((prev) => [...prev, { text: currentCode, cursorPos: currentCursorPos }])
+    setRedoStack([])
+  }
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return
+    const lastState = undoStack[undoStack.length - 1]
+    setRedoStack((prev) => [...prev, { text: code, cursorPos: cursor.offset }])
+    setCode(lastState.text)
+    setCursor({
+      line: 1,
+      column: 1,
+      offset: Math.min(lastState.cursorPos, lastState.text.length),
+    })
+    setModified(true)
+    setUndoStack((prev) => prev.slice(0, -1))
+  }
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return
+    const nextState = redoStack[redoStack.length - 1]
+    setUndoStack((prev) => [...prev, { text: code, cursorPos: cursor.offset }])
+    setCode(nextState.text)
+    setCursor({
+      line: 1,
+      column: 1,
+      offset: Math.min(nextState.cursorPos, nextState.text.length),
+    })
+    setModified(true)
+    setRedoStack((prev) => prev.slice(0, -1))
   }
 
   const handleFindFile = () => {
@@ -238,6 +274,9 @@ function App() {
         onIsearchBackward={handleIsearchBackward}
         onExecuteCommand={handleExecuteCommand}
         onQuit={handleQuit}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onPushUndo={handlePushUndo}
         highlightRange={highlightRange}
         disabled={minibufferState.mode !== 'message'}
       />
