@@ -1,6 +1,6 @@
 # Raw input and output
 
-## [Press `Ctrl-Q` to quit](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#press-ctrl-q-to-quit)
+## [Press `Ctrl-Q` to quit](03_raw_input_and_output.md#press-ctrl-q-to-quit)
 
 Last chapter we saw that the `Ctrl` key combined with the alphabetic keys seemed to map to bytes 1–26. We can use this to detect `Ctrl` key combinations and map them to different operations in our editor. We’ll start by mapping `Ctrl-Q` to the quit operation. [kilo.c](https://github.com/snaptoken/kilo-src/blob/ctrl-q/kilo.c)
 
@@ -44,7 +44,7 @@ Last chapter we saw that the `Ctrl` key combined with the alphabetic keys seemed
 
 The `CTRL_KEY` macro bitwise-ANDs a character with the value `00011111`, in binary. (In C, you generally specify bitmasks using hexadecimal, since C doesn’t have binary literals, and hexadecimal is more concise and readable once you get used to it.) In other words, it sets the upper 3 bits of the character to `0`. This mirrors what the `Ctrl` key does in the terminal: it strips bits 5 and 6 from whatever key you press in combination with `Ctrl`, and sends that. (By convention, bit numbering starts from 0.) The ASCII character set seems to be designed this way on purpose. (It is also similarly designed so that you can set and clear bit 5 to switch between lowercase and uppercase.)
 
-## [Refactor keyboard input](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#refactor-keyboard-input)
+## [Refactor keyboard input](03_raw_input_and_output.md#refactor-keyboard-input)
 
 Let’s make a function for low-level keypress reading, and another function for mapping keypresses to editor operations. We’ll also stop printing out keypresses at this point. [kilo.c](https://github.com/snaptoken/kilo-src/blob/refactor-input/kilo.c)
 
@@ -104,7 +104,7 @@ Note that `editorReadKey()` belongs in the `/*** terminal ***/` section because 
 
 Now we have vastly simplified `main()`, and we will try to keep it that way.
 
-## [Clear the screen](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#clear-the-screen)
+## [Clear the screen](03_raw_input_and_output.md#clear-the-screen)
 
 We’re going to render the editor’s user interface to the screen after each keypress. Let’s start by just clearing the screen. [kilo.c](https://github.com/snaptoken/kilo-src/blob/clear-screen/kilo.c)
 
@@ -157,7 +157,7 @@ For our text editor, we will be mostly using [VT100](https://en.wikipedia.org/wi
 
 If we wanted to support the maximum number of terminals out there, we could use the [ncurses](https://en.wikipedia.org/wiki/Ncurses) library, which uses the [terminfo](https://en.wikipedia.org/wiki/Terminfo) database to figure out the capabilities of a terminal and what escape sequences to use for that particular terminal.
 
-## [Reposition the cursor](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#reposition-the-cursor)
+## [Reposition the cursor](03_raw_input_and_output.md#reposition-the-cursor)
 
 You may notice that the `<esc>[2J` command left the cursor at the bottom of the screen. Let’s reposition it at the top-left corner so that we’re ready to draw the editor interface from top to bottom. [kilo.c](https://github.com/snaptoken/kilo-src/blob/cursor-home/kilo.c)
 
@@ -181,7 +181,7 @@ You may notice that the `<esc>[2J` command left the cursor at the bottom of the 
 
 This escape sequence is only `3` bytes long, and uses the `H` command ([Cursor Position](http://vt100.net/docs/vt100-ug/chapter3.html#CUP)) to position the cursor. The `H` command actually takes two arguments: the row number and the column number at which to position the cursor. So if you have an 80×24 size terminal and you want the cursor in the center of the screen, you could use the command `<esc>[12;40H`. (Multiple arguments are separated by a `;` character.) The default arguments for `H` both happen to be `1`, so we can leave both arguments out and it will position the cursor at the first row and first column, as if we had sent the `<esc>[1;1H` command. (Rows and columns are numbered starting at `1`, not `0`.)
 
-## [Clear the screen on exit](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#clear-the-screen-on-exit)
+## [Clear the screen on exit](03_raw_input_and_output.md#clear-the-screen-on-exit)
 
 Let’s clear the screen and reposition the cursor when our program exits. If an error occurs in the middle of rendering the screen, we don’t want a bunch of garbage left over on the screen, and we don’t want the error to be printed wherever the cursor happens to be at that point. [kilo.c](https://github.com/snaptoken/kilo-src/blob/clean-exit/kilo.c)
 
@@ -229,7 +229,7 @@ We have two exit points we want to clear the screen at: `die()`, and when the us
 
 We could use `atexit()` to clear the screen when our program exits, but then the error message printed by `die()` would get erased right after printing it.
 
-## [Tildes](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#tildes)
+## [Tildes](03_raw_input_and_output.md#tildes)
 
 It’s time to start drawing. Let’s draw a column of tildes (`~`) on the left hand side of the screen, like [vim](http://www.vim.org/) does. In our text editor, we’ll draw a tilde at the beginning of any lines that come after the end of the file being edited. [kilo.c](https://github.com/snaptoken/kilo-src/blob/tildes/kilo.c)
 
@@ -268,7 +268,7 @@ We don’t know the size of the terminal yet, so we don’t know how many rows t
 
 After we’re done drawing, we do another `<esc>[H` escape sequence to reposition the cursor back up at the top-left corner.
 
-## [Global state](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#global-state)
+## [Global state](03_raw_input_and_output.md#global-state)
 
 Our next goal is to get the size of the terminal, so we know how many rows to draw in `editorDrawRows()`. But first, let’s set up a global struct that will contain our editor state, which we’ll use to store the width and height of the terminal. For now, let’s just put our `orig_termios` global into the struct. [kilo.c](https://github.com/snaptoken/kilo-src/blob/global-state/kilo.c)
 
@@ -318,7 +318,7 @@ Our next goal is to get the size of the terminal, so we know how many rows to dr
 
 Our global variable containing our editor state is named `E`. We must replace all occurrences of `orig_termios` with `E.orig_termios`.
 
-## [Window size, the easy way](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#window-size-the-easy-way)
+## [Window size, the easy way](03_raw_input_and_output.md#window-size-the-easy-way)
 
 On most systems, you should be able to get the size of the terminal by simply calling `ioctl()` with the `TIOCGWINSZ` request. (As far as I can tell, it stands for **T**erminal **IOC**tl (which itself stands for **I**nput/**O**utput **C**on**t**ro**l**) **G**et **WIN**dow **S**i**Z**e.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/ioctl/kilo.c)
 
@@ -433,7 +433,7 @@ Now we’re ready to display the proper number of tildes on the screen: [kilo.c]
  /*** init ***/
 ```
 
-## [Window size, the hard way](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#window-size-the-hard-way)
+## [Window size, the hard way](03_raw_input_and_output.md#window-size-the-hard-way)
 
 `ioctl()` isn’t guaranteed to be able to request the window size on all systems, so we are going to provide a fallback method of getting the window size.
 
@@ -681,7 +681,7 @@ Now that we know that works, let’s remove the `1 ||` we put in the `if` condit
  /*** init ***/
 ```
 
-## [The last line](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#the-last-line)
+## [The last line](03_raw_input_and_output.md#the-last-line)
 
 Maybe you noticed the last line of the screen doesn’t seem to have a tilde. That’s because of a small bug in our code. When we print the final tilde, we then print a `"\r\n"` like on any other line, but this causes the terminal to scroll in order to make room for a new, blank line. Let’s make the last line an exception when we print our `"\r\n"`’s. [kilo.c](https://github.com/snaptoken/kilo-src/blob/last-line/kilo.c)
 
@@ -711,7 +711,7 @@ Maybe you noticed the last line of the screen doesn’t seem to have a tilde. Th
  /*** init ***/
 ```
 
-## [Append buffer](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#append-buffer)
+## [Append buffer](03_raw_input_and_output.md#append-buffer)
 
 It’s not a good idea to make a whole bunch of small `write()`’s every time we refresh the screen. It would be better to do one big `write()`, to make sure the whole screen updates at once. Otherwise there could be small unpredictable pauses between `write()`’s, which would cause an annoying flicker effect.
 
@@ -849,7 +849,7 @@ Okay, our `abuf` type is ready to be put to use. [kilo.c](https://github.com/sna
 
 In `editorRefreshScreen()`, we first initialize a new `abuf` called `ab`, by assigning `ABUF_INIT` to it. We then replace each occurrence of `write(STDOUT_FILENO, ...)` with `abAppend(&ab, ...)`. We also pass `ab` into `editorDrawRows()`, so it too can use `abAppend()`. Lastly, we `write()` the buffer’s contents out to standard output, and free the memory used by the `abuf`.
 
-## [Hide the cursor when repainting](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#hide-the-cursor-when-repainting)
+## [Hide the cursor when repainting](03_raw_input_and_output.md#hide-the-cursor-when-repainting)
 
 There is another possible source of the annoying flicker effect we will take care of now. It’s possible that the cursor might be displayed in the middle of the screen somewhere for a split second while the terminal is drawing to the screen. To make sure that doesn’t happen, let’s hide the cursor before refreshing the screen, and show it again immediately after the refresh finishes. [kilo.c](https://github.com/snaptoken/kilo-src/blob/hide-cursor/kilo.c)
 
@@ -887,7 +887,7 @@ There is another possible source of the annoying flicker effect we will take car
 
 We use escape sequences to tell the terminal to hide and show the cursor. The `h` and `l` commands ([Set Mode](http://vt100.net/docs/vt100-ug/chapter3.html#SM), [Reset Mode](http://vt100.net/docs/vt100-ug/chapter3.html#RM)) are used to turn on and turn off various terminal features or [“modes”](http://vt100.net/docs/vt100-ug/chapter3.html#S3.3.4). The VT100 User Guide just linked to doesn’t document argument `?25` which we use above. It appears the cursor hiding/showing feature appeared in [later VT models](http://vt100.net/docs/vt510-rm/DECTCEM.html). So some terminals might not support hiding/showing the cursor, but if they don’t, then they will just ignore those escape sequences, which isn’t a big deal in this case.
 
-## [Clear lines one at a time](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#clear-lines-one-at-a-time)
+## [Clear lines one at a time](03_raw_input_and_output.md#clear-lines-one-at-a-time)
 
 Instead of clearing the entire screen before each refresh, it seems more optimal to clear each line as we redraw them. Let’s remove the `<esc>[2J` (clear entire screen) escape sequence, and instead put a `<esc>[K` sequence at the end of each line we draw. [kilo.c](https://github.com/snaptoken/kilo-src/blob/clear-line/kilo.c)
 
@@ -935,7 +935,7 @@ Instead of clearing the entire screen before each refresh, it seems more optimal
 
 The `K` command ([Erase In Line](http://vt100.net/docs/vt100-ug/chapter3.html#EL)) erases part of the current line. Its argument is analogous to the `J` command’s argument: `2` erases the whole line, `1` erases the part of the line to the left of the cursor, and `0` erases the part of the line to the right of the cursor. `0` is the default argument, and that’s what we want, so we leave out the argument and just use `<esc>[K`.
 
-## [Welcome message](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#welcome-message)
+## [Welcome message](03_raw_input_and_output.md#welcome-message)
 
 Perhaps it’s time to display a welcome message. Let’s display the name of our editor and a version number a third of the way down the screen. [kilo.c](https://github.com/snaptoken/kilo-src/blob/welcome/kilo.c)
 
@@ -1030,7 +1030,7 @@ Now let’s center it. [kilo.c](https://github.com/snaptoken/kilo-src/blob/cente
 
 To center a string, you divide the screen width by `2`, and then subtract half of the string’s length from that. In other words: `E.screencols/2 - welcomelen/2`, which simplifies to `(E.screencols - welcomelen) / 2`. That tells you how far from the left edge of the screen you should start printing the string. So we fill that space with space characters, except for the first character, which should be a tilde.
 
-## [Move the cursor](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#move-the-cursor)
+## [Move the cursor](03_raw_input_and_output.md#move-the-cursor)
 
 Let’s focus on input now. We want the user to be able to move the cursor around. The first step is to keep track of the cursor’s `x` and `y` position in the global editor state. [kilo.c](https://github.com/snaptoken/kilo-src/blob/cx-cy/kilo.c)
 
@@ -1166,9 +1166,9 @@ Next, we’ll allow the user to move the cursor using the `w``a``s``d` keys. (If
 
 Now you should be able to move the cursor around with those keys.
 
-## [Arrow keys](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#arrow-keys)
+## [Arrow keys](03_raw_input_and_output.md#arrow-keys)
 
-Now that we have a way of mapping keypresses to move the cursor, let’s replace the `w``a``s``d` keys with the arrow keys. Last chapter we [saw](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#display-keypresses) that pressing an arrow key sends multiple bytes as input to our program. These bytes are in the form of an escape sequence that starts with `'\x1b'`, `'['`, followed by an `'A'`, `'B'`, `'C'`, or `'D'` depending on which of the four arrow keys was pressed. Let’s modify `editorReadKey()` to read escape sequences of this form as a single keypress. [kilo.c](https://github.com/snaptoken/kilo-src/blob/detect-arrow-keys/kilo.c)
+Now that we have a way of mapping keypresses to move the cursor, let’s replace the `w``a``s``d` keys with the arrow keys. Last chapter we [saw](02_entering_raw_mode.md#display-keypresses) that pressing an arrow key sends multiple bytes as input to our program. These bytes are in the form of an escape sequence that starts with `'\x1b'`, `'['`, followed by an `'A'`, `'B'`, `'C'`, or `'D'` depending on which of the four arrow keys was pressed. Let’s modify `editorReadKey()` to read escape sequences of this form as a single keypress. [kilo.c](https://github.com/snaptoken/kilo-src/blob/detect-arrow-keys/kilo.c)
 
 **Step 46**: `detect-arrow-keys`
 
@@ -1438,7 +1438,7 @@ By setting the first constant in the enum to `1000`, the rest of the constants g
 
 That concludes our arrow key handling code. At this point, it can be fun to try entering an escape sequence manually while the program runs. Try pressing the `Escape` key, the `[` key, and `Shift+C` in sequence really fast, and you may see your keypresses being interpreted as the right arrow key being pressed. You have to be pretty fast to do it, so you may want to adjust the `VTIME` value in `enableRawMode()` temporarily, to make it easier. (It also helps to know that pressing `Ctrl-[` is the same as pressing the `Escape` key, for the same reason that `Ctrl-M` is the same as pressing `Enter`: `Ctrl` clears the 6th and 7th bits of the character you type in combination with it.)
 
-## [Prevent moving the cursor off screen](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#prevent-moving-the-cursor-off-screen)
+## [Prevent moving the cursor off screen](03_raw_input_and_output.md#prevent-moving-the-cursor-off-screen)
 
 Currently, you can cause the `E.cx` and `E.cy` values to go into the negatives, or go past the right and bottom edges of the screen. Let’s prevent that by doing some bounds checking in `editorMoveCursor()`. [kilo.c](https://github.com/snaptoken/kilo-src/blob/off-screen/kilo.c)
 
@@ -1483,7 +1483,7 @@ Currently, you can cause the `E.cx` and `E.cy` values to go into the negatives, 
  /*** init ***/
 ```
 
-## [The `Page Up` and `Page Down` keys](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#the-page-up-and-page-down-keys)
+## [The `Page Up` and `Page Down` keys](03_raw_input_and_output.md#the-page-up-and-page-down-keys)
 
 To complete our low-level terminal code, we need to detect a few more special keypresses that use escape sequences, like the arrow keys did. We’ll start with the `Page Up` and `Page Down` keys. `Page Up` is sent as `<esc>[5~` and `Page Down` is sent as `<esc>[6~`. [kilo.c](https://github.com/snaptoken/kilo-src/blob/detect-page-up-down/kilo.c)
 
@@ -1615,7 +1615,7 @@ We create a code block with that pair of braces so that we’re allowed to decla
 
 If you’re on a laptop with an `Fn` key, you may be able to press `Fn`+`↑` and `Fn`+`↓` to simulate pressing the `Page Up` and `Page Down` keys.
 
-## [The `Home` and `End` keys](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#the-home-and-end-keys)
+## [The `Home` and `End` keys](03_raw_input_and_output.md#the-home-and-end-keys)
 
 Now let’s implement the `Home` and `End` keys. Like the previous keys, these keys also send escape sequences. Unlike the previous keys, there are many different escape sequences that could be sent by these keys, depending on your OS, or your terminal emulator. The `Home` key could be sent as `<esc>[1~`, `<esc>[7~`, `<esc>[H`, or `<esc>OH` (this is the letter O followed by H). Similarly, the `End` key could be sent as `<esc>[4~`, `<esc>[8~`, `<esc>[F`, or `<esc>OF` (this is the letter O followed by F). Let’s handle all of these cases. [kilo.c](https://github.com/snaptoken/kilo-src/blob/detect-home-end/kilo.c)
 
@@ -1764,7 +1764,7 @@ Now let’s make `Home` and `End` do something. For now, we’ll have them move 
 
 If you’re on a laptop with an `Fn` key, you may be able to press `Fn`+`←` and `Fn`+`→` to simulate pressing the `Home` and `End` keys.
 
-## [The `Delete` key](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#the-delete-key)
+## [The `Delete` key](03_raw_input_and_output.md#the-delete-key)
 
 Lastly, let’s detect when the `Delete` key is pressed. It simply sends the escape sequence `<esc>[3~`, so it’s easy to add to our switch statement. We won’t make this key do anything for now. [kilo.c](https://github.com/snaptoken/kilo-src/blob/detect-delete-key/kilo.c)
 
@@ -1861,4 +1861,4 @@ Lastly, let’s detect when the `Delete` key is pressed. It simply sends the esc
 
 If you’re on a laptop with an `Fn` key, you may be able to press `Fn`+`Backspace` to simulate pressing the `Delete` key.
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html), we will get our program to display text files, complete with vertical and horizontal scrolling and a status bar. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](04_a_text_viewer.md), we will get our program to display text files, complete with vertical and horizontal scrolling and a status bar. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

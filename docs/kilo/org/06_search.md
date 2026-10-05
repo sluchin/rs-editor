@@ -53,7 +53,7 @@ If they pressed `Escape` to cancel the input prompt, then `editorPrompt()` retur
 
 Otherwise, we loop through all the rows of the file. We use `strstr()` to check if `query` is a substring of the current row. It returns `NULL` if there is no match, otherwise it returns a pointer to the matching substring. To convert that into an index that we can set `E.cx` to, we subtract the `row->render` pointer from the `match` pointer, since `match` is a pointer into the `row->render` string. Lastly, we set `E.rowoff` so that we are scrolled to the very bottom of the file, which will cause `editorScroll()` to scroll upwards at the next screen refresh so that the matching line will be at the very top of the screen. This way, the user doesn’t have to look all over their screen to find where their cursor jumped to, and where the matching line is.
 
-There’s one problem here. Did you notice what we just did wrong? We assigned a `render` index to `E.cx`, but `E.cx` is an index into `chars`. If there are tabs to the left of the match, the cursor is going to be in the wrong position. We need to convert the `render` index into a `chars` index before assigning it to `E.cx`. Let’s create an `editorRowRxToCx()` function, which is the opposite of the `editorRowCxToRx()` function we wrote in [chapter 4](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#tabs-and-the-cursor), but contains a lot of the same code. [kilo.c](https://github.com/snaptoken/kilo-src/blob/rx-to-cx/kilo.c)
+There’s one problem here. Did you notice what we just did wrong? We assigned a `render` index to `E.cx`, but `E.cx` is an index into `chars`. If there are tabs to the left of the match, the cursor is going to be in the wrong position. We need to convert the `render` index into a `chars` index before assigning it to `E.cx`. Let’s create an `editorRowRxToCx()` function, which is the opposite of the `editorRowCxToRx()` function we wrote in [chapter 4](04_a_text_viewer.md#tabs-and-the-cursor), but contains a lot of the same code. [kilo.c](https://github.com/snaptoken/kilo-src/blob/rx-to-cx/kilo.c)
 
 **Step 132**: `rx-to-cx`
 
@@ -273,7 +273,7 @@ Finally, let’s map `Ctrl-F` to the `editorFind()` function, and add it to the 
  }
 ```
 
-## [Incremental search](https://viewsourcecode.org/snaptoken/kilo/06.search.html#incremental-search)
+## [Incremental search](06_search.md#incremental-search)
 
 Now, let’s make our search feature fancy. We want to support incremental search, meaning the file is searched after each keypress when the user is typing in their search query.
 
@@ -471,7 +471,7 @@ In the callback, we check if the user pressed `Enter` or `Escape`, in which case
 
 That’s all there is to it. We now have incremental search.
 
-## [Restore cursor position when cancelling search](https://viewsourcecode.org/snaptoken/kilo/06.search.html#restore-cursor-position-when-cancelling-search)
+## [Restore cursor position when cancelling search](06_search.md#restore-cursor-position-when-cancelling-search)
 
 When the user presses `Escape` to cancel a search, we want the cursor to go back to where it was when they started the search. To do that, we’ll have to save their cursor position and scroll position, and restore those values after the search is cancelled. [kilo.c](https://github.com/snaptoken/kilo-src/blob/restore-cursor/kilo.c)
 
@@ -516,7 +516,7 @@ When the user presses `Escape` to cancel a search, we want the cursor to go back
 
 If `query` is `NULL`, that means they pressed `Escape`, so in that case we restore the values we saved.
 
-## [Search forward and backward](https://viewsourcecode.org/snaptoken/kilo/06.search.html#search-forward-and-backward)
+## [Search forward and backward](06_search.md#search-forward-and-backward)
 
 The last feature we’d like to add is to allow the user to advance to the next or previous match in the file using the arrow keys. The `↑` and `←` keys will go to the previous match, and the `↓` and `→` keys will go to the next match.
 
@@ -685,4 +685,4 @@ Finally, let’s not forget to update the prompt text to let the user know they 
  /*** init ***/
 ```
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html), we’ll implement syntax highlighting and filetype detection, to complete our text editor. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](07_syntax_highlighting.md), we’ll implement syntax highlighting and filetype detection, to complete our text editor. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

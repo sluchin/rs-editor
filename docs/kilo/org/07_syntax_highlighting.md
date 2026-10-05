@@ -1,6 +1,6 @@
 # Syntax highlighting
 
-## [Colorful digits](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-digits)
+## [Colorful digits](07_syntax_highlighting.md#colorful-digits)
 
 Let’s start by just getting some color on the screen, as simply as possible. We’ll attempt to highlight numbers by coloring each digit character red. [kilo.c](https://github.com/snaptoken/kilo-src/blob/syntax-digits/kilo.c)
 
@@ -81,7 +81,7 @@ We previously used the `m` command ([Select Graphic Rendition](http://vt100.net/
 
 The first table says we can set the text color using codes `30` to `37`, and reset it to the default color using `39`. The color table says `0` is black, `1` is red, and so on, up to `7` which is white. Putting these together, we can set the text color to red using `31` as an argument to the `m` command. After printing the digit, we use `39` as an argument to `m` to set the text color back to normal.
 
-## [Refactor syntax highlighting](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#refactor-syntax-highlighting)
+## [Refactor syntax highlighting](07_syntax_highlighting.md#refactor-syntax-highlighting)
 
 Now we know how to color text, but we’re going to have to do a lot more work to actually highlight entire strings, keywords, comments, and so on. We can’t just decide what color to use based on the class of each character, like we’re doing with digits currently. What we want to do is figure out the highlighting for each row of text before we display it, and then rehighlight a line whenever it gets changed. To do that, we need to store the highlighting of each line in an array. Let’s add an array to the `erow` struct named `hl`, which stands for “highlight”. [kilo.c](https://github.com/snaptoken/kilo-src/blob/syntax-refactoring/kilo.c)
 
@@ -514,7 +514,7 @@ This works, but do we really have to write out an escape sequence before every s
 
 That concludes our refactoring of the syntax highlighting system.
 
-## [Colorful search results](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-search-results)
+## [Colorful search results](07_syntax_highlighting.md#colorful-search-results)
 
 Before we start highlighting strings and keywords and all that, let’s use our highlighting system to highlight search results. We’ll start by adding `HL_MATCH` to the `editorHighlight` enum, and mapping it to the color blue (`34`) in `editorSyntaxToColor()`. [kilo.c](https://github.com/snaptoken/kilo-src/blob/hl-match/kilo.c)
 
@@ -628,7 +628,7 @@ Now all we have to do is `memset()` the matched substring to `HL_MATCH` in our s
 
 `match - row->render` is the index into `render` of the match, so we use that as our index into `hl`.
 
-## [Restore syntax highlighting after search](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#restore-syntax-highlighting-after-search)
+## [Restore syntax highlighting after search](07_syntax_highlighting.md#restore-syntax-highlighting-after-search)
 
 Currently, search results stay highlighted in blue even after the user is done using the search feature. We want to restore `hl` to its previous value after each search. To do that, we’ll save the original contents of `hl` in a static variable named `saved_hl` in `editorFindCallback()`, and restore `hl` to the contents of `saved_hl` at the top of the callback. [kilo.c](https://github.com/snaptoken/kilo-src/blob/restore-hl/kilo.c)
 
@@ -709,7 +709,7 @@ We use another static variable named `saved_hl_line` to know which line’s `hl`
 
 Notice that the `malloc()`’d memory is guaranteed to be `free()`’d, because when the user closes the search prompt by pressing `Enter` or `Escape`, `editorPrompt()` calls our callback, giving a chance for `hl` to be restored before `editorPrompt()` finally returns. Also notice that it’s impossible for `saved_hl` to get `malloc()`’d before its old value gets `free()`’d, because we always `free()` it at the top of the function. And finally, it’s impossible for the user to edit the file between saving and restoring the `hl`, so we can safely use `saved_hl_line` as an index into `E.row`. (It’s important to think about these things.)
 
-## [Colorful numbers](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-numbers)
+## [Colorful numbers](07_syntax_highlighting.md#colorful-numbers)
 
 Alright, let’s start working on highlighting numbers properly. First, we’ll change our `for` loop in `editorUpdateSyntax()` to a `while` loop, to allow us to consume multiple characters each iteration. (We’ll only consume one character at a time for numbers, but this will be useful for later.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/syntax-while/kilo.c)
 
@@ -894,7 +894,7 @@ Now let’s support highlighting numbers that contain decimal points. [kilo.c](h
 
 A `.` character that comes after a character that we just highlighted as a number will now be considered part of the number.
 
-## [Detect filetype](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#detect-filetype)
+## [Detect filetype](07_syntax_highlighting.md#detect-filetype)
 
 Before we go on to highlight other things, we’re going to add filetype detection to our editor. This will allow us to have different rules for how to highlight different types of files. For example, text files shouldn’t have any highlighting, and C files should highlight numbers, strings, C/C++-style comments, and many different keywords specific to C.
 
@@ -1373,7 +1373,7 @@ Let’s rehighlight the entire file after setting `E.syntax` in `editorSelectSyn
 
 We simply loop through each row in the file, and call `editorUpdateSyntax()` on it. Now the highlighting immediately changes when the filetype changes.
 
-## [Colorful strings](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-strings)
+## [Colorful strings](07_syntax_highlighting.md#colorful-strings)
 
 With all that out of the way, we can finally get to highlighting more things! Let’s start with strings. [kilo.c](https://github.com/snaptoken/kilo-src/blob/hl-string/kilo.c)
 
@@ -1645,7 +1645,7 @@ We should probably take escaped quotes into account when highlighting strings. I
 
 If we’re in a string and the current character is a backslash (`\`), *and* there’s at least one more character in that line that comes after the backslash, then we highlight the character that comes after the backslash with `HL_STRING` and consume it. We increment `i` by `2` to consume both characters at once.
 
-## [Colorful single-line comments](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-single-line-comments)
+## [Colorful single-line comments](07_syntax_highlighting.md#colorful-single-line-comments)
 
 Next let’s highlight single-line comments. (We’ll leave multi-line comments until the end, because they’re complicated.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/hl-comment/kilo.c)
 
@@ -1856,7 +1856,7 @@ So we wrap our comment highlighting code in an `if` statement that checks `scs_l
 
 If those checks passed, then we use `strncmp()` to check if this character is the start of a single-line comment. If so, then we simply `memset()` the whole rest of the line with `HL_COMMENT` and `break` out of the syntax highlighting loop. Just like that, we’re done highlighting the line.
 
-## [Colorful keywords](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-keywords)
+## [Colorful keywords](07_syntax_highlighting.md#colorful-keywords)
 
 Now let’s turn to highlighting keywords. We’re going to allow languages to specify two types of keywords that will be highlighted in different colors. (In C, we’ll highlight actual keywords in one color and common type names in the other color.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/hl-keywords/kilo.c)
 
@@ -2106,7 +2106,7 @@ We then use `strncmp()` to check if the keyword exists at our current position i
 
 If all that passed, then we have a keyword to highlight. We use `memset()` to highlight the whole keyword at once, highlighting it with `HL_KEYWORD1` or `HL_KEYWORD2` depending on the value of `kw2`. We then consume the entire keyword by incrementing `i` by the length of the keyword. Then we `break` instead of `continue`ing, because we are in an inner loop, so we have to break out of that loop before `continue`ing the outer loop. That is why, after the `for` loop, we check if the loop was broken out of by seeing if it got to the terminating `NULL` value, and if it was broken out of, we `continue`.
 
-## [Nonprintable characters](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#nonprintable-characters)
+## [Nonprintable characters](07_syntax_highlighting.md#nonprintable-characters)
 
 Before we tackle highlighting multi-line comments, let’s take a quick break from `editorUpdateSyntax()`.
 
@@ -2307,7 +2307,7 @@ Unfortunately, `<esc>[m` turns off *all* text formatting, including colors. So l
 
 You can test the coloring of nonprintables by pressing `Ctrl-A`, `Ctrl-B`, and so on to insert those control characters into strings or comments, and you should see that they get the same color as the surrounding characters, just inverted.
 
-## [Colorful multiline comments](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#colorful-multiline-comments)
+## [Colorful multiline comments](07_syntax_highlighting.md#colorful-multiline-comments)
 
 Okay, we have one last feature to implement: multi-line comment highlighting. Let’s start by adding `HL_MLCOMMENT` to the `editorHighlight` enum. [kilo.c](https://github.com/snaptoken/kilo-src/blob/hl-multiline-comments/kilo.c)
 
@@ -3135,6 +3135,6 @@ At the bottom of `editorUpdateSyntax()`, we set the value of the current row’s
 
 Then we have to consider updating the syntax of the next lines in the file. So far, we have only been updating the syntax of a line when the user changes that specific line. But with multi-line comments, a user could comment out an entire file just by changing one line. So it seems like we need to update the syntax of all the lines following the current line. However, we know the highlighting of the next line will not change if the value of this line’s `hl_open_comment` did not change. So we check if it changed, and only call `editorUpdateSyntax()` on the next line if `hl_open_comment` changed (and if there is a next line in the file). Because `editorUpdateSyntax()` keeps calling itself with the next line, the change will continue to propagate to more and more lines until one of them is unchanged, at which point we know that all the lines after that one must be unchanged as well.
 
-## [You’re done](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html#youre-done)
+## [You’re done](07_syntax_highlighting.md#youre-done)
 
-That’s it! Our text editor is finished. In the [appendices](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html), you’ll find some ideas for features you might want to extend the editor with on your own. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+That’s it! Our text editor is finished. In the [appendices](08_appendices.md), you’ll find some ideas for features you might want to extend the editor with on your own. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

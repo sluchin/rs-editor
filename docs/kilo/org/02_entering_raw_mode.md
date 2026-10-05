@@ -22,7 +22,7 @@ What we want is **raw mode**. Unfortunately, there is no simple switch you can f
 
 To exit the above program, press `Ctrl-D` to tell `read()` that it’s reached the end of file. Or you can always press `Ctrl-C` to signal the process to terminate immediately.
 
-## [Press `q` to quit?](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#press-q-to-quit)
+## [Press `q` to quit?](02_entering_raw_mode.md#press-q-to-quit)
 
 To demonstrate how canonical mode works, we’ll have the program exit when it reads a `q` keypress from the user. (Lines you need to change are highlighted and marked the same way as lines you need to add.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/press-q/kilo.c)
 
@@ -40,7 +40,7 @@ To demonstrate how canonical mode works, we’ll have the program exit when it r
 
 To quit this program, you will have to type a line of text that includes a `q` in it, and then press enter. The program will quickly read the line of text one character at a time until it reads the `q`, at which point the `while` loop will stop and the program will exit. Any characters after the `q` will be left unread on the input queue, and you may see that input being fed into your shell after your program exits.
 
-## [Turn off echoing](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#turn-off-echoing)
+## [Turn off echoing](02_entering_raw_mode.md#turn-off-echoing)
 
 We can set a terminal’s attributes by (1) using `tcgetattr()` to read the current attributes into a struct, (2) modifying the struct by hand, and (3) passing the modified struct to `tcsetattr()` to write the new terminal attributes back out. Let’s try turning off the `ECHO` feature this way. [kilo.c](https://github.com/snaptoken/kilo-src/blob/echo/kilo.c)
 
@@ -81,7 +81,7 @@ The `c_lflag` field is for “local flags”. A comment in macOS’s `<termios.h
 
 `ECHO` is a [bitflag](https://en.wikipedia.org/wiki/Bit_field), defined as `00000000000000000000000000001000` in binary. We use the bitwise-NOT operator (`~`) on this value to get `11111111111111111111111111110111`. We then bitwise-AND this value with the flags field, which forces the fourth bit in the flags field to become `0`, and causes every other bit to retain its current value. Flipping bits like this is common in C.
 
-## [Disable raw mode at exit](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#disable-raw-mode-at-exit)
+## [Disable raw mode at exit](02_entering_raw_mode.md#disable-raw-mode-at-exit)
 
 Let’s be nice to the user and restore their terminal’s original attributes when our program exits. We’ll save a copy of the `termios` struct in its original state, and use `tcsetattr()` to apply it to the terminal when the program exits. [kilo.c](https://github.com/snaptoken/kilo-src/blob/atexit/kilo.c)
 
@@ -117,7 +117,7 @@ We store the original terminal attributes in a global variable, `orig_termios`. 
 
 You may notice that leftover input is no longer fed into your shell after the program quits. This is because of the `TCSAFLUSH` option being passed to `tcsetattr()` when the program exits. As described earlier, it discards any unread input before applying the changes to the terminal. (Note: This doesn’t happen in Cygwin for some reason, but it won’t matter once we are reading input one byte at a time.)
 
-## [Turn off canonical mode](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#turn-off-canonical-mode)
+## [Turn off canonical mode](02_entering_raw_mode.md#turn-off-canonical-mode)
 
 There is an `ICANON` flag that allows us to turn off canonical mode. This means we will finally be reading input byte-by-byte, instead of line-by-line. [kilo.c](https://github.com/snaptoken/kilo-src/blob/icanon/kilo.c)
 
@@ -149,7 +149,7 @@ There is an `ICANON` flag that allows us to turn off canonical mode. This means 
 
 Now the program will quit as soon as you press `q`.
 
-## [Display keypresses](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#display-keypresses)
+## [Display keypresses](02_entering_raw_mode.md#display-keypresses)
 
 To get a better idea of how input in raw mode works, let’s print out each byte that we `read()`. We’ll print each character’s numeric ASCII value, as well as the character it represents if it is a printable character. [kilo.c](https://github.com/snaptoken/kilo-src/blob/keypresses/kilo.c)
 
@@ -203,7 +203,7 @@ By the way, if you happen to press `Ctrl-S`, you may find your program seems to 
 
 Also, if you press `Ctrl-Z` (or maybe `Ctrl-Y`), your program will be suspended to the background. Run the `fg` command to bring it back to the foreground. (It may quit immediately after you do that, as a result of `read()` returning `-1` to indicate that an error occurred. This happens on macOS, while Linux seems to be able to resume the `read()` call properly.)
 
-## [Turn off `Ctrl-C` and `Ctrl-Z` signals](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#turn-off-ctrl-c-and-ctrl-z-signals)
+## [Turn off `Ctrl-C` and `Ctrl-Z` signals](02_entering_raw_mode.md#turn-off-ctrl-c-and-ctrl-z-signals)
 
 By default, `Ctrl-C` sends a `SIGINT` signal to the current process which causes it to terminate, and `Ctrl-Z` sends a `SIGTSTP` signal to the current process which causes it to suspend. Let’s turn off the sending of both of these signals. [kilo.c](https://github.com/snaptoken/kilo-src/blob/isig/kilo.c)
 
@@ -239,7 +239,7 @@ Now `Ctrl-C` can be read as a `3` byte and `Ctrl-Z` can be read as a `26` byte.
 
 This also disables `Ctrl-Y` on macOS, which is like `Ctrl-Z` except it waits for the program to read input before suspending it.
 
-## [Disable `Ctrl-S` and `Ctrl-Q`](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#disable-ctrl-s-and-ctrl-q)
+## [Disable `Ctrl-S` and `Ctrl-Q`](02_entering_raw_mode.md#disable-ctrl-s-and-ctrl-q)
 
 By default, `Ctrl-S` and `Ctrl-Q` are used for [software flow control](https://en.wikipedia.org/wiki/Software_flow_control). `Ctrl-S` stops data from being transmitted to the terminal until you press `Ctrl-Q`. This originates in the days when you might want to pause the transmission of data to let a device like a printer catch up. Let’s just turn off that feature. [kilo.c](https://github.com/snaptoken/kilo-src/blob/ixon/kilo.c)
 
@@ -274,7 +274,7 @@ By default, `Ctrl-S` and `Ctrl-Q` are used for [software flow control](https://e
 
 Now `Ctrl-S` can be read as a `19` byte and `Ctrl-Q` can be read as a `17` byte.
 
-## [Disable `Ctrl-V`](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#disable-ctrl-v)
+## [Disable `Ctrl-V`](02_entering_raw_mode.md#disable-ctrl-v)
 
 On some systems, when you type `Ctrl-V`, the terminal waits for you to type another character and then sends that character literally. For example, before we disabled `Ctrl-C`, you might’ve been able to type `Ctrl-V` and then `Ctrl-C` to input a `3` byte. We can turn off this feature using the `IEXTEN` flag.
 
@@ -311,7 +311,7 @@ Turning off `IEXTEN` also fixes `Ctrl-O` in macOS, whose terminal driver is othe
 
 `Ctrl-V` can now be read as a `22` byte, and `Ctrl-O` as a `15` byte.
 
-## [Fix `Ctrl-M`](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#fix-ctrl-m)
+## [Fix `Ctrl-M`](02_entering_raw_mode.md#fix-ctrl-m)
 
 If you run the program now and go through the whole alphabet while holding down `Ctrl`, you should see that we have every letter except `M`. `Ctrl-M` is weird: it’s being read as `10`, when we expect it to be read as `13`, since it is the 13th letter of the alphabet, and `Ctrl-J` already produces a `10`. What else produces `10`? The `Enter` key does.
 
@@ -348,7 +348,7 @@ It turns out that the terminal is helpfully translating any carriage returns (`1
 
 Now `Ctrl-M` is read as a `13` (carriage return), and the `Enter` key is also read as a `13`.
 
-## [Turn off all output processing](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#turn-off-all-output-processing)
+## [Turn off all output processing](02_entering_raw_mode.md#turn-off-all-output-processing)
 
 It turns out that the terminal does a similar translation on the output side. It translates each newline (`"\n"`) we print into a carriage return followed by a newline (`"\r\n"`). The terminal requires both of these characters in order to start a new line of text. The carriage return moves the cursor back to the beginning of the current line, and the newline moves the cursor down a line, scrolling the screen if necessary. (These two distinct operations originated in the days of typewriters and [teletypes](https://en.wikipedia.org/wiki/Teleprinter).)
 
@@ -419,7 +419,7 @@ If you run the program now, you’ll see that the newline characters we’re pri
 
 From now on, we’ll have to write out the full `"\r\n"` whenever we want to start a new line.
 
-## [Miscellaneous flags](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#miscellaneous-flags)
+## [Miscellaneous flags](02_entering_raw_mode.md#miscellaneous-flags)
 
 Let’s turn off a few more flags. [kilo.c](https://github.com/snaptoken/kilo-src/blob/misc-flags/kilo.c)
 
@@ -463,7 +463,7 @@ As far as I can tell:
 - `ISTRIP` causes the 8th bit of each input byte to be stripped, meaning it will set it to `0`. This is probably already turned off.
 - `CS8` is not a flag, it is a bit mask with multiple bits, which we set using the bitwise-OR (`|`) operator unlike all the flags we are turning off. It sets the character size (CS) to 8 bits per byte. On my system, it’s already set that way.
 
-## [A timeout for `read()`](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#a-timeout-for-read)
+## [A timeout for `read()`](02_entering_raw_mode.md#a-timeout-for-read)
 
 Currently, `read()` will wait indefinitely for input from the keyboard before it returns. What if we want to do something like animate something on the screen while waiting for user input? We can set a timeout, so that `read()` returns if it doesn’t get any input for a certain amount of time. [kilo.c](https://github.com/snaptoken/kilo-src/blob/vmin-vtime/kilo.c)
 
@@ -521,7 +521,7 @@ When you run the program, you can see how often `read()` times out. If you don�
 
 If you’re using **Bash on Windows**, you may see that `read()` still blocks for input. It doesn’t seem to care about the `VTIME` value. Fortunately, this won’t make too big a difference in our text editor, as we’ll be basically blocking for input anyways.
 
-## [Error handling](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#error-handling)
+## [Error handling](02_entering_raw_mode.md#error-handling)
 
 `enableRawMode()` now gets us fully into raw mode. It’s time to clean up the code by adding some error handling.
 
@@ -618,7 +618,7 @@ In Cygwin, when `read()` times out it returns `-1` with an `errno` of `EAGAIN`, 
 
 An easy way to make `tcgetattr()` fail is to give your program a text file or a pipe as the standard input instead of your terminal. To give it a file as standard input, run `./kilo <kilo.c`. To give it a pipe, run `echo test | ./kilo`. Both should result in the same error from `tcgetattr()`, something like `Inappropriate ioctl for device`.
 
-## [Sections](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html#sections)
+## [Sections](02_entering_raw_mode.md#sections)
 
 That just about concludes this chapter on entering raw mode. The last thing we’ll do now is split our code into sections. This will allow these diffs to be shorter, as each section that isn’t changed in a diff will be folded into a single line. [kilo.c](https://github.com/snaptoken/kilo-src/blob/sections/kilo.c)
 
@@ -651,4 +651,4 @@ That just about concludes this chapter on entering raw mode. The last thing we�
  int main() { … }
 ```
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html), we’ll do some more low-level terminal input/output handling, and use that to draw to the screen and allow the user to move the cursor around. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](03_raw_input_and_output.md), we’ll do some more low-level terminal input/output handling, and use that to draw to the screen and allow the user to move the cursor around. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

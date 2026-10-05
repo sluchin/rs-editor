@@ -8,19 +8,19 @@ This booklet walks you through building the editor in **184 steps**. Each step, 
 
 I explain each step along the way, sometimes in a lot of detail. Feel free to skim or skip the prose, as the main point of this is that **you are going to build a text editor from scratch**! Anything you learn along the way is bonus, and there’s plenty to learn just from typing in the changes to the code and observing the results.
 
-See the [appendices](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html) for more information on the tutorial itself (including what to do if you get stuck, and where to get help).
+See the [appendices](08_appendices.md) for more information on the tutorial itself (including what to do if you get stuck, and where to get help).
 
-If you’re ready to begin, then go to [chapter 1](https://viewsourcecode.org/snaptoken/kilo/01.setup.html)!
+If you’re ready to begin, then go to [chapter 1](01_setup.md)!
 
 ## Table of Contents
 
-1. [Setup](https://viewsourcecode.org/snaptoken/kilo/01.setup.html)
-2. [Entering raw mode](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html)
-3. [Raw input and output](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html)
-4. [A text viewer](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html)
-5. [A text editor](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html)
-6. [Search](https://viewsourcecode.org/snaptoken/kilo/06.search.html)
-7. [Syntax highlighting](https://viewsourcecode.org/snaptoken/kilo/07.syntaxHighlighting.html)
-8. [Appendices](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html)
+1. [Setup](01_setup.md)
+2. [Entering raw mode](02_entering_raw_mode.md)
+3. [Raw input and output](03_raw_input_and_output.md)
+4. [A text viewer](04_a_text_viewer.md)
+5. [A text editor](05_a_text_editor.md)
+6. [Search](06_search.md)
+7. [Syntax highlighting](07_syntax_highlighting.md)
+8. [Appendices](08_appendices.md)
 
 [← back to snaptoken tutorials](https://viewsourcecode.org/snaptoken) [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

@@ -1,6 +1,6 @@
 # Appendices
 
-## [How the diffs work](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#how-the-diffs-work)
+## [How the diffs work](08_appendices.md#how-the-diffs-work)
 
 Each step in this tutorial is presented as a diff. A diff shows you the changes you need to make to the previous step’s code to get to the current step. Here’s a sample diff, from step 7: [kilo.c](https://github.com/snaptoken/kilo-src/blob/icanon/kilo.c)
 
@@ -36,23 +36,23 @@ Lines that need to be removed are given a red background, a ~~strike-through~~ s
 
 The bottom of each diff shows you the compile status of that step. If it’s green and says “compiles”, then you can expect your code to compile after completing the step, and you can expect to be able to observe the change when you run the program. If there are no observable changes for that step, then the compile status will be blue and say, “compiles, but with no observable effects”. On the rare occasion that the step doesn’t compile, it will be red and say “doesn’t compile”.
 
-## [What to do if you are stuck](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#what-to-do-if-you-are-stuck)
+## [What to do if you are stuck](08_appendices.md#what-to-do-if-you-are-stuck)
 
 Some of the code in this tutorial is very tricky to type in exactly, especially if you’re not used to C. It’s especially easy to make a mistake when you’re making a change to a line, and you think you’re done changing that line, but you missed one little change to another part of that same line. It’s important to take your time, and compare the changed parts of the diff *character-by-character* with your code to make sure they’re the same.
 
 If you suspect you made an error, but don’t know where it is or how far back you might’ve made the error, you should get your computer to do a diff between your version of `kilo.c` and the tutorial’s version of `kilo.c` for whatever step you’re on. The [kilo-src](https://github.com/snaptoken/kilo-src) repository contains the `kilo.c` source code for every step in the tutorial.
 
-You will need `git` to do this. To install `git` (assuming you’ve completed [chapter 1](https://viewsourcecode.org/snaptoken/kilo/01.setup.html)): on **Ubuntu/Bash on Windows**, run `sudo apt-get install git`; on **Cygwin**, run the installer again and select the `git` package for installation; on **macOS**, `git` should’ve been installed when you installed command line tools.
+You will need `git` to do this. To install `git` (assuming you’ve completed [chapter 1](01_setup.md)): on **Ubuntu/Bash on Windows**, run `sudo apt-get install git`; on **Cygwin**, run the installer again and select the `git` package for installation; on **macOS**, `git` should’ve been installed when you installed command line tools.
 
 Once you have `git` installed, clone the [kilo-src](https://github.com/snaptoken/kilo-src) repository by running `git clone https://github.com/snaptoken/kilo-src`. `cd` into the repo using `cd kilo-src`. The repo has a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) for each step that points the step name to that step’s commit in the repo. So to get the source code for the step named `icanon`, run `git checkout icanon`. The `kilo.c` file will now contain the code for that step. You can compare your `kilo.c` with this `kilo.c` by running something like `git diff --no-index -b ../path/to/your/kilo.c kilo.c`. This will show you the changes you would need to make to your `kilo.c` to get it to look like the one in the repo. The `-b` option ignores whitespace, so it won’t matter if you use a different indent style than the one in the tutorial.
 
-## [Where to get help](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#where-to-get-help)
+## [Where to get help](08_appendices.md#where-to-get-help)
 
 If you are having trouble, feel free to create an [issue](https://github.com/snaptoken/kilo-tutorial/issues) on the tutorial’s [GitHub repo](https://github.com/snaptoken/kilo-tutorial), and ask a question.
 
 You can also [email me](mailto:paige.ruten@gmail.com) directly if you’d rather not use GitHub.
 
-## [Ideas for features to add on your own](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#ideas-for-features-to-add-on-your-own)
+## [Ideas for features to add on your own](08_appendices.md#ideas-for-features-to-add-on-your-own)
 
 If you want to extend `kilo` on your own, I suggest trying to actually *use* `kilo` as your text editor for a while. You will very quickly become painfully aware of all sorts of features you’re used to having in a text editor, but are missing in `kilo`. Those are the features you should try to add. And you should use `kilo` when you work on `kilo.c`.
 
@@ -70,7 +70,7 @@ If you’re still looking for ideas, here’s a small list, roughly in order of 
 - **Modal editing**: If you like [vim](http://www.vim.org/), make `kilo` work more like vim by letting the user press `i` for “insert mode” and then press `Escape` to go back to “normal mode”. Then start adding all your favourite vim commands, starting with the basic movement commands (`h``j``k``l`).
 - **Multiple buffers**: Allow having multiple files open at once, and have some way of switching between them.
 
-## [More tutorials like this](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#more-tutorials-like-this)
+## [More tutorials like this](08_appendices.md#more-tutorials-like-this)
 
 I am planning to make more tutorials like this one. They will all be available at [viewsourcecode.org/snaptoken](http://viewsourcecode.org/snaptoken). There is a link there that will let you sign up to receive an email whenever a new tutorial is available. There is also a list of similar tutorials by other people from around the web.
 
@@ -78,7 +78,7 @@ The next tutorials will be a little different from this one. For example, one mi
 
 What the tutorials will have in common is the step-by-step build-it-yourself approach to reading and understanding the code of real open-source software projects. If there was a toy like Lego that involved putting *programs* together instead of physical structures, I think “snaptoken” would be a great name for it. That is the experience I’m trying to create with tutorials like this.
 
-## [How to contribute](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#how-to-contribute)
+## [How to contribute](08_appendices.md#how-to-contribute)
 
 Contributions are welcome, whether it’s changes to the text, the code, or the HTML/CSS.
 
@@ -97,7 +97,7 @@ If you are making significant changes to the text, you probably want to generate
 
 If you just have a small correction to make in the text, there is no need to go through all this. Just make the change in the chapter’s markdown file and [submit a pull request](https://github.com/snaptoken/kilo-tutorial/pulls).
 
-## [Credits](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#credits)
+## [Credits](08_appendices.md#credits)
 
 [antirez](http://invece.org/) is the author of [kilo](https://github.com/antirez/kilo). He wrote a [blog post](http://antirez.com/news/108) about it, in which he explains how he reused code from two of his other projects to quickly throw together `kilo` in just a few hours during a couple already busy weekends. It’s not the sort of pristine code you usually see in programming tutorials, but I like it this way. I originally intended this tutorial to be an experimental form of documentation for his code, until I started making changes to the code all over the place to make for a better reading experience.
 
@@ -107,7 +107,7 @@ I used [redcarpet](https://github.com/vmg/redcarpet) to render the Markdown sour
 
 If you want to know more about me, see [viewsourcecode.org](http://viewsourcecode.org/).
 
-## [License](https://viewsourcecode.org/snaptoken/kilo/08.appendices.html#license)
+## [License](08_appendices.md#license)
 
 The `kilo` source code is released under the [BSD 2-Clause](https://github.com/snaptoken/kilo-tutorial/blob/master/steps.diff.LICENSE) license.
 
