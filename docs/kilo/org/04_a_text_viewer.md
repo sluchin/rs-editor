@@ -1,6 +1,6 @@
 # A text viewer
 
-## [A line viewer](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#a-line-viewer)
+## [A line viewer](04_a_text_viewer.md#a-line-viewer)
 
 Let’s create a data type for storing a row of text in our editor. [kilo.c](https://github.com/snaptoken/kilo-src/blob/erow/kilo.c)
 
@@ -326,7 +326,7 @@ Now let’s fix a quick bug. We want the welcome message to only display when th
 
 There, now the welcome message only displays if the text buffer is completely empty.
 
-## [Multiple lines](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#multiple-lines)
+## [Multiple lines](04_a_text_viewer.md#multiple-lines)
 
 To store multiple lines, let’s make `E.row` an array of `erow` structs. It will be a dynamically-allocated array, so we’ll make it a pointer to `erow`, and initialize the pointer to `NULL`. (This will break a bunch of our code that doesn’t expect `E.row` to be a pointer, so the program will fail to compile for the next few steps.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/erow-array/kilo.c)
 
@@ -551,7 +551,7 @@ The `while` loop works because `getline()` returns `-1` when it gets to the end 
 
 Now you should see your screen fill up with lines of text when you run `./kilo kilo.c`, for example.
 
-## [Vertical scrolling](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#vertical-scrolling)
+## [Vertical scrolling](04_a_text_viewer.md#vertical-scrolling)
 
 Next we want to enable the user to scroll through the whole file, instead of just being able to see the top few lines of the file. Let’s add a `rowoff` (row offset) variable to the global editor state, which will keep track of what row of the file the user is currently scrolled to. [kilo.c](https://github.com/snaptoken/kilo-src/blob/rowoff/kilo.c)
 
@@ -795,7 +795,7 @@ If you try to scroll back up, you may notice the cursor isn’t being positioned
  /*** init ***/
 ```
 
-## [Horizontal scrolling](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#horizontal-scrolling)
+## [Horizontal scrolling](04_a_text_viewer.md#horizontal-scrolling)
 
 Now let’s work on horizontal scrolling. We’ll implement it in just about the same way we implemented vertical scrolling. Start by adding a `coloff` (column offset) variable to the global editor state. [kilo.c](https://github.com/snaptoken/kilo-src/blob/coloff/kilo.c)
 
@@ -1030,7 +1030,7 @@ Next, let’s fix the cursor positioning, just like we did with vertical scrolli
  /*** init ***/
 ```
 
-## [Limit scrolling to the right](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#limit-scrolling-to-the-right)
+## [Limit scrolling to the right](04_a_text_viewer.md#limit-scrolling-to-the-right)
 
 Now both `E.cx` and `E.cy` refer to the cursor’s position within the file, not its position on the screen. So our goal with the next few steps is to limit the values of `E.cx` and `E.cy` to only ever point to valid positions in the file. Otherwise, the user could move the cursor way off to the right of a line and start inserting text there, which wouldn’t make much sense. (The only exceptions to this rule are that `E.cx` can point one character past the end of a line so that characters can be inserted at the end of the line, and `E.cy` can point one line past the end of the file so that new lines at the end of the file can be added easily.)
 
@@ -1083,7 +1083,7 @@ Let’s start by not allowing the user to scroll past the end of the current lin
 
 Since `E.cy` is allowed to be one past the last line of the file, we use the ternary operator to check if the cursor is on an actual line. If it is, then the `row` variable will point to the `erow` that the cursor is on, and we’ll check whether `E.cx` is to the left of the end of that line before we allow the cursor to move to the right.
 
-## [Snap cursor to end of line](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#snap-cursor-to-end-of-line)
+## [Snap cursor to end of line](04_a_text_viewer.md#snap-cursor-to-end-of-line)
 
 The user is still able to move the cursor past the end of a line, however. They can do it by moving the cursor to the end of a long line, then moving it down to the next line, which is shorter. The `E.cx` value won’t change, and the cursor will be off to the right of the end of the line it’s now on.
 
@@ -1142,7 +1142,7 @@ Let’s add some code to `editorMoveCursor()` that corrects `E.cx` if it ends up
 
 We have to set `row` again, since `E.cy` could point to a different line than it did before. We then set `E.cx` to the end of that line if `E.cx` is to the right of the end of that line. Also note that we consider a `NULL` line to be of length `0`, which works for our purposes here.
 
-## [Moving left at the start of a line](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#moving-left-at-the-start-of-a-line)
+## [Moving left at the start of a line](04_a_text_viewer.md#moving-left-at-the-start-of-a-line)
 
 Let’s allow the user to press `←` at the beginning of the line to move to the end of the previous line. [kilo.c](https://github.com/snaptoken/kilo-src/blob/moving-left/kilo.c)
 
@@ -1202,7 +1202,7 @@ Let’s allow the user to press `←` at the beginning of the line to move to th
 
 We make sure they aren’t on the very first line before we move them up a line.
 
-## [Moving right at the end of a line](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#moving-right-at-the-end-of-a-line)
+## [Moving right at the end of a line](04_a_text_viewer.md#moving-right-at-the-end-of-a-line)
 
 Similarly, let’s allow the user to press `→` at the end of a line to go to the beginning of the next line. [kilo.c](https://github.com/snaptoken/kilo-src/blob/moving-right/kilo.c)
 
@@ -1265,7 +1265,7 @@ Similarly, let’s allow the user to press `→` at the end of a line to go to t
 
 Here we have to make sure they’re not at the end of the file before moving down a line.
 
-## [Rendering tabs](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#rendering-tabs)
+## [Rendering tabs](04_a_text_viewer.md#rendering-tabs)
 
 If you try opening the `Makefile` using `./kilo Makefile`, you’ll notice that the tab character on the second line of the Makefile takes up a width of 8 columns or so. The length of a tab is up to the terminal being used and its settings. We want to *know* the length of each tab, and we also want control over how to render tabs, so we’re going to add a second string to the `erow` struct called `render`, which will contain the actual characters to draw on the screen for that row of text. We’ll only use `render` for tabs for now, but in the future it could be used to render nonprintable control characters as a `^` character followed by another character, such as `^A` for the `Ctrl-A` character (this is a common way to display control characters in the terminal).
 
@@ -1519,7 +1519,7 @@ At this point, we should probably make the length of a tab stop a constant. [kil
 
 This makes the code clearer, and also makes the tab stop length configurable.
 
-## [Tabs and the cursor](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#tabs-and-the-cursor)
+## [Tabs and the cursor](04_a_text_viewer.md#tabs-and-the-cursor)
 
 The cursor doesn’t currently interact with tabs very well. When we position the cursor on the screen, we’re still assuming each character takes up only one column on the screen. To fix this, let’s introduce a new horizontal coordinate variable, `E.rx`. While `E.cx` is an index into the `chars` field of an `erow`, the `E.rx` variable will be an index into the `render` field. If there are no tabs on the current line, then `E.rx` will be the same as `E.cx`. If there are tabs, then `E.rx` will be greater than `E.cx` by however many extra spaces those tabs take up when rendered.
 
@@ -1732,7 +1732,7 @@ Let’s call `editorRowCxToRx()` at the top of `editorScroll()` to finally set `
 
 You should now be able to confirm that the cursor moves properly within lines that contain tabs.
 
-## [Scrolling with `Page Up` and `Page Down`](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#scrolling-with-page-up-and-page-down)
+## [Scrolling with `Page Up` and `Page Down`](04_a_text_viewer.md#scrolling-with-page-up-and-page-down)
 
 Now that we have scrolling, let’s make the `Page Up` and `Page Down` keys scroll up or down an entire page. [kilo.c](https://github.com/snaptoken/kilo-src/blob/page-up-down/kilo.c)
 
@@ -1799,7 +1799,7 @@ Now that we have scrolling, let’s make the `Page Up` and `Page Down` keys scro
 
 To scroll up or down a page, we position the cursor either at the top or bottom of the screen, and then simulate an entire screen’s worth of `↑` or `↓` keypresses. Delegating to `editorMoveCursor()` takes care of all the bounds-checking and cursor-fixing that needs to be done when moving the cursor.
 
-## [Move to the end of the line with `End`](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#move-to-the-end-of-the-line-with-end)
+## [Move to the end of the line with `End`](04_a_text_viewer.md#move-to-the-end-of-the-line-with-end)
 
 Now let’s have the `End` key move the cursor to the end of the current line. (The `Home` key already moves the cursor to the beginning of the line, since we made `E.cx` relative to the file instead of relative to the screen.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/end-key/kilo.c)
 
@@ -1867,7 +1867,7 @@ Now let’s have the `End` key move the cursor to the end of the current line. (
 
 The `End` key brings the cursor to the end of the current line. If there is no current line, then `E.cx` must be `0` and it should stay at `0`, so there’s nothing to do.
 
-## [Status bar](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#status-bar)
+## [Status bar](04_a_text_viewer.md#status-bar)
 
 The last thing we’ll add before finally getting to text editing is a status bar. This will show useful information such as the filename, how many lines are in the file, and what line you’re currently on. Later we’ll add a marker that tells you whether the file has been modified since it was last saved, and we’ll also display the filetype when we implement syntax highlighting.
 
@@ -2165,7 +2165,7 @@ Now let’s show the current line number, and align it to the right edge of the 
 
 The current line is stored in `E.cy`, which we add `1` to since `E.cy` is 0-indexed. After printing the first status string, we want to keep printing spaces until we get to the point where if we printed the second status string, it would end up against the right edge of the screen. That happens when `E.screencols - len` is equal to the length of the second status string. At that point we print the status string and break out of the loop, as the entire status bar has now been printed.
 
-## [Status message](https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html#status-message)
+## [Status message](04_a_text_viewer.md#status-message)
 
 We’re going to add one more line below our status bar. This will be for displaying messages to the user, and prompting the user for input when doing a search, for example. We’ll store the current message in a string called `statusmsg`, which we’ll put in the global editor state. We’ll also store a timestamp for the message, so that we can erase it a few seconds after it’s been displayed. [kilo.c](https://github.com/snaptoken/kilo-src/blob/status-message/kilo.c)
 
@@ -2449,4 +2449,4 @@ First we clear the message bar with the `<esc>[K` escape sequence. Then we make 
 
 When you start up the program now, you should see the help message at the bottom. It will disappear *when you press a key* after 5 seconds. Remember, we only refresh the screen after each keypress.
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html), we will turn our text viewer into a text editor, allowing the user to insert and delete characters and save their changes to disk. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](05_a_text_editor.md), we will turn our text viewer into a text editor, allowing the user to insert and delete characters and save their changes to disk. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

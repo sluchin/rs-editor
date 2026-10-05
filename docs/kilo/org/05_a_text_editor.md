@@ -1,6 +1,6 @@
 # A text editor
 
-## [Insert ordinary characters](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#insert-ordinary-characters)
+## [Insert ordinary characters](05_a_text_editor.md#insert-ordinary-characters)
 
 Let’s begin by writing a function that inserts a single character into an `erow`, at a given position. [kilo.c](https://github.com/snaptoken/kilo-src/blob/row-insert-char/kilo.c)
 
@@ -152,7 +152,7 @@ Let’s call `editorInsertChar()` in the `default:` case of the `switch` stateme
 
 We’ve now officially upgraded our text viewer to a text editor.
 
-## [Prevent inserting special characters](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#prevent-inserting-special-characters)
+## [Prevent inserting special characters](05_a_text_editor.md#prevent-inserting-special-characters)
 
 Currently, if you press keys like `Backspace` or `Enter`, those characters will be inserted directly into the text, which we certainly don’t want. Let’s handle a bunch of these special keys in `editorProcessKeypress()`, so that they don’t fall through to the `default` case of calling `editorInsertChar()`. [kilo.c](https://github.com/snaptoken/kilo-src/blob/block-special-chars/kilo.c)
 
@@ -260,11 +260,11 @@ Currently, if you press keys like `Backspace` or `Enter`, those characters will 
 
 In `editorProcessKeypress()`, the first new key we add to the `switch` statement is `'\r'`, which is the `Enter` key. For now we want to ignore it, but obviously we’ll be making it do something later, so we mark it with a `TODO` comment.
 
-We handle `Backspace` and `Delete` in a similar way, marking them with a `TODO`. We also handle the `Ctrl-H` key combination, which sends the control code `8`, which is originally what the `Backspace` character would send back in the day. If you look at the [ASCII table](http://www.asciitable.com/), you’ll see that ASCII code `8` is named `BS` for “backspace”, and ASCII code `127` is named `DEL` for “delete”. But for whatever reason, in modern computers the `Backspace` key is mapped to `127` and the `Delete` key is mapped to the escape sequence `<esc>[3~`, as we saw at the end of [chapter 3](https://viewsourcecode.org/snaptoken/kilo/03.rawInputAndOutput.html#the-delete-key).
+We handle `Backspace` and `Delete` in a similar way, marking them with a `TODO`. We also handle the `Ctrl-H` key combination, which sends the control code `8`, which is originally what the `Backspace` character would send back in the day. If you look at the [ASCII table](http://www.asciitable.com/), you’ll see that ASCII code `8` is named `BS` for “backspace”, and ASCII code `127` is named `DEL` for “delete”. But for whatever reason, in modern computers the `Backspace` key is mapped to `127` and the `Delete` key is mapped to the escape sequence `<esc>[3~`, as we saw at the end of [chapter 3](03_raw_input_and_output.md#the-delete-key).
 
 Lastly, we handle `Ctrl-L` and `Escape` by not doing anything when those keys are pressed. `Ctrl-L` is traditionally used to refresh the screen in terminal programs. In our text editor, the screen refreshes after *any* keypress, so we don’t have to do anything else to implement that feature. We ignore the `Escape` key because there are many key escape sequences that we aren’t handling (such as the `F1`–`F12` keys), and the way we wrote `editorReadKey()`, pressing those keys will be equivalent to pressing the `Escape` key. We don’t want the user to unwittingly insert the escape character `27` into their text, so we ignore those keypresses.
 
-## [Save to disk](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#save-to-disk)
+## [Save to disk](05_a_text_editor.md#save-to-disk)
 
 Now that we’ve finally made text editable, let’s implement saving to disk. First we’ll write a function that converts our array of `erow` structs into a single string that is ready to be written out to a file. [kilo.c](https://github.com/snaptoken/kilo-src/blob/rows-to-string/kilo.c)
 
@@ -613,7 +613,7 @@ When we call a function in C, the compiler needs to know the arguments and retur
  /*** init ***/
 ```
 
-## [Dirty flag](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#dirty-flag)
+## [Dirty flag](05_a_text_editor.md#dirty-flag)
 
 We’d like to keep track of whether the text loaded in our editor differs from what’s in the file. Then we can warn the user that they might lose unsaved changes when they try to quit.
 
@@ -851,7 +851,7 @@ If you open a file at this point, you’ll see that `(modified)` appears right a
 
 Now you should see `(modified)` appear in the status bar when you first insert a character, and you should see it disappear when you save the file to disk.
 
-## [Quit confirmation](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#quit-confirmation)
+## [Quit confirmation](05_a_text_editor.md#quit-confirmation)
 
 Now we’re ready to warn the user about unsaved changes when they try to quit. If `E.dirty` is set, we will display a warning in the status bar, and require the user to press `Ctrl-Q` three more times in order to quit without saving. [kilo.c](https://github.com/snaptoken/kilo-src/blob/quit-confirmation/kilo.c)
 
@@ -962,7 +962,7 @@ Now we’re ready to warn the user about unsaved changes when they try to quit. 
 
 We use a static variable in `editorProcessKeypress()` to keep track of how many more times the user must press `Ctrl-Q` to quit. Each time they press `Ctrl-Q` with unsaved changes, we set the status message and decrement `quit_times`. When `quit_times` gets to `0`, we finally allow the program to exit. When they press any key other than `Ctrl-Q`, then `quit_times` gets reset back to `3` at the end of the `editorProcessKeypress()` function.
 
-## [Simple backspacing](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#simple-backspacing)
+## [Simple backspacing](05_a_text_editor.md#simple-backspacing)
 
 Let’s implement backspacing next. First we’ll create an `editorRowDelChar()` function, which deletes a character in an `erow`. [kilo.c](https://github.com/snaptoken/kilo-src/blob/row-del-char/kilo.c)
 
@@ -1137,7 +1137,7 @@ Let’s map the `Backspace`, `Ctrl-H`, and `Delete` keys to `editorDelChar()`. [
 
 It so happens that in our editor, pressing the `→` key and then `Backspace` is equivalent to what you would expect from pressing the `Delete` key in a text editor: it deletes the character to the right of the cursor. So that is how we implement the `Delete` key above.
 
-## [Backspacing at the start of a line](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#backspacing-at-the-start-of-a-line)
+## [Backspacing at the start of a line](05_a_text_editor.md#backspacing-at-the-start-of-a-line)
 
 Currently, `editorDelChar()` doesn’t do anything when the cursor is at the beginning of a line. When the user backspaces at the beginning of a line, we want to append the contents of that line to the previous line, and then delete the current line. This effectively backspaces the implicit `\n` character in between the two lines to join them into one line.
 
@@ -1275,7 +1275,7 @@ If the cursor is at the beginning of the *first* line, then there’s nothing to
 
 Notice that pressing the `Delete` key at the end of a line works as the user would expect, joining the current line with the next line. This is because moving the cursor to the right at the end of a line moves it to the beginning of the next line. So making the `Delete` key an alias for the `→` key followed by the `Backspace` key still works.
 
-## [The `Enter` key](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#the-enter-key)
+## [The `Enter` key](05_a_text_editor.md#the-enter-key)
 
 The last editor operation we have to implement is the `Enter` key. The `Enter` key allows the user to insert new lines into the text, or split a line into two lines. The first thing we need to do is rename the `editorAppendRow(...)` function to `editorInsertRow(int at, ...)`. It will now be able to insert a row at the index specified by the new `at` argument. [kilo.c](https://github.com/snaptoken/kilo-src/blob/append-to-insert/kilo.c)
 
@@ -1537,7 +1537,7 @@ Finally, let’s actually map the `Enter` key to the `editorInsertNewline()` ope
 
 That concludes all of the text editing operations we are going to implement. If you wish, and if you are brave enough, you may now start using the editor to modify its own code for the rest of the tutorial. If you do, I suggest making regular backups of your work (using `git` or similar) in case you run into bugs in the editor.
 
-## [Save as…](https://viewsourcecode.org/snaptoken/kilo/05.aTextEditor.html#save-as)
+## [Save as…](05_a_text_editor.md#save-as)
 
 Currently, when the user runs `./kilo` with no arguments, they get a blank file to edit but have no way of saving. We need a way of prompting the user to input a filename when saving a new file. Let’s make an `editorPrompt()` function that displays a prompt in the status bar, and lets the user input a line of text after the prompt. [kilo.c](https://github.com/snaptoken/kilo-src/blob/prompt/kilo.c)
 
@@ -1826,4 +1826,4 @@ Now let’s allow the user to press `Backspace` (or `Ctrl-H`, or `Delete`) in th
  /*** init ***/
 ```
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/06.search.html), we’ll make use of `editorPrompt()` to implement an incremental search feature in our editor. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](06_search.md), we’ll make use of `editorPrompt()` to implement an incremental search feature in our editor. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))

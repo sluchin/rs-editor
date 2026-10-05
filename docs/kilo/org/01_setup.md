@@ -8,9 +8,9 @@ Unfortunately, when you’re building a *computer program*, step 1 can get… co
 
 Fortunately, the program we are building doesn’t depend on any external libraries, so you don’t need anything beyond a C compiler and the standard library it comes with. (We will also be using the `make` program.) To check whether you have a C compiler installed, try running `cc --version` at the command line (`cc` stands for “C Compiler”). To check whether you have `make`, try running `make -v`.
 
-## [How to install a C compiler…](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#how-to-install-a-c-compiler)
+## [How to install a C compiler…](01_setup.md#how-to-install-a-c-compiler)
 
-### […in Windows](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#in-windows)
+### […in Windows](01_setup.md#in-windows)
 
 You will **need to install some kind of Linux environment within Windows**. This is because our text editor interacts with the terminal at a low level using the `<termios.h>` header, which isn’t available on Windows. I suggest using either [Bash on Windows](https://msdn.microsoft.com/en-us/commandline/wsl/about) or [Cygwin](https://www.cygwin.com/).
 
@@ -18,15 +18,15 @@ You will **need to install some kind of Linux environment within Windows**. This
 
 **Cygwin**: Download the installer from [cygwin.com/install.html](https://cygwin.com/install.html). When the installer asks you to select packages to install, look in the `devel` category and select the `gcc-core` and `make` packages. To use Cygwin, you have to run the Cygwin terminal program. Unlike Bash on Windows, in Cygwin your home directory is separate from your Windows home directory. If you installed Cygwin to `C:\cygwin64`, then your home directory is at `C:\cygwin64\home\yourname`. So if you want to use a text editor outside of Cygwin to write your code, that’s where you’ll want to save to.
 
-### […in macOS](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#in-macos)
+### […in macOS](01_setup.md#in-macos)
 
 When you try to run the `cc` command, a window should pop up asking if you want to install the command line developer tools. You can also run `xcode-select --install` to get this window to pop up. Then just click “Install” and it will install a C compiler and `make`, among other things.
 
-### […in Linux](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#in-linux)
+### […in Linux](01_setup.md#in-linux)
 
 In Ubuntu, it’s `sudo apt-get install gcc make`. Other distributions should have `gcc` and `make` packages available as well.
 
-## [The `main()` function](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#the-main-function)
+## [The `main()` function](01_setup.md#the-main-function)
 
 Create a new file named `kilo.c` and give it a `main()` function. (`kilo` is the name of the text editor we are building.) [kilo.c](https://github.com/snaptoken/kilo-src/blob/main/kilo.c)
 
@@ -46,7 +46,7 @@ To compile `kilo.c`, run `cc kilo.c -o kilo` in your shell. If no errors occur, 
 
 To run `kilo`, type `./kilo` in your shell and press `Enter`. The program doesn’t print any output, but you can check its exit status (the value `main()` returns) by running `echo $?`, which should print `0`.
 
-## [Compiling with `make`](https://viewsourcecode.org/snaptoken/kilo/01.setup.html#compiling-with-make)
+## [Compiling with `make`](01_setup.md#compiling-with-make)
 
 Typing `cc kilo.c -o kilo` every time you want to recompile gets tiring. The `make` program allows you to simply run `make` and it will compile your program for you. You just have to supply a `Makefile` to tell it how to compile your program.
 
@@ -76,4 +76,4 @@ Try changing the return value in `kilo.c` to a number other than `0`. Then run `
 
 After each step in this tutorial, you will want to recompile `kilo.c`, see if it finds any errors in your code, and then run `./kilo`. It is easy to forget to recompile, and just run `./kilo`, and wonder why your changes to `kilo.c` don’t seem to have any effect. You must recompile in order for changes in `kilo.c` to be reflected in `kilo`.
 
-In the [next chapter](https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html), we’ll work on getting the terminal into *raw mode*, and reading individual keypresses from the user. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
+In the [next chapter](02_entering_raw_mode.md), we’ll work on getting the terminal into *raw mode*, and reading individual keypresses from the user. [1.0.0beta11](https://github.com/snaptoken/kilo-tutorial/tree/v1.0.0beta11) ([changelog](https://github.com/snaptoken/kilo-tutorial/blob/master/CHANGELOG.md))
