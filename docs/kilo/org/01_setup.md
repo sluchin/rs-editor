@@ -1,6 +1,6 @@
 # Setup
 
-![Step 1 of a Lego instruction booklet: a single Lego piece](<html/1. Setup _ Build Your Own Text Editor_files/lego-step-one.png>)
+![Step 1 of a Lego instruction booklet: a single Lego piece](../assets/1_setup_build_your_own_text_editor_files/lego-step-one.png)
 
 Ahh, step 1. Don’t you love a fresh start on a blank slate? And then selecting that singular brick onto which you will build your entire palatial estate?
 
