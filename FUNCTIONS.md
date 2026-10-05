@@ -68,7 +68,7 @@
 
 ## 実装予定の関数（TODO）
 
-以下の関数は CLAUDE.md の TODO リストで実装予定です：
+以下の関数は .claude/CLAUDE.md の TODO リストで実装予定です：
 
 ### 比較演算子
 - `(> num1 num2 ...)`
@@ -120,7 +120,7 @@ rs-editor の Scheme インタプリタがサポートしている型：
 
 ## 今後の拡張予定
 
-詳細は `CLAUDE.md` の TODO と `TODO.md` のフェーズ分けを参照してください。
+詳細は `.claude/CLAUDE.md` の TODO と `TODO.md` のフェーズ分けを参照してください。
 
 次のステップ：
 1. 比較演算子と制御フロー（`if`, `cond`）の実装
