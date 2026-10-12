@@ -26,12 +26,14 @@ mod evaluator_edge_cases {
     #[test]
     fn test_arithmetic_with_floats() {
         // 浮動小数点数の演算が正しく動作することを確認.
-        let result = 0.1 + 0.2;
+        let result: f64 = 0.1 + 0.2;
         // 浮動小数点数の精度問題に対応.
         assert!((result - 0.3).abs() < 1e-10);
     }
 
     #[test]
+    // ゼロの単位元・零元の扱いを確認するテストなので, 意図した式.
+    #[allow(clippy::identity_op, clippy::erasing_op)]
     fn test_zero_operations() {
         // ゼロを含む演算が正しく動作することを確認.
         assert_eq!(0 + 5, 5);
@@ -47,41 +49,41 @@ mod evaluator_edge_cases {
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_operator_with_no_arguments_errors() {
         // 引数なしの演算子はエラーになることを確認する予定.
         // (+) のように引数なしの場合はエラー.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_operator_with_wrong_type_errors() {
         // 型が間違っている場合はエラーになることを確認する予定.
         // (+ "hello" 1) はエラー.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_quote_preserves_structure() {
         // (quote (1 2 3)) は評価されずに (1 2 3) を返すことを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_list_operation_with_evaluated_elements() {
         // (list (+ 1 1) (* 2 3)) は (2 6) を返すことを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_empty_list() {
         // () は空のリストに評価されることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_nested_list_operations() {
         // (list (list 1 2) (list 3 4)) がネストされた構造を作成することを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
@@ -94,7 +96,7 @@ mod evaluator_edge_cases {
     #[test]
     fn test_division_precision() {
         // 10 / 3 が約 3.333... になることを確認.
-        let result = 10.0 / 3.0;
+        let result: f64 = 10.0 / 3.0;
         assert!((result - 3.333).abs() < 0.001);
     }
 
@@ -135,75 +137,75 @@ mod parser_edge_cases {
     // パーサーのエッジケースをテストします.
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_empty_list() {
         // () が正しくパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_nested_lists() {
         // ((1 2) (3 4)) が正しくパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_symbol_with_special_chars() {
         // foo-bar, foo_bar, foo?, foo! がすべてパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_string_with_escapes() {
         // "hello\\nworld" が正しくパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_number_formats() {
         // 42, -42, 3.14, -3.14 がすべてパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_boolean_formats() {
         // #t と #f が正しくパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_comments() {
         // コメント (;) がスキップされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_whitespace_variations() {
         // 異なるホワイトスペース (スペース, タブ, 改行) がすべて機能することを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_multiple_expressions() {
         // 1 2 3 が3つの独立した式としてパースされることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_unclosed_list_error() {
         // ( がエラーを引き起こすことを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_unclosed_string_error() {
         // "hello (引用符なし) がエラーを引き起こすことを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_invalid_escape_sequence() {
         // "hello\\x" が不正なエスケープシーケンスでエラーになることを確認する予定.
-        assert!(true); // プレースホルダー.
     }
 }
 

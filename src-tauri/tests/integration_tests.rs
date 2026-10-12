@@ -1,11 +1,8 @@
-use std::path::PathBuf;
-
 // ファイル操作に関連したテスト.
 #[cfg(test)]
 mod file_operations_tests {
     use std::fs;
     use std::io::Write;
-    use std::path::PathBuf;
     use tempfile::TempDir;
 
     #[test]
@@ -147,10 +144,9 @@ mod parser_evaluator_integration {
     }
 
     #[test]
+    #[ignore = "プレースホルダー: 実際のモジュールインポートが可能になったときに実装する"]
     fn test_multiple_expressions_pipeline() {
         // 複数の最上位フォームをパースして評価することをテストする予定.
-        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
-        assert!(true);
     }
 }
 
@@ -160,19 +156,7 @@ mod error_handling_tests {
     use std::fs;
     use tempfile::TempDir;
 
-    #[test]
-    fn test_handle_malformed_scheme_gracefully() {
-        // 不正な入力がパーサーで拒否されることを確認.
-        // このテストはパーサーモジュールのテストに統合されています.
-        assert!(true);
-    }
-
-    #[test]
-    fn test_handle_division_by_zero() {
-        // ゼロで除算するとエラーになることを確認.
-        // このテストは評価器モジュールのテストに統合されています.
-        assert!(true);
-    }
+    // 不正な入力の拒否はパーサーモジュールのテストで, ゼロ除算のエラーは評価器モジュールのテストで確認する.
 
     #[test]
     fn test_handle_missing_file_gracefully() {
@@ -208,7 +192,7 @@ mod error_handling_tests {
 #[cfg(test)]
 mod concurrent_operations_tests {
     use std::fs;
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
     use tempfile::TempDir;
 
     #[test]
