@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { usePrefixKeymap } from '../lib/prefixKeymap'
+import type { KeyboardEvent } from 'react'
 
 /**
  * usePrefixKeymap フック のテストスイート.

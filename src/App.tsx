@@ -293,7 +293,7 @@ function App() {
           ? current.matchStart + 1
           : current.matchStart - 1
 
-    const match = findNextMatch(code, current.query, fromPos, direction)
+    const match = findNextMatch(currentBuffer.content, current.query, fromPos, direction)
 
     if (match) {
       setHighlightRange(match)

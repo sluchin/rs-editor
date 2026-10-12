@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useEmacsKeymap } from '../lib/emacsKeymap'
+import type { KeyboardEvent } from 'react'
 
 /**
  * useEmacsKeymap フック のテストスイート.
