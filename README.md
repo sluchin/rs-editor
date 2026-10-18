@@ -99,6 +99,9 @@ npm run lint
 # Vitest でテスト実行
 npm run test
 
+# フロントエンドのカバレッジ (@vitest/coverage-v8。結果は coverage/index.html)
+npm run coverage
+
 # テストをウォッチモードで実行
 npm run test:watch
 

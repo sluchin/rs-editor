@@ -22,6 +22,7 @@
     "test:rust": "cd src-tauri && cargo test",
     "test:all": "npm run test && npm run test:rust",
     "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
     "check": "npm run format:check && npm run lint:all && npm run test:all"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^4",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10",
     "eslint-plugin-react-hooks": "^7",
     "eslint-plugin-react-refresh": "^0.5",
