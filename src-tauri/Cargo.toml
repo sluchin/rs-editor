@@ -7,6 +7,9 @@ edition = "2021"
 tauri = { version = "2", features = ["devtools"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+log = "0.4"
+env_logger = "0.11"
+dirs = "5.0"
 
 [features]
 default = ["custom-protocol"]
@@ -17,3 +20,7 @@ tempfile = "3"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+
+# cargo tarpaulin の除外 (`#[cfg(not(tarpaulin_include))]`) を, 未知の cfg として警告しない
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }

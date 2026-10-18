@@ -35,9 +35,19 @@
 └── tsconfig.json            # TypeScript 設定
 ```
 
+## ログ
+
+ログは、標準エラー出力と、ログファイルに出ます。フロントエンド (`loglevel`) のログも、バックエンドに転送して (`log_frontend_message`)、同じファイルに残します。
+
+- ログファイル: `<データディレクトリ>/rseditor/logs/rseditor.log` (Linux は `~/.local/share/rseditor/logs/`、Windows は `%LOCALAPPDATA%\rseditor\logs\`、macOS は `~/Library/Application Support/rseditor/logs/`)。5 MB を超えると世代送りして、3 世代 (`.1` から `.3`) を残します。
+- レベル: デバッグ版 (`npm run tauri:dev`) はデバッグ以上、リリース版 (`npm run tauri:build`) は情報 (最低限)、警告、エラーを出します。判定は、ログの初期化の中でします (Rust は `src-tauri/src/logging.rs` の `default_level`、フロントエンドは `src/lib/logForwarder.ts` の `setupLogging`)。
+- レベルを変えるとき: `RUST_LOG=debug npm run tauri:dev` のように、環境変数 `RUST_LOG` で上書きします (リリース版でも効きます)。
+- ログは、Rust は `log::debug!` / `info!` / `warn!` / `error!`、フロントエンドは `loglevel` の `log.debug` / `info` / `warn` / `error` を使います。パスワードなどの秘密は書きません。
+
 ## セットアップと開発
 
 ### 前提条件
+
 - Node.js 18 以上
 - Rust 1.70 以上
 - Tauri CLI 2
@@ -64,6 +74,7 @@ npm run tauri:dev
 ```
 
 このコマンドは以下の処理を実行します:
+
 1. Vite dev サーバーを `http://localhost:5173` で起動
 2. Rust バックエンドをコンパイル
 3. Tauri デスクトップアプリケーションを起動
@@ -80,6 +91,7 @@ npm run tauri:build
 ### 開発ワークフロー（Lint / Format / Test）
 
 **ローカル開発（TypeScript のみ）:**
+
 ```bash
 # TypeScript 静的解析（ESLint）
 npm run lint
@@ -101,6 +113,7 @@ npm run format:check
 ```
 
 **Rust も含めて完全にチェック（CI 相当）:**
+
 ```bash
 # TypeScript + Rust の static analysis（ESLint + cargo clippy）
 npm run lint:all
@@ -112,7 +125,8 @@ npm run test:all
 npm run check
 ```
 
-**注:** 
+**注:**
+
 - `npm run lint` はローカル環境で実行可能（TypeScript のみ）
 - `npm run lint:all` と `npm run test:all` は Rust のビルド環境が必要
 - GitHub Actions の CI (`.github/workflows/ci.yml`) は `npm run check` を実行し、`main` ブランチへの push・PR ごとに全てのチェックが自動実行されます
@@ -120,6 +134,7 @@ npm run check
 ## 使用例
 
 ### 基本的な算術演算
+
 ```scheme
 (+ 1 2 3)      ; => 6
 (- 10 3)       ; => 7
@@ -128,12 +143,14 @@ npm run check
 ```
 
 ### リスト
+
 ```scheme
 (list 1 2 3)   ; => (1 2 3)
 (quote (a b c)) ; => (a b c)
 ```
 
 ### Scheme 式の評価
+
 ```scheme
 ; カーソルを式の直後に置いて C-x C-e で評価
 (+ 2 3)        ; カーソル↑: C-x C-e → ミニバッファに「5」と表示
@@ -150,15 +167,18 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 ### よく使うショートカット
 
 **ファイル操作**
+
 - `C-x C-f` - ファイルを開く
 - `C-x C-s` - ファイルを保存
 
 **カーソル移動**
+
 - `C-f` / `C-b` - 前後に移動
 - `C-n` / `C-p` - 上下に移動
 - `C-a` / `C-e` - 行の開始/末尾へ
 
 **編集**
+
 - `C-d` - 文字を削除
 - `C-k` - 行を削除
 - `C-y` - 貼り付け
@@ -166,14 +186,17 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - `C-x C-/` - やり直し（redo）
 
 **Scheme 評価**
+
 - `C-x C-e` - カーソル直前の S 式を評価
 - `M-:` - ミニバッファで式を直接入力して評価
 
 **検索**
+
 - `C-s` - 前方に検索
 - `C-r` - 後方に検索
 
 **バッファ管理**
+
 - `C-x b` - バッファを切り替え
 - `C-x k` - バッファを閉じる
 - `C-x C-b` - バッファ一覧を表示
@@ -220,16 +243,19 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 ## アーキテクチャ
 
 ### フロントエンド (React + TypeScript)
+
 - **Editor.tsx** - コード入力エリアと実行ボタン
 - **REPL.tsx** - 対話的出力、履歴、インラインREPL
 - **App.tsx** - 状態管理と Tauri 通信を行うメインアプリコンポーネント
 
 ### バックエンド (Rust)
+
 - **Parser** - Scheme 式をトークン化して AST にパース
 - **Evaluator** - シンプルな環境/スコープシステムを使用して AST ノードを評価
 - **Value** - Scheme 値を表現し、表示フォーマットを処理
 
 ### 通信
+
 Tauri のコマンドシステムを使用して React から `eval_scheme` 関数を呼び出し、コード文字列を送信して結果/エラーを受け取ります。
 
 ## ライセンス

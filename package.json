@@ -25,28 +25,29 @@
     "check": "npm run format:check && npm run lint:all && npm run test:all"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2",
+    "loglevel": "^1.9.2",
     "react": "^18",
-    "react-dom": "^18",
-    "@tauri-apps/api": "^2"
+    "react-dom": "^18"
   },
   "devDependencies": {
+    "@eslint/js": "^10",
+    "@tauri-apps/cli": "^2",
+    "@testing-library/dom": "^10",
+    "@testing-library/jest-dom": "^7",
+    "@testing-library/react": "^16",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^4",
-    "typescript": "^5",
-    "vite": "^5",
-    "@tauri-apps/cli": "^2",
-    "vitest": "^4",
-    "jsdom": "^29",
-    "@testing-library/react": "^16",
-    "@testing-library/jest-dom": "^7",
-    "@testing-library/dom": "^10",
     "eslint": "^10",
-    "typescript-eslint": "^8",
     "eslint-plugin-react-hooks": "^7",
     "eslint-plugin-react-refresh": "^0.5",
-    "@eslint/js": "^10",
     "globals": "^17",
-    "prettier": "^3"
+    "jsdom": "^29",
+    "prettier": "^3",
+    "typescript": "^5",
+    "typescript-eslint": "^8",
+    "vite": "^5",
+    "vitest": "^4"
   }
 }
