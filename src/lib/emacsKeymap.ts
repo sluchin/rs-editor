@@ -51,20 +51,11 @@ export function useEmacsKeymap({
   const killRingIndex = useRef(0)
   const markPos = useRef<number | null>(null)
 
-  const setCursor = (pos: number, extendSelection = false) => {
-    const el = textareaRef.current
-    if (!el) return
-    if (extendSelection && markPos.current !== null) {
-      if (markPos.current < pos) el.setSelectionRange(markPos.current, pos)
-      else el.setSelectionRange(pos, markPos.current)
-    } else {
-      el.setSelectionRange(pos, pos)
-    }
-  }
-
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     const el = textareaRef.current
     if (!el) return
+    // カーソルを動かす (選択を広げる呼び出しはないので, 選択は畳む)
+    const setCursor = (to: number) => el.setSelectionRange(to, to)
     const pos = el.selectionStart
     const selEnd = el.selectionEnd
     const ctrl = e.ctrlKey
@@ -165,8 +156,9 @@ export function useEmacsKeymap({
           // transpose-chars
           e.preventDefault()
           if (value.length < 2) return
+          // カーソルの前の文字と, カーソルの位置の文字を入れ替える (end は, 入れ替える範囲の終わり)
           let start = pos - 1
-          let end = pos
+          let end = pos + 1
           if (pos === 0) {
             start = 0
             end = 2
