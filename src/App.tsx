@@ -4,7 +4,11 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import MenuBar from './components/MenuBar'
 import CodeEditor, { CursorInfo } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
-import Minibuffer, { MinibufferState } from './components/Minibuffer'
+import Minibuffer, {
+  MinibufferInputState,
+  MinibufferIsearchState,
+  MinibufferState,
+} from './components/Minibuffer'
 import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
 import { findNextMatch } from './lib/isearch'
@@ -41,8 +45,7 @@ function generateBufferId(): string {
   return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-function bufferNameFromPath(path: string | null): string {
-  if (!path) return '*scratch*'
+function bufferNameFromPath(path: string): string {
   const parts = path.split('/')
   return parts[parts.length - 1] || path
 }
@@ -72,7 +75,8 @@ function App() {
   const [redoStack, setRedoStack] = useState<{ text: string; cursorPos: number }[]>([])
   const [showBufferList, setShowBufferList] = useState(false)
 
-  const currentBuffer = buffers.find((b) => b.id === currentBufferId) || buffers[0]
+  // バッファを消すときは, 今のバッファの ID も一緒に変えるので, 必ず見つかる
+  const currentBuffer = buffers.find((b) => b.id === currentBufferId) as Buffer
 
   // Helper functions for buffer management
   const updateCurrentBuffer = (updates: Partial<Buffer>) => {
@@ -96,19 +100,16 @@ function App() {
     setCurrentBufferId(bufferId)
   }
 
-  const killBuffer = (bufferId: string) => {
-    const bufferToKill = buffers.find((b) => b.id === bufferId)
-    if (!bufferToKill) return false
-
-    if (bufferToKill.modified) {
+  const killCurrentBuffer = () => {
+    if (currentBuffer.modified) {
       setMinibufferState({
         mode: 'message',
-        text: `Buffer "${bufferToKill.name}" is modified. Use C-x C-s to save first.`,
+        text: `Buffer "${currentBuffer.name}" is modified. Use C-x C-s to save first.`,
       })
       return false
     }
 
-    const newBuffers = buffers.filter((b) => b.id !== bufferId)
+    const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
     if (newBuffers.length === 0) {
       // Create a new scratch buffer if all are killed
       const scratch = createScratchBuffer()
@@ -116,9 +117,7 @@ function App() {
       setCurrentBufferId(scratch.id)
     } else {
       setBuffers(newBuffers)
-      if (currentBufferId === bufferId) {
-        setCurrentBufferId(newBuffers[0].id)
-      }
+      setCurrentBufferId(newBuffers[0].id)
     }
     return true
   }
@@ -203,7 +202,7 @@ function App() {
         text: `Buffer "${currentBuffer.name}" is modified. Use C-x C-s to save.`,
       })
     } else {
-      killBuffer(currentBuffer.id)
+      killCurrentBuffer()
     }
   }
 
@@ -277,10 +276,10 @@ function App() {
     })
   }
 
-  const handleIsearchRepeat = (direction: 'forward' | 'backward') => {
-    const current = minibufferState
-    if (current.mode !== 'isearch') return
-
+  const handleIsearchRepeat = (
+    direction: 'forward' | 'backward',
+    current: MinibufferIsearchState,
+  ) => {
     if (direction === 'backward' && current.matchStart !== null && current.matchStart <= 0) {
       setMinibufferState({ ...current, matchStart: null, matchEnd: null })
       return
@@ -316,11 +315,13 @@ function App() {
     setMinibufferState({ mode: 'message', text: 'Quit' })
   }
 
-  const handleMinibufferInputChange = (value: string) => {
-    const current = minibufferState
+  const handleMinibufferInputChange = (
+    value: string,
+    current: MinibufferInputState | MinibufferIsearchState,
+  ) => {
     if (current.mode === 'input') {
       setMinibufferState({ ...current, input: value })
-    } else if (current.mode === 'isearch') {
+    } else {
       const match = findNextMatch(
         currentBuffer.content,
         value,
@@ -350,7 +351,6 @@ function App() {
 
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
-    const currentState = minibufferState
     setPendingAction(null)
 
     if (action === 'find-file') {
@@ -386,7 +386,7 @@ function App() {
         setMinibufferState({ mode: 'message', text: `No buffer named "${value}"` })
       }
     } else if (action === 'kill-buffer') {
-      killBuffer(currentBuffer.id)
+      killCurrentBuffer()
       setMinibufferState({ mode: 'message', text: '' })
     } else if (action === 'execute-command') {
       const cmd = commands.find((c) => c.name === value.trim())
@@ -409,7 +409,8 @@ function App() {
       } catch (err) {
         setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
       }
-    } else if (currentState.mode === 'isearch') {
+    } else {
+      // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ)
       setHighlightRange(null)
       setMinibufferState({ mode: 'message', text: '' })
     }

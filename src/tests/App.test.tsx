@@ -98,6 +98,15 @@ describe('App', () => {
     expect(editor.text()).toContain('[3/3]')
   })
 
+  it('C-x C-f で, / で終わるパスは, パスをそのままバッファの名前にする', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValueOnce(false)
+
+    editor.ctrlX('f')
+    await editor.submit('/tmp/dir/')
+    expect(editor.text()).toContain('/tmp/dir/')
+  })
+
   it('C-x C-f の失敗は, メッセージにする', async () => {
     const editor = await setup()
     mocked.pathExists.mockRejectedValueOnce('denied')

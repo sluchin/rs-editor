@@ -24,6 +24,13 @@ export default defineConfig({
         'src/main.tsx',
         'src/vite-env.d.ts',
       ],
+      // 行, 分岐, 関数, 文の全てを 100% に保つ (下回れば失敗する)
+      thresholds: {
+        lines: 100,
+        branches: 100,
+        functions: 100,
+        statements: 100,
+      },
     },
   },
 })

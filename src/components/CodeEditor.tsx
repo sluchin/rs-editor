@@ -95,10 +95,8 @@ export default function CodeEditor({
     onEvalExpression,
   })
 
-  const updateCursorFromEl = () => {
-    const el = textareaRef.current
-    if (!el) return
-    setCursorPos(el.selectionStart)
+  const updateCursorFromEl = (e: { currentTarget: HTMLTextAreaElement }) => {
+    setCursorPos(e.currentTarget.selectionStart)
   }
 
   useEffect(() => {

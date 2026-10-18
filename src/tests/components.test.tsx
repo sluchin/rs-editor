@@ -273,7 +273,7 @@ describe('Minibuffer Component', () => {
     const input = container.querySelector('input') as HTMLInputElement
     fireEvent.change(input, { target: { value: 'test.scm' } })
 
-    expect(onInputChange).toHaveBeenCalledWith('test.scm')
+    expect(onInputChange).toHaveBeenCalledWith('test.scm', state)
   })
 
   it('calls onSubmit on Enter key', () => {
@@ -398,7 +398,7 @@ describe('Minibuffer Component', () => {
     const input = container.querySelector('input') as HTMLInputElement
     fireEvent.keyDown(input, { key: 's', ctrlKey: true })
 
-    expect(onIsearchRepeat).toHaveBeenCalledWith('forward')
+    expect(onIsearchRepeat).toHaveBeenCalledWith('forward', state)
   })
 
   it('calls onIsearchRepeat with backward direction on C-r during isearch', () => {
@@ -425,7 +425,7 @@ describe('Minibuffer Component', () => {
     const input = container.querySelector('input') as HTMLInputElement
     fireEvent.keyDown(input, { key: 'r', ctrlKey: true })
 
-    expect(onIsearchRepeat).toHaveBeenCalledWith('backward')
+    expect(onIsearchRepeat).toHaveBeenCalledWith('backward', state)
   })
 })
 

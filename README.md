@@ -99,7 +99,7 @@ npm run lint
 # Vitest でテスト実行
 npm run test
 
-# フロントエンドのカバレッジ (@vitest/coverage-v8。結果は coverage/index.html)
+# フロントエンドのカバレッジ (@vitest/coverage-v8。行、分岐、関数、文が 100% でなければ失敗する。結果は coverage/index.html)
 npm run coverage
 
 # テストをウォッチモードで実行

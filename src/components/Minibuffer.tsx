@@ -6,13 +6,13 @@ interface MinibufferMessageState {
   text: string
 }
 
-interface MinibufferInputState {
+export interface MinibufferInputState {
   mode: 'input'
   prompt: string
   input: string
 }
 
-interface MinibufferIsearchState {
+export interface MinibufferIsearchState {
   mode: 'isearch'
   direction: 'forward' | 'backward'
   query: string
@@ -25,10 +25,10 @@ export type MinibufferState = MinibufferMessageState | MinibufferInputState | Mi
 
 interface MinibufferProps {
   state: MinibufferState
-  onInputChange: (value: string) => void
+  onInputChange: (value: string, state: MinibufferInputState | MinibufferIsearchState) => void
   onSubmit: (value: string) => void
   onCancel: () => void
-  onIsearchRepeat?: (direction: 'forward' | 'backward') => void
+  onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
 }
 
 const DEFAULT_MESSAGE = 'For information about this editor, see the README.'
@@ -67,7 +67,7 @@ export default function Minibuffer({
         if ((e.ctrlKey && e.key === 's') || (e.ctrlKey && e.key === 'r')) {
           e.preventDefault()
           const dir = e.key === 's' ? 'forward' : 'backward'
-          onIsearchRepeat?.(dir)
+          onIsearchRepeat?.(dir, state)
           return
         }
       }
@@ -88,7 +88,7 @@ export default function Minibuffer({
           ref={inputRef}
           className="minibuffer-input"
           value={getValue()}
-          onChange={(e) => onInputChange(e.target.value)}
+          onChange={(e) => onInputChange(e.target.value, state)}
           onKeyDown={handleKeyDown}
           spellCheck={false}
         />
