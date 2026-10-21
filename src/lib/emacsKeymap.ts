@@ -2,7 +2,7 @@ import { RefObject, KeyboardEvent, useRef } from 'react'
 import { forwardSexp, backwardSexp, killSexp } from './bracketMatch'
 
 interface EmacsKeymapOptions {
-  textareaRef: RefObject<HTMLTextAreaElement>
+  textareaRef: RefObject<HTMLTextAreaElement | null>
   value: string
   onChange: (value: string, cursorPos: number) => void
   onIsearchForward?: () => void
