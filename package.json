@@ -28,8 +28,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "loglevel": "^1.9.2",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^10",
@@ -37,9 +37,9 @@
     "@testing-library/dom": "^10",
     "@testing-library/jest-dom": "^7",
     "@testing-library/react": "^16",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "@vitejs/plugin-react": "^4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10",
     "eslint-plugin-react-hooks": "^7",
@@ -49,7 +49,7 @@
     "prettier": "^3",
     "typescript": "^6",
     "typescript-eslint": "^8",
-    "vite": "^5",
+    "vite": "^8.3.5",
     "vitest": "^4"
   }
 }
