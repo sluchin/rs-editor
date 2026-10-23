@@ -21,8 +21,12 @@
     "test": "vitest run",
     "test:rust": "cd src-tauri && cargo test",
     "test:all": "npm run test && npm run test:rust",
+    "coverage:fe": "vitest run --coverage",
+    "coverage:be": "cd src-tauri && cargo tarpaulin --skip-clean --engine llvm --fail-under 100 --out Html",
+    "coverage:be:clean": "cd src-tauri && cargo tarpaulin --engine llvm --fail-under 100 --out Html",
+    "coverage": "npm run coverage:fe && npm run coverage:be",
+    "coverage:clean": "npm run coverage:fe && npm run coverage:be:clean",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage",
     "check": "npm run format:check && npm run lint:all && npm run test:all"
   },
   "dependencies": {

@@ -6,13 +6,7 @@ use std::path::Path;
 
 use tempfile::tempdir;
 
-// rseditor は, ライブラリのクレートがない (バイナリだけ) ので, ログのモジュールを, そのまま取り込む.
-// テストで使わない関数 (init_logging など) があるので, dead_code の警告を抑える.
-#[allow(dead_code)]
-#[path = "../src/logging.rs"]
-mod logging;
-
-use logging::{
+use rseditor::logging::{
     backup_path, default_level, default_log_path, log_frontend_message, log_path_from, LogLevel,
     RotatingFile, Tee,
 };
@@ -105,6 +99,16 @@ fn test_rotating_file_small_writes_do_not_rotate() {
 
     assert_eq!(fs::read_to_string(&path).unwrap(), "ab");
     assert!(!backup_path(&path, 1).exists());
+}
+
+#[test]
+fn test_rotating_file_flush_writes_to_disk() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("app.log");
+    let mut file = RotatingFile::open(&path, 1024, 3).unwrap();
+    file.write_all(b"line\n").unwrap();
+    file.flush().unwrap();
+    assert_eq!(fs::read_to_string(&path).unwrap(), "line\n");
 }
 
 #[test]

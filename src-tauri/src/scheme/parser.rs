@@ -27,24 +27,23 @@ impl Parser {
 
     fn parse_value(&mut self) -> Result<Value, String> {
         self.skip_whitespace();
-        match self.current() {
-            Some('(') => self.parse_list(),
-            Some('"') => self.parse_string(),
-            Some('#') => self.parse_boolean(),
-            Some(c)
-                if c.is_numeric()
-                    || (c == '-' && self.peek().is_some_and(|ch| ch.is_numeric())) =>
-            {
+        let c = self
+            .current()
+            .ok_or_else(|| "Unexpected end of input".to_string())?;
+        match c {
+            '(' => self.parse_list(),
+            '"' => self.parse_string(),
+            '#' => self.parse_boolean(),
+            c if c.is_numeric() || (c == '-' && self.peek().is_some_and(|ch| ch.is_numeric())) => {
                 self.parse_number()
             }
-            Some(c) if c.is_alphabetic() || "+-*/<>=!?".contains(c) => self.parse_symbol(),
-            Some(c) => Err(format!("Unexpected character: {}", c)),
-            None => Err("Unexpected end of input".to_string()),
+            c if c.is_alphabetic() || "+-*/<>=!?".contains(c) => self.parse_symbol(),
+            c => Err(format!("Unexpected character: {}", c)),
         }
     }
 
     fn parse_list(&mut self) -> Result<Value, String> {
-        self.consume('(')?;
+        self.advance('(');
         let mut items = Vec::new();
         self.skip_whitespace();
 
@@ -56,12 +55,12 @@ impl Parser {
             self.skip_whitespace();
         }
 
-        self.consume(')')?;
+        self.advance(')');
         Ok(Value::List(items))
     }
 
     fn parse_string(&mut self) -> Result<Value, String> {
-        self.consume('"')?;
+        self.advance('"');
         let mut result = String::new();
 
         while self.current() != Some('"') {
@@ -85,12 +84,12 @@ impl Parser {
             }
         }
 
-        self.consume('"')?;
+        self.advance('"');
         Ok(Value::String(result))
     }
 
     fn parse_boolean(&mut self) -> Result<Value, String> {
-        self.consume('#')?;
+        self.advance('#');
         match self.current() {
             Some('t') => {
                 self.pos += 1;
@@ -165,13 +164,10 @@ impl Parser {
         }
     }
 
-    fn consume(&mut self, expected: char) -> Result<(), String> {
-        if self.current() == Some(expected) {
-            self.pos += 1;
-            Ok(())
-        } else {
-            Err(format!("Expected '{}'", expected))
-        }
+    /// 今の文字 (呼ぶ側が確かめた `expected`) を読み飛ばす.
+    fn advance(&mut self, expected: char) {
+        debug_assert_eq!(self.current(), Some(expected));
+        self.pos += 1;
     }
 }
 

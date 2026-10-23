@@ -7,6 +7,12 @@ pub struct Evaluator {
     vars: Mutex<std::collections::HashMap<String, Value>>,
 }
 
+impl Default for Evaluator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Evaluator {
     pub fn new() -> Self {
         Evaluator {

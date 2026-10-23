@@ -15,7 +15,7 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 - エディタは CodeMirror 6 (`src/components/CodeEditor.tsx`)。バッファごとに `EditorState` を持ち, 切り替えるときに差し替える。
 - Emacs のコマンドとキーの割り当ては `src/lib/emacs.ts`。コマンドは Emacs の名前で引き, キーと `M-x` の両方から使う。画面のコマンド (ファイル, バッファ, 検索, 評価) は `App.tsx` の `actions` に置く。
 - 位置の計算 (単語, 行) は `src/lib/text.ts`, kill-ring は `src/lib/killRing.ts`, S 式の範囲は `src/lib/bracketMatch.ts`。
-- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
+- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
 
 ## 開発ワークフロー
 - **開発サーバーを起動**: `npm run tauri:dev` — フロントエンドと Rust は両方とも変更時に自動リロード
