@@ -4,7 +4,7 @@ import BufferList from '../components/BufferList'
 import REPL from '../components/REPL'
 import ModeLine from '../components/ModeLine'
 import Minibuffer, { MinibufferState } from '../components/Minibuffer'
-import { backwardSexp, forwardSexp, killSexp } from '../lib/bracketMatch'
+import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
 
 describe('bracketMatch (文字列と, 閉じていない括弧)', () => {
   it('文字列のリテラルを 1 つの S 式として飛ばす (\\" を含む)', () => {
@@ -23,10 +23,9 @@ describe('bracketMatch (文字列と, 閉じていない括弧)', () => {
     expect(backwardSexp('a b)', 4)).toBe(0)
   })
 
-  it('空白だけなら, 端まで動き, 消す S 式がなければ, そのまま', () => {
+  it('空白だけなら, 端まで動くこと', () => {
     expect(forwardSexp('a  ', 1)).toBe(3)
     expect(backwardSexp('  a', 2)).toBe(0)
-    expect(killSexp('ab', 2)).toEqual(['ab', 2])
   })
 })
 

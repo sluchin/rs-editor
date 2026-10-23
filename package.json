@@ -26,6 +26,9 @@
     "check": "npm run format:check && npm run lint:all && npm run test:all"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
     "@tauri-apps/api": "^2",
     "loglevel": "^1.9.2",
     "react": "^19.3.1",

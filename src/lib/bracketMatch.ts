@@ -119,13 +119,3 @@ export function backwardSexp(text: string, cursorPos: number): number {
   // Otherwise move to start of current token
   return token.start
 }
-
-/**
- * Kill (delete) the next S-expression starting from cursor position.
- * Returns [newText, newCursorPos].
- */
-export function killSexp(text: string, cursorPos: number): [string, number] {
-  const endPos = forwardSexp(text, cursorPos)
-  if (endPos === cursorPos) return [text, cursorPos]
-  return [text.slice(0, cursorPos) + text.slice(endPos), cursorPos]
-}

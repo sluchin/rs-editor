@@ -50,13 +50,13 @@
 
 ## Phase 3: ミニバッファ / コマンド実行の拡張
 
-- [ ] `Minibuffer.tsx` の `MinibufferState` に `mode: 'isearch'` を追加し、`C-s` / `C-r` によるインクリメンタル検索を実装する。
+- [x] `Minibuffer.tsx` の `MinibufferState` に `mode: 'isearch'` を追加し、`C-s` / `C-r` によるインクリメンタル検索を実装する。
       - マッチ箇所へのカーソル移動、`C-s` 連打で次のマッチへ、`C-g` でキャンセルして元の位置に戻る。
-- [ ] `M-x` (execute-extended-command) を実装する。
+- [x] `M-x` (execute-extended-command) を実装する。
       - コマンド名を文字列で受け取り、内部の「コマンドレジストリ」（`{name, run}` のマップ）から実行する。
       - 最初は `find-file` / `save-buffer` / `save-buffers-kill-terminal` 程度から始め、Phase 4/5 のバッファ/REPL 系コマンドを順次登録する。
 - [ ] `M-x` の補完（前方一致で候補を絞り込み、Tab で補完）はあると Emacs らしさが出るが優先度は低め。
-- [ ] `keyboard-quit` (`C-g`) 実行時に `Quit` メッセージをミニバッファに表示する（現状 `emacsKeymap.ts` は mark を消すのみ）。
+- [x] `keyboard-quit` (`C-g`) 実行時に `Quit` メッセージをミニバッファに表示する。
 
 ## Phase 4: 編集コマンドの強化
 
@@ -94,8 +94,31 @@
 
 - [x] `ModeLine.tsx` に現在の mark 状態（リージョン選択中かどうか）、isearch 状態などを表示する。
 - [ ] `C-h k` (describe-key) 相当の簡易ヘルプ（実装済みキーバインド一覧をミニバッファかダイアログで表示）。
+- [ ] メニューバー (`MenuBar.tsx`) を押せるようにする。今は File / Edit / Options / Buffers / Tools / Help の文字を並べているだけで, 押しても何も起きない。
+      項目を押すとメニューを開き, 選ぶとコマンドを名前で呼ぶ (`M-x` と同じ. 例: File → Open は `find-file`, Edit → Undo は `undo`)。
+      項目の横に, 割り当てたキー (`src/lib/emacs.ts` の `KEY_BINDINGS`) を出す。
 - [x] キーバインドの一覧をドキュメント化し `README.md` に追記する。
 - [x] 各フェーズの hook ごとに Vitest でのテストを追加し、`npm run check` を通すこと。
+
+## Phase 8: CodeMirror 6 への置き換えと, 足りない Emacs のキー
+
+- [x] エディタを `<textarea>` から CodeMirror 6 に置き換える (`CodeEditor.tsx`)。バッファごとにエディタの状態 (カーソル, 元に戻す履歴) を持つ。
+- [x] Emacs のコマンドを `src/lib/emacs.ts` にまとめる (マーク, 直前のコマンド, kill-ring)。`C-x` 系のキーは, CodeMirror のキーの並びで割り当て, `prefixKeymap.ts` をなくす。
+- [x] `C-v` / `M-v`, `C-l`, `M-g g`, `M-d` / `M-DEL`, `M-u` / `M-l` / `M-c`, `C-o`, `C-x C-x`, `C-x C-c` を足す。
+- [x] 続けたキルを 1 つにつなげる。`C-SPC` の後の移動で, 範囲を広げる (transient-mark-mode)。
+- [ ] 置換 (`M-%`) と正規表現の検索 (`C-M-s`, `C-M-r`)。
+- [ ] 前置引数 (`C-u`) とキーボードマクロ。
+
+## Phase 9: Lisp でのカスタマイズ
+
+- [ ] Scheme の処理系に, 言語の核を足す: `define`, `lambda`, `let`, `if` / `cond`, 比較 (`<`, `=` など), 文字列とリストの操作 (`car`, `cdr`, `cons` など)。
+      定義は, アプリが持ち続ける処理系 (`Evaluator`) の `vars` に覚える (`vars` はあるが, まだ使っていない)。
+- [ ] Lisp からエディタを操作する関数を用意する: `point`, `goto-char`, `insert`, `delete-region`, `buffer-string`, `message` など。
+      評価は Rust で行うので, エディタの操作は, フロントエンドとのやり取りで行う。
+- [ ] Lisp から, 既にあるコマンドを名前で呼べるようにする (`src/lib/emacs.ts` のコマンドと, `App.tsx` の `actions`)。
+- [ ] Lisp で定義した関数を, コマンドとして登録する (`M-x` から呼べるようにする)。
+- [ ] キーの割り当てを Lisp から変える (`global-set-key` にあたるもの)。今は `src/lib/emacs.ts` の `KEY_BINDINGS` に直接書いている。
+- [ ] 起動のときに, 初期設定ファイル (`~/.emacs` にあたるもの) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
 
 ---
 

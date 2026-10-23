@@ -21,8 +21,14 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-e` | end-of-line | 行の末尾へ |
 | `M-f` | forward-word | 1 単語進む |
 | `M-b` | backward-word | 1 単語戻る |
-| `M-<` | buffer-start | バッファの先頭へ |
-| `M->` | buffer-end | バッファの末尾へ |
+| `M-<` | beginning-of-buffer | バッファの先頭へ |
+| `M->` | end-of-buffer | バッファの末尾へ |
+| `C-v` | scroll-up-command | 1 画面先へ (カーソルの行を画面の上に) |
+| `M-v` | scroll-down-command | 1 画面前へ (カーソルの行を画面の下に) |
+| `C-l` | recenter-top-bottom | カーソルの行を画面の中央へ (続けて押すと, 上, 下の順) |
+| `M-g g` / `M-g M-g` | goto-line | 入れた行へ移動 |
+
+`C-n` / `C-p` は, 続けて押すあいだ, 始めの桁を保ちます.
 
 ## S式移動（Scheme 特化）
 
@@ -36,21 +42,34 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-d` | delete-char | カーソル位置の文字を削除 |
-| `C-k` | kill-line | 行を削除（kill-ring に保存） |
+| `C-k` | kill-line | 行を削除（kill-ring に保存。行末では改行を削除） |
+| `M-d` | kill-word | 次の単語を削除（kill-ring に保存） |
+| `M-DEL` | backward-kill-word | 前の単語を削除（kill-ring に保存） |
 | `C-w` | kill-region | 選択範囲を削除（kill-ring に保存） |
+| `M-w` | kill-ring-save | 選択範囲をコピー（kill-ring に保存） |
 | `C-y` | yank | kill-ring から貼り付け |
 | `M-y` | yank-pop | kill-ring の別の内容を貼り付け |
 | `C-t` | transpose-chars | 隣同士の文字を入れ替え |
-| `C-/` | undo | 操作を取り消す |
+| `M-u` | upcase-word | 次の単語を大文字に |
+| `M-l` | downcase-word | 次の単語を小文字に |
+| `M-c` | capitalize-word | 次の単語の先頭を大文字に |
+| `C-o` | open-line | カーソルを動かさずに改行を入れる |
+| `C-/` / `C-_` / `C-x u` | undo | 操作を取り消す |
 | `C-x C-/` | redo | 操作をやり直す |
 | `C-M-k` | kill-sexp | 次の S 式を削除 |
+
+続けてキルすると（`C-k C-k` など）, kill-ring の 1 つの項目につなげます。kill-ring は, 全てのバッファで共通です。
 
 ## リージョン選択
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-SPC` | set-mark | マーク位置を設定（リージョン選択開始） |
+| `C-SPC` | set-mark-command | マークを置く（移動すると, マークからカーソルまでが選ばれる） |
+| `C-x C-x` | exchange-point-and-mark | カーソルとマークを入れ替え |
 | `C-x h` | mark-whole-buffer | バッファ全体を選択 |
+| `C-g` | keyboard-quit | マークを外す |
+
+本文を書き換えると, マークは外れます（Emacs の transient-mark-mode）。
 
 ## 検索
 
@@ -75,6 +94,9 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-x b` | switch-to-buffer | バッファを切り替え |
 | `C-x k` | kill-buffer | 現在のバッファを閉じる |
 | `C-x C-b` | list-buffers | バッファ一覧を表示 |
+| `C-x C-c` | save-buffers-kill-terminal | 終了（保存していないバッファがあれば, 終わってよいか聞く） |
+
+バッファごとに, カーソルの位置と, 元に戻す履歴を覚えています。
 
 ## Scheme 評価
 
@@ -87,7 +109,7 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-x` | execute-extended-command | コマンドを名前で実行 |
+| `M-x` | execute-extended-command | コマンドを名前で実行（この一覧のコマンドの名前は, 全て使える） |
 
 ## その他
 
@@ -98,19 +120,21 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 ## 実装状況
 
 ### 完全実装済み
-- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->）
+- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g）
 - S 式移動（C-M-f, C-M-b）
-- 削除・編集（C-d, C-k, C-w, C-y, M-y, C-t, C-/, C-x C-/, C-M-k）
-- リージョン選択（C-SPC, C-x h）
+- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k）
+- リージョン選択（C-SPC, C-x C-x, C-x h）
 - 検索（C-s, C-r）
 - ファイル操作（C-x C-f, C-x C-s）
-- バッファ管理（C-x b, C-x k, C-x C-b）
+- バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - Scheme 評価（C-x C-e, M-:）
 - コマンド実行（M-x）
 - その他（C-g）
 
 ### 未実装
+- 置換（M-%）, 正規表現の検索（C-M-s, C-M-r）
 - ウィンドウ分割（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
+- 前置引数（C-u）, キーボードマクロ（C-x (, C-x ), C-x e）
 - より詳細なヘルプシステム（C-h k など）
 
 ## よくある操作パターン

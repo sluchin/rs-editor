@@ -1,222 +1,123 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import CodeEditor, { CursorInfo } from '../components/CodeEditor'
+import { createRef } from 'react'
+import { act, render, screen, fireEvent } from '@testing-library/react'
+import { EditorView } from '@codemirror/view'
+import CodeEditor, { CursorInfo, EditorHandle } from '../components/CodeEditor'
 import Minibuffer, { MinibufferState } from '../components/Minibuffer'
 import MenuBar from '../components/MenuBar'
 import ModeLine from '../components/ModeLine'
 import REPL from '../components/REPL'
 
 /**
- * CodeEditor コンポーネント のテストスイート.
- * コード入力エリアの機能をテストします.
+ * CodeEditor を表示します.
+ *
+ * @param props - 変える引数.
+ * @returns 表示と, エディタ (CodeMirror) と, 呼ばれた関数.
  */
+function renderEditor(props: Partial<Parameters<typeof CodeEditor>[0]> = {}) {
+  const handlers = {
+    onChange: vi.fn(),
+    onCursorChange: vi.fn(),
+    onMessage: vi.fn(),
+    actions: { 'find-file': vi.fn() },
+  }
+  const handle = createRef<EditorHandle>()
+  const element = (extra: Partial<Parameters<typeof CodeEditor>[0]> = {}) => (
+    <CodeEditor
+      bufferId="a"
+      initialContent="(+ 1 2)"
+      disabled={false}
+      handle={handle}
+      {...handlers}
+      {...props}
+      {...extra}
+    />
+  )
+  const view = render(element())
+  const editor = EditorView.findFromDOM(
+    view.container.querySelector('.cm-editor') as HTMLElement,
+  ) as EditorView
+  /** キーを押します. */
+  const key = (k: string, mods: { ctrl?: boolean; alt?: boolean } = {}) =>
+    fireEvent.keyDown(editor.contentDOM, {
+      key: k,
+      ctrlKey: mods.ctrl ?? false,
+      altKey: mods.alt ?? false,
+    })
+  return { ...view, editor, handle, key, element, ...handlers }
+}
+
 describe('CodeEditor Component', () => {
-  it('renders textarea with initial value', () => {
-    // 初期値を持つテキストエリアがレンダリングされることを確認.
-    const { container } = render(
-      <CodeEditor
-        value="(+ 1 2)"
-        onChange={vi.fn()}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    expect(textarea).toBeTruthy()
-    expect(textarea.value).toBe('(+ 1 2)')
+  it('始めの本文を表示し, カーソルの位置を知らせること', () => {
+    const { editor, onCursorChange } = renderEditor()
+    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
+    expect(onCursorChange).toHaveBeenCalledWith({ line: 1, column: 1, offset: 0 })
   })
 
-  it('calls onChange when text is modified', () => {
-    // テキストが変更されると onChange が呼ばれることを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value=""
-        onChange={onChange}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    fireEvent.change(textarea, { target: { value: '(+ 1 1)' } })
-
-    expect(onChange).toHaveBeenCalledWith('(+ 1 1)')
+  it('書き換えと, カーソルの移動を知らせること', () => {
+    const { editor, onChange, onCursorChange } = renderEditor()
+    editor.dispatch({ changes: { from: 0, insert: 'a\n' }, selection: { anchor: 3 } })
+    expect(onChange).toHaveBeenCalledWith('a\n(+ 1 2)')
+    expect(onCursorChange).toHaveBeenLastCalledWith({ line: 2, column: 2, offset: 3 })
+    editor.dispatch({ selection: { anchor: 0 } })
+    expect(onCursorChange).toHaveBeenLastCalledWith({ line: 1, column: 1, offset: 0 })
   })
 
-  it('calls onCursorChange with cursor position info', () => {
-    // カーソル位置情報が更新されると onCursorChange が呼ばれることを確認.
-    const onCursorChange = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value="hello\nworld"
-        onChange={vi.fn()}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onCursorChange={onCursorChange}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    // カーソルを2行目の開始位置 (位置6) に移動.
-    fireEvent.click(textarea)
-    textarea.setSelectionRange(6, 6)
-    fireEvent.click(textarea)
-
-    expect(onCursorChange).toHaveBeenCalled()
+  it('Emacs のキーでエディタを動かし, 画面のコマンドも呼ぶこと', () => {
+    const { editor, key, actions } = renderEditor()
+    key('e', { ctrl: true })
+    expect(editor.state.selection.main.head).toBe(7)
+    key('x', { ctrl: true })
+    key('f', { ctrl: true })
+    expect(actions['find-file']).toHaveBeenCalled()
   })
 
-  it('disables textarea when disabled prop is true', () => {
-    // disabled プロップが true のとき, テキストエリアが無効化されることを確認.
-    const { container } = render(
-      <CodeEditor
-        value="text"
-        onChange={vi.fn()}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-        disabled={true}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    expect(textarea.readOnly).toBe(true)
+  it('コマンドを名前で実行し, 無いコマンドは false を返すこと', () => {
+    const { editor, handle, actions } = renderEditor()
+    expect(handle.current?.run('end-of-buffer')).toBe(true)
+    expect(editor.state.selection.main.head).toBe(7)
+    expect(handle.current?.run('find-file')).toBe(true)
+    expect(actions['find-file']).toHaveBeenCalled()
+    expect(handle.current?.run('no-such-command')).toBe(false)
   })
 
-  it('handles C-x C-f key sequence', () => {
-    // C-x C-f キーシーケンスで onFindFile が呼ばれることを確認.
-    const onFindFile = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value=""
-        onChange={vi.fn()}
-        onFindFile={onFindFile}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-
-    // C-x を押す.
-    fireEvent.keyDown(textarea, { key: 'x', ctrlKey: true })
-    // C-f を押す.
-    fireEvent.keyDown(textarea, { key: 'f', ctrlKey: true })
-
-    expect(onFindFile).toHaveBeenCalled()
+  it('範囲を選び, カーソルを置き, 行へ動くこと', () => {
+    const { editor, handle } = renderEditor({ initialContent: 'ab\ncd' })
+    act(() => handle.current?.select(1, 2))
+    expect(editor.state.selection.main).toMatchObject({ from: 1, to: 2 })
+    act(() => handle.current?.setCursor(4))
+    expect(editor.state.selection.main.head).toBe(4)
+    act(() => handle.current?.gotoLine(1))
+    expect(editor.state.selection.main.head).toBe(0)
   })
 
-  it('handles C-x C-s key sequence', () => {
-    // C-x C-s キーシーケンスで onSaveBuffer が呼ばれることを確認.
-    const onSaveBuffer = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value=""
-        onChange={vi.fn()}
-        onFindFile={vi.fn()}
-        onSaveBuffer={onSaveBuffer}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-
-    // C-x を押す.
-    fireEvent.keyDown(textarea, { key: 'x', ctrlKey: true })
-    // C-s を押す.
-    fireEvent.keyDown(textarea, { key: 's', ctrlKey: true })
-
-    expect(onSaveBuffer).toHaveBeenCalled()
+  it('コマンドの知らせを, ミニバッファへ渡すこと', () => {
+    const { key, onMessage } = renderEditor()
+    key('g', { ctrl: true })
+    expect(onMessage).toHaveBeenCalledWith('Quit')
   })
 
-  it('C-k kills to end of line via emacs keymap', () => {
-    // C-k で行末まで kill されることを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value="hello world"
-        onChange={onChange}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    textarea.setSelectionRange(5, 5)
-    fireEvent.keyDown(textarea, { key: 'k', ctrlKey: true })
-
-    expect(onChange).toHaveBeenCalledWith('hello')
+  it('書き換えさせないあいだは読み取り専用にし, 終わったら戻すこと', () => {
+    const { editor, rerender, element } = renderEditor({ disabled: true })
+    expect(editor.state.readOnly).toBe(true)
+    rerender(element({ disabled: false }))
+    expect(editor.state.readOnly).toBe(false)
   })
 
-  it('C-f moves cursor without emitting onChange', () => {
-    // C-f でカーソルだけ動かし onChange は呼ばれないことを確認.
-    const onChange = vi.fn()
-    const { container } = render(
-      <CodeEditor
-        value="hello"
-        onChange={onChange}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    textarea.setSelectionRange(0, 0)
-    fireEvent.keyDown(textarea, { key: 'f', ctrlKey: true })
-
-    expect(onChange).not.toHaveBeenCalled()
-    expect(textarea.selectionStart).toBe(1)
-  })
-
-  it('applies highlightRange to textarea selection', () => {
-    // highlightRange prop が textarea の selection に反映されることを確認.
-    const { container } = render(
-      <CodeEditor
-        value="hello world"
-        onChange={vi.fn()}
-        onFindFile={vi.fn()}
-        onSaveBuffer={vi.fn()}
-        onIsearchForward={vi.fn()}
-        onIsearchBackward={vi.fn()}
-        onExecuteCommand={vi.fn()}
-        onQuit={vi.fn()}
-        highlightRange={{ start: 0, end: 5 }}
-      />,
-    )
-
-    const textarea = container.querySelector('textarea') as HTMLTextAreaElement
-    expect(textarea.selectionStart).toBe(0)
-    expect(textarea.selectionEnd).toBe(5)
+  it('バッファを切り替えると, バッファごとの本文とカーソルに切り替え, 消したバッファは作り直すこと', () => {
+    const { editor, rerender, element, handle } = renderEditor()
+    editor.dispatch({ selection: { anchor: 3 } })
+    rerender(element({ bufferId: 'b', initialContent: 'other' }))
+    expect(editor.state.doc.toString()).toBe('other')
+    rerender(element({ bufferId: 'a', initialContent: 'ignored' }))
+    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
+    expect(editor.state.selection.main.head).toBe(3)
+    // 同じバッファのまま描き直しても, 状態を変えない
+    rerender(element({ bufferId: 'a', initialContent: 'ignored' }))
+    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
+    act(() => handle.current?.forget('b'))
+    rerender(element({ bufferId: 'b', initialContent: 'new' }))
+    expect(editor.state.doc.toString()).toBe('new')
   })
 })
 

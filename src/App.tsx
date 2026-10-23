@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import MenuBar from './components/MenuBar'
-import CodeEditor, { CursorInfo } from './components/CodeEditor'
+import CodeEditor, { CursorInfo, EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, {
   MinibufferInputState,
@@ -34,12 +34,9 @@ type PendingAction =
   | 'switch-buffer'
   | 'kill-buffer'
   | 'eval-expression'
+  | 'goto-line'
+  | 'confirm-exit'
   | null
-
-interface Command {
-  name: string
-  run: () => void | Promise<void>
-}
 
 function generateBufferId(): string {
   return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -70,10 +67,8 @@ function App() {
     mode: 'message',
     text: '',
   })
-  const [highlightRange, setHighlightRange] = useState<{ start: number; end: number } | null>(null)
-  const [undoStack, setUndoStack] = useState<{ text: string; cursorPos: number }[]>([])
-  const [redoStack, setRedoStack] = useState<{ text: string; cursorPos: number }[]>([])
   const [showBufferList, setShowBufferList] = useState(false)
+  const editor = useRef<EditorHandle>(null)
 
   // バッファを消すときは, 今のバッファの ID も一緒に変えるので, 必ず見つかる
   const currentBuffer = buffers.find((b) => b.id === currentBufferId) as Buffer
@@ -109,6 +104,7 @@ function App() {
       return false
     }
 
+    editor.current?.forget(currentBuffer.id)
     const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
     if (newBuffers.length === 0) {
       // Create a new scratch buffer if all are killed
@@ -130,38 +126,10 @@ function App() {
 
   const handleEditorChange = (value: string) => {
     updateCurrentBuffer({ content: value, modified: true })
-    setRedoStack([])
   }
 
-  const handlePushUndo = (currentCode: string, currentCursorPos: number) => {
-    setUndoStack((prev) => [...prev, { text: currentCode, cursorPos: currentCursorPos }])
-    setRedoStack([])
-  }
-
-  const handleUndo = () => {
-    if (undoStack.length === 0) return
-    const lastState = undoStack[undoStack.length - 1]
-    setRedoStack((prev) => [...prev, { text: currentBuffer.content, cursorPos: cursor.offset }])
-    updateCurrentBuffer({ content: lastState.text, modified: true })
-    setCursor({
-      line: 1,
-      column: 1,
-      offset: Math.min(lastState.cursorPos, lastState.text.length),
-    })
-    setUndoStack((prev) => prev.slice(0, -1))
-  }
-
-  const handleRedo = () => {
-    if (redoStack.length === 0) return
-    const nextState = redoStack[redoStack.length - 1]
-    setUndoStack((prev) => [...prev, { text: currentBuffer.content, cursorPos: cursor.offset }])
-    updateCurrentBuffer({ content: nextState.text, modified: true })
-    setCursor({
-      line: 1,
-      column: 1,
-      offset: Math.min(nextState.cursorPos, nextState.text.length),
-    })
-    setRedoStack((prev) => prev.slice(0, -1))
+  const showMessage = (text: string) => {
+    setMinibufferState({ mode: 'message', text })
   }
 
   const handleFindFile = () => {
@@ -244,16 +212,42 @@ function App() {
   }
 
   const handleSaveBuffersKillTerminal = async () => {
-    if (currentBuffer.filePath) {
-      await handleSaveBuffer()
-      await getCurrentWindow().close()
+    // 保存していないバッファがあれば, 終わってよいか聞く (Emacs と同じ)
+    if (buffers.some((b) => b.modified)) {
+      setPendingAction('confirm-exit')
+      setMinibufferState({
+        mode: 'input',
+        prompt: 'Modified buffers exist; exit anyway? (yes or no) ',
+        input: '',
+      })
+      return
+    }
+    await getCurrentWindow().close()
+  }
+
+  const handleGotoLine = () => {
+    setPendingAction('goto-line')
+    setMinibufferState({ mode: 'input', prompt: 'Goto line: ', input: '' })
+  }
+
+  /**
+   * 見つかったところを選びます. カーソルは, 前へ探すときは終わりに, 後ろへ探すときは始めに置きます.
+   *
+   * @param direction - 探す向き.
+   * @param match - 見つかったところ.
+   */
+  const selectMatch = (
+    direction: 'forward' | 'backward',
+    match: { start: number; end: number },
+  ) => {
+    if (direction === 'forward') {
+      editor.current?.select(match.start, match.end)
     } else {
-      handleSaveBuffer()
+      editor.current?.select(match.end, match.start)
     }
   }
 
   const handleIsearchForward = () => {
-    setHighlightRange(null)
     setMinibufferState({
       mode: 'isearch',
       direction: 'forward',
@@ -265,7 +259,6 @@ function App() {
   }
 
   const handleIsearchBackward = () => {
-    setHighlightRange(null)
     setMinibufferState({
       mode: 'isearch',
       direction: 'backward',
@@ -295,9 +288,10 @@ function App() {
     const match = findNextMatch(currentBuffer.content, current.query, fromPos, direction)
 
     if (match) {
-      setHighlightRange(match)
+      selectMatch(direction, match)
       setMinibufferState({
         ...current,
+        direction,
         matchStart: match.start,
         matchEnd: match.end,
       })
@@ -309,10 +303,6 @@ function App() {
   const handleExecuteCommand = () => {
     setPendingAction('execute-command')
     setMinibufferState({ mode: 'input', prompt: 'M-x ', input: '' })
-  }
-
-  const handleQuit = () => {
-    setMinibufferState({ mode: 'message', text: 'Quit' })
   }
 
   const handleMinibufferInputChange = (
@@ -329,7 +319,7 @@ function App() {
         current.direction,
       )
       if (match) {
-        setHighlightRange(match)
+        selectMatch(current.direction, match)
         setMinibufferState({
           ...current,
           query: value,
@@ -337,17 +327,26 @@ function App() {
           matchEnd: match.end,
         })
       } else {
-        setHighlightRange(null)
         setMinibufferState({ ...current, query: value, matchStart: null, matchEnd: null })
       }
     }
   }
 
-  const commands: Command[] = [
-    { name: 'find-file', run: handleFindFile },
-    { name: 'save-buffer', run: handleSaveBuffer },
-    { name: 'save-buffers-kill-terminal', run: handleSaveBuffersKillTerminal },
-  ]
+  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ
+  const actions: Record<string, () => void> = {
+    'find-file': handleFindFile,
+    'save-buffer': () => void handleSaveBuffer(),
+    'switch-to-buffer': handleSwitchBuffer,
+    'kill-buffer': handleKillBuffer,
+    'list-buffers': handleListBuffers,
+    'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
+    'execute-extended-command': handleExecuteCommand,
+    'eval-last-sexp': () => void handleEvalLastSexp(),
+    'eval-expression': handleEvalExpression,
+    'isearch-forward': handleIsearchForward,
+    'isearch-backward': handleIsearchBackward,
+    'goto-line': handleGotoLine,
+  }
 
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
@@ -389,11 +388,18 @@ function App() {
       killCurrentBuffer()
       setMinibufferState({ mode: 'message', text: '' })
     } else if (action === 'execute-command') {
-      const cmd = commands.find((c) => c.name === value.trim())
-      if (cmd) {
-        await cmd.run()
-      } else {
+      setMinibufferState({ mode: 'message', text: '' })
+      if (!editor.current?.run(value.trim())) {
         setMinibufferState({ mode: 'message', text: `Undefined command: ${value}` })
+      }
+    } else if (action === 'goto-line') {
+      editor.current?.gotoLine(Number(value))
+      setMinibufferState({ mode: 'message', text: '' })
+    } else if (action === 'confirm-exit') {
+      if (value.trim() === 'yes') {
+        await getCurrentWindow().close()
+      } else {
+        setMinibufferState({ mode: 'message', text: '' })
       }
     } else if (action === 'eval-expression') {
       try {
@@ -410,8 +416,14 @@ function App() {
         setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
       }
     } else {
-      // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ)
-      setHighlightRange(null)
+      // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ).
+      // 見つかったところの, 探した向きの側にカーソルを置く
+      const current = minibufferState as MinibufferIsearchState
+      if (current.matchStart !== null) {
+        editor.current?.setCursor(
+          current.direction === 'forward' ? (current.matchEnd as number) : current.matchStart,
+        )
+      }
       setMinibufferState({ mode: 'message', text: '' })
     }
   }
@@ -421,36 +433,23 @@ function App() {
     setPendingAction(null)
 
     if (current.mode === 'isearch') {
-      setHighlightRange({ start: current.originalCursor, end: current.originalCursor })
-      setMinibufferState({ mode: 'message', text: 'Quit' })
-    } else {
-      setMinibufferState({ mode: 'message', text: 'Quit' })
+      editor.current?.setCursor(current.originalCursor)
     }
+    setMinibufferState({ mode: 'message', text: 'Quit' })
   }
 
   return (
     <div className="app">
       <MenuBar />
       <CodeEditor
-        value={currentBuffer.content}
+        bufferId={currentBufferId}
+        initialContent={currentBuffer.content}
         onChange={handleEditorChange}
         onCursorChange={setCursor}
-        onFindFile={handleFindFile}
-        onSaveBuffer={handleSaveBuffer}
-        onIsearchForward={handleIsearchForward}
-        onIsearchBackward={handleIsearchBackward}
-        onExecuteCommand={handleExecuteCommand}
-        onQuit={handleQuit}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onPushUndo={handlePushUndo}
-        onSwitchBuffer={handleSwitchBuffer}
-        onKillBuffer={handleKillBuffer}
-        onListBuffers={handleListBuffers}
-        onEvalLastSexp={handleEvalLastSexp}
-        onEvalExpression={handleEvalExpression}
-        highlightRange={highlightRange}
+        actions={actions}
+        onMessage={showMessage}
         disabled={minibufferState.mode !== 'message' || showBufferList}
+        handle={editor}
       />
       <ModeLine
         bufferName={currentBuffer.name}

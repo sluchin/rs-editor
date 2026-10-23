@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, fireEvent, act } from '@testing-library/react'
+import { isolateHistory } from '@codemirror/commands'
+import { EditorView } from '@codemirror/view'
 import { invoke } from '@tauri-apps/api/core'
 import App from '../App'
 import * as fileOps from '../lib/fileOps'
@@ -30,12 +32,18 @@ interface Mods {
  */
 async function setup() {
   const view = render(<App />)
-  const textarea = view.container.querySelector('textarea') as HTMLTextAreaElement
+  const editor = EditorView.findFromDOM(
+    view.container.querySelector('.cm-editor') as HTMLElement,
+  ) as EditorView
   // ホームのディレクトリの取得 (useEffect) を待つ
   await act(async () => {})
-  /** テキストエリアで, キーを押す. */
+  /** エディタで, キーを押す. */
   const key = (k: string, mods: Mods = {}) =>
-    fireEvent.keyDown(textarea, { key: k, ctrlKey: mods.ctrl ?? false, altKey: mods.alt ?? false })
+    fireEvent.keyDown(editor.contentDOM, {
+      key: k,
+      ctrlKey: mods.ctrl ?? false,
+      altKey: mods.alt ?? false,
+    })
   /** C-x に続けて, キーを押す. */
   const ctrlX = (k: string, ctrl = true) => {
     key('x', { ctrl: true })
@@ -50,14 +58,21 @@ async function setup() {
       fireEvent.keyDown(input(), { key: 'Enter' })
     })
   }
-  /** エディタの文字を書き換えて, カーソルを置く. */
-  const type = (value: string, cursor = value.length) => {
-    fireEvent.change(textarea, { target: { value } })
-    textarea.setSelectionRange(cursor, cursor)
-    fireEvent.keyUp(textarea)
-  }
+  /** エディタの文字を書き換えて, カーソルを置く (元に戻す履歴は, 前の変更とつなげない). */
+  const type = (value: string, cursor = value.length) =>
+    act(() => {
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: value },
+        selection: { anchor: cursor },
+        annotations: isolateHistory.of('full'),
+      })
+    })
+  /** エディタの本文. */
+  const doc = () => editor.state.doc.toString()
+  /** カーソルの位置. */
+  const cursor = () => editor.state.selection.main.head
   const text = () => view.container.textContent ?? ''
-  return { ...view, textarea, key, ctrlX, input, submit, type, text }
+  return { ...view, editor, key, ctrlX, input, submit, type, doc, cursor, text }
 }
 
 describe('App', () => {
@@ -89,7 +104,7 @@ describe('App', () => {
     expect(editor.input().value).toBe('/home/u/')
     await editor.submit('/tmp/a.scm')
     expect(editor.text()).toContain('a.scm')
-    expect(editor.textarea.value).toBe('(+ 1 2)')
+    expect(editor.doc()).toBe('(+ 1 2)')
 
     mocked.pathExists.mockResolvedValueOnce(false)
     editor.ctrlX('f')
@@ -178,7 +193,7 @@ describe('App', () => {
 
   it('C-x k は, 変更したバッファを消さない', async () => {
     const editor = await setup()
-    editor.type('changed')
+    await editor.type('changed')
 
     editor.ctrlX('k', false)
     expect(editor.text()).toContain('is modified')
@@ -187,7 +202,7 @@ describe('App', () => {
   it('変更したバッファの C-x k のあと, 検索を Enter で確定しても, バッファは消さない', async () => {
     // C-x k の保留が, 次のミニバッファの確定 (検索) まで残る (今の作りの動き)
     const editor = await setup()
-    editor.type('changed')
+    await editor.type('changed')
     editor.ctrlX('k', false)
 
     editor.key('s', { ctrl: true })
@@ -195,7 +210,7 @@ describe('App', () => {
       fireEvent.keyDown(editor.input(), { key: 'Enter' })
     })
     // 変更があるので消さない (警告は, 直後の空のメッセージで消える)
-    expect(editor.textarea.value).toBe('changed')
+    expect(editor.doc()).toBe('changed')
     expect(editor.text()).toContain('*scratch*')
   })
 
@@ -214,7 +229,7 @@ describe('App', () => {
 
   it('C-x C-e で, カーソルの前の S 式を評価する (結果, エラー, 失敗, S 式なし)', async () => {
     const editor = await setup()
-    editor.type('(+ 1 2)')
+    await editor.type('(+ 1 2)')
 
     mockedInvoke.mockResolvedValueOnce({ result: '3', error: null })
     await act(async () => editor.ctrlX('e'))
@@ -229,7 +244,7 @@ describe('App', () => {
     await act(async () => editor.ctrlX('e'))
     expect(editor.text()).toContain('Eval error: crash')
 
-    editor.type('', 0)
+    await editor.type('', 0)
     await act(async () => editor.ctrlX('e'))
     expect(editor.text()).toContain('No S-expression found before cursor')
   })
@@ -267,26 +282,42 @@ describe('App', () => {
     fireEvent.keyDown(editor.input(), { key: 'Escape' })
 
     editor.key('x', { alt: true })
-    await editor.submit('save-buffers-kill-terminal')
-    expect(editor.text()).toContain('Save file')
-    fireEvent.keyDown(editor.input(), { key: 'Escape' })
-    expect(editor.text()).toContain('Quit')
+    await editor.submit('end-of-buffer')
+    expect(editor.cursor()).toBe(editor.doc().length)
 
     editor.key('x', { alt: true })
     await editor.submit('no-such')
     expect(editor.text()).toContain('Undefined command: no-such')
   })
 
-  it('save-buffers-kill-terminal は, ファイルのあるバッファなら保存して閉じる', async () => {
+  it('C-x C-c は, 変更したバッファがなければ, すぐに閉じる', async () => {
     const editor = await setup()
-    mocked.pathExists.mockResolvedValueOnce(true)
-    mocked.readFile.mockResolvedValueOnce('x')
-    editor.ctrlX('f')
-    await editor.submit('/tmp/k.scm')
+    await act(async () => editor.ctrlX('c'))
+    expect(close).toHaveBeenCalled()
+  })
 
-    editor.key('x', { alt: true })
-    await editor.submit('save-buffers-kill-terminal')
-    await waitFor(() => expect(close).toHaveBeenCalled())
+  it('C-x C-c は, 変更したバッファがあれば, 終わってよいか聞き, yes でだけ閉じる', async () => {
+    const editor = await setup()
+    await editor.type('changed')
+
+    await act(async () => editor.ctrlX('c'))
+    expect(editor.text()).toContain('Modified buffers exist; exit anyway?')
+    await editor.submit('no')
+    expect(close).not.toHaveBeenCalled()
+
+    await act(async () => editor.ctrlX('c'))
+    await editor.submit('yes')
+    expect(close).toHaveBeenCalled()
+  })
+
+  it('M-g g で, 入れた行へ動く', async () => {
+    const editor = await setup()
+    await editor.type('a\nb\nc', 0)
+
+    editor.key('g', { alt: true })
+    editor.key('g')
+    await editor.submit('3')
+    expect(editor.cursor()).toBe(4)
   })
 
   it('C-/ で元に戻し, C-x C-/ でやり直す (履歴がなければ, 何もしない)', async () => {
@@ -294,25 +325,29 @@ describe('App', () => {
     await act(async () => editor.ctrlX('/'))
     editor.key('/', { ctrl: true })
 
-    editor.type('abc\ndef', 0)
+    await editor.type('abc\ndef', 0)
     editor.key('k', { ctrl: true })
-    expect(editor.textarea.value).toBe('\ndef')
+    expect(editor.doc()).toBe('\ndef')
 
     editor.key('/', { ctrl: true })
-    expect(editor.textarea.value).toBe('abc\ndef')
+    expect(editor.doc()).toBe('abc\ndef')
 
     editor.ctrlX('/')
-    expect(editor.textarea.value).toBe('\ndef')
+    expect(editor.doc()).toBe('\ndef')
   })
 
   it('C-s と C-r で検索し, 繰り返し, Enter で確定, C-g でやめる', async () => {
     const editor = await setup()
-    editor.type('ab ab ab', 0)
+    await editor.type('ab ab ab', 0)
 
     editor.key('s', { ctrl: true })
     fireEvent.change(editor.input(), { target: { value: 'ab' } })
+    expect(editor.editor.state.selection.main).toMatchObject({ from: 0, to: 2, head: 2 })
     fireEvent.keyDown(editor.input(), { key: 's', ctrlKey: true })
+    expect(editor.editor.state.selection.main).toMatchObject({ from: 3, to: 5 })
     fireEvent.keyDown(editor.input(), { key: 'r', ctrlKey: true })
+    // 後ろへ探すときは, カーソルを見つかったところの始めに置く
+    expect(editor.editor.state.selection.main).toMatchObject({ from: 0, to: 2, head: 0 })
     fireEvent.keyDown(editor.input(), { key: 'r', ctrlKey: true })
     fireEvent.change(editor.input(), { target: { value: 'zz' } })
     expect(editor.text()).toContain('Failing')
@@ -322,9 +357,27 @@ describe('App', () => {
     })
     expect(editor.input()).toBeNull()
 
+    // 確定すると, 見つかったところの終わり (後ろへ探したときは始め) にカーソルを置く
+    editor.key('s', { ctrl: true })
+    fireEvent.change(editor.input(), { target: { value: 'ab' } })
+    fireEvent.keyDown(editor.input(), { key: 's', ctrlKey: true })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Enter' })
+    })
+    expect(editor.cursor()).toBe(5)
     editor.key('r', { ctrl: true })
+    fireEvent.change(editor.input(), { target: { value: 'ab' } })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Enter' })
+    })
+    expect(editor.cursor()).toBe(3)
+
+    // C-g でやめると, 探し始めた位置に戻す
+    editor.key('r', { ctrl: true })
+    fireEvent.change(editor.input(), { target: { value: 'ab' } })
     fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
     expect(editor.text()).toContain('Quit')
+    expect(editor.cursor()).toBe(3)
   })
 
   it('C-g は Quit を出す', async () => {

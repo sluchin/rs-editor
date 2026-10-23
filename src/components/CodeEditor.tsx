@@ -1,6 +1,9 @@
-import { useRef, useState, useEffect, useLayoutEffect, KeyboardEvent } from 'react'
-import { usePrefixKeymap } from '../lib/prefixKeymap'
-import { useEmacsKeymap } from '../lib/emacsKeymap'
+import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
+import { indentWithTab, standardKeymap } from '@codemirror/commands'
+import { Compartment, EditorSelection, EditorState, Prec } from '@codemirror/state'
+import { EditorView, drawSelection, keymap } from '@codemirror/view'
+import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
+import { KillRing } from '../lib/killRing'
 import '../styles/CodeEditor.css'
 
 export interface CursorInfo {
@@ -9,140 +12,190 @@ export interface CursorInfo {
   offset: number
 }
 
+/** 画面 (App) から, エディタを動かす窓口. */
+export interface EditorHandle {
+  /**
+   * コマンドを名前で実行します (M-x).
+   *
+   * @returns コマンドがあれば `true`.
+   */
+  run: (name: string) => boolean
+  /** 範囲を選びます (検索で見つかったところ). */
+  select: (from: number, to: number) => void
+  /** カーソルを置きます. */
+  setCursor: (pos: number) => void
+  /** 1 から数えた行へ動きます. */
+  gotoLine: (line: number) => void
+  /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
+  forget: (bufferId: string) => void
+}
+
 interface CodeEditorProps {
-  value: string
+  /** 表示するバッファ. 変わると, そのバッファの状態 (カーソル, 元に戻す履歴) に切り替えます. */
+  bufferId: string
+  /** バッファの始めの本文 (始めて表示するときだけ使う). */
+  initialContent: string
+  /** 本文が変わったときに呼びます. */
   onChange: (value: string) => void
-  onCursorChange?: (info: CursorInfo) => void
-  onFindFile: () => void
-  onSaveBuffer: () => void
-  onIsearchForward: () => void
-  onIsearchBackward: () => void
-  onExecuteCommand: () => void
-  onQuit: () => void
-  onUndo?: () => void
-  onRedo?: () => void
-  onPushUndo?: (currentCode: string, currentCursorPos: number) => void
-  onSwitchBuffer?: () => void
-  onKillBuffer?: () => void
-  onListBuffers?: () => void
-  onEvalLastSexp?: () => void
-  onEvalExpression?: () => void
-  highlightRange?: { start: number; end: number } | null
-  disabled?: boolean
+  /** カーソルが動いたときに呼びます. */
+  onCursorChange: (info: CursorInfo) => void
+  /** 画面のコマンド (ファイル, バッファ, 検索, 評価など). 名前で引きます. */
+  actions: Record<string, () => void>
+  /** ミニバッファに出します. */
+  onMessage: (text: string) => void
+  /** ミニバッファで入力しているあいだは `true` (書き換えさせない). */
+  disabled: boolean
+  /** 画面から, エディタを動かす窓口. */
+  handle: Ref<EditorHandle>
 }
 
-function cursorInfoFromOffset(text: string, offset: number): CursorInfo {
-  const before = text.slice(0, offset)
-  const lines = before.split('\n')
-  return {
-    line: lines.length,
-    column: lines[lines.length - 1].length + 1,
-    offset,
-  }
+/**
+ * カーソルの位置の情報 (行と桁は 1 から) を返します.
+ *
+ * @param state - エディタの状態.
+ * @returns カーソルの位置の情報.
+ */
+function cursorInfo(state: EditorState): CursorInfo {
+  const offset = state.selection.main.head
+  const line = state.doc.lineAt(offset)
+  return { line: line.number, column: offset - line.from + 1, offset }
 }
 
+/**
+ * Emacs のキー操作のエディタ (CodeMirror 6). バッファごとに, エディタの状態を持ちます.
+ *
+ * @param props - 引数.
+ * @returns 画面.
+ */
 export default function CodeEditor({
-  value,
+  bufferId,
+  initialContent,
   onChange,
   onCursorChange,
-  onFindFile,
-  onSaveBuffer,
-  onIsearchForward,
-  onIsearchBackward,
-  onExecuteCommand,
-  onQuit,
-  onUndo,
-  onRedo,
-  onPushUndo,
-  onSwitchBuffer,
-  onKillBuffer,
-  onListBuffers,
-  onEvalLastSexp,
-  onEvalExpression,
-  highlightRange,
+  actions,
+  onMessage,
   disabled,
+  handle,
 }: CodeEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [cursorPos, setCursorPos] = useState(0)
-  const pendingCursorRef = useRef<number | null>(null)
-  const highlightRangeRef = useRef<{ start: number; end: number } | null>(null)
-
-  const applyProgrammaticChange = (newValue: string, pos: number) => {
-    pendingCursorRef.current = pos
-    onChange(newValue)
-    setCursorPos(pos)
-  }
-
-  const { handleKeyDown: prefixKeyDown } = usePrefixKeymap({
-    onFindFile,
-    onSaveBuffer,
-    onRedo,
-    onSwitchBuffer,
-    onKillBuffer,
-    onListBuffers,
-    onEvalLastSexp,
-  })
-  const { handleKeyDown: emacsKeyDown } = useEmacsKeymap({
-    textareaRef,
-    value,
-    onChange: applyProgrammaticChange,
-    onIsearchForward,
-    onIsearchBackward,
-    onExecuteCommand,
-    onQuit,
-    onUndo,
-    onPushUndo,
-    onEvalExpression,
-  })
-
-  const updateCursorFromEl = (e: { currentTarget: HTMLTextAreaElement }) => {
-    setCursorPos(e.currentTarget.selectionStart)
-  }
+  const host = useRef<HTMLDivElement>(null)
+  const view = useRef<EditorView>(undefined)
+  // バッファごとの状態 (表示していないバッファの分)
+  const states = useRef(new Map<string, EditorState>())
+  const shown = useRef(bufferId)
+  const readOnly = useRef(new Compartment())
+  const latest = useRef({ onChange, onCursorChange, actions, onMessage })
+  const commands = useRef<Record<string, Command>>(undefined)
+  const initial = useRef({ bufferId, initialContent, disabled })
 
   useEffect(() => {
-    onCursorChange?.(cursorInfoFromOffset(value, cursorPos))
-  }, [value, cursorPos, onCursorChange])
+    latest.current = { onChange, onCursorChange, actions, onMessage }
+  }, [onChange, onCursorChange, actions, onMessage])
 
-  useLayoutEffect(() => {
-    if (pendingCursorRef.current === null) return
-    textareaRef.current?.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current)
-    pendingCursorRef.current = null
-  }, [value, cursorPos])
+  /**
+   * コマンドを名前で引きます. エディタのコマンドがなければ, 画面のコマンドを引きます.
+   *
+   * @param name - コマンドの名前.
+   * @returns コマンド. なければ `undefined`.
+   */
+  const lookup = (name: string): Command | undefined => {
+    const command = commands.current?.[name]
+    if (command) return command
+    const action = latest.current.actions[name]
+    return action
+      ? () => {
+          action()
+          return true
+        }
+      : undefined
+  }
 
-  useLayoutEffect(() => {
-    if (!highlightRange) return
-    textareaRef.current?.setSelectionRange(highlightRange.start, highlightRange.end)
-    highlightRangeRef.current = highlightRange
-  }, [highlightRange])
+  /**
+   * バッファの始めの状態を作ります.
+   *
+   * @param doc - 本文.
+   * @param isReadOnly - 書き換えさせないなら `true`.
+   * @returns 状態.
+   */
+  const createState = (doc: string, isReadOnly: boolean): EditorState =>
+    EditorState.create({
+      doc,
+      extensions: [
+        emacsState(),
+        drawSelection(),
+        readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
+        // Emacs のキーを, CodeMirror の既定のキー (Ctrl-a で全て選ぶ, など) より先に使う
+        Prec.highest(keymap.of(emacsKeymap(lookup))),
+        keymap.of([...standardKeymap, indentWithTab]),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) latest.current.onChange(update.state.doc.toString())
+          if (update.docChanged || update.selectionSet) {
+            latest.current.onCursorChange(cursorInfo(update.state))
+          }
+        }),
+      ],
+    })
 
-  useEffect(() => {
-    if (highlightRangeRef.current) {
-      setCursorPos(highlightRangeRef.current.end)
+  useImperativeHandle(handle, () => {
+    const current = () => view.current as EditorView
+    return {
+      run: (name) => {
+        const command = lookup(name)
+        return command ? (command(current()), true) : false
+      },
+      select: (from, to) => {
+        current().dispatch({ selection: EditorSelection.range(from, to), scrollIntoView: true })
+      },
+      setCursor: (pos) => {
+        current().dispatch({ selection: EditorSelection.cursor(pos), scrollIntoView: true })
+      },
+      gotoLine: (line) => gotoLine(current(), line),
+      forget: (id) => {
+        states.current.delete(id)
+      },
     }
-  }, [highlightRange])
+  })
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (prefixKeyDown(e)) return
-    emacsKeyDown(e)
-  }
+  useEffect(() => {
+    commands.current = createCommands({
+      killRing: new KillRing(),
+      message: (text) => latest.current.onMessage(text),
+    })
+    const created = new EditorView({
+      parent: host.current as HTMLDivElement,
+      state: createState(initial.current.initialContent, initial.current.disabled),
+    })
+    view.current = created
+    latest.current.onCursorChange(cursorInfo(created.state))
+    created.focus()
+    return () => {
+      created.destroy()
+      view.current = undefined
+    }
+    // 作るのは 1 回だけ (バッファの切り替えと, 書き換えの禁止は, 下の効果で行う)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  return (
-    <div className="code-editor-container">
-      <textarea
-        ref={textareaRef}
-        className="code-editor-textarea"
-        value={value}
-        onChange={(e) => {
-          onChange(e.target.value)
-          setCursorPos(e.target.selectionStart)
-        }}
-        onKeyDown={handleKeyDown}
-        onKeyUp={updateCursorFromEl}
-        onClick={updateCursorFromEl}
-        readOnly={disabled}
-        spellCheck={false}
-        autoFocus
-      />
-    </div>
-  )
+  // バッファを切り替えたら, そのバッファの状態にする (表示していたバッファの状態は, 覚えておく)
+  useEffect(() => {
+    const current = view.current as EditorView
+    if (shown.current === bufferId) return
+    states.current.set(shown.current, current.state)
+    shown.current = bufferId
+    const next = states.current.get(bufferId) ?? createState(initialContent, disabled)
+    states.current.delete(bufferId)
+    current.setState(next)
+    current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(disabled)) })
+    latest.current.onCursorChange(cursorInfo(next))
+    // initialContent は, 始めて表示するときにだけ使う. disabled は, 下の効果で合わせる
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bufferId])
+
+  // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, エディタに戻る
+  useEffect(() => {
+    const current = view.current as EditorView
+    current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(disabled)) })
+    if (!disabled) current.focus()
+  }, [disabled])
+
+  return <div className="code-editor-container" ref={host} />
 }
