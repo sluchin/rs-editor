@@ -194,18 +194,22 @@ function App() {
     setBuffers((prev) => prev.map((b) => (b.id === currentBufferId ? { ...b, ...updates } : b)))
   }
 
-  const createNewBuffer = (
-    name: string,
-    filePath: string | null = null,
-    content: string = '',
-    modified = content !== '',
-  ) => {
+  /**
+   * バッファを作って, 選んでいるウィンドウに出します. 作ったばかりのバッファは, 変更なしです
+   * (開いたファイルの中身は, ファイルと同じ).
+   *
+   * @param name - バッファの名前.
+   * @param filePath - バッファのファイル.
+   * @param content - 本文.
+   * @returns 作ったバッファ.
+   */
+  const createNewBuffer = (name: string, filePath: string | null = null, content: string = '') => {
     const newBuffer: Buffer = {
       id: generateBufferId(),
       name,
       filePath,
       content,
-      modified,
+      modified: false,
     }
     setBuffers((prev) => [...prev, newBuffer])
     setCurrentBufferId(newBuffer.id)
@@ -450,7 +454,7 @@ function App() {
       setBuffers((prev) => prev.filter((b) => b.id !== old.id))
     }
     const header = `${'key'.padEnd(24)}binding\n${'---'.padEnd(24)}-------\n`
-    createNewBuffer('*Help*', null, header + lines.join('\n') + '\n', false)
+    createNewBuffer('*Help*', null, header + lines.join('\n') + '\n')
   }
 
   const handleEvalLastSexp = async () => {

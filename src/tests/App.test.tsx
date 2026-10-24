@@ -688,6 +688,18 @@ describe('App', () => {
     expect(close).toHaveBeenCalled()
   })
 
+  it('C-x C-f で開いただけのファイルは, 変更なしで, C-x C-c ですぐに閉じる', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValueOnce(true)
+    mocked.readFile.mockResolvedValueOnce('(+ 1 2)')
+    editor.ctrlX('f')
+    await editor.submit('/tmp/a.scm')
+    expect(editor.text()).toContain('-:--- a.scm')
+
+    await act(async () => editor.ctrlX('c'))
+    expect(close).toHaveBeenCalled()
+  })
+
   it('C-x C-c は, 変更したバッファがあれば, 終わってよいか聞き, yes でだけ閉じる', async () => {
     const editor = await setup()
     await editor.type('changed')
