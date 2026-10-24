@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react'
-import { complete } from '../lib/complete'
+import { complete, type Completion } from '../lib/complete'
 import '../styles/Minibuffer.css'
 
 interface MinibufferMessageState {
@@ -13,6 +13,8 @@ export interface MinibufferInputState {
   input: string
   /** Tab で補完する候補 (無ければ, 補完しない). */
   completions?: readonly string[]
+  /** Tab で補完する関数 (ファイルの名前など, 候補を入力から探すとき. `completions` より先に使う). */
+  complete?: (input: string) => Promise<Completion>
 }
 
 export interface MinibufferIsearchState {
@@ -119,11 +121,20 @@ export default function Minibuffer({
         }
       }
 
-      if (e.key === 'Tab' && state.mode === 'input' && state.completions) {
+      if (e.key === 'Tab' && state.mode === 'input' && (state.complete || state.completions)) {
         e.preventDefault()
-        const { value, matches } = complete(state.input, state.completions)
-        setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches)
-        onInputChange(value, state)
+        const show = ({ value, matches }: Completion) => {
+          setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches)
+          onInputChange(value, state)
+        }
+        if (state.complete) {
+          void state.complete(state.input).then((result) => {
+            // 補完を待つあいだに, 入力を変えたか, ミニバッファを閉じたなら, 捨てる
+            if (inputRef.current?.value === state.input) show(result)
+          })
+        } else {
+          show(complete(state.input, state.completions as readonly string[]))
+        }
         return
       }
 

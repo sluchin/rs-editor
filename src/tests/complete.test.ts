@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { complete } from '../lib/complete'
+import { describe, it, expect, vi } from 'vitest'
+import { complete, completeFileName } from '../lib/complete'
 
 describe('complete', () => {
   it('前方一致する候補の, 共通する先頭の部分まで補完すること', () => {
@@ -16,5 +16,32 @@ describe('complete', () => {
       matches: ['kill-line', 'kill-word'],
     })
     expect(complete('zz', ['a'])).toEqual({ value: 'zz', matches: [] })
+  })
+})
+
+describe('completeFileName', () => {
+  it('最後の / の後ろを, そのディレクトリの中の名前で補完すること', async () => {
+    const list = vi.fn(async (dir: string) =>
+      dir === '/home/u/' ? ['.emacs', 'src/', 'scheme.scm', 'scratch/'] : [],
+    )
+    expect(await completeFileName('/home/u/sc', list)).toEqual({
+      value: '/home/u/sc',
+      matches: ['scheme.scm', 'scratch/'],
+    })
+    expect(list).toHaveBeenCalledWith('/home/u/')
+    // ディレクトリは, / まで補完する
+    expect(await completeFileName('/home/u/sr', list)).toEqual({
+      value: '/home/u/src/',
+      matches: ['src/'],
+    })
+    expect(await completeFileName('/home/u/', list)).toEqual({
+      value: '/home/u/',
+      matches: ['.emacs', 'scheme.scm', 'scratch/', 'src/'],
+    })
+  })
+
+  it('ディレクトリを読めなければ, 候補なしにすること', async () => {
+    const list = vi.fn().mockRejectedValue('No such file or directory')
+    expect(await completeFileName('/none/a', list)).toEqual({ value: '/none/a', matches: [] })
   })
 })

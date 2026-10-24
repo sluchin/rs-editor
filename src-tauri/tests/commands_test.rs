@@ -5,8 +5,8 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    eval_code, eval_code_with, home_dir, init_file_path, init_file_path_from, load_init_file,
-    path_exists, read_file_content, run_command, write_file_content, EvalResponse,
+    eval_code, eval_code_with, home_dir, init_file_path, init_file_path_from, list_directory,
+    load_init_file, path_exists, read_file_content, run_command, write_file_content, EvalResponse,
 };
 use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
 use rseditor::scheme::host::NoHost;
@@ -46,6 +46,16 @@ fn test_read_and_write_fail_with_the_reason() {
     let missing = dir.path().join("none/a.scm").to_string_lossy().into_owned();
     assert!(read_file_content(missing.clone()).is_err());
     assert!(write_file_content(missing, "x".to_string()).is_err());
+}
+
+#[test]
+fn test_list_directory_marks_the_directories() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("b.scm"), "").unwrap();
+    fs::create_dir(dir.path().join("a")).unwrap();
+    let path = dir.path().to_string_lossy().into_owned();
+    assert_eq!(list_directory(path.clone()).unwrap(), vec!["a/", "b.scm"]);
+    assert!(list_directory(path + "/none").is_err());
 }
 
 #[test]

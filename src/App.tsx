@@ -9,7 +9,9 @@ import Minibuffer, {
   MinibufferState,
 } from './components/Minibuffer'
 import BufferList from './components/BufferList'
-import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
+import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from './lib/fileOps'
+import { completeFileName } from './lib/complete'
+import { majorMode } from './lib/modes'
 import { compileRegexp, findNextMatch } from './lib/isearch'
 import {
   type ReplaceMatch,
@@ -76,6 +78,14 @@ interface ReplaceState {
   /** 置き換えた数. */
   count: number
 }
+
+/**
+ * ファイルの名前を補完します (`C-x C-f`, 保存するファイル).
+ *
+ * @param input - 入力 (パス).
+ * @returns 補完した入力と, 候補.
+ */
+const completeFile = (input: string) => completeFileName(input, listDirectory)
 
 /**
  * 置換の名前 (プロンプトに出す) を返します.
@@ -366,7 +376,12 @@ function App() {
 
   const handleFindFile = () => {
     setPendingAction('find-file')
-    setMinibufferState({ mode: 'input', prompt: 'Find file: ', input: homeDir })
+    setMinibufferState({
+      mode: 'input',
+      prompt: 'Find file: ',
+      input: homeDir,
+      complete: completeFile,
+    })
   }
 
   const handleSaveBuffer = async () => {
@@ -380,7 +395,12 @@ function App() {
       }
     } else {
       setPendingAction('write-file')
-      setMinibufferState({ mode: 'input', prompt: 'Save file: ', input: homeDir })
+      setMinibufferState({
+        mode: 'input',
+        prompt: 'Save file: ',
+        input: homeDir,
+        complete: completeFile,
+      })
     }
   }
 
@@ -799,6 +819,7 @@ function App() {
           const bufferId = windowBuffers[rect.id]
           const buffer = buffers.find((b) => b.id === bufferId) as Buffer
           const active = rect.id === activeWindow
+          const mode = majorMode(buffer.name, buffer.filePath)
           return (
             <div
               key={rect.id}
@@ -821,6 +842,7 @@ function App() {
                 onMessage={showMessage}
                 disabled={minibufferState.mode !== 'message' || showBufferList}
                 active={active}
+                language={mode.language}
                 handle={(handle) => {
                   if (handle) handles.current.set(rect.id, handle)
                   else handles.current.delete(rect.id)
@@ -830,7 +852,7 @@ function App() {
                 bufferName={buffer.name}
                 modified={buffer.modified}
                 cursor={cursors[rect.id] ?? START_CURSOR}
-                mode="Lisp Interaction"
+                mode={mode.name}
                 bufferCount={buffers.length}
                 currentBufferIndex={buffers.findIndex((b) => b.id === bufferId) + 1}
                 active={active}

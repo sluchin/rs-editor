@@ -12,6 +12,8 @@ import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
+import type { MajorMode } from '../lib/modes'
+import { schemeHighlighting } from '../lib/schemeMode'
 import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
 
@@ -105,6 +107,8 @@ interface CodeEditorProps {
   disabled: boolean
   /** 選んでいるウィンドウなら `true` (フォーカスを取る). 省くと `true`. */
   active?: boolean
+  /** シンタックスハイライトの言語 (省くと, 色を付けない). */
+  language?: MajorMode['language']
   /** 画面から, エディタを動かす窓口. */
   handle: Ref<EditorHandle>
 }
@@ -137,6 +141,7 @@ export default function CodeEditor({
   onMessage,
   disabled,
   active = true,
+  language = null,
   handle,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null)
@@ -146,6 +151,7 @@ export default function CodeEditor({
   const shown = useRef(bufferId)
   const readOnly = useRef(new Compartment())
   const keys = useRef(new Compartment())
+  const highlight = useRef(new Compartment())
   // キーボードマクロ (全てのバッファで共通)
   const macro = useRef(new KeyboardMacro())
   const latestKeys = useRef(keyBindings)
@@ -194,6 +200,13 @@ export default function CodeEditor({
     )
 
   /**
+   * シンタックスハイライトの拡張を作ります.
+   *
+   * @returns 拡張.
+   */
+  const highlightExtension = () => (language === 'scheme' ? schemeHighlighting : [])
+
+  /**
    * バッファの始めの状態を作ります.
    *
    * @param doc - 本文.
@@ -208,6 +221,7 @@ export default function CodeEditor({
         drawSelection(),
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
+        highlight.current.of(highlightExtension()),
         // キーボードマクロを記録する (キーの割り当てより先に見る)
         Prec.highest(
           EditorView.domEventHandlers({
@@ -309,6 +323,7 @@ export default function CodeEditor({
       effects: [
         readOnly.current.reconfigure(EditorState.readOnly.of(disabled)),
         keys.current.reconfigure(keyExtension()),
+        highlight.current.reconfigure(highlightExtension()),
       ],
     })
     // 隠していたあいだに, 別のウィンドウで書き換えたかもしれない
@@ -328,6 +343,14 @@ export default function CodeEditor({
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyBindings])
+
+  // ファイルの名前を変えて (保存するファイル), メジャーモードが変わったら, 色を付け直す
+  useEffect(() => {
+    ;(view.current as EditorView).dispatch({
+      effects: highlight.current.reconfigure(highlightExtension()),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language])
 
   // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, 選んでいるウィンドウのエディタに戻る
   useEffect(() => {

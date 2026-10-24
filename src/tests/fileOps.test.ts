@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFile, writeFile, pathExists, getHomeDir } from '../lib/fileOps'
+import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from '../lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
 vi.mock('@tauri-apps/api/core')
@@ -123,6 +123,18 @@ describe('fileOps', () => {
       vi.mocked(tauri.invoke).mockRejectedValueOnce(error)
 
       await expect(getHomeDir()).rejects.toThrow('Failed to get home directory')
+    })
+  })
+
+  describe('listDirectory', () => {
+    it('lists the directory with Tauri', async () => {
+      // Tauri の list_directory コマンドで, ディレクトリの中の名前を取ることを確認.
+      vi.mocked(tauri.invoke).mockResolvedValueOnce(['a/', 'b.scm'])
+
+      const result = await listDirectory('/home/u/')
+
+      expect(tauri.invoke).toHaveBeenCalledWith('list_directory', { path: '/home/u/' })
+      expect(result).toEqual(['a/', 'b.scm'])
     })
   })
 })

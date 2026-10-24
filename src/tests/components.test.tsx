@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { createRef } from 'react'
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import { EditorView } from '@codemirror/view'
+import { language } from '@codemirror/language'
 import CodeEditor, { CursorInfo, EditorHandle } from '../components/CodeEditor'
 import Minibuffer, { MinibufferInputState, MinibufferState } from '../components/Minibuffer'
 import ModeLine from '../components/ModeLine'
@@ -70,6 +71,16 @@ describe('CodeEditor Component', () => {
     expect(onChange).not.toHaveBeenCalled()
     expect(handle.current?.run('undo')).toBe(true)
     expect(editor.state.doc.toString()).toBe('x')
+  })
+
+  it('言語を渡すと色を付け, 言語やバッファが変わると付け直すこと', () => {
+    const { editor, rerender, element } = renderEditor({ language: 'scheme' })
+    expect(editor.state.facet(language)?.name).toBe('scheme')
+    rerender(element({ language: null }))
+    expect(editor.state.facet(language)).toBeNull()
+    // 色を付けないバッファから, 色を付けるバッファに切り替える
+    rerender(element({ bufferId: 'b', language: 'scheme' }))
+    expect(editor.state.facet(language)?.name).toBe('scheme')
   })
 
   it('選んでいないウィンドウのエディタは, フォーカスを取らず, 選ぶと取ること', () => {
@@ -240,6 +251,39 @@ describe('Minibuffer Component (補完)', () => {
     // 候補がなければ, Tab で補完しない
     fireEvent.keyDown(input(), { key: 'Tab' })
     expect(onInputChange).toHaveBeenCalledTimes(4)
+  })
+})
+
+describe('Minibuffer Component (ファイルの名前の補完)', () => {
+  it('Tab で, 補完する関数の結果を待って補完し, 待つあいだに入力が変われば捨てること', async () => {
+    let state: MinibufferState = {
+      mode: 'input',
+      prompt: 'Find file: ',
+      input: '/home/u/s',
+      complete: async (input) => ({ value: input + 'rc/', matches: ['src/'] }),
+    }
+    const onInputChange = vi.fn((value: string) => {
+      state = { ...(state as MinibufferInputState), input: value }
+    })
+    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn() }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const input = () => view.container.querySelector('input') as HTMLInputElement
+    await act(async () => {
+      fireEvent.keyDown(input(), { key: 'Tab' })
+    })
+    expect(onInputChange).toHaveBeenLastCalledWith('/home/u/src/', expect.anything())
+    view.rerender(<Minibuffer state={state} {...props} />)
+    // 補完を待つあいだに, ミニバッファを閉じた
+    let finish: (value: { value: string; matches: string[] }) => void = () => {}
+    state = {
+      ...(state as MinibufferInputState),
+      complete: () => new Promise((resolve) => (finish = resolve)),
+    }
+    view.rerender(<Minibuffer state={state} {...props} />)
+    fireEvent.keyDown(input(), { key: 'Tab' })
+    view.rerender(<Minibuffer state={{ mode: 'message', text: '' }} {...props} />)
+    await act(async () => finish({ value: '/x', matches: [] }))
+    expect(onInputChange).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -15,3 +15,13 @@ export async function pathExists(path: string): Promise<boolean> {
 export async function getHomeDir(): Promise<string> {
   return await invoke<string>('home_dir')
 }
+
+/**
+ * ディレクトリの中の名前を返します (ディレクトリには, 後ろに `/` が付く).
+ *
+ * @param path - ディレクトリのパス.
+ * @returns 名前の順の, 名前.
+ */
+export async function listDirectory(path: string): Promise<string[]> {
+  return await invoke<string[]>('list_directory', { path })
+}

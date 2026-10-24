@@ -111,10 +111,10 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 
 ## 削除された機能
 
-Emacs はシンタックスハイライトと括弧マッチングを Lisp で実装しており、これらはコア機能ではなくユーザー拡張です。同様に、括弧の自動補完も IDE 固有の機能で Emacs には無い。
+括弧の自動補完は IDE 固有の機能で, Emacs の既定には無い。
 
 **削除したもの:**
-- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - Lisp ユーザー拡張
+- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Scheme モード (`schemeMode.ts`) で作り直した (Emacs の既定の font-lock と同じく, 色を付ける)
 - ❌ **括弧マッチハイライト** (`findMatchingBracket`, `findUnmatchedClose` from `bracketMatch.ts`) - Lisp ユーザー拡張
 - ❌ **括弧自動補完** (`bracketAutoClose.ts`) - IDE 固有機能
 

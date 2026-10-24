@@ -302,6 +302,34 @@ pub fn path_exists(path: String) -> bool {
     std::path::Path::new(&path).exists()
 }
 
+/// ディレクトリの中の名前を, 名前の順に返します (ファイル名の補完). ディレクトリには, 後ろに `/` を付けます.
+///
+/// # Arguments
+///
+/// * `path` - ディレクトリのパス.
+///
+/// # Returns
+///
+/// 名前. 読めなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn list_directory(path: String) -> Result<Vec<String>, String> {
+    let entries = std::fs::read_dir(&path).map_err(|e| e.to_string())?;
+    let mut names: Vec<String> = entries
+        .flatten()
+        .map(|entry| {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            // シンボリックリンクは, 指す先で決める
+            if entry.path().is_dir() {
+                name + "/"
+            } else {
+                name
+            }
+        })
+        .collect();
+    names.sort();
+    Ok(names)
+}
+
 /// ホームディレクトリ (環境変数 `HOME`) を返します.
 ///
 /// # Returns

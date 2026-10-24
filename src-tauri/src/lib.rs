@@ -36,6 +36,7 @@ pub fn run() {
             commands::read_file_content,
             commands::write_file_content,
             commands::path_exists,
+            commands::list_directory,
             commands::home_dir
         ])
         .run(tauri::generate_context!())

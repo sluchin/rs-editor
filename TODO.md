@@ -117,6 +117,15 @@
 - [x] キーの割り当てを Lisp から変える (`global-set-key`)。
 - [x] 起動のときに, 初期設定ファイル (`~/.config/rseditor/init.scm`) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
 
+## Phase 10: ファイルの名前の補完と, シンタックスハイライト
+
+- [x] `C-x C-f` と保存先 (`C-x C-s` のファイルのないバッファ) で, Tab でファイルの名前を補完する。
+      最後の `/` の後ろを, そのディレクトリの中の名前 (Rust の `list_directory`) で補完し, ディレクトリには `/` を付ける。
+- [x] シンタックスハイライト (Emacs の font-lock)。Emacs の scheme-mode と同じく, コメント, 文字列, `(` の直後の特別な形,
+      `define` で定義する名前に, Emacs の既定の色を付ける (`src/lib/schemeMode.ts`)。
+- [x] メジャーモード (`src/lib/modes.ts`): `*scratch*` は Lisp Interaction, `.scm` などは Scheme (色を付ける), ほかは Fundamental。
+      モードラインに名前を出す。
+
 ---
 
 ## 実装順序の目安

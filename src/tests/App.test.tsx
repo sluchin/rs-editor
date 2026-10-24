@@ -16,6 +16,7 @@ vi.mock('../lib/fileOps', () => ({
   writeFile: vi.fn(),
   pathExists: vi.fn(),
   getHomeDir: vi.fn(),
+  listDirectory: vi.fn(),
 }))
 
 const mocked = vi.mocked(fileOps)
@@ -134,6 +135,38 @@ describe('App', () => {
     await editor.submit('/tmp/new.scm')
     expect(editor.text()).toContain('(New file)')
     expect(editor.text()).toContain('[3/3]')
+  })
+
+  it('C-x C-f と保存先で, Tab でファイルの名前を補完する', async () => {
+    const editor = await setup()
+    mocked.listDirectory.mockResolvedValue(['init.scm', 'src/'])
+    editor.ctrlX('f')
+    fireEvent.change(editor.input(), { target: { value: '/home/u/i' } })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Tab' })
+    })
+    expect(mocked.listDirectory).toHaveBeenCalledWith('/home/u/')
+    expect(editor.input().value).toBe('/home/u/init.scm')
+    fireEvent.keyDown(editor.input(), { key: 'Escape' })
+
+    await act(async () => editor.ctrlX('s'))
+    fireEvent.change(editor.input(), { target: { value: '/home/u/' } })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Tab' })
+    })
+    expect(editor.text()).toContain('Possible completions:')
+  })
+
+  it('モードラインに, バッファのメジャーモードを出す', async () => {
+    const editor = await setup()
+    expect(editor.text()).toContain('(Lisp Interaction)')
+    mocked.pathExists.mockResolvedValue(false)
+    editor.ctrlX('f')
+    await editor.submit('/tmp/a.scm')
+    expect(editor.text()).toContain('(Scheme)')
+    editor.ctrlX('f')
+    await editor.submit('/tmp/a.txt')
+    expect(editor.text()).toContain('(Fundamental)')
   })
 
   it('C-x C-f で, / で終わるパスは, パスをそのままバッファの名前にする', async () => {
