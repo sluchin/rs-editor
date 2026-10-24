@@ -41,3 +41,26 @@ describe('Phase 4: Edit Command Enhancements', () => {
     })
   })
 })
+
+describe('bracketMatch (文字列と, 閉じていない括弧)', () => {
+  it('文字列のリテラルを 1 つの S 式として飛ばす (\\" を含む)', () => {
+    const text = '"a \\" b" c'
+    expect(forwardSexp(text, 0)).toBe(8)
+    expect(backwardSexp(text, 8)).toBe(0)
+  })
+
+  it('閉じていない文字列は, 最後までを 1 つにする', () => {
+    expect(forwardSexp('"abc', 0)).toBe(4)
+    expect(forwardSexp('"ab\\', 0)).toBe(4)
+  })
+
+  it('対応する括弧がなければ, 端まで動く', () => {
+    expect(forwardSexp('(a b', 0)).toBe(4)
+    expect(backwardSexp('a b)', 4)).toBe(0)
+  })
+
+  it('空白だけなら, 端まで動くこと', () => {
+    expect(forwardSexp('a  ', 1)).toBe(3)
+    expect(backwardSexp('  a', 2)).toBe(0)
+  })
+})
