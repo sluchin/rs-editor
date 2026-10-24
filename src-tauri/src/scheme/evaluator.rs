@@ -1,10 +1,42 @@
-use crate::scheme::parser::Parser;
-use crate::scheme::value::Value;
-use std::sync::Mutex;
+//! Scheme の評価器. 定義 (`define`) は, アプリが持ち続ける評価器の環境に覚えます.
+//!
+//! - 特別な形: `quote` (`'`), `if`, `define`, `set!`, `lambda`, `begin`, `let` (名前付きも), `let*`, `letrec`,
+//!   `cond`, `case`, `and`, `or`, `when`, `unless`, `define-command`.
+//! - 組み込みの手続きは [`builtins`](crate::scheme::builtins).
+//! - 末尾の呼び出しは, 深さを使いません. それ以外の入れ子は, [`MAX_DEPTH`] までです.
 
+use std::sync::{Arc, Mutex};
+
+use serde::{Deserialize, Serialize};
+
+use crate::scheme::builtins;
+use crate::scheme::env::Env;
+use crate::scheme::host::{Host, NoHost};
+use crate::scheme::parser::Parser;
+use crate::scheme::value::{Lambda, Value};
+
+/// 評価の入れ子の深さの上限.
+pub const MAX_DEPTH: usize = 10_000;
+
+/// 評価に使うスレッドのスタックの大きさ ([`MAX_DEPTH`] まで入れ子にできるように, 大きくする).
+const STACK_SIZE: usize = 256 * 1024 * 1024;
+
+/// Lisp で割り当てたキー (`global-set-key`).
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyBinding {
+    /// キー (画面のエディタ (CodeMirror) の書き方).
+    pub key: String,
+    /// コマンドの名前.
+    pub command: String,
+}
+
+/// 評価器. 定義と, Lisp で作ったコマンドとキーの割り当てを, 覚えています.
 pub struct Evaluator {
-    #[allow(dead_code)]
-    vars: Mutex<std::collections::HashMap<String, Value>>,
+    global: Env,
+    commands: Mutex<Vec<String>>,
+    keys: Mutex<Vec<KeyBinding>>,
+    // 評価は, 1 度に 1 つ
+    running: Mutex<()>,
 }
 
 impl Default for Evaluator {
@@ -14,121 +46,578 @@ impl Default for Evaluator {
 }
 
 impl Evaluator {
+    /// 組み込みの手続きを定義した評価器を作ります.
+    ///
+    /// # Returns
+    ///
+    /// 評価器.
     pub fn new() -> Self {
+        let global = Env::new();
+        for name in builtins::NAMES {
+            global.define(name, Value::Function(name.to_string()));
+        }
         Evaluator {
-            vars: Mutex::new(std::collections::HashMap::new()),
+            global,
+            commands: Mutex::new(Vec::new()),
+            keys: Mutex::new(Vec::new()),
+            running: Mutex::new(()),
         }
     }
 
+    /// コードを評価します (エディタの操作は, 失敗します).
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - コード.
+    ///
+    /// # Returns
+    ///
+    /// 式ごとの結果 (改行で区切る), または失敗の内容.
     pub fn eval(&self, code: &str) -> Result<String, String> {
-        let mut parser = Parser::new(code);
-        let values = parser.parse()?;
-
-        if values.is_empty() {
-            return Ok(String::new());
-        }
-
-        let mut results = Vec::new();
-        for value in values {
-            let result = self.eval_value(&value)?;
-            results.push(result.to_string());
-        }
-
-        Ok(results.join("\n"))
+        self.eval_with(code, &NoHost)
     }
 
-    fn eval_value(&self, value: &Value) -> Result<Value, String> {
-        match value {
-            Value::List(items) if !items.is_empty() => match &items[0] {
-                Value::Symbol(op) => self.eval_builtin(op, &items[1..]),
-                _ => Err("First element must be a symbol".to_string()),
+    /// コードを評価します.
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - コード.
+    /// * `host` - エディタ.
+    ///
+    /// # Returns
+    ///
+    /// 式ごとの結果 (改行で区切る), または失敗の内容.
+    pub fn eval_with(&self, code: &str, host: &dyn Host) -> Result<String, String> {
+        let values = Parser::new(code).parse()?;
+        self.run(host, |machine| {
+            let mut results = Vec::new();
+            for value in &values {
+                results.push(machine.eval(value, &self.global)?.to_string());
+            }
+            Ok(results.join("\n"))
+        })
+    }
+
+    /// Lisp で作ったコマンド (`define-command`) を実行します.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - コマンドの名前.
+    /// * `host` - エディタ.
+    ///
+    /// # Returns
+    ///
+    /// 結果, または失敗の内容.
+    pub fn run_command(&self, name: &str, host: &dyn Host) -> Result<String, String> {
+        if !self.is_command(name) {
+            return Err(format!("Undefined command: {}", name));
+        }
+        self.run(host, |machine| {
+            machine.call_command(name).map(|value| value.to_string())
+        })
+    }
+
+    /// Lisp で作ったコマンドの名前を返します.
+    ///
+    /// # Returns
+    ///
+    /// 名前 (作った順).
+    pub fn commands(&self) -> Vec<String> {
+        self.commands.lock().unwrap().clone()
+    }
+
+    /// Lisp で割り当てたキーを返します.
+    ///
+    /// # Returns
+    ///
+    /// 割り当て (割り当てた順).
+    pub fn key_bindings(&self) -> Vec<KeyBinding> {
+        self.keys.lock().unwrap().clone()
+    }
+
+    /// コマンドとして覚えます.
+    pub(crate) fn add_command(&self, name: &str) {
+        let mut commands = self.commands.lock().unwrap();
+        if !commands.iter().any(|c| c == name) {
+            commands.push(name.to_string());
+        }
+    }
+
+    /// Lisp で作ったコマンドかを返します.
+    pub(crate) fn is_command(&self, name: &str) -> bool {
+        self.commands.lock().unwrap().iter().any(|c| c == name)
+    }
+
+    /// キーを割り当てます (同じキーの割り当ては, 置き換える).
+    pub(crate) fn set_key(&self, binding: KeyBinding) {
+        let mut keys = self.keys.lock().unwrap();
+        keys.retain(|k| k.key != binding.key);
+        keys.push(binding);
+    }
+
+    /// 大きなスタックのスレッドで, 評価します.
+    fn run<T: Send>(
+        &self,
+        host: &dyn Host,
+        task: impl FnOnce(&mut Machine) -> Result<T, String> + Send,
+    ) -> Result<T, String> {
+        // 前の評価が失敗 (panic) していても, 続ける
+        let _running = self.running.lock().unwrap_or_else(|e| e.into_inner());
+        std::thread::scope(|scope| {
+            std::thread::Builder::new()
+                .stack_size(STACK_SIZE)
+                .spawn_scoped(scope, || task(&mut Machine::new(self, host)))
+                .map_err(|e| e.to_string())?
+                .join()
+                .unwrap_or_else(|_| Err("The evaluator crashed".to_string()))
+        })
+    }
+}
+
+/// 評価の 1 歩の結果.
+enum Step {
+    /// 値が決まった.
+    Done(Value),
+    /// この式を, この環境で評価した値が, 結果 (末尾の呼び出し).
+    Tail(Value, Env),
+}
+
+/// 1 回の評価 (入れ子の深さと, エディタを持つ).
+pub(crate) struct Machine<'a> {
+    pub(crate) evaluator: &'a Evaluator,
+    pub(crate) host: &'a dyn Host,
+    depth: usize,
+}
+
+impl<'a> Machine<'a> {
+    fn new(evaluator: &'a Evaluator, host: &'a dyn Host) -> Self {
+        Machine {
+            evaluator,
+            host,
+            depth: 0,
+        }
+    }
+
+    /// 式を評価します.
+    pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, String> {
+        if self.depth >= MAX_DEPTH {
+            return Err("Too deep recursion".to_string());
+        }
+        self.depth += 1;
+        let result = self.eval_tail(expr.clone(), env.clone());
+        self.depth -= 1;
+        result
+    }
+
+    /// 式を評価します. 末尾の式は, ここで繰り返して評価します (深さを使わない).
+    fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
+        loop {
+            let items = match &expr {
+                Value::Symbol(name) => {
+                    return env
+                        .get(name)
+                        .ok_or_else(|| format!("Unbound variable: {}", name))
+                }
+                Value::List(items) if !items.is_empty() => items.clone(),
+                other => return Ok(other.clone()),
+            };
+            let special = match &items[0] {
+                Value::Symbol(op) => self.special_form(op, &items[1..], &env)?,
+                _ => None,
+            };
+            let step = match special {
+                Some(step) => step,
+                None => {
+                    let procedure = self.eval(&items[0], &env)?;
+                    let args = self.eval_all(&items[1..], &env)?;
+                    self.apply_step(procedure, args)?
+                }
+            };
+            match step {
+                Step::Done(value) => return Ok(value),
+                Step::Tail(next, next_env) => {
+                    expr = next;
+                    env = next_env;
+                }
+            }
+        }
+    }
+
+    /// 式を順に評価して, 値を並べます.
+    fn eval_all(&mut self, exprs: &[Value], env: &Env) -> Result<Vec<Value>, String> {
+        exprs.iter().map(|e| self.eval(e, env)).collect()
+    }
+
+    /// 手続きを呼びます.
+    pub(crate) fn apply(&mut self, procedure: Value, args: Vec<Value>) -> Result<Value, String> {
+        match self.apply_step(procedure, args)? {
+            Step::Done(value) => Ok(value),
+            Step::Tail(expr, env) => self.eval(&expr, &env),
+        }
+    }
+
+    /// 手続きを呼びます. `lambda` の本体の最後の式は, 評価せずに返します.
+    fn apply_step(&mut self, procedure: Value, args: Vec<Value>) -> Result<Step, String> {
+        match procedure {
+            Value::Lambda(lambda) => {
+                let env = bind(&lambda, args)?;
+                self.sequence(&lambda.body, &env)
+            }
+            Value::Function(name) => builtins::call(self, &name, args).map(Step::Done),
+            other => Err(format!("Not a procedure: {}", other)),
+        }
+    }
+
+    /// コマンドを実行します. Lisp で作ったコマンドは, ここで呼び, ほかは, エディタに頼みます.
+    pub(crate) fn call_command(&mut self, name: &str) -> Result<Value, String> {
+        if self.evaluator.is_command(name) {
+            let procedure = self
+                .evaluator
+                .global
+                .get(name)
+                .ok_or_else(|| format!("Unbound variable: {}", name))?;
+            return self.apply(procedure, vec![]);
+        }
+        self.host
+            .call("command", vec![Value::String(name.to_string())])
+    }
+
+    /// 式を順に評価します. 最後の式は, 評価せずに返します (空なら `nil`).
+    fn sequence(&mut self, body: &[Value], env: &Env) -> Result<Step, String> {
+        match body.split_last() {
+            None => Ok(Step::Done(Value::Nil)),
+            Some((last, init)) => {
+                for expr in init {
+                    self.eval(expr, env)?;
+                }
+                Ok(Step::Tail(last.clone(), env.clone()))
+            }
+        }
+    }
+
+    /// 特別な形を評価します.
+    ///
+    /// # Returns
+    ///
+    /// 特別な形でなければ `None`.
+    fn special_form(
+        &mut self,
+        op: &str,
+        args: &[Value],
+        env: &Env,
+    ) -> Result<Option<Step>, String> {
+        let step = match op {
+            "quote" => match args {
+                [value] => Step::Done(value.clone()),
+                _ => return Err("quote expects 1 argument".to_string()),
             },
-            v => Ok(v.clone()),
+            "if" => match args {
+                [test, then, rest @ ..] if rest.len() <= 1 => {
+                    if self.eval(test, env)?.is_true() {
+                        Step::Tail(then.clone(), env.clone())
+                    } else {
+                        match rest.first() {
+                            Some(otherwise) => Step::Tail(otherwise.clone(), env.clone()),
+                            None => Step::Done(Value::Nil),
+                        }
+                    }
+                }
+                _ => return Err("if expects 2 or 3 arguments".to_string()),
+            },
+            "define" => Step::Done(Value::Symbol(self.define(args, env)?)),
+            "define-command" => {
+                let name = self.define(args, env)?;
+                match env.get(&name) {
+                    Some(Value::Lambda(_) | Value::Function(_)) => {
+                        self.evaluator.add_command(&name);
+                        Step::Done(Value::Symbol(name))
+                    }
+                    _ => return Err("define-command expects a procedure".to_string()),
+                }
+            }
+            "set!" => match args {
+                [Value::Symbol(name), expr] => {
+                    let value = self.eval(expr, env)?;
+                    if !env.set(name, value) {
+                        return Err(format!("Unbound variable: {}", name));
+                    }
+                    Step::Done(Value::Nil)
+                }
+                _ => return Err("set! expects a name and a value".to_string()),
+            },
+            "lambda" => match args {
+                [params, body @ ..] => Step::Done(make_lambda(None, params, body, env)?),
+                _ => return Err("lambda expects parameters".to_string()),
+            },
+            "begin" => self.sequence(args, env)?,
+            "let" => match args {
+                [Value::Symbol(name), bindings, body @ ..] => {
+                    self.named_let(name, bindings, body, env)?
+                }
+                [bindings, body @ ..] => {
+                    let pairs = parse_bindings("let", bindings)?;
+                    let inner = env.child();
+                    for (name, expr) in pairs {
+                        let value = self.eval(&expr, env)?;
+                        inner.define(&name, value);
+                    }
+                    self.sequence(body, &inner)?
+                }
+                _ => return Err("let expects bindings".to_string()),
+            },
+            "let*" | "letrec" | "letrec*" => match args {
+                [bindings, body @ ..] => {
+                    let pairs = parse_bindings(op, bindings)?;
+                    let inner = env.child();
+                    // letrec では, 初めの式から, 全ての名前が見える
+                    if op != "let*" {
+                        for (name, _) in &pairs {
+                            inner.define(name, Value::Nil);
+                        }
+                    }
+                    for (name, expr) in pairs {
+                        let value = self.eval(&expr, &inner)?;
+                        inner.define(&name, name_lambda(value, &name));
+                    }
+                    self.sequence(body, &inner)?
+                }
+                _ => return Err(format!("{} expects bindings", op)),
+            },
+            "cond" => self.cond(args, env)?,
+            "case" => match args {
+                [key, clauses @ ..] => {
+                    let key = self.eval(key, env)?;
+                    self.case(&key, clauses, env)?
+                }
+                _ => return Err("case expects a key".to_string()),
+            },
+            "and" => match args.split_last() {
+                None => Step::Done(Value::Boolean(true)),
+                Some((last, init)) => {
+                    for expr in init {
+                        let value = self.eval(expr, env)?;
+                        if !value.is_true() {
+                            return Ok(Some(Step::Done(value)));
+                        }
+                    }
+                    Step::Tail(last.clone(), env.clone())
+                }
+            },
+            "or" => match args.split_last() {
+                None => Step::Done(Value::Boolean(false)),
+                Some((last, init)) => {
+                    for expr in init {
+                        let value = self.eval(expr, env)?;
+                        if value.is_true() {
+                            return Ok(Some(Step::Done(value)));
+                        }
+                    }
+                    Step::Tail(last.clone(), env.clone())
+                }
+            },
+            "when" | "unless" => match args {
+                [test, body @ ..] => {
+                    if self.eval(test, env)?.is_true() == (op == "when") {
+                        self.sequence(body, env)?
+                    } else {
+                        Step::Done(Value::Nil)
+                    }
+                }
+                _ => return Err(format!("{} expects a test", op)),
+            },
+            _ => return Ok(None),
+        };
+        Ok(Some(step))
+    }
+
+    /// `define` (と `define-command`) を評価して, 定義した名前を返します.
+    fn define(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
+        match args {
+            [Value::Symbol(name), rest @ ..] if rest.len() <= 1 => {
+                let value = match rest.first() {
+                    Some(expr) => self.eval(expr, env)?,
+                    None => Value::Nil,
+                };
+                env.define(name, name_lambda(value, name));
+                Ok(name.clone())
+            }
+            [Value::List(signature), body @ ..] => match signature.split_first() {
+                Some((Value::Symbol(name), params)) => {
+                    let lambda = make_lambda(Some(name), &Value::List(params.to_vec()), body, env)?;
+                    env.define(name, lambda);
+                    Ok(name.clone())
+                }
+                _ => Err("define expects a name".to_string()),
+            },
+            _ => Err("define expects a name and a value".to_string()),
         }
     }
 
-    fn eval_builtin(&self, op: &str, args: &[Value]) -> Result<Value, String> {
-        match op {
-            "+" => {
-                let mut sum = 0.0;
-                for arg in args {
-                    let val = self.eval_value(arg)?;
-                    match val {
-                        Value::Number(n) => sum += n,
-                        _ => return Err("+ expects numbers".to_string()),
-                    }
-                }
-                Ok(Value::Number(sum))
-            }
-            "-" => {
-                if args.is_empty() {
-                    return Err("- expects at least one argument".to_string());
-                }
-                let first = self.eval_value(&args[0])?;
-                let mut result = match first {
-                    Value::Number(n) => n,
-                    _ => return Err("- expects numbers".to_string()),
-                };
-
-                if args.len() == 1 {
-                    return Ok(Value::Number(-result));
-                }
-
-                for arg in &args[1..] {
-                    let val = self.eval_value(arg)?;
-                    match val {
-                        Value::Number(n) => result -= n,
-                        _ => return Err("- expects numbers".to_string()),
-                    }
-                }
-                Ok(Value::Number(result))
-            }
-            "*" => {
-                let mut product = 1.0;
-                for arg in args {
-                    let val = self.eval_value(arg)?;
-                    match val {
-                        Value::Number(n) => product *= n,
-                        _ => return Err("* expects numbers".to_string()),
-                    }
-                }
-                Ok(Value::Number(product))
-            }
-            "/" => {
-                if args.len() < 2 {
-                    return Err("/ expects at least two arguments".to_string());
-                }
-                let first = self.eval_value(&args[0])?;
-                let mut result = match first {
-                    Value::Number(n) => n,
-                    _ => return Err("/ expects numbers".to_string()),
-                };
-
-                for arg in &args[1..] {
-                    let val = self.eval_value(arg)?;
-                    match val {
-                        Value::Number(n) if n != 0.0 => result /= n,
-                        _ => return Err("/ expects non-zero numbers".to_string()),
-                    }
-                }
-                Ok(Value::Number(result))
-            }
-            "quote" => {
-                if args.len() != 1 {
-                    return Err("quote expects 1 argument".to_string());
-                }
-                Ok(args[0].clone())
-            }
-            "list" => {
-                let mut list_items = Vec::new();
-                for arg in args {
-                    list_items.push(self.eval_value(arg)?);
-                }
-                Ok(Value::List(list_items))
-            }
-            _ => Err(format!("Unknown operator: {}", op)),
-        }
+    /// 名前付きの `let` (`(let loop ((i 0)) ...)`) を評価します.
+    fn named_let(
+        &mut self,
+        name: &str,
+        bindings: &Value,
+        body: &[Value],
+        env: &Env,
+    ) -> Result<Step, String> {
+        let pairs = parse_bindings("let", bindings)?;
+        let (names, exprs): (Vec<Value>, Vec<Value>) = pairs
+            .into_iter()
+            .map(|(name, expr)| (Value::Symbol(name), expr))
+            .unzip();
+        let inner = env.child();
+        let lambda = make_lambda(Some(name), &Value::List(names), body, &inner)?;
+        inner.define(name, lambda.clone());
+        let args = self.eval_all(&exprs, env)?;
+        self.apply_step(lambda, args)
     }
+
+    /// `cond` を評価します.
+    fn cond(&mut self, clauses: &[Value], env: &Env) -> Result<Step, String> {
+        for clause in clauses {
+            let Value::List(items) = clause else {
+                return Err("cond expects clauses".to_string());
+            };
+            let Some((test, body)) = items.split_first() else {
+                return Err("cond expects clauses".to_string());
+            };
+            if *test == Value::Symbol("else".to_string()) {
+                return self.sequence(body, env);
+            }
+            let value = self.eval(test, env)?;
+            if value.is_true() {
+                return match body {
+                    [] => Ok(Step::Done(value)),
+                    _ => self.sequence(body, env),
+                };
+            }
+        }
+        Ok(Step::Done(Value::Nil))
+    }
+
+    /// `case` を評価します.
+    fn case(&mut self, key: &Value, clauses: &[Value], env: &Env) -> Result<Step, String> {
+        for clause in clauses {
+            match clause {
+                Value::List(items) => match items.split_first() {
+                    Some((Value::Symbol(word), body)) if word == "else" => {
+                        return self.sequence(body, env)
+                    }
+                    Some((Value::List(data), body)) => {
+                        if data.contains(key) {
+                            return self.sequence(body, env);
+                        }
+                    }
+                    _ => return Err("case expects clauses".to_string()),
+                },
+                _ => return Err("case expects clauses".to_string()),
+            }
+        }
+        Ok(Step::Done(Value::Nil))
+    }
+}
+
+/// `lambda` を作ります.
+fn make_lambda(
+    name: Option<&str>,
+    params: &Value,
+    body: &[Value],
+    env: &Env,
+) -> Result<Value, String> {
+    let (names, rest) = match params {
+        Value::Symbol(rest) => (vec![], Some(rest.clone())),
+        Value::List(items) => {
+            let mut names = Vec::new();
+            let mut rest = None;
+            let mut iter = items.iter();
+            while let Some(item) = iter.next() {
+                match item {
+                    Value::Symbol(dot) if dot == "." => match (iter.next(), iter.next()) {
+                        (Some(Value::Symbol(last)), None) => rest = Some(last.clone()),
+                        _ => return Err("Invalid parameter list".to_string()),
+                    },
+                    Value::Symbol(param) => names.push(param.clone()),
+                    _ => return Err("Invalid parameter list".to_string()),
+                }
+            }
+            (names, rest)
+        }
+        _ => return Err("Invalid parameter list".to_string()),
+    };
+    Ok(Value::Lambda(Arc::new(Lambda {
+        name: name.map(str::to_string),
+        params: names,
+        rest,
+        body: body.to_vec(),
+        env: env.clone(),
+    })))
+}
+
+/// 名前のない `lambda` に, 名前を付けます (表示のため). ほかの値は, そのまま返します.
+fn name_lambda(value: Value, name: &str) -> Value {
+    match value {
+        Value::Lambda(lambda) if lambda.name.is_none() => Value::Lambda(Arc::new(Lambda {
+            name: Some(name.to_string()),
+            params: lambda.params.clone(),
+            rest: lambda.rest.clone(),
+            body: lambda.body.clone(),
+            env: lambda.env.clone(),
+        })),
+        other => other,
+    }
+}
+
+/// 引数を, `lambda` の環境に結び付けます.
+fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
+    let count = lambda.params.len();
+    let fits = match lambda.rest {
+        Some(_) => args.len() >= count,
+        None => args.len() == count,
+    };
+    if !fits {
+        let name = lambda.name.as_deref().unwrap_or("#<procedure>");
+        let at_least = if lambda.rest.is_some() {
+            "at least "
+        } else {
+            ""
+        };
+        return Err(format!(
+            "{} expects {}{} arguments, given {}",
+            name,
+            at_least,
+            count,
+            args.len()
+        ));
+    }
+    let env = lambda.env.child();
+    let mut args = args.into_iter();
+    for param in &lambda.params {
+        // 数は, 上で確かめた
+        env.define(param, args.next().unwrap_or(Value::Nil));
+    }
+    if let Some(rest) = &lambda.rest {
+        env.define(rest, Value::List(args.collect()));
+    }
+    Ok(env)
+}
+
+/// `let` の束縛 (`((a 1) (b 2))`) を読みます.
+fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, String> {
+    let invalid = || format!("{} expects bindings", form);
+    let Value::List(items) = bindings else {
+        return Err(invalid());
+    };
+    items
+        .iter()
+        .map(|item| match item {
+            Value::List(pair) => match pair.as_slice() {
+                [Value::Symbol(name), expr] => Ok((name.clone(), expr.clone())),
+                _ => Err(invalid()),
+            },
+            _ => Err(invalid()),
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -181,6 +670,7 @@ mod tests {
     fn evaluates_quote() {
         let eval = Evaluator::new();
         assert_eq!(eval.eval("(quote (a b c))").unwrap(), "(a b c)");
+        assert_eq!(eval.eval("'(a b c)").unwrap(), "(a b c)");
     }
 
     #[test]
@@ -204,12 +694,33 @@ mod tests {
     #[test]
     fn unknown_operator_is_an_error() {
         let eval = Evaluator::new();
-        assert!(eval.eval("(unknown-op 1 2)").is_err());
+        assert_eq!(
+            eval.eval("(unknown-op 1 2)").unwrap_err(),
+            "Unbound variable: unknown-op"
+        );
     }
 
     #[test]
     fn wrong_argument_type_is_an_error() {
         let eval = Evaluator::new();
         assert!(eval.eval(r#"(+ 1 "two")"#).is_err());
+    }
+
+    #[test]
+    fn unknown_builtin_is_an_error() {
+        // 組み込みの手続きの値は, 名前の一覧からしか作らないので, 評価では起きない
+        let evaluator = Evaluator::new();
+        let mut machine = Machine::new(&evaluator, &NoHost);
+        assert_eq!(
+            builtins::call(&mut machine, "none", vec![]),
+            Err("Unknown procedure: none".to_string())
+        );
+    }
+
+    #[test]
+    fn remembers_definitions_between_evaluations() {
+        let eval = Evaluator::new();
+        assert_eq!(eval.eval("(define x 10)").unwrap(), "x");
+        assert_eq!(eval.eval("(* x 2)").unwrap(), "20");
     }
 }

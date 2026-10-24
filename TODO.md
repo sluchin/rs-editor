@@ -108,14 +108,14 @@
 
 ## Phase 9: Lisp でのカスタマイズ
 
-- [ ] Scheme の処理系に, 言語の核を足す: `define`, `lambda`, `let`, `if` / `cond`, 比較 (`<`, `=` など), 文字列とリストの操作 (`car`, `cdr`, `cons` など)。
-      定義は, アプリが持ち続ける処理系 (`Evaluator`) の `vars` に覚える (`vars` はあるが, まだ使っていない)。
-- [ ] Lisp からエディタを操作する関数を用意する: `point`, `goto-char`, `insert`, `delete-region`, `buffer-string`, `message` など。
-      評価は Rust で行うので, エディタの操作は, フロントエンドとのやり取りで行う。
-- [ ] Lisp から, 既にあるコマンドを名前で呼べるようにする (`src/lib/emacs.ts` のコマンドと, `App.tsx` の `actions`)。
-- [ ] Lisp で定義した関数を, コマンドとして登録する (`M-x` から呼べるようにする)。
-- [ ] キーの割り当てを Lisp から変える (`global-set-key` にあたるもの)。今は `src/lib/emacs.ts` の `KEY_BINDINGS` に直接書いている。
-- [ ] 起動のときに, 初期設定ファイル (`~/.emacs` にあたるもの) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
+- [x] Scheme の処理系に, 言語の核を足す: `define`, `lambda`, `let` (名前付きも), `let*`, `letrec`, `if` / `cond` / `case`, `and` / `or` / `when` / `unless`, 比較, 文字列とリストの操作。
+      定義は, アプリが持ち続ける処理系 (`Evaluator`) の環境に覚える。末尾の呼び出しは, 深さを使わない。
+- [x] Lisp からエディタを操作する関数を用意する: `point`, `point-min`, `point-max`, `goto-char`, `insert`, `delete-region`, `buffer-string`, `buffer-substring`, `buffer-name`, `message`。
+      評価は Rust で行い, エディタの操作は, 画面に頼んで返事を待つ (`src-tauri/src/scheme/host.rs` と `src/lib/lisp.ts`)。
+- [x] Lisp から, 既にあるコマンドを名前で呼べるようにする (`call-interactively`, `command-execute`)。
+- [x] Lisp で定義した関数を, コマンドとして登録する (`define-command`。`M-x` から呼べる)。
+- [x] キーの割り当てを Lisp から変える (`global-set-key`)。
+- [x] 起動のときに, 初期設定ファイル (`~/.config/rseditor/init.scm`) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
 
 ---
 

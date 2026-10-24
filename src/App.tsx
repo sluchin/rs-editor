@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import CodeEditor, { CursorInfo, EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
@@ -12,6 +12,15 @@ import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
 import { findNextMatch } from './lib/isearch'
 import { backwardSexp, forwardSexp } from './lib/bracketMatch'
+import {
+  type EvalResponse,
+  type KeyBinding,
+  type LispHost,
+  evalLisp,
+  listenEditorRequests,
+  loadInitFile,
+  runLispCommand,
+} from './lib/lisp'
 import './App.css'
 
 const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
@@ -67,7 +76,12 @@ function App() {
     text: '',
   })
   const [showBufferList, setShowBufferList] = useState(false)
+  // Lisp で作ったコマンドと, 割り当てたキー
+  const [lispCommands, setLispCommands] = useState<string[]>([])
+  const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
   const editor = useRef<EditorHandle>(null)
+  // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
+  const lispHost = useRef<LispHost>(undefined)
 
   // バッファを消すときは, 今のバッファの ID も一緒に変えるので, 必ず見つかる
   const currentBuffer = buffers.find((b) => b.id === currentBufferId) as Buffer
@@ -123,6 +137,20 @@ function App() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    const handle = () => editor.current as EditorHandle
+    lispHost.current = {
+      text: () => handle().text(),
+      point: () => handle().point(),
+      setPoint: (pos) => handle().setCursor(pos),
+      insert: (text) => handle().insert(text),
+      deleteRegion: (from, to) => handle().deleteRegion(from, to),
+      bufferName: () => currentBuffer.name,
+      message: (text) => setMinibufferState({ mode: 'message', text }),
+      command: (name) => handle().run(name),
+    }
+  })
+
   const handleEditorChange = (value: string) => {
     updateCurrentBuffer({ content: value, modified: true })
   }
@@ -130,6 +158,71 @@ function App() {
   const showMessage = (text: string) => {
     setMinibufferState({ mode: 'message', text })
   }
+
+  /**
+   * 評価の結果を出して, Lisp で作ったコマンドと, 割り当てたキーを覚えます.
+   *
+   * @param response - 評価の結果.
+   * @param quiet - 成功したときは, 結果を出さない (コマンドと, 初期設定ファイル).
+   */
+  const showEvalResult = (response: EvalResponse, quiet = false) => {
+    setLispCommands(response.commands)
+    setLispKeys(response.keys)
+    if (response.error) {
+      showMessage(`Error: ${response.error}`)
+    } else if (!quiet) {
+      showMessage(response.result)
+    }
+  }
+
+  /**
+   * コードを評価して, 結果を出します.
+   *
+   * @param code - コード.
+   */
+  const evaluate = async (code: string) => {
+    try {
+      showEvalResult(await evalLisp(code))
+    } catch (err) {
+      showMessage(`Eval error: ${err}`)
+    }
+  }
+
+  /**
+   * Lisp で作ったコマンドを実行します.
+   *
+   * @param name - コマンドの名前.
+   */
+  const handleRunLispCommand = async (name: string) => {
+    try {
+      showEvalResult(await runLispCommand(name), true)
+    } catch (err) {
+      showMessage(`Eval error: ${err}`)
+    }
+  }
+
+  // 評価器からの, エディタの操作の頼みを受ける. 受け始めてから, 初期設定ファイルを読む
+  useEffect(() => {
+    let stopped = false
+    let unlisten: UnlistenFn | undefined
+    void listenEditorRequests(() => lispHost.current as LispHost).then((stop) => {
+      // 受け始める前に, 画面を閉じた (開発版の StrictMode では, 1 度閉じて, 開き直す)
+      if (stopped) {
+        stop()
+        return
+      }
+      unlisten = stop
+      loadInitFile()
+        .then((response) => showEvalResult(response, true))
+        .catch((err) => showMessage(`Init file error: ${err}`))
+    })
+    return () => {
+      stopped = true
+      unlisten?.()
+    }
+    // 始めの 1 回だけ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleFindFile = () => {
     setPendingAction('find-file')
@@ -188,21 +281,7 @@ function App() {
       return
     }
 
-    const sexp = currentBuffer.content.slice(startPos, endPos)
-
-    try {
-      const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
-        code: sexp,
-      })
-
-      if (result.error) {
-        setMinibufferState({ mode: 'message', text: `Error: ${result.error}` })
-      } else {
-        setMinibufferState({ mode: 'message', text: result.result })
-      }
-    } catch (err) {
-      setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
-    }
+    await evaluate(currentBuffer.content.slice(startPos, endPos))
   }
 
   const handleEvalExpression = () => {
@@ -331,7 +410,8 @@ function App() {
     }
   }
 
-  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ
+  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ.
+  // Lisp で作ったコマンドは, 同じ名前のコマンドより先に使う
   const actions: Record<string, () => void> = {
     'find-file': handleFindFile,
     'save-buffer': () => void handleSaveBuffer(),
@@ -345,6 +425,9 @@ function App() {
     'isearch-forward': handleIsearchForward,
     'isearch-backward': handleIsearchBackward,
     'goto-line': handleGotoLine,
+    ...Object.fromEntries(
+      lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
+    ),
   }
 
   const handleMinibufferSubmit = async (value: string) => {
@@ -401,19 +484,7 @@ function App() {
         setMinibufferState({ mode: 'message', text: '' })
       }
     } else if (action === 'eval-expression') {
-      try {
-        const result = await invoke<{ result: string; error: string | null }>('eval_scheme', {
-          code: value,
-        })
-
-        if (result.error) {
-          setMinibufferState({ mode: 'message', text: `Error: ${result.error}` })
-        } else {
-          setMinibufferState({ mode: 'message', text: result.result })
-        }
-      } catch (err) {
-        setMinibufferState({ mode: 'message', text: `Eval error: ${err}` })
-      }
+      await evaluate(value)
     } else {
       // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ).
       // 見つかったところの, 探した向きの側にカーソルを置く
@@ -445,6 +516,7 @@ function App() {
         onChange={handleEditorChange}
         onCursorChange={setCursor}
         actions={actions}
+        keyBindings={lispKeys}
         onMessage={showMessage}
         disabled={minibufferState.mode !== 'message' || showBufferList}
         handle={editor}

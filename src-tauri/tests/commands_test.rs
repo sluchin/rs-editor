@@ -5,9 +5,11 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    eval_code, home_dir, path_exists, read_file_content, write_file_content, EvalResponse,
+    eval_code, eval_code_with, home_dir, init_file_path, init_file_path_from, load_init_file,
+    path_exists, read_file_content, run_command, write_file_content, EvalResponse,
 };
-use rseditor::scheme::evaluator::Evaluator;
+use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
+use rseditor::scheme::host::NoHost;
 
 #[test]
 fn test_eval_code_returns_the_result_or_the_error() {
@@ -17,6 +19,8 @@ fn test_eval_code_returns_the_result_or_the_error() {
         EvalResponse {
             result: "3".to_string(),
             error: None,
+            commands: vec![],
+            keys: vec![],
         }
     );
     assert_eq!(eval_code(&Evaluator::default(), "1").result, "1");
@@ -48,4 +52,65 @@ fn test_read_and_write_fail_with_the_reason() {
 fn test_home_dir_reads_home() {
     // テストの実行環境には, HOME がある
     assert_eq!(home_dir().unwrap(), std::env::var("HOME").unwrap());
+}
+
+#[test]
+fn test_responses_carry_the_lisp_commands_and_keys() {
+    let evaluator = Evaluator::new();
+    let defined = eval_code_with(
+        &evaluator,
+        "(define-command (hi) 1) (global-set-key \"C-c h\" 'hi)",
+        &NoHost,
+    );
+    assert_eq!(defined.result, "hi\nhi");
+    assert_eq!(defined.commands, vec!["hi"]);
+    assert_eq!(
+        defined.keys,
+        vec![KeyBinding {
+            key: "Ctrl-c h".to_string(),
+            command: "hi".to_string(),
+        }]
+    );
+    assert_eq!(run_command(&evaluator, "hi", &NoHost).result, "1");
+    assert_eq!(
+        run_command(&evaluator, "none", &NoHost).error.unwrap(),
+        "Undefined command: none"
+    );
+}
+
+#[test]
+fn test_load_init_file() {
+    let dir = tempdir().unwrap();
+    let path = init_file_path_from(dir.path());
+    assert!(path.ends_with("rseditor/init.scm"));
+    assert!(init_file_path().unwrap().ends_with("rseditor/init.scm"));
+    let evaluator = Evaluator::new();
+    // ファイルがなければ, 何もしない
+    assert_eq!(
+        load_init_file(&evaluator, Some(&path), &NoHost),
+        eval_code(&evaluator, "")
+    );
+    assert_eq!(load_init_file(&evaluator, None, &NoHost).error, None);
+
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, "(define-command (hello) 1)").unwrap();
+    let loaded = load_init_file(&evaluator, Some(&path), &NoHost);
+    assert_eq!(loaded.error, None);
+    assert_eq!(loaded.commands, vec!["hello"]);
+
+    fs::write(&path, "(car 1)").unwrap();
+    assert_eq!(
+        load_init_file(&evaluator, Some(&path), &NoHost)
+            .error
+            .unwrap(),
+        format!("{}: car expects a non-empty list", path.display())
+    );
+
+    // 読めない (ディレクトリ)
+    let unreadable = dir.path();
+    let failed = load_init_file(&evaluator, Some(unreadable), &NoHost);
+    assert!(failed
+        .error
+        .unwrap()
+        .starts_with(&format!("{}: ", unreadable.display())));
 }

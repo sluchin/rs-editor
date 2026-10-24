@@ -1,5 +1,8 @@
 use crate::scheme::value::Value;
 
+/// 記号に使える, 英数字のほかの文字 (`.` だけの記号は, 引数のリストの `(a . rest)` に使う).
+const SYMBOL_CHARS: &str = "+-*/<>=!?_.:&%$~^";
+
 pub struct Parser {
     input: Vec<char>,
     pos: usize,
@@ -32,12 +35,22 @@ impl Parser {
             .ok_or_else(|| "Unexpected end of input".to_string())?;
         match c {
             '(' => self.parse_list(),
+            '\'' => {
+                self.advance('\'');
+                let quoted = self.parse_value()?;
+                Ok(Value::List(vec![
+                    Value::Symbol("quote".to_string()),
+                    quoted,
+                ]))
+            }
             '"' => self.parse_string(),
             '#' => self.parse_boolean(),
-            c if c.is_numeric() || (c == '-' && self.peek().is_some_and(|ch| ch.is_numeric())) => {
+            c if c.is_numeric()
+                || ("-.".contains(c) && self.peek().is_some_and(|ch| ch.is_numeric())) =>
+            {
                 self.parse_number()
             }
-            c if c.is_alphabetic() || "+-*/<>=!?".contains(c) => self.parse_symbol(),
+            c if c.is_alphabetic() || SYMBOL_CHARS.contains(c) => self.parse_symbol(),
             c => Err(format!("Unexpected character: {}", c)),
         }
     }
@@ -124,7 +137,7 @@ impl Parser {
         let start = self.pos;
         while self
             .current()
-            .is_some_and(|c| c.is_alphanumeric() || "+-*/<>=!?_-".contains(c))
+            .is_some_and(|c| c.is_alphanumeric() || SYMBOL_CHARS.contains(c))
         {
             self.pos += 1;
         }
@@ -252,6 +265,23 @@ mod tests {
             values,
             vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)]
         );
+    }
+
+    #[test]
+    fn parses_quote_and_dots() {
+        assert_eq!(
+            parse_one("'(a . b)"),
+            Value::List(vec![
+                Value::Symbol("quote".to_string()),
+                Value::List(vec![
+                    Value::Symbol("a".to_string()),
+                    Value::Symbol(".".to_string()),
+                    Value::Symbol("b".to_string()),
+                ]),
+            ])
+        );
+        assert_eq!(parse_one(".5"), Value::Number(0.5));
+        assert_eq!(parse_one("a.b:c"), Value::Symbol("a.b:c".to_string()));
     }
 
     #[test]

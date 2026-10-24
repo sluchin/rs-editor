@@ -4,6 +4,7 @@ import { Compartment, EditorSelection, EditorState, Prec } from '@codemirror/sta
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
+import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
 
 export interface CursorInfo {
@@ -26,6 +27,14 @@ export interface EditorHandle {
   setCursor: (pos: number) => void
   /** 1 から数えた行へ動きます. */
   gotoLine: (line: number) => void
+  /** 本文を返します. */
+  text: () => string
+  /** カーソルの位置を返します. */
+  point: () => number
+  /** カーソルの位置に入れて, カーソルを入れた文字の後へ動かします. */
+  insert: (text: string) => void
+  /** 範囲を消します. */
+  deleteRegion: (from: number, to: number) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
   forget: (bufferId: string) => void
 }
@@ -39,8 +48,10 @@ interface CodeEditorProps {
   onChange: (value: string) => void
   /** カーソルが動いたときに呼びます. */
   onCursorChange: (info: CursorInfo) => void
-  /** 画面のコマンド (ファイル, バッファ, 検索, 評価など). 名前で引きます. */
+  /** 画面のコマンド (ファイル, バッファ, 検索, 評価, Lisp で作ったコマンド). 名前で引きます. */
   actions: Record<string, () => void>
+  /** Lisp で割り当てたキー (既定の割り当てより先に使う). */
+  keyBindings: readonly KeyBinding[]
   /** ミニバッファに出します. */
   onMessage: (text: string) => void
   /** ミニバッファで入力しているあいだは `true` (書き換えさせない). */
@@ -73,6 +84,7 @@ export default function CodeEditor({
   onChange,
   onCursorChange,
   actions,
+  keyBindings,
   onMessage,
   disabled,
   handle,
@@ -83,6 +95,8 @@ export default function CodeEditor({
   const states = useRef(new Map<string, EditorState>())
   const shown = useRef(bufferId)
   const readOnly = useRef(new Compartment())
+  const keys = useRef(new Compartment())
+  const latestKeys = useRef(keyBindings)
   const latest = useRef({ onChange, onCursorChange, actions, onMessage })
   const commands = useRef<Record<string, Command>>(undefined)
   const initial = useRef({ bufferId, initialContent, disabled })
@@ -92,22 +106,30 @@ export default function CodeEditor({
   }, [onChange, onCursorChange, actions, onMessage])
 
   /**
-   * コマンドを名前で引きます. エディタのコマンドがなければ, 画面のコマンドを引きます.
+   * コマンドを名前で引きます. 画面のコマンドを先に引きます (Lisp で, エディタのコマンドを作り直せるように).
    *
    * @param name - コマンドの名前.
    * @returns コマンド. なければ `undefined`.
    */
   const lookup = (name: string): Command | undefined => {
-    const command = commands.current?.[name]
-    if (command) return command
     const action = latest.current.actions[name]
-    return action
-      ? () => {
-          action()
-          return true
-        }
-      : undefined
+    if (action) {
+      return () => {
+        action()
+        return true
+      }
+    }
+    return commands.current?.[name]
   }
+
+  /**
+   * キーの割り当て (Lisp の割り当てを含む) の拡張を作ります.
+   *
+   * @returns 拡張.
+   */
+  const keyExtension = () =>
+    // Emacs のキーを, CodeMirror の既定のキー (Ctrl-a で全て選ぶ, など) より先に使う
+    Prec.highest(keymap.of(emacsKeymap(lookup, latestKeys.current)))
 
   /**
    * バッファの始めの状態を作ります.
@@ -123,8 +145,7 @@ export default function CodeEditor({
         emacsState(),
         drawSelection(),
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
-        // Emacs のキーを, CodeMirror の既定のキー (Ctrl-a で全て選ぶ, など) より先に使う
-        Prec.highest(keymap.of(emacsKeymap(lookup))),
+        keys.current.of(keyExtension()),
         keymap.of([...standardKeymap, indentWithTab]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) latest.current.onChange(update.state.doc.toString())
@@ -149,6 +170,19 @@ export default function CodeEditor({
         current().dispatch({ selection: EditorSelection.cursor(pos), scrollIntoView: true })
       },
       gotoLine: (line) => gotoLine(current(), line),
+      text: () => current().state.doc.toString(),
+      point: () => current().state.selection.main.head,
+      insert: (text) => {
+        const pos = current().state.selection.main.head
+        current().dispatch({
+          changes: { from: pos, insert: text },
+          selection: EditorSelection.cursor(pos + text.length),
+          scrollIntoView: true,
+        })
+      },
+      deleteRegion: (from, to) => {
+        current().dispatch({ changes: { from, to }, scrollIntoView: true })
+      },
       forget: (id) => {
         states.current.delete(id)
       },
@@ -184,11 +218,27 @@ export default function CodeEditor({
     const next = states.current.get(bufferId) ?? createState(initialContent, disabled)
     states.current.delete(bufferId)
     current.setState(next)
-    current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(disabled)) })
+    // 隠していたあいだに, Lisp でキーを割り当てたかもしれない
+    current.dispatch({
+      effects: [
+        readOnly.current.reconfigure(EditorState.readOnly.of(disabled)),
+        keys.current.reconfigure(keyExtension()),
+      ],
+    })
     latest.current.onCursorChange(cursorInfo(next))
     // initialContent は, 始めて表示するときにだけ使う. disabled は, 下の効果で合わせる
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bufferId])
+
+  // Lisp でキーを割り当てたら, 割り当てを作り直す
+  useEffect(() => {
+    if (latestKeys.current === keyBindings) return
+    latestKeys.current = keyBindings
+    ;(view.current as EditorView).dispatch({
+      effects: keys.current.reconfigure(keyExtension()),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyBindings])
 
   // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, エディタに戻る
   useEffect(() => {

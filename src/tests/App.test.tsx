@@ -3,10 +3,12 @@ import { render, fireEvent, act } from '@testing-library/react'
 import { isolateHistory } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import App from '../App'
 import * as fileOps from '../lib/fileOps'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
+vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 const close = vi.fn()
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ close }) }))
 vi.mock('../lib/fileOps', () => ({
@@ -18,6 +20,24 @@ vi.mock('../lib/fileOps', () => ({
 
 const mocked = vi.mocked(fileOps)
 const mockedInvoke = vi.mocked(invoke)
+const mockedListen = vi.mocked(listen)
+const unlisten = vi.fn()
+
+/**
+ * 評価の結果を作ります.
+ *
+ * @param result - 結果.
+ * @param error - 失敗の内容.
+ * @param extra - Lisp で作ったコマンドと, 割り当てたキー.
+ * @returns 評価の結果.
+ */
+function response(
+  result: string,
+  error: string | null = null,
+  extra: { commands?: string[]; keys?: { key: string; command: string }[] } = {},
+) {
+  return { result, error, commands: extra.commands ?? [], keys: extra.keys ?? [] }
+}
 
 /** キーの修飾. */
 interface Mods {
@@ -80,6 +100,9 @@ describe('App', () => {
     vi.clearAllMocks()
     mocked.getHomeDir.mockResolvedValue('/home/u')
     mocked.writeFile.mockResolvedValue(undefined)
+    mockedListen.mockResolvedValue(unlisten)
+    // 初期設定ファイル (と, エディタの操作の返事) は, 何もしない
+    mockedInvoke.mockResolvedValue(response(''))
   })
 
   it('最初は *scratch* で, ホームのディレクトリを取れなくても動く', async () => {
@@ -231,12 +254,12 @@ describe('App', () => {
     const editor = await setup()
     await editor.type('(+ 1 2)')
 
-    mockedInvoke.mockResolvedValueOnce({ result: '3', error: null })
+    mockedInvoke.mockResolvedValueOnce(response('3'))
     await act(async () => editor.ctrlX('e'))
     expect(mockedInvoke).toHaveBeenCalledWith('eval_scheme', { code: '(+ 1 2)' })
     expect(editor.text()).toContain('3')
 
-    mockedInvoke.mockResolvedValueOnce({ result: '', error: 'bad' })
+    mockedInvoke.mockResolvedValueOnce(response('', 'bad'))
     await act(async () => editor.ctrlX('e'))
     expect(editor.text()).toContain('Error: bad')
 
@@ -252,12 +275,12 @@ describe('App', () => {
   it('M-: で式を評価する (結果, エラー, 失敗)', async () => {
     const editor = await setup()
 
-    mockedInvoke.mockResolvedValueOnce({ result: '42', error: null })
+    mockedInvoke.mockResolvedValueOnce(response('42'))
     editor.key(':', { alt: true })
     await editor.submit('(* 6 7)')
     expect(editor.text()).toContain('42')
 
-    mockedInvoke.mockResolvedValueOnce({ result: '', error: 'oops' })
+    mockedInvoke.mockResolvedValueOnce(response('', 'oops'))
     editor.key(':', { alt: true })
     await editor.submit('(car 1)')
     expect(editor.text()).toContain('Error: oops')
@@ -266,6 +289,82 @@ describe('App', () => {
     editor.key(':', { alt: true })
     await editor.submit('x')
     expect(editor.text()).toContain('Eval error: down')
+  })
+
+  it('起動のときに, 頼みを受け始めてから, 初期設定ファイルを読む', async () => {
+    mockedInvoke.mockResolvedValueOnce(response('', 'init.scm: bad'))
+    const editor = await setup()
+    expect(mockedListen).toHaveBeenCalledWith('editor-request', expect.any(Function))
+    expect(mockedInvoke).toHaveBeenCalledWith('load_init')
+    expect(editor.text()).toContain('Error: init.scm: bad')
+    editor.unmount()
+    expect(unlisten).toHaveBeenCalled()
+  })
+
+  it('初期設定ファイルを読めなくても, 起動する', async () => {
+    mockedInvoke.mockRejectedValueOnce('no backend')
+    const editor = await setup()
+    expect(editor.text()).toContain('Init file error: no backend')
+  })
+
+  it('頼みを受け始める前に閉じたら, すぐに受けるのをやめる', async () => {
+    let resolve: (stop: () => void) => void = () => {}
+    mockedListen.mockReturnValueOnce(new Promise((r) => (resolve = r)))
+    const view = render(<App />)
+    view.unmount()
+    await act(async () => resolve(unlisten))
+    expect(unlisten).toHaveBeenCalled()
+    expect(mockedInvoke).not.toHaveBeenCalledWith('load_init')
+  })
+
+  it('Lisp で作ったコマンドを M-x とキーで実行する (成功, 失敗, バックエンドの失敗)', async () => {
+    const defined = { commands: ['hello'], keys: [{ key: 'Ctrl-c h', command: 'hello' }] }
+    mockedInvoke.mockResolvedValueOnce(response('', null, defined))
+    const editor = await setup()
+
+    mockedInvoke.mockResolvedValueOnce(response('nil', null, defined))
+    editor.key('x', { alt: true })
+    await editor.submit('hello')
+    expect(mockedInvoke).toHaveBeenCalledWith('run_lisp_command', { name: 'hello' })
+    // 成功したときは, 結果を出さない
+    expect(editor.text()).not.toContain('nil')
+
+    mockedInvoke.mockResolvedValueOnce(response('', 'boom', defined))
+    await act(async () => {
+      editor.key('c', { ctrl: true })
+      editor.key('h')
+    })
+    expect(editor.text()).toContain('Error: boom')
+
+    mockedInvoke.mockRejectedValueOnce('gone')
+    editor.key('x', { alt: true })
+    await editor.submit('hello')
+    expect(editor.text()).toContain('Eval error: gone')
+  })
+
+  it('評価器の頼みで, エディタを操作する', async () => {
+    const editor = await setup()
+    await editor.type('abc', 0)
+    const handler = mockedListen.mock.calls[0][1]
+    const send = (op: string, ...args: unknown[]) =>
+      act(() => {
+        handler({ event: 'editor-request', id: 0, payload: { id: 7, op, args } })
+      })
+    const lastReply = () => mockedInvoke.mock.calls.at(-1)
+
+    await send('goto-char', 2)
+    await send('insert', 'X')
+    expect(editor.doc()).toBe('aXbc')
+    await send('point')
+    expect(lastReply()).toEqual(['editor_reply', { id: 7, value: 3, error: null }])
+    await send('delete-region', 1, 3)
+    expect(editor.doc()).toBe('bc')
+    await send('buffer-name')
+    expect(lastReply()).toEqual(['editor_reply', { id: 7, value: '*scratch*', error: null }])
+    await send('message', 'from lisp')
+    expect(editor.text()).toContain('from lisp')
+    await send('command', 'end-of-buffer')
+    expect(editor.cursor()).toBe(2)
   })
 
   it('M-x でコマンドを実行し, ないコマンドはメッセージにする', async () => {

@@ -6,9 +6,12 @@
 
 - 📝 **コードエディタ** - CodeMirror 6 の上で、Emacs のキー操作で Scheme コードを書く (キーの一覧は `KEYBINDINGS.md`)
 - ⚙️ **Scheme インタプリタ** - Rust ベースの Scheme 処理系:
-  - 算術演算: `+`, `-`, `*`, `/`
-  - リスト操作: `list`, `quote`
-  - 基本値の型: 数値、シンボル、文字列、ブール値、リスト
+  - 特別な形: `quote` (`'`)、`if`、`define`、`set!`、`lambda`、`begin`、`let` (名前付きも)、`let*`、`letrec`、`cond`、`case`、`and`、`or`、`when`、`unless`
+  - 数: `+`、`-`、`*`、`/`、`=`、`<`、`>`、`<=`、`>=`、`abs`、`min`、`max`、`quotient`、`remainder`、`modulo` など
+  - リスト: `car`、`cdr`、`cons`、`list`、`length`、`append`、`reverse`、`map`、`for-each`、`filter`、`apply`、`assoc`、`member` など
+  - 文字列: `string-append`、`substring`、`string-length`、`format` など
+  - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
+- 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.config/rseditor/init.scm` を読む (「Lisp でのカスタマイズ」)
 - 💬 **REPL** - 対話的 Read-Eval-Print ループとコマンド履歴
 - 📊 **出力表示** - 評価結果とエラーメッセージを表示
 
@@ -18,6 +21,7 @@
 .
 ├── src/                      # React フロントエンド
 │   ├── components/          # エディタと REPL コンポーネント
+│   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── App.tsx              # メインアプリケーション
 │   └── main.tsx             # エントリーポイント
@@ -26,7 +30,11 @@
 │   │   ├── main.rs          # Tauri アプリのエントリーポイント
 │   │   └── scheme/          # Scheme インタプリタ
 │   │       ├── parser.rs    # Scheme パーサー
-│   │       ├── evaluator.rs # Scheme 評価器
+│   │       ├── evaluator.rs # Scheme 評価器 (特別な形)
+│   │       ├── builtins.rs  # 組み込みの手続き (エディタの操作を含む)
+│   │       ├── env.rs       # 変数の環境
+│   │       ├── host.rs      # エディタ (画面) に操作を頼む仕組み
+│   │       ├── keys.rs      # キーの書き方の変換 (Emacs → CodeMirror)
 │   │       ├── value.rs     # 値型定義
 │   │       └── mod.rs       # モジュール定義
 │   └── Cargo.toml           # Rust 依存関係
@@ -164,6 +172,54 @@ M-:            ; ミニバッファが開く
 (* 3 4)        ; 式を入力して Enter → ミニバッファに「12」と表示
 ```
 
+### 定義と手続き
+
+```scheme
+(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))
+(fact 10)                         ; => 3628800
+(map (lambda (x) (* x x)) '(1 2 3)) ; => (1 4 9)
+(let loop ((i 0) (acc '()))       ; 名前付きの let で繰り返す
+  (if (= i 3) acc (loop (+ i 1) (cons i acc)))) ; => (2 1 0)
+```
+
+定義は、アプリを閉じるまで覚えています (`C-x C-e`、`M-:`、初期設定ファイルで共通)。
+
+## Lisp でのカスタマイズ
+
+### エディタを動かす関数
+
+位置は、Emacs と同じく 1 から数えます。
+
+| 関数 | 内容 |
+|------|------|
+| `(point)` / `(point-min)` / `(point-max)` | カーソルの位置 / 先頭 / 末尾 |
+| `(goto-char pos)` | カーソルを動かす |
+| `(insert "文字" ...)` | カーソルの位置に入れる |
+| `(delete-region from to)` | 範囲を消す |
+| `(buffer-string)` / `(buffer-substring from to)` | 本文 / 範囲の文字 |
+| `(buffer-name)` | バッファの名前 |
+| `(message "形式" 引数 ...)` | ミニバッファに出す (`%s`、`%S`、`%d`、`%%`) |
+| `(call-interactively 'name)` / `(command-execute 'name)` | コマンドを名前で実行する (`M-x` と同じ) |
+
+### コマンドとキー
+
+```scheme
+;; コマンドを作る (M-x insert-hello で実行できる)
+(define-command (insert-hello)
+  (insert "Hello, " (buffer-name)))
+
+;; キーを割り当てる (Emacs の書き方: C- は Ctrl、M- は Alt、空白で区切ると続けて押すキー)
+(global-set-key "C-c h" 'insert-hello)
+(global-set-key "<f5>" 'save-buffer)
+```
+
+- `define-command` は `(define-command (名前) 本体 ...)` か、`(define-command 名前 手続き)`。同じ名前の既にあるコマンドより、先に使います。
+- `global-set-key` の割り当ては、既定の割り当てより先に使います。名前の付いたキーは `SPC`、`RET`、`TAB`、`DEL`、`ESC`、`<f1>` から `<f12>`、`<left>` などです。
+
+### 初期設定ファイル
+
+起動のときに、`~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読んで評価します。ファイルがなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
+
 ## キーバインド
 
 rs-editor は Emacs スタイルのキーバインドをサポートしています。詳細は [KEYBINDINGS.md](./KEYBINDINGS.md) を参照してください。
@@ -212,13 +268,15 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 
 ## 開発ロードマップ
 
-- [ ] 拡張算術演算 (mod, abs, sqrt など)
-- [ ] 制御フロー (if, cond)
-- [ ] 変数バインディング (define, let)
-- [ ] ラムダ関数
-- [ ] 条件と比較 (>, <, =)
-- [ ] 文字列操作
-- [ ] リスト操作 (car, cdr, cons)
+- [x] 拡張算術演算 (modulo, abs など)
+- [ ] sqrt などの数学の関数
+- [x] 制御フロー (if, cond)
+- [x] 変数バインディング (define, let)
+- [x] ラムダ関数
+- [x] 条件と比較 (>, <, =)
+- [x] 文字列操作
+- [x] リスト操作 (car, cdr, cons)
+- [x] Lisp でのカスタマイズ (コマンド、キー、初期設定ファイル)
 - [ ] Monaco Editor を使ったシンタックスハイライト
 - [ ] コード補完と自動フォーマット
 - [ ] デバッグサポート
@@ -265,7 +323,9 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 
 ### 通信
 
-Tauri のコマンドシステムを使用して React から `eval_scheme` 関数を呼び出し、コード文字列を送信して結果/エラーを受け取ります。
+Tauri のコマンドシステムを使用して React から `eval_scheme` 関数を呼び出し、コード文字列を送信して結果/エラーを受け取ります。結果には、Lisp で作ったコマンドと、割り当てたキーも含みます。
+
+評価の途中のエディタの操作 (`insert` など) は、評価器が `editor-request` のイベントで画面に頼み、画面が操作をして `editor_reply` で返事をします。評価は別のスレッドで行い、返事を待ちます (5 秒で失敗にする)。Lisp で作ったコマンドは `run_lisp_command`、初期設定ファイルは `load_init` で評価します。
 
 ## ライセンス
 

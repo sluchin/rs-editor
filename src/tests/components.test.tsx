@@ -25,6 +25,7 @@ function renderEditor(props: Partial<Parameters<typeof CodeEditor>[0]> = {}) {
     <CodeEditor
       bufferId="a"
       initialContent="(+ 1 2)"
+      keyBindings={[]}
       disabled={false}
       handle={handle}
       {...handlers}
@@ -47,6 +48,38 @@ function renderEditor(props: Partial<Parameters<typeof CodeEditor>[0]> = {}) {
 }
 
 describe('CodeEditor Component', () => {
+  it('Lisp から使う操作 (本文, 位置, 入れる, 消す) をすること', () => {
+    const { editor, handle } = renderEditor()
+    act(() => handle.current?.setCursor(3))
+    expect(handle.current?.point()).toBe(3)
+    act(() => handle.current?.insert('xy'))
+    expect(handle.current?.text()).toBe('(+ xy1 2)')
+    expect(editor.state.selection.main.head).toBe(5)
+    act(() => handle.current?.deleteRegion(0, 3))
+    expect(handle.current?.text()).toBe('xy1 2)')
+  })
+
+  it('Lisp で割り当てたキーを, 既定のキーより先に使い, バッファを切り替えても使うこと', () => {
+    const run = vi.fn()
+    const { editor, key, element, rerender } = renderEditor({ actions: { mine: run } })
+    // 画面のコマンドは, 同じ名前のエディタのコマンドより先に使う
+    const ownEnd = vi.fn()
+    rerender(element({ actions: { 'end-of-buffer': ownEnd } }))
+    key('>', { alt: true })
+    expect(ownEnd).toHaveBeenCalled()
+    expect(editor.state.selection.main.head).toBe(0)
+
+    const keys = [{ key: 'Ctrl-e', command: 'mine' }]
+    rerender(element({ actions: { mine: run }, keyBindings: keys }))
+    key('e', { ctrl: true })
+    expect(run).toHaveBeenCalledTimes(1)
+    // 同じ割り当てなら, 作り直さない
+    rerender(element({ actions: { mine: run }, keyBindings: keys }))
+    rerender(element({ actions: { mine: run }, keyBindings: keys, bufferId: 'b' }))
+    key('e', { ctrl: true })
+    expect(run).toHaveBeenCalledTimes(2)
+  })
+
   it('始めの本文を表示し, カーソルの位置を知らせること', () => {
     const { editor, onCursorChange } = renderEditor()
     expect(editor.state.doc.toString()).toBe('(+ 1 2)')

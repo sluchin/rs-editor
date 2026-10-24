@@ -491,10 +491,15 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
  * キーの割り当てを, CodeMirror のキーの割り当てにします. コマンドは, 押したときに `lookup` で引きます.
  *
  * @param lookup - コマンドの名前から, コマンドを返す関数 (無ければ `undefined`).
+ * @param extra - 足す割り当て (Lisp の `global-set-key`). 既定の割り当てより先に使います.
  * @returns キーの割り当て.
  */
-export function emacsKeymap(lookup: (name: string) => Command | undefined): KeyBinding[] {
-  return KEY_BINDINGS.map(([key, name]) => ({
+export function emacsKeymap(
+  lookup: (name: string) => Command | undefined,
+  extra: readonly { key: string; command: string }[] = [],
+): KeyBinding[] {
+  const bindings = [...extra.map(({ key, command }) => [key, command] as const), ...KEY_BINDINGS]
+  return bindings.map(([key, name]) => ({
     key,
     run: (view) => lookup(name)?.(view) ?? false,
     preventDefault: true,
