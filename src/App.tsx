@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import MenuBar from './components/MenuBar'
 import CodeEditor, { CursorInfo, EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, {
@@ -440,7 +439,6 @@ function App() {
 
   return (
     <div className="app">
-      <MenuBar />
       <CodeEditor
         bufferId={currentBufferId}
         initialContent={currentBuffer.content}

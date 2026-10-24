@@ -4,7 +4,6 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 import { EditorView } from '@codemirror/view'
 import CodeEditor, { CursorInfo, EditorHandle } from '../components/CodeEditor'
 import Minibuffer, { MinibufferState } from '../components/Minibuffer'
-import MenuBar from '../components/MenuBar'
 import ModeLine from '../components/ModeLine'
 import REPL from '../components/REPL'
 
@@ -363,21 +362,6 @@ describe('ModeLine Component', () => {
     )
 
     expect(container.textContent).toContain('**')
-  })
-})
-
-/**
- * MenuBar コンポーネント のテストスイート.
- * メニュー項目の表示をテストします.
- */
-describe('MenuBar Component', () => {
-  it('renders menu options', () => {
-    // メニュー項目が表示されることを確認.
-    render(<MenuBar />)
-
-    expect(screen.getByText('File')).toBeTruthy()
-    expect(screen.getByText('Edit')).toBeTruthy()
-    expect(screen.getByText('Help')).toBeTruthy()
   })
 })
 

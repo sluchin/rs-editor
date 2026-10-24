@@ -94,9 +94,6 @@
 
 - [x] `ModeLine.tsx` に現在の mark 状態（リージョン選択中かどうか）、isearch 状態などを表示する。
 - [ ] `C-h k` (describe-key) 相当の簡易ヘルプ（実装済みキーバインド一覧をミニバッファかダイアログで表示）。
-- [ ] メニューバー (`MenuBar.tsx`) を押せるようにする。今は File / Edit / Options / Buffers / Tools / Help の文字を並べているだけで, 押しても何も起きない。
-      項目を押すとメニューを開き, 選ぶとコマンドを名前で呼ぶ (`M-x` と同じ. 例: File → Open は `find-file`, Edit → Undo は `undo`)。
-      項目の横に, 割り当てたキー (`src/lib/emacs.ts` の `KEY_BINDINGS`) を出す。
 - [x] キーバインドの一覧をドキュメント化し `README.md` に追記する。
 - [x] 各フェーズの hook ごとに Vitest でのテストを追加し、`npm run check` を通すこと。
 
