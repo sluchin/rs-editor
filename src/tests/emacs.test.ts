@@ -8,9 +8,11 @@ import {
   emacsState,
   gotoLine,
   KEY_BINDINGS,
+  describeKeyField,
   lastCommandField,
   markField,
   pageLines,
+  toEmacsKey,
 } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
@@ -434,5 +436,44 @@ describe('キーボードマクロ', () => {
     macro.noteBinding(5)
     run('end-kbd-macro')
     expect(macro.isDefined).toBe(false)
+  })
+})
+
+describe('キーの説明', () => {
+  it('C-h k の次のキーを, 実行せずに説明すること', () => {
+    const { press, text, message, view, run } = setup('|ab')
+    press('C-h k')
+    expect(message).toHaveBeenCalledWith('Describe the following key: ')
+    press('C-f')
+    expect(message).toHaveBeenLastCalledWith('C-f runs the command forward-char')
+    expect(text()).toBe('|ab')
+    press('C-h k C-x C-f')
+    expect(message).toHaveBeenLastCalledWith('C-x C-f runs the command find-file')
+    // 修飾キーだけは, 次のキーを待つ
+    run('describe-key')
+    press('Control')
+    expect(view.state.field(describeKeyField)).toBe(true)
+    press('a')
+    expect(message).toHaveBeenLastCalledWith('a runs the command self-insert-command')
+    press('C-h k C-z')
+    expect(message).toHaveBeenLastCalledWith('C-z is undefined')
+    press('C-h k M-z')
+    expect(message).toHaveBeenLastCalledWith('M-z is undefined')
+    press('C-h k')
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', metaKey: true }))
+    expect(message).toHaveBeenLastCalledWith('s-q is undefined')
+    press('C-f')
+    expect(text()).toBe('a|b')
+  })
+
+  it('CodeMirror のキーの書き方を, Emacs の書き方にすること', () => {
+    expect(toEmacsKey('Ctrl-Alt-f')).toBe('C-M-f')
+    expect(toEmacsKey('Ctrl-x Ctrl-f')).toBe('C-x C-f')
+    expect(toEmacsKey('Shift-ArrowLeft')).toBe('S-<left>')
+    expect(toEmacsKey('Meta-a')).toBe('s-a')
+    expect(toEmacsKey('F5')).toBe('<f5>')
+    expect(toEmacsKey('Ctrl--')).toBe('C--')
+    expect(toEmacsKey('Ctrl-Space')).toBe('C-SPC')
+    expect(toEmacsKey('Cmd-a')).toBe('Cmd-a')
   })
 })

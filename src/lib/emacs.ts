@@ -62,13 +62,85 @@ export const markField = StateField.define<number | null>({
   },
 })
 
+/** 次に押すキーを説明するか (describe-key) を変える. */
+const describeKeyEffect = StateEffect.define<boolean>()
+
+/** 次に押すキーを, 実行せずに説明するなら `true` (`C-h k`). */
+export const describeKeyField = StateField.define<boolean>({
+  create: () => false,
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(describeKeyEffect)) return effect.value
+    }
+    return value
+  },
+})
+
 /**
- * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴).
+ * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴, キーの説明).
  *
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [markField, lastCommandField, history()]
+  return [markField, lastCommandField, history(), describeKeyField]
+}
+
+/** CodeMirror のキーの名前と, Emacs のキーの名前. */
+const EMACS_KEY_NAMES: Record<string, string> = {
+  Space: 'SPC',
+  ' ': 'SPC',
+  Enter: 'RET',
+  Tab: 'TAB',
+  Backspace: 'DEL',
+  Escape: 'ESC',
+  Delete: '<delete>',
+  Insert: '<insert>',
+  Home: '<home>',
+  End: '<end>',
+  PageUp: '<prior>',
+  PageDown: '<next>',
+  ArrowLeft: '<left>',
+  ArrowRight: '<right>',
+  ArrowUp: '<up>',
+  ArrowDown: '<down>',
+}
+
+/** CodeMirror の修飾キーと, Emacs の修飾キー. */
+const EMACS_MODIFIERS: Record<string, string> = {
+  Ctrl: 'C-',
+  Alt: 'M-',
+  Shift: 'S-',
+  Meta: 's-',
+}
+
+/**
+ * CodeMirror のキーの書き方 (`Ctrl-x Ctrl-f`) を, Emacs の書き方 (`C-x C-f`) にします.
+ *
+ * @param keys - CodeMirror の書き方 (空白で区切ると, 続けて押すキー).
+ * @returns Emacs の書き方.
+ */
+export function toEmacsKey(keys: string): string {
+  return keys
+    .split(' ')
+    .map((stroke) => {
+      const parts = stroke.split(/-(?!$)/)
+      const key = parts.pop() as string
+      const modifiers = parts.map((m) => EMACS_MODIFIERS[m] ?? `${m}-`).join('')
+      const name = EMACS_KEY_NAMES[key] ?? (/^F\d+$/.test(key) ? `<${key.toLowerCase()}>` : key)
+      return modifiers + name
+    })
+    .join(' ')
+}
+
+/**
+ * 押したキーを, CodeMirror の書き方にします (修飾キーを付ける).
+ *
+ * @param event - キーの事象.
+ * @returns CodeMirror の書き方.
+ */
+function eventKeyName(event: KeyboardEvent): string {
+  const modifiers = [event.ctrlKey && 'Ctrl-', event.altKey && 'Alt-', event.metaKey && 'Meta-']
+  return modifiers.filter(Boolean).join('') + event.key
 }
 
 /** コマンド (エディタを受け取って, 処理したら `true`). */
@@ -432,6 +504,13 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       }
       return true
     },
+
+    // ヘルプ
+    'describe-key': (view) => {
+      view.dispatch({ effects: describeKeyEffect.of(true) })
+      message('Describe the following key: ')
+      return true
+    },
     'keyboard-quit': (view) => {
       view.dispatch({
         selection: EditorSelection.cursor(head(view)),
@@ -502,6 +581,9 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x Ctrl-x', 'exchange-point-and-mark'],
   ['Ctrl-x h', 'mark-whole-buffer'],
   ['Ctrl-g', 'keyboard-quit'],
+  // ヘルプ
+  ['Ctrl-h k', 'describe-key'],
+  ['Ctrl-h b', 'describe-bindings'],
   // 前置引数
   ['Ctrl-u', 'universal-argument'],
   ...Array.from({ length: 10 }, (_, d) => [`Alt-${d}`, 'digit-argument'] as const),
@@ -528,6 +610,9 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x Ctrl-e', 'eval-last-sexp'],
   ['Alt-:', 'eval-expression'],
 ]
+
+/** 修飾キーだけを押したときの, キーの名前. */
+const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
 
 /** キーの割り当ての作り方. */
 export interface KeymapOptions {
@@ -576,6 +661,11 @@ export function emacsKeymap(
    * @returns 処理したら `true`.
    */
   const run = (view: EditorView, key: string, name: string): boolean => {
+    if (view.state.field(describeKeyField, false)) {
+      view.dispatch({ effects: describeKeyEffect.of(false) })
+      message(`${toEmacsKey(key)} runs the command ${name}`)
+      return true
+    }
     if (name === 'universal-argument') {
       // 数字を入れた後は, 数を変えない
       if (prefix.digits === '') prefix.count = (prefix.count ?? 1) * 4
@@ -610,6 +700,15 @@ export function emacsKeymap(
     // 最後に置く (割り当てのあるキーでは, コマンドを先に動かす)
     {
       any: (view, event) => {
+        if (view.state.field(describeKeyField, false)) {
+          // 修飾キーだけのときは, 次のキーを待つ
+          if (MODIFIER_KEYS.includes(event.key)) return false
+          view.dispatch({ effects: describeKeyEffect.of(false) })
+          const name = toEmacsKey(eventKeyName(event))
+          const plain = event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey
+          message(plain ? `${name} runs the command self-insert-command` : `${name} is undefined`)
+          return true
+        }
         if (prefix.count === null || event.ctrlKey || event.altKey || event.metaKey) return false
         if (/^[0-9]$/.test(event.key)) {
           addDigit(event.key)

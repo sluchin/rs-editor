@@ -170,7 +170,8 @@ export default function CodeEditor({
             },
           }),
         ),
-        keymap.of([...standardKeymap, indentWithTab]),
+        // macOS の Ctrl-h (1 文字消す) は, C-h (ヘルプ) の前置きのキーとぶつかるので, 除く
+        keymap.of([...standardKeymap.filter((b) => b.mac !== 'Ctrl-h'), indentWithTab]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) latest.current.onChange(update.state.doc.toString())
           if (update.docChanged || update.selectionSet) {

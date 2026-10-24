@@ -36,6 +36,10 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - C-M-s, C-M-r - 正規表現の検索
 - M-%, C-M-% - 置換（query-replace, query-replace-regexp）. M-x replace-string, replace-regexp
 
+**ヘルプ**
+- C-h k - キーの説明（describe-key）
+- C-h b - キーの割り当ての一覧（describe-bindings）
+
 **前置引数とマクロ**
 - C-u, M-0 から M-9 - 前置引数
 - C-x (, C-x ), C-x e - キーボードマクロ
@@ -78,8 +82,6 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-h` | help-command | ヘルプ（C-h k, C-h f など） |
-| `C-h k` | describe-key | キーの説明表示 |
 | `C-h f` | describe-function | 関数の説明表示 |
 | `C-h v` | describe-variable | 変数の説明表示 |
 | `C-x C-q` | read-only-mode | 読み込み専用モード |
@@ -149,10 +151,9 @@ rs-editor は Emacs の**基本的な編集機能の大部分**を実装して�
 
 **Emacs デフォルト機能で未実装:**
 - ❌ ウィンドウ分割
-- ❌ ヘルプシステム
+- ❌ ヘルプシステム（C-h f, C-h v など. C-h k と C-h b はある）
 
 **実装の状態:**
 
 Scheme エディタとしての**コア機能は十分実装されている**と言えます。**次のステップ**として：
-1. `C-h k` などのヘルプを実装する
-2. `M-x` の補完と, ウィンドウ分割を実装する
+1. `M-x` の補完と, ウィンドウ分割を実装する

@@ -19,6 +19,7 @@ import {
   replaceRemaining,
 } from './lib/replace'
 import { backwardSexp, forwardSexp } from './lib/bracketMatch'
+import { KEY_BINDINGS, toEmacsKey } from './lib/emacs'
 import {
   type EvalResponse,
   type KeyBinding,
@@ -132,13 +133,18 @@ function App() {
     setBuffers((prev) => prev.map((b) => (b.id === currentBufferId ? { ...b, ...updates } : b)))
   }
 
-  const createNewBuffer = (name: string, filePath: string | null = null, content: string = '') => {
+  const createNewBuffer = (
+    name: string,
+    filePath: string | null = null,
+    content: string = '',
+    modified = content !== '',
+  ) => {
     const newBuffer: Buffer = {
       id: generateBufferId(),
       name,
       filePath,
       content,
-      modified: content !== '',
+      modified,
     }
     setBuffers((prev) => [...prev, newBuffer])
     setCurrentBufferId(newBuffer.id)
@@ -309,6 +315,28 @@ function App() {
 
   const handleListBuffers = () => {
     setShowBufferList(true)
+  }
+
+  /**
+   * キーの割り当ての一覧を, *Help* バッファに出します (前の *Help* は, 作り直す).
+   */
+  const handleDescribeBindings = () => {
+    // Lisp の割り当ては, 同じキーの既定の割り当てより先に使う
+    const bindings = [
+      ...lispKeys.map(({ key, command }) => [key, command] as const),
+      ...KEY_BINDINGS,
+    ]
+    const seen = new Set<string>()
+    const lines = bindings
+      .filter(([key]) => !seen.has(key) && seen.add(key))
+      .map(([key, command]) => `${toEmacsKey(key).padEnd(24)}${command}`)
+    const old = buffers.find((b) => b.name === '*Help*')
+    if (old) {
+      editor.current?.forget(old.id)
+      setBuffers((prev) => prev.filter((b) => b.id !== old.id))
+    }
+    const header = `${'key'.padEnd(24)}binding\n${'---'.padEnd(24)}-------\n`
+    createNewBuffer('*Help*', null, header + lines.join('\n') + '\n', false)
   }
 
   const handleEvalLastSexp = async () => {
@@ -535,6 +563,7 @@ function App() {
     'switch-to-buffer': handleSwitchBuffer,
     'kill-buffer': handleKillBuffer,
     'list-buffers': handleListBuffers,
+    'describe-bindings': handleDescribeBindings,
     'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
     'execute-extended-command': handleExecuteCommand,
     'eval-last-sexp': () => void handleEvalLastSexp(),

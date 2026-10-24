@@ -498,6 +498,31 @@ describe('App', () => {
     expect(editor.text()).toContain('Quit')
   })
 
+  it('C-h b で, キーの割り当ての一覧を *Help* バッファに出す (Lisp の割り当てを先に)', async () => {
+    mockedInvoke.mockResolvedValueOnce(
+      response('', null, {
+        commands: ['hello'],
+        keys: [{ key: 'Ctrl-x Ctrl-f', command: 'hello' }],
+      }),
+    )
+    const editor = await setup()
+    await act(async () => {
+      editor.key('h', { ctrl: true })
+      editor.key('b')
+    })
+    expect(editor.text()).toContain('*Help*')
+    expect(editor.doc()).toMatch(/^C-x C-f +hello$/m)
+    expect(editor.doc()).not.toMatch(/^C-x C-f +find-file$/m)
+    expect(editor.doc()).toMatch(/^C-h k +describe-key$/m)
+    // もう一度出すと, 作り直す (変更なしなので, すぐに閉じられる)
+    await act(async () => {
+      editor.key('h', { ctrl: true })
+      editor.key('b')
+    })
+    await act(async () => editor.ctrlX('k', false))
+    expect(editor.text()).not.toContain('*Help*')
+  })
+
   it('M-x でコマンドを実行し, ないコマンドはメッセージにする', async () => {
     const editor = await setup()
 
