@@ -36,6 +36,8 @@ export interface EditorHandle {
   insert: (text: string) => void
   /** 範囲を消します. */
   deleteRegion: (from: number, to: number) => void
+  /** エディタのコマンドの名前を返します (M-x の補完). */
+  commandNames: () => string[]
   /** 範囲を置き換えて, カーソルを置き換えた文字の後へ動かします. */
   replace: (from: number, to: number, text: string) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
@@ -208,6 +210,7 @@ export default function CodeEditor({
       deleteRegion: (from, to) => {
         current().dispatch({ changes: { from, to }, scrollIntoView: true })
       },
+      commandNames: () => Object.keys(commands.current as Record<string, Command>),
       replace: (from, to, text) => {
         current().dispatch({
           changes: { from, to, insert: text },

@@ -55,7 +55,7 @@
 - [x] `M-x` (execute-extended-command) を実装する。
       - コマンド名を文字列で受け取り、内部の「コマンドレジストリ」（`{name, run}` のマップ）から実行する。
       - 最初は `find-file` / `save-buffer` / `save-buffers-kill-terminal` 程度から始め、Phase 4/5 のバッファ/REPL 系コマンドを順次登録する。
-- [ ] `M-x` の補完（前方一致で候補を絞り込み、Tab で補完）はあると Emacs らしさが出るが優先度は低め。
+- [x] `M-x` と `C-x b` の補完（前方一致する候補の, 共通する先頭の部分まで Tab で補完し, 候補が複数なら一覧を出す）。
 - [x] `keyboard-quit` (`C-g`) 実行時に `Quit` メッセージをミニバッファに表示する。
 
 ## Phase 4: 編集コマンドの強化

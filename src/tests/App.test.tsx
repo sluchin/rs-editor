@@ -523,6 +523,23 @@ describe('App', () => {
     expect(editor.text()).not.toContain('*Help*')
   })
 
+  it('M-x と C-x b で, Tab で名前を補完する', async () => {
+    const editor = await setup()
+    editor.key('x', { alt: true })
+    fireEvent.change(editor.input(), { target: { value: 'find-fi' } })
+    fireEvent.keyDown(editor.input(), { key: 'Tab' })
+    expect(editor.input().value).toBe('find-file')
+    fireEvent.change(editor.input(), { target: { value: 'describe-k' } })
+    fireEvent.keyDown(editor.input(), { key: 'Tab' })
+    expect(editor.input().value).toBe('describe-key')
+    fireEvent.keyDown(editor.input(), { key: 'Escape' })
+
+    editor.ctrlX('b', false)
+    fireEvent.change(editor.input(), { target: { value: '*s' } })
+    fireEvent.keyDown(editor.input(), { key: 'Tab' })
+    expect(editor.input().value).toBe('*scratch*')
+  })
+
   it('M-x でコマンドを実行し, ないコマンドはメッセージにする', async () => {
     const editor = await setup()
 

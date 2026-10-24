@@ -3,7 +3,7 @@ import { createRef } from 'react'
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import { EditorView } from '@codemirror/view'
 import CodeEditor, { CursorInfo, EditorHandle } from '../components/CodeEditor'
-import Minibuffer, { MinibufferState } from '../components/Minibuffer'
+import Minibuffer, { MinibufferInputState, MinibufferState } from '../components/Minibuffer'
 import ModeLine from '../components/ModeLine'
 import REPL from '../components/REPL'
 
@@ -169,6 +169,49 @@ describe('CodeEditor Component', () => {
  * Minibuffer コンポーネント のテストスイート.
  * メッセージ表示と入力プロンプトをテストします.
  */
+describe('Minibuffer Component (補完)', () => {
+  it('Tab で補完し, 候補が複数なら一覧を, 無ければ [No match] を出すこと', () => {
+    let state: MinibufferState = {
+      mode: 'input',
+      prompt: 'M-x ',
+      input: 'kill',
+      completions: ['kill-line', 'kill-word', 'yank'],
+    }
+    const onInputChange = vi.fn((value: string) => {
+      state = { ...(state as MinibufferInputState), input: value }
+    })
+    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn() }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const input = () => view.container.querySelector('input') as HTMLInputElement
+    const tab = () => {
+      fireEvent.keyDown(input(), { key: 'Tab' })
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    tab()
+    expect(onInputChange).toHaveBeenLastCalledWith('kill-', expect.anything())
+    expect(view.container.textContent).toContain('Possible completions:')
+    expect(view.container.textContent).toContain('kill-word')
+    // 入力すると, 一覧を消す
+    fireEvent.change(input(), { target: { value: 'kill-l' } })
+    view.rerender(<Minibuffer state={state} {...props} />)
+    expect(view.container.textContent).not.toContain('Possible completions:')
+    tab()
+    expect(onInputChange).toHaveBeenLastCalledWith('kill-line', expect.anything())
+    expect(view.container.textContent).not.toContain('Possible completions:')
+    state = { ...(state as MinibufferInputState), input: 'zz' }
+    view.rerender(<Minibuffer state={state} {...props} />)
+    tab()
+    expect(view.container.textContent).toContain('[No match]')
+    // 別の入力に移ると, 出さない
+    state = { mode: 'input', prompt: 'Find file: ', input: '' }
+    view.rerender(<Minibuffer state={state} {...props} />)
+    expect(view.container.textContent).not.toContain('[No match]')
+    // 候補がなければ, Tab で補完しない
+    fireEvent.keyDown(input(), { key: 'Tab' })
+    expect(onInputChange).toHaveBeenCalledTimes(4)
+  })
+})
+
 describe('Minibuffer Component (問い)', () => {
   it('問いでは, 押したキーを知らせ, Esc と C-g で取り消すこと', () => {
     const onQueryKey = vi.fn()

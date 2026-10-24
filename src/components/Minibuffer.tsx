@@ -1,4 +1,5 @@
-import { useEffect, useRef, KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, KeyboardEvent } from 'react'
+import { complete } from '../lib/complete'
 import '../styles/Minibuffer.css'
 
 interface MinibufferMessageState {
@@ -10,6 +11,8 @@ export interface MinibufferInputState {
   mode: 'input'
   prompt: string
   input: string
+  /** Tab で補完する候補 (無ければ, 補完しない). */
+  completions?: readonly string[]
 }
 
 export interface MinibufferIsearchState {
@@ -53,6 +56,14 @@ export default function Minibuffer({
   onQueryKey,
 }: MinibufferProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  // Tab で補完したときの, 候補の一覧 (`[No match]` のときは null). 別の入力 (プロンプト) に移ったら, 出さない
+  const inputKey = `${state.mode}:${state.mode === 'input' ? state.prompt : ''}`
+  const [completion, setCompletion] = useState<{ key: string; list: string[] | null }>({
+    key: '',
+    list: [],
+  })
+  const shown = completion.key === inputKey ? completion.list : []
+  const setShown = (list: string[] | null) => setCompletion({ key: inputKey, list })
 
   useEffect(() => {
     if (state.mode !== 'message') {
@@ -108,6 +119,14 @@ export default function Minibuffer({
         }
       }
 
+      if (e.key === 'Tab' && state.mode === 'input' && state.completions) {
+        e.preventDefault()
+        const { value, matches } = complete(state.input, state.completions)
+        setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches)
+        onInputChange(value, state)
+        return
+      }
+
       if (e.key === 'Enter') {
         e.preventDefault()
         onSubmit(getValue())
@@ -124,10 +143,22 @@ export default function Minibuffer({
           ref={inputRef}
           className="minibuffer-input"
           value={getValue()}
-          onChange={(e) => onInputChange(e.target.value, state)}
+          onChange={(e) => {
+            setShown([])
+            onInputChange(e.target.value, state)
+          }}
           onKeyDown={handleKeyDown}
           spellCheck={false}
         />
+        {shown === null && <span className="minibuffer-note">[No match]</span>}
+        {shown !== null && shown.length > 0 && (
+          <div className="minibuffer-completions">
+            <div className="minibuffer-completions-title">Possible completions:</div>
+            {shown.map((c) => (
+              <div key={c}>{c}</div>
+            ))}
+          </div>
+        )}
       </div>
     )
   }

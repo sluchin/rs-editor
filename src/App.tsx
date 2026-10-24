@@ -298,6 +298,7 @@ function App() {
       mode: 'input',
       prompt: `Switch to buffer (${bufferNames}): `,
       input: '',
+      completions: buffers.map((b) => b.name),
     })
   }
 
@@ -524,7 +525,12 @@ function App() {
 
   const handleExecuteCommand = () => {
     setPendingAction('execute-command')
-    setMinibufferState({ mode: 'input', prompt: 'M-x ', input: '' })
+    setMinibufferState({
+      mode: 'input',
+      prompt: 'M-x ',
+      input: '',
+      completions: [...(editor.current as EditorHandle).commandNames(), ...Object.keys(actions)],
+    })
   }
 
   const handleMinibufferInputChange = (
