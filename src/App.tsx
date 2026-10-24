@@ -10,7 +10,14 @@ import Minibuffer, {
 } from './components/Minibuffer'
 import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir } from './lib/fileOps'
-import { findNextMatch } from './lib/isearch'
+import { compileRegexp, findNextMatch } from './lib/isearch'
+import {
+  type ReplaceMatch,
+  type ReplaceSpec,
+  findReplaceMatch,
+  replacedMessage,
+  replaceRemaining,
+} from './lib/replace'
 import { backwardSexp, forwardSexp } from './lib/bracketMatch'
 import {
   type EvalResponse,
@@ -44,7 +51,40 @@ type PendingAction =
   | 'eval-expression'
   | 'goto-line'
   | 'confirm-exit'
+  | 'replace-from'
+  | 'replace-to'
   | null
+
+/** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
+interface ReplaceKind {
+  /** 1 つずつ聞くなら `true`. */
+  query: boolean
+  /** 正規表現で探すなら `true`. */
+  regexp: boolean
+}
+
+/** 進めている置換. */
+interface ReplaceState {
+  kind: ReplaceKind
+  /** 探す文字 (入力したら). */
+  from?: string
+  /** 置換の指定と, 聞いている所 (query-replace で, 聞いているあいだ). */
+  spec?: ReplaceSpec
+  match?: ReplaceMatch
+  /** 置き換えた数. */
+  count: number
+}
+
+/**
+ * 置換の名前 (プロンプトに出す) を返します.
+ *
+ * @param kind - 置換の種類.
+ * @returns 名前.
+ */
+function replaceTitle({ query, regexp }: ReplaceKind): string {
+  if (query) return regexp ? 'Query replace regexp' : 'Query replace'
+  return regexp ? 'Replace regexp' : 'Replace string'
+}
 
 function generateBufferId(): string {
   return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -76,6 +116,7 @@ function App() {
     text: '',
   })
   const [showBufferList, setShowBufferList] = useState(false)
+  const [replace, setReplace] = useState<ReplaceState | null>(null)
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
   const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
@@ -325,10 +366,17 @@ function App() {
     }
   }
 
-  const handleIsearchForward = () => {
+  /**
+   * isearch を始めます.
+   *
+   * @param direction - 探す向き.
+   * @param regexp - 正規表現で探すなら `true`.
+   */
+  const handleIsearch = (direction: 'forward' | 'backward', regexp: boolean) => {
     setMinibufferState({
       mode: 'isearch',
-      direction: 'forward',
+      direction,
+      regexp,
       query: '',
       originalCursor: cursor.offset,
       matchStart: null,
@@ -336,15 +384,77 @@ function App() {
     })
   }
 
-  const handleIsearchBackward = () => {
+  /**
+   * 置換を始めます (探す文字を聞く).
+   *
+   * @param kind - 置換の種類.
+   */
+  const handleReplace = (kind: ReplaceKind) => {
+    setReplace({ kind, count: 0 })
+    setPendingAction('replace-from')
+    setMinibufferState({ mode: 'input', prompt: `${replaceTitle(kind)}: `, input: '' })
+  }
+
+  /**
+   * query-replace で, 置き換える所を選んで聞きます. 無ければ, 終えます.
+   *
+   * @param state - 進めている置換 (spec がある).
+   * @param pos - 探し始める位置.
+   */
+  const askReplace = (state: ReplaceState, pos: number) => {
+    const handle = editor.current as EditorHandle
+    const spec = state.spec as ReplaceSpec
+    const match = findReplaceMatch(handle.text(), spec, pos)
+    if (!match) {
+      finishReplace(state.count, pos)
+      return
+    }
+    handle.select(match.start, match.end)
+    setReplace({ ...state, match })
     setMinibufferState({
-      mode: 'isearch',
-      direction: 'backward',
-      query: '',
-      originalCursor: cursor.offset,
-      matchStart: null,
-      matchEnd: null,
+      mode: 'query',
+      prompt: `Query replacing ${spec.from} with ${spec.to}: (y, n, !, ., q) `,
     })
+  }
+
+  /**
+   * 置換を終えて, 置き換えた数を出します.
+   *
+   * @param count - 置き換えた数.
+   * @param pos - カーソルを置く位置.
+   */
+  const finishReplace = (count: number, pos: number) => {
+    editor.current?.setCursor(pos)
+    setReplace(null)
+    showMessage(replacedMessage(count))
+  }
+
+  /**
+   * query-replace の問いに答えます.
+   *
+   * @param key - 押したキー.
+   */
+  const handleQueryKey = (key: string) => {
+    const state = replace as ReplaceState
+    const match = state.match as ReplaceMatch
+    const handle = editor.current as EditorHandle
+    const replaceMatch = () => {
+      handle.replace(match.start, match.end, match.replacement)
+      return match.start + match.replacement.length
+    }
+    if (key === 'y' || key === ' ') {
+      const pos = replaceMatch()
+      askReplace({ ...state, count: state.count + 1 }, pos)
+    } else if (key === 'n' || key === 'Backspace' || key === 'Delete') {
+      askReplace(state, match.end)
+    } else if (key === '!') {
+      const rest = replaceRemaining(handle, state.spec as ReplaceSpec, replaceMatch())
+      finishReplace(state.count + 1 + rest.count, rest.pos)
+    } else if (key === '.') {
+      finishReplace(state.count + 1, replaceMatch())
+    } else if (key === 'q' || key === 'Enter') {
+      finishReplace(state.count, match.start)
+    }
   }
 
   const handleIsearchRepeat = (
@@ -363,7 +473,13 @@ function App() {
           ? current.matchStart + 1
           : current.matchStart - 1
 
-    const match = findNextMatch(currentBuffer.content, current.query, fromPos, direction)
+    const match = findNextMatch(
+      currentBuffer.content,
+      current.query,
+      fromPos,
+      direction,
+      current.regexp,
+    )
 
     if (match) {
       selectMatch(direction, match)
@@ -395,6 +511,7 @@ function App() {
         value,
         current.originalCursor,
         current.direction,
+        current.regexp,
       )
       if (match) {
         selectMatch(current.direction, match)
@@ -422,8 +539,14 @@ function App() {
     'execute-extended-command': handleExecuteCommand,
     'eval-last-sexp': () => void handleEvalLastSexp(),
     'eval-expression': handleEvalExpression,
-    'isearch-forward': handleIsearchForward,
-    'isearch-backward': handleIsearchBackward,
+    'isearch-forward': () => handleIsearch('forward', false),
+    'isearch-backward': () => handleIsearch('backward', false),
+    'isearch-forward-regexp': () => handleIsearch('forward', true),
+    'isearch-backward-regexp': () => handleIsearch('backward', true),
+    'query-replace': () => handleReplace({ query: true, regexp: false }),
+    'query-replace-regexp': () => handleReplace({ query: true, regexp: true }),
+    'replace-string': () => handleReplace({ query: false, regexp: false }),
+    'replace-regexp': () => handleReplace({ query: false, regexp: true }),
     'goto-line': handleGotoLine,
     ...Object.fromEntries(
       lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
@@ -485,6 +608,33 @@ function App() {
       }
     } else if (action === 'eval-expression') {
       await evaluate(value)
+    } else if (action === 'replace-from') {
+      const state = replace as ReplaceState
+      if (value === '') {
+        setReplace(null)
+        showMessage('')
+      } else if (state.kind.regexp && !compileRegexp(value)) {
+        setReplace(null)
+        showMessage(`Invalid regexp: ${value}`)
+      } else {
+        setReplace({ ...state, from: value })
+        setPendingAction('replace-to')
+        setMinibufferState({
+          mode: 'input',
+          prompt: `${replaceTitle(state.kind)} ${value} with: `,
+          input: '',
+        })
+      }
+    } else if (action === 'replace-to') {
+      const state = replace as ReplaceState
+      const spec = { from: state.from as string, to: value, regexp: state.kind.regexp }
+      const pos = (editor.current as EditorHandle).point()
+      if (state.kind.query) {
+        askReplace({ ...state, spec }, pos)
+      } else {
+        const done = replaceRemaining(editor.current as EditorHandle, spec, pos)
+        finishReplace(done.count, done.pos)
+      }
     } else {
       // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ).
       // 見つかったところの, 探した向きの側にカーソルを置く
@@ -501,6 +651,7 @@ function App() {
   const handleMinibufferCancel = () => {
     const current = minibufferState
     setPendingAction(null)
+    setReplace(null)
 
     if (current.mode === 'isearch') {
       editor.current?.setCursor(current.originalCursor)
@@ -535,6 +686,7 @@ function App() {
         onSubmit={handleMinibufferSubmit}
         onCancel={handleMinibufferCancel}
         onIsearchRepeat={handleIsearchRepeat}
+        onQueryKey={handleQueryKey}
       />
       {showBufferList && (
         <BufferList

@@ -77,8 +77,37 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 |------|---------|------|
 | `C-s` | isearch-forward | 前方に検索 |
 | `C-r` | isearch-backward | 後方に検索 |
+| `C-M-s` | isearch-forward-regexp | 正規表現で前方に検索 |
+| `C-M-r` | isearch-backward-regexp | 正規表現で後方に検索 |
 | `C-s` （検索中） | 次のマッチへ | 検索結果の次へ |
 | `C-g` （検索中） | quit | 検索をキャンセル |
+
+正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。
+
+## 置換
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-%` | query-replace | カーソルから後ろを, 1 つずつ聞いて置き換える |
+| `C-M-%` | query-replace-regexp | 正規表現で, 1 つずつ聞いて置き換える |
+| （`M-x`） | replace-string | カーソルから後ろを, 全て置き換える |
+| （`M-x`） | replace-regexp | 正規表現で, 全て置き換える |
+
+1 つずつ聞くときは, `y` / `SPC` で置き換え, `n` / `DEL` で飛ばし, `!` で残りを全て置き換え, `.` で置き換えて終え, `q` / `RET` で終えます（`C-g` で取り消し）。
+置き換える文字では, `\&`（合った全体）と `\1` から `\9`（グループ）を使えます。
+
+## 前置引数とキーボードマクロ
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-u` | universal-argument | 次のコマンドを 4 回（続けて押すと 16 回, 後に数字を押すとその回数）繰り返す |
+| `M-0` から `M-9` | digit-argument | 次のコマンドを, その数だけ繰り返す |
+| `C-x (` | start-kbd-macro | キーボードマクロの記録を始める |
+| `C-x )` | end-kbd-macro | 記録を終える |
+| `C-x e` | call-last-kbd-macro | 記録したマクロを実行する（`C-u 3 C-x e` で 3 回） |
+
+前置引数の後の, 割り当てのない文字は, その数だけ入れます（`C-u 3 a` で `aaa`）。ファイルやバッファなど, 画面のコマンドは, 繰り返しません。
+キーボードマクロは, エディタで押したキーを記録します。ミニバッファに入力した文字は, 記録しません。
 
 ## ファイル操作
 
@@ -256,7 +285,9 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - S 式移動（C-M-f, C-M-b）
 - 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k）
 - リージョン選択（C-SPC, C-x C-x, C-x h）
-- 検索（C-s, C-r）
+- 検索（C-s, C-r, C-M-s, C-M-r）
+- 置換（M-%, C-M-%, replace-string, replace-regexp）
+- 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
 - ファイル操作（C-x C-f, C-x C-s）
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - Scheme 評価（C-x C-e, M-:）
@@ -264,9 +295,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - その他（C-g）
 
 ### 未実装
-- 置換（M-%）, 正規表現の検索（C-M-s, C-M-r）
 - ウィンドウ分割（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
-- 前置引数（C-u）, キーボードマクロ（C-x (, C-x ), C-x e）
 - より詳細なヘルプシステム（C-h k など）
 - Dired（C-x d と, dired の中の全てのキー）
 

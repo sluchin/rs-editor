@@ -15,13 +15,22 @@ export interface MinibufferInputState {
 export interface MinibufferIsearchState {
   mode: 'isearch'
   direction: 'forward' | 'backward'
+  /** 正規表現で探すなら `true`. */
+  regexp: boolean
   query: string
   originalCursor: number
   matchStart: number | null
   matchEnd: number | null
 }
 
-export type MinibufferState = MinibufferMessageState | MinibufferInputState | MinibufferIsearchState
+/** 1 つのキーで答える問い (query-replace の `y`, `n` など). */
+export interface MinibufferQueryState {
+  mode: 'query'
+  prompt: string
+}
+
+export type MinibufferState =
+  MinibufferMessageState | MinibufferInputState | MinibufferIsearchState | MinibufferQueryState
 
 interface MinibufferProps {
   state: MinibufferState
@@ -29,6 +38,8 @@ interface MinibufferProps {
   onSubmit: (value: string) => void
   onCancel: () => void
   onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
+  /** 問いに答えたキー (`y`, `n`, `!` など). */
+  onQueryKey?: (key: string) => void
 }
 
 const DEFAULT_MESSAGE = 'For information about this editor, see the README.'
@@ -39,14 +50,38 @@ export default function Minibuffer({
   onSubmit,
   onCancel,
   onIsearchRepeat,
+  onQueryKey,
 }: MinibufferProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (state.mode === 'input' || state.mode === 'isearch') {
+    if (state.mode !== 'message') {
       inputRef.current?.focus()
     }
   }, [state.mode])
+
+  if (state.mode === 'query') {
+    const handleQueryKey = (e: KeyboardEvent<HTMLInputElement>) => {
+      e.preventDefault()
+      if (e.key === 'Escape' || (e.ctrlKey && e.key === 'g')) {
+        onCancel()
+      } else {
+        onQueryKey?.(e.key)
+      }
+    }
+    return (
+      <div className="minibuffer">
+        <span className="minibuffer-prompt">{state.prompt}</span>
+        <input
+          ref={inputRef}
+          className="minibuffer-input"
+          value=""
+          readOnly
+          onKeyDown={handleQueryKey}
+        />
+      </div>
+    )
+  }
 
   if (state.mode === 'input' || state.mode === 'isearch') {
     const getPrompt = (): string => {
@@ -55,7 +90,8 @@ export default function Minibuffer({
       }
       const prefix = state.direction === 'forward' ? 'I-search' : 'I-search backward'
       const failing = state.matchStart === null && state.query !== '' ? 'Failing ' : ''
-      return `${failing}${prefix}: `
+      const regexp = state.regexp ? 'Regexp ' : ''
+      return `${failing}${regexp}${prefix}: `
     }
 
     const getValue = (): string => {

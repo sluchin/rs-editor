@@ -17,6 +17,7 @@ import {
 import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
 import type { KillRing } from './killRing'
+import type { KeyboardMacro } from './macro'
 import { type CaseKind, changeCase, clampLine, wordBackward, wordForward } from './text'
 
 /** 直前のコマンド. */
@@ -79,6 +80,8 @@ export interface CommandDeps {
   killRing: KillRing
   /** ミニバッファに出す. */
   message: (text: string) => void
+  /** キーボードマクロ. */
+  macro: KeyboardMacro
 }
 
 /**
@@ -184,7 +187,7 @@ function recenter(view: EditorView): boolean {
  * @param deps - コマンドに要るもの.
  * @returns コマンド (Emacs のコマンドの名前で引く).
  */
-export function createCommands({ killRing, message }: CommandDeps): Record<string, Command> {
+export function createCommands({ killRing, message, macro }: CommandDeps): Record<string, Command> {
   /**
    * 範囲を消して, kill-ring に入れます. 続けてキルしたときは, 1 つの項目につなげます.
    *
@@ -401,6 +404,34 @@ export function createCommands({ killRing, message }: CommandDeps): Record<strin
       })
       return true
     },
+
+    // キーボードマクロ
+    'start-kbd-macro': () => {
+      if (macro.start()) {
+        message('Defining kbd macro...')
+      } else {
+        // 記録には残さない
+        macro.dropLastBinding()
+        message('Already defining kbd macro')
+      }
+      return true
+    },
+    'end-kbd-macro': () => {
+      message(macro.end() ? 'Keyboard macro defined' : 'Not defining kbd macro')
+      return true
+    },
+    'call-last-kbd-macro': (view) => {
+      if (macro.isRecording || macro.isReplaying) {
+        // 記録には残さない
+        macro.dropLastBinding()
+        message('Cannot execute a keyboard macro while defining or executing one')
+      } else if (!macro.isDefined) {
+        message('No kbd macro has been defined')
+      } else {
+        macro.replay(view)
+      }
+      return true
+    },
     'keyboard-quit': (view) => {
       view.dispatch({
         selection: EditorSelection.cursor(head(view)),
@@ -471,9 +502,20 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x Ctrl-x', 'exchange-point-and-mark'],
   ['Ctrl-x h', 'mark-whole-buffer'],
   ['Ctrl-g', 'keyboard-quit'],
-  // 検索
+  // 前置引数
+  ['Ctrl-u', 'universal-argument'],
+  ...Array.from({ length: 10 }, (_, d) => [`Alt-${d}`, 'digit-argument'] as const),
+  // キーボードマクロ
+  ['Ctrl-x (', 'start-kbd-macro'],
+  ['Ctrl-x )', 'end-kbd-macro'],
+  ['Ctrl-x e', 'call-last-kbd-macro'],
+  // 検索と置換
   ['Ctrl-s', 'isearch-forward'],
   ['Ctrl-r', 'isearch-backward'],
+  ['Ctrl-Alt-s', 'isearch-forward-regexp'],
+  ['Ctrl-Alt-r', 'isearch-backward-regexp'],
+  ['Alt-%', 'query-replace'],
+  ['Ctrl-Alt-%', 'query-replace-regexp'],
   // ファイルとバッファ
   ['Ctrl-x Ctrl-f', 'find-file'],
   ['Ctrl-x Ctrl-s', 'save-buffer'],
@@ -487,21 +529,102 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-:', 'eval-expression'],
 ]
 
+/** キーの割り当ての作り方. */
+export interface KeymapOptions {
+  /** 足す割り当て (Lisp の `global-set-key`). 既定の割り当てより先に使います. */
+  extra?: readonly { key: string; command: string }[]
+  /** 前置引数 (`C-u 4`) の数だけ繰り返すコマンドなら `true` (既定は全て). */
+  repeatable?: (name: string) => boolean
+  /** キーボードマクロ (割り当てが動いたことを知らせる). */
+  macro?: KeyboardMacro
+  /** ミニバッファに出す (前置引数の入力中の表示). */
+  message?: (text: string) => void
+}
+
 /**
  * キーの割り当てを, CodeMirror のキーの割り当てにします. コマンドは, 押したときに `lookup` で引きます.
  *
+ * 前置引数: `C-u` は 4 (続けて押すと 4 倍), `C-u` の後の数字と `M-0` から `M-9` は, その数です.
+ * 次のコマンドを, その数だけ繰り返します. 割り当てのない文字は, その数だけ入れます.
+ *
  * @param lookup - コマンドの名前から, コマンドを返す関数 (無ければ `undefined`).
- * @param extra - 足す割り当て (Lisp の `global-set-key`). 既定の割り当てより先に使います.
+ * @param options - 作り方.
  * @returns キーの割り当て.
  */
 export function emacsKeymap(
   lookup: (name: string) => Command | undefined,
-  extra: readonly { key: string; command: string }[] = [],
+  { extra = [], repeatable = () => true, macro, message = () => {} }: KeymapOptions = {},
 ): KeyBinding[] {
+  // 入力中の前置引数 (無ければ count は null)
+  const prefix: { count: number | null; digits: string } = { count: null, digits: '' }
+  const clearPrefix = () => {
+    prefix.count = null
+    prefix.digits = ''
+  }
+  const addDigit = (digit: string) => {
+    prefix.digits += digit
+    prefix.count = Number(prefix.digits)
+    message(`C-u ${prefix.count}-`)
+  }
+
+  /**
+   * 割り当てたコマンドを動かします.
+   *
+   * @param view - エディタ.
+   * @param key - キー.
+   * @param name - コマンドの名前.
+   * @returns 処理したら `true`.
+   */
+  const run = (view: EditorView, key: string, name: string): boolean => {
+    if (name === 'universal-argument') {
+      // 数字を入れた後は, 数を変えない
+      if (prefix.digits === '') prefix.count = (prefix.count ?? 1) * 4
+      message(`C-u ${prefix.digits === '' ? prefix.count : prefix.digits}-`)
+      return true
+    }
+    if (name === 'digit-argument') {
+      addDigit(key.slice(-1))
+      return true
+    }
+    const command = lookup(name)
+    const count = prefix.count
+    if (count !== null) {
+      clearPrefix()
+      message('')
+    }
+    if (!command) return false
+    macro?.noteBinding(key.split(' ').length)
+    if (count === null || !repeatable(name)) return command(view)
+    for (let i = 0; i < count; i++) command(view)
+    return true
+  }
+
   const bindings = [...extra.map(({ key, command }) => [key, command] as const), ...KEY_BINDINGS]
-  return bindings.map(([key, name]) => ({
-    key,
-    run: (view) => lookup(name)?.(view) ?? false,
-    preventDefault: true,
-  }))
+  return [
+    ...bindings.map(([key, name]) => ({
+      key,
+      run: (view: EditorView) => run(view, key, name),
+      preventDefault: true,
+    })),
+    // 前置引数の入力中の, 数字と, 割り当てのない文字. CodeMirror は, `any` を, 後から足す割り当ての先に動かすので,
+    // 最後に置く (割り当てのあるキーでは, コマンドを先に動かす)
+    {
+      any: (view, event) => {
+        if (prefix.count === null || event.ctrlKey || event.altKey || event.metaKey) return false
+        if (/^[0-9]$/.test(event.key)) {
+          addDigit(event.key)
+          return true
+        }
+        if (event.key.length !== 1) return false
+        const text = event.key.repeat(prefix.count)
+        clearPrefix()
+        message('')
+        view.dispatch(view.state.replaceSelection(text), {
+          scrollIntoView: true,
+          userEvent: 'input.type',
+        })
+        return true
+      },
+    },
+  ]
 }

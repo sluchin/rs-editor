@@ -350,7 +350,7 @@ describe('App', () => {
       act(() => {
         handler({ event: 'editor-request', id: 0, payload: { id: 7, op, args } })
       })
-    const lastReply = () => mockedInvoke.mock.calls.at(-1)
+    const lastReply = () => mockedInvoke.mock.calls[mockedInvoke.mock.calls.length - 1]
 
     await send('goto-char', 2)
     await send('insert', 'X')
@@ -365,6 +365,137 @@ describe('App', () => {
     expect(editor.text()).toContain('from lisp')
     await send('command', 'end-of-buffer')
     expect(editor.cursor()).toBe(2)
+  })
+
+  it('C-M-s と C-M-r で, 正規表現で探す', async () => {
+    const editor = await setup()
+    await editor.type('ab12 cd345', 0)
+    editor.key('s', { ctrl: true, alt: true })
+    expect(editor.text()).toContain('Regexp I-search: ')
+    fireEvent.change(editor.input(), { target: { value: '[0-9]+' } })
+    expect(editor.editor.state.selection.main.from).toBe(2)
+    fireEvent.keyDown(editor.input(), { key: 's', ctrlKey: true })
+    expect(editor.editor.state.selection.main.from).toBe(7)
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Enter' })
+    })
+    expect(editor.cursor()).toBe(10)
+
+    editor.key('r', { ctrl: true, alt: true })
+    expect(editor.text()).toContain('Regexp I-search backward: ')
+    fireEvent.change(editor.input(), { target: { value: '[a-z]+' } })
+    expect(editor.editor.state.selection.main.from).toBe(5)
+  })
+
+  it('M-% で, 1 つずつ聞いて置き換える (y, n, SPC, DEL, q)', async () => {
+    const editor = await setup()
+    await editor.type('a a a a a', 0)
+    const answer = (key: string) =>
+      act(() => {
+        fireEvent.keyDown(editor.input(), { key })
+      })
+    editor.key('%', { alt: true })
+    expect(editor.text()).toContain('Query replace: ')
+    await editor.submit('a')
+    expect(editor.text()).toContain('Query replace a with: ')
+    await editor.submit('X')
+    expect(editor.text()).toContain('Query replacing a with X: (y, n, !, ., q)')
+    expect(editor.editor.state.selection.main.from).toBe(0)
+    await answer('n')
+    await answer('y')
+    await answer('Backspace')
+    await answer('z')
+    await answer(' ')
+    expect(editor.doc()).toBe('a X a X a')
+    await answer('q')
+    expect(editor.text()).toContain('Replaced 2 occurrences')
+    expect(editor.cursor()).toBe(8)
+  })
+
+  it('M-% の !, ., Enter と, 見つからないとき, 取り消したとき', async () => {
+    const editor = await setup()
+    const answer = (key: string) =>
+      act(() => {
+        fireEvent.keyDown(editor.input(), { key })
+      })
+    const start = async (from: string, to: string) => {
+      editor.key('%', { alt: true })
+      await editor.submit(from)
+      await editor.submit(to)
+    }
+    await editor.type('a a a', 0)
+    await start('a', 'b')
+    await answer('!')
+    expect(editor.doc()).toBe('b b b')
+    expect(editor.text()).toContain('Replaced 3 occurrences')
+    expect(editor.cursor()).toBe(5)
+
+    await editor.type('a a', 0)
+    await start('a', 'c')
+    await answer('.')
+    expect(editor.doc()).toBe('c a')
+    expect(editor.text()).toContain('Replaced 1 occurrence')
+
+    await editor.type('a a', 0)
+    await start('a', 'c')
+    await answer('Enter')
+    expect(editor.doc()).toBe('a a')
+    expect(editor.text()).toContain('Replaced 0 occurrences')
+
+    await start('zzz', 'c')
+    expect(editor.text()).toContain('Replaced 0 occurrences')
+
+    await start('a', 'c')
+    await answer('Escape')
+    expect(editor.text()).toContain('Quit')
+    expect(editor.doc()).toBe('a a')
+
+    editor.key('%', { alt: true })
+    await editor.submit('')
+    expect(editor.text()).not.toContain('Query replace')
+  })
+
+  it('C-M-% と M-x replace-string, replace-regexp で置き換える', async () => {
+    const editor = await setup()
+    const answer = (key: string) =>
+      act(() => {
+        fireEvent.keyDown(editor.input(), { key })
+      })
+    await editor.type('ab cd', 0)
+    editor.key('%', { ctrl: true, alt: true })
+    expect(editor.text()).toContain('Query replace regexp: ')
+    await editor.submit('(')
+    expect(editor.text()).toContain('Invalid regexp: (')
+
+    editor.key('%', { ctrl: true, alt: true })
+    await editor.submit('([a-z])([a-z])')
+    await editor.submit('\\2\\1')
+    await answer('!')
+    expect(editor.doc()).toBe('ba dc')
+
+    editor.key('x', { alt: true })
+    await editor.submit('replace-string')
+    expect(editor.text()).toContain('Replace string: ')
+    await editor.submit('ba')
+    await editor.submit('X')
+    expect(editor.doc()).toBe('ba dc')
+    expect(editor.text()).toContain('Replaced 0 occurrences')
+
+    await editor.type('ba ba', 0)
+    editor.key('x', { alt: true })
+    await editor.submit('replace-string')
+    await editor.submit('ba')
+    await editor.submit('X')
+    expect(editor.doc()).toBe('X X')
+    expect(editor.cursor()).toBe(3)
+
+    editor.key('x', { alt: true })
+    await editor.submit('replace-regexp')
+    expect(editor.text()).toContain('Replace regexp: ')
+    await editor.submit('X')
+    expect(editor.text()).toContain('Replace regexp X with: ')
+    fireEvent.keyDown(editor.input(), { key: 'Escape' })
+    expect(editor.text()).toContain('Quit')
   })
 
   it('M-x でコマンドを実行し, ないコマンドはメッセージにする', async () => {

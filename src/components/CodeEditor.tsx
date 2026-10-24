@@ -4,6 +4,7 @@ import { Compartment, EditorSelection, EditorState, Prec } from '@codemirror/sta
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
+import { KeyboardMacro } from '../lib/macro'
 import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
 
@@ -35,6 +36,8 @@ export interface EditorHandle {
   insert: (text: string) => void
   /** 範囲を消します. */
   deleteRegion: (from: number, to: number) => void
+  /** 範囲を置き換えて, カーソルを置き換えた文字の後へ動かします. */
+  replace: (from: number, to: number, text: string) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
   forget: (bufferId: string) => void
 }
@@ -96,6 +99,8 @@ export default function CodeEditor({
   const shown = useRef(bufferId)
   const readOnly = useRef(new Compartment())
   const keys = useRef(new Compartment())
+  // キーボードマクロ (全てのバッファで共通)
+  const macro = useRef(new KeyboardMacro())
   const latestKeys = useRef(keyBindings)
   const latest = useRef({ onChange, onCursorChange, actions, onMessage })
   const commands = useRef<Record<string, Command>>(undefined)
@@ -129,7 +134,17 @@ export default function CodeEditor({
    */
   const keyExtension = () =>
     // Emacs のキーを, CodeMirror の既定のキー (Ctrl-a で全て選ぶ, など) より先に使う
-    Prec.highest(keymap.of(emacsKeymap(lookup, latestKeys.current)))
+    Prec.highest(
+      keymap.of(
+        emacsKeymap(lookup, {
+          extra: latestKeys.current,
+          // 前置引数で繰り返すのは, エディタのコマンドだけ (画面のコマンドは 1 回)
+          repeatable: (name) => !latest.current.actions[name],
+          macro: macro.current,
+          message: (text) => latest.current.onMessage(text),
+        }),
+      ),
+    )
 
   /**
    * バッファの始めの状態を作ります.
@@ -146,6 +161,15 @@ export default function CodeEditor({
         drawSelection(),
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
+        // キーボードマクロを記録する (キーの割り当てより先に見る)
+        Prec.highest(
+          EditorView.domEventHandlers({
+            keydown: (event) => {
+              macro.current.record(event)
+              return false
+            },
+          }),
+        ),
         keymap.of([...standardKeymap, indentWithTab]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) latest.current.onChange(update.state.doc.toString())
@@ -183,6 +207,13 @@ export default function CodeEditor({
       deleteRegion: (from, to) => {
         current().dispatch({ changes: { from, to }, scrollIntoView: true })
       },
+      replace: (from, to, text) => {
+        current().dispatch({
+          changes: { from, to, insert: text },
+          selection: EditorSelection.cursor(from + text.length),
+          scrollIntoView: true,
+        })
+      },
       forget: (id) => {
         states.current.delete(id)
       },
@@ -193,6 +224,7 @@ export default function CodeEditor({
     commands.current = createCommands({
       killRing: new KillRing(),
       message: (text) => latest.current.onMessage(text),
+      macro: macro.current,
     })
     const created = new EditorView({
       parent: host.current as HTMLDivElement,

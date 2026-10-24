@@ -170,6 +170,7 @@ describe('ModeLine Component (バッファの数)', () => {
 describe('Minibuffer Component (isearch の繰り返し)', () => {
   const isearch: MinibufferState = {
     mode: 'isearch',
+    regexp: false,
     direction: 'forward',
     query: 'a',
     originalCursor: 0,

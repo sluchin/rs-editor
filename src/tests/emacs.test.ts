@@ -13,6 +13,7 @@ import {
   pageLines,
 } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
+import { KeyboardMacro } from '../lib/macro'
 
 /** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []
@@ -31,13 +32,29 @@ function setup(doc: string) {
   const cursor = doc.indexOf('|')
   const killRing = new KillRing()
   const message = vi.fn()
-  const commands = createCommands({ killRing, message })
+  const macro = new KeyboardMacro()
+  const commands = createCommands({ killRing, message, macro })
   const view = new EditorView({
     parent: document.body,
     state: EditorState.create({
       doc: doc.replace('|', ''),
       selection: EditorSelection.cursor(Math.max(cursor, 0)),
-      extensions: [emacsState(), keymap.of(emacsKeymap((name) => commands[name]))],
+      extensions: [
+        emacsState(),
+        EditorView.domEventHandlers({
+          keydown: (event) => {
+            macro.record(event)
+            return false
+          },
+        }),
+        keymap.of(
+          emacsKeymap((name) => commands[name], {
+            macro,
+            message,
+            repeatable: (name) => name !== 'transpose-chars',
+          }),
+        ),
+      ],
     }),
   })
   views.push(view)
@@ -63,7 +80,16 @@ function setup(doc: string) {
     const pos = view.state.selection.main.head
     view.dispatch({ changes: { from: pos, insert }, selection: { anchor: pos + insert.length } })
   }
-  return { view, run, text, selected, type, message, killRing }
+  /** キーを押します (`C-x (` のように, 空白で区切ると続けて押す). */
+  const press = (keys: string) => {
+    for (const stroke of keys.split(' ')) {
+      const ctrlKey = stroke.startsWith('C-')
+      const altKey = stroke.startsWith('M-')
+      const key = ctrlKey || altKey ? stroke.slice(2) : stroke
+      view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key, ctrlKey, altKey }))
+    }
+  }
+  return { view, run, text, selected, type, message, killRing, press, macro }
 }
 
 describe('移動', () => {
@@ -314,5 +340,99 @@ describe('キーの割り当て', () => {
   it('同じキーを, 二重に割り当てないこと', () => {
     const keys = KEY_BINDINGS.map(([key]) => key)
     expect(new Set(keys).size).toBe(keys.length)
+  })
+})
+
+describe('前置引数', () => {
+  it('作り方を省くと, 全てのコマンドを繰り返すこと', () => {
+    const commands = createCommands({
+      killRing: new KillRing(),
+      message: vi.fn(),
+      macro: new KeyboardMacro(),
+    })
+    const view = new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc: 'abcdef',
+        extensions: [emacsState(), keymap.of(emacsKeymap((name) => commands[name]))],
+      }),
+    })
+    views.push(view)
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'u', ctrlKey: true }))
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', ctrlKey: true }))
+    expect(view.state.selection.main.head).toBe(4)
+  })
+
+  it('C-u は 4 回, 続けると 16 回, 数字はその数だけ繰り返すこと', () => {
+    const { press, text, message } = setup('|' + 'x'.repeat(40))
+    press('C-u C-f')
+    expect(text()).toBe('xxxx|' + 'x'.repeat(36))
+    expect(message).toHaveBeenCalledWith('C-u 4-')
+    press('C-u C-u C-f')
+    expect(text().indexOf('|')).toBe(20)
+    expect(message).toHaveBeenCalledWith('C-u 16-')
+    press('C-u 1 2 C-u C-b')
+    expect(text().indexOf('|')).toBe(8)
+    expect(message).toHaveBeenCalledWith('C-u 12-')
+    press('M-3 C-b')
+    expect(text().indexOf('|')).toBe(5)
+  })
+
+  it('割り当てのない文字は, その数だけ入れ, 繰り返さないコマンドは 1 回だけ動かすこと', () => {
+    const { press, text, view } = setup('ab|')
+    press('C-u a')
+    expect(text()).toBe('abaaaa|')
+    press('C-u C-t')
+    expect(text()).toBe('abaaaa|')
+    view.dispatch({ selection: { anchor: 1 } })
+    press('M-2 C-t')
+    expect(text()).toBe('ba|aaaa')
+    // 文字でないキーと, 修飾キー付きのキーは, 前置引数を残したまま, 処理しない
+    press('C-u ArrowRight C-z')
+    press('b')
+    expect(text()).toBe('babbbb|aaaa')
+  })
+
+  it('前置引数の後の, コマンドのないキーは, 前置引数を捨てること', () => {
+    const { press, text } = setup('|ab')
+    press('C-u M-x')
+    press('C-f')
+    expect(text()).toBe('a|b')
+  })
+})
+
+describe('キーボードマクロ', () => {
+  it('C-x ( から C-x ) までのキーを記録し, C-x e で再生すること', () => {
+    const { press, text, message } = setup('|')
+    press('C-x (')
+    expect(message).toHaveBeenCalledWith('Defining kbd macro...')
+    press('C-x (')
+    expect(message).toHaveBeenCalledWith('Already defining kbd macro')
+    press('C-x e')
+    expect(message).toHaveBeenCalledWith(
+      'Cannot execute a keyboard macro while defining or executing one',
+    )
+    // jsdom では, キーを押しても文字は入らない (再生では入れる)
+    press('Shift h i C-z C-b')
+    press('C-x )')
+    expect(message).toHaveBeenCalledWith('Keyboard macro defined')
+    press('C-x e')
+    expect(text()).toBe('h|i')
+    // 2 回: hi| → hih|i → hihh|ii
+    press('C-e C-u 2 C-x e')
+    expect(text()).toBe('hihh|ii')
+  })
+
+  it('記録していないときと, 記録がないときは, 知らせること', () => {
+    const { press, message, macro, run } = setup('|')
+    press('C-x )')
+    expect(message).toHaveBeenCalledWith('Not defining kbd macro')
+    press('C-x e')
+    expect(message).toHaveBeenCalledWith('No kbd macro has been defined')
+    // 割り当てより多いキーを除いても, 空になるだけ
+    run('start-kbd-macro')
+    macro.noteBinding(5)
+    run('end-kbd-macro')
+    expect(macro.isDefined).toBe(false)
   })
 })

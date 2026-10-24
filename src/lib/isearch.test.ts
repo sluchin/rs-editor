@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findNextMatch } from './isearch'
+import { compileRegexp, findNextMatch } from './isearch'
 
 describe('isearch utilities', () => {
   describe('findNextMatch', () => {
@@ -64,5 +64,24 @@ describe('isearch utilities', () => {
       const result = findNextMatch(text, 'world', 6, 'forward')
       expect(result).toEqual({ start: 6, end: 11 })
     })
+  })
+})
+
+describe('findNextMatch (正規表現)', () => {
+  const text = 'foo1 bar22\nfoo333'
+
+  it('前へ探し, 後ろへ探すこと', () => {
+    expect(findNextMatch(text, '[0-9]+', 0, 'forward', true)).toEqual({ start: 3, end: 4 })
+    expect(findNextMatch(text, '[0-9]+', 4, 'forward', true)).toEqual({ start: 8, end: 10 })
+    expect(findNextMatch(text, '[0-9]+', 9, 'backward', true)).toEqual({ start: 8, end: 10 })
+    expect(findNextMatch(text, '[0-9]+', 2, 'backward', true)).toBeNull()
+    expect(findNextMatch(text, '[0-9]+', 99, 'forward', true)).toBeNull()
+  })
+
+  it('^ は行の始めに合い, 空の所と, 誤った正規表現は, 合わないこと', () => {
+    expect(findNextMatch(text, '^foo', 1, 'forward', true)).toEqual({ start: 11, end: 14 })
+    expect(findNextMatch(text, 'x*', 0, 'forward', true)).toBeNull()
+    expect(findNextMatch(text, '(', 0, 'forward', true)).toBeNull()
+    expect(compileRegexp('(')).toBeNull()
   })
 })

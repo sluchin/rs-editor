@@ -48,6 +48,18 @@ function renderEditor(props: Partial<Parameters<typeof CodeEditor>[0]> = {}) {
 }
 
 describe('CodeEditor Component', () => {
+  it('前置引数で, エディタのコマンドは繰り返し, 画面のコマンドは 1 回だけ動かすこと', () => {
+    const { editor, key, actions, onMessage } = renderEditor()
+    key('u', { ctrl: true })
+    expect(onMessage).toHaveBeenCalledWith('C-u 4-')
+    key('f', { ctrl: true })
+    expect(editor.state.selection.main.head).toBe(4)
+    key('u', { ctrl: true })
+    key('x', { ctrl: true })
+    key('f', { ctrl: true })
+    expect(actions['find-file']).toHaveBeenCalledTimes(1)
+  })
+
   it('Lisp から使う操作 (本文, 位置, 入れる, 消す) をすること', () => {
     const { editor, handle } = renderEditor()
     act(() => handle.current?.setCursor(3))
@@ -157,6 +169,31 @@ describe('CodeEditor Component', () => {
  * Minibuffer コンポーネント のテストスイート.
  * メッセージ表示と入力プロンプトをテストします.
  */
+describe('Minibuffer Component (問い)', () => {
+  it('問いでは, 押したキーを知らせ, Esc と C-g で取り消すこと', () => {
+    const onQueryKey = vi.fn()
+    const onCancel = vi.fn()
+    const props = {
+      state: { mode: 'query', prompt: 'Query replacing a with b: ' } as MinibufferState,
+      onInputChange: vi.fn(),
+      onSubmit: vi.fn(),
+      onCancel,
+    }
+    const view = render(<Minibuffer {...props} onQueryKey={onQueryKey} />)
+    expect(view.container.textContent).toContain('Query replacing a with b: ')
+    const input = view.container.querySelector('input') as HTMLInputElement
+    fireEvent.keyDown(input, { key: 'y' })
+    expect(onQueryKey).toHaveBeenCalledWith('y')
+    fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(onCancel).toHaveBeenCalledTimes(2)
+    // 知らせる先がなくても, 落ちない
+    view.rerender(<Minibuffer {...props} />)
+    fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, { key: 'n' })
+    expect(onQueryKey).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('Minibuffer Component', () => {
   it('displays message when in message mode', () => {
     // メッセージモードでメッセージが表示されることを確認.
@@ -255,6 +292,7 @@ describe('Minibuffer Component', () => {
     // isearch フォワードモードでプロンプトが表示されることを確認.
     const state: MinibufferState = {
       mode: 'isearch',
+      regexp: false,
       direction: 'forward',
       query: 'test',
       originalCursor: 0,
@@ -275,6 +313,7 @@ describe('Minibuffer Component', () => {
     // isearch バックワードモードでプロンプトが表示されることを確認.
     const state: MinibufferState = {
       mode: 'isearch',
+      regexp: false,
       direction: 'backward',
       query: 'test',
       originalCursor: 20,
@@ -293,6 +332,7 @@ describe('Minibuffer Component', () => {
     // isearch でマッチが無いときに Failing プレフィックスが表示されることを確認.
     const state: MinibufferState = {
       mode: 'isearch',
+      regexp: false,
       direction: 'forward',
       query: 'xyz',
       originalCursor: 0,
@@ -312,6 +352,7 @@ describe('Minibuffer Component', () => {
     const onIsearchRepeat = vi.fn()
     const state: MinibufferState = {
       mode: 'isearch',
+      regexp: false,
       direction: 'forward',
       query: 'test',
       originalCursor: 0,
@@ -339,6 +380,7 @@ describe('Minibuffer Component', () => {
     const onIsearchRepeat = vi.fn()
     const state: MinibufferState = {
       mode: 'isearch',
+      regexp: false,
       direction: 'forward',
       query: 'test',
       originalCursor: 20,

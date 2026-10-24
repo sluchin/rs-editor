@@ -103,8 +103,8 @@
 - [x] Emacs のコマンドを `src/lib/emacs.ts` にまとめる (マーク, 直前のコマンド, kill-ring)。`C-x` 系のキーは, CodeMirror のキーの並びで割り当て, `prefixKeymap.ts` をなくす。
 - [x] `C-v` / `M-v`, `C-l`, `M-g g`, `M-d` / `M-DEL`, `M-u` / `M-l` / `M-c`, `C-o`, `C-x C-x`, `C-x C-c` を足す。
 - [x] 続けたキルを 1 つにつなげる。`C-SPC` の後の移動で, 範囲を広げる (transient-mark-mode)。
-- [ ] 置換 (`M-%`) と正規表現の検索 (`C-M-s`, `C-M-r`)。
-- [ ] 前置引数 (`C-u`) とキーボードマクロ。
+- [x] 置換 (`M-%`, `C-M-%`, `replace-string`, `replace-regexp`) と正規表現の検索 (`C-M-s`, `C-M-r`)。
+- [x] 前置引数 (`C-u`, `M-0` から `M-9`) とキーボードマクロ (`C-x (`, `C-x )`, `C-x e`)。
 
 ## Phase 9: Lisp でのカスタマイズ
 
