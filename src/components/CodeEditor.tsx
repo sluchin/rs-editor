@@ -13,7 +13,7 @@ import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from 
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
 import type { MajorMode } from '../lib/modes'
-import { schemeHighlighting } from '../lib/schemeMode'
+import { lispHighlighting } from '../lib/lispMode'
 import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
 
@@ -204,7 +204,7 @@ export default function CodeEditor({
    *
    * @returns 拡張.
    */
-  const highlightExtension = () => (language === 'scheme' ? schemeHighlighting : [])
+  const highlightExtension = () => (language ? lispHighlighting[language] : [])
 
   /**
    * バッファの始めの状態を作ります.

@@ -121,9 +121,11 @@
 
 - [x] `C-x C-f` と保存先 (`C-x C-s` のファイルのないバッファ) で, Tab でファイルの名前を補完する。
       最後の `/` の後ろを, そのディレクトリの中の名前 (Rust の `list_directory`) で補完し, ディレクトリには `/` を付ける。
-- [x] シンタックスハイライト (Emacs の font-lock)。Emacs の scheme-mode と同じく, コメント, 文字列, `(` の直後の特別な形,
-      `define` で定義する名前に, Emacs の既定の色を付ける (`src/lib/schemeMode.ts`)。
-- [x] メジャーモード (`src/lib/modes.ts`): `*scratch*` は Lisp Interaction, `.scm` などは Scheme (色を付ける), ほかは Fundamental。
+- [x] シンタックスハイライト (Emacs の font-lock)。Emacs 30 の scheme-mode と emacs-lisp-mode と同じ所に, Emacs の既定の色を付ける
+      (`src/lib/lispMode.ts`)。コメント, 文字列, `(` の直後の特別な形, 定義する名前, `:key` など。Emacs Lisp では,
+      文字列の中の正規表現のグループと要らない `\`, 閉じた括弧の後ろに続く引数の警告も。`emacs -Q --batch` で付けた色と, 1 文字ずつ比べて確かめた。
+- [x] メジャーモード (`src/lib/modes.ts`): Emacs の `auto-mode-alist` と同じく, `*scratch*` は Lisp Interaction, `.scm` などは Scheme,
+      `.el` と `.emacs` などは ELisp/l か ELisp/d, `.dir-locals.el` などは Lisp-Data (この 4 つは色を付ける), ほかは Fundamental。
       モードラインに名前を出す。
 
 ---

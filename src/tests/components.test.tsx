@@ -81,6 +81,8 @@ describe('CodeEditor Component', () => {
     // 色を付けないバッファから, 色を付けるバッファに切り替える
     rerender(element({ bufferId: 'b', language: 'scheme' }))
     expect(editor.state.facet(language)?.name).toBe('scheme')
+    rerender(element({ bufferId: 'b', language: 'elisp' }))
+    expect(editor.state.facet(language)?.name).toBe('elisp')
   })
 
   it('選んでいないウィンドウのエディタは, フォーカスを取らず, 選ぶと取ること', () => {

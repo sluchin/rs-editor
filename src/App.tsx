@@ -819,7 +819,7 @@ function App() {
           const bufferId = windowBuffers[rect.id]
           const buffer = buffers.find((b) => b.id === bufferId) as Buffer
           const active = rect.id === activeWindow
-          const mode = majorMode(buffer.name, buffer.filePath)
+          const mode = majorMode(buffer.name, buffer.filePath, buffer.content)
           return (
             <div
               key={rect.id}

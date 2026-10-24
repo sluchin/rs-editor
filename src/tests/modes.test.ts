@@ -1,102 +1,274 @@
 import { describe, it, expect } from 'vitest'
-import { StringStream } from '@codemirror/language'
+import { StringStream, type StreamParser } from '@codemirror/language'
 import { majorMode } from '../lib/modes'
-import { definitionKind, schemeParser } from '../lib/schemeMode'
+import { elispParser, type LispState, schemeParser } from '../lib/lispMode'
 
 /**
- * 行を, 字句に分けます (色を付けない字句と, 空白は除く).
+ * 行を, 色ごとに分けます (色を付けない字句と, 括弧は除く. 続く同じ色の字句は, 1 つにする).
  *
+ * @param parser - 字句を読む関数.
  * @param lines - 行.
  * @returns 字句の文字と種類.
  */
-function tokenize(...lines: string[]): [string, string][] {
-  const state = schemeParser.startState?.(2) as ReturnType<
-    NonNullable<typeof schemeParser.startState>
-  >
+function tokenize(parser: StreamParser<LispState>, ...lines: string[]): [string, string][] {
+  // 行ごとに, 状態を写して使う (CodeMirror と同じ)
+  let state = (parser.startState as (unit: number) => LispState)(2)
   const tokens: [string, string][] = []
   for (const line of lines) {
+    state = (parser.copyState as (s: LispState) => LispState)(state)
     const stream = new StringStream(line, 2, 2)
+    let end = -1
     while (!stream.eol()) {
       stream.start = stream.pos
-      const type = schemeParser.token(stream, state)
-      if (type && type !== 'paren') tokens.push([stream.current(), type])
+      const type = parser.token(stream, state)
+      expect(stream.pos).toBeGreaterThan(stream.start)
+      if (!type || type === 'paren') continue
+      const last = tokens[tokens.length - 1]
+      if (end === stream.start && last[1] === type) last[0] += stream.current()
+      else tokens.push([stream.current(), type])
+      end = stream.pos
     }
   }
   return tokens
 }
 
+const scheme = (...lines: string[]) => tokenize(schemeParser, ...lines)
+const elisp = (...lines: string[]) => tokenize(elispParser, ...lines)
+
 describe('majorMode', () => {
   it('バッファの名前とファイルから, メジャーモードを決めること', () => {
-    expect(majorMode('*scratch*', null)).toEqual({ name: 'Lisp Interaction', language: 'scheme' })
-    expect(majorMode('*Help*', null)).toEqual({ name: 'Help', language: null })
-    expect(majorMode('a.scm', '/tmp/a.scm')).toEqual({ name: 'Scheme', language: 'scheme' })
-    expect(majorMode('a.sld', '/tmp/a.sld').language).toBe('scheme')
-    expect(majorMode('a.txt', '/tmp/a.txt')).toEqual({ name: 'Fundamental', language: null })
-    expect(majorMode('a.scm', null)).toEqual({ name: 'Fundamental', language: null })
+    expect(majorMode('*scratch*', null, '')).toEqual({
+      name: 'Lisp Interaction',
+      language: 'scheme',
+    })
+    expect(majorMode('*Help*', null, '')).toEqual({ name: 'Help', language: null })
+    expect(majorMode('a.scm', '/tmp/a.scm', '')).toEqual({ name: 'Scheme', language: 'scheme' })
+    expect(majorMode('a.sld', '/tmp/a.sld', '').language).toBe('scheme')
+    expect(majorMode('.guile', '/home/u/.guile', '').language).toBe('scheme')
+    expect(majorMode('a.txt', '/tmp/a.txt', '')).toEqual({ name: 'Fundamental', language: null })
+    expect(majorMode('a.scm', null, '')).toEqual({ name: 'Fundamental', language: null })
+  })
+
+  it('Emacs Lisp のファイルは, 字句の束縛かどうかを名前に出すこと', () => {
+    expect(majorMode('.emacs.el', '/home/u/.emacs.el', '(setq a 1)')).toEqual({
+      name: 'ELisp/d',
+      language: 'elisp',
+    })
+    const lexical = ';;; init.el --- init  -*- lexical-binding: t; -*-\n(setq a 1)'
+    expect(majorMode('init.el', '/home/u/init.el', lexical).name).toBe('ELisp/l')
+    expect(majorMode('.emacs', '/home/u/.emacs', '').name).toBe('ELisp/d')
+    expect(majorMode('_emacs', 'C:/u/_emacs', '').name).toBe('ELisp/d')
+    // .dir-locals.el は, .el より先に合う
+    expect(majorMode('.dir-locals.el', '/p/.dir-locals.el', '')).toEqual({
+      name: 'Lisp-Data',
+      language: 'elisp',
+    })
   })
 })
 
 describe('schemeParser', () => {
-  it('define の仲間を見分けること (Emacs の scheme-mode と同じ色)', () => {
-    expect(definitionKind('define')).toBe('function')
-    expect(definitionKind('define*')).toBe('function')
-    expect(definitionKind('define-public')).toBe('function')
-    expect(definitionKind('define-syntax')).toBe('variable')
-    expect(definitionKind('define-macro')).toBe('variable')
-    expect(definitionKind('define-command')).toBe('type')
-    expect(definitionKind('define-record-type')).toBe('type')
-    expect(definitionKind('defined')).toBeNull()
-    expect(definitionKind('car')).toBeNull()
-  })
-
-  it('( の直後の特別な形と, 定義する名前に色を付けること', () => {
-    expect(tokenize('(define (square x) (if (car x) x 1))')).toEqual([
+  it('( の直後の特別な形と, 定義する名前に色を付けること (Emacs の scheme-mode)', () => {
+    expect(scheme('(define (square x) (if (car x) x 1))')).toEqual([
       ['define', 'keyword'],
       ['square', 'definedFunction'],
       ['if', 'keyword'],
     ])
-    expect(tokenize('(define-syntax swap! (syntax-rules () ((_ a b) b)))')).toEqual([
+    expect(scheme('(define ((curried a) b) a)')).toEqual([
+      ['define', 'keyword'],
+      ['curried', 'definedFunction'],
+    ])
+    expect(scheme('(define-syntax swap! (syntax-rules ()))')).toEqual([
       ['define-syntax', 'keyword'],
       ['swap!', 'definedVariable'],
       ['syntax-rules', 'keyword'],
     ])
-    expect(tokenize('(define-command hello', '  (lambda () 1))')).toEqual([
-      ['define-command', 'keyword'],
-      ['hello', 'definedType'],
-      ['lambda', 'keyword'],
+    expect(scheme('(define-module (a b))')).toEqual([
+      ['define-module', 'keyword'],
+      ['a', 'typeName'],
     ])
-    // ( の直後でなければ, キーワードでも色を付けない
-    expect(tokenize("'(if) (list if 'define)")).toEqual([['if', 'keyword']])
-    // 定義する名前は, 次の字句だけ
-    expect(tokenize('(define "x" y)')).toEqual([
+    // define-command は, Emacs と同じく色を付けない
+    expect(scheme('(define-command hello (lambda () 1))')).toEqual([['lambda', 'keyword']])
+    expect(scheme('(let loop ((i 0)) i) (let ((j 1)) j)')).toEqual([
+      ['let', 'keyword'],
+      ['loop', 'definedFunction'],
+      ['let', 'keyword'],
+    ])
+    expect(scheme('(library (srfi 1) (import))')).toEqual([
+      ['library', 'keyword'],
+      ['srfi', 'typeName'],
+      ['import', 'keyword'],
+    ])
+    // ( の直後でなければ, キーワードでも色を付けない. [ の後も付けない
+    expect(scheme("(list if 'define) [if]")).toEqual([])
+    // `'(define y)` は, Emacs と同じく色を付ける
+    expect(scheme("'(define y)")).toEqual([
+      ['define', 'keyword'],
+      ['y', 'definedFunction'],
+    ])
+    // 定義する名前は, 次の字句で, 同じ行にあるものだけ
+    expect(scheme('(define "x" y)', '(define', ' z)')).toEqual([
       ['define', 'keyword'],
       ['"x"', 'string'],
+      ['define', 'keyword'],
     ])
-    // [ の後は, キーワードにしない
-    expect(tokenize('[if]')).toEqual([])
+  })
+
+  it('型と, : で始まる名前に色を付けること', () => {
+    expect(scheme('(make <point> :x #:y : x)')).toEqual([
+      ['<point>', 'typeName'],
+      [':x', 'builtin'],
+      ['#:y', 'builtin'],
+    ])
   })
 
   it('コメントと文字列は, 行をまたいで色を付けること', () => {
-    expect(tokenize('(+ 1 2) ; sum (if')).toEqual([['; sum (if', 'comment']])
-    expect(tokenize('"a \\" (if', 'b" (when)')).toEqual([
+    expect(scheme('(+ 1 2) ; sum (if')).toEqual([['; sum (if', 'comment']])
+    expect(scheme('"a \\" (if', 'b" (when)')).toEqual([
       ['"a \\" (if', 'string'],
       ['b"', 'string'],
       ['when', 'keyword'],
     ])
-    expect(tokenize('#| a #| b |# (if', 'c |# (or)')).toEqual([
+    expect(scheme('#| a #| b |# (if', 'c |# (or)')).toEqual([
       ['#| a #| b |# (if', 'comment'],
       ['c |#', 'comment'],
       ['or', 'keyword'],
     ])
-    expect(tokenize('#|', '|#')).toEqual([
-      ['#|', 'comment'],
-      ['|#', 'comment'],
-    ])
+  })
+
+  it('#; の後の式 1 つを, コメントにすること', () => {
+    const comments = (line: string) =>
+      scheme(line)
+        .filter(([, type]) => type === 'comment')
+        .map(([text]) => text)
+        .join('')
+    expect(comments('#;(if (a) "b)") (when)')).toBe('#;(if (a) "b)")')
+    expect(scheme('#;(if', 'x) (when)').pop()).toEqual(['when', 'keyword'])
+    expect(comments("#; 'x (if)")).toBe("#; 'x")
+    expect(comments('#;"abc')).toBe('#;"abc')
+    expect(comments('#;[a] (if)')).toBe('#;[a]')
   })
 
   it('文字の括弧と, 名前でない文字を, 名前と分けること', () => {
     // `#\(` は文字なので, 次の `(if` は ( の直後
-    expect(tokenize('(list #\\( `(if ,x))')).toEqual([['if', 'keyword']])
-    expect(tokenize('#\\')).toEqual([])
+    expect(scheme('(list #\\( `(if ,x))')).toEqual([['if', 'keyword']])
+    expect(scheme('#\\')).toEqual([])
+  })
+})
+
+describe('elispParser', () => {
+  it('定義の形と, 定義する名前に色を付けること (Emacs の emacs-lisp-mode)', () => {
+    expect(elisp('(defun my-fn (a &optional b) (car a))')).toEqual([
+      ['defun', 'keyword'],
+      ['my-fn', 'definedFunction'],
+      ['&optional', 'typeName'],
+    ])
+    expect(elisp("(defvar v 1) (defalias 'f #'g) (defgroup my nil)")).toEqual([
+      ['defvar', 'keyword'],
+      ['v', 'definedVariable'],
+      ['defalias', 'keyword'],
+      ['f', 'definedFunction'],
+      ['defgroup', 'keyword'],
+      ['my', 'typeName'],
+    ])
+    // `(` の後の名前は, 関数なら色を付けず, 型なら付ける
+    expect(elisp('(defun (f)) (cl-defstruct (st (:copier nil)))')).toEqual([
+      ['defun', 'keyword'],
+      ['cl-defstruct', 'keyword'],
+      ['st', 'typeName'],
+      [':copier', 'builtin'],
+    ])
+  })
+
+  it('マクロ, 機能の名前, 警告の形に色を付けること', () => {
+    expect(elisp('(require \'cl-lib) (throw (x)) (error "x") (when t) (car t)')).toEqual([
+      ['require', 'keyword'],
+      ['cl-lib', 'constant'],
+      ['throw', 'keyword'],
+      ['error', 'warning'],
+      ['"x"', 'string'],
+      ['when', 'keyword'],
+    ])
+  })
+
+  it("'( と let の束縛の中では, マクロに色を付けないこと", () => {
+    expect(elisp("(defvar x '(progn)) '(a (when b))")).toEqual([
+      ['defvar', 'keyword'],
+      ['x', 'definedVariable'],
+      ['when', 'keyword'],
+    ])
+    expect(elisp('(let ((when 1)) (cond ((progn 1))))')).toEqual([
+      ['let', 'keyword'],
+      ['cond', 'keyword'],
+      ['progn', 'keyword'],
+    ])
+    // `` `( `` と `#'(` は, 関数を呼ぶリスト
+    expect(elisp("`(when ,(progn 1)) #'(lambda () 1)")).toEqual([
+      ['when', 'keyword'],
+      ['progn', 'keyword'],
+      ['lambda', 'keyword'],
+    ])
+  })
+
+  it('文字列の中の, 正規表現のグループ, キー, 名前, 要らない \\ に色を付けること', () => {
+    expect(elisp('"\\\\(a\\\\|b\\\\)\\\\(?:c\\\\) \\\\\\\\(d"')).toEqual([
+      ['"', 'string'],
+      ['\\\\', 'regexpBackslash'],
+      ['(', 'regexpConstruct'],
+      ['a', 'string'],
+      ['\\\\', 'regexpBackslash'],
+      ['|', 'regexpConstruct'],
+      ['b', 'string'],
+      ['\\\\', 'regexpBackslash'],
+      [')', 'regexpConstruct'],
+      ['\\\\', 'regexpBackslash'],
+      ['(?:', 'regexpConstruct'],
+      ['c', 'string'],
+      ['\\\\', 'regexpBackslash'],
+      [')', 'regexpConstruct'],
+      // `\\\\` は, 正規表現の `\` そのもの
+      [' \\\\\\\\(d"', 'string'],
+    ])
+    expect(elisp('"\\\\[cmd] \\\\<map> \\\\= `name\' \\. \\n"')).toEqual([
+      ['"\\\\[', 'string'],
+      ['cmd', 'constant'],
+      ['] \\\\<', 'string'],
+      ['map', 'definedVariable'],
+      ['> ', 'string'],
+      ['\\\\=', 'builtin'],
+      [' `', 'string'],
+      ['name', 'constant'],
+      ["' ", 'string'],
+      ['\\', 'warning'],
+      ['. \\n"', 'string'],
+    ])
+    // 行の始めの `\(` は, 要るもの
+    expect(elisp('"a', '\\(b"')).toEqual([
+      ['"a', 'string'],
+      ['\\(b"', 'string'],
+    ])
+  })
+
+  it("コメントの中の `name' に色を付けること", () => {
+    expect(elisp(";; see `foo' and `bar'", '(when t)')).toEqual([
+      [';; see `', 'comment'],
+      ['foo', 'constant'],
+      ["' and `", 'comment'],
+      ['bar', 'constant'],
+      ["'", 'comment'],
+      ['when', 'keyword'],
+    ])
+  })
+
+  it('前の行で開いた括弧を閉じた後ろに続く引数を, 行の終わりまで警告すること', () => {
+    expect(elisp('(foo (a', '      b) c "s")')).toEqual([['c "s")', 'warning']])
+    expect(elisp('(foo (a', '      b)) c')).toEqual([['c', 'warning']])
+    // 閉じる括弧と, コメントと, 行の終わりは, 警告しない
+    expect(elisp('(foo (a', '      b) ; x', '  b))')).toEqual([['; x', 'comment']])
+    // 同じ行で開いた括弧は, 警告しない
+    expect(elisp('(foo (a b) c)')).toEqual([])
+  })
+
+  it('文字の括弧を, 名前の文字にすること', () => {
+    expect(elisp('(list ?( ?\\( ?a) (when)')).toEqual([['when', 'keyword']])
   })
 })

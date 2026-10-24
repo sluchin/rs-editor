@@ -15,7 +15,7 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 - エディタは CodeMirror 6 (`src/components/CodeEditor.tsx`)。バッファごとに `EditorState` を持ち, 切り替えるときに差し替える。
 - ウィンドウ (`C-x 2` など) は, 分け方を木 (`src/lib/windows.ts`) で持ち, 描くときは位置を % で計算して平らに並べる (分け方が変わっても, エディタを作り直さない)。ウィンドウごとに `CodeEditor` を置き, 同じバッファの書き換えは `sync` で別のウィンドウに写す。
 - Emacs のコマンドとキーの割り当ては `src/lib/emacs.ts`。コマンドは Emacs の名前で引き, キーと `M-x` の両方から使う。画面のコマンド (ファイル, バッファ, 検索, 評価) は `App.tsx` の `actions` に置く。
-- シンタックスハイライトは, CodeMirror の `StreamLanguage` で, Emacs の scheme-mode と同じ色分けにする (`src/lib/schemeMode.ts`)。バッファのメジャーモード (色を付けるか, モードラインの名前) は `src/lib/modes.ts` で決める。
+- シンタックスハイライトは, CodeMirror の `StreamLanguage` で, Emacs 30 の scheme-mode と emacs-lisp-mode と同じ色分けにする (`src/lib/lispMode.ts`)。決まりは, Emacs の font-lock の変数 (`scheme-font-lock-keywords-2`, `lisp-el-font-lock-keywords-2`) から取り, `emacs -Q --batch` で付けた色と比べて確かめる。Emacs Lisp のマクロの名前は `src/lib/elispKeywords.ts` (`emacs -Q` から作る)。バッファのメジャーモード (色を付けるか, モードラインの名前) は `src/lib/modes.ts` で決める。
 - 位置の計算 (単語, 行) は `src/lib/text.ts`, kill-ring は `src/lib/killRing.ts`, S 式の範囲は `src/lib/bracketMatch.ts`。
 - Lisp からのエディタの操作: 評価器は, 操作を `Host` (`src-tauri/src/scheme/host.rs`) に頼む。アプリでは `Bridge` が `editor-request` のイベントで画面に頼み, 画面 (`src/lib/lisp.ts`) が操作をして `editor_reply` で返事をする。テストでは, 偽の `Host` を使う。位置は Emacs と同じく 1 から数える。
 - 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。
@@ -61,7 +61,7 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 - ✅ REPL と履歴機能（最後の 10 項目）
 - ✅ エラーハンドリングと表示
 - ✅ ダークテーマ UI
-- ✅ シンタックスハイライト (Emacs の scheme-mode と同じ色分け) と, ファイルの名前の補完
+- ✅ シンタックスハイライト (Emacs の scheme-mode と emacs-lisp-mode と同じ色分け) と, ファイルの名前の補完
 
 ### TODO
 - [ ] マクロ: define-syntax

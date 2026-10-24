@@ -167,6 +167,9 @@ describe('App', () => {
     editor.ctrlX('f')
     await editor.submit('/tmp/a.txt')
     expect(editor.text()).toContain('(Fundamental)')
+    editor.ctrlX('f')
+    await editor.submit('/home/u/.emacs.el')
+    expect(editor.text()).toContain('(ELisp/d)')
   })
 
   it('C-x C-f で, / で終わるパスは, パスをそのままバッファの名前にする', async () => {
