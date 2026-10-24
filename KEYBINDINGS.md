@@ -127,6 +127,18 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 
 バッファごとに, カーソルの位置と, 元に戻す履歴を覚えています。
 
+## ウィンドウ
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x 2` | split-window-below | ウィンドウを上下に分ける |
+| `C-x 3` | split-window-right | ウィンドウを左右に分ける |
+| `C-x o` | other-window | 次のウィンドウへ移る（クリックでも選べる） |
+| `C-x 0` | delete-window | 選んでいるウィンドウを消す |
+| `C-x 1` | delete-other-windows | ほかのウィンドウを消す |
+
+同じバッファを 2 つのウィンドウに出すと, 一方での書き換えは, もう一方にも写ります（カーソルと, 元に戻す履歴は, ウィンドウごと）。
+
 ## Scheme 評価
 
 | キー | コマンド | 説明 |
@@ -298,13 +310,13 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
 - ファイル操作（C-x C-f, C-x C-s）
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
+- ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）
 - コマンド実行（M-x）
 - ヘルプ（C-h k, C-h b）
 - その他（C-g）
 
 ### 未実装
-- ウィンドウ分割（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - そのほかのヘルプ（C-h f, C-h v など）
 - Dired（C-x d と, dired の中の全てのキー）
 

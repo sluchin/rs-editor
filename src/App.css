@@ -7,3 +7,24 @@
   font-family: 'Courier New', monospace;
   overflow: hidden;
 }
+
+/* ウィンドウ (C-x 2, C-x 3 で分ける). 位置と大きさは, 分け方から計算して, % で置く */
+.windows {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 右に別のウィンドウがあるときの, 区切りの線 */
+.window-left-of {
+  border-right: 1px solid #999999;
+  box-sizing: border-box;
+}

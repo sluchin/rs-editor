@@ -540,6 +540,90 @@ describe('App', () => {
     expect(editor.input().value).toBe('*scratch*')
   })
 
+  it('C-x 2, C-x 3 でウィンドウを分け, C-x o で移り, 同じバッファの書き換えを写す', async () => {
+    const editor = await setup()
+    /** 全てのウィンドウのエディタ. */
+    const views = () =>
+      [...editor.container.querySelectorAll('.cm-editor')].map(
+        (el) => EditorView.findFromDOM(el as HTMLElement) as EditorView,
+      )
+    const inactive = () => editor.container.querySelectorAll('.mode-line-inactive').length
+    await act(async () => editor.ctrlX('2', false))
+    expect(views()).toHaveLength(2)
+    expect(inactive()).toBe(1)
+    // 書き換えは, 同じバッファを出している別のウィンドウにも写す
+    await editor.type('(+ 1 2)')
+    expect(views()[1].state.doc.toString()).toBe('(+ 1 2)')
+
+    await act(async () => editor.ctrlX('o', false))
+    expect(views()[1].hasFocus).toBe(true)
+    // 2 つ目のウィンドウで, 別のバッファ (*Help*) を出す
+    await act(async () => {
+      fireEvent.keyDown(views()[1].contentDOM, { key: 'h', ctrlKey: true })
+      fireEvent.keyDown(views()[1].contentDOM, { key: 'b' })
+    })
+    expect(views()[0].state.doc.toString()).toBe('(+ 1 2)')
+    expect(views()[1].state.doc.toString()).toContain('describe-key')
+
+    await act(async () => {
+      fireEvent.keyDown(views()[1].contentDOM, { key: 'x', ctrlKey: true })
+      fireEvent.keyDown(views()[1].contentDOM, { key: '3' })
+    })
+    expect(views()).toHaveLength(3)
+    expect(editor.container.querySelectorAll('.window-left-of')).toHaveLength(1)
+    // クリックなどで, フォーカスを移すと, そのウィンドウを選ぶ
+    await act(async () => views()[0].focus())
+    expect(inactive()).toBe(2)
+    expect(
+      editor.container.querySelector('.mode-line:not(.mode-line-inactive)')?.textContent,
+    ).toContain('*scratch*')
+
+    await act(async () => editor.ctrlX('1', false))
+    expect(views()).toHaveLength(1)
+    expect(views()[0].state.doc.toString()).toBe('(+ 1 2)')
+    await act(async () => editor.ctrlX('0', false))
+    expect(editor.text()).toContain('Attempt to delete minibuffer or sole ordinary window')
+  })
+
+  it('C-x 0 で選んでいるウィンドウを消し, 消したバッファを出していたウィンドウは, 別のバッファを出す', async () => {
+    const editor = await setup()
+    const views = () =>
+      [...editor.container.querySelectorAll('.cm-editor')].map(
+        (el) => EditorView.findFromDOM(el as HTMLElement) as EditorView,
+      )
+    const modeLine = (i: number) => editor.container.querySelectorAll('.mode-line')[i].textContent
+    /** 2 つ目のウィンドウで, キーを押す. */
+    const keyIn2 = (...keys: [string, boolean][]) =>
+      act(async () => {
+        for (const [key, ctrlKey] of keys) {
+          fireEvent.keyDown(views()[1].contentDOM, { key, ctrlKey })
+        }
+      })
+    await act(async () => editor.ctrlX('3', false))
+    // 両方のウィンドウで出している *scratch* を消すと, 両方とも新しい *scratch* を出す
+    await act(async () => editor.ctrlX('k', false))
+    expect(modeLine(0)).toContain('*scratch*')
+    expect(modeLine(1)).toContain('*scratch*')
+
+    // 2 つ目のウィンドウに *Help* を出し, 1 つ目の *scratch* を書き換えても, *Help* は変わらない
+    await act(async () => editor.ctrlX('o', false))
+    await keyIn2(['h', true], ['b', false])
+    await act(async () => editor.ctrlX('o', false))
+    await editor.type('edited')
+    expect(views()[1].state.doc.toString()).toContain('describe-key')
+
+    // 2 つ目で *Help* を消すと, 2 つ目だけ, 別のバッファを出す
+    await act(async () => editor.ctrlX('o', false))
+    await keyIn2(['x', true], ['k', false])
+    expect(modeLine(0)).toContain('*scratch*')
+    expect(modeLine(1)).toContain('*scratch*')
+    expect(views()[1].state.doc.toString()).toBe('edited')
+
+    await keyIn2(['x', true], ['0', false])
+    expect(views()).toHaveLength(1)
+    expect(views()[0].hasFocus).toBe(true)
+  })
+
   it('M-x でコマンドを実行し, ないコマンドはメッセージにする', async () => {
     const editor = await setup()
 

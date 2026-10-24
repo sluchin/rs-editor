@@ -605,6 +605,12 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x k', 'kill-buffer'],
   ['Ctrl-x Ctrl-b', 'list-buffers'],
   ['Ctrl-x Ctrl-c', 'save-buffers-kill-terminal'],
+  // ウィンドウ
+  ['Ctrl-x 2', 'split-window-below'],
+  ['Ctrl-x 3', 'split-window-right'],
+  ['Ctrl-x o', 'other-window'],
+  ['Ctrl-x 0', 'delete-window'],
+  ['Ctrl-x 1', 'delete-other-windows'],
   // コマンドと評価
   ['Alt-x', 'execute-extended-command'],
   ['Ctrl-x Ctrl-e', 'eval-last-sexp'],

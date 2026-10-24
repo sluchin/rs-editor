@@ -1,12 +1,52 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { indentWithTab, standardKeymap } from '@codemirror/commands'
-import { Compartment, EditorSelection, EditorState, Prec } from '@codemirror/state'
+import {
+  Annotation,
+  Compartment,
+  EditorSelection,
+  EditorState,
+  Prec,
+  Transaction,
+} from '@codemirror/state'
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
 import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
+
+/** 別のウィンドウでの書き換えを写した変更 (書き換えとして知らせない). */
+const syncAnnotation = Annotation.define<boolean>()
+
+/**
+ * 本文を, 新しい本文に合わせる変更を作ります (前と後ろの同じ部分は, そのまま).
+ *
+ * @param state - エディタの状態.
+ * @param content - 新しい本文.
+ * @returns 変更. 同じなら `null`.
+ */
+function syncChange(state: EditorState, content: string) {
+  const old = state.doc.toString()
+  if (old === content) return null
+  let start = 0
+  while (start < old.length && start < content.length && old[start] === content[start]) start++
+  let end = 0
+  while (
+    end < old.length - start &&
+    end < content.length - start &&
+    old[old.length - 1 - end] === content[content.length - 1 - end]
+  ) {
+    end++
+  }
+  return {
+    changes: {
+      from: start,
+      to: old.length - end,
+      insert: content.slice(start, content.length - end),
+    },
+    annotations: [syncAnnotation.of(true), Transaction.addToHistory.of(false)],
+  }
+}
 
 export interface CursorInfo {
   line: number
@@ -38,6 +78,8 @@ export interface EditorHandle {
   deleteRegion: (from: number, to: number) => void
   /** エディタのコマンドの名前を返します (M-x の補完). */
   commandNames: () => string[]
+  /** 別のウィンドウで書き換えた本文を写します (元に戻す履歴には入れない). */
+  sync: (content: string) => void
   /** 範囲を置き換えて, カーソルを置き換えた文字の後へ動かします. */
   replace: (from: number, to: number, text: string) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
@@ -61,6 +103,8 @@ interface CodeEditorProps {
   onMessage: (text: string) => void
   /** ミニバッファで入力しているあいだは `true` (書き換えさせない). */
   disabled: boolean
+  /** 選んでいるウィンドウなら `true` (フォーカスを取る). 省くと `true`. */
+  active?: boolean
   /** 画面から, エディタを動かす窓口. */
   handle: Ref<EditorHandle>
 }
@@ -92,6 +136,7 @@ export default function CodeEditor({
   keyBindings,
   onMessage,
   disabled,
+  active = true,
   handle,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null)
@@ -106,7 +151,7 @@ export default function CodeEditor({
   const latestKeys = useRef(keyBindings)
   const latest = useRef({ onChange, onCursorChange, actions, onMessage })
   const commands = useRef<Record<string, Command>>(undefined)
-  const initial = useRef({ bufferId, initialContent, disabled })
+  const initial = useRef({ bufferId, initialContent, disabled, active })
 
   useEffect(() => {
     latest.current = { onChange, onCursorChange, actions, onMessage }
@@ -175,7 +220,8 @@ export default function CodeEditor({
         // macOS の Ctrl-h (1 文字消す) は, C-h (ヘルプ) の前置きのキーとぶつかるので, 除く
         keymap.of([...standardKeymap.filter((b) => b.mac !== 'Ctrl-h'), indentWithTab]),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) latest.current.onChange(update.state.doc.toString())
+          const synced = update.transactions.some((tr) => tr.annotation(syncAnnotation))
+          if (update.docChanged && !synced) latest.current.onChange(update.state.doc.toString())
           if (update.docChanged || update.selectionSet) {
             latest.current.onCursorChange(cursorInfo(update.state))
           }
@@ -211,6 +257,10 @@ export default function CodeEditor({
         current().dispatch({ changes: { from, to }, scrollIntoView: true })
       },
       commandNames: () => Object.keys(commands.current as Record<string, Command>),
+      sync: (content) => {
+        const change = syncChange(current().state, content)
+        if (change) current().dispatch(change)
+      },
       replace: (from, to, text) => {
         current().dispatch({
           changes: { from, to, insert: text },
@@ -236,7 +286,7 @@ export default function CodeEditor({
     })
     view.current = created
     latest.current.onCursorChange(cursorInfo(created.state))
-    created.focus()
+    if (initial.current.active) created.focus()
     return () => {
       created.destroy()
       view.current = undefined
@@ -261,8 +311,11 @@ export default function CodeEditor({
         keys.current.reconfigure(keyExtension()),
       ],
     })
-    latest.current.onCursorChange(cursorInfo(next))
-    // initialContent は, 始めて表示するときにだけ使う. disabled は, 下の効果で合わせる
+    // 隠していたあいだに, 別のウィンドウで書き換えたかもしれない
+    const change = syncChange(current.state, initialContent)
+    if (change) current.dispatch(change)
+    latest.current.onCursorChange(cursorInfo(current.state))
+    // initialContent は, 始めて表示するときと, 切り替えたときにだけ使う. disabled は, 下の効果で合わせる
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bufferId])
 
@@ -276,12 +329,20 @@ export default function CodeEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyBindings])
 
-  // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, エディタに戻る
+  // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, 選んでいるウィンドウのエディタに戻る
   useEffect(() => {
     const current = view.current as EditorView
     current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(disabled)) })
-    if (!disabled) current.focus()
+    if (!disabled && active) current.focus()
+    // active が変わったときは, 下の効果で合わせる
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled])
+
+  // 選んだウィンドウのエディタに, フォーカスを移す
+  useEffect(() => {
+    if (active && !disabled) (view.current as EditorView).focus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active])
 
   return <div className="code-editor-container" ref={host} />
 }

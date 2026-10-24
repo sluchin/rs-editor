@@ -20,6 +20,7 @@ import {
 } from './lib/replace'
 import { backwardSexp, forwardSexp } from './lib/bracketMatch'
 import { KEY_BINDINGS, toEmacsKey } from './lib/emacs'
+import { type Layout, deleteWindow, splitWindow, windowIds, windowRects } from './lib/windows'
 import {
   type EvalResponse,
   type KeyBinding,
@@ -106,10 +107,30 @@ function createScratchBuffer(): Buffer {
   }
 }
 
+/** 始めのウィンドウ. */
+const FIRST_WINDOW = 'window-1'
+
+/** カーソルの位置の始め. */
+const START_CURSOR: CursorInfo = { line: 1, column: 1, offset: 0 }
+
+/**
+ * ウィンドウの ID を作ります.
+ *
+ * @returns ID.
+ */
+function generateWindowId(): string {
+  return `window-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
+
 function App() {
   const [buffers, setBuffers] = useState<Buffer[]>([createScratchBuffer()])
-  const [currentBufferId, setCurrentBufferId] = useState(buffers[0].id)
-  const [cursor, setCursor] = useState<CursorInfo>({ line: 1, column: 1, offset: 0 })
+  // ウィンドウの分け方と, 各ウィンドウに出すバッファと, カーソルの位置
+  const [layout, setLayout] = useState<Layout>({ kind: 'window', id: FIRST_WINDOW })
+  const [windowBuffers, setWindowBuffers] = useState<Record<string, string>>({
+    [FIRST_WINDOW]: buffers[0].id,
+  })
+  const [cursors, setCursors] = useState<Record<string, CursorInfo>>({})
+  const [activeWindow, setActiveWindow] = useState(FIRST_WINDOW)
   const [homeDir, setHomeDir] = useState('/')
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [minibufferState, setMinibufferState] = useState<MinibufferState>({
@@ -121,12 +142,42 @@ function App() {
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
   const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
-  const editor = useRef<EditorHandle>(null)
+  // ウィンドウごとのエディタ
+  const handles = useRef(new Map<string, EditorHandle>())
+  // 選んでいるウィンドウ (描くのを待たずに, すぐ使えるように)
+  const activeWindowRef = useRef(FIRST_WINDOW)
+  // 選んでいるウィンドウのエディタ
+  const [editor] = useState(() => ({
+    get current(): EditorHandle | undefined {
+      return handles.current.get(activeWindowRef.current)
+    },
+  }))
   // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
   const lispHost = useRef<LispHost>(undefined)
 
-  // バッファを消すときは, 今のバッファの ID も一緒に変えるので, 必ず見つかる
+  const currentBufferId = windowBuffers[activeWindow]
+  const cursor = cursors[activeWindow] ?? START_CURSOR
+  // バッファを消すときは, ウィンドウのバッファも一緒に変えるので, 必ず見つかる
   const currentBuffer = buffers.find((b) => b.id === currentBufferId) as Buffer
+
+  /**
+   * ウィンドウを選びます.
+   *
+   * @param id - ウィンドウ.
+   */
+  const selectWindow = (id: string) => {
+    activeWindowRef.current = id
+    setActiveWindow(id)
+  }
+
+  /**
+   * 選んでいるウィンドウに, バッファを出します.
+   *
+   * @param bufferId - バッファ.
+   */
+  const setCurrentBufferId = (bufferId: string) => {
+    setWindowBuffers((prev) => ({ ...prev, [activeWindowRef.current]: bufferId }))
+  }
 
   // Helper functions for buffer management
   const updateCurrentBuffer = (updates: Partial<Buffer>) => {
@@ -164,17 +215,17 @@ function App() {
       return false
     }
 
-    editor.current?.forget(currentBuffer.id)
+    for (const handle of handles.current.values()) handle.forget(currentBuffer.id)
     const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
-    if (newBuffers.length === 0) {
-      // Create a new scratch buffer if all are killed
-      const scratch = createScratchBuffer()
-      setBuffers([scratch])
-      setCurrentBufferId(scratch.id)
-    } else {
-      setBuffers(newBuffers)
-      setCurrentBufferId(newBuffers[0].id)
-    }
+    // 全て消したら, *scratch* を作り直す
+    const next = newBuffers.length === 0 ? createScratchBuffer() : newBuffers[0]
+    setBuffers(newBuffers.length === 0 ? [next] : newBuffers)
+    // 消したバッファを出していたウィンドウには, 別のバッファを出す
+    setWindowBuffers((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([w, b]) => [w, b === currentBuffer.id ? next.id : b]),
+      ),
+    )
     return true
   }
 
@@ -198,8 +249,50 @@ function App() {
     }
   })
 
-  const handleEditorChange = (value: string) => {
-    updateCurrentBuffer({ content: value, modified: true })
+  /**
+   * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
+   *
+   * @param windowId - 書き換えたウィンドウ.
+   * @param value - 本文.
+   */
+  const handleEditorChange = (windowId: string, value: string) => {
+    const bufferId = windowBuffers[windowId]
+    setBuffers((prev) =>
+      prev.map((b) => (b.id === bufferId ? { ...b, content: value, modified: true } : b)),
+    )
+    for (const [w, b] of Object.entries(windowBuffers)) {
+      if (w !== windowId && b === bufferId) handles.current.get(w)?.sync(value)
+    }
+  }
+
+  /**
+   * 選んでいるウィンドウを分けます (新しいウィンドウにも, 同じバッファを出す).
+   *
+   * @param direction - 分ける向き.
+   */
+  const handleSplitWindow = (direction: 'below' | 'right') => {
+    const id = generateWindowId()
+    setLayout((prev) => splitWindow(prev, activeWindowRef.current, id, direction))
+    setWindowBuffers((prev) => ({ ...prev, [id]: prev[activeWindowRef.current] }))
+  }
+
+  const handleOtherWindow = () => {
+    const ids = windowIds(layout)
+    selectWindow(ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length])
+  }
+
+  const handleDeleteWindow = () => {
+    const next = deleteWindow(layout, activeWindowRef.current)
+    if (!next) {
+      showMessage('Attempt to delete minibuffer or sole ordinary window')
+      return
+    }
+    setLayout(next)
+    selectWindow(windowIds(next)[0])
+  }
+
+  const handleDeleteOtherWindows = () => {
+    setLayout({ kind: 'window', id: activeWindowRef.current })
   }
 
   const showMessage = (text: string) => {
@@ -333,7 +426,7 @@ function App() {
       .map(([key, command]) => `${toEmacsKey(key).padEnd(24)}${command}`)
     const old = buffers.find((b) => b.name === '*Help*')
     if (old) {
-      editor.current?.forget(old.id)
+      for (const handle of handles.current.values()) handle.forget(old.id)
       setBuffers((prev) => prev.filter((b) => b.id !== old.id))
     }
     const header = `${'key'.padEnd(24)}binding\n${'---'.padEnd(24)}-------\n`
@@ -569,6 +662,11 @@ function App() {
     'switch-to-buffer': handleSwitchBuffer,
     'kill-buffer': handleKillBuffer,
     'list-buffers': handleListBuffers,
+    'split-window-below': () => handleSplitWindow('below'),
+    'split-window-right': () => handleSplitWindow('right'),
+    'other-window': handleOtherWindow,
+    'delete-window': handleDeleteWindow,
+    'delete-other-windows': handleDeleteOtherWindows,
     'describe-bindings': handleDescribeBindings,
     'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
     'execute-extended-command': handleExecuteCommand,
@@ -696,25 +794,51 @@ function App() {
 
   return (
     <div className="app">
-      <CodeEditor
-        bufferId={currentBufferId}
-        initialContent={currentBuffer.content}
-        onChange={handleEditorChange}
-        onCursorChange={setCursor}
-        actions={actions}
-        keyBindings={lispKeys}
-        onMessage={showMessage}
-        disabled={minibufferState.mode !== 'message' || showBufferList}
-        handle={editor}
-      />
-      <ModeLine
-        bufferName={currentBuffer.name}
-        modified={currentBuffer.modified}
-        cursor={cursor}
-        mode="Lisp Interaction"
-        bufferCount={buffers.length}
-        currentBufferIndex={buffers.findIndex((b) => b.id === currentBufferId) + 1}
-      />
+      <div className="windows">
+        {windowRects(layout).map((rect) => {
+          const bufferId = windowBuffers[rect.id]
+          const buffer = buffers.find((b) => b.id === bufferId) as Buffer
+          const active = rect.id === activeWindow
+          return (
+            <div
+              key={rect.id}
+              className={`window${rect.left + rect.width < 100 ? ' window-left-of' : ''}`}
+              style={{
+                left: `${rect.left}%`,
+                top: `${rect.top}%`,
+                width: `${rect.width}%`,
+                height: `${rect.height}%`,
+              }}
+              onFocus={() => selectWindow(rect.id)}
+            >
+              <CodeEditor
+                bufferId={bufferId}
+                initialContent={buffer.content}
+                onChange={(value) => handleEditorChange(rect.id, value)}
+                onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
+                actions={actions}
+                keyBindings={lispKeys}
+                onMessage={showMessage}
+                disabled={minibufferState.mode !== 'message' || showBufferList}
+                active={active}
+                handle={(handle) => {
+                  if (handle) handles.current.set(rect.id, handle)
+                  else handles.current.delete(rect.id)
+                }}
+              />
+              <ModeLine
+                bufferName={buffer.name}
+                modified={buffer.modified}
+                cursor={cursors[rect.id] ?? START_CURSOR}
+                mode="Lisp Interaction"
+                bufferCount={buffers.length}
+                currentBufferIndex={buffers.findIndex((b) => b.id === bufferId) + 1}
+                active={active}
+              />
+            </div>
+          )
+        })}
+      </div>
       <Minibuffer
         state={minibufferState}
         onInputChange={handleMinibufferInputChange}

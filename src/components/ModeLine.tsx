@@ -8,6 +8,8 @@ interface ModeLineProps {
   mode?: string
   bufferCount?: number
   currentBufferIndex?: number
+  /** 選んでいるウィンドウのモードラインなら `true` (省くと `true`). */
+  active?: boolean
 }
 
 export default function ModeLine({
@@ -17,12 +19,13 @@ export default function ModeLine({
   mode = 'Scheme',
   bufferCount = 1,
   currentBufferIndex = 1,
+  active = true,
 }: ModeLineProps) {
   const status = modified ? '**' : '--'
   const bufferIndicator = bufferCount > 1 ? ` [${currentBufferIndex}/${bufferCount}]` : ''
 
   return (
-    <div className="mode-line">
+    <div className={active ? 'mode-line' : 'mode-line mode-line-inactive'}>
       -:{status}- {bufferName}
       {bufferIndicator} All L{cursor.line} C{cursor.column} ({mode})
     </div>

@@ -60,6 +60,30 @@ describe('CodeEditor Component', () => {
     expect(actions['find-file']).toHaveBeenCalledTimes(1)
   })
 
+  it('別のウィンドウの書き換えを写し, 元に戻す履歴には入れないこと', () => {
+    const { editor, handle, onChange } = renderEditor()
+    act(() => handle.current?.sync('(+ 1 2 3)'))
+    expect(editor.state.doc.toString()).toBe('(+ 1 2 3)')
+    act(() => handle.current?.sync('(+ 1 2 3)'))
+    act(() => handle.current?.sync('x'))
+    expect(editor.state.doc.toString()).toBe('x')
+    expect(onChange).not.toHaveBeenCalled()
+    expect(handle.current?.run('undo')).toBe(true)
+    expect(editor.state.doc.toString()).toBe('x')
+  })
+
+  it('選んでいないウィンドウのエディタは, フォーカスを取らず, 選ぶと取ること', () => {
+    const { editor, rerender, element } = renderEditor({ active: false })
+    expect(editor.hasFocus).toBe(false)
+    rerender(element({ active: false, disabled: true }))
+    rerender(element({ active: false, disabled: false }))
+    expect(editor.hasFocus).toBe(false)
+    rerender(element({ active: true, disabled: true }))
+    expect(editor.hasFocus).toBe(false)
+    rerender(element({ active: true, disabled: false }))
+    expect(editor.hasFocus).toBe(true)
+  })
+
   it('Lisp から使う操作 (本文, 位置, 入れる, 消す) をすること', () => {
     const { editor, handle } = renderEditor()
     act(() => handle.current?.setCursor(3))
@@ -149,16 +173,23 @@ describe('CodeEditor Component', () => {
   })
 
   it('バッファを切り替えると, バッファごとの本文とカーソルに切り替え, 消したバッファは作り直すこと', () => {
-    const { editor, rerender, element, handle } = renderEditor()
+    const { editor, rerender, element, handle, onChange } = renderEditor()
     editor.dispatch({ selection: { anchor: 3 } })
     rerender(element({ bufferId: 'b', initialContent: 'other' }))
     expect(editor.state.doc.toString()).toBe('other')
-    rerender(element({ bufferId: 'a', initialContent: 'ignored' }))
+    rerender(element({ bufferId: 'a', initialContent: '(+ 1 2)' }))
     expect(editor.state.doc.toString()).toBe('(+ 1 2)')
     expect(editor.state.selection.main.head).toBe(3)
+    // 隠していたあいだに (別のウィンドウで) 書き換えた本文は, 写す (書き換えとしては知らせない)
+    rerender(element({ bufferId: 'b', initialContent: 'other' }))
+    onChange.mockClear()
+    rerender(element({ bufferId: 'a', initialContent: '(+ 10 2) ;' }))
+    expect(editor.state.doc.toString()).toBe('(+ 10 2) ;')
+    expect(editor.state.selection.main.head).toBe(3)
+    expect(onChange).not.toHaveBeenCalled()
     // 同じバッファのまま描き直しても, 状態を変えない
     rerender(element({ bufferId: 'a', initialContent: 'ignored' }))
-    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
+    expect(editor.state.doc.toString()).toBe('(+ 10 2) ;')
     act(() => handle.current?.forget('b'))
     rerender(element({ bufferId: 'b', initialContent: 'new' }))
     expect(editor.state.doc.toString()).toBe('new')

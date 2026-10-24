@@ -12,3 +12,9 @@
   border-top: 1px solid #999999;
   user-select: none;
 }
+
+/* 選んでいないウィンドウのモードライン */
+.mode-line-inactive {
+  background: #eeeeee;
+  color: #666666;
+}

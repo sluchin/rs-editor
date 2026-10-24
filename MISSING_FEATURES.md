@@ -36,6 +36,10 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - C-M-s, C-M-r - 正規表現の検索
 - M-%, C-M-% - 置換（query-replace, query-replace-regexp）. M-x replace-string, replace-regexp
 
+**ウィンドウ**
+- C-x 2, C-x 3 - ウィンドウを分ける
+- C-x o, C-x 0, C-x 1 - ウィンドウを移る, 消す, ほかを消す
+
 **ヘルプ**
 - C-h k - キーの説明（describe-key）
 - C-h b - キーの割り当ての一覧（describe-bindings）
@@ -67,16 +71,6 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-x C-n` | set-goal-column | ゴールカラム設定 |
-
-### 中優先度（ウィンドウ分割）
-
-| キー | コマンド | 説明 |
-|------|---------|------|
-| `C-x 2` | split-window-below | 縦分割 |
-| `C-x 3` | split-window-right | 横分割 |
-| `C-x 1` | delete-other-windows | 他ウィンドウ削除 |
-| `C-x 0` | delete-window | 現在ウィンドウ削除 |
-| `C-x o` | other-window | 別ウィンドウへ移動 |
 
 ### 低優先度（補助機能）
 
@@ -150,10 +144,9 @@ rs-editor は Emacs の**基本的な編集機能の大部分**を実装して�
 - ✅ REPL（**未接続**）
 
 **Emacs デフォルト機能で未実装:**
-- ❌ ウィンドウ分割
 - ❌ ヘルプシステム（C-h f, C-h v など. C-h k と C-h b はある）
 
 **実装の状態:**
 
 Scheme エディタとしての**コア機能は十分実装されている**と言えます。**次のステップ**として：
-1. `M-x` の補完と, ウィンドウ分割を実装する
+1. `C-h f` などのヘルプと, Dired を実装する
