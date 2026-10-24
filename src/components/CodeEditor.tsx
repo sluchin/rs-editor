@@ -1,5 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
-import { indentWithTab, standardKeymap } from '@codemirror/commands'
+import { standardKeymap } from '@codemirror/commands'
 import {
   Annotation,
   Compartment,
@@ -14,6 +14,8 @@ import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
 import type { MajorMode } from '../lib/modes'
 import { lispHighlighting } from '../lib/lispMode'
+import { indentConfig } from '../lib/lispIndent'
+import { showParen } from '../lib/showParen'
 import type { KeyBinding } from '../lib/lisp'
 import '../styles/CodeEditor.css'
 
@@ -107,8 +109,12 @@ interface CodeEditorProps {
   disabled: boolean
   /** 選んでいるウィンドウなら `true` (フォーカスを取る). 省くと `true`. */
   active?: boolean
-  /** シンタックスハイライトの言語 (省くと, 色を付けない). */
+  /** シンタックスハイライトと字下げの言語 (省くと, 色を付けず, Fundamental モードの字下げ). */
   language?: MajorMode['language']
+  /** 字下げにタブを使うなら `true`. 省くと `true` (Emacs の既定). */
+  indentTabs?: boolean
+  /** タブの幅. 省くと 8 (Emacs の既定). */
+  tabWidth?: number
   /** 画面から, エディタを動かす窓口. */
   handle: Ref<EditorHandle>
 }
@@ -142,6 +148,8 @@ export default function CodeEditor({
   disabled,
   active = true,
   language = null,
+  indentTabs = true,
+  tabWidth = 8,
   handle,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null)
@@ -200,11 +208,15 @@ export default function CodeEditor({
     )
 
   /**
-   * シンタックスハイライトの拡張を作ります.
+   * メジャーモードの拡張 (シンタックスハイライトと字下げ) を作ります.
    *
    * @returns 拡張.
    */
-  const highlightExtension = () => (language ? lispHighlighting[language] : [])
+  const highlightExtension = () => [
+    language ? lispHighlighting[language] : [],
+    indentConfig.of({ dialect: language, indentTabs, tabWidth }),
+    EditorState.tabSize.of(tabWidth),
+  ]
 
   /**
    * バッファの始めの状態を作ります.
@@ -219,6 +231,7 @@ export default function CodeEditor({
       extensions: [
         emacsState(),
         drawSelection(),
+        showParen(),
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
         highlight.current.of(highlightExtension()),
@@ -232,7 +245,7 @@ export default function CodeEditor({
           }),
         ),
         // macOS の Ctrl-h (1 文字消す) は, C-h (ヘルプ) の前置きのキーとぶつかるので, 除く
-        keymap.of([...standardKeymap.filter((b) => b.mac !== 'Ctrl-h'), indentWithTab]),
+        keymap.of(standardKeymap.filter((b) => b.mac !== 'Ctrl-h')),
         EditorView.updateListener.of((update) => {
           const synced = update.transactions.some((tr) => tr.annotation(syncAnnotation))
           if (update.docChanged && !synced) latest.current.onChange(update.state.doc.toString())
@@ -344,13 +357,13 @@ export default function CodeEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyBindings])
 
-  // ファイルの名前を変えて (保存するファイル), メジャーモードが変わったら, 色を付け直す
+  // ファイルの名前を変えて (保存するファイル), メジャーモードが変わったら, 色と字下げを合わせ直す
   useEffect(() => {
     ;(view.current as EditorView).dispatch({
       effects: highlight.current.reconfigure(highlightExtension()),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language])
+  }, [language, indentTabs, tabWidth])
 
   // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, 選んでいるウィンドウのエディタに戻る
   useEffect(() => {

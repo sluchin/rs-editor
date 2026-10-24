@@ -37,3 +37,13 @@
 .code-editor-container .cm-cursor {
   border-left: 2px solid #000000;
 }
+
+/* 括弧の強調 (Emacs の show-paren-match と show-paren-mismatch の face) */
+.code-editor-container .cm-show-paren-match {
+  background: turquoise;
+}
+
+.code-editor-container .cm-show-paren-mismatch {
+  background: purple;
+  color: white;
+}

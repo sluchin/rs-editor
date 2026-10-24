@@ -58,6 +58,20 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-x C-/` | redo | 操作をやり直す |
 | `C-M-k` | kill-sexp | 次の S 式を削除 |
 
+## 改行と字下げ
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `RET` / `C-m` | newline | 改行して, 新しい行を字下げする（前の行の字下げも直し, 前の行の終わりの空白を消す. Emacs の electric-indent-mode） |
+| `C-j` | electric-newline-and-maybe-indent | 改行だけを入れる（字下げしない） |
+| `TAB` / `C-i` | indent-for-tab-command | 行を字下げする（リージョンがあれば, リージョンの行を）. Fundamental モードでは, 前の行の次の字下げの位置まで空白を入れる |
+| `C-M-q` | indent-sexp | カーソルの後ろの S 式の, 2 行目からを字下げする（Lisp だけ） |
+| `C-M-\` | indent-region | リージョンの行を字下げする |
+
+字下げは, Emacs 30 の scheme-mode と emacs-lisp-mode と同じです（`lisp-indent-function` の指定, コメントの `;` と `;;` と `;;;`）。Emacs の既定のとおり, タブを使い, タブの幅は 8 です。ファイルの 1 行目の `-*- indent-tabs-mode: nil; tab-width: 4 -*-` で変えられます。
+
+カーソルの前の閉じる括弧か, 後ろの開く括弧と, 対になる括弧に色を付けます（Emacs の show-paren-mode）。対が無いか, 括弧の種類が違えば, 紫にします。
+
 続けてキルすると（`C-k C-k` など）, kill-ring の 1 つの項目につなげます。kill-ring は, 全てのバッファで共通です。
 
 ## リージョン選択
@@ -305,6 +319,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - S 式移動（C-M-f, C-M-b）
 - 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k）
 - リージョン選択（C-SPC, C-x C-x, C-x h）
+- 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）
 - 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）

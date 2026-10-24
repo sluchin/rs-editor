@@ -847,6 +847,8 @@ function App() {
                 disabled={minibufferState.mode !== 'message' || showBufferList}
                 active={active}
                 language={mode.language}
+                indentTabs={mode.indentTabs}
+                tabWidth={mode.tabWidth}
                 handle={(handle) => {
                   if (handle) handles.current.set(rect.id, handle)
                   else handles.current.delete(rect.id)

@@ -128,6 +128,17 @@
       `.el` と `.emacs` などは ELisp/l か ELisp/d, `.dir-locals.el` などは Lisp-Data (この 4 つは色を付ける), ほかは Fundamental。
       モードラインに名前を出す。
 
+## Phase 11: 字下げと, 括弧の強調
+
+- [x] 字下げ (`src/lib/lispIndent.ts`): Emacs 30 の `calculate-lisp-indent` と `lisp-indent-function` (`scheme-indent-function`) と同じ。
+      フォームごとの指定は, Emacs の `lisp-indent-function` と `scheme-indent-function` の値から作る (`src/lib/lispIndentSpecs.ts`)。
+      `RET` (electric-indent-mode), `C-j`, `TAB` (Fundamental モードでは indent-relative), `C-M-q`, `C-M-\`。
+      `emacs -Q --batch` の `indent-region` と, 1 バイトずつ比べて確かめた。
+- [x] タブを使うかと, タブの幅 (Emacs の既定は, タブを使い, 幅は 8)。ファイルの 1 行目の `-*- ... -*-` の
+      `mode`, `lexical-binding`, `indent-tabs-mode`, `tab-width` を読む。
+- [x] 括弧の強調 (`src/lib/showParen.ts`. Emacs の show-paren-mode): カーソルの前の閉じる括弧か, 後ろの開く括弧と, 対に色を付ける。
+      対が無いか, 種類が違えば, 合わない色にする。
+
 ---
 
 ## 実装順序の目安

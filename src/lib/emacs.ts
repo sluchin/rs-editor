@@ -16,6 +16,7 @@ import {
 } from '@codemirror/state'
 import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
+import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
 import { type CaseKind, changeCase, clampLine, wordBackward, wordForward } from './text'
@@ -292,6 +293,34 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
   }
 
   /**
+   * リージョンの行を字下げします (Emacs の `indent-region`. 空の行は除く).
+   *
+   * @param view - エディタ.
+   * @returns `true`.
+   */
+  const indentRegion = (view: EditorView): boolean => {
+    const mark = view.state.field(markField)
+    if (mark === null) {
+      message('The mark is not set now, so there is no region')
+      return true
+    }
+    const { doc } = view.state
+    const from = Math.min(mark, head(view))
+    const to = Math.max(mark, head(view))
+    // 終わりが行の始めなら, その行は含めない
+    const last = doc.lineAt(to)
+    const end = to === last.from && to > from ? last.number - 1 : last.number
+    const result = indentLines(view.state, { from: doc.lineAt(from).number, to: end })
+    const changes = view.state.changes(result.changes)
+    view.dispatch({
+      changes,
+      selection: EditorSelection.cursor(changes.mapPos(head(view), 1)),
+      annotations: commandAnnotation.of({ name: 'indent' }),
+    })
+    return true
+  }
+
+  /**
    * カーソルからの単語の大文字・小文字を変えて, 単語の後へ動きます.
    *
    * @param view - エディタ.
@@ -440,6 +469,58 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       })
       return true
     },
+
+    // 改行と字下げ
+    newline: (view) => {
+      view.dispatch({
+        ...newlineAndIndent(view.state, head(view)),
+        scrollIntoView: true,
+        userEvent: 'input',
+        annotations: commandAnnotation.of({ name: 'newline' }),
+      })
+      return true
+    },
+    // electric-indent-mode のときは, 字下げしない
+    'electric-newline-and-maybe-indent': (view) => {
+      const pos = head(view)
+      view.dispatch({
+        changes: { from: pos, insert: '\n' },
+        selection: EditorSelection.cursor(pos + 1),
+        scrollIntoView: true,
+        userEvent: 'input',
+        annotations: commandAnnotation.of({ name: 'newline' }),
+      })
+      return true
+    },
+    // リージョンがあれば, リージョンを字下げする
+    'indent-for-tab-command': (view) => {
+      const mark = view.state.field(markField)
+      if (mark !== null && mark !== head(view)) return indentRegion(view)
+      view.dispatch({
+        ...indentForTab(view.state, head(view)),
+        scrollIntoView: true,
+        annotations: commandAnnotation.of({ name: 'indent' }),
+      })
+      return true
+    },
+    'indent-region': (view) => indentRegion(view),
+    // カーソルの後ろの式の, 2 行目からを字下げする (Lisp だけ)
+    'indent-sexp': (view) => {
+      if (!view.state.facet(indentConfig).dialect) return true
+      const pos = head(view)
+      const line = view.state.doc.lineAt(pos)
+      const result = indentLines(view.state, {
+        from: line.number + 1,
+        to: view.state.doc.lines,
+        skipBlank: true,
+        whileDeeper: { line: line.number, index: pos - line.from },
+      })
+      view.dispatch({
+        changes: result.changes,
+        annotations: commandAnnotation.of({ name: 'indent' }),
+      })
+      return true
+    },
     undo: (view) => undo(view) || true,
     redo: (view) => redo(view) || true,
 
@@ -572,6 +653,14 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-l', 'downcase-word'],
   ['Alt-c', 'capitalize-word'],
   ['Ctrl-o', 'open-line'],
+  // 改行と字下げ
+  ['Enter', 'newline'],
+  ['Ctrl-m', 'newline'],
+  ['Ctrl-j', 'electric-newline-and-maybe-indent'],
+  ['Tab', 'indent-for-tab-command'],
+  ['Ctrl-i', 'indent-for-tab-command'],
+  ['Ctrl-Alt-q', 'indent-sexp'],
+  ['Ctrl-Alt-\\', 'indent-region'],
   ['Ctrl-/', 'undo'],
   ['Ctrl-_', 'undo'],
   ['Ctrl-x u', 'undo'],

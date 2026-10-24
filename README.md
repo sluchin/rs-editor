@@ -278,6 +278,7 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - [x] リスト操作 (car, cdr, cons)
 - [x] Lisp でのカスタマイズ (コマンド、キー、初期設定ファイル)
 - [x] シンタックスハイライト (Emacs の scheme-mode と emacs-lisp-mode と同じ色分け)
+- [x] 字下げ (Emacs の scheme-mode と emacs-lisp-mode と同じ) と, 括弧の強調 (show-paren-mode)
 - [ ] コード補完と自動フォーマット
 - [ ] デバッグサポート
 
