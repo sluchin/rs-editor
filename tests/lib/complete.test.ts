@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { complete, completeFileName } from '../lib/complete'
+import { complete, completeFileName } from '@/lib/complete'
 
 describe('complete', () => {
   it('前方一致する候補の, 共通する先頭の部分まで補完すること', () => {

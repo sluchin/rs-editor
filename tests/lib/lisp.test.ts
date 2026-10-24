@@ -8,7 +8,7 @@ import {
   loadInitFile,
   performEditorRequest,
   runLispCommand,
-} from '../lib/lisp'
+} from '@/lib/lisp'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))

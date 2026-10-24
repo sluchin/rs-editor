@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // src を `@/` で参照する (テストから `@/lib/...` のように使う)
+  resolve: {
+    alias: { '@': '/src' },
+  },
   // エディタ (CodeMirror) で, 1 つのファイルが大きくなる (アプリの中から読むので, 分けない)
   build: { chunkSizeWarningLimit: 1000 },
   server: {
@@ -13,19 +17,15 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './src/test/setup.ts',
+    setupFiles: './tests/setup.ts',
+    // テストは tests/ に, src/ と同じ構成で置く
+    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
       // 測るのは src のソース (テスト, 型の宣言, 入口は除く)
       include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/**/*.test.{ts,tsx}',
-        'src/tests/**',
-        'src/test/**',
-        'src/main.tsx',
-        'src/vite-env.d.ts',
-      ],
+      exclude: ['src/main.tsx', 'src/vite-env.d.ts'],
       // 行, 分岐, 関数, 文の全てを 100% に保つ (下回れば失敗する)
       thresholds: {
         lines: 100,

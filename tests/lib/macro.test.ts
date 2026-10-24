@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
-import { KeyboardMacro } from '../lib/macro'
+import { KeyboardMacro } from '@/lib/macro'
 
 const views: EditorView[] = []
 

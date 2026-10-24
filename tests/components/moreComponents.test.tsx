@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import BufferList from '../components/BufferList'
-import REPL from '../components/REPL'
-import ModeLine from '../components/ModeLine'
-import Minibuffer, { MinibufferState } from '../components/Minibuffer'
-import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
+import BufferList from '@/components/BufferList'
+import REPL from '@/components/REPL'
+import ModeLine from '@/components/ModeLine'
+import Minibuffer, { MinibufferState } from '@/components/Minibuffer'
+import { backwardSexp, forwardSexp } from '@/lib/bracketMatch'
 
 describe('bracketMatch (文字列と, 閉じていない括弧)', () => {
   it('文字列のリテラルを 1 つの S 式として飛ばす (\\" を含む)', () => {

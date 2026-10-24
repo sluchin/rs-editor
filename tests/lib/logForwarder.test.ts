@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import log from 'loglevel'
 import { invoke } from '@tauri-apps/api/core'
-import { installLogForwarding, setupLogging } from '../lib/logForwarder'
+import { installLogForwarding, setupLogging } from '@/lib/logForwarder'
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),

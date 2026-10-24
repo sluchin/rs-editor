@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { StringStream, type StreamParser } from '@codemirror/language'
-import { fileVariables, majorMode } from '../lib/modes'
-import { elispParser, type LispState, schemeParser } from '../lib/lispMode'
+import { fileVariables, majorMode } from '@/lib/modes'
+import { elispParser, type LispState, schemeParser } from '@/lib/lispMode'
 
 /**
  * 行を, 色ごとに分けます (色を付けない字句と, 括弧は除く. 続く同じ色の字句は, 1 つにする).

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from '../lib/fileOps'
+import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
 vi.mock('@tauri-apps/api/core')

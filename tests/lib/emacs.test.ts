@@ -13,9 +13,9 @@ import {
   markField,
   pageLines,
   toEmacsKey,
-} from '../lib/emacs'
-import { KillRing } from '../lib/killRing'
-import { KeyboardMacro } from '../lib/macro'
+} from '@/lib/emacs'
+import { KillRing } from '@/lib/killRing'
+import { KeyboardMacro } from '@/lib/macro'
 
 /** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []

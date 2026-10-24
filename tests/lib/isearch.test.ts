@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compileRegexp, findNextMatch } from './isearch'
+import { compileRegexp, findNextMatch } from '@/lib/isearch'
 
 describe('isearch utilities', () => {
   describe('findNextMatch', () => {

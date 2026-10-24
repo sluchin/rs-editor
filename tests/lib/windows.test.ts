@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { type Layout, deleteWindow, splitWindow, windowIds, windowRects } from '../lib/windows'
+import { type Layout, deleteWindow, splitWindow, windowIds, windowRects } from '@/lib/windows'
 
 describe('windows', () => {
   const one: Layout = { kind: 'window', id: 'a' }

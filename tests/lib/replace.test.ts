@@ -4,7 +4,7 @@ import {
   findReplaceMatch,
   replacedMessage,
   replaceRemaining,
-} from '../lib/replace'
+} from '@/lib/replace'
 
 /**
  * 置き換える本文 (文字列を持つ) を作ります.

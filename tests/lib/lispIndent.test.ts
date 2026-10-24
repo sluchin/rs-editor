@@ -1,16 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { EditorSelection, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { type Command, createCommands, emacsState } from '../lib/emacs'
-import { KillRing } from '../lib/killRing'
-import { KeyboardMacro } from '../lib/macro'
-import {
-  charWidth,
-  columnAt,
-  type IndentConfig,
-  indentConfig,
-  indentLines,
-} from '../lib/lispIndent'
+import { type Command, createCommands, emacsState } from '@/lib/emacs'
+import { KillRing } from '@/lib/killRing'
+import { KeyboardMacro } from '@/lib/macro'
+import { charWidth, columnAt, type IndentConfig, indentConfig, indentLines } from '@/lib/lispIndent'
 
 /** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []

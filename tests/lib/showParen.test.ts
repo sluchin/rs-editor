@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Compartment, EditorSelection, EditorState, Text } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { indentConfig } from '../lib/lispIndent'
-import { findParen, showParen } from '../lib/showParen'
+import { indentConfig } from '@/lib/lispIndent'
+import { findParen, showParen } from '@/lib/showParen'
 
 /** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []

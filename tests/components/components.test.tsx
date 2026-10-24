@@ -3,10 +3,10 @@ import { createRef } from 'react'
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import { EditorView } from '@codemirror/view'
 import { language } from '@codemirror/language'
-import CodeEditor, { CursorInfo, EditorHandle } from '../components/CodeEditor'
-import Minibuffer, { MinibufferInputState, MinibufferState } from '../components/Minibuffer'
-import ModeLine from '../components/ModeLine'
-import REPL from '../components/REPL'
+import CodeEditor, { CursorInfo, EditorHandle } from '@/components/CodeEditor'
+import Minibuffer, { MinibufferInputState, MinibufferState } from '@/components/Minibuffer'
+import ModeLine from '@/components/ModeLine'
+import REPL from '@/components/REPL'
 
 /**
  * CodeEditor を表示します.

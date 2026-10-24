@@ -20,11 +20,11 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 - 位置の計算 (単語, 行) は `src/lib/text.ts`, kill-ring は `src/lib/killRing.ts`, S 式の範囲は `src/lib/bracketMatch.ts`。
 - Lisp からのエディタの操作: 評価器は, 操作を `Host` (`src-tauri/src/scheme/host.rs`) に頼む。アプリでは `Bridge` が `editor-request` のイベントで画面に頼み, 画面 (`src/lib/lisp.ts`) が操作をして `editor_reply` で返事をする。テストでは, 偽の `Host` を使う。位置は Emacs と同じく 1 から数える。
 - 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。
-- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
+- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。フロントエンドのテストは `tests/` に, `src/` と同じ構成で置く (`src/lib/text.ts` のテストは `tests/lib/text.test.ts`。`src/` は `@/` で参照する)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
 
 ## 開発ワークフロー
 - **開発サーバーを起動**: `npm run tauri:dev` — フロントエンドと Rust は両方とも変更時に自動リロード
-- **テスト**: `npm run test`（`src/` に対する Vitest）と `cargo test`（`src-tauri/` に対する）
+- **テスト**: `npm run test`（`tests/` の Vitest）と `cargo test`（`src-tauri/` に対する）
 - **フォーマット + リント**: `npm run check`（format:check、lint、test を実行 — CI ゲート）
 - CI は `main` へのすべてのプッシュ/PR で同じ内容を実行
 

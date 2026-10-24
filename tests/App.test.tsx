@@ -4,14 +4,14 @@ import { isolateHistory } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import App from '../App'
-import * as fileOps from '../lib/fileOps'
+import App from '@/App'
+import * as fileOps from '@/lib/fileOps'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 const close = vi.fn()
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ close }) }))
-vi.mock('../lib/fileOps', () => ({
+vi.mock('@/lib/fileOps', () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
   pathExists: vi.fn(),

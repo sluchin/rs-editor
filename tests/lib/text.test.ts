@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { changeCase, clampLine, wordBackward, wordForward } from '../lib/text'
+import { changeCase, clampLine, wordBackward, wordForward } from '@/lib/text'
 
 describe('wordForward と wordBackward', () => {
   it('区切りを飛ばして, 単語の終わりと始めへ動くこと', () => {

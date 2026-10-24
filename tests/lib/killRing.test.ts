@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { KILL_RING_MAX, KillRing } from '../lib/killRing'
+import { KILL_RING_MAX, KillRing } from '@/lib/killRing'
 
 describe('KillRing', () => {
   it('新しいものから取り出し, rotate で古い方へ進み, 最後の次は最新に戻ること', () => {
