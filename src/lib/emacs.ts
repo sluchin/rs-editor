@@ -19,6 +19,7 @@ import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
 import { commentDwim } from './comment'
 import { findExpansions } from './dabbrev'
+import { countMessage } from './count'
 import { fillParagraph } from './fill'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
@@ -111,13 +112,40 @@ export const zapField = StateField.define<ZapState | null>({
   },
 })
 
+/** 次に押すキーを, そのまま入れる (`quoted-insert`) のを待っているときの, 回数と, 押したキー. */
+export interface QuotedState {
+  /** 入れる回数 (前置引数). */
+  count: number
+  /** 8 進数の文字のコード (`C-q 1 0 1` で `A`. 数字を押していなければ 0). */
+  code: number
+  /** 押した 8 進数の数字の数. */
+  digits: number
+  /** 入れる文字 (まだ押していなければ `undefined`). */
+  char?: string
+}
+
+/** キーをそのまま入れるのを待つ (止めるときは `null`). */
+const quotedEffect = StateEffect.define<QuotedState | null>()
+
+/** キーをそのまま入れる (`C-q`) のを待っていれば, その状態. 待っていなければ `null`. */
+export const quotedField = StateField.define<QuotedState | null>({
+  create: () => null,
+  // 変える変更があれば, その値
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(quotedEffect)) return effect.value
+    }
+    return value
+  },
+})
+
 /**
- * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴, キーの説明, `M-z`).
+ * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴, キーの説明, `M-z`, `C-q`).
  *
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [markField, lastCommandField, history(), describeKeyField, zapField]
+  return [markField, lastCommandField, history(), describeKeyField, zapField, quotedField]
 }
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */
@@ -607,6 +635,46 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       message(`Search failed: "${char}"`)
       return true
     },
+    // 次に押すキーを, そのまま入れる (制御文字も. 8 進数で, 文字のコードも入れられる)
+    'quoted-insert': (view) => {
+      const quoted = view.state.field(quotedField)
+      if (quoted?.char === undefined) {
+        // 前置引数で繰り返したときは, 回数を足す
+        view.dispatch({
+          effects: quotedEffect.of({ count: (quoted?.count ?? 0) + 1, code: 0, digits: 0 }),
+        })
+        message('C-q-')
+        return true
+      }
+      view.dispatch(view.state.replaceSelection(quoted.char.repeat(quoted.count)), {
+        effects: quotedEffect.of(null),
+        scrollIntoView: true,
+        userEvent: 'input.type',
+        annotations: commandAnnotation.of({ name: 'quoted-insert' }),
+      })
+      message('')
+      return true
+    },
+    // リージョンがあれば, リージョンを数え, 無ければ, バッファ全体を数える
+    'count-words': (view) => {
+      const { from, to } = view.state.selection.main
+      const region = view.state.field(markField) !== null && from !== to
+      message(
+        region
+          ? countMessage('Region', view.state.sliceDoc(from, to))
+          : countMessage('Buffer', text(view)),
+      )
+      return true
+    },
+    'count-words-region': (view) => {
+      if (view.state.field(markField) === null) {
+        message('The mark is not set now, so there is no region')
+        return true
+      }
+      const { from, to } = view.state.selection.main
+      message(countMessage('Region', view.state.sliceDoc(from, to)))
+      return true
+    },
     'fill-paragraph': (view) => {
       const result = fillParagraph(view.state, head(view))
       if (result) {
@@ -893,6 +961,8 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-/', 'dabbrev-expand'],
   ['Alt-z', 'zap-to-char'],
   ['Alt-q', 'fill-paragraph'],
+  ['Ctrl-q', 'quoted-insert'],
+  ['Alt-=', 'count-words-region'],
   ['Alt-Space', 'just-one-space'],
   ['Alt-\\', 'delete-horizontal-space'],
   ['Alt-^', 'delete-indentation'],
@@ -959,6 +1029,46 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
 
 /** 修飾キーだけを押したときの, キーの名前. */
 const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
+
+/** `C-q` の後に押すと, 文字として入れる, 文字でないキー (Emacs の RET は `^M` だが, 改行にする). */
+const QUOTED_KEYS: Record<string, string> = {
+  Enter: '\n',
+  Tab: '\t',
+  Backspace: '\x7f',
+  Escape: '\x1b',
+}
+
+/** `C-` を付けた記号と, 制御文字のコード. */
+const CONTROL_SYMBOLS: Record<string, number> = {
+  '@': 0,
+  ' ': 0,
+  '[': 27,
+  '\\': 28,
+  ']': 29,
+  '^': 30,
+  _: 31,
+  '?': 127,
+}
+
+/**
+ * `C-q` の後に押したキーの, 入れる文字を返します.
+ *
+ * @param event - キーの事象.
+ * @returns 文字. 入れられないキー (`M-` を付けたもの, 矢印など) なら `null`.
+ */
+export function quotedChar(event: KeyboardEvent): string | null {
+  if (event.altKey || event.metaKey) return null
+  if (event.ctrlKey) {
+    const key = event.key.toUpperCase()
+    // C-m は, RET と同じく, 改行にする
+    if (key === 'M') return '\n'
+    if (/^[A-Z]$/.test(key)) return String.fromCharCode(key.charCodeAt(0) - 64)
+    const code = CONTROL_SYMBOLS[event.key]
+    return code === undefined ? null : String.fromCharCode(code)
+  }
+  if (event.key.length === 1 || /^[\ud800-\udbff]/.test(event.key)) return event.key
+  return QUOTED_KEYS[event.key] ?? null
+}
 
 /** 割り当てのあるキーのうち, `M-z` の後に押すと, 文字として使うもの. */
 const ZAP_KEYS: Record<string, string> = {
@@ -1062,8 +1172,57 @@ export function emacsKeymap(
     return true
   }
 
+  /**
+   * `C-q` の後に押したキーを, 入れます. 8 進数の数字は, 3 つまで続けて押せます. 数字の後に,
+   * 数字でないキーを押すと, そのコードの文字を入れ, そのキーも動かします (RET は, 入れて終わり).
+   *
+   * @param view - エディタ.
+   * @param event - キーの事象.
+   * @returns 処理したら `true` (後のキーの割り当てを動かさない).
+   */
+  const quotedKey = (view: EditorView, event: KeyboardEvent): boolean => {
+    const quoted = view.state.field(quotedField, false)
+    if (!quoted || MODIFIER_KEYS.includes(event.key)) return false
+    const plain = !event.ctrlKey && !event.altKey && !event.metaKey
+    /** 文字を入れます. */
+    const insert = (char: string) => {
+      view.dispatch({ effects: quotedEffect.of({ ...quoted, char }) })
+      ;(lookup('quoted-insert') as Command)(view)
+    }
+    if (plain && /^[0-7]$/.test(event.key)) {
+      const next = {
+        ...quoted,
+        code: quoted.code * 8 + Number(event.key),
+        digits: quoted.digits + 1,
+      }
+      if (next.digits === 3) {
+        insert(String.fromCodePoint(next.code))
+      } else {
+        view.dispatch({ effects: quotedEffect.of(next) })
+        message(`C-q ${next.code.toString(8)}-`)
+      }
+      return true
+    }
+    if (quoted.digits > 0) {
+      insert(String.fromCodePoint(quoted.code))
+      return plain && event.key === 'Enter'
+    }
+    const char = quotedChar(event)
+    if (char === null) {
+      // 入れられないキーなら, 待つのを止めて, そのキーのコマンドを動かす
+      view.dispatch({ effects: quotedEffect.of(null) })
+      message('')
+      return false
+    }
+    insert(char)
+    return true
+  }
+
   const bindings = [...extra.map(({ key, command }) => [key, command] as const), ...KEY_BINDINGS]
   return [
+    // `C-q` の後のキー. CodeMirror は, `any` を, 後から足す割り当ての先に動かすので, 始めに置く
+    // (C-x などの前置きのキーは, CodeMirror が先に受けるので, そのまま入れられない)
+    { any: quotedKey },
     ...bindings.map(([key, name]) => ({
       key,
       run: (view: EditorView) => run(view, key, name),

@@ -38,6 +38,11 @@
   border-left: 2px solid #000000;
 }
 
+/* 制御文字の `^A` (Emacs の escape-glyph の face) */
+.code-editor-container .cm-control-char {
+  color: brown;
+}
+
 /* 括弧の強調 (Emacs の show-paren-match と show-paren-mismatch の face) */
 .code-editor-container .cm-show-paren-match {
   background: turquoise;

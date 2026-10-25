@@ -13,6 +13,7 @@ import {
   Transaction,
 } from '@codemirror/state'
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
+import { controlChars } from '../lib/controlChars'
 import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
@@ -241,6 +242,7 @@ export default function CodeEditor({
         emacsState(),
         drawSelection(),
         showParen(),
+        controlChars(),
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
         highlight.current.of(highlightExtension()),

@@ -12,6 +12,8 @@ import {
   lastCommandField,
   markField,
   zapField,
+  quotedField,
+  quotedChar,
   pageLines,
   toEmacsKey,
 } from '@/lib/emacs'
@@ -414,6 +416,87 @@ describe('削除とキル', () => {
     expect(message).toHaveBeenCalledWith('The mark is not set now, so there is no region')
   })
 
+  it('C-q で, 次に押したキーを, そのまま入れること (制御文字も)', () => {
+    const { press, text, message } = setup('|')
+    press('C-q')
+    expect(message).toHaveBeenCalledWith('C-q-')
+    press('Control C-a')
+    press('C-q C-f C-q Tab C-q Enter C-q C-m C-q a C-q 8')
+    expect(text()).toBe('\x01\x06\t\n\na8|')
+  })
+
+  it('C-q の前置引数の数だけ入れること', () => {
+    const { press, text } = setup('|')
+    press('C-u 3 C-q x')
+    expect(text()).toBe('xxx|')
+  })
+
+  it('C-q の後の 8 進数の数字は, 3 つで, 文字のコードとして入れること', () => {
+    const { press, text, message } = setup('|')
+    press('C-q 1 0')
+    expect(message).toHaveBeenLastCalledWith('C-q 10-')
+    press('1')
+    expect(text()).toBe('A|')
+    // 数字の後の RET は, 入れて終わり. ほかのキーは, 入れてから動かす
+    press('C-q 4 1 Enter')
+    expect(text()).toBe('A!|')
+    press('C-q 4 1 C-b')
+    expect(text()).toBe('A!|!')
+  })
+
+  it('C-q の後の, 入れられないキーは, 待つのを止めて, そのキーのコマンドを動かすこと', () => {
+    const { press, text, view } = setup('|ab cd')
+    press('C-q M-f')
+    expect(text()).toBe('ab| cd')
+    expect(view.state.field(quotedField)).toBeNull()
+    press('C-q ArrowRight')
+    expect(view.state.field(quotedField)).toBeNull()
+    expect(text()).toBe('ab| cd')
+  })
+
+  it('C-q の後のキーの, 入れる文字を返すこと', () => {
+    const key = (init: KeyboardEventInit) => quotedChar(new KeyboardEvent('keydown', init))
+    expect(key({ key: '[', ctrlKey: true })).toBe('\x1b')
+    expect(key({ key: '?', ctrlKey: true })).toBe('\x7f')
+    expect(key({ key: ' ', ctrlKey: true })).toBe('\x00')
+    expect(key({ key: '1', ctrlKey: true })).toBeNull()
+    expect(key({ key: 'a', metaKey: true })).toBeNull()
+    expect(key({ key: '😀' })).toBe('😀')
+    expect(key({ key: 'Backspace' })).toBe('\x7f')
+    expect(key({ key: 'Escape' })).toBe('\x1b')
+    expect(key({ key: 'F1' })).toBeNull()
+  })
+
+  it('M-= で, リージョンの行, 文, 単語, 文字を数えること (マークが無ければ, 知らせる)', () => {
+    const { press, run, message, view } = setup('|abc def\nghi')
+    press('M-=')
+    expect(message).toHaveBeenLastCalledWith('The mark is not set now, so there is no region')
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 0, head: 7 } })
+    press('M-=')
+    expect(message).toHaveBeenLastCalledWith(
+      'Region has 1 line, 1 sentence, 2 words, and 7 characters',
+    )
+  })
+
+  it('M-x count-words で, リージョンがあればリージョンを, 無ければバッファ全体を数えること', () => {
+    const { run, message, view } = setup('|abc def\nghi')
+    run('count-words')
+    expect(message).toHaveBeenLastCalledWith(
+      'Buffer has 2 lines, 1 sentence, 3 words, and 11 characters',
+    )
+    run('set-mark-command')
+    run('count-words')
+    expect(message).toHaveBeenLastCalledWith(
+      'Buffer has 2 lines, 1 sentence, 3 words, and 11 characters',
+    )
+    view.dispatch({ selection: { anchor: 0, head: 3 } })
+    run('count-words')
+    expect(message).toHaveBeenLastCalledWith(
+      'Region has 1 line, 1 sentence, 1 word, and 3 characters',
+    )
+  })
+
   it('C-o で, カーソルを動かさずに改行を入れること', () => {
     const { run, text } = setup('a|b')
     run('open-line')
@@ -563,6 +646,13 @@ describe('キーボードマクロ', () => {
     // 2 回: hi| → hih|i → hihh|ii
     press('C-e C-u 2 C-x e')
     expect(text()).toBe('hihh|ii')
+  })
+
+  it('C-q と, その後に押したキーを記録し, 再生すること', () => {
+    const { press, text } = setup('|')
+    press('C-x ( C-q C-a C-x )')
+    press('C-x e')
+    expect(text()).toBe('\x01\x01|')
   })
 
   it('M-z と, その後に押した文字を記録し, 再生すること', () => {

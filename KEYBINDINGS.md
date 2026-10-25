@@ -55,6 +55,8 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `M-;` | comment-dwim | コメントを付ける（リージョンがあれば、行をコメントにする・外す。コメントがあれば、コメントへ動く） |
 | `M-/` | dabbrev-expand | 前の単語を、バッファの中の単語で補完（続けて押すと、次の候補） |
 | `C-x C-u` / `C-x C-l` | upcase-region / downcase-region | リージョンを大文字・小文字にする |
+| `C-q` | quoted-insert | 次に押すキーを、そのまま入れる（`C-q C-a` で制御文字。`C-q 1 0 1` のように、8 進数で文字のコードも入れられる。制御文字は `^A` のように出す） |
+| `M-=` | count-words-region | リージョンの行、文、単語、文字の数を出す（`M-x count-words` は、リージョンが無ければバッファ全体） |
 | `M-z` | zap-to-char | 次に押す文字までをキル（その文字を含む。前置引数があれば、その数だけ先の文字まで） |
 | `M-q` | fill-paragraph | 段落を 70 桁に詰める（Lisp では、コメントの段落） |
 | `M-SPC` | just-one-space | カーソルの前後の空白を 1 つにする |
@@ -329,7 +331,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 ### 完全実装済み
 - カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g）
 - S 式移動（C-M-f, C-M-b）
-- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l）
+- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
 - リージョン選択（C-SPC, C-x C-x, C-x h）
 - 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r）
