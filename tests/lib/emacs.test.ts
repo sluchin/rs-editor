@@ -11,7 +11,7 @@ import {
   describeKeyField,
   lastCommandField,
   markField,
-  zapField,
+  readCharField,
   quotedField,
   quotedChar,
   pageLines,
@@ -351,7 +351,7 @@ describe('削除とキル', () => {
     press('M-z q')
     expect(text()).toBe('|abc')
     expect(message).toHaveBeenLastCalledWith('Search failed: "q"')
-    expect(view.state.field(zapField)).toBeNull()
+    expect(view.state.field(readCharField)).toBeNull()
   })
 
   it('M-z の後の RET と TAB は, 改行とタブの文字として使うこと', () => {
@@ -367,10 +367,10 @@ describe('削除とキル', () => {
     const { press, text, view } = setup('|abc')
     press('M-z C-f')
     expect(text()).toBe('a|bc')
-    expect(view.state.field(zapField)).toBeNull()
+    expect(view.state.field(readCharField)).toBeNull()
     // 割り当てのないキーは, 待つのを止めるだけ
     press('M-z C-z')
-    expect(view.state.field(zapField)).toBeNull()
+    expect(view.state.field(readCharField)).toBeNull()
     press('b')
     expect(text()).toBe('a|bc')
   })
@@ -495,6 +495,49 @@ describe('削除とキル', () => {
     expect(message).toHaveBeenLastCalledWith(
       'Region has 1 line, 1 sentence, 1 word, and 3 characters',
     )
+  })
+
+  it('C-x r s で, リージョンをレジスタに入れ, C-x r i で, カーソルの後ろに入れること', () => {
+    const { press, run, text, view, message } = setup('|abc')
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 0, head: 2 } })
+    press('C-x r s')
+    expect(message).toHaveBeenCalledWith('Copy to register: ')
+    press('a')
+    expect(view.state.field(markField)).toBeNull()
+    expect(text()).toBe('ab|c')
+    press('C-x r i')
+    expect(message).toHaveBeenCalledWith('Insert register: ')
+    press('a')
+    expect(text()).toBe('ab|abc')
+    // C-x r x と C-x r g も同じ
+    press('C-x r x b')
+    expect(message).toHaveBeenLastCalledWith('The mark is not set now, so there is no region')
+    press('C-x r g z')
+    expect(message).toHaveBeenLastCalledWith('Register does not contain text')
+  })
+
+  it('レジスタは, 渡したものを使うこと (エディタのあいだで共通にできる)', () => {
+    const registers = new Map([['q', 'shared']])
+    const commands = createCommands({
+      killRing: new KillRing(),
+      message: vi.fn(),
+      macro: new KeyboardMacro(),
+      registers,
+    })
+    const view = new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc: '',
+        extensions: [emacsState(), keymap.of(emacsKeymap((name) => commands[name]))],
+      }),
+    })
+    views.push(view)
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', ctrlKey: true }))
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'r' }))
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }))
+    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q' }))
+    expect(view.state.doc.toString()).toBe('shared')
   })
 
   it('C-o で, カーソルを動かさずに改行を入れること', () => {

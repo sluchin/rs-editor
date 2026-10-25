@@ -98,6 +98,13 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 
 本文を書き換えると, マークは外れます（Emacs の transient-mark-mode）。
 
+## レジスタ
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x r s` / `C-x r x` | copy-to-register | リージョンを, 次に押す文字のレジスタに入れる |
+| `C-x r i` / `C-x r g` | insert-register | 次に押す文字のレジスタの中身を入れる（カーソルは, 入れた文字の前） |
+
 ## 検索
 
 | キー | コマンド | 説明 |
@@ -333,6 +340,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - S 式移動（C-M-f, C-M-b）
 - 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
 - リージョン選択（C-SPC, C-x C-x, C-x h）
+- レジスタ（C-x r s, C-x r i）
 - 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）

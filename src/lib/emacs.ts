@@ -89,24 +89,28 @@ export const describeKeyField = StateField.define<boolean>({
   },
 })
 
-/** 文字までキルする (`zap-to-char`) のを待っているときの, 回数と, 押した文字. */
-export interface ZapState {
-  /** 何番目の文字までキルするか (前置引数). */
+/**
+ * 次に押す文字を待つコマンド (`M-z` の文字, `C-x r s` のレジスタ) の, 名前と, 回数と, 押した文字.
+ */
+export interface ReadCharState {
+  /** 文字を待つコマンドの名前. */
+  command: string
+  /** 前置引数 (`M-z` では, 何番目の文字までキルするか). */
   count: number
   /** 押した文字 (まだ押していなければ `undefined`). */
   char?: string
 }
 
-/** 文字までキルするのを待つ (止めるときは `null`). */
-const zapEffect = StateEffect.define<ZapState | null>()
+/** 文字を待つ (止めるときは `null`). */
+const readCharEffect = StateEffect.define<ReadCharState | null>()
 
-/** 文字までキルする (`M-z`) のを待っていれば, その回数と文字. 待っていなければ `null`. */
-export const zapField = StateField.define<ZapState | null>({
+/** 次に押す文字を待っていれば, そのコマンドと文字. 待っていなければ `null`. */
+export const readCharField = StateField.define<ReadCharState | null>({
   create: () => null,
   // 変える変更があれば, その値
   update(value, tr) {
     for (const effect of tr.effects) {
-      if (effect.is(zapEffect)) return effect.value
+      if (effect.is(readCharEffect)) return effect.value
     }
     return value
   },
@@ -145,7 +149,7 @@ export const quotedField = StateField.define<QuotedState | null>({
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [markField, lastCommandField, history(), describeKeyField, zapField, quotedField]
+  return [markField, lastCommandField, history(), describeKeyField, readCharField, quotedField]
 }
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */
@@ -217,6 +221,8 @@ export interface CommandDeps {
   message: (text: string) => void
   /** キーボードマクロ. */
   macro: KeyboardMacro
+  /** レジスタ (名前の文字と, 中身). 省くと, コマンドの組ごとに作る. */
+  registers?: Map<string, string>
 }
 
 /**
@@ -322,7 +328,12 @@ function recenter(view: EditorView): boolean {
  * @param deps - コマンドに要るもの.
  * @returns コマンド (Emacs のコマンドの名前で引く).
  */
-export function createCommands({ killRing, message, macro }: CommandDeps): Record<string, Command> {
+export function createCommands({
+  killRing,
+  message,
+  macro,
+  registers = new Map(),
+}: CommandDeps): Record<string, Command> {
   /**
    * 範囲を消して, kill-ring に入れます. 続けてキルしたときは, 1 つの項目につなげます.
    *
@@ -447,6 +458,34 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
   }
 
   const text = (view: EditorView) => view.state.doc.toString()
+
+  /**
+   * 次に押す文字を待ってから, コマンドを動かします. 押す前は, 待つことにして, 聞く文字を出します.
+   * 待っているあいだに, 同じコマンドを前置引数で繰り返したときは, 回数を足します.
+   *
+   * @param view - エディタ.
+   * @param name - コマンドの名前.
+   * @param prompt - 聞く文字.
+   * @param action - 押した文字と回数で, することを.
+   * @returns `true`.
+   */
+  const readChar = (
+    view: EditorView,
+    name: string,
+    prompt: string,
+    action: (char: string, count: number) => boolean,
+  ): boolean => {
+    const pending = view.state.field(readCharField)
+    if (pending?.command !== name || pending.char === undefined) {
+      const count = pending?.command === name ? pending.count + 1 : 1
+      view.dispatch({ effects: readCharEffect.of({ command: name, count }) })
+      message(prompt)
+      return true
+    }
+    view.dispatch({ effects: readCharEffect.of(null) })
+    message('')
+    return action(pending.char, pending.count)
+  }
 
   /**
    * 空白を変える変更をします.
@@ -613,28 +652,56 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       return true
     },
     // 次に押す文字を待ち, カーソルから, その文字 (前置引数があれば, その数だけ先の文字) までをキルする
-    'zap-to-char': (view) => {
-      const zap = view.state.field(zapField)
-      if (zap?.char === undefined) {
-        // 前置引数で繰り返したときは, 回数を足す
-        view.dispatch({ effects: zapEffect.of({ count: (zap?.count ?? 0) + 1 }) })
-        message('Zap to char: ')
+    'zap-to-char': (view) =>
+      readChar(view, 'zap-to-char', 'Zap to char: ', (char, count) => {
+        // 大文字なら, 大文字と小文字を区別する (Emacs の `char-uppercase-p`)
+        const fold = char === char.toLowerCase()
+        const same = (c: string) => (fold ? c.toLowerCase() === char : c === char)
+        const doc = text(view)
+        let found = 0
+        for (let i = head(view); i < doc.length; i++) {
+          if (same(doc[i]) && ++found === count) return kill(view, head(view), i + 1)
+        }
+        message(`Search failed: "${char}"`)
         return true
-      }
-      view.dispatch({ effects: zapEffect.of(null) })
-      message('')
-      const { count, char } = zap
-      // 大文字なら, 大文字と小文字を区別する (Emacs の `char-uppercase-p`)
-      const fold = char === char.toLowerCase()
-      const same = (c: string) => (fold ? c.toLowerCase() === char : c === char)
-      const doc = text(view)
-      let found = 0
-      for (let i = head(view); i < doc.length; i++) {
-        if (same(doc[i]) && ++found === count) return kill(view, head(view), i + 1)
-      }
-      message(`Search failed: "${char}"`)
-      return true
-    },
+      }),
+    // リージョンを, 次に押す文字のレジスタに入れる
+    'copy-to-register': (view) =>
+      readChar(view, 'copy-to-register', 'Copy to register: ', (char) => {
+        const mark = view.state.field(markField)
+        if (mark === null) {
+          message('The mark is not set now, so there is no region')
+          return true
+        }
+        registers.set(
+          char,
+          view.state.sliceDoc(Math.min(mark, head(view)), Math.max(mark, head(view))),
+        )
+        view.dispatch({
+          selection: EditorSelection.cursor(head(view)),
+          effects: setMarkEffect.of(null),
+          annotations: commandAnnotation.of({ name: 'register' }),
+        })
+        return true
+      }),
+    // 次に押す文字のレジスタの中身を入れる. カーソルは, 入れた文字の前に置く
+    'insert-register': (view) =>
+      readChar(view, 'insert-register', 'Insert register: ', (char) => {
+        const content = registers.get(char)
+        if (content === undefined) {
+          message('Register does not contain text')
+          return true
+        }
+        const { from, to } = view.state.selection.main
+        view.dispatch({
+          changes: { from, to, insert: content },
+          selection: EditorSelection.cursor(from),
+          scrollIntoView: true,
+          userEvent: 'input.paste',
+          annotations: commandAnnotation.of({ name: 'register' }),
+        })
+        return true
+      }),
     // 次に押すキーを, そのまま入れる (制御文字も. 8 進数で, 文字のコードも入れられる)
     'quoted-insert': (view) => {
       const quoted = view.state.field(quotedField)
@@ -963,6 +1030,11 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-q', 'fill-paragraph'],
   ['Ctrl-q', 'quoted-insert'],
   ['Alt-=', 'count-words-region'],
+  // レジスタ
+  ['Ctrl-x r s', 'copy-to-register'],
+  ['Ctrl-x r x', 'copy-to-register'],
+  ['Ctrl-x r i', 'insert-register'],
+  ['Ctrl-x r g', 'insert-register'],
   ['Alt-Space', 'just-one-space'],
   ['Alt-\\', 'delete-horizontal-space'],
   ['Alt-^', 'delete-indentation'],
@@ -1070,8 +1142,8 @@ export function quotedChar(event: KeyboardEvent): string | null {
   return QUOTED_KEYS[event.key] ?? null
 }
 
-/** 割り当てのあるキーのうち, `M-z` の後に押すと, 文字として使うもの. */
-const ZAP_KEYS: Record<string, string> = {
+/** 割り当てのあるキーのうち, `M-z` や `C-x r s` の後に押すと, 文字として使うもの. */
+const READ_CHAR_KEYS: Record<string, string> = {
   Enter: '\n',
   'Ctrl-m': '\n',
   'Ctrl-j': '\n',
@@ -1118,16 +1190,16 @@ export function emacsKeymap(
   }
 
   /**
-   * `M-z` の後に押した文字までキルします.
+   * 文字を待つコマンド (`M-z` など) に, 押した文字を渡して動かします.
    *
    * @param view - エディタ.
    * @param char - 文字.
    * @returns `true`.
    */
-  const zapTo = (view: EditorView, char: string): boolean => {
-    const zap = view.state.field(zapField) as ZapState
-    view.dispatch({ effects: zapEffect.of({ ...zap, char }) })
-    return (lookup('zap-to-char') as Command)(view)
+  const readCharTo = (view: EditorView, char: string): boolean => {
+    const pending = view.state.field(readCharField) as ReadCharState
+    view.dispatch({ effects: readCharEffect.of({ ...pending, char }) })
+    return (lookup(pending.command) as Command)(view)
   }
 
   /**
@@ -1139,10 +1211,10 @@ export function emacsKeymap(
    * @returns 処理したら `true`.
    */
   const run = (view: EditorView, key: string, name: string): boolean => {
-    if (view.state.field(zapField, false)) {
-      if (ZAP_KEYS[key] !== undefined) return zapTo(view, ZAP_KEYS[key])
+    if (view.state.field(readCharField, false)) {
+      if (READ_CHAR_KEYS[key] !== undefined) return readCharTo(view, READ_CHAR_KEYS[key])
       // 文字でないキーなら, 待つのを止めて, そのキーのコマンドを動かす
-      view.dispatch({ effects: zapEffect.of(null) })
+      view.dispatch({ effects: readCharEffect.of(null) })
     }
     if (view.state.field(describeKeyField, false)) {
       view.dispatch({ effects: describeKeyEffect.of(false) })
@@ -1241,13 +1313,13 @@ export function emacsKeymap(
           message(plain ? `${name} runs the command self-insert-command` : `${name} is undefined`)
           return true
         }
-        if (view.state.field(zapField, false)) {
+        if (view.state.field(readCharField, false)) {
           // 修飾キーだけのときは, 次のキーを待つ. 文字でなければ, 待つのを止める
           if (MODIFIER_KEYS.includes(event.key)) return false
           if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
-            return zapTo(view, event.key)
+            return readCharTo(view, event.key)
           }
-          view.dispatch({ effects: zapEffect.of(null) })
+          view.dispatch({ effects: readCharEffect.of(null) })
           return false
         }
         if (prefix.count === null || event.ctrlKey || event.altKey || event.metaKey) return false
