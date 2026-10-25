@@ -391,6 +391,29 @@ describe('削除とキル', () => {
     expect(text()).toBe('FOO bar Baz|')
   })
 
+  it('C-x C-u と C-x C-l で, リージョンの大文字・小文字を変え, カーソルを同じ端に置くこと', () => {
+    const { press, run, text, view } = setup('a|bc Straße def')
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 10 } })
+    press('C-x C-u')
+    expect(text()).toBe('aBC STRASSE| def')
+    expect(view.state.field(markField)).toBeNull()
+    view.dispatch({ selection: { anchor: 15 } })
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 1 } })
+    press('C-x C-l')
+    expect(text()).toBe('a|bc strasse def')
+  })
+
+  it('C-x C-u と C-x C-l は, マークが無ければ, 知らせること', () => {
+    const { run, text, message } = setup('a|b')
+    run('upcase-region')
+    run('downcase-region')
+    expect(text()).toBe('a|b')
+    expect(message).toHaveBeenCalledTimes(2)
+    expect(message).toHaveBeenCalledWith('The mark is not set now, so there is no region')
+  })
+
   it('C-o で, カーソルを動かさずに改行を入れること', () => {
     const { run, text } = setup('a|b')
     run('open-line')

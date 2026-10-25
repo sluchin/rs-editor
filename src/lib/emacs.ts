@@ -374,6 +374,31 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
   }
 
   /**
+   * リージョンの大文字・小文字を変えます. カーソルは, リージョンの同じ端に置きます.
+   *
+   * @param view - エディタ.
+   * @param kind - 変え方.
+   * @returns `true`.
+   */
+  const caseRegion = (view: EditorView, kind: CaseKind): boolean => {
+    const mark = view.state.field(markField)
+    if (mark === null) {
+      message('The mark is not set now, so there is no region')
+      return true
+    }
+    const from = Math.min(mark, head(view))
+    const to = Math.max(mark, head(view))
+    // `ß` の大文字は `SS` なので, 長さが変わることがある
+    const insert = changeCase(view.state.sliceDoc(from, to), kind)
+    view.dispatch({
+      changes: { from, to, insert },
+      selection: EditorSelection.cursor(head(view) === from ? from : from + insert.length),
+      annotations: commandAnnotation.of({ name: 'case' }),
+    })
+    return true
+  }
+
+  /**
    * 文字を入れて, 入れた範囲を, 直前のヤンクとして覚えます.
    *
    * @param view - エディタ.
@@ -602,6 +627,8 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
     'upcase-word': (view) => caseWord(view, 'upcase'),
     'downcase-word': (view) => caseWord(view, 'downcase'),
     'capitalize-word': (view) => caseWord(view, 'capitalize'),
+    'upcase-region': (view) => caseRegion(view, 'upcase'),
+    'downcase-region': (view) => caseRegion(view, 'downcase'),
     'open-line': (view) => {
       const pos = head(view)
       view.dispatch({
@@ -873,6 +900,8 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-u', 'upcase-word'],
   ['Alt-l', 'downcase-word'],
   ['Alt-c', 'capitalize-word'],
+  ['Ctrl-x Ctrl-u', 'upcase-region'],
+  ['Ctrl-x Ctrl-l', 'downcase-region'],
   ['Ctrl-o', 'open-line'],
   // 改行と字下げ
   ['Enter', 'newline'],

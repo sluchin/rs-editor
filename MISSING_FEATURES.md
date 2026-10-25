@@ -26,6 +26,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - M-y - 別の削除内容を貼り付け（yank-pop）
 - C-t, M-t, C-x C-t - 文字、単語、行の入れ替え
 - M-u, M-l, M-c - 単語の大文字・小文字
+- C-x C-u, C-x C-l - リージョンの大文字・小文字（upcase-region, downcase-region）
 - C-o - 改行を入れる（open-line）
 - M-; - コメントの付け外し（comment-dwim）
 - M-/ - 単語の補完（dabbrev-expand。今のバッファの中だけを探す）
@@ -88,7 +89,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-x C-u` / `C-x C-l` | upcase-region / downcase-region | リージョンの大文字・小文字 |
 | `C-q` | quoted-insert | 文字をそのまま入れる |
 | `M-=` | count-words-region | 行、単語、文字の数 |
 | `C-x r k` / `C-x r y` / `C-x r t` など | kill-rectangle など | 矩形の操作 |

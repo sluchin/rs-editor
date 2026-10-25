@@ -149,6 +149,8 @@
   - `M-SPC` (just-one-space): `C-u 3 M-SPC` で空白を 3 つ残す。負の数なら, 改行も消す。
   - `M-\` (delete-horizontal-space): 前置引数があれば, カーソルの前の空白だけを消す。
   - `M-^` (delete-indentation): 前置引数があれば, 次の行とつなげる。リージョンがあれば, リージョンの行をつなげる。
+- [ ] `C-x C-u` (upcase-region) と `C-x C-l` (downcase-region): Emacs では, 既定で使えない (disabled) コマンドで,
+      初めて押すと, 使うかを確かめる。今は, 確かめずに動かす。
 - [ ] `M-SPC`: Linux のデスクトップ (GNOME など) は, Alt+Space をウィンドウのメニューに使うので, エディタにキーが届かないことがある。
       Emacs と同じく, `ESC SPC` でも動くようにするか, 届かないことを README に書く。
 
