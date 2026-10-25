@@ -1,14 +1,28 @@
+//! Scheme のコードの文字列を, 値 ([`Value`]) の並びに読み込むパーサ.
+
 use crate::scheme::value::Value;
 
 /// 記号に使える, 英数字のほかの文字 (`.` だけの記号は, 引数のリストの `(a . rest)` に使う).
 const SYMBOL_CHARS: &str = "+-*/<>=!?_.:&%$~^";
 
+/// Scheme のコードを読み込むパーサ. 1 文字ずつ先頭から読み進めます.
 pub struct Parser {
+    /// 読み込むコード (1 文字ずつ).
     input: Vec<char>,
+    /// 次に読む文字の位置 (`input` の添字).
     pos: usize,
 }
 
 impl Parser {
+    /// コードを読み込むパーサを作ります.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - 読み込むコード.
+    ///
+    /// # Returns
+    ///
+    /// 先頭から読むパーサ.
     pub fn new(input: &str) -> Self {
         Parser {
             input: input.chars().collect(),
@@ -16,6 +30,11 @@ impl Parser {
         }
     }
 
+    /// コードの全ての式を読み込みます. 空白とコメント (`;` から行末まで) は読み飛ばします.
+    ///
+    /// # Returns
+    ///
+    /// 読み込んだ式 (先頭から順). 書き方が誤っている場合は, その内容の [`Err`].
     pub fn parse(&mut self) -> Result<Vec<Value>, String> {
         let mut values = Vec::new();
         while self.pos < self.input.len() {
@@ -28,6 +47,11 @@ impl Parser {
         Ok(values)
     }
 
+    /// 式を 1 つ読み込みます. `'x` は `(quote x)` にします.
+    ///
+    /// # Returns
+    ///
+    /// 読み込んだ式. 入力が終わっているか, 式を始められない文字の場合は [`Err`].
     fn parse_value(&mut self) -> Result<Value, String> {
         self.skip_whitespace();
         let c = self
@@ -55,6 +79,11 @@ impl Parser {
         }
     }
 
+    /// `(` から対応する `)` までのリストを読み込みます.
+    ///
+    /// # Returns
+    ///
+    /// リスト. `)` で閉じていない場合は [`Err`].
     fn parse_list(&mut self) -> Result<Value, String> {
         self.advance('(');
         let mut items = Vec::new();
@@ -72,6 +101,11 @@ impl Parser {
         Ok(Value::List(items))
     }
 
+    /// `"` で囲んだ文字列を読み込みます. エスケープは `\n`, `\t`, `\"`, `\\` が使えます.
+    ///
+    /// # Returns
+    ///
+    /// 文字列. 閉じていないか, 使えないエスケープがある場合は [`Err`].
     fn parse_string(&mut self) -> Result<Value, String> {
         self.advance('"');
         let mut result = String::new();
@@ -101,6 +135,11 @@ impl Parser {
         Ok(Value::String(result))
     }
 
+    /// 真偽値 (`#t` / `#f`) を読み込みます.
+    ///
+    /// # Returns
+    ///
+    /// 真偽値. `#` の後が `t` でも `f` でもない場合は [`Err`].
     fn parse_boolean(&mut self) -> Result<Value, String> {
         self.advance('#');
         match self.current() {
@@ -116,6 +155,11 @@ impl Parser {
         }
     }
 
+    /// 数 (`-` で始まる負の数, 小数を含む) を読み込みます.
+    ///
+    /// # Returns
+    ///
+    /// 数. 数として読めない場合 (`1.2.3` など) は [`Err`].
     fn parse_number(&mut self) -> Result<Value, String> {
         let start = self.pos;
         if self.current() == Some('-') {
@@ -133,6 +177,11 @@ impl Parser {
         }
     }
 
+    /// 記号 (英数字と [`SYMBOL_CHARS`] の並び) を読み込みます.
+    ///
+    /// # Returns
+    ///
+    /// 記号 (失敗しない).
     fn parse_symbol(&mut self) -> Result<Value, String> {
         let start = self.pos;
         while self
@@ -146,6 +195,11 @@ impl Parser {
         Ok(Value::Symbol(symbol))
     }
 
+    /// 次に読む文字を返します.
+    ///
+    /// # Returns
+    ///
+    /// 次に読む文字. 入力が終わっている場合は [`None`].
     fn current(&self) -> Option<char> {
         if self.pos < self.input.len() {
             Some(self.input[self.pos])
@@ -154,6 +208,11 @@ impl Parser {
         }
     }
 
+    /// 次に読む文字の, 1 つ後の文字を返します (読み進めない).
+    ///
+    /// # Returns
+    ///
+    /// 1 つ後の文字. 無い場合は [`None`].
     fn peek(&self) -> Option<char> {
         if self.pos + 1 < self.input.len() {
             Some(self.input[self.pos + 1])
@@ -162,6 +221,7 @@ impl Parser {
         }
     }
 
+    /// 空白とコメント (`;` から行末まで) を読み飛ばします.
     fn skip_whitespace(&mut self) {
         while self
             .current()
@@ -178,6 +238,10 @@ impl Parser {
     }
 
     /// 今の文字 (呼ぶ側が確かめた `expected`) を読み飛ばす.
+    ///
+    /// # Arguments
+    ///
+    /// * `expected` - 今の文字 (デバッグ版でだけ確かめる).
     fn advance(&mut self, expected: char) {
         debug_assert_eq!(self.current(), Some(expected));
         self.pos += 1;

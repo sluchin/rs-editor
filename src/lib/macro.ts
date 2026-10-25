@@ -9,10 +9,15 @@ import { EditorView, runScopeHandlers } from '@codemirror/view'
 
 /** 記録したキー. */
 export interface RecordedKey {
+  /** キー (`KeyboardEvent.key`). */
   key: string
+  /** Ctrl を押していたら `true`. */
   ctrlKey: boolean
+  /** Alt を押していたら `true`. */
   altKey: boolean
+  /** Shift を押していたら `true`. */
   shiftKey: boolean
+  /** Meta を押していたら `true`. */
   metaKey: boolean
 }
 

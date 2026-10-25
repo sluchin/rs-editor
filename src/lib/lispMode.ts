@@ -33,7 +33,9 @@ interface Pending {
 
 /** `(` の直後の名前の色と, その後で待つ名前. */
 interface Head {
+  /** 名前の色 (特別な形か, 警告). */
   face: 'keyword' | 'warning'
+  /** その後で, 色を付ける名前を待つなら, その決まり. 待たなければ `null`. */
   next: Pending | null
 }
 
@@ -211,6 +213,7 @@ const ELISP_WARNINGS = new Set([
   'warn',
 ])
 
+/** Emacs Lisp のマクロの名前 (引くのを速くするため, 集合にする). */
 const ELISP_KEYWORD_SET = new Set(ELISP_KEYWORDS)
 
 /** Emacs Lisp の決まり (Emacs の emacs-lisp-mode). */

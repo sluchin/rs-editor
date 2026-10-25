@@ -9,6 +9,7 @@ import * as fileOps from '@/lib/fileOps'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
+/** アプリの窓を閉じる関数の偽物 (C-x C-c で呼ぶ). */
 const close = vi.fn()
 vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ close }) }))
 vi.mock('@/lib/fileOps', () => ({
@@ -22,6 +23,7 @@ vi.mock('@/lib/fileOps', () => ({
 const mocked = vi.mocked(fileOps)
 const mockedInvoke = vi.mocked(invoke)
 const mockedListen = vi.mocked(listen)
+/** エディタの操作の頼みを受けるのをやめる関数の偽物. */
 const unlisten = vi.fn()
 
 /**

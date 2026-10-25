@@ -1,13 +1,28 @@
+/**
+ * バッファの一覧 (C-x C-b). 画面の上に重ねて出し, 選んだバッファに切り替えます.
+ */
+
 import { Buffer } from '../App'
 import '../styles/BufferList.css'
 
+/** {@link BufferList} のプロパティ. */
 interface BufferListProps {
+  /** 一覧に出すバッファ. */
   buffers: Buffer[]
+  /** 選んでいるウィンドウのバッファ (印を付ける). */
   currentBufferId: string
+  /** バッファを選んだときに呼びます. */
   onSelectBuffer: (bufferId: string) => void
+  /** 一覧を閉じるときに呼びます (外側か, 閉じるボタンを押したとき). */
   onClose: () => void
 }
 
+/**
+ * バッファの一覧を出します.
+ *
+ * @param props - プロパティ.
+ * @returns バッファの一覧.
+ */
 export default function BufferList({
   buffers,
   currentBufferId,

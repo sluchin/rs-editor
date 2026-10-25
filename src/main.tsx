@@ -1,3 +1,7 @@
+/**
+ * フロントエンドの入口. ログを設定して, アプリの画面 ({@link App}) を描きます.
+ */
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'

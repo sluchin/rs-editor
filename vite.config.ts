@@ -1,4 +1,7 @@
 /// <reference types="vitest/config" />
+/**
+ * Vite (開発サーバーとビルド) と Vitest (テスト) の設定.
+ */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 

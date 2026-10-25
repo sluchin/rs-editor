@@ -55,6 +55,7 @@ const setMarkEffect = StateEffect.define<number | null>()
  */
 export const markField = StateField.define<number | null>({
   create: () => null,
+  // マークを置くか外す変更があれば, その値. 本文を書き換えたら, 外す
   update(mark, tr) {
     for (const effect of tr.effects) {
       if (effect.is(setMarkEffect)) return effect.value
@@ -69,6 +70,7 @@ const describeKeyEffect = StateEffect.define<boolean>()
 /** 次に押すキーを, 実行せずに説明するなら `true` (`C-h k`). */
 export const describeKeyField = StateField.define<boolean>({
   create: () => false,
+  // 変える変更があれば, その値
   update(value, tr) {
     for (const effect of tr.effects) {
       if (effect.is(describeKeyEffect)) return effect.value

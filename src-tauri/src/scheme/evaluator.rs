@@ -2,7 +2,7 @@
 //!
 //! - 特別な形: `quote` (`'`), `if`, `define`, `set!`, `lambda`, `begin`, `let` (名前付きも), `let*`, `letrec`,
 //!   `cond`, `case`, `and`, `or`, `when`, `unless`, `define-command`.
-//! - 組み込みの手続きは [`builtins`](crate::scheme::builtins).
+//! - 組み込みの手続きは [`builtins`].
 //! - 末尾の呼び出しは, 深さを使いません. それ以外の入れ子は, [`MAX_DEPTH`] までです.
 
 use std::sync::{Arc, Mutex};
@@ -32,10 +32,13 @@ pub struct KeyBinding {
 
 /// 評価器. 定義と, Lisp で作ったコマンドとキーの割り当てを, 覚えています.
 pub struct Evaluator {
+    /// 一番外側の環境 (組み込みの手続きと, `define` した変数).
     global: Env,
+    /// Lisp で作ったコマンドの名前 (作った順).
     commands: Mutex<Vec<String>>,
+    /// Lisp で割り当てたキー (割り当てた順).
     keys: Mutex<Vec<KeyBinding>>,
-    // 評価は, 1 度に 1 つ
+    /// 評価中は, 持ち続けるロック (評価は, 1 度に 1 つ).
     running: Mutex<()>,
 }
 
@@ -135,7 +138,11 @@ impl Evaluator {
         self.keys.lock().unwrap().clone()
     }
 
-    /// コマンドとして覚えます.
+    /// コマンドとして覚えます (覚えていれば, 何もしない).
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - コマンドの名前.
     pub(crate) fn add_command(&self, name: &str) {
         let mut commands = self.commands.lock().unwrap();
         if !commands.iter().any(|c| c == name) {
@@ -144,18 +151,39 @@ impl Evaluator {
     }
 
     /// Lisp で作ったコマンドかを返します.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - コマンドの名前.
+    ///
+    /// # Returns
+    ///
+    /// Lisp で作ったコマンドなら `true`.
     pub(crate) fn is_command(&self, name: &str) -> bool {
         self.commands.lock().unwrap().iter().any(|c| c == name)
     }
 
     /// キーを割り当てます (同じキーの割り当ては, 置き換える).
+    ///
+    /// # Arguments
+    ///
+    /// * `binding` - 割り当て.
     pub(crate) fn set_key(&self, binding: KeyBinding) {
         let mut keys = self.keys.lock().unwrap();
         keys.retain(|k| k.key != binding.key);
         keys.push(binding);
     }
 
-    /// 大きなスタックのスレッドで, 評価します.
+    /// 大きなスタックのスレッドで, 評価します. 前の評価が終わるまで待ちます.
+    ///
+    /// # Arguments
+    ///
+    /// * `host` - エディタ.
+    /// * `task` - 評価する処理.
+    ///
+    /// # Returns
+    ///
+    /// `task` の結果. スレッドを作れないか, 評価が panic した場合は [`Err`].
     fn run<T: Send>(
         &self,
         host: &dyn Host,
@@ -184,12 +212,25 @@ enum Step {
 
 /// 1 回の評価 (入れ子の深さと, エディタを持つ).
 pub(crate) struct Machine<'a> {
+    /// 評価器 (定義とコマンドとキーを覚えている).
     pub(crate) evaluator: &'a Evaluator,
+    /// エディタ (エディタの操作を頼む先).
     pub(crate) host: &'a dyn Host,
+    /// 今の評価の入れ子の深さ ([`MAX_DEPTH`] まで).
     depth: usize,
 }
 
 impl<'a> Machine<'a> {
+    /// 入れ子の深さが 0 の, 1 回の評価を作ります.
+    ///
+    /// # Arguments
+    ///
+    /// * `evaluator` - 評価器.
+    /// * `host` - エディタ.
+    ///
+    /// # Returns
+    ///
+    /// 1 回の評価.
     fn new(evaluator: &'a Evaluator, host: &'a dyn Host) -> Self {
         Machine {
             evaluator,
@@ -199,6 +240,15 @@ impl<'a> Machine<'a> {
     }
 
     /// 式を評価します.
+    ///
+    /// # Arguments
+    ///
+    /// * `expr` - 式.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 値. 失敗した場合 (入れ子が深すぎる場合も) は, その内容の [`Err`].
     pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, String> {
         if self.depth >= MAX_DEPTH {
             return Err("Too deep recursion".to_string());
@@ -210,6 +260,15 @@ impl<'a> Machine<'a> {
     }
 
     /// 式を評価します. 末尾の式は, ここで繰り返して評価します (深さを使わない).
+    ///
+    /// # Arguments
+    ///
+    /// * `expr` - 式.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 値, または失敗の内容.
     fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
         loop {
             let items = match &expr {
@@ -244,11 +303,29 @@ impl<'a> Machine<'a> {
     }
 
     /// 式を順に評価して, 値を並べます.
+    ///
+    /// # Arguments
+    ///
+    /// * `exprs` - 式.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 値 (式の順). 1 つでも失敗した場合は, その内容の [`Err`].
     fn eval_all(&mut self, exprs: &[Value], env: &Env) -> Result<Vec<Value>, String> {
         exprs.iter().map(|e| self.eval(e, env)).collect()
     }
 
     /// 手続きを呼びます.
+    ///
+    /// # Arguments
+    ///
+    /// * `procedure` - 手続き.
+    /// * `args` - 引数.
+    ///
+    /// # Returns
+    ///
+    /// 結果, または失敗の内容.
     pub(crate) fn apply(&mut self, procedure: Value, args: Vec<Value>) -> Result<Value, String> {
         match self.apply_step(procedure, args)? {
             Step::Done(value) => Ok(value),
@@ -257,6 +334,15 @@ impl<'a> Machine<'a> {
     }
 
     /// 手続きを呼びます. `lambda` の本体の最後の式は, 評価せずに返します.
+    ///
+    /// # Arguments
+    ///
+    /// * `procedure` - 手続き.
+    /// * `args` - 引数.
+    ///
+    /// # Returns
+    ///
+    /// 評価の 1 歩の結果. 手続きでない値の場合や, 引数の数が違う場合は [`Err`].
     fn apply_step(&mut self, procedure: Value, args: Vec<Value>) -> Result<Step, String> {
         match procedure {
             Value::Lambda(lambda) => {
@@ -269,6 +355,14 @@ impl<'a> Machine<'a> {
     }
 
     /// コマンドを実行します. Lisp で作ったコマンドは, ここで呼び, ほかは, エディタに頼みます.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - コマンドの名前.
+    ///
+    /// # Returns
+    ///
+    /// 結果, または失敗の内容.
     pub(crate) fn call_command(&mut self, name: &str) -> Result<Value, String> {
         if self.evaluator.is_command(name) {
             let procedure = self
@@ -283,6 +377,15 @@ impl<'a> Machine<'a> {
     }
 
     /// 式を順に評価します. 最後の式は, 評価せずに返します (空なら `nil`).
+    ///
+    /// # Arguments
+    ///
+    /// * `body` - 式.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 評価の 1 歩の結果, または失敗の内容.
     fn sequence(&mut self, body: &[Value], env: &Env) -> Result<Step, String> {
         match body.split_last() {
             None => Ok(Step::Done(Value::Nil)),
@@ -297,9 +400,15 @@ impl<'a> Machine<'a> {
 
     /// 特別な形を評価します.
     ///
+    /// # Arguments
+    ///
+    /// * `op` - 形の名前 (`if` など).
+    /// * `args` - 形の名前の後の, 評価していない式.
+    /// * `env` - 評価する環境.
+    ///
     /// # Returns
     ///
-    /// 特別な形でなければ `None`.
+    /// 評価の 1 歩の結果. 特別な形でなければ `None`. 書き方が誤っている場合は [`Err`].
     fn special_form(
         &mut self,
         op: &str,
@@ -431,6 +540,15 @@ impl<'a> Machine<'a> {
     }
 
     /// `define` (と `define-command`) を評価して, 定義した名前を返します.
+    ///
+    /// # Arguments
+    ///
+    /// * `args` - `define` の後の式 (名前と値, または `(名前 引数...)` と本体).
+    /// * `env` - 定義する環境.
+    ///
+    /// # Returns
+    ///
+    /// 定義した名前, または失敗の内容.
     fn define(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
         match args {
             [Value::Symbol(name), rest @ ..] if rest.len() <= 1 => {
@@ -454,6 +572,17 @@ impl<'a> Machine<'a> {
     }
 
     /// 名前付きの `let` (`(let loop ((i 0)) ...)`) を評価します.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 名前 (本体から呼べる手続きの名前).
+    /// * `bindings` - 束縛 (`((i 0))`).
+    /// * `body` - 本体.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 評価の 1 歩の結果, または失敗の内容.
     fn named_let(
         &mut self,
         name: &str,
@@ -474,6 +603,15 @@ impl<'a> Machine<'a> {
     }
 
     /// `cond` を評価します.
+    ///
+    /// # Arguments
+    ///
+    /// * `clauses` - 節 (`(test body...)`. `else` も使える).
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 評価の 1 歩の結果 (当てはまる節が無ければ `nil`), または失敗の内容.
     fn cond(&mut self, clauses: &[Value], env: &Env) -> Result<Step, String> {
         for clause in clauses {
             let Value::List(items) = clause else {
@@ -497,6 +635,16 @@ impl<'a> Machine<'a> {
     }
 
     /// `case` を評価します.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - 比べる値 (評価した値).
+    /// * `clauses` - 節 (`((data...) body...)`. `else` も使える).
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 評価の 1 歩の結果 (当てはまる節が無ければ `nil`), または失敗の内容.
     fn case(&mut self, key: &Value, clauses: &[Value], env: &Env) -> Result<Step, String> {
         for clause in clauses {
             match clause {
@@ -519,6 +667,17 @@ impl<'a> Machine<'a> {
 }
 
 /// `lambda` を作ります.
+///
+/// # Arguments
+///
+/// * `name` - 名前 (無名なら [`None`]).
+/// * `params` - 引数のリスト (`(a b)`, `(a . rest)`, または残りの全てを受ける記号).
+/// * `body` - 本体.
+/// * `env` - 作ったときの環境.
+///
+/// # Returns
+///
+/// 手続き. 引数のリストが誤っている場合は [`Err`].
 fn make_lambda(
     name: Option<&str>,
     params: &Value,
@@ -555,6 +714,15 @@ fn make_lambda(
 }
 
 /// 名前のない `lambda` に, 名前を付けます (表示のため). ほかの値は, そのまま返します.
+///
+/// # Arguments
+///
+/// * `value` - 値.
+/// * `name` - 名前.
+///
+/// # Returns
+///
+/// 名前を付けた値.
 fn name_lambda(value: Value, name: &str) -> Value {
     match value {
         Value::Lambda(lambda) if lambda.name.is_none() => Value::Lambda(Arc::new(Lambda {
@@ -569,6 +737,15 @@ fn name_lambda(value: Value, name: &str) -> Value {
 }
 
 /// 引数を, `lambda` の環境に結び付けます.
+///
+/// # Arguments
+///
+/// * `lambda` - 手続き.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 引数を定義した, 本体を評価する環境. 引数の数が違う場合は [`Err`].
 fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
     let count = lambda.params.len();
     let fits = match lambda.rest {
@@ -603,6 +780,15 @@ fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
 }
 
 /// `let` の束縛 (`((a 1) (b 2))`) を読みます.
+///
+/// # Arguments
+///
+/// * `form` - 形の名前 (失敗の内容に書く).
+/// * `bindings` - 束縛.
+///
+/// # Returns
+///
+/// 名前と式の組 (書いた順). 書き方が誤っている場合は [`Err`].
 fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, String> {
     let invalid = || format!("{} expects bindings", form);
     let Value::List(items) = bindings else {

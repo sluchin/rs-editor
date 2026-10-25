@@ -8,6 +8,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }))
 
 const mockedInvoke = vi.mocked(invoke)
+/** 転送を設定する前の `methodFactory` (テストごとに戻す). */
 const originalFactory = log.methodFactory
 
 describe('installLogForwarding', () => {

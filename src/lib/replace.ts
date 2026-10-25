@@ -9,7 +9,9 @@ import { compileRegexp } from './isearch'
 
 /** 置き換える所. */
 export interface ReplaceMatch {
+  /** 始まりの位置. */
   start: number
+  /** 終わりの位置 (この位置の文字は含まない). */
   end: number
   /** 置き換える文字 (`\&` などを展開した後). */
   replacement: string

@@ -27,6 +27,15 @@ pub struct EvalResponse {
 }
 
 /// 評価の結果に, 評価器が覚えているコマンドとキーを添えます.
+///
+/// # Arguments
+///
+/// * `evaluator` - 評価器.
+/// * `outcome` - 評価の結果, または失敗の内容.
+///
+/// # Returns
+///
+/// 画面へ返す評価の結果.
 fn respond(evaluator: &Evaluator, outcome: Result<String, String>) -> EvalResponse {
     let (result, error) = match outcome {
         Ok(result) => (result, None),
@@ -136,6 +145,15 @@ pub fn load_init_file(evaluator: &Evaluator, path: Option<&Path>, host: &dyn Hos
 pub const EDITOR_REQUEST_EVENT: &str = "editor-request";
 
 /// 画面に頼むエディタ (Tauri のイベントで頼み, [`editor_reply`] で返事を受け取る).
+///
+/// # Arguments
+///
+/// * `app` - アプリ (イベントを送る).
+/// * `bridge` - 返事を待つ仕組み.
+///
+/// # Returns
+///
+/// エディタ.
 #[cfg(not(tarpaulin_include))]
 fn app_host<'a>(
     app: &'a AppHandle,

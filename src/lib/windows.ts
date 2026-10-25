@@ -18,10 +18,15 @@ export type Layout =
 
 /** ウィンドウの位置と大きさ (画面に対する %). */
 export interface WindowRect {
+  /** ウィンドウの ID. */
   id: string
+  /** 左端の位置. */
   left: number
+  /** 上端の位置. */
   top: number
+  /** 幅. */
   width: number
+  /** 高さ. */
   height: number
 }
 

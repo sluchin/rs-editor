@@ -1,15 +1,24 @@
+/**
+ * ミニバッファ (画面の下の 1 行). メッセージ, 入力 (補完付き), isearch, 1 つのキーで答える問いを出します.
+ */
+
 import { useEffect, useRef, useState, KeyboardEvent } from 'react'
 import { complete, type Completion } from '../lib/complete'
 import '../styles/Minibuffer.css'
 
+/** メッセージを出している状態. */
 interface MinibufferMessageState {
   mode: 'message'
+  /** メッセージ (空なら, 既定のメッセージ). */
   text: string
 }
 
+/** 入力を待っている状態. */
 export interface MinibufferInputState {
   mode: 'input'
+  /** プロンプト. */
   prompt: string
+  /** 入力. */
   input: string
   /** Tab で補完する候補 (無ければ, 補完しない). */
   completions?: readonly string[]
@@ -17,38 +26,59 @@ export interface MinibufferInputState {
   complete?: (input: string) => Promise<Completion>
 }
 
+/** isearch の状態. */
 export interface MinibufferIsearchState {
   mode: 'isearch'
+  /** 探す向き. */
   direction: 'forward' | 'backward'
   /** 正規表現で探すなら `true`. */
   regexp: boolean
+  /** 探す文字. */
   query: string
+  /** 探し始めたときの, カーソルの位置 (やめたら, 戻す). */
   originalCursor: number
+  /** 合った所の始まり. 合わなければ `null`. */
   matchStart: number | null
+  /** 合った所の終わり. 合わなければ `null`. */
   matchEnd: number | null
 }
 
 /** 1 つのキーで答える問い (query-replace の `y`, `n` など). */
 export interface MinibufferQueryState {
   mode: 'query'
+  /** プロンプト. */
   prompt: string
 }
 
+/** ミニバッファの状態. */
 export type MinibufferState =
   MinibufferMessageState | MinibufferInputState | MinibufferIsearchState | MinibufferQueryState
 
+/** {@link Minibuffer} のプロパティ. */
 interface MinibufferProps {
+  /** ミニバッファの状態. */
   state: MinibufferState
+  /** 入力が変わったときに呼びます (Tab で補完したときも). */
   onInputChange: (value: string, state: MinibufferInputState | MinibufferIsearchState) => void
+  /** Enter で入力を確定したときに呼びます. */
   onSubmit: (value: string) => void
+  /** C-g か Escape で, やめたときに呼びます. */
   onCancel: () => void
+  /** isearch で, C-s か C-r を押したときに呼びます (次か前に合う所へ進む). */
   onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
   /** 問いに答えたキー (`y`, `n`, `!` など). */
   onQueryKey?: (key: string) => void
 }
 
+/** メッセージが空のときに出す, 既定のメッセージ. */
 const DEFAULT_MESSAGE = 'For information about this editor, see the README.'
 
+/**
+ * ミニバッファを出します.
+ *
+ * @param props - プロパティ.
+ * @returns ミニバッファ.
+ */
 export default function Minibuffer({
   state,
   onInputChange,
@@ -67,6 +97,7 @@ export default function Minibuffer({
   const shown = completion.key === inputKey ? completion.list : []
   const setShown = (list: string[] | null) => setCompletion({ key: inputKey, list })
 
+  // 入力を待つときは, 入力欄にフォーカスを移す
   useEffect(() => {
     if (state.mode !== 'message') {
       inputRef.current?.focus()
@@ -74,6 +105,11 @@ export default function Minibuffer({
   }, [state.mode])
 
   if (state.mode === 'query') {
+    /**
+     * 問いに答えたキーを受けます. C-g か Escape なら, やめます.
+     *
+     * @param e - キーのイベント.
+     */
     const handleQueryKey = (e: KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault()
       if (e.key === 'Escape' || (e.ctrlKey && e.key === 'g')) {
@@ -97,6 +133,11 @@ export default function Minibuffer({
   }
 
   if (state.mode === 'input' || state.mode === 'isearch') {
+    /**
+     * プロンプトを返します. isearch では, 向き, 正規表現か, 合わなかったか (`Failing`) を出します.
+     *
+     * @returns プロンプト.
+     */
     const getPrompt = (): string => {
       if (state.mode === 'input') {
         return state.prompt
@@ -107,10 +148,20 @@ export default function Minibuffer({
       return `${failing}${regexp}${prefix}: `
     }
 
+    /**
+     * 入力欄に出す文字を返します.
+     *
+     * @returns 入力 (isearch なら, 探す文字).
+     */
     const getValue = (): string => {
       return state.mode === 'input' ? state.input : state.query
     }
 
+    /**
+     * 入力欄のキーを受けます. isearch の C-s / C-r, Tab での補完, Enter での確定, C-g / Escape でやめる.
+     *
+     * @param e - キーのイベント.
+     */
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (state.mode === 'isearch') {
         if ((e.ctrlKey && e.key === 's') || (e.ctrlKey && e.key === 'r')) {

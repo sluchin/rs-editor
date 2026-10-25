@@ -8,11 +8,27 @@ use rseditor::scheme::parser::Parser;
 use rseditor::scheme::value::Value;
 
 /// 評価して, 結果を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 結果 (失敗したら panic する).
 fn eval(code: &str) -> String {
     Evaluator::new().eval(code).unwrap()
 }
 
 /// 評価して, 失敗の内容を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 失敗の内容 (成功したら panic する).
 fn eval_err(code: &str) -> String {
     Evaluator::new().eval(code).unwrap_err()
 }
@@ -20,12 +36,24 @@ fn eval_err(code: &str) -> String {
 /// 偽のエディタ. 本文とカーソル (1 から数える) を持ち, 呼ばれた操作を覚える.
 #[derive(Default)]
 struct FakeEditor {
+    /// 本文.
     text: Mutex<String>,
+    /// カーソルの位置 (1 から数える).
     point: Mutex<usize>,
+    /// 呼ばれた操作 (`insert "a"` のように, 名前と引数).
     calls: Mutex<Vec<String>>,
 }
 
 impl FakeEditor {
+    /// カーソルが先頭にある, 偽のエディタを作る.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - 本文.
+    ///
+    /// # Returns
+    ///
+    /// 偽のエディタ.
     fn new(text: &str) -> Self {
         FakeEditor {
             text: Mutex::new(text.to_string()),
@@ -34,16 +62,34 @@ impl FakeEditor {
         }
     }
 
+    /// 本文を返す.
+    ///
+    /// # Returns
+    ///
+    /// 本文.
     fn text(&self) -> String {
         self.text.lock().unwrap().clone()
     }
 
+    /// 呼ばれた操作を返す.
+    ///
+    /// # Returns
+    ///
+    /// 呼ばれた操作 (呼ばれた順).
     fn calls(&self) -> Vec<String> {
         self.calls.lock().unwrap().clone()
     }
 }
 
 /// 数を, 位置 (0 から数える) にする.
+///
+/// # Arguments
+///
+/// * `v` - 位置 (1 から数える数).
+///
+/// # Returns
+///
+/// 位置 (0 から数える. 数でなければ panic する).
 fn offset(v: &Value) -> usize {
     match v {
         Value::Number(n) => *n as usize - 1,

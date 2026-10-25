@@ -1,3 +1,7 @@
+/**
+ * エディタ (CodeMirror 6). Emacs のキーとコマンドで動かし, バッファごとに状態 (カーソル, 元に戻す履歴) を持ちます.
+ */
+
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { standardKeymap } from '@codemirror/commands'
 import {
@@ -52,9 +56,13 @@ function syncChange(state: EditorState, content: string) {
   }
 }
 
+/** カーソルの位置. */
 export interface CursorInfo {
+  /** 行 (1 から数える). */
   line: number
+  /** 桁 (1 から数える). */
   column: number
+  /** 本文の始めからの位置 (0 から数える). */
   offset: number
 }
 
@@ -90,6 +98,7 @@ export interface EditorHandle {
   forget: (bufferId: string) => void
 }
 
+/** {@link CodeEditor} のプロパティ. */
 interface CodeEditorProps {
   /** 表示するバッファ. 変わると, そのバッファの状態 (カーソル, 元に戻す履歴) に切り替えます. */
   bufferId: string

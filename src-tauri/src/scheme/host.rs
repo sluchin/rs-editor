@@ -49,8 +49,11 @@ pub struct EditorRequest {
 
 /// 画面に頼んで, 返事を待つ仕組み.
 pub struct Bridge {
+    /// 次の頼みに付ける番号.
     next_id: AtomicU64,
+    /// 返事を待っている頼み (番号と, 返事を渡す先).
     pending: Mutex<HashMap<u64, mpsc::Sender<Result<Value, String>>>>,
+    /// 返事を待つ長さ (過ぎたら, 失敗にする).
     timeout: Duration,
 }
 
@@ -132,7 +135,9 @@ impl Bridge {
 
 /// [`Bridge`] を使うエディタ.
 pub struct BridgeHost<'a, F> {
+    /// 返事を待つ仕組み.
     bridge: &'a Bridge,
+    /// 頼みを画面へ送る関数.
     send: F,
 }
 

@@ -135,6 +135,7 @@ interface Frame {
   col: number
   /** `(` の行. */
   line: number
+  /** これまでに読んだ, リストの要素 (前から順). */
   elements: Element[]
 }
 

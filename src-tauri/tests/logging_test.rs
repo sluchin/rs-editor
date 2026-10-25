@@ -113,6 +113,7 @@ fn test_rotating_file_flush_writes_to_disk() {
 
 #[test]
 fn test_tee_writes_to_both_and_tolerates_failure() {
+    /// 書き込みが常に失敗する書き込み先.
     struct Failing;
     impl Write for Failing {
         fn write(&mut self, _buf: &[u8]) -> io::Result<usize> {

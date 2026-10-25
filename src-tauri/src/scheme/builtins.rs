@@ -404,12 +404,31 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
 }
 
 /// 引数の数を確かめて, 配列にします.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// `N` 個の引数の配列. 数が違う場合は [`Err`].
 fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], String> {
     let count = args.len();
     args.try_into().map_err(|_| arity_error(name, N, count))
 }
 
 /// 引数の数が違うときの, 失敗の内容を作ります.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前.
+/// * `expected` - 求める引数の数.
+/// * `given` - 渡された引数の数.
+///
+/// # Returns
+///
+/// 失敗の内容.
 fn arity_error(name: &str, expected: usize, given: usize) -> String {
     let plural = if expected == 1 { "" } else { "s" };
     format!(
@@ -419,6 +438,15 @@ fn arity_error(name: &str, expected: usize, given: usize) -> String {
 }
 
 /// 数を取り出します.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `v` - 値.
+///
+/// # Returns
+///
+/// 数. 数でない場合は [`Err`].
 fn number(name: &str, v: &Value) -> Result<f64, String> {
     match v {
         Value::Number(n) => Ok(*n),
@@ -427,11 +455,29 @@ fn number(name: &str, v: &Value) -> Result<f64, String> {
 }
 
 /// 全ての引数を, 数として取り出します.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 数 (引数の順). 数でない引数がある場合は [`Err`].
 fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, String> {
     args.iter().map(|v| number(name, v)).collect()
 }
 
 /// 0 以上の整数 (添え字) を取り出します.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `v` - 値.
+///
+/// # Returns
+///
+/// 添え字. 0 以上の整数でない場合は [`Err`].
 fn index(name: &str, v: &Value) -> Result<usize, String> {
     match v {
         Value::Number(n) if *n >= 0.0 && n.fract() == 0.0 => Ok(*n as usize),
@@ -440,6 +486,15 @@ fn index(name: &str, v: &Value) -> Result<usize, String> {
 }
 
 /// 文字列を取り出します.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `v` - 値.
+///
+/// # Returns
+///
+/// 文字列. 文字列でない場合は [`Err`].
 fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
     match v {
         Value::String(s) => Ok(s),
@@ -448,6 +503,15 @@ fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
 }
 
 /// リストを取り出します.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `v` - 値.
+///
+/// # Returns
+///
+/// リストの要素. リストでない場合は [`Err`].
 fn list<'v>(name: &str, v: &'v Value) -> Result<&'v Vec<Value>, String> {
     match v {
         Value::List(items) => Ok(items),
@@ -456,6 +520,14 @@ fn list<'v>(name: &str, v: &'v Value) -> Result<&'v Vec<Value>, String> {
 }
 
 /// `format` の文字列を作ります. `%s` (文字列は引用符なし), `%S` (書いたとおり), `%d` (整数), `%%` を使えます.
+///
+/// # Arguments
+///
+/// * `args` - 書式の文字列と, 埋め込む値.
+///
+/// # Returns
+///
+/// 作った文字列. 書式が文字列でない, 値が足りない, 使えない指定がある場合は [`Err`].
 fn format(args: &[Value]) -> Result<String, String> {
     let Some((template, values)) = args.split_first() else {
         return Err("format expects a format string".to_string());

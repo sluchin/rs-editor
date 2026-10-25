@@ -49,6 +49,14 @@ pub fn to_codemirror(keys: &str) -> Result<String, String> {
 }
 
 /// 1 回に押すキー (`C-M-f` など) を, CodeMirror の書き方にします.
+///
+/// # Arguments
+///
+/// * `text` - 1 回に押すキーの, Emacs の書き方.
+///
+/// # Returns
+///
+/// CodeMirror の書き方 (`Ctrl-Alt-f` など). 読めなければ [`Err`] (理由は空. 呼ぶ側が書く).
 fn stroke(text: &str) -> Result<String, String> {
     let mut rest = text;
     let mut result = String::new();
@@ -66,6 +74,14 @@ fn stroke(text: &str) -> Result<String, String> {
 }
 
 /// 修飾キーを除いたキーを, CodeMirror の名前にします.
+///
+/// # Arguments
+///
+/// * `key` - キーの Emacs の名前 (`a`, `RET`, `<f5>` など).
+///
+/// # Returns
+///
+/// CodeMirror の名前 (`a`, `Enter`, `F5` など). 知らない名前は [`None`].
 fn key_name(key: &str) -> Option<String> {
     if key.chars().count() == 1 {
         return Some(key.to_string());

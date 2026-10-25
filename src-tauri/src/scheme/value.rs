@@ -1,3 +1,5 @@
+//! Scheme の値 ([`Value`]) と, `lambda` で作った手続き ([`Lambda`]).
+
 use std::fmt;
 use std::sync::Arc;
 
@@ -8,9 +10,13 @@ use crate::scheme::env::Env;
 pub enum Value {
     /// 値がないこと (`insert` などの結果).
     Nil,
+    /// 真偽値 (`#t` / `#f`).
     Boolean(bool),
+    /// 数 (整数も小数も, 浮動小数点数で持つ).
     Number(f64),
+    /// 記号 (変数の名前など).
     Symbol(String),
+    /// 文字列.
     String(String),
     /// リスト (ドット対は扱わない).
     List(Vec<Value>),

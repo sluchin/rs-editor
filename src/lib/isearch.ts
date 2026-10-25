@@ -1,5 +1,12 @@
+/**
+ * isearch の検索 (文字と, 正規表現).
+ */
+
+/** 合った所. */
 export interface IsearchMatch {
+  /** 始まりの位置. */
   start: number
+  /** 終わりの位置 (この位置の文字は含まない). */
   end: number
 }
 

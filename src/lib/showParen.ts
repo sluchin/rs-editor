@@ -21,10 +21,12 @@ interface Paren {
   mismatch: boolean
 }
 
+/** Lisp の方言 (`null` なら, Lisp でない Fundamental モード). */
 type Dialect = 'scheme' | 'elisp' | null
 
-/** 開く括弧と, 閉じる括弧. */
+/** 開く括弧と, 対になる閉じる括弧. */
 const PAIRS: Record<string, string> = { '(': ')', '[': ']', '{': '}' }
+/** 閉じる括弧と, 対になる開く括弧. */
 const CLOSERS: Record<string, string> = { ')': '(', ']': '[', '}': '{' }
 
 /** 本文ごとの, 括弧の対 (カーソルを動かすたびに読み直さない). */
@@ -163,7 +165,9 @@ export function findParen(
   return candidate(pos - 1, 'close') ?? candidate(pos, 'open')
 }
 
+/** 対になる括弧の色. */
 const matchMark = Decoration.mark({ class: 'cm-show-paren-match' })
+/** 合わない括弧の色. */
 const mismatchMark = Decoration.mark({ class: 'cm-show-paren-mismatch' })
 
 /**
@@ -191,12 +195,23 @@ function decorations(view: EditorView): DecorationSet {
 export function showParen() {
   return ViewPlugin.fromClass(
     class {
+      /** 括弧の強調. */
       decorations: DecorationSet
 
+      /**
+       * 括弧の強調を作ります.
+       *
+       * @param view - エディタ.
+       */
       constructor(view: EditorView) {
         this.decorations = decorations(view)
       }
 
+      /**
+       * 本文, カーソル, フォーカス, 字下げの設定 (方言) が変わったら, 括弧の強調を作り直します.
+       *
+       * @param update - エディタの変化.
+       */
       update(update: ViewUpdate) {
         if (
           update.docChanged ||

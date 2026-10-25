@@ -9,9 +9,12 @@ use crate::scheme::value::Value;
 #[derive(Clone, Default)]
 pub struct Env(Arc<Mutex<Frame>>);
 
+/// 環境の中身 (1 段分).
 #[derive(Default)]
 struct Frame {
+    /// この段の変数 (名前と値).
     vars: HashMap<String, Value>,
+    /// 外側の環境. 一番外側では [`None`].
     parent: Option<Env>,
 }
 

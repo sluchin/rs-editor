@@ -3,6 +3,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { KeyboardMacro } from '@/lib/macro'
 
+/** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []
 
 afterEach(() => {

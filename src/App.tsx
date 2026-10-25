@@ -1,3 +1,7 @@
+/**
+ * アプリの画面. バッファとウィンドウを持ち, ファイル, バッファ, 検索, 置換, 評価のコマンドを受け持ちます.
+ */
+
 import { useState, useEffect, useRef } from 'react'
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -34,18 +38,26 @@ import {
 } from './lib/lisp'
 import './App.css'
 
+/** *scratch* バッファの始めの本文 (Emacs と同じ). */
 const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
 ;; To create a file, visit it with C-x C-f and enter text in its buffer.
 `
 
+/** バッファ (ファイルを開いたもの, または *scratch* などの, ファイルのないもの). */
 export interface Buffer {
+  /** バッファを区別する ID. */
   id: string
+  /** バッファの名前 (ファイルの名前, または `*scratch*` など). */
   name: string
+  /** バッファのファイルのパス. ファイルのないバッファは `null`. */
   filePath: string | null
+  /** 本文. */
   content: string
+  /** 保存してから, 書き換えたら `true`. */
   modified: boolean
 }
 
+/** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
 type PendingAction =
   | 'find-file'
   | 'write-file'
@@ -69,11 +81,13 @@ interface ReplaceKind {
 
 /** 進めている置換. */
 interface ReplaceState {
+  /** 置換の種類. */
   kind: ReplaceKind
   /** 探す文字 (入力したら). */
   from?: string
   /** 置換の指定と, 聞いている所 (query-replace で, 聞いているあいだ). */
   spec?: ReplaceSpec
+  /** query-replace で, 聞いている所. */
   match?: ReplaceMatch
   /** 置き換えた数. */
   count: number
@@ -98,15 +112,31 @@ function replaceTitle({ query, regexp }: ReplaceKind): string {
   return regexp ? 'Replace regexp' : 'Replace string'
 }
 
+/**
+ * バッファの ID を作ります.
+ *
+ * @returns ID.
+ */
 function generateBufferId(): string {
   return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
+/**
+ * ファイルのパスから, バッファの名前 (ファイルの名前) を作ります.
+ *
+ * @param path - ファイルのパス.
+ * @returns バッファの名前. パスが `/` で終わる場合は, パスのまま.
+ */
 function bufferNameFromPath(path: string): string {
   const parts = path.split('/')
   return parts[parts.length - 1] || path
 }
 
+/**
+ * *scratch* バッファを作ります.
+ *
+ * @returns *scratch* バッファ.
+ */
 function createScratchBuffer(): Buffer {
   return {
     id: generateBufferId(),
@@ -132,7 +162,13 @@ function generateWindowId(): string {
   return `window-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 }
 
+/**
+ * アプリの画面 (ウィンドウ, モードライン, ミニバッファ, バッファの一覧).
+ *
+ * @returns 画面.
+ */
 function App() {
+  // 開いているバッファ (開いた順)
   const [buffers, setBuffers] = useState<Buffer[]>([createScratchBuffer()])
   // ウィンドウの分け方と, 各ウィンドウに出すバッファと, カーソルの位置
   const [layout, setLayout] = useState<Layout>({ kind: 'window', id: FIRST_WINDOW })
@@ -141,13 +177,17 @@ function App() {
   })
   const [cursors, setCursors] = useState<Record<string, CursorInfo>>({})
   const [activeWindow, setActiveWindow] = useState(FIRST_WINDOW)
+  // ホームディレクトリ (ファイルの名前の入力の始め. `/` で終わる)
   const [homeDir, setHomeDir] = useState('/')
+  // ミニバッファの入力を待っているコマンドと, ミニバッファの状態
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [minibufferState, setMinibufferState] = useState<MinibufferState>({
     mode: 'message',
     text: '',
   })
+  // バッファの一覧 (C-x C-b) を出しているか
   const [showBufferList, setShowBufferList] = useState(false)
+  // 進めている置換
   const [replace, setReplace] = useState<ReplaceState | null>(null)
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
@@ -165,6 +205,7 @@ function App() {
   // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
   const lispHost = useRef<LispHost>(undefined)
 
+  // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
   const cursor = cursors[activeWindow] ?? START_CURSOR
   // バッファを消すときは, ウィンドウのバッファも一緒に変えるので, 必ず見つかる
@@ -189,7 +230,11 @@ function App() {
     setWindowBuffers((prev) => ({ ...prev, [activeWindowRef.current]: bufferId }))
   }
 
-  // Helper functions for buffer management
+  /**
+   * 選んでいるウィンドウのバッファを, 書き換えます.
+   *
+   * @param updates - 書き換える項目.
+   */
   const updateCurrentBuffer = (updates: Partial<Buffer>) => {
     setBuffers((prev) => prev.map((b) => (b.id === currentBufferId ? { ...b, ...updates } : b)))
   }
@@ -216,10 +261,21 @@ function App() {
     return newBuffer
   }
 
+  /**
+   * 選んでいるウィンドウに, バッファを出します.
+   *
+   * @param bufferId - バッファ.
+   */
   const switchToBuffer = (bufferId: string) => {
     setCurrentBufferId(bufferId)
   }
 
+  /**
+   * 選んでいるウィンドウのバッファを消します. 全て消したら, *scratch* を作り直します.
+   * 保存していないバッファは消さず, メッセージを出します.
+   *
+   * @returns 消したら `true`.
+   */
   const killCurrentBuffer = () => {
     if (currentBuffer.modified) {
       setMinibufferState({
@@ -243,12 +299,14 @@ function App() {
     return true
   }
 
+  // ホームディレクトリを, 始めに 1 回だけ取る (取れなければ, `/` のまま)
   useEffect(() => {
     getHomeDir()
       .then((dir) => setHomeDir(dir.endsWith('/') ? dir : dir + '/'))
       .catch(() => {})
   }, [])
 
+  // Lisp から動かすエディタを, 今の状態で作り直す
   useEffect(() => {
     const handle = () => editor.current as EditorHandle
     lispHost.current = {
@@ -290,11 +348,17 @@ function App() {
     setWindowBuffers((prev) => ({ ...prev, [id]: prev[activeWindowRef.current] }))
   }
 
+  /**
+   * 次のウィンドウを選びます (C-x o. 最後の次は, 最初).
+   */
   const handleOtherWindow = () => {
     const ids = windowIds(layout)
     selectWindow(ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length])
   }
 
+  /**
+   * 選んでいるウィンドウを閉じます (C-x 0). ウィンドウが 1 つなら, 閉じずにメッセージを出します.
+   */
   const handleDeleteWindow = () => {
     const next = deleteWindow(layout, activeWindowRef.current)
     if (!next) {
@@ -305,10 +369,18 @@ function App() {
     selectWindow(windowIds(next)[0])
   }
 
+  /**
+   * 選んでいるウィンドウのほかを, 全て閉じます (C-x 1).
+   */
   const handleDeleteOtherWindows = () => {
     setLayout({ kind: 'window', id: activeWindowRef.current })
   }
 
+  /**
+   * ミニバッファに, メッセージを出します.
+   *
+   * @param text - メッセージ.
+   */
   const showMessage = (text: string) => {
     setMinibufferState({ mode: 'message', text })
   }
@@ -378,6 +450,9 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /**
+   * 開くファイルの名前を, ミニバッファで聞きます (C-x C-f).
+   */
   const handleFindFile = () => {
     setPendingAction('find-file')
     setMinibufferState({
@@ -388,6 +463,9 @@ function App() {
     })
   }
 
+  /**
+   * バッファを, ファイルに保存します (C-x C-s). ファイルのないバッファは, 保存するファイルの名前を聞きます.
+   */
   const handleSaveBuffer = async () => {
     if (currentBuffer.filePath) {
       try {
@@ -408,6 +486,9 @@ function App() {
     }
   }
 
+  /**
+   * 出すバッファの名前を, ミニバッファで聞きます (C-x b).
+   */
   const handleSwitchBuffer = () => {
     const bufferNames = buffers.map((b) => b.name).join(', ')
     setPendingAction('switch-buffer')
@@ -419,6 +500,9 @@ function App() {
     })
   }
 
+  /**
+   * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消さずにメッセージを出します.
+   */
   const handleKillBuffer = () => {
     if (currentBuffer.modified) {
       setPendingAction('kill-buffer')
@@ -431,6 +515,9 @@ function App() {
     }
   }
 
+  /**
+   * バッファの一覧を出します (C-x C-b).
+   */
   const handleListBuffers = () => {
     setShowBufferList(true)
   }
@@ -457,8 +544,11 @@ function App() {
     createNewBuffer('*Help*', null, header + lines.join('\n') + '\n')
   }
 
+  /**
+   * カーソルの前の S 式を評価して, 結果を出します (C-x C-e).
+   */
   const handleEvalLastSexp = async () => {
-    // カーソル直前のS式の範囲を特定
+    // カーソルの直前の S 式の範囲を求める
     const cursorPos = cursor.offset
     const startPos = backwardSexp(currentBuffer.content, cursorPos)
     const endPos = forwardSexp(currentBuffer.content, startPos)
@@ -471,11 +561,17 @@ function App() {
     await evaluate(currentBuffer.content.slice(startPos, endPos))
   }
 
+  /**
+   * 評価する式を, ミニバッファで聞きます (M-:).
+   */
   const handleEvalExpression = () => {
     setPendingAction('eval-expression')
     setMinibufferState({ mode: 'input', prompt: 'Eval: ', input: '' })
   }
 
+  /**
+   * アプリを終わります (C-x C-c). 保存していないバッファがあれば, 終わってよいか聞きます.
+   */
   const handleSaveBuffersKillTerminal = async () => {
     // 保存していないバッファがあれば, 終わってよいか聞く (Emacs と同じ)
     if (buffers.some((b) => b.modified)) {
@@ -490,6 +586,9 @@ function App() {
     await getCurrentWindow().close()
   }
 
+  /**
+   * 移動する行の番号を, ミニバッファで聞きます (M-g g).
+   */
   const handleGotoLine = () => {
     setPendingAction('goto-line')
     setMinibufferState({ mode: 'input', prompt: 'Goto line: ', input: '' })
@@ -603,6 +702,13 @@ function App() {
     }
   }
 
+  /**
+   * isearch で, 同じ文字の次 (または前) に合う所へ進みます (isearch 中の C-s / C-r).
+   * 前へ探していて, 本文の始めで合っている場合は, 失敗にします (もう 1 度押すと, 現在位置から探し直す).
+   *
+   * @param direction - 探す向き.
+   * @param current - isearch の状態.
+   */
   const handleIsearchRepeat = (
     direction: 'forward' | 'backward',
     current: MinibufferIsearchState,
@@ -640,6 +746,9 @@ function App() {
     }
   }
 
+  /**
+   * 実行するコマンドの名前を, ミニバッファで聞きます (M-x).
+   */
   const handleExecuteCommand = () => {
     setPendingAction('execute-command')
     setMinibufferState({
@@ -650,6 +759,12 @@ function App() {
     })
   }
 
+  /**
+   * ミニバッファの入力が変わったときに, 入力を覚えます. isearch なら, 入力した文字で探し直します.
+   *
+   * @param value - 入力.
+   * @param current - ミニバッファの状態.
+   */
   const handleMinibufferInputChange = (
     value: string,
     current: MinibufferInputState | MinibufferIsearchState,
@@ -710,6 +825,12 @@ function App() {
     ),
   }
 
+  /**
+   * ミニバッファの入力を確定したときに, 入力を待っていたコマンドを行います.
+   * 待っているコマンドがなければ, isearch を終わります.
+   *
+   * @param value - 入力.
+   */
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
     setPendingAction(null)
@@ -805,6 +926,9 @@ function App() {
     }
   }
 
+  /**
+   * ミニバッファの入力をやめます (C-g). isearch なら, カーソルを探す前の位置に戻します.
+   */
   const handleMinibufferCancel = () => {
     const current = minibufferState
     setPendingAction(null)

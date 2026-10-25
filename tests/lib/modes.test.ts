@@ -32,7 +32,9 @@ function tokenize(parser: StreamParser<LispState>, ...lines: string[]): [string,
   return tokens
 }
 
+/** Scheme の決まりで, 色を付けた字句を返します. */
 const scheme = (...lines: string[]) => tokenize(schemeParser, ...lines)
+/** Emacs Lisp の決まりで, 色を付けた字句を返します. */
 const elisp = (...lines: string[]) => tokenize(elispParser, ...lines)
 
 /** Emacs の既定の字下げ. */

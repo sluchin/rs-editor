@@ -11,7 +11,9 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
 /** Lisp で割り当てたキー (`global-set-key`). キーは CodeMirror の書き方. */
 export interface KeyBinding {
+  /** キー (CodeMirror の書き方. `Ctrl-c a` など). */
   key: string
+  /** コマンドの名前. */
   command: string
 }
 
@@ -29,8 +31,11 @@ export interface EvalResponse {
 
 /** 評価器からの, エディタの操作の頼み. */
 export interface EditorRequest {
+  /** 返事 (`editor_reply`) と組にする番号. */
   id: number
+  /** 操作の名前 (`insert`, `point` など). */
   op: string
+  /** 引数. */
   args: unknown[]
 }
 
