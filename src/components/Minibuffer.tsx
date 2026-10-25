@@ -192,6 +192,9 @@ export default function Minibuffer({
      * @param e - キーのイベント.
      */
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      // 日本語などの変換中のキー (変換を確定する Enter も) は, IME に任せる
+      // (WebKit は, 確定の Enter で isComposing が false でも, keyCode を 229 にする)
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return
       if (state.mode === 'isearch') {
         if ((e.ctrlKey && e.key === 's') || (e.ctrlKey && e.key === 'r')) {
           e.preventDefault()

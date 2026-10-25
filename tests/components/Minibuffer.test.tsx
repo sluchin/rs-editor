@@ -173,6 +173,25 @@ describe('Minibuffer Component', () => {
     expect(onSubmit).toHaveBeenCalledWith('test.scm')
   })
 
+  it('変換中のキー (変換を確定する Enter, Escape) では, 確定もやめもしない', () => {
+    const onSubmit = vi.fn()
+    const onCancel = vi.fn()
+    const state: MinibufferState = { mode: 'input', prompt: 'Find file: ', input: 'にほんご' }
+    const { container } = render(
+      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={onSubmit} onCancel={onCancel} />,
+    )
+    const input = container.querySelector('input') as HTMLInputElement
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
+    fireEvent.keyDown(input, { key: 'Escape', isComposing: true })
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(onCancel).not.toHaveBeenCalled()
+
+    // 確定のあとの Enter で, 入力を確定する
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSubmit).toHaveBeenCalledWith('にほんご')
+  })
+
   it('calls onCancel on Escape key', () => {
     // Escape キーが押されると onCancel が呼ばれることを確認.
     const onCancel = vi.fn()
