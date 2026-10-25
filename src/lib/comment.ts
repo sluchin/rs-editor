@@ -37,7 +37,7 @@ const BLANK = /^[ \t]*$/
  * @param lineNumber - 行 (1 から).
  * @returns 行の始めからの位置. コメントが無ければ `null`.
  */
-function commentStart(state: EditorState, lineNumber: number): number | null {
+export function commentStart(state: EditorState, lineNumber: number): number | null {
   const config = state.facet(indentConfig)
   // 文字列は, 行をまたぐので, 始めから読む
   const parser = new LispParser(config.dialect === 'scheme', config.tabWidth)

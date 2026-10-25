@@ -18,6 +18,7 @@ import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
 import { commentDwim } from './comment'
 import { findExpansions } from './dabbrev'
+import { fillParagraph } from './fill'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
@@ -85,13 +86,36 @@ export const describeKeyField = StateField.define<boolean>({
   },
 })
 
+/** 文字までキルする (`zap-to-char`) のを待っているときの, 回数と, 押した文字. */
+export interface ZapState {
+  /** 何番目の文字までキルするか (前置引数). */
+  count: number
+  /** 押した文字 (まだ押していなければ `undefined`). */
+  char?: string
+}
+
+/** 文字までキルするのを待つ (止めるときは `null`). */
+const zapEffect = StateEffect.define<ZapState | null>()
+
+/** 文字までキルする (`M-z`) のを待っていれば, その回数と文字. 待っていなければ `null`. */
+export const zapField = StateField.define<ZapState | null>({
+  create: () => null,
+  // 変える変更があれば, その値
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(zapEffect)) return effect.value
+    }
+    return value
+  },
+})
+
 /**
- * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴, キーの説明).
+ * Emacs のコマンドに要るエディタの拡張 (マーク, 直前のコマンド, 元に戻す履歴, キーの説明, `M-z`).
  *
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [markField, lastCommandField, history(), describeKeyField]
+  return [markField, lastCommandField, history(), describeKeyField, zapField]
 }
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */
@@ -514,6 +538,41 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       })
       return true
     },
+    // 次に押す文字を待ち, カーソルから, その文字 (前置引数があれば, その数だけ先の文字) までをキルする
+    'zap-to-char': (view) => {
+      const zap = view.state.field(zapField)
+      if (zap?.char === undefined) {
+        // 前置引数で繰り返したときは, 回数を足す
+        view.dispatch({ effects: zapEffect.of({ count: (zap?.count ?? 0) + 1 }) })
+        message('Zap to char: ')
+        return true
+      }
+      view.dispatch({ effects: zapEffect.of(null) })
+      message('')
+      const { count, char } = zap
+      // 大文字なら, 大文字と小文字を区別する (Emacs の `char-uppercase-p`)
+      const fold = char === char.toLowerCase()
+      const same = (c: string) => (fold ? c.toLowerCase() === char : c === char)
+      const doc = text(view)
+      let found = 0
+      for (let i = head(view); i < doc.length; i++) {
+        if (same(doc[i]) && ++found === count) return kill(view, head(view), i + 1)
+      }
+      message(`Search failed: "${char}"`)
+      return true
+    },
+    'fill-paragraph': (view) => {
+      const result = fillParagraph(view.state, head(view))
+      if (result) {
+        view.dispatch({
+          ...result,
+          scrollIntoView: true,
+          userEvent: 'input',
+          annotations: commandAnnotation.of({ name: 'fill' }),
+        })
+      }
+      return true
+    },
     'upcase-word': (view) => caseWord(view, 'upcase'),
     'downcase-word': (view) => caseWord(view, 'downcase'),
     'capitalize-word': (view) => caseWord(view, 'capitalize'),
@@ -779,6 +838,8 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x Ctrl-t', 'transpose-lines'],
   ['Alt-;', 'comment-dwim'],
   ['Alt-/', 'dabbrev-expand'],
+  ['Alt-z', 'zap-to-char'],
+  ['Alt-q', 'fill-paragraph'],
   ['Alt-u', 'upcase-word'],
   ['Alt-l', 'downcase-word'],
   ['Alt-c', 'capitalize-word'],
@@ -840,6 +901,15 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
 /** 修飾キーだけを押したときの, キーの名前. */
 const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
 
+/** 割り当てのあるキーのうち, `M-z` の後に押すと, 文字として使うもの. */
+const ZAP_KEYS: Record<string, string> = {
+  Enter: '\n',
+  'Ctrl-m': '\n',
+  'Ctrl-j': '\n',
+  Tab: '\t',
+  'Ctrl-i': '\t',
+}
+
 /** キーの割り当ての作り方. */
 export interface KeymapOptions {
   /** 足す割り当て (Lisp の `global-set-key`). 既定の割り当てより先に使います. */
@@ -879,6 +949,19 @@ export function emacsKeymap(
   }
 
   /**
+   * `M-z` の後に押した文字までキルします.
+   *
+   * @param view - エディタ.
+   * @param char - 文字.
+   * @returns `true`.
+   */
+  const zapTo = (view: EditorView, char: string): boolean => {
+    const zap = view.state.field(zapField) as ZapState
+    view.dispatch({ effects: zapEffect.of({ ...zap, char }) })
+    return (lookup('zap-to-char') as Command)(view)
+  }
+
+  /**
    * 割り当てたコマンドを動かします.
    *
    * @param view - エディタ.
@@ -887,6 +970,11 @@ export function emacsKeymap(
    * @returns 処理したら `true`.
    */
   const run = (view: EditorView, key: string, name: string): boolean => {
+    if (view.state.field(zapField, false)) {
+      if (ZAP_KEYS[key] !== undefined) return zapTo(view, ZAP_KEYS[key])
+      // 文字でないキーなら, 待つのを止めて, そのキーのコマンドを動かす
+      view.dispatch({ effects: zapEffect.of(null) })
+    }
     if (view.state.field(describeKeyField, false)) {
       view.dispatch({ effects: describeKeyEffect.of(false) })
       message(`${toEmacsKey(key)} runs the command ${name}`)
@@ -934,6 +1022,15 @@ export function emacsKeymap(
           const plain = event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey
           message(plain ? `${name} runs the command self-insert-command` : `${name} is undefined`)
           return true
+        }
+        if (view.state.field(zapField, false)) {
+          // 修飾キーだけのときは, 次のキーを待つ. 文字でなければ, 待つのを止める
+          if (MODIFIER_KEYS.includes(event.key)) return false
+          if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+            return zapTo(view, event.key)
+          }
+          view.dispatch({ effects: zapEffect.of(null) })
+          return false
         }
         if (prefix.count === null || event.ctrlKey || event.altKey || event.metaKey) return false
         if (/^[0-9]$/.test(event.key)) {

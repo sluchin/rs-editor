@@ -11,6 +11,7 @@ import {
   describeKeyField,
   lastCommandField,
   markField,
+  zapField,
   pageLines,
   toEmacsKey,
 } from '@/lib/emacs'
@@ -321,6 +322,69 @@ describe('削除とキル', () => {
     expect(none.message).toHaveBeenCalledWith('No dynamic expansion for ‘zz’ found')
   })
 
+  it('M-z で, 次に押した文字までをキルすること (前置引数があれば, その数だけ先の文字まで)', () => {
+    const { press, text, message, killRing } = setup('|abcabcx')
+    press('M-z')
+    expect(message).toHaveBeenCalledWith('Zap to char: ')
+    press('Control')
+    press('b')
+    expect(text()).toBe('|cabcx')
+    expect(killRing.current()).toBe('ab')
+    const repeated = setup('|abcabcx')
+    repeated.press('C-u 2 M-z c')
+    expect(repeated.text()).toBe('|x')
+  })
+
+  it('M-z の文字が小文字なら, 大文字と小文字を区別せず, 大文字なら, 区別すること', () => {
+    const lower = setup('|aXbx')
+    lower.press('M-z x')
+    expect(lower.text()).toBe('|bx')
+    const upper = setup('|xaXb')
+    upper.press('M-z X')
+    expect(upper.text()).toBe('|b')
+  })
+
+  it('M-z の文字が無ければ, 知らせること', () => {
+    const { press, text, message, view } = setup('|abc')
+    press('M-z q')
+    expect(text()).toBe('|abc')
+    expect(message).toHaveBeenLastCalledWith('Search failed: "q"')
+    expect(view.state.field(zapField)).toBeNull()
+  })
+
+  it('M-z の後の RET と TAB は, 改行とタブの文字として使うこと', () => {
+    const newline = setup('|ab\ncd')
+    newline.press('M-z Enter')
+    expect(newline.text()).toBe('|cd')
+    const tab = setup('|a\tb')
+    tab.press('M-z Tab')
+    expect(tab.text()).toBe('|b')
+  })
+
+  it('M-z の後の, 文字でないキーは, 待つのを止めて, そのキーのコマンドを動かすこと', () => {
+    const { press, text, view } = setup('|abc')
+    press('M-z C-f')
+    expect(text()).toBe('a|bc')
+    expect(view.state.field(zapField)).toBeNull()
+    // 割り当てのないキーは, 待つのを止めるだけ
+    press('M-z C-z')
+    expect(view.state.field(zapField)).toBeNull()
+    press('b')
+    expect(text()).toBe('a|bc')
+  })
+
+  it('M-q で, 段落を詰めること (詰める段落が無ければ, 何もしない)', () => {
+    const words = Array.from({ length: 15 }, (_, i) => `word${i}`).join(' ')
+    const { run, text } = setup(`|${words}`)
+    run('fill-paragraph')
+    expect(text()).toBe(
+      '|word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10\nword11 word12 word13 word14',
+    )
+    const empty = setup('|\n')
+    empty.run('fill-paragraph')
+    expect(empty.text()).toBe('|\n')
+  })
+
   it('単語の大文字・小文字を変えて, 単語の後へ動くこと', () => {
     const { run, text } = setup('|foo bar bAZ')
     run('upcase-word', 'downcase-word', 'capitalize-word')
@@ -478,6 +542,14 @@ describe('キーボードマクロ', () => {
     expect(text()).toBe('hihh|ii')
   })
 
+  it('M-z と, その後に押した文字を記録し, 再生すること', () => {
+    const { press, text } = setup('|a,b,c,d')
+    press('C-x ( M-z , C-x )')
+    expect(text()).toBe('|b,c,d')
+    press('C-x e')
+    expect(text()).toBe('|c,d')
+  })
+
   it('記録していないときと, 記録がないときは, 知らせること', () => {
     const { press, message, macro, run } = setup('|')
     press('C-x )')
@@ -510,8 +582,8 @@ describe('キーの説明', () => {
     expect(message).toHaveBeenLastCalledWith('a runs the command self-insert-command')
     press('C-h k C-z')
     expect(message).toHaveBeenLastCalledWith('C-z is undefined')
-    press('C-h k M-z')
-    expect(message).toHaveBeenLastCalledWith('M-z is undefined')
+    press('C-h k M-k')
+    expect(message).toHaveBeenLastCalledWith('M-k is undefined')
     press('C-h k')
     view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', metaKey: true }))
     expect(message).toHaveBeenLastCalledWith('s-q is undefined')
