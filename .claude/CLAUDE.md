@@ -1,7 +1,7 @@
 # Scheme エディタプロジェクトガイド
 
 ## 概要
-Tauri + React + Rust で構築された Scheme 言語エディタで、組み込みインタプリタと REPL を備えています。
+Tauri + React + Rust で構築された, Emacs のように使えるエディタで、Scheme の組み込みインタプリタを備えています (評価は `C-x C-e` と `M-:`)。
 
 ## 技術スタック
 - **フロントエンド**: React 18 + TypeScript + Vite
@@ -31,10 +31,11 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 ## 機能の追加
 
 ### Scheme 組み込み関数の追加
-`src-tauri/src/scheme/evaluator.rs` を編集:
-1. `eval_builtin()` 関数内に新しい match 分岐を追加
-2. `Value` 型のパターンマッチングを使用してロジックを実装
+`src-tauri/src/scheme/builtins.rs` を編集:
+1. `NAMES` に名前を追加 (評価器は, 起動のときに, この名前を一番外側の環境に定義する)
+2. `call()` 関数内に新しい match 分岐を追加 (引数は `fixed`, `number`, `string` などで取り出す)
 3. `Value` 結果またはエラー文字列を返す
+4. 特別な形 (引数を評価しないもの) は, `src-tauri/src/scheme/evaluator.rs` の `special_form()` に追加
 
 ### UI の更新
 `src/` 内のコンポーネントを編集:
@@ -44,9 +45,9 @@ Tauri + React + Rust で構築された Scheme 言語エディタで、組み込
 
 ### Tauri コマンド
 React から呼び出し可能な新しいバックエンド関数を追加:
-1. `src-tauri/src/main.rs` に `#[tauri::command]` 関数を追加
-2. `.invoke_handler(tauri::generate_handler![...])` リストに追加
-3. React から呼び出し: `await invoke('function_name', { arg: value })`
+1. `src-tauri/src/commands.rs` に `#[tauri::command]` 関数を追加 (本体は普通の関数にして, `src-tauri/tests/` から呼べるようにする)
+2. `src-tauri/src/lib.rs` の `.invoke_handler(tauri::generate_handler![...])` リストに追加
+3. React から呼び出し: `await invoke('function_name', { arg: value })` (`src/lib/fileOps.ts` や `src/lib/lisp.ts` のように, 関数で包む)
 
 ## 現在の実装状況
 
@@ -59,7 +60,7 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 - ✅ リスト操作: quote, list, car, cdr, cons, append, length, map など
 - ✅ 型チェック: number?, string?, symbol? など
 - ✅ エディタの操作と, Lisp でのカスタマイズ (define-command, global-set-key, 初期設定ファイル)
-- ✅ REPL と履歴機能（最後の 10 項目）
+- ✅ 評価: カーソルの前の S 式 (`C-x C-e`) と, ミニバッファに入力した式 (`M-:`)。結果はミニバッファに出す
 - ✅ エラーハンドリングと表示
 - ✅ ダークテーマ UI
 - ✅ シンタックスハイライト (Emacs の scheme-mode と emacs-lisp-mode と同じ色分け) と, ファイルの名前の補完

@@ -12,7 +12,7 @@
   - 文字列: `string-append`、`substring`、`string-length`、`format` など
   - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
 - 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.config/rseditor/init.scm` を読む (「Lisp でのカスタマイズ」)
-- 💬 **REPL** - 対話的 Read-Eval-Print ループとコマンド履歴
+- 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
 - 📊 **出力表示** - 評価結果とエラーメッセージを表示
 
 ## プロジェクト構成
@@ -20,7 +20,7 @@
 ```
 .
 ├── src/                      # React フロントエンド
-│   ├── components/          # エディタと REPL コンポーネント
+│   ├── components/          # エディタ、ミニバッファ、モードライン、バッファの一覧
 │   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── App.tsx              # メインアプリケーション
@@ -28,6 +28,9 @@
 ├── src-tauri/               # Tauri バックエンド
 │   ├── src/
 │   │   ├── main.rs          # Tauri アプリのエントリーポイント
+│   │   ├── lib.rs           # アプリの起動と、コマンドの登録
+│   │   ├── commands.rs      # 画面から呼ぶコマンド (評価、ファイルの読み書き)
+│   │   ├── logging.rs       # ログ
 │   │   └── scheme/          # Scheme インタプリタ
 │   │       ├── parser.rs    # Scheme パーサー
 │   │       ├── evaluator.rs # Scheme 評価器 (特別な形)
@@ -312,9 +315,11 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 
 ### フロントエンド (React + TypeScript)
 
-- **Editor.tsx** - コード入力エリアと実行ボタン
-- **REPL.tsx** - 対話的出力、履歴、インラインREPL
-- **App.tsx** - 状態管理と Tauri 通信を行うメインアプリコンポーネント
+- **CodeEditor.tsx** - エディタ (CodeMirror 6。Emacs のキーとコマンドで動かす)
+- **Minibuffer.tsx** - ミニバッファ (メッセージ、入力と補完、isearch、query-replace の問い)
+- **ModeLine.tsx** - モードライン (バッファの名前、変更、カーソルの位置、メジャーモード)
+- **BufferList.tsx** - バッファの一覧 (`C-x C-b`)
+- **App.tsx** - バッファとウィンドウの状態と、ファイル、バッファ、検索、評価のコマンドを持つメインアプリコンポーネント
 
 ### バックエンド (Rust)
 
