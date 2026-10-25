@@ -24,11 +24,12 @@
 .
 ├── src/                      # React フロントエンド
 │   ├── components/          # エディタ、ミニバッファ、モードライン、バッファの一覧、プロジェクトのツリー
+│   ├── hooks/               # 機能ごとの状態とコマンド (ファイル、dired と grep、検索と置換、ブックマーク、Lisp)
 │   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── lib/theme.ts         # 色とフォント (set-background-color, set-frame-font)
 │   ├── lib/grep.ts          # M-x grep の結果のバッファ (*grep*)
-│   ├── App.tsx              # メインアプリケーション
+│   ├── App.tsx              # メインアプリケーション (フックのコマンドを、キーとミニバッファにつなぐ)
 │   └── main.tsx             # エントリーポイント
 ├── src-tauri/               # Tauri バックエンド
 │   ├── src/
@@ -375,7 +376,8 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 - **ModeLine.tsx** - モードライン (バッファの名前、変更、カーソルの位置、メジャーモード)
 - **BufferList.tsx** - バッファの一覧 (`C-x C-b`)
 - **ProjectTree.tsx** - 左のサイドバーの、プロジェクトのファイルのツリー (`F8`。ディレクトリは、開いたときに読む)
-- **App.tsx** - バッファとウィンドウの状態と、ファイル、バッファ、検索、評価のコマンドを持つメインアプリコンポーネント
+- **App.tsx** - 画面を出し、機能ごとのフックのコマンドを、キーと `M-x` とミニバッファにつなぐメインアプリコンポーネント
+- **hooks/** - 機能ごとの状態とコマンド: ミニバッファ (`useMinibuffer`)、バッファとウィンドウ (`useBuffers`)、ファイル (`useFiles`)、dired と grep とプロジェクトのツリー (`useDirectories`)、検索と置換 (`useSearch`)、ブックマーク (`useBookmarks`)、評価と Lisp のコマンド (`useLisp`)
 - **lib/theme.ts** - 色とフォント (CSS の変数。背景が暗いと `data-background-mode="dark"` にして、暗い背景の色分けを使う)
 
 ### バックエンド (Rust)

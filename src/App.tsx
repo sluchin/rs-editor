@@ -1,228 +1,29 @@
 /**
- * アプリの画面. バッファとウィンドウを持ち, ファイル, バッファ, 検索, 置換, 評価のコマンドを受け持ちます.
+ * アプリの画面. バッファとウィンドウを出し, 機能ごとのフック (`src/hooks/`) のコマンドを, キーと M-x と
+ * ミニバッファにつなぎます. バッファのコマンド (C-x b, C-x k, C-x C-b) と, 終わること (C-x C-c) も受け持ちます.
  */
 
-import { useState, useEffect, useRef } from 'react'
-import type { UnlistenFn } from '@tauri-apps/api/event'
+import { useEffect, useRef, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import CodeEditor, { CursorInfo, EditorHandle } from './components/CodeEditor'
+import CodeEditor, { EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
-import Minibuffer, {
-  type IsearchCommand,
-  MinibufferInputState,
-  MinibufferIsearchState,
-  MinibufferState,
-} from './components/Minibuffer'
+import Minibuffer, { MinibufferInputState, MinibufferIsearchState } from './components/Minibuffer'
 import BufferList from './components/BufferList'
 import ProjectTree from './components/ProjectTree'
-import {
-  readFile,
-  writeFile,
-  pathExists,
-  getHomeDir,
-  listDirectory,
-  backupFile,
-  deleteFile,
-  fileNewerThan,
-  listDirectoryLong,
-  grepDirectory,
-  projectRoot,
-  type GrepMatch,
-} from './lib/fileOps'
-import { completeFileName } from './lib/complete'
-import {
-  type Bookmark,
-  bookmarkPosition,
-  loadBookmarks,
-  makeBookmark,
-  saveBookmarks,
-  storeBookmark,
-} from './lib/bookmarks'
+import type { Buffer } from './lib/buffer'
+import { listDirectory } from './lib/fileOps'
 import { DIRED_MODE, GREP_MODE, majorMode } from './lib/modes'
-import { GREP_BUFFER_NAME, grepBufferText, grepMatchIndex, lineStart } from './lib/grep'
-import { diredBufferName, diredListing } from './lib/dired'
-import { autoSaveFileName, directoryFileName, fileDirectory } from './lib/paths'
-import { compileRegexp, findNextMatch, quoteRegexp, yankWordOrCharEnd } from './lib/isearch'
-import { HISTORY_LENGTH, SEARCH_RING_MAX, addToHistory } from './lib/history'
-import { setBackgroundColor, setFont, setForegroundColor } from './lib/theme'
-import {
-  type ReplaceMatch,
-  type ReplaceSpec,
-  findReplaceMatch,
-  replacedMessage,
-  replaceRemaining,
-} from './lib/replace'
-import { backwardSexp, forwardSexp } from './lib/bracketMatch'
 import { KEY_BINDINGS, toEmacsKey } from './lib/emacs'
-import { type Layout, deleteWindow, splitWindow, windowIds, windowRects } from './lib/windows'
-import {
-  type EvalResponse,
-  type KeyBinding,
-  type LispHost,
-  evalLisp,
-  listenEditorRequests,
-  loadInitFile,
-  runLispCommand,
-} from './lib/lisp'
+import type { KeyBinding } from './lib/lisp'
+import { windowRects } from './lib/windows'
+import { type CommandSet, type Submitters, useMinibuffer } from './hooks/useMinibuffer'
+import { type AppContext, START_CURSOR, useBuffers } from './hooks/useBuffers'
+import { useDirectories } from './hooks/useDirectories'
+import { useFiles } from './hooks/useFiles'
+import { useSearch } from './hooks/useSearch'
+import { useBookmarks } from './hooks/useBookmarks'
+import { useLisp } from './hooks/useLisp'
 import './App.css'
-
-/** *scratch* バッファの始めの本文 (Emacs と同じ). */
-const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
-;; To create a file, visit it with C-x C-f and enter text in its buffer.
-`
-
-/** バッファ (ファイルを開いたもの, または *scratch* などの, ファイルのないもの). */
-export interface Buffer {
-  /** バッファを区別する ID. */
-  id: string
-  /** バッファの名前 (ファイルの名前, または `*scratch*` など). */
-  name: string
-  /** バッファのファイルのパス. ファイルのないバッファは `null`. */
-  filePath: string | null
-  /** 本文. */
-  content: string
-  /** 保存してから, 書き換えたら `true`. */
-  modified: boolean
-  /** 開いてから, ファイルのバックアップ (`<file>~`) を作ったら `true` (Emacs の `buffer-backed-up`). */
-  backedUp?: boolean
-  /** dired のバッファなら, そのディレクトリ (後ろに `/` は付けない). */
-  directory?: string
-  /** バッファだけのキー (Lisp の `local-set-key`. Lisp の割り当てより先に使う). */
-  keys?: KeyBinding[]
-  /** `M-x grep` の結果のバッファなら, 探したディレクトリ (`/` で終わる) と, 合った行. */
-  grep?: { directory: string; matches: GrepMatch[] }
-}
-
-/** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
-type PendingAction =
-  | 'find-file'
-  | 'write-file'
-  | 'execute-command'
-  | 'switch-buffer'
-  | 'kill-buffer'
-  | 'eval-expression'
-  | 'goto-line'
-  | 'confirm-exit'
-  | 'replace-from'
-  | 'replace-to'
-  | 'string-rectangle'
-  | 'bookmark-set'
-  | 'bookmark-jump'
-  | 'insert-file'
-  | 'find-alternate-file'
-  | 'confirm-alternate'
-  | 'confirm-revert'
-  | 'confirm-recover'
-  | 'dired'
-  | 'read-string'
-  | 'grep'
-  | 'grep-directory'
-  | null
-
-/** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
-const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
-  'find-file': 'file-name',
-  'write-file': 'file-name',
-  'insert-file': 'file-name',
-  'find-alternate-file': 'file-name',
-  dired: 'file-name',
-  'execute-command': 'extended-command',
-  'switch-buffer': 'buffer-name',
-  'eval-expression': 'read-expression',
-  'goto-line': 'goto-line',
-  'replace-from': 'query-replace',
-  'replace-to': 'query-replace',
-  'string-rectangle': 'string-rectangle',
-  'bookmark-set': 'bookmark',
-  'bookmark-jump': 'bookmark',
-  'kill-buffer': 'yes-or-no-p',
-  'confirm-exit': 'yes-or-no-p',
-  'confirm-alternate': 'yes-or-no-p',
-  'confirm-revert': 'yes-or-no-p',
-  'confirm-recover': 'yes-or-no-p',
-  'read-string': 'minibuffer',
-  grep: 'grep',
-  'grep-directory': 'file-name',
-}
-
-/** `M-x grep` の結果のバッファのキー (Emacs の grep-mode). */
-const GREP_KEYS: KeyBinding[] = [{ key: 'Enter', command: 'compile-goto-error' }]
-
-/** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
-interface ReplaceKind {
-  /** 1 つずつ聞くなら `true`. */
-  query: boolean
-  /** 正規表現で探すなら `true`. */
-  regexp: boolean
-}
-
-/** 進めている置換. */
-interface ReplaceState {
-  /** 置換の種類. */
-  kind: ReplaceKind
-  /** 探す文字 (入力したら). */
-  from?: string
-  /** 置換の指定と, 聞いている所 (query-replace で, 聞いているあいだ). */
-  spec?: ReplaceSpec
-  /** query-replace で, 聞いている所. */
-  match?: ReplaceMatch
-  /** 置き換えた数. */
-  count: number
-}
-
-/**
- * ファイルの名前を補完します (`C-x C-f`, 保存するファイル).
- *
- * @param input - 入力 (パス).
- * @returns 補完した入力と, 候補.
- */
-const completeFile = (input: string) => completeFileName(input, listDirectory)
-
-/**
- * 置換の名前 (プロンプトに出す) を返します.
- *
- * @param kind - 置換の種類.
- * @returns 名前.
- */
-function replaceTitle({ query, regexp }: ReplaceKind): string {
-  if (query) return regexp ? 'Query replace regexp' : 'Query replace'
-  return regexp ? 'Replace regexp' : 'Replace string'
-}
-
-/**
- * バッファの ID を作ります.
- *
- * @returns ID.
- */
-function generateBufferId(): string {
-  return `buffer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
-/**
- * ファイルのパスから, バッファの名前 (ファイルの名前) を作ります.
- *
- * @param path - ファイルのパス.
- * @returns バッファの名前. パスが `/` で終わる場合は, パスのまま.
- */
-function bufferNameFromPath(path: string): string {
-  const parts = path.split('/')
-  return parts[parts.length - 1] || path
-}
-
-/**
- * *scratch* バッファを作ります.
- *
- * @returns *scratch* バッファ.
- */
-function createScratchBuffer(): Buffer {
-  return {
-    id: generateBufferId(),
-    name: '*scratch*',
-    filePath: null,
-    content: INITIAL_TEXT,
-    modified: false,
-  }
-}
 
 /**
  * バッファだけのキーと, Lisp のキーを合わせたもの (同じなら同じ配列にして, エディタが割り当てを作り直さないように).
@@ -230,26 +31,8 @@ function createScratchBuffer(): Buffer {
  */
 const mergedKeys = new WeakMap<KeyBinding[], { base: KeyBinding[]; merged: KeyBinding[] }>()
 
-/** 始めのウィンドウ. */
-const FIRST_WINDOW = 'window-1'
-
-/** 自動保存するまでの, 書き換えの無い時間 (Emacs の `auto-save-timeout`. ミリ秒). */
-export const AUTO_SAVE_TIMEOUT = 30000
-
 /** 保存していないバッファがあるとき, 終わってよいか聞く文. */
 const CONFIRM_EXIT_PROMPT = 'Modified buffers exist; exit anyway? (yes or no) '
-
-/** カーソルの位置の始め. */
-const START_CURSOR: CursorInfo = { line: 1, column: 1, offset: 0 }
-
-/**
- * ウィンドウの ID を作ります.
- *
- * @returns ID.
- */
-function generateWindowId(): string {
-  return `window-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-}
 
 /**
  * アプリの画面 (ウィンドウ, モードライン, ミニバッファ, バッファの一覧).
@@ -257,166 +40,38 @@ function generateWindowId(): string {
  * @returns 画面.
  */
 function App() {
-  // 開いているバッファ (開いた順)
-  const [buffers, setBuffers] = useState<Buffer[]>([createScratchBuffer()])
-  // ウィンドウの分け方と, 各ウィンドウに出すバッファと, カーソルの位置
-  const [layout, setLayout] = useState<Layout>({ kind: 'window', id: FIRST_WINDOW })
-  const [windowBuffers, setWindowBuffers] = useState<Record<string, string>>({
-    [FIRST_WINDOW]: buffers[0].id,
-  })
-  const [cursors, setCursors] = useState<Record<string, CursorInfo>>({})
-  const [activeWindow, setActiveWindow] = useState(FIRST_WINDOW)
-  // ホームディレクトリ (ファイルの名前の入力の始め. `/` で終わる)
-  const [homeDir, setHomeDir] = useState('/')
-  // ミニバッファの入力を待っているコマンドと, ミニバッファの状態
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-  const [minibufferState, setMinibufferState] = useState<MinibufferState>({
-    mode: 'message',
-    text: '',
-  })
+  const minibuffer = useMinibuffer()
+  const { pendingAction, setPendingAction, minibufferState, setMinibufferState, showMessage } =
+    minibuffer
+  const bufs = useBuffers(showMessage)
+  const {
+    buffers,
+    layout,
+    windowBuffers,
+    cursors,
+    setCursors,
+    activeWindow,
+    handles,
+    editor,
+    currentBufferId,
+    currentBuffer,
+    selectWindow,
+    setCurrentBufferId,
+    createNewBuffer,
+    killCurrentBuffer,
+    handleEditorChange,
+  } = bufs
+  const ctx: AppContext = { ...minibuffer, ...bufs }
+  const directories = useDirectories(ctx)
+  const files = useFiles(ctx, directories.listDirectoryInto)
+  const search = useSearch(ctx)
+  const bookmarks = useBookmarks(ctx)
+  const lisp = useLisp(ctx)
+  const { lispKeys } = lisp
   // バッファの一覧 (C-x C-b) を出しているか
   const [showBufferList, setShowBufferList] = useState(false)
-  // 進めている置換
-  const [replace, setReplace] = useState<ReplaceState | null>(null)
-  // 置き換えてよいか聞いている, ファイルのパス (C-x C-w で, ほかのファイルに書くとき)
-  const [overwritePath, setOverwritePath] = useState<string | null>(null)
-  // Lisp で作ったコマンドと, 割り当てたキー
-  const [lispCommands, setLispCommands] = useState<string[]>([])
-  const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
-  // ウィンドウごとのエディタ
-  const handles = useRef(new Map<string, EditorHandle>())
-  // 選んでいるウィンドウ (描くのを待たずに, すぐ使えるように)
-  const activeWindowRef = useRef(FIRST_WINDOW)
-  // 選んでいるウィンドウのエディタ
-  const [editor] = useState(() => ({
-    get current(): EditorHandle | undefined {
-      return handles.current.get(activeWindowRef.current)
-    },
-  }))
-  // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
-  const lispHost = useRef<LispHost>(undefined)
   // 最後に C-x r t で入れた文字 (次の既定)
   const rectangleString = useRef<string | null>(null)
-  // ブックマークの一覧 (新しい順) と, 最後に使ったブックマークの名前 (C-x r b の既定)
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const lastBookmark = useRef<string | null>(null)
-  // バッファを出したら置く, カーソルの位置 (ブックマークへ移るとき)
-  const pendingPoint = useRef<number | null>(null)
-  // 聞いているあいだの, 開き直すファイル (C-x C-v)
-  const alternatePath = useRef('')
-  // 保存するか聞いているバッファ (C-x s) と, 保存した数
-  const [saveQueue, setSaveQueue] = useState<{ buffers: Buffer[]; saved: number } | null>(null)
-  // バッファごとの, 最後に自動保存した本文
-  const autoSaved = useRef(new Map<string, string>())
-  // ミニバッファの入力の履歴 (履歴の名前ごと. 新しい順)
-  const [histories, setHistories] = useState<Record<string, string[]>>({})
-  // isearch の検索の履歴 (文字と, 正規表現. 新しい順)
-  const searchRing = useRef({ plain: [] as string[], regexp: [] as string[] })
-  // 探す正規表現 (M-x grep で, ディレクトリを聞いているあいだ) と, next-error で出した, 合った行の添え字 (`*grep*` は 1 つ)
-  const grepPattern = useRef('')
-  const nextErrorIndex = useRef(-1)
-  // サイドバーのプロジェクトのツリーの根 (出していなければ null)
-  const [treeRoot, setTreeRoot] = useState<string | null>(null)
-  // Lisp が, バッファを出してから続けるために, 描き直すのを待っている関数
-  const bufferWaiters = useRef<(() => void)[]>([])
-  // Lisp が待っている, ミニバッファの入力 (read-string)
-  const lispInput = useRef<{ resolve: (value: string) => void; reject: (err: Error) => void }>(null)
-
-  // 選んでいるウィンドウのバッファと, カーソルの位置
-  const currentBufferId = windowBuffers[activeWindow]
-  const cursor = cursors[activeWindow] ?? START_CURSOR
-  // バッファを消すときは, ウィンドウのバッファも一緒に変えるので, 必ず見つかる
-  const currentBuffer = buffers.find((b) => b.id === currentBufferId) as Buffer
-
-  /**
-   * ウィンドウを選びます.
-   *
-   * @param id - ウィンドウ.
-   */
-  const selectWindow = (id: string) => {
-    activeWindowRef.current = id
-    setActiveWindow(id)
-  }
-
-  /**
-   * 選んでいるウィンドウに, バッファを出します.
-   *
-   * @param bufferId - バッファ.
-   */
-  const setCurrentBufferId = (bufferId: string) => {
-    setWindowBuffers((prev) => ({ ...prev, [activeWindowRef.current]: bufferId }))
-  }
-
-  /**
-   * 選んでいるウィンドウのバッファを, 書き換えます.
-   *
-   * @param updates - 書き換える項目.
-   */
-  const updateCurrentBuffer = (updates: Partial<Buffer>) => {
-    setBuffers((prev) => prev.map((b) => (b.id === currentBufferId ? { ...b, ...updates } : b)))
-  }
-
-  /**
-   * バッファを作って, 選んでいるウィンドウに出します. 作ったばかりのバッファは, 変更なしです
-   * (開いたファイルの中身は, ファイルと同じ).
-   *
-   * @param name - バッファの名前.
-   * @param filePath - バッファのファイル.
-   * @param content - 本文.
-   * @returns 作ったバッファ.
-   */
-  const createNewBuffer = (name: string, filePath: string | null = null, content: string = '') => {
-    const newBuffer: Buffer = {
-      id: generateBufferId(),
-      name,
-      filePath,
-      content,
-      modified: false,
-    }
-    setBuffers((prev) => [...prev, newBuffer])
-    setCurrentBufferId(newBuffer.id)
-    return newBuffer
-  }
-
-  /**
-   * バッファの既定のディレクトリを返します (Emacs の `default-directory`). ファイルのディレクトリ,
-   * dired のディレクトリ, またはホームディレクトリです.
-   *
-   * @param buffer - バッファ.
-   * @returns ディレクトリ (`/` で終わる).
-   */
-  const defaultDirectory = (buffer: Buffer): string => {
-    if (buffer.directory !== undefined) {
-      return buffer.directory.endsWith('/') ? buffer.directory : buffer.directory + '/'
-    }
-    return buffer.filePath ? fileDirectory(buffer.filePath) : homeDir
-  }
-
-  /**
-   * 選んでいるウィンドウに, バッファを出します.
-   *
-   * @param bufferId - バッファ.
-   */
-  const switchToBuffer = (bufferId: string) => {
-    setCurrentBufferId(bufferId)
-  }
-
-  /**
-   * 選んでいるウィンドウのバッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
-   */
-  const killCurrentBuffer = () => {
-    for (const handle of handles.current.values()) handle.forget(currentBuffer.id)
-    const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
-    // 全て消したら, *scratch* を作り直す
-    const next = newBuffers.length === 0 ? createScratchBuffer() : newBuffers[0]
-    setBuffers(newBuffers.length === 0 ? [next] : newBuffers)
-    // 消したバッファを出していたウィンドウには, 別のバッファを出す
-    setWindowBuffers((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).map(([w, b]) => [w, b === currentBuffer.id ? next.id : b]),
-      ),
-    )
-  }
 
   // 窓を閉じるとき (× のボタンも) に見る, 今のバッファと, 終わってよいと答えたか
   const buffersRef = useRef(buffers)
@@ -436,828 +91,7 @@ function App() {
     return () => {
       void unlisten.then((f) => f())
     }
-  }, [])
-
-  // ホームディレクトリを, 始めに 1 回だけ取る (取れなければ, `/` のまま)
-  useEffect(() => {
-    getHomeDir()
-      .then((dir) => setHomeDir(dir.endsWith('/') ? dir : dir + '/'))
-      .catch(() => {})
-  }, [])
-
-  // 保存したブックマークを, 始めに 1 回だけ読む
-  useEffect(() => {
-    loadBookmarks()
-      .then(setBookmarks)
-      .catch((err) => setMinibufferState({ mode: 'message', text: `Bookmark file error: ${err}` }))
-  }, [])
-
-  // ブックマークへ移るときは, バッファを出してから, カーソルを置く
-  useEffect(() => {
-    if (pendingPoint.current === null) return
-    editor.current?.setCursor(pendingPoint.current)
-    pendingPoint.current = null
-  }, [currentBufferId, editor])
-
-  // 書き換えが止まってから, しばらくしたら, 変更したファイルのバッファを自動保存する (`#名前#`)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const targets = buffers.filter(
-        (b) => b.filePath && b.modified && autoSaved.current.get(b.id) !== b.content,
-      )
-      if (targets.length === 0) return
-      void Promise.all(
-        targets.map(async (b) => {
-          await writeFile(autoSaveFileName(b.filePath as string), b.content)
-          autoSaved.current.set(b.id, b.content)
-        }),
-      )
-        .then(() =>
-          setMinibufferState((prev) =>
-            prev.mode === 'message' ? { mode: 'message', text: 'Auto-saving...done' } : prev,
-          ),
-        )
-        .catch((err) => setMinibufferState({ mode: 'message', text: `Error: ${err}` }))
-    }, AUTO_SAVE_TIMEOUT)
-    return () => clearTimeout(timer)
-  }, [buffers])
-
-  /**
-   * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
-   *
-   * @param windowId - 書き換えたウィンドウ.
-   * @param value - 本文.
-   */
-  const handleEditorChange = (windowId: string, value: string) => {
-    const bufferId = windowBuffers[windowId]
-    setBuffers((prev) =>
-      prev.map((b) => (b.id === bufferId ? { ...b, content: value, modified: true } : b)),
-    )
-    for (const [w, b] of Object.entries(windowBuffers)) {
-      if (w !== windowId && b === bufferId) handles.current.get(w)?.sync(value)
-    }
-  }
-
-  /**
-   * 選んでいるウィンドウを分けます (新しいウィンドウにも, 同じバッファを出す).
-   *
-   * @param direction - 分ける向き.
-   */
-  const handleSplitWindow = (direction: 'below' | 'right') => {
-    const id = generateWindowId()
-    setLayout((prev) => splitWindow(prev, activeWindowRef.current, id, direction))
-    setWindowBuffers((prev) => ({ ...prev, [id]: prev[activeWindowRef.current] }))
-  }
-
-  /**
-   * 次のウィンドウを選びます (C-x o. 最後の次は, 最初).
-   */
-  const handleOtherWindow = () => {
-    const ids = windowIds(layout)
-    selectWindow(ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length])
-  }
-
-  /**
-   * 選んでいるウィンドウを閉じます (C-x 0). ウィンドウが 1 つなら, 閉じずにメッセージを出します.
-   */
-  const handleDeleteWindow = () => {
-    const next = deleteWindow(layout, activeWindowRef.current)
-    if (!next) {
-      showMessage('Attempt to delete minibuffer or sole ordinary window')
-      return
-    }
-    setLayout(next)
-    selectWindow(windowIds(next)[0])
-  }
-
-  /**
-   * 選んでいるウィンドウのほかを, 全て閉じます (C-x 1).
-   */
-  const handleDeleteOtherWindows = () => {
-    setLayout({ kind: 'window', id: activeWindowRef.current })
-  }
-
-  /**
-   * ミニバッファに, メッセージを出します.
-   *
-   * @param text - メッセージ.
-   */
-  const showMessage = (text: string) => {
-    setMinibufferState({ mode: 'message', text })
-  }
-
-  /**
-   * 評価の結果を出して, Lisp で作ったコマンドと, 割り当てたキーを覚えます.
-   *
-   * @param response - 評価の結果.
-   * @param quiet - 成功したときは, 結果を出さない (コマンドと, 初期設定ファイル).
-   */
-  const showEvalResult = (response: EvalResponse, quiet = false) => {
-    setLispCommands(response.commands)
-    setLispKeys(response.keys)
-    if (response.error === 'Quit') {
-      // read-string を C-g でやめた
-      showMessage('Quit')
-    } else if (response.error) {
-      showMessage(`Error: ${response.error}`)
-    } else if (!quiet) {
-      showMessage(response.result)
-    }
-  }
-
-  /**
-   * コードを評価して, 結果を出します.
-   *
-   * @param code - コード.
-   */
-  const evaluate = async (code: string) => {
-    try {
-      showEvalResult(await evalLisp(code))
-    } catch (err) {
-      showMessage(`Eval error: ${err}`)
-    }
-  }
-
-  /**
-   * Lisp で作ったコマンドを実行します.
-   *
-   * @param name - コマンドの名前.
-   */
-  const handleRunLispCommand = async (name: string) => {
-    try {
-      showEvalResult(await runLispCommand(name), true)
-    } catch (err) {
-      showMessage(`Eval error: ${err}`)
-    }
-  }
-
-  // 評価器からの, エディタの操作の頼みを受ける. 受け始めてから, 初期設定ファイルを読む
-  useEffect(() => {
-    let stopped = false
-    let unlisten: UnlistenFn | undefined
-    void listenEditorRequests(() => lispHost.current as LispHost).then((stop) => {
-      // 受け始める前に, 画面を閉じた (開発版の StrictMode では, 1 度閉じて, 開き直す)
-      if (stopped) {
-        stop()
-        return
-      }
-      unlisten = stop
-      loadInitFile()
-        .then((response) => showEvalResult(response, true))
-        .catch((err) => showMessage(`Init file error: ${err}`))
-    })
-    return () => {
-      stopped = true
-      unlisten?.()
-    }
-    // 始めの 1 回だけ
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  /**
-   * 開くファイルの名前を, ミニバッファで聞きます (C-x C-f).
-   */
-  const handleFindFile = () => {
-    setPendingAction('find-file')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Find file: ',
-      input: defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * バッファを, ファイルに保存します (C-x C-s). ファイルのないバッファは, 保存するファイルの名前を聞きます.
-   */
-  const handleSaveBuffer = async () => {
-    if (currentBuffer.filePath) {
-      await saveBuffer(currentBuffer, currentBuffer.filePath)
-    } else {
-      setPendingAction('write-file')
-      setMinibufferState({
-        mode: 'input',
-        prompt: 'Save file: ',
-        input: homeDir,
-        complete: completeFile,
-      })
-    }
-  }
-
-  /**
-   * 書くファイルの名前を, ミニバッファで聞きます (C-x C-w). 入力の始めは, バッファのファイルのディレクトリ
-   * (ファイルのないバッファは, ホームディレクトリ).
-   */
-  const handleWriteFile = () => {
-    const path = currentBuffer.filePath
-    setPendingAction('write-file')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Write file: ',
-      input: path ? path.slice(0, path.lastIndexOf('/') + 1) : homeDir,
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * バッファを, ファイルに書いて, そのファイルのバッファにします (バッファの名前も, ファイルの名前にする).
-   *
-   * @param path - ファイルのパス.
-   */
-  const writeBufferTo = async (path: string) => {
-    await saveBuffer(currentBuffer, path)
-  }
-
-  /**
-   * バッファを, ファイルに保存します. 開いてから始めて保存するときは, 前の版をバックアップ (`<file>~`) にします.
-   * 保存したら, 自動保存のファイルを消します.
-   *
-   * @param buffer - バッファ.
-   * @param path - ファイルのパス (バッファのファイルと違えば, そのファイルのバッファにする).
-   * @returns 保存したら `true`.
-   */
-  const saveBuffer = async (buffer: Buffer, path: string): Promise<boolean> => {
-    try {
-      // バックアップを作れなくても, 保存はする
-      if (!buffer.backedUp || buffer.filePath !== path) await backupFile(path).catch(() => {})
-      await writeFile(path, buffer.content)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-      return false
-    }
-    if (buffer.filePath) void deleteFile(autoSaveFileName(buffer.filePath)).catch(() => {})
-    autoSaved.current.delete(buffer.id)
-    const name = buffer.filePath === path ? buffer.name : bufferNameFromPath(path)
-    // 書いているあいだに書き換えた分は, 保存していないので, 変更ありのままにする
-    setBuffers((prev) =>
-      prev.map((b) =>
-        b.id === buffer.id
-          ? {
-              ...b,
-              filePath: path,
-              name,
-              modified: b.modified && b.content !== buffer.content,
-              backedUp: true,
-            }
-          : b,
-      ),
-    )
-    showMessage(`Wrote ${path}`)
-    return true
-  }
-
-  /**
-   * ファイルを読んで, バッファを作ります (まだ出さない). 自動保存のファイルの方が新しければ, そう知らせます.
-   *
-   * @param path - ファイルのパス.
-   * @returns バッファと, 出すメッセージ. ファイルが無ければ, 空のバッファ.
-   */
-  const visitFile = async (path: string): Promise<{ buffer: Buffer; message: string }> => {
-    const exists = await pathExists(path)
-    const content = exists ? await readFile(path) : ''
-    const name = bufferNameFromPath(path)
-    const buffer: Buffer = {
-      id: generateBufferId(),
-      name,
-      filePath: path,
-      content,
-      modified: false,
-    }
-    if (await fileNewerThan(autoSaveFileName(path), path)) {
-      return { buffer, message: `${name} has auto save data; consider M-x recover-this-file` }
-    }
-    return { buffer, message: exists ? '' : '(New file)' }
-  }
-
-  // Lisp から動かすエディタを, 今の状態で作り直す
-  useEffect(() => {
-    const handle = () => editor.current as EditorHandle
-    const root = document.documentElement
-    /**
-     * バッファを出して, 出し終わるのを待ちます (出したバッファで, Lisp が続きの操作をするため).
-     *
-     * @param id - バッファ.
-     * @returns 出し終わったら, 終わる Promise.
-     */
-    const showBuffer = (id: string) => {
-      if (id === currentBufferId) return Promise.resolve()
-      setCurrentBufferId(id)
-      return new Promise<void>((resolve) => bufferWaiters.current.push(resolve))
-    }
-    lispHost.current = {
-      text: () => handle().text(),
-      point: () => handle().point(),
-      setPoint: (pos) => handle().setCursor(pos),
-      insert: (text) => handle().insert(text),
-      deleteRegion: (from, to) => handle().deleteRegion(from, to),
-      bufferName: () => currentBuffer.name,
-      message: (text) => setMinibufferState({ mode: 'message', text }),
-      command: (name) => handle().run(name),
-      findFile: async (path) => {
-        const open = buffers.find((b) => b.filePath === path)
-        if (open) return showBuffer(open.id)
-        const { buffer, message } = await visitFile(path)
-        setBuffers((prev) => [...prev, buffer])
-        showMessage(message)
-        return showBuffer(buffer.id)
-      },
-      switchToBuffer: (name) => {
-        const open = buffers.find((b) => b.name === name)
-        if (open) return showBuffer(open.id)
-        const buffer: Buffer = {
-          id: generateBufferId(),
-          name,
-          filePath: null,
-          content: '',
-          modified: false,
-        }
-        setBuffers((prev) => [...prev, buffer])
-        return showBuffer(buffer.id)
-      },
-      bufferFileName: () => currentBuffer.filePath,
-      setModified: (modified) => updateCurrentBuffer({ modified }),
-      localSetKey: (key, command) =>
-        setBuffers((prev) =>
-          prev.map((b) =>
-            b.id === currentBufferId
-              ? { ...b, keys: [{ key, command }, ...(b.keys ?? []).filter((k) => k.key !== key)] }
-              : b,
-          ),
-        ),
-      readString: (prompt, initial) =>
-        new Promise((resolve, reject) => {
-          lispInput.current = { resolve, reject }
-          setPendingAction('read-string')
-          setMinibufferState({ mode: 'input', prompt, input: initial })
-        }),
-      setBackgroundColor: (color) => setBackgroundColor(root, color),
-      setForegroundColor: (color) => setForegroundColor(root, color),
-      setFont: (family, size) => setFont(root, family, size),
-    }
-    // 出すのを待っていたバッファは, 描き直したので, 出している (待つのを終える)
-    for (const resolve of bufferWaiters.current) resolve()
-    bufferWaiters.current = []
-  })
-
-  /**
-   * バッファを, 別のバッファに置き換えます (出しているウィンドウも).
-   *
-   * @param old - 置き換えるバッファ.
-   * @param next - 新しいバッファ.
-   */
-  const replaceBuffer = (old: string, next: Buffer) => {
-    for (const handle of handles.current.values()) handle.forget(old)
-    setBuffers((prev) => prev.map((b) => (b.id === old ? next : b)))
-    setWindowBuffers((prev) =>
-      Object.fromEntries(Object.entries(prev).map(([w, b]) => [w, b === old ? next.id : b])),
-    )
-  }
-
-  /**
-   * 選んでいるウィンドウのバッファを, 別のバッファに置き換えます (同じバッファを出しているウィンドウも).
-   *
-   * @param next - 新しいバッファ.
-   */
-  const replaceCurrentBuffer = (next: Buffer) => replaceBuffer(currentBuffer.id, next)
-
-  /**
-   * ほかのウィンドウに, バッファを出します. ウィンドウが 1 つなら, 下に分けます (Emacs の `display-buffer`).
-   *
-   * @param bufferId - バッファ.
-   * @param select - そのウィンドウを選ぶなら `true`.
-   */
-  const displayInOtherWindow = (bufferId: string, select: boolean) => {
-    const ids = windowIds(layout)
-    let target: string
-    if (ids.length === 1) {
-      target = generateWindowId()
-      setLayout((prev) => splitWindow(prev, activeWindowRef.current, target, 'below'))
-    } else {
-      target = ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length]
-    }
-    setWindowBuffers((prev) => ({ ...prev, [target]: bufferId }))
-    if (select) selectWindow(target)
-  }
-
-  /**
-   * ファイルを開いて (開いていれば, そのバッファを出して), 行の始めへ動きます.
-   *
-   * @param path - ファイルのパス.
-   * @param line - 行の番号 (1 から).
-   * @param other - ほかのウィンドウに出して, 選ぶなら `true`. `false` なら, 選んでいるウィンドウに出す.
-   */
-  const visitLocation = async (path: string, line: number, other: boolean) => {
-    let buffer = buffers.find((b) => b.filePath === path)
-    if (!buffer) {
-      const visited = (await visitFile(path)).buffer
-      setBuffers((prev) => [...prev, visited])
-      buffer = visited
-    }
-    const pos = lineStart(buffer.content, line)
-    if (!other && buffer.id === currentBufferId) {
-      editor.current?.setCursor(pos)
-      return
-    }
-    // バッファを出してから, カーソルを置く
-    pendingPoint.current = pos
-    if (other) displayInOtherWindow(buffer.id, true)
-    else setCurrentBufferId(buffer.id)
-  }
-
-  /**
-   * ファイルを開いたバッファで, 選んでいるウィンドウのバッファを置き換えます (C-x C-v).
-   *
-   * @param path - ファイルのパス.
-   */
-  const findAlternateFile = async (path: string) => {
-    try {
-      const { buffer, message } = await visitFile(path)
-      replaceCurrentBuffer(buffer)
-      showMessage(message)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * 開き直すファイルの名前を, ミニバッファで聞きます (C-x C-v). 入力の始めは, バッファのファイルです.
-   */
-  const handleFindAlternateFile = () => {
-    setPendingAction('find-alternate-file')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Find alternate file: ',
-      input: currentBuffer.filePath ?? defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * 入れるファイルの名前を, ミニバッファで聞きます (C-x i).
-   */
-  const handleInsertFile = () => {
-    setPendingAction('insert-file')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Insert file: ',
-      input: defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * ファイルの中身を, カーソルの位置に入れます. カーソルは, 入れた文字の前に残します.
-   *
-   * @param path - ファイルのパス.
-   */
-  const insertFile = async (path: string) => {
-    try {
-      const content = await readFile(path)
-      const handle = editor.current as EditorHandle
-      const pos = handle.point()
-      handle.insert(content)
-      handle.setCursor(pos)
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * 変更したファイルのバッファを, 1 つずつ保存するか聞きます (C-x s).
-   */
-  const handleSaveSomeBuffers = () => {
-    const modified = buffers.filter((b) => b.modified && b.filePath)
-    if (modified.length === 0) {
-      showMessage('(No files need saving)')
-      return
-    }
-    askSave(modified, 0)
-  }
-
-  /**
-   * 保存するか聞くバッファの, 始めのバッファを聞きます. 無ければ, 終えます.
-   *
-   * @param queue - 聞くバッファ.
-   * @param saved - 保存した数.
-   */
-  const askSave = (queue: Buffer[], saved: number) => {
-    if (queue.length === 0) {
-      setSaveQueue(null)
-      if (saved === 0) showMessage('')
-      return
-    }
-    setSaveQueue({ buffers: queue, saved })
-    setMinibufferState({
-      mode: 'query',
-      prompt: `Save file ${queue[0].filePath}? (y, n, !, ., q) `,
-    })
-  }
-
-  /**
-   * C-x s の問いに答えます (y で保存, n で保存しない, ! で残りを全て保存, . で保存して終える, q で終える).
-   *
-   * @param key - 押したキー.
-   * @param queue - 聞いているバッファと, 保存した数.
-   */
-  const answerSave = async (
-    key: string,
-    { buffers: queue, saved }: { buffers: Buffer[]; saved: number },
-  ) => {
-    const [first, ...rest] = queue
-    const save = async (b: Buffer) => ((await saveBuffer(b, b.filePath as string)) ? 1 : 0)
-    if (key === 'y' || key === ' ') {
-      askSave(rest, saved + (await save(first)))
-    } else if (key === 'n' || key === 'Backspace' || key === 'Delete') {
-      askSave(rest, saved)
-    } else if (key === '!') {
-      let count = saved
-      for (const b of queue) count += await save(b)
-      askSave([], count)
-    } else if (key === '.') {
-      askSave([], saved + (await save(first)))
-    } else if (key === 'q' || key === 'Enter') {
-      askSave([], saved)
-    }
-  }
-
-  /**
-   * バッファを, ファイルから読み直します (M-x revert-buffer). 読み直してよいか, 聞きます.
-   * dired のバッファは, 聞かずに, 一覧を作り直します.
-   */
-  const handleRevertBuffer = () => {
-    if (currentBuffer.directory !== undefined) {
-      void listDirectoryInto(currentBuffer.directory, true)
-      return
-    }
-    if (!currentBuffer.filePath) {
-      showMessage('Buffer does not seem to be associated with any file')
-      return
-    }
-    setPendingAction('confirm-revert')
-    setMinibufferState({
-      mode: 'input',
-      prompt: currentBuffer.modified
-        ? `Discard edits and reread from ${currentBuffer.filePath}? (yes or no) `
-        : `Revert buffer from file ${currentBuffer.filePath}? (yes or no) `,
-      input: '',
-    })
-  }
-
-  /**
-   * 選んでいるウィンドウのバッファの本文を, 置き換えます.
-   *
-   * @param content - 本文.
-   * @param modified - 置き換えた後に, 変更ありにするなら `true`.
-   */
-  const setCurrentText = (content: string, modified: boolean) => {
-    ;(editor.current as EditorHandle).setText(content)
-    updateCurrentBuffer({ content, modified })
-  }
-
-  /**
-   * バッファを, ファイルから読み直します.
-   *
-   * @param path - ファイルのパス.
-   */
-  const revertBuffer = async (path: string) => {
-    try {
-      setCurrentText(await readFile(path), false)
-      autoSaved.current.delete(currentBuffer.id)
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * 自動保存のファイルから, バッファを読み直します (M-x recover-this-file). 読み直してよいか, 聞きます.
-   */
-  const handleRecoverThisFile = async () => {
-    const path = currentBuffer.filePath
-    if (!path) {
-      showMessage('This buffer is not visiting a file')
-      return
-    }
-    const autoSave = autoSaveFileName(path)
-    try {
-      if ((await pathExists(path)) && !(await pathExists(autoSave))) {
-        showMessage(`Auto save file ${autoSave} does not exist`)
-        return
-      }
-      if (!(await fileNewerThan(autoSave, path))) {
-        showMessage(`Auto-save file ${autoSave} not current`)
-        return
-      }
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-      return
-    }
-    setPendingAction('confirm-recover')
-    setMinibufferState({
-      mode: 'input',
-      prompt: `Recover auto save file ${autoSave}? (yes or no) `,
-      input: '',
-    })
-  }
-
-  /**
-   * 自動保存のファイルから, バッファを読み直します (変更ありにする).
-   *
-   * @param path - ファイルのパス.
-   */
-  const recoverFile = async (path: string) => {
-    try {
-      setCurrentText(await readFile(autoSaveFileName(path)), true)
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * 開くディレクトリの名前を, ミニバッファで聞きます (C-x d).
-   */
-  const handleDired = () => {
-    setPendingAction('dired')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Dired (directory): ',
-      input: defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * ディレクトリの一覧を, dired のバッファに出します (同じディレクトリの dired があれば, それを出す).
-   *
-   * @param path - ディレクトリのパス.
-   * @param revert - 選んでいる dired のバッファを, 作り直すなら `true`.
-   */
-  const listDirectoryInto = async (path: string, revert = false) => {
-    const dir = directoryFileName(path)
-    const open = buffers.find((b) => b.directory === dir)
-    if (open && !revert) {
-      switchToBuffer(open.id)
-      showMessage('')
-      return
-    }
-    try {
-      const content = diredListing(dir, await listDirectoryLong(dir))
-      if (revert) {
-        setCurrentText(content, false)
-      } else {
-        const buffer: Buffer = {
-          id: generateBufferId(),
-          name: diredBufferName(dir),
-          filePath: null,
-          content,
-          modified: false,
-          directory: dir,
-        }
-        setBuffers((prev) => [...prev, buffer])
-        setCurrentBufferId(buffer.id)
-      }
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * 探す正規表現を, ミニバッファで聞きます (M-x grep). 続けて, 探すディレクトリを聞きます.
-   */
-  const handleGrep = () => {
-    setPendingAction('grep')
-    setMinibufferState({ mode: 'input', prompt: 'Grep (regexp): ', input: '' })
-  }
-
-  /**
-   * ディレクトリの下のファイルから, 正規表現に合う行を探して, `*grep*` バッファに出します
-   * (ほかのウィンドウに出し, 選んでいるウィンドウは変えない. Emacs と同じ). 探すのは, エディタ (Rust) が行います.
-   *
-   * @param pattern - 正規表現.
-   * @param dir - ディレクトリ.
-   */
-  const runGrep = async (pattern: string, dir: string) => {
-    const directory = dir.endsWith('/') ? dir : dir + '/'
-    try {
-      const matches = await grepDirectory(pattern, directory)
-      const content = grepBufferText(directory, homeDir, pattern, matches, new Date())
-      const buffer: Buffer = {
-        id: generateBufferId(),
-        name: GREP_BUFFER_NAME,
-        filePath: null,
-        content,
-        modified: false,
-        keys: GREP_KEYS,
-        grep: { directory, matches },
-      }
-      const old = buffers.find((b) => b.grep)
-      if (old) replaceBuffer(old.id, buffer)
-      else setBuffers((prev) => [...prev, buffer])
-      nextErrorIndex.current = -1
-      // 選んでいるウィンドウに前の結果を出していれば, そこで置き換える
-      if (old?.id !== currentBufferId) displayInOtherWindow(buffer.id, false)
-      const count = matches.length === 1 ? '1 match' : `${matches.length || 'no'} matches`
-      showMessage(`Grep finished with ${count} found`)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * `*grep*` バッファの, 合った行のファイルを開きます.
-   *
-   * @param buffer - `*grep*` バッファ.
-   * @param index - 合った行の添え字.
-   */
-  const gotoGrepMatch = async (buffer: Buffer, index: number) => {
-    const { directory, matches } = buffer.grep as NonNullable<Buffer['grep']>
-    const match = matches[index]
-    nextErrorIndex.current = index
-    try {
-      // 結果のバッファから開くときは, ほかのウィンドウに出す
-      await visitLocation(directory + match.file, match.line, currentBufferId === buffer.id)
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * カーソルの行の, 合った行のファイルを開きます (`*grep*` の RET. Emacs の `compile-goto-error`).
-   */
-  const handleCompileGotoError = () => {
-    const handle = editor.current as EditorHandle
-    const line = handle.text().slice(0, handle.point()).split('\n').length
-    const index = currentBuffer.grep ? grepMatchIndex(currentBuffer.grep.matches, line) : null
-    if (index === null) {
-      showMessage('No error here')
-      return
-    }
-    void gotoGrepMatch(currentBuffer, index)
-  }
-
-  /**
-   * `*grep*` の, 次 (前) の合った行のファイルを開きます (M-g n, M-g p. Emacs の `next-error`).
-   *
-   * @param delta - 進む数 (前は -1).
-   */
-  const handleNextError = (delta: number) => {
-    const buffer = buffers.find((b) => b.grep)
-    if (!buffer) {
-      showMessage('No buffers contain error message locations')
-      return
-    }
-    const index = nextErrorIndex.current + delta
-    const { matches } = buffer.grep as NonNullable<Buffer['grep']>
-    if (index < 0) {
-      showMessage('Moved back before first grep hit')
-    } else if (index >= matches.length) {
-      showMessage('Moved past last grep hit')
-    } else {
-      void gotoGrepMatch(buffer, index)
-    }
-  }
-
-  /**
-   * サイドバーのプロジェクトのツリーを, 出すか, 消します (F8). 根は, バッファのディレクトリから上へたどって,
-   * `.git` のある所 (無ければ, バッファのディレクトリ) です.
-   */
-  const handleProjectTree = async () => {
-    if (treeRoot !== null) {
-      setTreeRoot(null)
-      return
-    }
-    try {
-      const root = await projectRoot(defaultDirectory(currentBuffer))
-      setTreeRoot(root.replace(/\/+$/, '') || '/')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * ツリーで選んだファイルを, 選んでいるウィンドウに出します (開いていれば, そのバッファ).
-   *
-   * @param path - ファイルのパス.
-   */
-  const openFromTree = async (path: string) => {
-    const open = buffers.find((b) => b.filePath === path)
-    if (open) {
-      switchToBuffer(open.id)
-      return
-    }
-    try {
-      const { buffer, message } = await visitFile(path)
-      setBuffers((prev) => [...prev, buffer])
-      setCurrentBufferId(buffer.id)
-      showMessage(message)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
+  }, [setPendingAction, setMinibufferState])
 
   /**
    * 出すバッファの名前を, ミニバッファで聞きます (C-x b).
@@ -1290,13 +124,6 @@ function App() {
   }
 
   /**
-   * バッファの一覧を出します (C-x C-b).
-   */
-  const handleListBuffers = () => {
-    setShowBufferList(true)
-  }
-
-  /**
    * キーの割り当ての一覧を, *Help* バッファに出します (前の *Help* は, 作り直す).
    */
   const handleDescribeBindings = () => {
@@ -1312,35 +139,10 @@ function App() {
     const old = buffers.find((b) => b.name === '*Help*')
     if (old) {
       for (const handle of handles.current.values()) handle.forget(old.id)
-      setBuffers((prev) => prev.filter((b) => b.id !== old.id))
+      bufs.setBuffers((prev) => prev.filter((b) => b.id !== old.id))
     }
     const header = `${'key'.padEnd(24)}binding\n${'---'.padEnd(24)}-------\n`
     createNewBuffer('*Help*', null, header + lines.join('\n') + '\n')
-  }
-
-  /**
-   * カーソルの前の S 式を評価して, 結果を出します (C-x C-e).
-   */
-  const handleEvalLastSexp = async () => {
-    // カーソルの直前の S 式の範囲を求める
-    const cursorPos = cursor.offset
-    const startPos = backwardSexp(currentBuffer.content, cursorPos)
-    const endPos = forwardSexp(currentBuffer.content, startPos)
-
-    if (startPos === endPos) {
-      setMinibufferState({ mode: 'message', text: 'No S-expression found before cursor' })
-      return
-    }
-
-    await evaluate(currentBuffer.content.slice(startPos, endPos))
-  }
-
-  /**
-   * 評価する式を, ミニバッファで聞きます (M-:).
-   */
-  const handleEvalExpression = () => {
-    setPendingAction('eval-expression')
-    setMinibufferState({ mode: 'input', prompt: 'Eval: ', input: '' })
   }
 
   /**
@@ -1374,339 +176,11 @@ function App() {
   }
 
   /**
-   * ブックマークの名前を, ミニバッファで聞きます (C-x r m). 既定は, ファイルの名前です.
-   */
-  const handleBookmarkSet = () => {
-    if (!currentBuffer.filePath) {
-      showMessage('Buffer not visiting a file or directory')
-      return
-    }
-    setPendingAction('bookmark-set')
-    setMinibufferState({
-      mode: 'input',
-      prompt: `Set bookmark named (default ${bufferNameFromPath(currentBuffer.filePath)}): `,
-      input: '',
-      completions: bookmarks.map((b) => b.name),
-    })
-  }
-
-  /**
-   * 移るブックマークの名前を, ミニバッファで聞きます (C-x r b). 既定は, 最後に使ったブックマークです.
-   */
-  const handleBookmarkJump = () => {
-    const last = lastBookmark.current
-    setPendingAction('bookmark-jump')
-    setMinibufferState({
-      mode: 'input',
-      prompt: last === null ? 'Jump to bookmark: ' : `Jump to bookmark (default ${last}): `,
-      input: '',
-      completions: bookmarks.map((b) => b.name),
-    })
-  }
-
-  /**
-   * ブックマークを付けて, 保存します.
-   *
-   * @param value - 入力した名前 (空なら, ファイルの名前).
-   */
-  const setBookmark = async (value: string) => {
-    const filePath = currentBuffer.filePath as string
-    const name = value === '' ? bufferNameFromPath(filePath) : value
-    const handle = editor.current as EditorHandle
-    const next = storeBookmark(
-      bookmarks,
-      makeBookmark(name, filePath, handle.text(), handle.point()),
-    )
-    setBookmarks(next)
-    lastBookmark.current = name
-    showMessage('')
-    try {
-      await saveBookmarks(next)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
-   * ブックマークのファイルを出して, 位置へ動きます. ファイルを開いたバッファがあれば, それを使います.
-   *
-   * @param value - 入力した名前 (空なら, 最後に使ったブックマーク).
-   */
-  const jumpToBookmark = async (value: string) => {
-    const name = value === '' ? lastBookmark.current : value
-    const bookmark = bookmarks.find((b) => b.name === name)
-    if (!bookmark) {
-      showMessage(name ? `Invalid bookmark ${name}` : 'No bookmark specified')
-      return
-    }
-    lastBookmark.current = bookmark.name
-    showMessage('')
-    const open = buffers.find((b) => b.filePath === bookmark.filename)
-    if (open) {
-      const pos = bookmarkPosition(bookmark, open.content)
-      if (open.id === currentBufferId) {
-        editor.current?.setCursor(pos)
-      } else {
-        pendingPoint.current = pos
-        switchToBuffer(open.id)
-      }
-      return
-    }
-    try {
-      const content = await readFile(bookmark.filename)
-      pendingPoint.current = bookmarkPosition(bookmark, content)
-      createNewBuffer(bufferNameFromPath(bookmark.filename), bookmark.filename, content)
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
-
-  /**
    * 移動する行の番号を, ミニバッファで聞きます (M-g g).
    */
   const handleGotoLine = () => {
     setPendingAction('goto-line')
     setMinibufferState({ mode: 'input', prompt: 'Goto line: ', input: '' })
-  }
-
-  /**
-   * 見つかったところを選びます. カーソルは, 前へ探すときは終わりに, 後ろへ探すときは始めに置きます.
-   *
-   * @param direction - 探す向き.
-   * @param match - 見つかったところ.
-   */
-  const selectMatch = (
-    direction: 'forward' | 'backward',
-    match: { start: number; end: number },
-  ) => {
-    if (direction === 'forward') {
-      editor.current?.select(match.start, match.end)
-    } else {
-      editor.current?.select(match.end, match.start)
-    }
-  }
-
-  /**
-   * isearch を始めます.
-   *
-   * @param direction - 探す向き.
-   * @param regexp - 正規表現で探すなら `true`.
-   */
-  const handleIsearch = (direction: 'forward' | 'backward', regexp: boolean) => {
-    setMinibufferState({
-      mode: 'isearch',
-      direction,
-      regexp,
-      query: '',
-      originalCursor: cursor.offset,
-      matchStart: null,
-      matchEnd: null,
-    })
-  }
-
-  /**
-   * 置換を始めます (探す文字を聞く).
-   *
-   * @param kind - 置換の種類.
-   */
-  const handleReplace = (kind: ReplaceKind) => {
-    setReplace({ kind, count: 0 })
-    setPendingAction('replace-from')
-    setMinibufferState({ mode: 'input', prompt: `${replaceTitle(kind)}: `, input: '' })
-  }
-
-  /**
-   * query-replace で, 置き換える所を選んで聞きます. 無ければ, 終えます.
-   *
-   * @param state - 進めている置換 (spec がある).
-   * @param pos - 探し始める位置.
-   */
-  const askReplace = (state: ReplaceState, pos: number) => {
-    const handle = editor.current as EditorHandle
-    const spec = state.spec as ReplaceSpec
-    const match = findReplaceMatch(handle.text(), spec, pos)
-    if (!match) {
-      finishReplace(state.count, pos)
-      return
-    }
-    handle.select(match.start, match.end)
-    setReplace({ ...state, match })
-    setMinibufferState({
-      mode: 'query',
-      prompt: `Query replacing ${spec.from} with ${spec.to}: (y, n, !, ., q) `,
-    })
-  }
-
-  /**
-   * 置換を終えて, 置き換えた数を出します.
-   *
-   * @param count - 置き換えた数.
-   * @param pos - カーソルを置く位置.
-   */
-  const finishReplace = (count: number, pos: number) => {
-    editor.current?.setCursor(pos)
-    setReplace(null)
-    showMessage(replacedMessage(count))
-  }
-
-  /**
-   * 1 つのキーで答える問い (ファイルを置き換えてよいか, query-replace) に答えます.
-   *
-   * @param key - 押したキー.
-   */
-  const handleQueryKey = (key: string) => {
-    if (saveQueue !== null) {
-      void answerSave(key, saveQueue)
-      return
-    }
-    // ファイルを置き換えてよいかの問い (y か n のほかのキーは, 答えにしない)
-    if (overwritePath !== null) {
-      if (key === 'y') {
-        setOverwritePath(null)
-        void writeBufferTo(overwritePath)
-      } else if (key === 'n') {
-        setOverwritePath(null)
-        showMessage('Canceled')
-      }
-      return
-    }
-    const state = replace as ReplaceState
-    const match = state.match as ReplaceMatch
-    const handle = editor.current as EditorHandle
-    const replaceMatch = () => {
-      handle.replace(match.start, match.end, match.replacement)
-      return match.start + match.replacement.length
-    }
-    if (key === 'y' || key === ' ') {
-      const pos = replaceMatch()
-      askReplace({ ...state, count: state.count + 1 }, pos)
-    } else if (key === 'n' || key === 'Backspace' || key === 'Delete') {
-      askReplace(state, match.end)
-    } else if (key === '!') {
-      const rest = replaceRemaining(handle, state.spec as ReplaceSpec, replaceMatch())
-      finishReplace(state.count + 1 + rest.count, rest.pos)
-    } else if (key === '.') {
-      finishReplace(state.count + 1, replaceMatch())
-    } else if (key === 'q' || key === 'Enter') {
-      finishReplace(state.count, match.start)
-    }
-  }
-
-  /**
-   * isearch で, 同じ文字の次 (または前) に合う所へ進みます (isearch 中の C-s / C-r).
-   * 前へ探していて, 本文の始めで合っている場合は, 失敗にします (もう 1 度押すと, 現在位置から探し直す).
-   *
-   * @param direction - 探す向き.
-   * @param current - isearch の状態.
-   */
-  const handleIsearchRepeat = (
-    direction: 'forward' | 'backward',
-    current: MinibufferIsearchState,
-  ) => {
-    // 探す文字が空なら, 最後に探した文字で探す
-    if (current.query === '' && direction === current.direction) {
-      const ring = searchRing.current[current.regexp ? 'regexp' : 'plain']
-      if (ring.length > 0) searchIsearch(current, ring[0], { ringIndex: 0 })
-      return
-    }
-    if (direction === 'backward' && current.matchStart !== null && current.matchStart <= 0) {
-      setMinibufferState({ ...current, matchStart: null, matchEnd: null, yankBase: undefined })
-      return
-    }
-
-    const fromPos =
-      current.matchStart === null
-        ? current.originalCursor
-        : direction === 'forward'
-          ? current.matchStart + 1
-          : current.matchStart - 1
-
-    const match = findNextMatch(
-      currentBuffer.content,
-      current.query,
-      fromPos,
-      direction,
-      current.regexp,
-    )
-
-    if (match) {
-      selectMatch(direction, match)
-      setMinibufferState({
-        ...current,
-        direction,
-        matchStart: match.start,
-        matchEnd: match.end,
-        yankBase: undefined,
-      })
-    } else {
-      setMinibufferState({ ...current, matchStart: null, matchEnd: null, yankBase: undefined })
-    }
-  }
-
-  /**
-   * isearch の探す文字を変えて, 探し始めた位置から探し直します.
-   *
-   * @param current - isearch の状態.
-   * @param query - 探す文字.
-   * @param changes - ほかに変える項目 (続けた M-y の文字などは, 変えなければ捨てる).
-   */
-  const searchIsearch = (
-    current: MinibufferIsearchState,
-    query: string,
-    changes: Partial<MinibufferIsearchState> = {},
-  ) => {
-    const match = findNextMatch(
-      currentBuffer.content,
-      query,
-      current.originalCursor,
-      current.direction,
-      current.regexp,
-    )
-    if (match) selectMatch(current.direction, match)
-    setMinibufferState({
-      ...current,
-      yankBase: undefined,
-      ...changes,
-      query,
-      matchStart: match ? match.start : null,
-      matchEnd: match ? match.end : null,
-    })
-  }
-
-  /**
-   * isearch の中のコマンドを行います. C-w でカーソルの後ろの単語か文字を, M-y でキルした文字を取り込み,
-   * M-p と M-n で, 検索の履歴を出します.
-   *
-   * @param command - コマンド.
-   * @param current - isearch の状態.
-   */
-  const handleIsearchCommand = (command: IsearchCommand, current: MinibufferIsearchState) => {
-    const quote = (text: string) => (current.regexp ? quoteRegexp(text) : text)
-    const handle = editor.current as EditorHandle
-    if (command === 'yank-word-or-char') {
-      // 合っていれば, 合った所の終わりから (前へ探していても)
-      const text = currentBuffer.content
-      const from = current.matchEnd ?? current.yankPoint ?? current.originalCursor
-      const end = yankWordOrCharEnd(text, from)
-      if (end === from) return
-      const failing = current.matchStart === null && current.query !== ''
-      searchIsearch(current, current.query + quote(text.slice(from, end)), {
-        yankPoint: failing ? end : null,
-      })
-    } else if (command === 'yank-pop') {
-      // 続けた M-y は, 取り込んだ文字を, 1 つ古いキルした文字に置き換える
-      const base = current.yankBase ?? current.query
-      const kill = current.yankBase === undefined ? handle.currentKill() : handle.rotateKill()
-      if (kill === undefined) return
-      searchIsearch(current, base + quote(kill), { yankBase: base })
-    } else {
-      const ring = searchRing.current[current.regexp ? 'regexp' : 'plain']
-      if (ring.length === 0) return
-      const advance = command === 'ring-advance'
-      const index =
-        ((current.ringIndex ?? (advance ? 0 : -1)) + (advance ? -1 : 1) + ring.length) % ring.length
-      searchIsearch(current, ring[index], { ringIndex: index })
-    }
   }
 
   /**
@@ -1722,6 +196,79 @@ function App() {
     })
   }
 
+  // 画面のコマンドのうち, ここで受け持つもの
+  const appCommands: CommandSet = {
+    actions: {
+      'switch-to-buffer': handleSwitchBuffer,
+      'kill-buffer': handleKillBuffer,
+      'list-buffers': () => setShowBufferList(true),
+      'describe-bindings': handleDescribeBindings,
+      'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
+      'execute-extended-command': handleExecuteCommand,
+      'goto-line': handleGotoLine,
+      'string-rectangle': handleStringRectangle,
+    },
+    submit: {
+      'switch-buffer': (value) => {
+        const targetBuffer = buffers.find((b) => b.name === value.trim())
+        if (targetBuffer) {
+          setCurrentBufferId(targetBuffer.id)
+          showMessage('')
+        } else {
+          showMessage(`No buffer named "${value}"`)
+        }
+      },
+      'kill-buffer': (value) => {
+        if (value.trim() === 'yes') killCurrentBuffer()
+        showMessage('')
+      },
+      'execute-command': (value) => {
+        showMessage('')
+        if (!editor.current?.run(value.trim())) showMessage(`Undefined command: ${value}`)
+      },
+      'goto-line': (value) => {
+        editor.current?.gotoLine(Number(value))
+        showMessage('')
+      },
+      'confirm-exit': async (value) => {
+        if (value.trim() === 'yes') {
+          exitConfirmed.current = true
+          await getCurrentWindow().close()
+        } else {
+          showMessage('')
+        }
+      },
+      'string-rectangle': (value) => {
+        // 空の入力は, 次の既定にしない (Emacs の履歴と同じ)
+        const string = value === '' ? (rectangleString.current ?? '') : value
+        if (string !== '') rectangleString.current = string
+        editor.current?.stringRectangle(string)
+        showMessage('')
+      },
+    },
+  }
+
+  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ.
+  // Lisp で作ったコマンドは, 同じ名前のコマンドより先に使う (最後に置く)
+  const actions: Record<string, () => void> = {
+    ...appCommands.actions,
+    ...bufs.windowCommands.actions,
+    ...files.commands.actions,
+    ...directories.commands.actions,
+    ...search.commands.actions,
+    ...bookmarks.actions,
+    ...lisp.commands.actions,
+  }
+  const submitters: Submitters = {
+    ...appCommands.submit,
+    ...bufs.windowCommands.submit,
+    ...files.commands.submit,
+    ...directories.commands.submit,
+    ...search.commands.submit,
+    ...bookmarks.submit,
+    ...lisp.commands.submit,
+  }
+
   /**
    * ミニバッファの入力が変わったときに, 入力を覚えます. isearch なら, 入力した文字で探し直します.
    *
@@ -1735,252 +282,47 @@ function App() {
     if (current.mode === 'input') {
       setMinibufferState({ ...current, input: value })
     } else {
-      searchIsearch(current, value)
+      search.searchIsearch(current, value)
     }
-  }
-
-  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ.
-  // Lisp で作ったコマンドは, 同じ名前のコマンドより先に使う
-  const actions: Record<string, () => void> = {
-    'find-file': handleFindFile,
-    'save-buffer': () => void handleSaveBuffer(),
-    'write-file': handleWriteFile,
-    'switch-to-buffer': handleSwitchBuffer,
-    'kill-buffer': handleKillBuffer,
-    'list-buffers': handleListBuffers,
-    'split-window-below': () => handleSplitWindow('below'),
-    'split-window-right': () => handleSplitWindow('right'),
-    'other-window': handleOtherWindow,
-    'delete-window': handleDeleteWindow,
-    'delete-other-windows': handleDeleteOtherWindows,
-    'describe-bindings': handleDescribeBindings,
-    'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
-    'execute-extended-command': handleExecuteCommand,
-    'eval-last-sexp': () => void handleEvalLastSexp(),
-    'eval-expression': handleEvalExpression,
-    'isearch-forward': () => handleIsearch('forward', false),
-    'isearch-backward': () => handleIsearch('backward', false),
-    'isearch-forward-regexp': () => handleIsearch('forward', true),
-    'isearch-backward-regexp': () => handleIsearch('backward', true),
-    'query-replace': () => handleReplace({ query: true, regexp: false }),
-    'query-replace-regexp': () => handleReplace({ query: true, regexp: true }),
-    'replace-string': () => handleReplace({ query: false, regexp: false }),
-    'replace-regexp': () => handleReplace({ query: false, regexp: true }),
-    'goto-line': handleGotoLine,
-    'string-rectangle': handleStringRectangle,
-    'bookmark-set': handleBookmarkSet,
-    'bookmark-jump': handleBookmarkJump,
-    'insert-file': handleInsertFile,
-    'find-alternate-file': handleFindAlternateFile,
-    'save-some-buffers': handleSaveSomeBuffers,
-    'revert-buffer': handleRevertBuffer,
-    'recover-this-file': () => void handleRecoverThisFile(),
-    dired: handleDired,
-    grep: handleGrep,
-    'compile-goto-error': handleCompileGotoError,
-    'next-error': () => handleNextError(1),
-    'previous-error': () => handleNextError(-1),
-    'project-tree': () => void handleProjectTree(),
-    ...Object.fromEntries(
-      lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
-    ),
   }
 
   /**
    * ミニバッファの入力を確定したときに, 入力を待っていたコマンドを行います.
-   * 待っているコマンドがなければ, isearch を終わります.
+   * 待っているコマンドがなければ, isearch を終わります (コマンドのない入力欄は, isearch だけ).
    *
    * @param value - 入力.
    */
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
     setPendingAction(null)
-    const historyName = action && HISTORY_NAMES[action]
-    if (historyName) {
-      setHistories((prev) => ({
-        ...prev,
-        [historyName]: addToHistory(prev[historyName] ?? [], value, HISTORY_LENGTH),
-      }))
-    }
-
-    if (action === 'grep') {
-      if (value === '') {
-        showMessage('')
-        return
-      }
-      grepPattern.current = value
-      setPendingAction('grep-directory')
-      setMinibufferState({
-        mode: 'input',
-        prompt: 'In directory: ',
-        input: defaultDirectory(currentBuffer),
-        complete: completeFile,
-      })
-    } else if (action === 'grep-directory') {
-      await runGrep(grepPattern.current, value)
-    } else if (action === 'read-string') {
-      showMessage('')
-      lispInput.current?.resolve(value)
-      lispInput.current = null
-    } else if (action === 'find-file') {
-      try {
-        const { buffer, message } = await visitFile(value)
-        setBuffers((prev) => [...prev, buffer])
-        setCurrentBufferId(buffer.id)
-        showMessage(message)
-      } catch (err) {
-        setMinibufferState({ mode: 'message', text: `Error: ${err}` })
-      }
-    } else if (action === 'find-alternate-file') {
-      // 書き換えたファイルのバッファは, 捨ててよいか聞く
-      if (currentBuffer.modified && currentBuffer.filePath) {
-        alternatePath.current = value
-        setPendingAction('confirm-alternate')
-        setMinibufferState({
-          mode: 'input',
-          prompt: `Kill and replace buffer ‘${currentBuffer.name}’ without saving it? (yes or no) `,
-          input: '',
-        })
-      } else {
-        await findAlternateFile(value)
-      }
-    } else if (action === 'confirm-alternate') {
-      if (value.trim() === 'yes') await findAlternateFile(alternatePath.current)
-      else showMessage('Aborted')
-    } else if (action === 'confirm-revert') {
-      if (value.trim() === 'yes') await revertBuffer(currentBuffer.filePath as string)
-      else showMessage('')
-    } else if (action === 'confirm-recover') {
-      if (value.trim() === 'yes') await recoverFile(currentBuffer.filePath as string)
-      else showMessage('')
-    } else if (action === 'insert-file') {
-      await insertFile(value)
-    } else if (action === 'dired') {
-      await listDirectoryInto(value)
-    } else if (action === 'write-file') {
-      // バッファのファイルでない, ほかのファイルを置き換えるときは, 聞く (Emacs と同じ)
-      let exists: boolean
-      try {
-        exists = value !== currentBuffer.filePath && (await pathExists(value))
-      } catch (err) {
-        showMessage(`Error: ${err}`)
-        return
-      }
-      if (exists) {
-        setOverwritePath(value)
-        setMinibufferState({
-          mode: 'query',
-          prompt: `File ‘${value}’ exists; overwrite? (y or n) `,
-        })
-      } else {
-        await writeBufferTo(value)
-      }
-    } else if (action === 'switch-buffer') {
-      const targetBuffer = buffers.find((b) => b.name === value.trim())
-      if (targetBuffer) {
-        switchToBuffer(targetBuffer.id)
-        setMinibufferState({ mode: 'message', text: '' })
-      } else {
-        setMinibufferState({ mode: 'message', text: `No buffer named "${value}"` })
-      }
-    } else if (action === 'kill-buffer') {
-      if (value.trim() === 'yes') killCurrentBuffer()
-      setMinibufferState({ mode: 'message', text: '' })
-    } else if (action === 'execute-command') {
-      setMinibufferState({ mode: 'message', text: '' })
-      if (!editor.current?.run(value.trim())) {
-        setMinibufferState({ mode: 'message', text: `Undefined command: ${value}` })
-      }
-    } else if (action === 'goto-line') {
-      editor.current?.gotoLine(Number(value))
-      setMinibufferState({ mode: 'message', text: '' })
-    } else if (action === 'confirm-exit') {
-      if (value.trim() === 'yes') {
-        exitConfirmed.current = true
-        await getCurrentWindow().close()
-      } else {
-        setMinibufferState({ mode: 'message', text: '' })
-      }
-    } else if (action === 'eval-expression') {
-      await evaluate(value)
-    } else if (action === 'replace-from') {
-      const state = replace as ReplaceState
-      if (value === '') {
-        setReplace(null)
-        showMessage('')
-      } else if (state.kind.regexp && !compileRegexp(value)) {
-        setReplace(null)
-        showMessage(`Invalid regexp: ${value}`)
-      } else {
-        setReplace({ ...state, from: value })
-        setPendingAction('replace-to')
-        setMinibufferState({
-          mode: 'input',
-          prompt: `${replaceTitle(state.kind)} ${value} with: `,
-          input: '',
-        })
-      }
-    } else if (action === 'string-rectangle') {
-      // 空の入力は, 次の既定にしない (Emacs の履歴と同じ)
-      const string = value === '' ? (rectangleString.current ?? '') : value
-      if (string !== '') rectangleString.current = string
-      editor.current?.stringRectangle(string)
-      showMessage('')
-    } else if (action === 'bookmark-set') {
-      await setBookmark(value)
-    } else if (action === 'bookmark-jump') {
-      await jumpToBookmark(value)
-    } else if (action === 'replace-to') {
-      const state = replace as ReplaceState
-      const spec = { from: state.from as string, to: value, regexp: state.kind.regexp }
-      const pos = (editor.current as EditorHandle).point()
-      if (state.kind.query) {
-        askReplace({ ...state, spec }, pos)
-      } else {
-        const done = replaceRemaining(editor.current as EditorHandle, spec, pos)
-        finishReplace(done.count, done.pos)
-      }
+    minibuffer.addHistory(action, value)
+    const submit = action && submitters[action]
+    if (submit) {
+      await submit(value)
     } else {
-      // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ).
-      // 見つかったところの, 探した向きの側にカーソルを置く
-      const current = minibufferState as MinibufferIsearchState
-      // 探した文字を, 検索の履歴に加える
-      const kind = current.regexp ? 'regexp' : 'plain'
-      searchRing.current[kind] = addToHistory(
-        searchRing.current[kind],
-        current.query,
-        SEARCH_RING_MAX,
-        true,
-      )
-      if (current.matchStart !== null) {
-        editor.current?.setCursor(
-          current.direction === 'forward' ? (current.matchEnd as number) : current.matchStart,
-        )
-      }
-      setMinibufferState({ mode: 'message', text: '' })
+      search.finishIsearch(minibufferState as MinibufferIsearchState)
     }
+  }
+
+  /**
+   * 1 つのキーで答える問い (C-x s, ファイルを置き換えてよいか, query-replace) に答えます.
+   *
+   * @param key - 押したキー.
+   */
+  const handleQueryKey = (key: string) => {
+    if (!files.answerQuery(key)) search.answerQuery(key)
   }
 
   /**
    * ミニバッファの入力をやめます (C-g). isearch なら, カーソルを探す前の位置に戻します.
    */
   const handleMinibufferCancel = () => {
-    const current = minibufferState
     setPendingAction(null)
-    setReplace(null)
-    setOverwritePath(null)
-    setSaveQueue(null)
-
-    if (current.mode === 'isearch') {
-      editor.current?.setCursor(current.originalCursor)
-    }
-    lispInput.current?.reject(new Error('Quit'))
-    lispInput.current = null
-    setMinibufferState({ mode: 'message', text: 'Quit' })
+    files.cancel()
+    search.cancel(minibufferState)
+    lisp.cancel()
+    showMessage('Quit')
   }
-
-  // 入力を待っているコマンドの, 入力の履歴の名前
-  const historyName = pendingAction ? HISTORY_NAMES[pendingAction] : undefined
 
   /**
    * バッファで使うキーの割り当て (バッファだけのキーを, Lisp のキーより先に置く) を返します.
@@ -2000,12 +342,12 @@ function App() {
   return (
     <div className="app">
       <div className="main">
-        {treeRoot !== null && (
+        {directories.treeRoot !== null && (
           <ProjectTree
-            root={treeRoot}
+            root={directories.treeRoot}
             currentFile={currentBuffer.filePath}
             listDirectory={listDirectory}
-            onOpenFile={(path) => void openFromTree(path)}
+            onOpenFile={(path) => void directories.openFromTree(path)}
           />
         )}
         <div className="windows">
@@ -2066,14 +408,14 @@ function App() {
       <Minibuffer
         state={
           minibufferState.mode === 'input'
-            ? { ...minibufferState, history: histories[historyName as string] }
+            ? { ...minibufferState, history: minibuffer.history }
             : minibufferState
         }
         onInputChange={handleMinibufferInputChange}
         onSubmit={handleMinibufferSubmit}
         onCancel={handleMinibufferCancel}
-        onIsearchRepeat={handleIsearchRepeat}
-        onIsearchCommand={handleIsearchCommand}
+        onIsearchRepeat={search.handleIsearchRepeat}
+        onIsearchCommand={search.handleIsearchCommand}
         onQueryKey={handleQueryKey}
       />
       {showBufferList && (
@@ -2081,7 +423,7 @@ function App() {
           buffers={buffers}
           currentBufferId={currentBufferId}
           onSelectBuffer={(bufferId) => {
-            switchToBuffer(bufferId)
+            setCurrentBufferId(bufferId)
             setShowBufferList(false)
           }}
           onClose={() => setShowBufferList(false)}

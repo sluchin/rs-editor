@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react'
-import { Buffer } from '../App'
+import type { Buffer } from '../lib/buffer'
 import { majorMode } from '../lib/modes'
 import '../styles/BufferList.css'
 
