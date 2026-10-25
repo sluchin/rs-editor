@@ -21,7 +21,14 @@ import { findExpansions } from './dabbrev'
 import { countMessage } from './count'
 import { fillParagraph } from './fill'
 import { killRectangle, stringRectangle, yankRectangle } from './rectangle'
-import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
+import {
+  columnAt,
+  indentConfig,
+  indentForTab,
+  indentLines,
+  indexAtColumn,
+  newlineAndIndent,
+} from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
 import { forwardParagraph, forwardSentence } from './paragraph'
@@ -74,6 +81,21 @@ export const markField = StateField.define<number | null>({
       if (effect.is(setMarkEffect)) return effect.value
     }
     return tr.docChanged ? null : mark
+  },
+})
+
+/** 行を移るときの桁を決める (止めるときは `null`). */
+const goalColumnEffect = StateEffect.define<number | null>()
+
+/** 行を移るときに, いつも使う桁 (`C-x C-n` の `goal-column`). 決めていなければ `null`. */
+export const goalColumnField = StateField.define<number | null>({
+  create: () => null,
+  // 変える変更があれば, その値
+  update(value, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(goalColumnEffect)) return effect.value
+    }
+    return value
   },
 })
 
@@ -152,7 +174,15 @@ export const quotedField = StateField.define<QuotedState | null>({
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [markField, lastCommandField, history(), describeKeyField, readCharField, quotedField]
+  return [
+    markField,
+    lastCommandField,
+    history(),
+    describeKeyField,
+    readCharField,
+    quotedField,
+    goalColumnField,
+  ]
 }
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */
@@ -213,8 +243,14 @@ function eventKeyName(event: KeyboardEvent): string {
   return modifiers.filter(Boolean).join('') + event.key
 }
 
-/** コマンド (エディタを受け取って, 処理したら `true`). */
-export type Command = (view: EditorView) => boolean
+/**
+ * コマンド (エディタを受け取って, 処理したら `true`). 前置引数を引数として受け取るコマンド
+ * ({@link ARGUMENT_COMMANDS}) には, 前置引数の数を渡します.
+ */
+export type Command = (view: EditorView, prefix?: number) => boolean
+
+/** 前置引数を, 繰り返しでなく, 引数として受け取るコマンド. */
+const ARGUMENT_COMMANDS = new Set(['set-goal-column'])
 
 /** コマンドを作るのに要るもの. */
 export interface CommandDeps {
@@ -258,6 +294,7 @@ function head(view: EditorView): number {
 
 /**
  * 行を移ります (論理行). 続けて移るあいだは, 始めの桁を保ちます. 先頭と末尾の行からは, 外へ出ません.
+ * `C-x C-n` で桁を決めていれば, その桁へ動きます.
  *
  * @param view - エディタ.
  * @param delta - 移る行の数 (下が正).
@@ -266,6 +303,12 @@ function head(view: EditorView): number {
 function lineMove(view: EditorView, delta: number): boolean {
   const { doc } = view.state
   const line = doc.lineAt(head(view))
+  const column = view.state.field(goalColumnField, false) ?? null
+  if (column !== null) {
+    const target = doc.line(clampLine(line.number + delta, doc.lines))
+    const { tabWidth } = view.state.facet(indentConfig)
+    return moveTo(view, target.from + indexAtColumn(target.text, column, tabWidth))
+  }
   const last = view.state.field(lastCommandField)
   const goal = last?.name === 'line-move' ? (last.goal as number) : head(view) - line.from
   const target = doc.line(clampLine(line.number + delta, doc.lines))
@@ -613,6 +656,20 @@ export function createCommands({
       let pos = line.from
       while (pos < line.to && isWhitespace(src, pos)) pos++
       return moveTo(view, pos)
+    },
+    // 次の行から, 行を移るときに, いつも今の桁へ動く (前置引数があれば, 止める)
+    'set-goal-column': (view, prefix) => {
+      if (prefix !== undefined) {
+        view.dispatch({ effects: goalColumnEffect.of(null) })
+        message('No goal column')
+        return true
+      }
+      const line = view.state.doc.lineAt(head(view))
+      const { tabWidth } = view.state.facet(indentConfig)
+      const column = columnAt(line.text, head(view) - line.from, tabWidth)
+      view.dispatch({ effects: goalColumnEffect.of(column) })
+      message(`Goal column ${column} (use C-x C-n with an arg to unset it)`)
+      return true
     },
 
     // 削除と編集
@@ -1186,6 +1243,7 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-a', 'backward-sentence'],
   ['Alt-e', 'forward-sentence'],
   ['Alt-m', 'back-to-indentation'],
+  ['Ctrl-x Ctrl-n', 'set-goal-column'],
   // 削除と編集
   ['Ctrl-d', 'delete-char'],
   ['Ctrl-k', 'kill-line'],
@@ -1423,6 +1481,7 @@ export function emacsKeymap(
     }
     if (!command) return false
     macro?.noteBinding(key.split(' ').length)
+    if (count !== null && ARGUMENT_COMMANDS.has(name)) return command(view, count)
     if (count === null || !repeatable(name)) return command(view)
     for (let i = 0; i < count; i++) command(view)
     return true

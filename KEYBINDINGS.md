@@ -30,6 +30,7 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `M-m` | back-to-indentation | 行の字下げの後ろへ |
 | `M-}` / `M-{` | forward-paragraph / backward-paragraph | 次の段落の後ろ・前の段落の前へ（段落は, 空白だけの行で分ける。scheme-mode では空の行だけ） |
 | `M-e` / `M-a` | forward-sentence / backward-sentence | 文の終わり・始めへ（文の終わりは, `.` などの後に空白 2 つか行の終わり。`。` などは, そのまま。段落の終わりも文の終わり） |
+| `C-x C-n` | set-goal-column | 今の桁を, 上下に移るときの桁にする（`C-u C-x C-n` で止める） |
 
 `C-n` / `C-p` は, 続けて押すあいだ, 始めの桁を保ちます.
 
@@ -355,7 +356,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 ## 実装状況
 
 ### 完全実装済み
-- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g, M-m, M-{, M-}, M-a, M-e）
+- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g, M-m, M-{, M-}, M-a, M-e, C-x C-n）
 - S 式移動（C-M-f, C-M-b, C-M-u, C-M-d, C-M-a, C-M-e）
 - 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
 - リージョン選択（C-SPC, C-x C-x, C-x h, M-@, C-M-SPC, C-M-h）

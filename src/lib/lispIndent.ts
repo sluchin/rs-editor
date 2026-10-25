@@ -77,6 +77,22 @@ export function columnAt(text: string, index: number, tabWidth: number): number 
 }
 
 /**
+ * 行の, 桁の位置を返します (Emacs の `move-to-column`). 桁がタブや全角の文字の途中なら, その文字の後ろです.
+ *
+ * @param text - 行.
+ * @param col - 桁.
+ * @param tabWidth - タブの幅.
+ * @returns 位置 (行の中). 行が短ければ, 行の終わり.
+ */
+export function indexAtColumn(text: string, col: number, tabWidth: number): number {
+  let i = 0
+  while (i < text.length && columnAt(text, i, tabWidth) < col) {
+    i += (text.codePointAt(i) as number) > 0xffff ? 2 : 1
+  }
+  return i
+}
+
+/**
  * 桁から桁までを埋める空白を返します (Emacs の `indent-to`).
  *
  * @param from - 始めの桁.

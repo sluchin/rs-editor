@@ -9,6 +9,7 @@ import {
   gotoLine,
   KEY_BINDINGS,
   describeKeyField,
+  goalColumnField,
   lastCommandField,
   markField,
   readCharField,
@@ -147,6 +148,27 @@ describe('移動', () => {
     expect(text()).toBe('a\nb\n|c')
     gotoLine(view, 0)
     expect(text()).toBe('|a\nb\nc')
+  })
+
+  it('C-x C-n で決めた桁へ, 行を移り, C-u C-x C-n で止めること', () => {
+    const { press, run, text, message, view } = setup('a\tb|c\nx\n\tyyyyyy\n日本語')
+    press('C-x C-n')
+    expect(message).toHaveBeenLastCalledWith('Goal column 9 (use C-x C-n with an arg to unset it)')
+    run('next-line')
+    expect(text()).toBe('a\tbc\nx|\n\tyyyyyy\n日本語')
+    run('next-line')
+    expect(text()).toBe('a\tbc\nx\n\ty|yyyyy\n日本語')
+    run('next-line')
+    expect(text()).toBe('a\tbc\nx\n\tyyyyyy\n日本語|')
+    press('C-u C-x C-n')
+    expect(message).toHaveBeenLastCalledWith('No goal column')
+    expect(view.state.field(goalColumnField)).toBeNull()
+  })
+
+  it('C-x C-n の桁が, 全角の文字の途中なら, その文字の後ろへ動くこと', () => {
+    const { press, text } = setup('abc|\n日本語')
+    press('C-x C-n C-n')
+    expect(text()).toBe('abc\n日本|語')
   })
 })
 

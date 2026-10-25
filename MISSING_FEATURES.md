@@ -17,6 +17,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - M-m - 行の字下げの後ろへ（back-to-indentation）
 - M-{, M-} - 段落の移動（backward-paragraph, forward-paragraph）
 - M-a, M-e - 文の移動（backward-sentence, forward-sentence）
+- C-x C-n - 上下に移るときの桁を決める（set-goal-column）
 - C-M-f, C-M-b - S 式単位の移動
 - C-M-u, C-M-d - リストの外と中へ（backward-up-list, down-list。M-x up-list）
 - C-M-a, C-M-e - defun の始めと終わり（beginning-of-defun, end-of-defun）
@@ -112,7 +113,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-M-n` / `C-M-p` | forward-list / backward-list | リストの単位の移動 |
-| `C-x C-n` | set-goal-column | 上下に移るときの桁を決める |
 | `C-x .` | set-fill-prefix | 段落の行の始めの文字を決める（段落の移動と `M-q` で使う） |
 
 ### ファイル・バッファ・ウィンドウ

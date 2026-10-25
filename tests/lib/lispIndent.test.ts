@@ -4,7 +4,14 @@ import { EditorView } from '@codemirror/view'
 import { type Command, createCommands, emacsState } from '@/lib/emacs'
 import { KillRing } from '@/lib/killRing'
 import { KeyboardMacro } from '@/lib/macro'
-import { charWidth, columnAt, type IndentConfig, indentConfig, indentLines } from '@/lib/lispIndent'
+import {
+  charWidth,
+  columnAt,
+  type IndentConfig,
+  indentConfig,
+  indentLines,
+  indexAtColumn,
+} from '@/lib/lispIndent'
 
 /** 作ったエディタ (テストの後に消す). */
 const views: EditorView[] = []
@@ -81,6 +88,11 @@ describe('桁', () => {
     expect(columnAt('a\tb', 3, 8)).toBe(9)
     expect(columnAt('あい', 2, 8)).toBe(4)
     expect(columnAt('😀a', 3, 8)).toBe(3)
+    // 桁の位置. 文字の途中なら, その文字の後ろ. 行が短ければ, 行の終わり
+    expect(indexAtColumn('😀a', 1, 8)).toBe(2)
+    expect(indexAtColumn('😀a', 3, 8)).toBe(3)
+    expect(indexAtColumn('a\tb', 4, 8)).toBe(2)
+    expect(indexAtColumn('ab', 9, 8)).toBe(2)
     const wide = [0x1100, 0x2e80, 0x3041, 0x3400, 0x4e00, 0xa000, 0xac00, 0xf900, 0xfe30]
     wide.push(0xff00, 0xffe0, 0x1f600, 0x1f900, 0x20000)
     for (const code of wide) expect(charWidth(code)).toBe(2)
