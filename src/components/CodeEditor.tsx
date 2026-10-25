@@ -14,7 +14,15 @@ import {
 } from '@codemirror/state'
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { controlChars } from '../lib/controlChars'
-import { type Command, createCommands, emacsKeymap, emacsState, gotoLine } from '../lib/emacs'
+import {
+  type Command,
+  createCommands,
+  emacsKeymap,
+  emacsState,
+  gotoLine,
+  markField,
+  replaceRectangle,
+} from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
 import type { MajorMode } from '../lib/modes'
@@ -97,6 +105,14 @@ export interface EditorHandle {
   replace: (from: number, to: number, text: string) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
   forget: (bufferId: string) => void
+  /** マークを置いていれば `true`. */
+  hasMark: () => boolean
+  /**
+   * 矩形の各行を, 文字で置き換えます (C-x r t).
+   *
+   * @returns マークが無ければ `false`.
+   */
+  stringRectangle: (string: string) => boolean
 }
 
 /** {@link CodeEditor} のプロパティ. */
@@ -309,6 +325,8 @@ export default function CodeEditor({
       forget: (id) => {
         states.current.delete(id)
       },
+      hasMark: () => current().state.field(markField) !== null,
+      stringRectangle: (string) => replaceRectangle(current(), string),
     }
   })
 

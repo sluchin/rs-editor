@@ -21,6 +21,7 @@ import { commentDwim } from './comment'
 import { findExpansions } from './dabbrev'
 import { countMessage } from './count'
 import { fillParagraph } from './fill'
+import { killRectangle, stringRectangle, yankRectangle } from './rectangle'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
@@ -459,6 +460,9 @@ export function createCommands({
 
   const text = (view: EditorView) => view.state.doc.toString()
 
+  /** 最後に消した矩形 (Emacs の `killed-rectangle`). */
+  let killedRectangle: string[] = []
+
   /**
    * 次に押す文字を待ってから, コマンドを動かします. 押す前は, 待つことにして, 聞く文字を出します.
    * 待っているあいだに, 同じコマンドを前置引数で繰り返したときは, 回数を足します.
@@ -702,6 +706,33 @@ export function createCommands({
         })
         return true
       }),
+    // 矩形を消して, 覚える (kill-ring には入れない)
+    'kill-rectangle': (view) => {
+      const mark = view.state.field(markField)
+      if (mark === null) {
+        message('The mark is not set now, so there is no region')
+        return true
+      }
+      const { spec, killed } = killRectangle(view.state, mark, head(view))
+      killedRectangle = killed
+      view.dispatch(spec, {
+        effects: setMarkEffect.of(null),
+        scrollIntoView: true,
+        userEvent: 'delete',
+        annotations: commandAnnotation.of({ name: 'kill-rectangle' }),
+      })
+      return true
+    },
+    // 最後に消した矩形を, カーソルを左上の角として入れる
+    'yank-rectangle': (view) => {
+      if (killedRectangle.length === 0) return true
+      view.dispatch(yankRectangle(view.state, head(view), killedRectangle), {
+        scrollIntoView: true,
+        userEvent: 'input.paste',
+        annotations: commandAnnotation.of({ name: 'yank-rectangle' }),
+      })
+      return true
+    },
     // 次に押すキーを, そのまま入れる (制御文字も. 8 進数で, 文字のコードも入れられる)
     'quoted-insert': (view) => {
       const quoted = view.state.field(quotedField)
@@ -978,6 +1009,25 @@ export function createCommands({
 }
 
 /**
+ * 矩形の各行を, 文字で置き換えます (`C-x r t`. 文字は, 画面がミニバッファで聞く).
+ *
+ * @param view - エディタ.
+ * @param string - 置き換える文字.
+ * @returns マークが無ければ `false`.
+ */
+export function replaceRectangle(view: EditorView, string: string): boolean {
+  const mark = view.state.field(markField)
+  if (mark === null) return false
+  view.dispatch(stringRectangle(view.state, mark, view.state.selection.main.head, string), {
+    effects: setMarkEffect.of(null),
+    scrollIntoView: true,
+    userEvent: 'input',
+    annotations: commandAnnotation.of({ name: 'string-rectangle' }),
+  })
+  return true
+}
+
+/**
  * 1 から数えた行の始めへ動きます (goto-line).
  *
  * @param view - エディタ.
@@ -1030,7 +1080,10 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-q', 'fill-paragraph'],
   ['Ctrl-q', 'quoted-insert'],
   ['Alt-=', 'count-words-region'],
-  // レジスタ
+  // 矩形とレジスタ
+  ['Ctrl-x r k', 'kill-rectangle'],
+  ['Ctrl-x r y', 'yank-rectangle'],
+  ['Ctrl-x r t', 'string-rectangle'],
   ['Ctrl-x r s', 'copy-to-register'],
   ['Ctrl-x r x', 'copy-to-register'],
   ['Ctrl-x r i', 'insert-register'],

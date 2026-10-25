@@ -29,6 +29,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-x C-u, C-x C-l - リージョンの大文字・小文字（upcase-region, downcase-region）
 - C-q - キーをそのまま入れる（quoted-insert）
 - M-= - 行、文、単語、文字の数（count-words-region. M-x count-words）
+- C-x r k, C-x r y, C-x r t - 矩形（kill-rectangle, yank-rectangle, string-rectangle）
 - C-x r s, C-x r i - レジスタ（copy-to-register, insert-register. 文字だけ）
 - C-o - 改行を入れる（open-line）
 - M-; - コメントの付け外し（comment-dwim）
@@ -92,7 +93,8 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-x r k` / `C-x r y` / `C-x r t` など | kill-rectangle など | 矩形の操作 |
+| `C-x r c` / `C-x r o` / `C-x r M-w` など | clear-rectangle など | そのほかの矩形の操作 |
+| `C-x SPC` | rectangle-mark-mode | 矩形を選ぶ |
 | `C-x r SPC` / `C-x r j` / `C-x r r` / `C-x r n` / `C-x r +` | point-to-register など | 位置, 矩形, 数のレジスタ |
 | `C-x r m` / `C-x r b` | bookmark-set / bookmark-jump | ブックマーク |
 | `C-x n n` / `C-x n w` | narrow-to-region / widen | ナローイング |

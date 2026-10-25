@@ -69,6 +69,7 @@ type PendingAction =
   | 'confirm-exit'
   | 'replace-from'
   | 'replace-to'
+  | 'string-rectangle'
   | null
 
 /** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
@@ -206,6 +207,8 @@ function App() {
   }))
   // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
   const lispHost = useRef<LispHost>(undefined)
+  // 最後に C-x r t で入れた文字 (次の既定)
+  const rectangleString = useRef<string | null>(null)
 
   // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
@@ -619,6 +622,23 @@ function App() {
   }
 
   /**
+   * 矩形を置き換える文字を, ミニバッファで聞きます (C-x r t).
+   */
+  const handleStringRectangle = () => {
+    if (!editor.current?.hasMark()) {
+      showMessage('The mark is not set now, so there is no region')
+      return
+    }
+    const last = rectangleString.current
+    setPendingAction('string-rectangle')
+    setMinibufferState({
+      mode: 'input',
+      prompt: last === null ? 'String rectangle: ' : `String rectangle (default ${last}): `,
+      input: '',
+    })
+  }
+
+  /**
    * 移動する行の番号を, ミニバッファで聞きます (M-g g).
    */
   const handleGotoLine = () => {
@@ -864,6 +884,7 @@ function App() {
     'replace-string': () => handleReplace({ query: false, regexp: false }),
     'replace-regexp': () => handleReplace({ query: false, regexp: true }),
     'goto-line': handleGotoLine,
+    'string-rectangle': handleStringRectangle,
     ...Object.fromEntries(
       lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
     ),
@@ -957,6 +978,12 @@ function App() {
           input: '',
         })
       }
+    } else if (action === 'string-rectangle') {
+      // 空の入力は, 次の既定にしない (Emacs の履歴と同じ)
+      const string = value === '' ? (rectangleString.current ?? '') : value
+      if (string !== '') rectangleString.current = string
+      editor.current?.stringRectangle(string)
+      showMessage('')
     } else if (action === 'replace-to') {
       const state = replace as ReplaceState
       const spec = { from: state.from as string, to: value, regexp: state.kind.regexp }

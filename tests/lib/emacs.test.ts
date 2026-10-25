@@ -12,6 +12,7 @@ import {
   lastCommandField,
   markField,
   readCharField,
+  replaceRectangle,
   quotedField,
   quotedChar,
   pageLines,
@@ -538,6 +539,33 @@ describe('削除とキル', () => {
     view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }))
     view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q' }))
     expect(view.state.doc.toString()).toBe('shared')
+  })
+
+  it('C-x r k で矩形を消し, C-x r y で入れること (マークが無ければ, 知らせる)', () => {
+    const { press, run, text, view, message } = setup('ab|cd\nefgh')
+    // 消す前は, 何も入れない
+    press('C-x r y')
+    expect(text()).toBe('ab|cd\nefgh')
+    press('C-x r k')
+    expect(message).toHaveBeenLastCalledWith('The mark is not set now, so there is no region')
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 8 } })
+    press('C-x r k')
+    expect(text()).toBe('abd\nef|h')
+    expect(view.state.field(markField)).toBeNull()
+    view.dispatch({ selection: { anchor: 0 } })
+    press('C-x r y')
+    expect(text()).toBe('cabd\ng|efh')
+  })
+
+  it('矩形を, 文字で置き換えること (マークが無ければ, false を返す)', () => {
+    const { run, text, view } = setup('a|b\ncd')
+    expect(replaceRectangle(view, 'X')).toBe(false)
+    run('set-mark-command')
+    view.dispatch({ selection: { anchor: 4 } })
+    expect(replaceRectangle(view, 'XY')).toBe(true)
+    expect(text()).toBe('aXYb\ncXY|d')
+    expect(view.state.field(markField)).toBeNull()
   })
 
   it('C-o で, カーソルを動かさずに改行を入れること', () => {

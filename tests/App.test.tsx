@@ -850,4 +850,45 @@ describe('App', () => {
     editor.key('g', { ctrl: true })
     expect(editor.text()).toContain('Quit')
   })
+
+  describe('矩形', () => {
+    /**
+     * C-x r に続けて, キーを押します.
+     *
+     * @param editor - エディタ.
+     * @param k - キー.
+     */
+    const ctrlXr = (editor: Awaited<ReturnType<typeof setup>>, k: string) => {
+      editor.key('x', { ctrl: true })
+      editor.key('r')
+      editor.key(k)
+    }
+
+    it('C-x r t で, 文字を聞いて, 矩形を置き換えること (2 回目からは, 前の文字が既定)', async () => {
+      const editor = await setup()
+      ctrlXr(editor, 't')
+      expect(editor.text()).toContain('The mark is not set now, so there is no region')
+      // 前の文字が無ければ, 空の文字 (矩形を消す)
+      await editor.type('xy', 0)
+      editor.key(' ', { ctrl: true })
+      act(() => editor.editor.dispatch({ selection: { anchor: 1 } }))
+      ctrlXr(editor, 't')
+      await editor.submit('')
+      expect(editor.doc()).toBe('y')
+      await editor.type('abc\ndef', 1)
+      editor.key(' ', { ctrl: true })
+      act(() => editor.editor.dispatch({ selection: { anchor: 6 } }))
+      ctrlXr(editor, 't')
+      expect(editor.text()).toContain('String rectangle: ')
+      await editor.submit('XY')
+      expect(editor.doc()).toBe('aXYc\ndXYf')
+      act(() => editor.editor.dispatch({ selection: { anchor: 0 } }))
+      editor.key(' ', { ctrl: true })
+      act(() => editor.editor.dispatch({ selection: { anchor: 1 } }))
+      ctrlXr(editor, 't')
+      expect(editor.text()).toContain('String rectangle (default XY): ')
+      await editor.submit('')
+      expect(editor.doc()).toBe('XYXYc\ndXYf')
+    })
+  })
 })
