@@ -31,6 +31,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - M-/ - 単語の補完（dabbrev-expand。今のバッファの中だけを探す）
 - M-z - 文字までキル（zap-to-char）
 - M-q - 段落を詰める（fill-paragraph。Lisp では、コメントを詰める。文字列は詰めない）
+- M-SPC, M-\, M-^, C-x C-o - 空白と空の行を消す（just-one-space, delete-horizontal-space, delete-indentation, delete-blank-lines）
 - C-/, C-x C-/ - Undo / Redo（バッファごと）
 
 **改行と字下げ**
@@ -87,10 +88,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-SPC` | just-one-space | 空白を 1 つにする |
-| `M-\` | delete-horizontal-space | 空白を消す |
-| `M-^` | delete-indentation | 前の行とつなげる |
-| `C-x C-o` | delete-blank-lines | 空の行を消す |
 | `C-x C-u` / `C-x C-l` | upcase-region / downcase-region | リージョンの大文字・小文字 |
 | `C-q` | quoted-insert | 文字をそのまま入れる |
 | `M-=` | count-words-region | 行、単語、文字の数 |
@@ -175,7 +172,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
 
 次の候補は、よく使い、手間の小さいものから:
-1. 編集: `M-SPC`, `M-\`, `M-^`, `M-m`
+1. 編集: `M-m`
 2. Lisp の移動: `C-M-u`, `C-M-d`, `C-M-a`, `C-M-e`
 3. ヘルプ: `C-h f`, `C-h v`
 4. Dired

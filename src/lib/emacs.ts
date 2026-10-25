@@ -13,6 +13,7 @@ import {
   type Extension,
   StateEffect,
   StateField,
+  type TransactionSpec,
 } from '@codemirror/state'
 import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
@@ -22,6 +23,7 @@ import { fillParagraph } from './fill'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
+import { deleteBlankLines, deleteHorizontalSpace, deleteIndentation, justOneSpace } from './spaces'
 import { type CaseKind, changeCase, clampLine, wordBackward, wordForward } from './text'
 
 /** 直前のコマンド. */
@@ -393,6 +395,25 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
 
   const text = (view: EditorView) => view.state.doc.toString()
 
+  /**
+   * 空白を変える変更をします.
+   *
+   * @param view - エディタ.
+   * @param spec - 変更とカーソル (無ければ, 何もしない).
+   * @returns `true`.
+   */
+  const changeSpaces = (view: EditorView, spec: TransactionSpec | null): boolean => {
+    if (spec) {
+      view.dispatch({
+        ...spec,
+        scrollIntoView: true,
+        userEvent: 'delete',
+        annotations: commandAnnotation.of({ name: 'spaces' }),
+      })
+    }
+    return true
+  }
+
   return {
     // 移動
     'forward-char': (view) => moveTo(view, Math.min(head(view) + 1, view.state.doc.length)),
@@ -573,6 +594,11 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       }
       return true
     },
+    'just-one-space': (view) => changeSpaces(view, justOneSpace(view.state, head(view))),
+    'delete-horizontal-space': (view) =>
+      changeSpaces(view, deleteHorizontalSpace(view.state, head(view))),
+    'delete-indentation': (view) => changeSpaces(view, deleteIndentation(view.state, head(view))),
+    'delete-blank-lines': (view) => changeSpaces(view, deleteBlankLines(view.state, head(view))),
     'upcase-word': (view) => caseWord(view, 'upcase'),
     'downcase-word': (view) => caseWord(view, 'downcase'),
     'capitalize-word': (view) => caseWord(view, 'capitalize'),
@@ -840,6 +866,10 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-/', 'dabbrev-expand'],
   ['Alt-z', 'zap-to-char'],
   ['Alt-q', 'fill-paragraph'],
+  ['Alt-Space', 'just-one-space'],
+  ['Alt-\\', 'delete-horizontal-space'],
+  ['Alt-^', 'delete-indentation'],
+  ['Ctrl-x Ctrl-o', 'delete-blank-lines'],
   ['Alt-u', 'upcase-word'],
   ['Alt-l', 'downcase-word'],
   ['Alt-c', 'capitalize-word'],
