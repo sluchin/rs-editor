@@ -1,255 +1,324 @@
-// Scheme 評価器のエッジケーステスト.
+//! Scheme の評価器, パーサ, 値の表示の, 境界の場合のテスト.
 
-#[cfg(test)]
+use rseditor::scheme::evaluator::Evaluator;
+use rseditor::scheme::parser::Parser;
+use rseditor::scheme::value::Value;
+
+/// 評価して, 結果を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 結果 (失敗したら panic する).
+fn eval(code: &str) -> String {
+    Evaluator::new().eval(code).unwrap()
+}
+
+/// 評価して, 失敗の内容を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 失敗の内容 (成功したら panic する).
+fn eval_err(code: &str) -> String {
+    Evaluator::new().eval(code).unwrap_err()
+}
+
+/// 読み込んで, 式を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 式 (失敗したら panic する).
+fn parse(code: &str) -> Vec<Value> {
+    Parser::new(code).parse().unwrap()
+}
+
+/// 読み込んで, 失敗の内容を返す.
+///
+/// # Arguments
+///
+/// * `code` - コード.
+///
+/// # Returns
+///
+/// 失敗の内容 (成功したら panic する).
+fn parse_err(code: &str) -> String {
+    Parser::new(code).parse().unwrap_err()
+}
+
+/// 数のリストの値を作る.
+///
+/// # Arguments
+///
+/// * `numbers` - 数.
+///
+/// # Returns
+///
+/// リスト.
+fn number_list(numbers: &[f64]) -> Value {
+    Value::List(numbers.iter().map(|n| Value::Number(*n)).collect())
+}
+
+/// Scheme 評価器のエッジケーステスト.
 mod evaluator_edge_cases {
-    // このテストモジュールでは, 評価器のエッジケースをドキュメントします.
-    // 将来的に実装される予定です.
+    use super::*;
 
     #[test]
     fn test_arithmetic_with_large_numbers() {
-        // 大きな数値の算術演算が正しく動作することを確認.
-        let a: f64 = 1e10;
-        let b: f64 = 1e10;
-        let sum = a + b;
-        assert_eq!(sum, 2e10);
+        // 大きな数でも, 整数として表示する.
+        assert_eq!(eval("(+ 10000000000 10000000000)"), "20000000000");
     }
 
     #[test]
     fn test_arithmetic_with_negative_numbers() {
-        // 負の数値の算術演算が正しく動作することを確認.
-        assert_eq!(-5 + 3, -2);
-        assert_eq!(-5 - 3, -8);
-        assert_eq!(-5 * 3, -15);
-        assert_eq!(-20 / 4, -5);
+        assert_eq!(eval("(+ -5 3)"), "-2");
+        assert_eq!(eval("(- -5 3)"), "-8");
+        assert_eq!(eval("(* -5 3)"), "-15");
+        assert_eq!(eval("(/ -20 4)"), "-5");
     }
 
     #[test]
     fn test_arithmetic_with_floats() {
-        // 浮動小数点数の演算が正しく動作することを確認.
-        let result: f64 = 0.1 + 0.2;
-        // 浮動小数点数の精度問題に対応.
-        assert!((result - 0.3).abs() < 1e-10);
+        // 浮動小数点数の誤差があるので, 差で比べる.
+        assert_eq!(eval("(< (abs (- (+ 0.1 0.2) 0.3)) 0.0000000001)"), "#t");
+        assert_eq!(eval("(* 0.5 3)"), "1.5");
     }
 
     #[test]
-    // ゼロの単位元・零元の扱いを確認するテストなので, 意図した式.
-    #[allow(clippy::identity_op, clippy::erasing_op)]
     fn test_zero_operations() {
-        // ゼロを含む演算が正しく動作することを確認.
-        assert_eq!(0 + 5, 5);
-        assert_eq!(0 * 100, 0);
-        assert_eq!(5 - 0, 5);
+        assert_eq!(eval("(+ 0 5)"), "5");
+        assert_eq!(eval("(* 0 100)"), "0");
+        assert_eq!(eval("(- 5 0)"), "5");
     }
 
     #[test]
     fn test_multiple_operations_left_to_right() {
-        // (- 10 2 3) は (- (- 10 2) 3) = 5 となることを確認.
-        let result = 10 - 2 - 3;
-        assert_eq!(result, 5);
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_operator_with_no_arguments_errors() {
-        // 引数なしの演算子はエラーになることを確認する予定.
-        // (+) のように引数なしの場合はエラー.
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_operator_with_wrong_type_errors() {
-        // 型が間違っている場合はエラーになることを確認する予定.
-        // (+ "hello" 1) はエラー.
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_quote_preserves_structure() {
-        // (quote (1 2 3)) は評価されずに (1 2 3) を返すことを確認する予定.
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_list_operation_with_evaluated_elements() {
-        // (list (+ 1 1) (* 2 3)) は (2 6) を返すことを確認する予定.
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_empty_list() {
-        // () は空のリストに評価されることを確認する予定.
-    }
-
-    #[test]
-    #[ignore = "プレースホルダー: 未実装"]
-    fn test_nested_list_operations() {
-        // (list (list 1 2) (list 3 4)) がネストされた構造を作成することを確認する予定.
-    }
-
-    #[test]
-    fn test_mixed_numeric_types() {
-        // (+ 1 2.5 3) が動作して 6.5 を返すことを確認する予定.
-        let result = 1.0 + 2.5 + 3.0;
-        assert_eq!(result, 6.5);
+        // (- 10 2 3) は (- (- 10 2) 3).
+        assert_eq!(eval("(- 10 2 3)"), "5");
+        assert_eq!(eval("(/ 100 5 2)"), "10");
     }
 
     #[test]
     fn test_division_precision() {
-        // 10 / 3 が約 3.333... になることを確認.
-        let result: f64 = 10.0 / 3.0;
-        assert!((result - 3.333).abs() < 0.001);
+        assert!(eval("(/ 10 3)").starts_with("3.333"));
     }
 
     #[test]
     fn test_multiplication_order_independence() {
-        // 乗算は可換であることを確認.
-        assert_eq!(3 * 4, 4 * 3);
-        assert_eq!(3 * 4 * 5, 5 * 4 * 3);
+        assert_eq!(eval("(= (* 3 4) (* 4 3))"), "#t");
+        assert_eq!(eval("(= (* 3 4 5) (* 5 4 3))"), "#t");
     }
 
     #[test]
     fn test_addition_order_independence() {
-        // 加算は可換であることを確認.
-        assert_eq!(1 + 2, 2 + 1);
-        assert_eq!(1 + 2 + 3, 3 + 2 + 1);
+        assert_eq!(eval("(= (+ 1 2) (+ 2 1))"), "#t");
+        assert_eq!(eval("(= (+ 1 2 3) (+ 3 2 1))"), "#t");
     }
 
     #[test]
     fn test_subtraction_order_dependent() {
-        // 減算は可換ではないことを確認.
-        assert_ne!(5 - 3, 3 - 5);
-        assert_eq!(5 - 3, 2);
-        assert_eq!(3 - 5, -2);
+        assert_eq!(eval("(- 5 3)"), "2");
+        assert_eq!(eval("(- 3 5)"), "-2");
     }
 
     #[test]
     fn test_division_order_dependent() {
-        // 除算は可換ではないことを確認.
-        assert_ne!(20.0 / 4.0, 4.0 / 20.0);
-        assert_eq!(20.0 / 4.0, 5.0);
-        assert_eq!(4.0 / 20.0, 0.2);
+        assert_eq!(eval("(/ 20 4)"), "5");
+        assert_eq!(eval("(/ 4 20)"), "0.2");
+    }
+
+    #[test]
+    fn test_operators_without_arguments() {
+        // 加算と乗算は, 単位元を返す (Scheme と同じ). 減算と除算は, 引数が要る.
+        assert_eq!(eval("(+)"), "0");
+        assert_eq!(eval("(*)"), "1");
+        assert_eq!(eval_err("(-)"), "- expects at least one argument");
+        assert_eq!(eval_err("(/)"), "/ expects at least two arguments");
+    }
+
+    #[test]
+    fn test_operator_with_wrong_type_errors() {
+        assert_eq!(eval_err("(+ \"hello\" 1)"), "+ expects numbers");
+    }
+
+    #[test]
+    fn test_quote_preserves_structure() {
+        // 評価せずに, そのまま返す.
+        assert_eq!(eval("(quote (1 2 3))"), "(1 2 3)");
+        assert_eq!(eval("'(+ 1 2)"), "(+ 1 2)");
+    }
+
+    #[test]
+    fn test_list_operation_with_evaluated_elements() {
+        assert_eq!(eval("(list (+ 1 1) (* 2 3))"), "(2 6)");
+    }
+
+    #[test]
+    fn test_empty_list() {
+        assert_eq!(eval("()"), "()");
+        assert_eq!(eval("(null? '())"), "#t");
+    }
+
+    #[test]
+    fn test_nested_list_operations() {
+        assert_eq!(eval("(list (list 1 2) (list 3 4))"), "((1 2) (3 4))");
+    }
+
+    #[test]
+    fn test_mixed_numeric_types() {
+        // 整数と小数を混ぜても, 計算できる.
+        assert_eq!(eval("(+ 1 2.5 3)"), "6.5");
     }
 }
 
-// Scheme パーサーのエッジケーステスト.
-#[cfg(test)]
+/// Scheme パーサーのエッジケーステスト.
 mod parser_edge_cases {
-    // パーサーのエッジケースをテストします.
+    use super::*;
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_empty_list() {
-        // () が正しくパースされることを確認する予定.
+        assert_eq!(parse("()"), vec![Value::List(vec![])]);
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_nested_lists() {
-        // ((1 2) (3 4)) が正しくパースされることを確認する予定.
+        assert_eq!(
+            parse("((1 2) (3 4))"),
+            vec![Value::List(vec![
+                number_list(&[1.0, 2.0]),
+                number_list(&[3.0, 4.0]),
+            ])]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_symbol_with_special_chars() {
-        // foo-bar, foo_bar, foo?, foo! がすべてパースされることを確認する予定.
+        let symbols = ["foo-bar", "foo_bar", "foo?", "foo!"];
+        assert_eq!(
+            parse(&symbols.join(" ")),
+            symbols
+                .iter()
+                .map(|s| Value::Symbol(s.to_string()))
+                .collect::<Vec<_>>()
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_string_with_escapes() {
-        // "hello\\nworld" が正しくパースされることを確認する予定.
+        assert_eq!(
+            parse(r#""hello\nworld\t\"q\" \\""#),
+            vec![Value::String("hello\nworld\t\"q\" \\".to_string())]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_number_formats() {
-        // 42, -42, 3.14, -3.14 がすべてパースされることを確認する予定.
+        assert_eq!(
+            parse("42 -42 3.5 -3.5"),
+            vec![
+                Value::Number(42.0),
+                Value::Number(-42.0),
+                Value::Number(3.5),
+                Value::Number(-3.5),
+            ]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_boolean_formats() {
-        // #t と #f が正しくパースされることを確認する予定.
+        assert_eq!(
+            parse("#t #f"),
+            vec![Value::Boolean(true), Value::Boolean(false)]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_comments() {
-        // コメント (;) がスキップされることを確認する予定.
+        // `;` から行末までは, 読み飛ばす (最後の行のコメントも).
+        assert_eq!(
+            parse("; first\n1 ; second\n2 ; last"),
+            vec![Value::Number(1.0), Value::Number(2.0)]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_whitespace_variations() {
-        // 異なるホワイトスペース (スペース, タブ, 改行) がすべて機能することを確認する予定.
+        assert_eq!(
+            parse(" 1\t2\n3\r\n4 "),
+            vec![
+                Value::Number(1.0),
+                Value::Number(2.0),
+                Value::Number(3.0),
+                Value::Number(4.0),
+            ]
+        );
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_multiple_expressions() {
-        // 1 2 3 が3つの独立した式としてパースされることを確認する予定.
+        assert_eq!(parse("1 2 3").len(), 3);
+        assert_eq!(parse("(+ 1 2) (* 3 4)").len(), 2);
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_unclosed_list_error() {
-        // ( がエラーを引き起こすことを確認する予定.
+        assert_eq!(parse_err("("), "Unclosed list");
+        assert_eq!(parse_err("(1 (2)"), "Unclosed list");
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_unclosed_string_error() {
-        // "hello (引用符なし) がエラーを引き起こすことを確認する予定.
+        assert_eq!(parse_err("\"hello"), "Unclosed string");
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 未実装"]
     fn test_parse_invalid_escape_sequence() {
-        // "hello\\x" が不正なエスケープシーケンスでエラーになることを確認する予定.
+        assert_eq!(parse_err(r#""hello\x""#), "Invalid escape sequence");
     }
 }
 
-// Value 型の表示形式のテスト.
-#[cfg(test)]
+/// Value 型の表示形式のテスト.
 mod value_display_tests {
-    // Value 型の表示フォーマットをテストします.
+    use super::*;
 
     #[test]
     fn test_nil_display() {
-        // nil が正しく表示されることを確認.
-        let nil_str = "nil";
-        assert_eq!(nil_str, "nil");
+        assert_eq!(Value::Nil.to_string(), "nil");
     }
 
     #[test]
     fn test_symbol_display() {
-        // シンボルが正しく表示されることを確認.
-        let sym = "foo-bar";
-        assert_eq!(sym, "foo-bar");
+        assert_eq!(Value::Symbol("foo-bar".to_string()).to_string(), "foo-bar");
     }
 
     #[test]
     fn test_string_display_with_special_chars() {
-        // 特殊文字を含む文字列が正しく表示されることを確認.
-        let s = r#""hello\nworld""#;
-        assert!(s.contains("hello"));
-        assert!(s.contains("world"));
+        // 文字列は, 引用符を付けて, 特殊な文字をエスケープして表す. `display` では, そのまま.
+        let value = Value::String("hello\nworld".to_string());
+        assert_eq!(value.to_string(), r#""hello\nworld""#);
+        assert_eq!(value.to_display(), "hello\nworld");
     }
 
     #[test]
     fn test_list_display_with_many_items() {
-        // (1 2 3 4 5) が正しく表示されることを確認.
-        let expected = "(1 2 3 4 5)";
-        assert!(expected.starts_with('('));
-        assert!(expected.ends_with(')'));
+        assert_eq!(
+            number_list(&[1.0, 2.0, 3.0, 4.0, 5.0]).to_string(),
+            "(1 2 3 4 5)"
+        );
     }
 
     #[test]
     fn test_deeply_nested_list_display() {
-        // (((1 2) 3) 4) が正しく表示されることを確認.
-        let expected = "(((1 2) 3) 4)";
-        assert!(expected.starts_with('('));
-        assert!(expected.ends_with(')'));
-        assert_eq!(expected.matches('(').count(), 3);
+        assert_eq!(eval("'(((1 2) 3) 4)"), "(((1 2) 3) 4)");
     }
 }

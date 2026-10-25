@@ -1,307 +1,289 @@
-// ファイル操作に関連したテスト.
-#[cfg(test)]
+//! ファイル操作, パーサと評価器の連携, エラー処理, 並行処理, 境界の場合の結合テスト.
+//!
+//! 画面から呼ぶコマンド ([`rseditor::commands`]) を通して確かめる.
+
+use std::path::Path;
+
+use tempfile::TempDir;
+
+use rseditor::commands::{
+    eval_code, load_init_file, path_exists, read_file_content, write_file_content,
+};
+use rseditor::scheme::evaluator::Evaluator;
+use rseditor::scheme::host::NoHost;
+
+/// パスを, コマンドに渡す文字列にする.
+///
+/// # Arguments
+///
+/// * `path` - パス.
+///
+/// # Returns
+///
+/// パスの文字列.
+fn path_string(path: &Path) -> String {
+    path.to_string_lossy().into_owned()
+}
+
+/// 一時ディレクトリに, ファイルを書く (コマンドを通す).
+///
+/// # Arguments
+///
+/// * `dir` - 一時ディレクトリ.
+/// * `name` - ファイルの名前.
+/// * `content` - 書く内容.
+///
+/// # Returns
+///
+/// ファイルのパス.
+fn write(dir: &TempDir, name: &str, content: &str) -> String {
+    let path = path_string(&dir.path().join(name));
+    write_file_content(path.clone(), content.to_string()).unwrap();
+    path
+}
+
+/// ファイル操作に関連したテスト.
 mod file_operations_tests {
-    use std::fs;
-    use std::io::Write;
-    use tempfile::TempDir;
+    use super::*;
 
     #[test]
     fn test_create_and_read_file() {
-        // ファイルを作成して読み込めることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("test.scm");
-
-        // ファイルにコンテンツを書く.
-        let mut file = fs::File::create(&file_path).unwrap();
-        file.write_all(b"(+ 1 2)").unwrap();
-
-        // ファイルを読み込む.
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "(+ 1 2)");
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "test.scm", "(+ 1 2)");
+        assert!(path_exists(path.clone()));
+        assert_eq!(read_file_content(path).unwrap(), "(+ 1 2)");
     }
 
     #[test]
     fn test_write_file_overwrites_existing() {
-        // ファイルの上書きが機能することを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("test.scm");
-
-        // 初期コンテンツを書く.
-        fs::write(&file_path, "(+ 1 2)").unwrap();
-
-        // 新しいコンテンツで上書き.
-        fs::write(&file_path, "(* 3 4)").unwrap();
-
-        // コンテンツが変更されたことを確認.
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "(* 3 4)");
+        let dir = TempDir::new().unwrap();
+        write(&dir, "test.scm", "(+ 1 2)");
+        let path = write(&dir, "test.scm", "(* 3 4)");
+        assert_eq!(read_file_content(path).unwrap(), "(* 3 4)");
     }
 
     #[test]
-    fn test_append_to_file() {
-        // ファイルに追記できることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("test.scm");
-
-        // 初期コンテンツでファイルを作成.
-        fs::write(&file_path, "(+ 1 2)").unwrap();
-
-        // さらにコンテンツを追記.
-        let mut file = fs::OpenOptions::new()
-            .append(true)
-            .open(&file_path)
-            .unwrap();
-        file.write_all(b"\n(* 3 4)").unwrap();
-
-        // 両方の行が存在することを確認.
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert!(content.contains("(+ 1 2)"));
-        assert!(content.contains("(* 3 4)"));
+    fn test_save_edited_buffer() {
+        // 読んだ内容に書き足して保存すると (C-x C-s), 両方の行が残る.
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "test.scm", "(+ 1 2)");
+        let edited = read_file_content(path.clone()).unwrap() + "\n(* 3 4)";
+        write_file_content(path.clone(), edited).unwrap();
+        assert_eq!(read_file_content(path).unwrap(), "(+ 1 2)\n(* 3 4)");
     }
 
     #[test]
     fn test_read_nonexistent_file_fails() {
-        // 存在しないファイルを読むとエラーになることを確認.
-        let result = fs::read_to_string("/nonexistent/path/to/file.scm");
-        assert!(result.is_err());
+        let dir = TempDir::new().unwrap();
+        let missing = path_string(&dir.path().join("none.scm"));
+        assert!(!path_exists(missing.clone()));
+        assert!(read_file_content(missing).is_err());
     }
 
     #[test]
     fn test_file_with_special_characters() {
-        // 特殊文字を含むコンテンツが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("test_special.scm");
-
+        let dir = TempDir::new().unwrap();
         let content = "(define greeting \"Hello, World!\\nHow are you?\")\n(+ 1 2 3)";
-        fs::write(&file_path, content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back, content);
+        let path = write(&dir, "test_special.scm", content);
+        assert_eq!(read_file_content(path).unwrap(), content);
     }
 
     #[test]
     fn test_empty_file() {
-        // 空のファイルが正しく作成・読み込みできることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("empty.scm");
-
-        fs::write(&file_path, "").unwrap();
-
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "");
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "empty.scm", "");
+        assert_eq!(read_file_content(path).unwrap(), "");
     }
 
     #[test]
     fn test_large_file() {
-        // 大きなファイルが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("large.scm");
-
-        let mut content = String::new();
-        for i in 0..1000 {
-            content.push_str(&format!("(+ {} 1)\n", i));
-        }
-
-        fs::write(&file_path, &content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back.lines().count(), 1000);
+        let dir = TempDir::new().unwrap();
+        let content: String = (0..1000).map(|i| format!("(+ {} 1)\n", i)).collect();
+        let path = write(&dir, "large.scm", &content);
+        assert_eq!(read_file_content(path).unwrap().lines().count(), 1000);
     }
 
     #[test]
     fn test_unicode_content() {
-        // Unicode を含むコンテンツが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("unicode.scm");
-
+        let dir = TempDir::new().unwrap();
         let content =
             "(define greeting \"你好世界\")  ; Hello World in Chinese\n(define emoji \"🎉🚀\")";
-        fs::write(&file_path, content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back, content);
+        let path = write(&dir, "unicode.scm", content);
+        assert_eq!(read_file_content(path).unwrap(), content);
     }
 }
 
-// パーサーと評価器の統合テスト.
-#[cfg(test)]
+/// パーサーと評価器の統合テスト (ファイルを読んで, 評価する).
 mod parser_evaluator_integration {
-    // これらのテストは, パーサーと評価器が一緒に機能することを検証します.
-    // 将来的にモジュールをインポートできるようになったときに, 実装する予定です.
+    use super::*;
 
     #[test]
     fn test_basic_arithmetic_pipeline() {
-        // "(+ 1 2)" をパースして評価すると "3" を得ることをテストする予定.
-        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
-        assert_eq!(1 + 2, 3);
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "a.scm", "(+ 1 2)");
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "3");
+        assert_eq!(response.error, None);
     }
 
     #[test]
     fn test_nested_expressions_pipeline() {
-        // "(+ 1 (* 2 3))" をパースして評価すると "7" を得ることをテストする予定.
-        // プレースホルダー: 実際のモジュールインポートが可能になったときに実装.
-        assert_eq!(1 + (2 * 3), 7);
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "a.scm", "(+ 1 (* 2 3))");
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "7");
     }
 
     #[test]
-    #[ignore = "プレースホルダー: 実際のモジュールインポートが可能になったときに実装する"]
     fn test_multiple_expressions_pipeline() {
-        // 複数の最上位フォームをパースして評価することをテストする予定.
+        // 最上位の式ごとの結果を, 改行で区切る. 定義は, 後の式から使える.
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "a.scm", "(define x 10)\n(* x 2)\n; done\n");
+        let evaluator = Evaluator::new();
+        let response = load_init_file(&evaluator, Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "x\n20");
+        // 読んだ定義は, 評価器に残る.
+        assert_eq!(eval_code(&evaluator, "(+ x 1)").result, "11");
     }
 }
 
-// エラー処理に関連したテスト.
-#[cfg(test)]
+/// エラー処理に関連したテスト.
 mod error_handling_tests {
-    use std::fs;
-    use tempfile::TempDir;
-
-    // 不正な入力の拒否はパーサーモジュールのテストで, ゼロ除算のエラーは評価器モジュールのテストで確認する.
+    use super::*;
 
     #[test]
     fn test_handle_missing_file_gracefully() {
-        // 存在しないファイルを読もうとするとエラーになることを確認.
-        let result = fs::read_to_string("/definitely/does/not/exist.scm");
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.kind() == std::io::ErrorKind::NotFound);
+        // ファイルの無い初期設定ファイルは, 何もせずに成功する.
+        let dir = TempDir::new().unwrap();
+        let missing = dir.path().join("none.scm");
+        let response = load_init_file(&Evaluator::new(), Some(&missing), &NoHost);
+        assert_eq!(response.result, "");
+        assert_eq!(response.error, None);
     }
 
     #[test]
+    fn test_handle_invalid_code_in_file() {
+        // 読めないコードの失敗には, ファイルのパスを添える.
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "broken.scm", "(+ 1");
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.error, Some(format!("{}: Unclosed list", path)));
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn test_handle_permission_errors() {
-        // Unix システムでは, ファイルを読み取り不可にするとエラーになることを確認.
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let temp_dir = TempDir::new().unwrap();
-            let file_path = temp_dir.path().join("restricted.scm");
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt;
 
-            fs::write(&file_path, "content").unwrap();
-            fs::set_permissions(&file_path, fs::Permissions::from_mode(0o000)).unwrap();
-
-            let result = fs::read_to_string(&file_path);
-            assert!(result.is_err());
-
-            // クリーンアップ用に権限を復元.
-            fs::set_permissions(&file_path, fs::Permissions::from_mode(0o644)).ok();
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "restricted.scm", "content");
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).unwrap();
+        // root では, 権限が無くても読めるので, 読めないときだけ確かめる.
+        if fs::read_to_string(&path).is_err() {
+            assert!(read_file_content(path.clone()).is_err());
         }
+        // 一時ディレクトリを消せるよう, 権限を戻す.
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
     }
 }
 
-// 並行処理に関連したテスト.
-#[cfg(test)]
+/// 並行処理に関連したテスト.
 mod concurrent_operations_tests {
-    use std::fs;
     use std::sync::Arc;
-    use tempfile::TempDir;
+
+    use super::*;
 
     #[test]
     fn test_concurrent_reads() {
-        // 複数のスレッドから同時にファイルを読めることを確認.
-        let temp_dir = Arc::new(TempDir::new().unwrap());
-        let file_path = temp_dir.path().join("concurrent.scm");
-
-        fs::write(&file_path, "(+ 1 2)").unwrap();
-
-        let mut handles = vec![];
-
-        for i in 0..5 {
-            let file_path_clone = file_path.clone();
-            let handle = std::thread::spawn(move || {
-                let content = fs::read_to_string(&file_path_clone).unwrap();
-                assert_eq!(content, "(+ 1 2)");
-                i
-            });
-            handles.push(handle);
-        }
-
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "concurrent.scm", "(+ 1 2)");
+        let handles: Vec<_> = (0..5)
+            .map(|_| {
+                let path = path.clone();
+                std::thread::spawn(move || read_file_content(path).unwrap())
+            })
+            .collect();
         for handle in handles {
-            handle.join().unwrap();
+            assert_eq!(handle.join().unwrap(), "(+ 1 2)");
         }
+    }
+
+    #[test]
+    fn test_concurrent_evaluations() {
+        // 評価は 1 度に 1 つずつ行うので, 別のスレッドからの定義が, 全て残る.
+        let evaluator = Arc::new(Evaluator::new());
+        let handles: Vec<_> = (0..5)
+            .map(|i| {
+                let evaluator = Arc::clone(&evaluator);
+                std::thread::spawn(move || eval_code(&evaluator, &format!("(define x{} {})", i, i)))
+            })
+            .collect();
+        for handle in handles {
+            assert_eq!(handle.join().unwrap().error, None);
+        }
+        assert_eq!(eval_code(&evaluator, "(+ x0 x1 x2 x3 x4)").result, "10");
     }
 
     #[test]
     fn test_sequential_write_read() {
-        // 複数回の書き込みと読み込みが順序通りに実行されることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("sequential.scm");
-
+        let dir = TempDir::new().unwrap();
         for i in 0..10 {
             let content = format!("(+ 1 {})", i);
-            fs::write(&file_path, &content).unwrap();
-
-            let read_content = fs::read_to_string(&file_path).unwrap();
-            assert_eq!(read_content, content);
+            let path = write(&dir, "sequential.scm", &content);
+            assert_eq!(read_file_content(path).unwrap(), content);
         }
     }
 }
 
-// エッジケースに関連したテスト.
-#[cfg(test)]
+/// エッジケースに関連したテスト.
 mod edge_case_tests {
-    use std::fs;
-    use tempfile::TempDir;
+    use super::*;
 
     #[test]
     fn test_file_with_only_whitespace() {
-        // ホワイトスペースのみを含むファイルが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("whitespace.scm");
-
-        fs::write(&file_path, "   \n\t\n   ").unwrap();
-
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "   \n\t\n   ");
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "whitespace.scm", "   \n\t\n   ");
+        assert_eq!(read_file_content(path.clone()).unwrap(), "   \n\t\n   ");
+        // 式が無いので, 結果は空.
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "");
     }
 
     #[test]
     fn test_file_with_only_comments() {
-        // コメントのみを含むファイルが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("comments.scm");
-
+        let dir = TempDir::new().unwrap();
         let content = "; This is a comment\n; Another comment\n; More comments";
-        fs::write(&file_path, content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back, content);
+        let path = write(&dir, "comments.scm", content);
+        assert_eq!(read_file_content(path.clone()).unwrap(), content);
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "");
+        assert_eq!(response.error, None);
     }
 
     #[test]
     fn test_file_with_long_line() {
-        // 長い行を持つファイルが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("longline.scm");
-
-        let long_content = "(define x \"".to_string() + &"a".repeat(10000) + "\")";
-        fs::write(&file_path, &long_content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back, long_content);
+        let dir = TempDir::new().unwrap();
+        let content = format!("(define x \"{}\")", "a".repeat(10000));
+        let path = write(&dir, "longline.scm", &content);
+        assert_eq!(read_file_content(path).unwrap(), content);
     }
 
     #[test]
     fn test_file_with_mixed_line_endings() {
-        // Unix と Windows の改行が混在したファイルが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("mixed_endings.scm");
-
+        // 改行は, そのまま読み書きする. 評価では, どちらも空白.
+        let dir = TempDir::new().unwrap();
         let content = "(+ 1 2)\r\n(* 3 4)\n(- 5 6)";
-        fs::write(&file_path, content).unwrap();
-
-        let read_back = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(read_back, content);
+        let path = write(&dir, "mixed_endings.scm", content);
+        assert_eq!(read_file_content(path.clone()).unwrap(), content);
+        let response = load_init_file(&Evaluator::new(), Some(Path::new(&path)), &NoHost);
+        assert_eq!(response.result, "3\n12\n-1");
     }
 
     #[test]
     fn test_file_path_with_special_chars() {
-        // 特殊文字を含むファイルパスが正しく扱われることを確認.
-        let temp_dir = TempDir::new().unwrap();
-        let file_path = temp_dir.path().join("test-file_v2.scm");
-
-        fs::write(&file_path, "(+ 1 2)").unwrap();
-
-        let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "(+ 1 2)");
+        let dir = TempDir::new().unwrap();
+        let path = write(&dir, "test-file_v2 (copy).scm", "(+ 1 2)");
+        assert_eq!(read_file_content(path).unwrap(), "(+ 1 2)");
     }
 }
