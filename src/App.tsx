@@ -135,6 +135,7 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'string-rectangle': 'string-rectangle',
   'bookmark-set': 'bookmark',
   'bookmark-jump': 'bookmark',
+  'kill-buffer': 'yes-or-no-p',
   'confirm-exit': 'yes-or-no-p',
   'confirm-alternate': 'yes-or-no-p',
   'confirm-revert': 'yes-or-no-p',
@@ -234,6 +235,9 @@ const FIRST_WINDOW = 'window-1'
 
 /** 自動保存するまでの, 書き換えの無い時間 (Emacs の `auto-save-timeout`. ミリ秒). */
 export const AUTO_SAVE_TIMEOUT = 30000
+
+/** 保存していないバッファがあるとき, 終わってよいか聞く文. */
+const CONFIRM_EXIT_PROMPT = 'Modified buffers exist; exit anyway? (yes or no) '
 
 /** カーソルの位置の始め. */
 const START_CURSOR: CursorInfo = { line: 1, column: 1, offset: 0 }
@@ -398,20 +402,9 @@ function App() {
   }
 
   /**
-   * 選んでいるウィンドウのバッファを消します. 全て消したら, *scratch* を作り直します.
-   * 保存していないバッファは消さず, メッセージを出します.
-   *
-   * @returns 消したら `true`.
+   * 選んでいるウィンドウのバッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
    */
   const killCurrentBuffer = () => {
-    if (currentBuffer.modified) {
-      setMinibufferState({
-        mode: 'message',
-        text: `Buffer "${currentBuffer.name}" is modified. Use C-x C-s to save first.`,
-      })
-      return false
-    }
-
     for (const handle of handles.current.values()) handle.forget(currentBuffer.id)
     const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
     // 全て消したら, *scratch* を作り直す
@@ -423,8 +416,27 @@ function App() {
         Object.entries(prev).map(([w, b]) => [w, b === currentBuffer.id ? next.id : b]),
       ),
     )
-    return true
   }
+
+  // 窓を閉じるとき (× のボタンも) に見る, 今のバッファと, 終わってよいと答えたか
+  const buffersRef = useRef(buffers)
+  const exitConfirmed = useRef(false)
+  useEffect(() => {
+    buffersRef.current = buffers
+  }, [buffers])
+
+  // 保存していないバッファがあれば, 窓を閉じずに, 終わってよいか聞く
+  useEffect(() => {
+    const unlisten = getCurrentWindow().onCloseRequested((event) => {
+      if (exitConfirmed.current || !buffersRef.current.some((b) => b.modified)) return
+      event.preventDefault()
+      setPendingAction('confirm-exit')
+      setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
+    })
+    return () => {
+      void unlisten.then((f) => f())
+    }
+  }, [])
 
   // ホームディレクトリを, 始めに 1 回だけ取る (取れなければ, `/` のまま)
   useEffect(() => {
@@ -676,9 +688,18 @@ function App() {
     if (buffer.filePath) void deleteFile(autoSaveFileName(buffer.filePath)).catch(() => {})
     autoSaved.current.delete(buffer.id)
     const name = buffer.filePath === path ? buffer.name : bufferNameFromPath(path)
+    // 書いているあいだに書き換えた分は, 保存していないので, 変更ありのままにする
     setBuffers((prev) =>
       prev.map((b) =>
-        b.id === buffer.id ? { ...b, filePath: path, name, modified: false, backedUp: true } : b,
+        b.id === buffer.id
+          ? {
+              ...b,
+              filePath: path,
+              name,
+              modified: b.modified && b.content !== buffer.content,
+              backedUp: true,
+            }
+          : b,
       ),
     )
     showMessage(`Wrote ${path}`)
@@ -1253,14 +1274,15 @@ function App() {
   }
 
   /**
-   * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消さずにメッセージを出します.
+   * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消してよいか聞きます.
    */
   const handleKillBuffer = () => {
     if (currentBuffer.modified) {
       setPendingAction('kill-buffer')
       setMinibufferState({
-        mode: 'message',
-        text: `Buffer "${currentBuffer.name}" is modified. Use C-x C-s to save.`,
+        mode: 'input',
+        prompt: `Buffer ${currentBuffer.name} modified; kill anyway? (yes or no) `,
+        input: '',
       })
     } else {
       killCurrentBuffer()
@@ -1328,11 +1350,7 @@ function App() {
     // 保存していないバッファがあれば, 終わってよいか聞く (Emacs と同じ)
     if (buffers.some((b) => b.modified)) {
       setPendingAction('confirm-exit')
-      setMinibufferState({
-        mode: 'input',
-        prompt: 'Modified buffers exist; exit anyway? (yes or no) ',
-        input: '',
-      })
+      setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
       return
     }
     await getCurrentWindow().close()
@@ -1866,7 +1884,7 @@ function App() {
         setMinibufferState({ mode: 'message', text: `No buffer named "${value}"` })
       }
     } else if (action === 'kill-buffer') {
-      killCurrentBuffer()
+      if (value.trim() === 'yes') killCurrentBuffer()
       setMinibufferState({ mode: 'message', text: '' })
     } else if (action === 'execute-command') {
       setMinibufferState({ mode: 'message', text: '' })
@@ -1878,6 +1896,7 @@ function App() {
       setMinibufferState({ mode: 'message', text: '' })
     } else if (action === 'confirm-exit') {
       if (value.trim() === 'yes') {
+        exitConfirmed.current = true
         await getCurrentWindow().close()
       } else {
         setMinibufferState({ mode: 'message', text: '' })

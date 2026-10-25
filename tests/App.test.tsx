@@ -12,7 +12,11 @@ vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 /** アプリの窓を閉じる関数の偽物 (C-x C-c で呼ぶ). */
 const close = vi.fn()
-vi.mock('@tauri-apps/api/window', () => ({ getCurrentWindow: () => ({ close }) }))
+/** 窓を閉じるときの頼みを受ける関数の偽物 (受ける関数を, 最後の引数で見る). */
+const onCloseRequested = vi.fn()
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ close, onCloseRequested }),
+}))
 vi.mock('@/lib/fileOps', () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
@@ -122,6 +126,7 @@ describe('App', () => {
     mocked.deleteFile.mockResolvedValue(undefined)
     mocked.fileNewerThan.mockResolvedValue(false)
     mockedListen.mockResolvedValue(unlisten)
+    onCloseRequested.mockResolvedValue(unlisten)
     mockedBookmarks.loadBookmarks.mockResolvedValue([])
     mockedBookmarks.saveBookmarks.mockResolvedValue(undefined)
     // 初期設定ファイル (と, エディタの操作の返事) は, 何もしない
@@ -228,6 +233,30 @@ describe('App', () => {
     expect(editor.text()).toContain('Error: disk full')
   })
 
+  it('書いているあいだに書き換えた分は, 保存していないので, 変更ありのままにする', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValueOnce(true)
+    mocked.readFile.mockResolvedValueOnce('a')
+    editor.ctrlX('f')
+    await editor.submit('/tmp/a.scm')
+    await editor.type('ab')
+
+    let finish = () => {}
+    mocked.writeFile.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (finish = resolve)),
+    )
+    await act(async () => editor.ctrlX('s'))
+    await editor.type('abc')
+    await act(async () => finish())
+    expect(mocked.writeFile).toHaveBeenCalledWith('/tmp/a.scm', 'ab')
+    expect(editor.text()).toContain('Wrote /tmp/a.scm')
+    expect(editor.text()).toContain('-:**- a.scm')
+
+    // 書き換えていなければ, 変更なしにする
+    await act(async () => editor.ctrlX('s'))
+    expect(editor.text()).toContain('-:--- a.scm')
+  })
+
   it('ファイルのないバッファの C-x C-s は, 保存先を聞く (失敗はメッセージ)', async () => {
     const editor = await setup()
 
@@ -331,25 +360,31 @@ describe('App', () => {
     expect(editor.text()).toContain('*scratch*')
   })
 
-  it('C-x k は, 変更したバッファを消さない', async () => {
+  it('C-x k は, 変更したバッファを消してよいか聞き, yes でだけ消す', async () => {
     const editor = await setup()
     await editor.type('changed')
 
     editor.ctrlX('k', false)
-    expect(editor.text()).toContain('is modified')
+    expect(editor.text()).toContain('Buffer *scratch* modified; kill anyway? (yes or no)')
+    await editor.submit('no')
+    expect(editor.doc()).toBe('changed')
+
+    editor.ctrlX('k', false)
+    await editor.submit('yes')
+    // 全て消したので, *scratch* を作り直す
+    expect(editor.doc()).toContain(';; This buffer is for text that is not saved')
   })
 
-  it('変更したバッファの C-x k のあと, 検索を Enter で確定しても, バッファは消さない', async () => {
-    // C-x k の保留が, 次のミニバッファの確定 (検索) まで残る (今の作りの動き)
+  it('変更したバッファの C-x k を C-g でやめたあと, 検索を Enter で確定しても, バッファは消さない', async () => {
     const editor = await setup()
     await editor.type('changed')
     editor.ctrlX('k', false)
+    fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
 
     editor.key('s', { ctrl: true })
     await act(async () => {
       fireEvent.keyDown(editor.input(), { key: 'Enter' })
     })
-    // 変更があるので消さない (警告は, 直後の空のメッセージで消える)
     expect(editor.doc()).toBe('changed')
     expect(editor.text()).toContain('*scratch*')
   })
@@ -793,6 +828,36 @@ describe('App', () => {
     await act(async () => editor.ctrlX('c'))
     await editor.submit('yes')
     expect(close).toHaveBeenCalled()
+  })
+
+  it('窓を閉じるときは, 変更したバッファがあれば閉じずに聞き, yes と答えたら閉じる', async () => {
+    const editor = await setup()
+    /** 窓を閉じる頼みを送り, 閉じるのを止めたかを返す. */
+    const requestClose = () => {
+      const event = { preventDefault: vi.fn() }
+      const handler = onCloseRequested.mock.lastCall?.[0] as (e: typeof event) => void
+      act(() => handler(event))
+      return event.preventDefault.mock.calls.length > 0
+    }
+    expect(requestClose()).toBe(false)
+
+    await editor.type('changed')
+    expect(requestClose()).toBe(true)
+    expect(editor.text()).toContain('Modified buffers exist; exit anyway?')
+    await editor.submit('no')
+    expect(close).not.toHaveBeenCalled()
+
+    expect(requestClose()).toBe(true)
+    await editor.submit('yes')
+    expect(close).toHaveBeenCalled()
+    expect(requestClose()).toBe(false)
+  })
+
+  it('窓を閉じたら, 窓を閉じる頼みを受けるのをやめる', async () => {
+    const editor = await setup()
+    editor.unmount()
+    await act(async () => {})
+    expect(unlisten).toHaveBeenCalled()
   })
 
   it('M-g g で, 入れた行へ動く', async () => {
