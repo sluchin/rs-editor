@@ -1,3 +1,5 @@
+/* ミニバッファ (メッセージ, 入力と補完, isearch) */
+
 .minibuffer {
   position: relative;
   flex: 0 0 auto;

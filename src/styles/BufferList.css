@@ -1,3 +1,5 @@
+/* バッファの一覧 (C-x C-b) */
+
 .buffer-list-overlay {
   position: fixed;
   top: 0;

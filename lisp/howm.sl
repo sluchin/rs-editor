@@ -253,11 +253,13 @@
 (define (howm-search-keyword keyword)
   (howm-search (howm-case-fold (regexp-quote keyword) keyword) keyword))
 
+;; 言葉を聞いて探す (C-c , s. メニューの s)
 (define-command (howm-search-fixed)
   (let ((keyword (read-string "Search: ")))
     (unless (string=? keyword "")
       (howm-search-keyword keyword))))
 
+;; 正規表現を聞いて探す (C-c , g. メニューの g)
 (define-command (howm-search-regexp)
   (let ((regexp (read-string "Search (regexp): ")))
     (unless (string=? regexp "")
@@ -268,12 +270,15 @@
   (howm-search-keyword
    (format-time-string "[%Y-%m-%d" (+ (current-time) (* days 24 60 60)))))
 
+;; 今日と昨日の日付のメモ (メニューの . と :)
 (define-command (howm-today) (howm-search-day 0))
 (define-command (howm-yesterday) (howm-search-day -1))
 
+;; 全てのメモの一覧 (新しい順. C-c , a)
 (define-command (howm-list-all)
   (howm-show-summary (howm-file-items (reverse (howm-files))) "No memo"))
 
+;; 最近のメモの一覧 (C-c , l)
 (define-command (howm-list-recent)
   (howm-show-summary (howm-file-items (howm-take (howm-recent-files) howm-menu-recent-num))
                      "No memo"))
@@ -349,6 +354,7 @@
                 (howm-reminders))
         (lambda (a b) (> (car a) (car b)))))
 
+;; 予定と todo の一覧 (C-c , y と C-c , t)
 (define-command (howm-list-schedule)
   (howm-show-summary (map howm-reminder-item (howm-schedule #f)) "No schedule"))
 
@@ -357,6 +363,7 @@
 
 ;;; メモを作る
 
+;; 新しいメモを作って開く (題の行と日時を入れ, 題の所にカーソルを置く. C-c , c)
 (define-command (howm-create)
   (let ((file (string-append (howm-dir) "/" (format-time-string howm-file-name-format))))
     (make-directory (howm-file-directory file))
@@ -434,6 +441,7 @@
               keys)
     (local-set-key "RET" 'howm-action)))
 
+;; メニューを出す (M-x howm, C-c , ,). menu-edit は, メニューのファイルを開く
 (define-command (howm-menu) (howm-menu-show))
 (define-command (howm) (howm-menu-show))
 (define-command (howm-menu-refresh) (howm-menu-show))
@@ -475,6 +483,7 @@
     (and item
          (begin (howm-open (cadr item) (list-ref item 2)) #t))))
 
+;; RET: 一覧なら, その行のメモを開く. ボタンかリンクなら動かす. メニューの項目なら開く
 (define-command (howm-action)
   (cond ((string=? (buffer-name) howm-summary-name)
          (let ((n (howm-current-line)))
@@ -485,6 +494,7 @@
         ((and (string=? (buffer-name) howm-menu-name) (howm-open-item howm-menu-items)) #t)
         (else (message "No action here"))))
 
+;; ボタンかリンクなら動かし, そうでなければ改行する (メモのバッファの RET)
 (define-command (howm-action-or-newline)
   (unless (howm-action-at-point)
     (call-interactively 'newline)))

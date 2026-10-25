@@ -130,7 +130,12 @@ function indentTo(old: string, col: number, config: IndentConfig): string {
   return base + whitespace(columnAt(base, base.length, tabWidth), col, config)
 }
 
-/** 行の始めの空白の長さを返します. */
+/**
+ * 行の始めの空白の長さを返します.
+ *
+ * @param text - 行.
+ * @returns 空白 (スペースとタブ) の文字の数.
+ */
 const indentLength = (text: string) => (/^[ \t]*/.exec(text) as RegExpExecArray)[0].length
 
 /** リストの要素. */

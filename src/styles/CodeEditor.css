@@ -1,3 +1,5 @@
+/* エディタ (CodeMirror) の見た目. 色とフォントは, src/index.css の変数を使う */
+
 .code-editor-container {
   flex: 1;
   min-height: 0;

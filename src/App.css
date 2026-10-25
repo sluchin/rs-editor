@@ -1,3 +1,5 @@
+/* アプリの全体の配置 (サイドバー, ウィンドウ, モードライン, ミニバッファを縦と横に並べる) */
+
 .app {
   display: flex;
   flex-direction: column;

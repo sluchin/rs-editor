@@ -10,6 +10,7 @@ import '../styles/ProjectTree.css'
 /** 出さない名前. */
 const HIDDEN_NAMES = ['.git/']
 
+/** プロジェクトのツリーの引数. */
 interface ProjectTreeProps {
   /** プロジェクトの根 (後ろに `/` は付けない). */
   root: string
