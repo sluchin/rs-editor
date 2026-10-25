@@ -14,13 +14,19 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-v, M-v - ページ単位のスクロール
 - C-l - 画面を中央にスクロール (続けて押すと, 上, 下)
 - M-g g - 指定行へジャンプ
+- M-m - 行の字下げの後ろへ（back-to-indentation）
+- M-{, M-} - 段落の移動（backward-paragraph, forward-paragraph）
+- M-a, M-e - 文の移動（backward-sentence, forward-sentence）
 - C-M-f, C-M-b - S 式単位の移動
+- C-M-u, C-M-d - リストの外と中へ（backward-up-list, down-list。M-x up-list）
+- C-M-a, C-M-e - defun の始めと終わり（beginning-of-defun, end-of-defun）
 
 **削除・編集**
 - C-d - 1 文字削除
 - C-k - 行削除（kill-line。続けたキルは 1 つにつなげる）
 - M-d, M-DEL - 単語削除（kill-word, backward-kill-word）
 - C-M-k - S 式削除（kill-sexp）
+- M-k - 文の削除（kill-sentence）
 - C-w, M-w - 選択範囲の削除とコピー（kill-region, kill-ring-save）
 - C-y - 貼り付け（yank）
 - M-y - 別の削除内容を貼り付け（yank-pop）
@@ -49,6 +55,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-SPC - マーク設定（移動で範囲が広がる。transient-mark-mode）
 - C-x C-x - カーソルとマークの入れ替え
 - C-x h - バッファ全体選択
+- M-@, C-M-SPC, C-M-h - 単語, S 式, defun を選ぶ（mark-word, mark-sexp, mark-defun）
 
 **検索と置換**
 - C-s, C-r - 前方・後方検索（isearch）
@@ -104,13 +111,9 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-{` / `M-}` | backward-paragraph / forward-paragraph | 段落の移動 |
-| `M-a` / `M-e` / `M-k` | backward-sentence / forward-sentence / kill-sentence | 文の移動とキル |
-| `M-m` | back-to-indentation | 行の字下げの後へ |
-| `C-M-u` / `C-M-d` | backward-up-list / down-list | リストの外と中へ |
-| `C-M-a` / `C-M-e` | beginning-of-defun / end-of-defun | 定義の始めと終わり |
-| `C-M-h` / `C-M-SPC` / `M-@` | mark-defun / mark-sexp / mark-word | 定義, S 式, 単語を選ぶ |
+| `C-M-n` / `C-M-p` | forward-list / backward-list | リストの単位の移動 |
 | `C-x C-n` | set-goal-column | 上下に移るときの桁を決める |
+| `C-x .` | set-fill-prefix | 段落の行の始めの文字を決める（段落の移動と `M-q` で使う） |
 
 ### ファイル・バッファ・ウィンドウ
 
@@ -176,7 +179,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
 
 次の候補は、よく使い、手間の小さいものから:
-1. 編集: `M-m`
-2. Lisp の移動: `C-M-u`, `C-M-d`, `C-M-a`, `C-M-e`
-3. ヘルプ: `C-h f`, `C-h v`
-4. Dired
+1. Lisp の移動: `C-M-n`, `C-M-p`
+2. ヘルプ: `C-h f`, `C-h v`
+3. Dired

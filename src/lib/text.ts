@@ -34,6 +34,18 @@ export function wordBackward(text: string, pos: number): number {
   return i
 }
 
+/**
+ * 位置の行の始めを返します.
+ *
+ * @param text - 文字列.
+ * @param pos - 位置.
+ * @returns 行の始めの位置.
+ */
+export function lineStartAt(text: string, pos: number): number {
+  // `lastIndexOf` は, 負の位置を 0 とするので, 文字列の始めは別にする
+  return pos <= 0 ? 0 : text.lastIndexOf('\n', pos - 1) + 1
+}
+
 /** 単語の大文字・小文字の変え方. */
 export type CaseKind = 'upcase' | 'downcase' | 'capitalize'
 

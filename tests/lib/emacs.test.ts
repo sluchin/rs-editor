@@ -221,6 +221,25 @@ describe('削除とキル', () => {
     expect(killRing.current()).toBe('(a b)')
   })
 
+  it('S 式が無ければ, キルせずに知らせること', () => {
+    const { run, text, message } = setup('(a|)')
+    run('kill-sexp')
+    expect(text()).toBe('(a|)')
+    expect(message).toHaveBeenLastCalledWith('No next sexp')
+  })
+
+  it('M-k で, 文の終わりまでキルし, 続けてキルすると, つなげること', () => {
+    const { press, text, message, killRing } = setup('|One.  Two.')
+    press('M-k')
+    expect(text()).toBe('|  Two.')
+    press('M-k')
+    expect(text()).toBe('|')
+    expect(killRing.current()).toBe('One.  Two.')
+    // 本文の終わりからは, 動けない
+    press('M-k')
+    expect(message).toHaveBeenLastCalledWith('End of buffer')
+  })
+
   it('リージョンをキルとコピーし, リージョンが無ければ知らせること', () => {
     const { run, text, killRing, message, view } = setup('|abc')
     run('kill-region', 'kill-ring-save')
@@ -586,6 +605,52 @@ describe('削除とキル', () => {
 })
 
 describe('マークとリージョン', () => {
+  it('M-@ で, 単語の終わりにマークを置き, 続けるとリージョンを延ばすこと', () => {
+    const { press, text, selected, message } = setup('a|b cd ef')
+    press('M-@')
+    expect(message).toHaveBeenLastCalledWith('Mark set')
+    expect(selected()).toBe('b')
+    expect(text()).toBe('a|b cd ef')
+    message.mockClear()
+    press('M-@')
+    expect(selected()).toBe('b cd')
+    expect(message).not.toHaveBeenCalled()
+  })
+
+  it('M-@ は, マークがカーソルの前なら, 前へ延ばすこと', () => {
+    const { press, run, selected } = setup('ab cd e|f')
+    run('set-mark-command', 'move-end-of-line')
+    press('M-@')
+    expect(selected()).toBe('ef')
+  })
+
+  it('C-M-SPC で, S 式の終わりにマークを置き, 続けるとリージョンを延ばすこと', () => {
+    const { run, selected, message } = setup('(|a b) c')
+    run('mark-sexp')
+    expect(message).toHaveBeenLastCalledWith('Mark set')
+    expect(selected()).toBe('a')
+    run('mark-sexp')
+    expect(selected()).toBe('a b')
+    run('mark-sexp')
+    expect(message).toHaveBeenLastCalledWith('No more sexp to select')
+    expect(selected()).toBe('a b')
+  })
+
+  it('C-M-SPC は, S 式が無ければ知らせること', () => {
+    const { run, message } = setup('(a |)')
+    run('mark-sexp')
+    expect(message).toHaveBeenLastCalledWith('No sexp to select')
+  })
+
+  it('C-M-h を続けると, 次の defun までリージョンを延ばすこと', () => {
+    const { run, selected, text } = setup('(a|)\n(b)\n')
+    run('mark-defun')
+    expect(selected()).toBe('(a)\n')
+    expect(text()).toBe('|(a)\n(b)\n')
+    run('mark-defun')
+    expect(selected()).toBe('(a)\n(b)\n')
+  })
+
   it('マークを置くと, 移動で範囲が広がり, C-g で外れること', () => {
     const { run, selected, message, view } = setup('|abc')
     run('set-mark-command')
@@ -766,8 +831,8 @@ describe('キーの説明', () => {
     expect(message).toHaveBeenLastCalledWith('a runs the command self-insert-command')
     press('C-h k C-z')
     expect(message).toHaveBeenLastCalledWith('C-z is undefined')
-    press('C-h k M-k')
-    expect(message).toHaveBeenLastCalledWith('M-k is undefined')
+    press('C-h k M-j')
+    expect(message).toHaveBeenLastCalledWith('M-j is undefined')
     press('C-h k')
     view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', metaKey: true }))
     expect(message).toHaveBeenLastCalledWith('s-q is undefined')

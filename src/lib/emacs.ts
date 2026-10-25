@@ -16,7 +16,6 @@ import {
   type TransactionSpec,
 } from '@codemirror/state'
 import { EditorView, type KeyBinding } from '@codemirror/view'
-import { backwardSexp, forwardSexp } from './bracketMatch'
 import { commentDwim } from './comment'
 import { findExpansions } from './dabbrev'
 import { countMessage } from './count'
@@ -25,6 +24,9 @@ import { killRectangle, stringRectangle, yankRectangle } from './rectangle'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
+import { forwardParagraph, forwardSentence } from './paragraph'
+import { beginningOfDefun, downList, endOfDefun, forwardSexp, markDefun, upList } from './sexp'
+import { ScanError, type Source, isWhitespace } from './syntax'
 import { deleteBlankLines, deleteHorizontalSpace, deleteIndentation, justOneSpace } from './spaces'
 import { type CaseKind, changeCase, clampLine, wordBackward, wordForward } from './text'
 
@@ -460,6 +462,68 @@ export function createCommands({
 
   const text = (view: EditorView) => view.state.doc.toString()
 
+  /**
+   * 本文と方言を返します (式の走査に渡す).
+   *
+   * @param view - エディタ.
+   * @returns 本文と方言.
+   */
+  const source = (view: EditorView): Source => ({
+    text: text(view),
+    dialect: view.state.facet(indentConfig).dialect,
+  })
+
+  /**
+   * 式を走査して, することをします. 走査に失敗したら, 理由をミニバッファに出します (Emacs のエラー).
+   *
+   * @param action - すること.
+   * @param failure - 括弧が合わないときに出す理由 (省くと, 走査の理由).
+   * @returns `true`.
+   */
+  const attempt = (action: () => boolean, failure?: string): boolean => {
+    try {
+      return action()
+    } catch (error) {
+      message(error instanceof ScanError ? (failure ?? error.message) : (error as Error).message)
+      return true
+    }
+  }
+
+  /**
+   * マークを置いて, リージョンを選びます.
+   *
+   * @param view - エディタ.
+   * @param mark - マーク.
+   * @param pos - カーソル.
+   * @param fresh - 新しく置いたなら `true` (`Mark set` と出す. リージョンを延ばしたときは出さない).
+   * @returns `true`.
+   */
+  const activateMark = (view: EditorView, mark: number, pos: number, fresh: boolean): boolean => {
+    view.dispatch({
+      selection: EditorSelection.range(mark, pos),
+      effects: setMarkEffect.of(mark),
+      scrollIntoView: true,
+      annotations: commandAnnotation.of({ name: 'mark' }),
+    })
+    if (fresh) message('Mark set')
+    return true
+  }
+
+  /**
+   * マークから, 式や単語を越えた所へ, マークを動かします (`C-M-SPC`, `M-@`). リージョンが無ければ,
+   * カーソルから越えた所に, マークを置きます. 続けると, リージョンを延ばします.
+   *
+   * @param view - エディタ.
+   * @param move - 位置と向きから, 越えた所を返す関数.
+   * @returns `true`.
+   */
+  const markForward = (view: EditorView, move: (from: number, count: number) => number) => {
+    const mark = view.state.field(markField)
+    // リージョンがあれば, カーソルから離れる向きに延ばす
+    const count = mark !== null && mark < head(view) ? -1 : 1
+    return activateMark(view, move(mark ?? head(view), count), head(view), mark === null)
+  }
+
   /** 最後に消した矩形 (Emacs の `killed-rectangle`). */
   let killedRectangle: string[] = []
 
@@ -525,8 +589,31 @@ export function createCommands({
     'scroll-up-command': (view) => scrollPage(view, 1),
     'scroll-down-command': (view) => scrollPage(view, -1),
     'recenter-top-bottom': recenter,
-    'forward-sexp': (view) => moveTo(view, forwardSexp(text(view), head(view))),
-    'backward-sexp': (view) => moveTo(view, backwardSexp(text(view), head(view))),
+    'forward-sexp': (view) =>
+      attempt(() => moveTo(view, forwardSexp(source(view), head(view), 1)), 'No next sexp'),
+    'backward-sexp': (view) =>
+      attempt(() => moveTo(view, forwardSexp(source(view), head(view), -1)), 'No previous sexp'),
+    'backward-up-list': (view) => attempt(() => moveTo(view, upList(source(view), head(view), -1))),
+    'up-list': (view) => attempt(() => moveTo(view, upList(source(view), head(view), 1))),
+    'down-list': (view) => attempt(() => moveTo(view, downList(source(view), head(view)))),
+    'beginning-of-defun': (view) => moveTo(view, beginningOfDefun(source(view), head(view))),
+    'end-of-defun': (view) => attempt(() => moveTo(view, endOfDefun(source(view), head(view)))),
+    'forward-paragraph': (view) =>
+      moveTo(view, forwardParagraph(text(view), head(view), 1, source(view).dialect)),
+    'backward-paragraph': (view) =>
+      moveTo(view, forwardParagraph(text(view), head(view), -1, source(view).dialect)),
+    'forward-sentence': (view) =>
+      attempt(() => moveTo(view, forwardSentence(text(view), head(view), 1, source(view).dialect))),
+    'backward-sentence': (view) =>
+      moveTo(view, forwardSentence(text(view), head(view), -1, source(view).dialect)),
+    // 行の, 字下げの後ろへ
+    'back-to-indentation': (view) => {
+      const line = view.state.doc.lineAt(head(view))
+      const src = source(view)
+      let pos = line.from
+      while (pos < line.to && isWhitespace(src, pos)) pos++
+      return moveTo(view, pos)
+    },
 
     // 削除と編集
     'delete-char': (view) => {
@@ -550,7 +637,15 @@ export function createCommands({
     'kill-word': (view) => kill(view, head(view), wordForward(text(view), head(view))),
     'backward-kill-word': (view) =>
       kill(view, wordBackward(text(view), head(view)), head(view), 'backward'),
-    'kill-sexp': (view) => kill(view, head(view), forwardSexp(text(view), head(view))),
+    'kill-sexp': (view) =>
+      attempt(
+        () => kill(view, head(view), forwardSexp(source(view), head(view), 1)),
+        'No next sexp',
+      ),
+    'kill-sentence': (view) =>
+      attempt(() =>
+        kill(view, head(view), forwardSentence(text(view), head(view), 1, source(view).dialect)),
+      ),
     'kill-region': (view) => {
       const { from, to } = view.state.selection.main
       if (from === to) {
@@ -952,6 +1047,27 @@ export function createCommands({
       })
       return true
     },
+    'mark-word': (view) =>
+      markForward(view, (from, count) =>
+        count > 0 ? wordForward(text(view), from) : wordBackward(text(view), from),
+      ),
+    'mark-sexp': (view) => {
+      const extend = view.state.field(markField) !== null
+      try {
+        return markForward(view, (from, count) => forwardSexp(source(view), from, count))
+      } catch (error) {
+        const { message: reason } = error as Error
+        const premature = reason === 'Containing expression ends prematurely'
+        message(premature ? (extend ? 'No more sexp to select' : 'No sexp to select') : reason)
+        return true
+      }
+    },
+    'mark-defun': (view) =>
+      attempt(() => {
+        const mark = view.state.field(markField)
+        const region = markDefun(source(view), head(view), mark)
+        return activateMark(view, region.mark, region.head, mark === null || mark === head(view))
+      }),
     'mark-whole-buffer': (view) => {
       const length = view.state.doc.length
       view.dispatch({
@@ -1061,12 +1177,22 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-g Alt-g', 'goto-line'],
   ['Ctrl-Alt-f', 'forward-sexp'],
   ['Ctrl-Alt-b', 'backward-sexp'],
+  ['Ctrl-Alt-u', 'backward-up-list'],
+  ['Ctrl-Alt-d', 'down-list'],
+  ['Ctrl-Alt-a', 'beginning-of-defun'],
+  ['Ctrl-Alt-e', 'end-of-defun'],
+  ['Alt-{', 'backward-paragraph'],
+  ['Alt-}', 'forward-paragraph'],
+  ['Alt-a', 'backward-sentence'],
+  ['Alt-e', 'forward-sentence'],
+  ['Alt-m', 'back-to-indentation'],
   // 削除と編集
   ['Ctrl-d', 'delete-char'],
   ['Ctrl-k', 'kill-line'],
   ['Alt-d', 'kill-word'],
   ['Alt-Backspace', 'backward-kill-word'],
   ['Ctrl-Alt-k', 'kill-sexp'],
+  ['Alt-k', 'kill-sentence'],
   ['Ctrl-w', 'kill-region'],
   ['Alt-w', 'kill-ring-save'],
   ['Ctrl-y', 'yank'],
@@ -1116,6 +1242,9 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-Space', 'set-mark-command'],
   ['Ctrl-x Ctrl-x', 'exchange-point-and-mark'],
   ['Ctrl-x h', 'mark-whole-buffer'],
+  ['Alt-@', 'mark-word'],
+  ['Ctrl-Alt-Space', 'mark-sexp'],
+  ['Ctrl-Alt-h', 'mark-defun'],
   ['Ctrl-g', 'keyboard-quit'],
   // ヘルプ
   ['Ctrl-h k', 'describe-key'],

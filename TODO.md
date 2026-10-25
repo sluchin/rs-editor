@@ -167,6 +167,11 @@
 - [ ] ブックマーク: Emacs は, `~/.emacs.d/bookmarks` に, Lisp の形で, 終わるときに保存する。
       今は, `~/.config/rseditor/bookmarks` に, JSON で, 付けるたびに保存する。位置は, Emacs と違い, 0 から数える (UTF-16 の位置)。
 - [ ] `C-x r b` (bookmark-jump): ファイルが無いとき, Emacs は, 新しい場所を聞く。今は, 読めないと知らせるだけ。
+- [ ] `C-M-a` (beginning-of-defun) と `C-M-e` (end-of-defun): Emacs は, 動く前の位置にマークを置く (リージョンは選ばない)。
+      今は, マークを置くとリージョンを選ぶので, 置かない。
+- [ ] Scheme の `#;` でコメントにした式と, `#/.../` (正規表現): Emacs の scheme-mode は, 式の移動 (`C-M-f`, `C-M-u` など) でも,
+      コメントと文字列として読む。今は, 字下げと括弧の強調だけで, そう読む。
+- [ ] `M-@`, `C-M-SPC`, `C-M-h` の負の前置引数 (前へ選ぶ)。
 - [ ] `M-SPC`: Linux のデスクトップ (GNOME など) は, Alt+Space をウィンドウのメニューに使うので, エディタにキーが届かないことがある。
       Emacs と同じく, `ESC SPC` でも動くようにするか, 届かないことを README に書く。
 

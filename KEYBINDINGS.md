@@ -27,6 +27,9 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `M-v` | scroll-down-command | 1 画面前へ (カーソルの行を画面の下に) |
 | `C-l` | recenter-top-bottom | カーソルの行を画面の中央へ (続けて押すと, 上, 下の順) |
 | `M-g g` / `M-g M-g` | goto-line | 入れた行へ移動 |
+| `M-m` | back-to-indentation | 行の字下げの後ろへ |
+| `M-}` / `M-{` | forward-paragraph / backward-paragraph | 次の段落の後ろ・前の段落の前へ（段落は, 空白だけの行で分ける。scheme-mode では空の行だけ） |
+| `M-e` / `M-a` | forward-sentence / backward-sentence | 文の終わり・始めへ（文の終わりは, `.` などの後に空白 2 つか行の終わり。`。` などは, そのまま。段落の終わりも文の終わり） |
 
 `C-n` / `C-p` は, 続けて押すあいだ, 始めの桁を保ちます.
 
@@ -36,6 +39,11 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 |------|---------|------|
 | `C-M-f` | forward-sexp | 次の S 式へ移動 |
 | `C-M-b` | backward-sexp | 前の S 式へ移動 |
+| `C-M-u` | backward-up-list | 外のリストの始めへ（文字列の中では, 文字列の中のリストを見て, 無ければ文字列の始めへ）。`M-x up-list` は外のリストの終わりへ |
+| `C-M-d` | down-list | 次のリストの中へ |
+| `C-M-a` / `C-M-e` | beginning-of-defun / end-of-defun | defun（行の始めの開く括弧から始まる式）の始め・終わりへ |
+
+S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme-mode）で読みます。文字列とコメント（`;`, Scheme の `#| |#`）の中の括弧は数えません。括弧が合わなければ, 動かずに知らせます（`No next sexp` など）。
 
 ## 削除・編集
 
@@ -70,6 +78,7 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-/` / `C-_` / `C-x u` | undo | 操作を取り消す |
 | `C-x C-/` | redo | 操作をやり直す |
 | `C-M-k` | kill-sexp | 次の S 式を削除 |
+| `M-k` | kill-sentence | 文の終わりまでを削除（kill-ring に保存） |
 
 ## 改行と字下げ
 
@@ -94,6 +103,9 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-SPC` | set-mark-command | マークを置く（移動すると, マークからカーソルまでが選ばれる） |
 | `C-x C-x` | exchange-point-and-mark | カーソルとマークを入れ替え |
 | `C-x h` | mark-whole-buffer | バッファ全体を選択 |
+| `M-@` | mark-word | 次の単語の終わりにマークを置く（続けると, リージョンを延ばす） |
+| `C-M-SPC` | mark-sexp | 次の S 式の終わりにマークを置く（続けると, リージョンを延ばす） |
+| `C-M-h` | mark-defun | defun を選ぶ（前のコメントと空の行も。続けると, 次の defun まで延ばす） |
 | `C-g` | keyboard-quit | マークを外す |
 
 本文を書き換えると, マークは外れます（Emacs の transient-mark-mode）。
@@ -343,10 +355,10 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 ## 実装状況
 
 ### 完全実装済み
-- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g）
-- S 式移動（C-M-f, C-M-b）
-- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
-- リージョン選択（C-SPC, C-x C-x, C-x h）
+- カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g, M-m, M-{, M-}, M-a, M-e）
+- S 式移動（C-M-f, C-M-b, C-M-u, C-M-d, C-M-a, C-M-e）
+- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
+- リージョン選択（C-SPC, C-x C-x, C-x h, M-@, C-M-SPC, C-M-h）
 - 矩形・レジスタ・ブックマーク（C-x r k, C-x r y, C-x r t, C-x r s, C-x r i, C-x r m, C-x r b）
 - 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r）
