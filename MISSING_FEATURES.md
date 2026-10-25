@@ -117,15 +117,10 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Lisp のモード (`lispMode.ts`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく, 色を付ける)
 - ❌ **括弧マッチハイライト** (`findMatchingBracket`, `findUnmatchedClose` from `bracketMatch.ts`) - Emacs の show-paren-mode と同じく, `showParen.ts` で作り直した
 - ❌ **括弧自動補完** (`bracketAutoClose.ts`) - IDE 固有機能
+- ❌ **REPL コンポーネント** (`REPL.tsx`) - 評価は Emacs と同じく `C-x C-e` と `M-:` で行い、結果をミニバッファに出す
 
 **保持したもの:**
 - ✅ **S-expression ナビゲーション** (`forwardSexp`, `backwardSexp`, `killSexp`) - Emacs Lisp に対応する機能
-
-### 未接続の機能
-
-| 機能 | ファイル | 状態 | 説明 |
-|------|---------|------|------|
-| **REPL コンポーネント** | `src/components/REPL.tsx` | ⚠️ **未接続** | 対話的 Read-Eval-Print Loop、履歴機能（`App.tsx` にマウントされていない） |
 
 ---
 
@@ -141,7 +136,6 @@ rs-editor は Emacs の**基本的な編集機能の大部分**を実装して�
 **Emacs にはない独自実装済み機能:**
 - ✅ S-expression ナビゲーション（C-M-f/b/k）
 - ✅ Scheme 式評価（C-x C-e, M-:）
-- ✅ REPL（**未接続**）
 
 **Emacs デフォルト機能で未実装:**
 - ❌ ヘルプシステム（C-h f, C-h v など. C-h k と C-h b はある）
