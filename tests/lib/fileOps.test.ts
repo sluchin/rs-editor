@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from '@/lib/fileOps'
+import {
+  readFile,
+  writeFile,
+  pathExists,
+  getHomeDir,
+  listDirectory,
+  backupFile,
+  deleteFile,
+  fileNewerThan,
+  listDirectoryLong,
+} from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
 vi.mock('@tauri-apps/api/core')
@@ -136,5 +146,20 @@ describe('fileOps', () => {
       expect(tauri.invoke).toHaveBeenCalledWith('list_directory', { path: '/home/u/' })
       expect(result).toEqual(['a/', 'b.scm'])
     })
+  })
+
+  it('バックアップ, 削除, 新しさ, ディレクトリの一覧を, Tauri に頼むこと', async () => {
+    vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
+    await backupFile('/a')
+    expect(tauri.invoke).toHaveBeenLastCalledWith('backup_file', { path: '/a' })
+    vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
+    await deleteFile('/#a#')
+    expect(tauri.invoke).toHaveBeenLastCalledWith('delete_file', { path: '/#a#' })
+    vi.mocked(tauri.invoke).mockResolvedValueOnce(true)
+    expect(await fileNewerThan('/#a#', '/a')).toBe(true)
+    expect(tauri.invoke).toHaveBeenLastCalledWith('file_newer_than', { file1: '/#a#', file2: '/a' })
+    vi.mocked(tauri.invoke).mockResolvedValueOnce('total 0\n')
+    expect(await listDirectoryLong('/d')).toBe('total 0\n')
+    expect(tauri.invoke).toHaveBeenLastCalledWith('list_directory_long', { path: '/d' })
   })
 })

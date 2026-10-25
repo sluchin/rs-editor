@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent, act } from '@testing-library/react'
 import { isolateHistory } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import App from '@/App'
+import App, { AUTO_SAVE_TIMEOUT } from '@/App'
 import * as fileOps from '@/lib/fileOps'
 import * as bookmarks from '@/lib/bookmarks'
 
@@ -19,6 +19,10 @@ vi.mock('@/lib/fileOps', () => ({
   pathExists: vi.fn(),
   getHomeDir: vi.fn(),
   listDirectory: vi.fn(),
+  backupFile: vi.fn(),
+  deleteFile: vi.fn(),
+  fileNewerThan: vi.fn(),
+  listDirectoryLong: vi.fn(),
 }))
 
 // ブックマークのファイルの読み書きだけを, 偽物にする
@@ -112,6 +116,9 @@ describe('App', () => {
     vi.clearAllMocks()
     mocked.getHomeDir.mockResolvedValue('/home/u')
     mocked.writeFile.mockResolvedValue(undefined)
+    mocked.backupFile.mockResolvedValue(undefined)
+    mocked.deleteFile.mockResolvedValue(undefined)
+    mocked.fileNewerThan.mockResolvedValue(false)
     mockedListen.mockResolvedValue(unlisten)
     mockedBookmarks.loadBookmarks.mockResolvedValue([])
     mockedBookmarks.saveBookmarks.mockResolvedValue(undefined)
@@ -993,6 +1000,373 @@ describe('App', () => {
       mockedBookmarks.loadBookmarks.mockRejectedValue('bad json')
       const editor = await setup()
       expect(editor.text()).toContain('Bookmark file error: bad json')
+    })
+  })
+
+  describe('ファイルのコマンド, 自動保存とバックアップ, dired', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    /**
+     * ファイルを開きます (C-x C-f).
+     *
+     * @param editor - エディタ.
+     * @param path - パス.
+     * @param content - 中身.
+     */
+    const open = async (
+      editor: Awaited<ReturnType<typeof setup>>,
+      path: string,
+      content: string,
+    ) => {
+      mocked.pathExists.mockResolvedValueOnce(true)
+      mocked.readFile.mockResolvedValueOnce(content)
+      editor.ctrlX('f')
+      await editor.submit(path)
+    }
+
+    /**
+     * M-x でコマンドを実行します.
+     *
+     * @param editor - エディタ.
+     * @param name - コマンドの名前.
+     */
+    const mx = async (editor: Awaited<ReturnType<typeof setup>>, name: string) => {
+      editor.key('x', { alt: true })
+      await editor.submit(name)
+    }
+
+    /**
+     * 1 つのキーで答える問いに, 答えます.
+     *
+     * @param editor - エディタ.
+     * @param key - キー.
+     */
+    const answer = (editor: Awaited<ReturnType<typeof setup>>, key: string) =>
+      act(async () => {
+        fireEvent.keyDown(editor.input(), { key })
+      })
+
+    /** モードライン (選んでいるウィンドウ) の文字. */
+    const modeLine = (editor: Awaited<ReturnType<typeof setup>>) =>
+      editor.container.querySelector('.mode-line')?.textContent ?? ''
+
+    it('C-x i で, ファイルの中身を, カーソルの位置に入れ, カーソルは前に残すこと', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.txt', 'ab')
+      editor.type('ab', 1)
+      mocked.readFile.mockResolvedValueOnce('XY')
+      editor.ctrlX('i', false)
+      expect(editor.text()).toContain('Insert file: ')
+      expect(editor.input().value).toBe('/tmp/')
+      await editor.submit('/tmp/b.txt')
+      expect(mocked.readFile).toHaveBeenLastCalledWith('/tmp/b.txt')
+      expect(editor.doc()).toBe('aXYb')
+      expect(editor.cursor()).toBe(1)
+      // 読めなければ, 知らせる
+      mocked.readFile.mockRejectedValueOnce('gone')
+      editor.ctrlX('i', false)
+      await editor.submit('/tmp/c.txt')
+      expect(editor.text()).toContain('Error: gone')
+      expect(editor.doc()).toBe('aXYb')
+    })
+
+    it('C-x C-v で, 選んでいるバッファを, 別のファイルのバッファに置き換えること', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.txt', 'a')
+      // 別のウィンドウには, 別のバッファを出しておく
+      editor.ctrlX('2', false)
+      editor.ctrlX('o', false)
+      editor.ctrlX('b', false)
+      await editor.submit('*scratch*')
+      editor.ctrlX('o', false)
+      editor.ctrlX('v')
+      expect(editor.text()).toContain('Find alternate file: ')
+      expect(editor.input().value).toBe('/tmp/a.txt')
+      mocked.pathExists.mockResolvedValueOnce(true)
+      mocked.readFile.mockResolvedValueOnce('b')
+      await editor.submit('/tmp/b.txt')
+      expect(editor.doc()).toBe('b')
+      expect(modeLine(editor)).toContain('b.txt')
+      // バッファの数は, 変わらない
+      expect(modeLine(editor)).toContain('[2/2]')
+      // ファイルのないバッファでは, 入力の始めは, 既定のディレクトリ
+      editor.ctrlX('b', false)
+      await editor.submit('*scratch*')
+      editor.ctrlX('v')
+      expect(editor.input().value).toBe('/home/u/')
+      // 読めなければ, 知らせる
+      mocked.pathExists.mockRejectedValueOnce('denied')
+      await editor.submit('/root/x')
+      expect(editor.text()).toContain('Error: denied')
+    })
+
+    it('C-x C-v は, 書き換えたファイルのバッファを, yes でだけ置き換えること', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.txt', 'a')
+      editor.type('changed')
+      editor.ctrlX('v')
+      await editor.submit('/tmp/b.txt')
+      expect(editor.text()).toContain(
+        'Kill and replace buffer ‘a.txt’ without saving it? (yes or no) ',
+      )
+      await editor.submit('no')
+      expect(editor.text()).toContain('Aborted')
+      expect(editor.doc()).toBe('changed')
+      editor.ctrlX('v')
+      await editor.submit('/tmp/b.txt')
+      mocked.pathExists.mockResolvedValueOnce(false)
+      await editor.submit('yes')
+      expect(editor.doc()).toBe('')
+      expect(editor.text()).toContain('(New file)')
+    })
+
+    it('C-x s で, 変更したファイルのバッファを, 1 つずつ保存するか聞くこと', async () => {
+      const editor = await setup()
+      await act(async () => editor.ctrlX('s', false))
+      expect(editor.text()).toContain('(No files need saving)')
+      // ファイルのないバッファは, 聞かない
+      editor.type('scratch')
+      await act(async () => editor.ctrlX('s', false))
+      expect(editor.text()).toContain('(No files need saving)')
+
+      const files = ['/tmp/a', '/tmp/b', '/tmp/c', '/tmp/d']
+      const modify = async () => {
+        for (const file of files) {
+          editor.ctrlX('b', false)
+          await editor.submit(file.slice(5))
+          editor.type(`new ${file}`)
+        }
+      }
+      for (const file of files) await open(editor, file, file)
+      await modify()
+      await act(async () => editor.ctrlX('s', false))
+      expect(editor.text()).toContain('Save file /tmp/a? (y, n, !, ., q) ')
+      await answer(editor, 'z')
+      expect(editor.text()).toContain('Save file /tmp/a?')
+      await answer(editor, 'y')
+      expect(mocked.writeFile).toHaveBeenLastCalledWith('/tmp/a', 'new /tmp/a')
+      expect(editor.text()).toContain('Save file /tmp/b?')
+      await answer(editor, 'n')
+      expect(editor.text()).toContain('Save file /tmp/c?')
+      await answer(editor, '!')
+      expect(mocked.writeFile).toHaveBeenLastCalledWith('/tmp/d', 'new /tmp/d')
+      expect(mocked.writeFile).toHaveBeenCalledTimes(3)
+      expect(editor.text()).toContain('Wrote /tmp/d')
+
+      // . で保存して終える. q で終える. 保存しなければ, メッセージを消す
+      await act(async () => editor.ctrlX('s', false))
+      expect(editor.text()).toContain('Save file /tmp/b?')
+      await answer(editor, '.')
+      expect(mocked.writeFile).toHaveBeenLastCalledWith('/tmp/b', 'new /tmp/b')
+      expect(editor.text()).toContain('Wrote /tmp/b')
+      await modify()
+      await act(async () => editor.ctrlX('s', false))
+      await answer(editor, 'q')
+      expect(editor.text()).not.toContain('Save file')
+      expect(editor.text()).not.toContain('Wrote')
+      await act(async () => editor.ctrlX('s', false))
+      await answer(editor, 'Backspace')
+      await answer(editor, 'n')
+      await answer(editor, 'n')
+      await answer(editor, 'n')
+      expect(editor.text()).not.toContain('Save file')
+      // 保存に失敗したら, 知らせて, 次を聞く
+      mocked.writeFile.mockRejectedValueOnce('disk full')
+      await act(async () => editor.ctrlX('s', false))
+      await answer(editor, ' ')
+      expect(editor.text()).toContain('Save file /tmp/b?')
+      // C-g でやめる
+      await act(async () => {
+        fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
+      })
+      expect(editor.text()).toContain('Quit')
+    })
+
+    it('始めて保存するときだけ, 前の版をバックアップにし, 自動保存のファイルを消すこと', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.txt', 'a')
+      await act(async () => editor.ctrlX('s'))
+      expect(mocked.backupFile).toHaveBeenCalledWith('/tmp/a.txt')
+      expect(mocked.deleteFile).toHaveBeenCalledWith('/tmp/#a.txt#')
+      await act(async () => editor.ctrlX('s'))
+      expect(mocked.backupFile).toHaveBeenCalledTimes(1)
+      // 別のファイルに書くときは, そのファイルをバックアップにする
+      mocked.pathExists.mockResolvedValueOnce(false)
+      editor.ctrlX('w')
+      await editor.submit('/tmp/b.txt')
+      expect(mocked.backupFile).toHaveBeenLastCalledWith('/tmp/b.txt')
+      // バックアップや, 自動保存のファイルの削除に失敗しても, 保存はする
+      await open(editor, '/tmp/c.txt', 'c')
+      mocked.backupFile.mockRejectedValueOnce('denied')
+      mocked.deleteFile.mockRejectedValueOnce('denied')
+      await act(async () => editor.ctrlX('s'))
+      expect(editor.text()).toContain('Wrote /tmp/c.txt')
+    })
+
+    it('書き換えが止まってしばらくしたら, 変更したファイルのバッファを自動保存すること', async () => {
+      const editor = await setup()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+      // ファイルのないバッファは, 自動保存しない
+      editor.type('scratch')
+      await act(async () => {
+        vi.advanceTimersByTime(AUTO_SAVE_TIMEOUT)
+      })
+      await open(editor, '/tmp/a.txt', 'a')
+      editor.type('b')
+      await act(async () => {
+        vi.advanceTimersByTime(AUTO_SAVE_TIMEOUT - 1)
+      })
+      expect(mocked.writeFile).not.toHaveBeenCalled()
+      await act(async () => {
+        vi.advanceTimersByTime(1)
+      })
+      expect(mocked.writeFile).toHaveBeenCalledWith('/tmp/#a.txt#', 'b')
+      expect(editor.text()).toContain('Auto-saving...done')
+      // 同じ本文は, もう保存しない
+      editor.ctrlX('b', false)
+      await act(async () => {
+        vi.advanceTimersByTime(AUTO_SAVE_TIMEOUT)
+      })
+      expect(mocked.writeFile).toHaveBeenCalledTimes(1)
+      // ミニバッファで入力しているあいだは, 知らせない
+      await editor.submit('a.txt')
+      editor.type('c')
+      editor.key('x', { alt: true })
+      await act(async () => {
+        vi.advanceTimersByTime(AUTO_SAVE_TIMEOUT)
+      })
+      expect(mocked.writeFile).toHaveBeenLastCalledWith('/tmp/#a.txt#', 'c')
+      expect(editor.text()).toContain('M-x ')
+      expect(editor.text()).not.toContain('Auto-saving')
+      // 失敗したら, 知らせる
+      await editor.submit('keyboard-quit')
+      editor.type('d')
+      mocked.writeFile.mockRejectedValueOnce('disk full')
+      await act(async () => {
+        vi.advanceTimersByTime(AUTO_SAVE_TIMEOUT)
+      })
+      expect(editor.text()).toContain('Error: disk full')
+    })
+
+    it('自動保存のファイルの方が新しければ, 開いたときに知らせ, recover-this-file で読み直すこと', async () => {
+      const editor = await setup()
+      mocked.fileNewerThan.mockResolvedValueOnce(true)
+      await open(editor, '/tmp/a.txt', 'old')
+      expect(mocked.fileNewerThan).toHaveBeenCalledWith('/tmp/#a.txt#', '/tmp/a.txt')
+      expect(editor.text()).toContain('a.txt has auto save data; consider M-x recover-this-file')
+
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.fileNewerThan.mockResolvedValue(true)
+      await mx(editor, 'recover-this-file')
+      expect(editor.text()).toContain('Recover auto save file /tmp/#a.txt#? (yes or no) ')
+      await editor.submit('no')
+      expect(editor.doc()).toBe('old')
+      await mx(editor, 'recover-this-file')
+      mocked.readFile.mockResolvedValueOnce('saved')
+      await editor.submit('yes')
+      expect(mocked.readFile).toHaveBeenLastCalledWith('/tmp/#a.txt#')
+      expect(editor.doc()).toBe('saved')
+      expect(modeLine(editor)).toContain('**')
+      // 読めなければ, 知らせる
+      await mx(editor, 'recover-this-file')
+      mocked.readFile.mockRejectedValueOnce('gone')
+      await editor.submit('yes')
+      expect(editor.text()).toContain('Error: gone')
+    })
+
+    it('recover-this-file は, 自動保存のファイルが無いか, 古ければ, 知らせること', async () => {
+      const editor = await setup()
+      await mx(editor, 'recover-this-file')
+      expect(editor.text()).toContain('This buffer is not visiting a file')
+      await open(editor, '/tmp/a.txt', 'a')
+      mocked.pathExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false)
+      await mx(editor, 'recover-this-file')
+      expect(editor.text()).toContain('Auto save file /tmp/#a.txt# does not exist')
+      mocked.pathExists.mockResolvedValueOnce(false)
+      await mx(editor, 'recover-this-file')
+      expect(editor.text()).toContain('Auto-save file /tmp/#a.txt# not current')
+      mocked.pathExists.mockRejectedValueOnce('denied')
+      await mx(editor, 'recover-this-file')
+      expect(editor.text()).toContain('Error: denied')
+    })
+
+    it('revert-buffer で, 聞いてから, ファイルから読み直すこと', async () => {
+      const editor = await setup()
+      await mx(editor, 'revert-buffer')
+      expect(editor.text()).toContain('Buffer does not seem to be associated with any file')
+      await open(editor, '/tmp/a.txt', 'abc')
+      await mx(editor, 'revert-buffer')
+      expect(editor.text()).toContain('Revert buffer from file /tmp/a.txt? (yes or no) ')
+      await editor.submit('no')
+      // 同じ本文なら, 書き換えない
+      await mx(editor, 'revert-buffer')
+      mocked.readFile.mockResolvedValueOnce('abc')
+      await editor.submit('yes')
+      expect(editor.doc()).toBe('abc')
+      editor.type('xbc', 2)
+      await mx(editor, 'revert-buffer')
+      expect(editor.text()).toContain('Discard edits and reread from /tmp/a.txt? (yes or no) ')
+      mocked.readFile.mockResolvedValueOnce('abc')
+      await editor.submit('yes')
+      expect(editor.doc()).toBe('abc')
+      // カーソルは, 同じ文字の所に残る
+      expect(editor.cursor()).toBe(2)
+      expect(modeLine(editor)).not.toContain('**')
+      // 元に戻せる
+      editor.key('/', { ctrl: true })
+      expect(editor.doc()).toBe('xbc')
+      // 読めなければ, 知らせる
+      await mx(editor, 'revert-buffer')
+      mocked.readFile.mockRejectedValueOnce('gone')
+      await editor.submit('yes')
+      expect(editor.text()).toContain('Error: gone')
+    })
+
+    it('C-x d で, ディレクトリの一覧を dired のバッファに出し, revert-buffer で作り直すこと', async () => {
+      const editor = await setup()
+      mocked.listDirectoryLong.mockResolvedValueOnce(
+        'total 4\n-rw-r--r-- 1 u u 3 Oct 25 16:42 a.txt\n',
+      )
+      editor.ctrlX('d', false)
+      expect(editor.text()).toContain('Dired (directory): ')
+      expect(editor.input().value).toBe('/home/u/')
+      await editor.submit('/home/u/src/')
+      expect(mocked.listDirectoryLong).toHaveBeenCalledWith('/home/u/src')
+      expect(editor.doc()).toBe('  /home/u/src:\n  -rw-r--r-- 1 u u 3 Oct 25 16:42 a.txt\n')
+      expect(modeLine(editor)).toContain('src')
+      expect(modeLine(editor)).toContain('Dired by name')
+      // dired のバッファの既定のディレクトリは, そのディレクトリ
+      editor.ctrlX('f')
+      expect(editor.input().value).toBe('/home/u/src/')
+      await act(async () => {
+        fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
+      })
+      // 作り直す (聞かない)
+      mocked.listDirectoryLong.mockResolvedValueOnce(
+        'total 0\n-rw-r--r-- 1 u u 3 Oct 25 16:42 b.txt\n',
+      )
+      await mx(editor, 'revert-buffer')
+      expect(editor.doc()).toBe('  /home/u/src:\n  -rw-r--r-- 1 u u 3 Oct 25 16:42 b.txt\n')
+      expect(modeLine(editor)).not.toContain('**')
+      // 同じディレクトリの dired があれば, それを出す
+      editor.ctrlX('b', false)
+      await editor.submit('*scratch*')
+      editor.ctrlX('d', false)
+      await editor.submit('/home/u/src')
+      expect(mocked.listDirectoryLong).toHaveBeenCalledTimes(2)
+      expect(editor.doc()).toContain('b.txt')
+      // ルートのディレクトリ. 読めなければ, 知らせる
+      mocked.listDirectoryLong.mockResolvedValueOnce('')
+      editor.ctrlX('d', false)
+      await editor.submit('/')
+      expect(editor.doc()).toBe('  /:\n')
+      mocked.listDirectoryLong.mockRejectedValueOnce('No such file or directory')
+      editor.ctrlX('d', false)
+      expect(editor.input().value).toBe('/')
+      await editor.submit('/none')
+      expect(editor.text()).toContain('Error: No such file or directory')
     })
   })
 })

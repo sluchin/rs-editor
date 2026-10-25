@@ -67,6 +67,12 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-x C-f - ファイルを開く（find-file。Tab でファイルの名前を補完）
 - C-x C-s - 保存（save-buffer）
 - C-x C-w - 別のファイルに保存（write-file）
+- C-x C-v - 別のファイルを開き直す（find-alternate-file）
+- C-x i - ファイルの中身を入れる（insert-file）
+- C-x s - 変更したバッファを保存（save-some-buffers）
+- M-x revert-buffer, M-x recover-this-file - ファイル, 自動保存のファイルから読み直す
+- 自動保存（`#名前#`）と, バックアップ（`名前~`）
+- C-x d - ディレクトリの一覧（dired。一覧を出すだけ）
 
 **バッファ管理**
 - C-x b - バッファ切り替え
@@ -119,15 +125,10 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-x i` | insert-file | ファイルの中身を入れる |
-| `C-x C-v` | find-alternate-file | 別のファイルを開き直す |
-| `C-x s` | save-some-buffers | 変更したバッファを保存 |
-| - | revert-buffer | ファイルから読み直す |
-| - | auto-save / バックアップ（`file~`） | 自動保存と, 前の版の保存 |
 | `C-x ^` / `C-x {` / `C-x }` / `C-x +` | enlarge-window など | ウィンドウの大きさ |
 | `C-M-v` | scroll-other-window | ほかのウィンドウをスクロール |
 | `C-x 4 ...` / `C-x 5 ...` | find-file-other-window など | ほかのウィンドウ, フレームで開く |
-| `C-x d` | dired | ディレクトリの一覧 |
+| dired の中のキー | dired-find-file など | dired での, ファイルを開く, マーク, 削除, コピーなど（`C-x d` は, 一覧を出すだけ） |
 
 ### 検索
 
@@ -181,4 +182,4 @@ rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、�
 次の候補は、よく使い、手間の小さいものから:
 1. Lisp の移動: `C-M-n`, `C-M-p`
 2. ヘルプ: `C-h f`, `C-h v`
-3. Dired
+3. Dired の中のキー（`RET` で開く, `^` で親へ, `g` で作り直す）

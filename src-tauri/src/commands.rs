@@ -384,3 +384,109 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
 pub fn home_dir() -> Result<String, String> {
     std::env::var("HOME").map_err(|e| e.to_string())
 }
+
+/// ファイルのバックアップ (`<path>~`) を作ります (Emacs の `make-backup-files`. 前の版を写す).
+/// ファイルが無ければ, 何もしません.
+///
+/// # Arguments
+///
+/// * `path` - ファイルのパス.
+///
+/// # Returns
+///
+/// 写せなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn backup_file(path: String) -> Result<(), String> {
+    if !Path::new(&path).is_file() {
+        return Ok(());
+    }
+    log::debug!("Backing up {}", path);
+    std::fs::copy(&path, format!("{}~", path))
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+/// ファイルを消します. 無ければ, 何もしません (自動保存のファイル).
+///
+/// # Arguments
+///
+/// * `path` - ファイルのパス.
+///
+/// # Returns
+///
+/// 消せなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn delete_file(path: String) -> Result<(), String> {
+    match std::fs::remove_file(&path) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
+        _ => Ok(()),
+    }
+}
+
+/// ファイルの更新日時を返します.
+///
+/// # Arguments
+///
+/// * `path` - ファイルのパス.
+///
+/// # Returns
+///
+/// 更新日時. ファイルが無ければ `None`.
+fn modified_time(path: &str) -> Option<std::time::SystemTime> {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
+/// 1 つ目のファイルが, 2 つ目のファイルより新しければ `true` (Emacs の `file-newer-than-file-p`).
+/// 1 つ目だけがあるときも `true` です.
+///
+/// # Arguments
+///
+/// * `file1` - 1 つ目のファイル.
+/// * `file2` - 2 つ目のファイル.
+///
+/// # Returns
+///
+/// 新しければ `true`.
+#[tauri::command]
+pub fn file_newer_than(file1: String, file2: String) -> bool {
+    match (modified_time(&file1), modified_time(&file2)) {
+        (Some(a), Some(b)) => a > b,
+        (a, _) => a.is_some(),
+    }
+}
+
+/// ディレクトリの一覧を, `ls -al` で作ります (Emacs の dired の `dired-listing-switches`).
+///
+/// # Arguments
+///
+/// * `program` - `ls` のプログラム.
+/// * `path` - ディレクトリのパス.
+///
+/// # Returns
+///
+/// `ls` の出力. ディレクトリを読めないか, `ls` が失敗すれば, 理由の文字列の [`Err`].
+pub fn list_directory_long_with(program: &str, path: &str) -> Result<String, String> {
+    std::fs::read_dir(path).map_err(|e| e.to_string())?;
+    let output = std::process::Command::new(program)
+        .args(["-al", "--", path])
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+}
+
+/// ディレクトリの一覧を, `ls -al` で作ります (`C-x d`).
+///
+/// # Arguments
+///
+/// * `path` - ディレクトリのパス.
+///
+/// # Returns
+///
+/// `ls` の出力. 作れなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn list_directory_long(path: String) -> Result<String, String> {
+    list_directory_long_with("ls", &path)
+}

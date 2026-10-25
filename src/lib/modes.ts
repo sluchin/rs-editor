@@ -78,6 +78,14 @@ const MODE_NAMES: Record<string, (typeof AUTO_MODES)[number][1] | 'fundamental'>
   fundamental: 'fundamental',
 }
 
+/** dired のバッファのメジャーモード (`C-x d`). */
+export const DIRED_MODE: MajorMode = {
+  name: 'Dired by name',
+  language: null,
+  indentTabs: true,
+  tabWidth: 8,
+}
+
 /**
  * バッファのメジャーモードを返します.
  *

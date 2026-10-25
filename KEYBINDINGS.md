@@ -170,7 +170,15 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-x C-f` | find-file | ファイルを開く |
 | `C-x C-s` | save-buffer | ファイルを保存 |
 | `C-x C-w` | write-file | 別のファイルに保存（ほかのファイルを置き換えるときは、聞く） |
+| `C-x C-v` | find-alternate-file | 選んでいるバッファを, 別のファイルを開いたバッファに置き換える（書き換えていれば, 聞く） |
+| `C-x i` | insert-file | ファイルの中身を, カーソルの位置に入れる |
+| `C-x s` | save-some-buffers | 変更したファイルのバッファを, 1 つずつ保存するか聞く（`y` / `SPC`, `n` / `DEL`, `!` で残りを全て, `.` で保存して終える, `q` / `RET` で終える） |
+| （`M-x`） | revert-buffer | ファイルから読み直す（聞いてから。dired のバッファは, 聞かずに一覧を作り直す） |
+| （`M-x`） | recover-this-file | 自動保存のファイルから読み直す |
 
+ファイルのバッファは, 書き換えが 30 秒止まると, 同じディレクトリの `#名前#` に自動保存します（保存すると消す）。
+開いたファイルの自動保存のファイルの方が新しければ, 開いたときに知らせます。
+開いてから始めて保存するときは, 前の版を `名前~` に写します（バックアップ）。
 ## バッファ管理
 
 | キー | コマンド | 説明 |
@@ -223,14 +231,15 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 
 ## Dired（ディレクトリの編集）
 
-Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor には dired が無いので, 全て未実装です。**
+Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor の dired は, `C-x d` でディレクトリの一覧（`ls -al`）を出すだけで, dired の中のキーは, 全て未実装です。**
+一覧は `M-x revert-buffer` で作り直せます。
 rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) にまとめています。
 
 ### Dired を開く
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `C-x d` | dired | ディレクトリを開く | 未実装 |
+| `C-x d` | dired | ディレクトリを開く | 実装済み（一覧を出すだけ） |
 | `C-x 4 d` | dired-other-window | 別のウィンドウでディレクトリを開く | 未実装 |
 | `C-x 5 d` | dired-other-frame | 別のフレームでディレクトリを開く | 未実装 |
 | `C-x C-j` | dired-jump | 今のファイルのディレクトリを開き, そのファイルにカーソルを合わせる | 未実装 |
@@ -271,7 +280,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `M-$` | dired-hide-all | 全てのサブディレクトリを畳む / 開く | 未実装 |
 | `k` | dired-do-kill-lines | マークした行を表示から消す（ファイルは消さない） | 未実装 |
 | `l` | dired-do-redisplay | マークした行を読み直す | 未実装 |
-| `g` | revert-buffer | 一覧を読み直す | 未実装 |
+| `g` | revert-buffer | 一覧を読み直す | 未実装（`M-x revert-buffer` で作り直せる） |
 | `s` | dired-sort-toggle-or-edit | 名前順と日付順を切り替える | 未実装 |
 | `(` | dired-hide-details-mode | 詳細（権限, サイズ, 日付）を隠す / 出す | 未実装 |
 | `w` | dired-copy-filename-as-kill | ファイル名を kill-ring にコピー（`C-u 0 w` でフルパス） | 未実装 |
@@ -365,7 +374,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - 検索（C-s, C-r, C-M-s, C-M-r）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）
 - 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
-- ファイル操作（C-x C-f, C-x C-s, C-x C-w）
+- ファイル操作（C-x C-f, C-x C-s, C-x C-w, C-x C-v, C-x i, C-x s, revert-buffer, recover-this-file）, 自動保存とバックアップ
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）
@@ -375,7 +384,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 
 ### 未実装
 - そのほかのヘルプ（C-h f, C-h v など）
-- Dired（C-x d と, dired の中の全てのキー）
+- Dired の中の全てのキー（C-x d は, 一覧を出すだけ）
 
 ## よくある操作パターン
 

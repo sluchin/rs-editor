@@ -5,9 +5,10 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    bookmark_file_path, bookmark_file_path_from, eval_code, eval_code_with, home_dir,
-    init_file_path, init_file_path_from, list_directory, load_init_file, path_exists,
-    read_file_content, run_command, write_file_content, EvalResponse,
+    backup_file, bookmark_file_path, bookmark_file_path_from, delete_file, eval_code,
+    eval_code_with, file_newer_than, home_dir, init_file_path, init_file_path_from, list_directory,
+    list_directory_long, list_directory_long_with, load_init_file, path_exists, read_file_content,
+    run_command, write_file_content, EvalResponse,
 };
 use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
 use rseditor::scheme::host::NoHost;
@@ -147,4 +148,66 @@ fn test_bookmark_file_path_uses_the_config_directory() {
     assert!(bookmark_file_path()
         .unwrap()
         .ends_with("rseditor/bookmarks"));
+}
+
+#[test]
+fn test_backup_file_copies_the_previous_version() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("a.scm").to_string_lossy().into_owned();
+    // ファイルが無ければ, 何もしない
+    backup_file(path.clone()).unwrap();
+    assert!(!path_exists(format!("{}~", path)));
+    fs::write(&path, "old").unwrap();
+    backup_file(path.clone()).unwrap();
+    assert_eq!(fs::read_to_string(format!("{}~", path)).unwrap(), "old");
+    // バックアップを書けなければ, 理由を返す
+    fs::create_dir(format!("{}~", dir.path().join("b").display())).unwrap();
+    let b = dir.path().join("b").to_string_lossy().into_owned();
+    fs::write(&b, "b").unwrap();
+    assert!(backup_file(b).is_err());
+}
+
+#[test]
+fn test_delete_file_ignores_missing_files() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("#a#").to_string_lossy().into_owned();
+    delete_file(path.clone()).unwrap();
+    fs::write(&path, "x").unwrap();
+    delete_file(path.clone()).unwrap();
+    assert!(!path_exists(path));
+    // ディレクトリは消せない
+    assert!(delete_file(dir.path().to_string_lossy().into_owned()).is_err());
+}
+
+#[test]
+fn test_file_newer_than_compares_the_modified_times() {
+    let dir = tempdir().unwrap();
+    let a = dir.path().join("a").to_string_lossy().into_owned();
+    let b = dir.path().join("b").to_string_lossy().into_owned();
+    assert!(!file_newer_than(a.clone(), b.clone()));
+    fs::write(&a, "a").unwrap();
+    assert!(file_newer_than(a.clone(), b.clone()));
+    fs::write(&b, "b").unwrap();
+    let old = std::time::SystemTime::now() - std::time::Duration::from_secs(60);
+    fs::File::options()
+        .write(true)
+        .open(&a)
+        .unwrap()
+        .set_modified(old)
+        .unwrap();
+    assert!(!file_newer_than(a.clone(), b.clone()));
+    assert!(file_newer_than(b, a));
+}
+
+#[test]
+fn test_list_directory_long_runs_ls() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("a.txt"), "hi").unwrap();
+    let path = dir.path().to_string_lossy().into_owned();
+    let listing = list_directory_long(path.clone()).unwrap();
+    assert!(listing.lines().any(|line| line.ends_with(" a.txt")));
+    // ディレクトリを読めないか, ls が無いか, 失敗すれば, 理由を返す
+    assert!(list_directory_long(format!("{}/none", path)).is_err());
+    assert!(list_directory_long_with("/nonexistent-ls", &path).is_err());
+    assert_eq!(list_directory_long_with("false", &path), Err(String::new()));
 }

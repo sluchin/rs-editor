@@ -108,6 +108,11 @@ export interface EditorHandle {
   /** マークを置いていれば `true`. */
   hasMark: () => boolean
   /**
+   * 本文を置き換えます (変わった所だけを書き換えるので, カーソルは, 同じ文字の所に残る. 元に戻せる).
+   * ファイルから読み直すとき (revert-buffer).
+   */
+  setText: (content: string) => void
+  /**
    * 矩形の各行を, 文字で置き換えます (C-x r t).
    *
    * @returns マークが無ければ `false`.
@@ -186,8 +191,9 @@ export default function CodeEditor({
   const readOnly = useRef(new Compartment())
   const keys = useRef(new Compartment())
   const highlight = useRef(new Compartment())
-  // キーボードマクロ (全てのバッファで共通)
+  // キーボードマクロと kill-ring (全てのバッファで共通)
   const macro = useRef(new KeyboardMacro())
+  const killRing = useRef(new KillRing())
   const latestKeys = useRef(keyBindings)
   const latest = useRef({ onChange, onCursorChange, actions, onMessage })
   const commands = useRef<Record<string, Command>>(undefined)
@@ -327,12 +333,16 @@ export default function CodeEditor({
       },
       hasMark: () => current().state.field(markField) !== null,
       stringRectangle: (string) => replaceRectangle(current(), string),
+      setText: (content) => {
+        const change = syncChange(current().state, content)
+        if (change) current().dispatch({ changes: change.changes, scrollIntoView: true })
+      },
     }
   })
 
   useEffect(() => {
     commands.current = createCommands({
-      killRing: new KillRing(),
+      killRing: killRing.current,
       message: (text) => latest.current.onMessage(text),
       macro: macro.current,
     })
