@@ -1,10 +1,11 @@
 # 未実装の Emacs デフォルト機能
 
-rs-editor が Emacs の初期状態では実装していない機能を以下にまとめました。
+rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装しているものと、まだ実装していないものをまとめました。
+キーの一覧は [KEYBINDINGS.md](./KEYBINDINGS.md)、dired との比較は [DIRED_VS_RS_FILER.md](./DIRED_VS_RS_FILER.md) にあります。
 
-## ✅ 実装済み（Emacs デフォルト機能）
+## ✅ 実装済み
 
-**カーソル移動・移動コマンド**
+**カーソル移動**
 - C-f, C-b - 前後に移動
 - C-n, C-p - 上下に移動 (続けて押すあいだ, 桁を保つ)
 - C-a, C-e - 行の開始・末尾
@@ -13,18 +14,27 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - C-v, M-v - ページ単位のスクロール
 - C-l - 画面を中央にスクロール (続けて押すと, 上, 下)
 - M-g g - 指定行へジャンプ
+- C-M-f, C-M-b - S 式単位の移動
 
 **削除・編集**
 - C-d - 1 文字削除
 - C-k - 行削除（kill-line。続けたキルは 1 つにつなげる）
 - M-d, M-DEL - 単語削除（kill-word, backward-kill-word）
+- C-M-k - S 式削除（kill-sexp）
 - C-w, M-w - 選択範囲の削除とコピー（kill-region, kill-ring-save）
 - C-y - 貼り付け（yank）
 - M-y - 別の削除内容を貼り付け（yank-pop）
-- C-t - 文字入れ替え
+- C-t, M-t, C-x C-t - 文字、単語、行の入れ替え
 - M-u, M-l, M-c - 単語の大文字・小文字
 - C-o - 改行を入れる（open-line）
+- M-; - コメントの付け外し（comment-dwim）
+- M-/ - 単語の補完（dabbrev-expand。今のバッファの中だけを探す）
 - C-/, C-x C-/ - Undo / Redo（バッファごと）
+
+**改行と字下げ**
+- RET, C-j - 改行（RET は字下げもする）
+- TAB, C-M-q, C-M-\ - 字下げ（Emacs の scheme-mode と emacs-lisp-mode と同じ計算）
+- 括弧の強調（show-paren-mode）、シンタックスハイライト（font-lock）
 
 **リージョン選択**
 - C-SPC - マーク設定（移動で範囲が広がる。transient-mark-mode）
@@ -36,9 +46,24 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - C-M-s, C-M-r - 正規表現の検索
 - M-%, C-M-% - 置換（query-replace, query-replace-regexp）. M-x replace-string, replace-regexp
 
+**ファイル操作**
+- C-x C-f - ファイルを開く（find-file。Tab でファイルの名前を補完）
+- C-x C-s - 保存（save-buffer）
+- C-x C-w - 別のファイルに保存（write-file）
+
+**バッファ管理**
+- C-x b - バッファ切り替え
+- C-x k - バッファを閉じる
+- C-x C-b - バッファ一覧
+- C-x C-c - 終了（保存していないバッファがあれば確認）
+
 **ウィンドウ**
 - C-x 2, C-x 3 - ウィンドウを分ける
 - C-x o, C-x 0, C-x 1 - ウィンドウを移る, 消す, ほかを消す
+
+**Lisp**
+- C-x C-e, M-: - 式の評価（eval-last-sexp, eval-expression）
+- 初期設定ファイル（`~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key）
 
 **ヘルプ**
 - C-h k - キーの説明（describe-key）
@@ -48,64 +73,85 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 - C-u, M-0 から M-9 - 前置引数
 - C-x (, C-x ), C-x e - キーボードマクロ
 
-**ファイル操作**
-- C-x C-f - ファイルを開く（find-file）
-- C-x C-s - 保存（save-buffer）
-
-**バッファ管理**
-- C-x b - バッファ切り替え
-- C-x k - バッファを閉じる
-- C-x C-b - バッファ一覧
-- C-x C-c - 終了（保存していないバッファがあれば確認）
-
 **その他**
-- M-x - コマンド実行
+- M-x - コマンド実行（Tab で補完）
 - C-g - キャンセル（keyboard-quit）
 
 ---
 
-## ❌ 未実装の Emacs デフォルト機能
+## ❌ 未実装
 
-### 高優先度（よく使う機能）
-
-| キー | コマンド | 説明 |
-|------|---------|------|
-| `C-x C-n` | set-goal-column | ゴールカラム設定 |
-
-### 低優先度（補助機能）
+### 編集
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-h f` | describe-function | 関数の説明表示 |
-| `C-h v` | describe-variable | 変数の説明表示 |
-| `C-x C-q` | read-only-mode | 読み込み専用モード |
+| `M-q` | fill-paragraph | 段落を詰める |
+| `M-z` | zap-to-char | 文字までキル |
+| `M-SPC` | just-one-space | 空白を 1 つにする |
+| `M-\` | delete-horizontal-space | 空白を消す |
+| `M-^` | delete-indentation | 前の行とつなげる |
+| `C-x C-o` | delete-blank-lines | 空の行を消す |
+| `C-x C-u` / `C-x C-l` | upcase-region / downcase-region | リージョンの大文字・小文字 |
+| `C-q` | quoted-insert | 文字をそのまま入れる |
+| `M-=` | count-words-region | 行、単語、文字の数 |
+| `C-x r k` / `C-x r y` / `C-x r t` など | kill-rectangle など | 矩形の操作 |
+| `C-x r s` / `C-x r i` | copy-to-register / insert-register | レジスタ |
+| `C-x r m` / `C-x r b` | bookmark-set / bookmark-jump | ブックマーク |
+| `C-x n n` / `C-x n w` | narrow-to-region / widen | ナローイング |
 
----
-
-## rs-editor 独自の実装機能
-
-以下は Emacs にはなく、rs-editor が Scheme エディタとして実装した独自機能です。
+### 移動
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-M-f` / `C-M-b` | forward-sexp / backward-sexp | S 式単位の移動 |
-| `C-M-k` | kill-sexp | S 式削除 |
-| `C-x C-e` | eval-last-sexp | S 式を評価 |
-| `M-:` | eval-expression | 式を入力して評価 |
+| `M-{` / `M-}` | backward-paragraph / forward-paragraph | 段落の移動 |
+| `M-a` / `M-e` / `M-k` | backward-sentence / forward-sentence / kill-sentence | 文の移動とキル |
+| `M-m` | back-to-indentation | 行の字下げの後へ |
+| `C-M-u` / `C-M-d` | backward-up-list / down-list | リストの外と中へ |
+| `C-M-a` / `C-M-e` | beginning-of-defun / end-of-defun | 定義の始めと終わり |
+| `C-M-h` / `C-M-SPC` / `M-@` | mark-defun / mark-sexp / mark-word | 定義, S 式, 単語を選ぶ |
+| `C-x C-n` | set-goal-column | 上下に移るときの桁を決める |
 
----
+### ファイル・バッファ・ウィンドウ
 
-## 実装の優先度別ガイドライン
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x i` | insert-file | ファイルの中身を入れる |
+| `C-x C-v` | find-alternate-file | 別のファイルを開き直す |
+| `C-x s` | save-some-buffers | 変更したバッファを保存 |
+| - | revert-buffer | ファイルから読み直す |
+| - | auto-save / バックアップ（`file~`） | 自動保存と, 前の版の保存 |
+| `C-x ^` / `C-x {` / `C-x }` / `C-x +` | enlarge-window など | ウィンドウの大きさ |
+| `C-M-v` | scroll-other-window | ほかのウィンドウをスクロール |
+| `C-x 4 ...` / `C-x 5 ...` | find-file-other-window など | ほかのウィンドウ, フレームで開く |
+| `C-x d` | dired | ディレクトリの一覧 |
 
-### Phase 9（提案）: ウィンドウ管理
+### 検索
 
-複数ウィンドウのサポートは複雑ですが、アプリケーションの利便性を大幅に向上させます。
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-s o` | occur | 合う行の一覧 |
+| `M-s .` | isearch-forward-symbol-at-point | カーソルの記号を検索 |
+| isearch 中の `C-w` / `M-y` / `M-p` / `M-n` | isearch-yank-word-or-char など | 検索の文字の取り込みと履歴 |
+| ミニバッファの `M-p` / `M-n` | previous-history-element など | 入力の履歴 |
 
-### Phase 10（提案）: ヘルプシステム
+### ヘルプ
 
-`C-h` 系コマンドでキーバインドやコマンドの説明を表示する機能。
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-h f` / `C-h v` | describe-function / describe-variable | 関数, 変数の説明 |
+| `C-h m` / `C-h a` / `C-h i` | describe-mode / apropos-command / info | モードの説明, コマンドの検索, マニュアル |
 
----
+### モードとそのほか
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `<insert>` | overwrite-mode | 上書き |
+| `C-x C-q` | read-only-mode | 読み込み専用 |
+| - | auto-fill-mode / display-line-numbers-mode / visual-line-mode | 自動の折り返し, 行番号, 見た目の行 |
+| `C-x C-+` / `C-x C--` | text-scale-adjust | 文字の大きさ |
+| - | shell / eshell / compile / grep | 外部のプログラム |
+| `C-x v ...` | vc-* | バージョン管理 |
+| `M-$` | ispell-word | 綴りの確かめ |
 
 ---
 
@@ -126,21 +172,10 @@ rs-editor が Emacs の初期状態では実装していない機能を以下に
 
 ## まとめ
 
-rs-editor は Emacs の**基本的な編集機能の大部分**を実装しており、特に：
-- ✅ 全ての基本的なカーソル移動
-- ✅ kill-ring ベースの削除・貼り付け
-- ✅ Undo/Redo
-- ✅ 検索機能
-- ✅ ファイル・バッファ管理
+rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
 
-**Emacs にはない独自実装済み機能:**
-- ✅ S-expression ナビゲーション（C-M-f/b/k）
-- ✅ Scheme 式評価（C-x C-e, M-:）
-
-**Emacs デフォルト機能で未実装:**
-- ❌ ヘルプシステム（C-h f, C-h v など. C-h k と C-h b はある）
-
-**実装の状態:**
-
-Scheme エディタとしての**コア機能は十分実装されている**と言えます。**次のステップ**として：
-1. `C-h f` などのヘルプと, Dired を実装する
+次の候補は、よく使い、手間の小さいものから:
+1. 編集: `M-q`, `M-z`, `M-SPC`, `M-\`, `M-^`, `M-m`
+2. Lisp の移動: `C-M-u`, `C-M-d`, `C-M-a`, `C-M-e`
+3. ヘルプ: `C-h f`, `C-h v`
+4. Dired
