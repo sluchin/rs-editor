@@ -28,7 +28,7 @@ export const indentConfig = Facet.define<IndentConfig, IndentConfig>({
 })
 
 /** `;` 1 つのコメントの行の桁 (Emacs の `comment-column`). */
-const COMMENT_COLUMN = 40
+export const COMMENT_COLUMN = 40
 
 /** 本体の字下げの幅 (Emacs の `lisp-body-indent`). */
 const BODY_INDENT = 2
@@ -84,7 +84,7 @@ export function columnAt(text: string, index: number, tabWidth: number): number 
  * @param config - 字下げの設定.
  * @returns 空白.
  */
-function whitespace(from: number, to: number, config: IndentConfig): string {
+export function whitespace(from: number, to: number, config: IndentConfig): string {
   const { indentTabs, tabWidth } = config
   const tabs = indentTabs ? Math.floor(to / tabWidth) - Math.floor(from / tabWidth) : 0
   if (tabs <= 0) return ' '.repeat(Math.max(0, to - from))
@@ -153,6 +153,8 @@ export class LispParser {
   datum: number | null = null
   /** 行ごとの, 始めの式の桁 (行の始めから読んで, 始めに式が始まる所. 前の `'` などを含む). */
   firstSexpCol: number[] = []
+  /** 最後に読んだ行の, コメントの `;` の位置 (文字列の中のものを除く). コメントが無ければ `null`. */
+  comment: number | null = null
   /** 括弧 (文字列, コメント, 文字の中のものを除く) を読んだときに呼びます (括弧の強調で使う). */
   onParen?: (line: number, index: number, ch: string) => void
 
@@ -172,6 +174,7 @@ export class LispParser {
   scanLine(text: string, line: number, start = 0, end = text.length) {
     let i = start
     let prefix: number | null = null
+    this.comment = null
     const col = () => columnAt(text, i, this.tabWidth)
     /** 式を, 開いているリストの要素にします. */
     const element = (kind: Element['kind'], at: number, name = '') => {
@@ -198,6 +201,7 @@ export class LispParser {
       } else if (ch === ' ' || ch === '\t') {
         i++
       } else if (ch === ';') {
+        this.comment = i
         break
       } else if (this.datum !== null) {
         i = this.skipDatum(text, i)

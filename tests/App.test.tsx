@@ -222,6 +222,65 @@ describe('App', () => {
     expect(other.text()).toContain('Error: readonly')
   })
 
+  it('C-x C-w で, 別のファイルに書き, バッファをそのファイルのバッファにする', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValue(false)
+
+    editor.ctrlX('w')
+    expect(editor.text()).toContain('Write file: ')
+    expect(editor.input().value).toBe('/home/u/')
+    await editor.submit('/tmp/w.scm')
+    expect(mocked.writeFile).toHaveBeenCalledWith('/tmp/w.scm', expect.any(String))
+    expect(editor.text()).toContain('Wrote /tmp/w.scm')
+    expect(editor.container.querySelector('.mode-line')?.textContent).toContain('w.scm')
+
+    // 入力の始めは, バッファのファイルのディレクトリ. バッファのファイルには, 聞かずに書く
+    mocked.pathExists.mockResolvedValue(true)
+    editor.ctrlX('w')
+    expect(editor.input().value).toBe('/tmp/')
+    await editor.submit('/tmp/w.scm')
+    expect(mocked.writeFile).toHaveBeenCalledTimes(2)
+  })
+
+  it('C-x C-w で, ほかのファイルを置き換えるときは, y でだけ書く (n と C-g でやめる)', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValue(true)
+    const answer = (key: string, ctrlKey = false) =>
+      act(async () => {
+        fireEvent.keyDown(editor.input(), { key, ctrlKey })
+      })
+
+    editor.ctrlX('w')
+    await editor.submit('/tmp/o.scm')
+    expect(editor.text()).toContain('File ‘/tmp/o.scm’ exists; overwrite? (y or n) ')
+    await answer('z')
+    expect(editor.text()).toContain('overwrite? (y or n)')
+    await answer('n')
+    expect(editor.text()).toContain('Canceled')
+    expect(mocked.writeFile).not.toHaveBeenCalled()
+
+    editor.ctrlX('w')
+    await editor.submit('/tmp/o.scm')
+    await answer('g', true)
+    expect(editor.text()).toContain('Quit')
+    expect(mocked.writeFile).not.toHaveBeenCalled()
+
+    editor.ctrlX('w')
+    await editor.submit('/tmp/o.scm')
+    await answer('y')
+    expect(mocked.writeFile).toHaveBeenCalledWith('/tmp/o.scm', expect.any(String))
+    expect(editor.text()).toContain('Wrote /tmp/o.scm')
+  })
+
+  it('C-x C-w で, ファイルがあるか確かめられなければ, メッセージにする', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockRejectedValueOnce('denied')
+    editor.ctrlX('w')
+    await editor.submit('/root/x')
+    expect(editor.text()).toContain('Error: denied')
+    expect(mocked.writeFile).not.toHaveBeenCalled()
+  })
+
   it('C-x b でバッファを切り替え, ない名前はメッセージにする', async () => {
     const editor = await setup()
     mocked.pathExists.mockResolvedValueOnce(false)

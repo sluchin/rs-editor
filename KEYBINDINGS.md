@@ -50,6 +50,10 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `C-y` | yank | kill-ring から貼り付け |
 | `M-y` | yank-pop | kill-ring の別の内容を貼り付け |
 | `C-t` | transpose-chars | 隣同士の文字を入れ替え |
+| `M-t` | transpose-words | 前の単語と後ろの単語を入れ替え |
+| `C-x C-t` | transpose-lines | 今の行と前の行を入れ替え |
+| `M-;` | comment-dwim | コメントを付ける（リージョンがあれば、行をコメントにする・外す。コメントがあれば、コメントへ動く） |
+| `M-/` | dabbrev-expand | 前の単語を、バッファの中の単語で補完（続けて押すと、次の候補） |
 | `M-u` | upcase-word | 次の単語を大文字に |
 | `M-l` | downcase-word | 次の単語を小文字に |
 | `M-c` | capitalize-word | 次の単語の先頭を大文字に |
@@ -129,6 +133,7 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 |------|---------|------|
 | `C-x C-f` | find-file | ファイルを開く |
 | `C-x C-s` | save-buffer | ファイルを保存 |
+| `C-x C-w` | write-file | 別のファイルに保存（ほかのファイルを置き換えるときは、聞く） |
 
 ## バッファ管理
 
@@ -317,13 +322,13 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 ### 完全実装済み
 - カーソル移動（C-f, C-b, C-n, C-p, C-a, C-e, M-f, M-b, M-<, M->, C-v, M-v, C-l, M-g g）
 - S 式移動（C-M-f, C-M-b）
-- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k）
+- 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-;, M-/）
 - リージョン選択（C-SPC, C-x C-x, C-x h）
 - 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）
 - 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
-- ファイル操作（C-x C-f, C-x C-s）
+- ファイル操作（C-x C-f, C-x C-s, C-x C-w）
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）

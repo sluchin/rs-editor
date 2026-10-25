@@ -16,6 +16,8 @@ import {
 } from '@codemirror/state'
 import { EditorView, type KeyBinding } from '@codemirror/view'
 import { backwardSexp, forwardSexp } from './bracketMatch'
+import { commentDwim } from './comment'
+import { findExpansions } from './dabbrev'
 import { indentConfig, indentForTab, indentLines, newlineAndIndent } from './lispIndent'
 import type { KillRing } from './killRing'
 import type { KeyboardMacro } from './macro'
@@ -31,8 +33,12 @@ export interface LastCommand {
   to?: number
   /** 行を移るときの桁 (`line-move`). */
   goal?: number
-  /** 画面のどこにカーソルの行を置いたか (`recenter`. 0: 中央, 1: 上, 2: 下). */
+  /** 画面のどこにカーソルの行を置いたか (`recenter`. 0: 中央, 1: 上, 2: 下). 何番目の候補か (`dabbrev`). */
   step?: number
+  /** 補完の略語 (`dabbrev`). */
+  abbrev?: string
+  /** 補完の候補 (`dabbrev`). */
+  candidates?: string[]
 }
 
 /** コマンドが起こした変更に付ける, 直前のコマンド. */
@@ -459,6 +465,55 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
       })
       return true
     },
+    // カーソルの前の単語 (単語の中なら, その単語) と, 後ろの単語を入れ替えて, 後ろの単語の後へ動く
+    'transpose-words': (view) => {
+      const doc = text(view)
+      const firstFrom = wordBackward(doc, head(view))
+      const firstTo = wordForward(doc, firstFrom)
+      const secondTo = wordForward(doc, firstTo)
+      const secondFrom = wordBackward(doc, secondTo)
+      if (firstFrom === firstTo || secondFrom < firstTo) {
+        message("Don't have two things to transpose")
+        return true
+      }
+      view.dispatch({
+        changes: {
+          from: firstFrom,
+          to: secondTo,
+          insert:
+            doc.slice(secondFrom, secondTo) +
+            doc.slice(firstTo, secondFrom) +
+            doc.slice(firstFrom, firstTo),
+        },
+        selection: EditorSelection.cursor(secondTo),
+        scrollIntoView: true,
+        annotations: commandAnnotation.of({ name: 'transpose' }),
+      })
+      return true
+    },
+    // カーソルの行と前の行を入れ替えて, 次の行の始めへ動く (先頭の行では, 次の行と入れ替える)
+    'transpose-lines': (view) => {
+      const { doc } = view.state
+      if (doc.lines < 2) {
+        message("Don't have two things to transpose")
+        return true
+      }
+      const second = doc.line(Math.max(doc.lineAt(head(view)).number, 2))
+      const first = doc.line(second.number - 1)
+      // 最後の行は, 後ろに改行を足す (Emacs と同じ)
+      const newline = second.number === doc.lines ? '\n' : ''
+      view.dispatch({
+        changes: {
+          from: first.from,
+          to: second.to,
+          insert: `${second.text}\n${first.text}${newline}`,
+        },
+        selection: EditorSelection.cursor(second.to + 1),
+        scrollIntoView: true,
+        annotations: commandAnnotation.of({ name: 'transpose' }),
+      })
+      return true
+    },
     'upcase-word': (view) => caseWord(view, 'upcase'),
     'downcase-word': (view) => caseWord(view, 'downcase'),
     'capitalize-word': (view) => caseWord(view, 'capitalize'),
@@ -522,6 +577,75 @@ export function createCommands({ killRing, message, macro }: CommandDeps): Recor
         annotations: commandAnnotation.of({ name: 'indent' }),
       })
       return true
+    },
+    'comment-dwim': (view) => {
+      const mark = view.state.field(markField)
+      const result = commentDwim(view.state, head(view), mark)
+      if (typeof result === 'string') {
+        message(result)
+        return true
+      }
+      view.dispatch({
+        ...result,
+        // リージョンを変えたら, マークを外す
+        effects: mark !== null && mark !== head(view) ? setMarkEffect.of(null) : [],
+        scrollIntoView: true,
+        userEvent: 'input',
+        annotations: commandAnnotation.of({ name: 'comment' }),
+      })
+      return true
+    },
+    // 続けて押すと, 次の候補にする. 候補が尽きたら, 略語に戻す
+    'dabbrev-expand': (view) => {
+      const last = view.state.field(lastCommandField)
+      /**
+       * 略語か候補を入れます.
+       *
+       * @param from - 略語の始め.
+       * @param to - 置き換える範囲の終わり.
+       * @param insert - 入れる文字.
+       * @param next - 直前のコマンドとして覚えること.
+       * @returns `true`.
+       */
+      const expand = (from: number, to: number, insert: string, next: LastCommand) => {
+        view.dispatch({
+          changes: { from, to, insert },
+          selection: EditorSelection.cursor(from + insert.length),
+          scrollIntoView: true,
+          userEvent: 'input.complete',
+          annotations: commandAnnotation.of(next),
+        })
+        return true
+      }
+      if (last?.name === 'dabbrev') {
+        const { from, to, abbrev, candidates } = last as Required<LastCommand>
+        const step = (last.step as number) + 1
+        if (step >= candidates.length) {
+          message(`No further dynamic expansion for ‘${abbrev}’ found`)
+          return expand(from, to, abbrev, { name: 'move' })
+        }
+        const word = candidates[step]
+        return expand(from, to, word, { ...last, to: from + word.length, step })
+      }
+      const pos = head(view)
+      const found = findExpansions(text(view), pos, view.state.facet(indentConfig).dialect !== null)
+      if (!found) {
+        message('No possible abbreviation preceding point')
+        return true
+      }
+      const { from, abbrev, candidates } = found
+      if (candidates.length === 0) {
+        message(`No dynamic expansion for ‘${abbrev}’ found`)
+        return true
+      }
+      return expand(from, pos, candidates[0], {
+        name: 'dabbrev',
+        from,
+        to: from + candidates[0].length,
+        step: 0,
+        abbrev,
+        candidates,
+      })
     },
     undo: (view) => undo(view) || true,
     redo: (view) => redo(view) || true,
@@ -651,6 +775,10 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-y', 'yank'],
   ['Alt-y', 'yank-pop'],
   ['Ctrl-t', 'transpose-chars'],
+  ['Alt-t', 'transpose-words'],
+  ['Ctrl-x Ctrl-t', 'transpose-lines'],
+  ['Alt-;', 'comment-dwim'],
+  ['Alt-/', 'dabbrev-expand'],
   ['Alt-u', 'upcase-word'],
   ['Alt-l', 'downcase-word'],
   ['Alt-c', 'capitalize-word'],
@@ -692,6 +820,7 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   // ファイルとバッファ
   ['Ctrl-x Ctrl-f', 'find-file'],
   ['Ctrl-x Ctrl-s', 'save-buffer'],
+  ['Ctrl-x Ctrl-w', 'write-file'],
   ['Ctrl-x b', 'switch-to-buffer'],
   ['Ctrl-x k', 'kill-buffer'],
   ['Ctrl-x Ctrl-b', 'list-buffers'],

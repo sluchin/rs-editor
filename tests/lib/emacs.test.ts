@@ -268,6 +268,59 @@ describe('削除とキル', () => {
     expect(one.text()).toBe('a|')
   })
 
+  it('M-t で, 前の単語 (単語の中なら, その単語) と後ろの単語を入れ替えること', () => {
+    const middle = setup('foo b|ar, baz')
+    middle.run('transpose-words')
+    expect(middle.text()).toBe('foo baz, bar|')
+    const between = setup('foo |bar')
+    between.run('transpose-words')
+    expect(between.text()).toBe('bar foo|')
+    // 後ろに単語が無いときと, 単語が無いときは, 知らせる
+    for (const doc of ['foo bar|', '|']) {
+      const none = setup(doc)
+      none.run('transpose-words')
+      expect(none.text()).toBe(doc)
+      expect(none.message).toHaveBeenCalledWith("Don't have two things to transpose")
+    }
+  })
+
+  it('C-x C-t で, 前の行と入れ替えて, 次の行へ動くこと (先頭の行は次の行と, 最後の行は改行を足す)', () => {
+    const middle = setup('a\nb|b\nc')
+    middle.run('transpose-lines')
+    expect(middle.text()).toBe('bb\na\n|c')
+    const first = setup('|a\nb')
+    first.run('transpose-lines')
+    expect(first.text()).toBe('b\na\n|')
+    const one = setup('a|')
+    one.run('transpose-lines')
+    expect(one.text()).toBe('a|')
+    expect(one.message).toHaveBeenCalledWith("Don't have two things to transpose")
+  })
+
+  it('M-/ で, 単語を補完し, 続けて押すと次の候補に, 尽きたら略語に戻すこと', () => {
+    const { run, text, message } = setup('apple apricot\nap|')
+    run('dabbrev-expand')
+    expect(text()).toBe('apple apricot\napricot|')
+    run('dabbrev-expand')
+    expect(text()).toBe('apple apricot\napple|')
+    run('dabbrev-expand')
+    expect(text()).toBe('apple apricot\nap|')
+    expect(message).toHaveBeenCalledWith('No further dynamic expansion for ‘ap’ found')
+    // 尽きた後は, 始めから探し直す
+    run('dabbrev-expand')
+    expect(text()).toBe('apple apricot\napricot|')
+  })
+
+  it('M-/ で, 略語が無いときと, 候補が無いときは, 知らせること', () => {
+    const blank = setup('a |')
+    blank.run('dabbrev-expand')
+    expect(blank.message).toHaveBeenCalledWith('No possible abbreviation preceding point')
+    const none = setup('zz|')
+    none.run('dabbrev-expand')
+    expect(none.text()).toBe('zz|')
+    expect(none.message).toHaveBeenCalledWith('No dynamic expansion for ‘zz’ found')
+  })
+
   it('単語の大文字・小文字を変えて, 単語の後へ動くこと', () => {
     const { run, text } = setup('|foo bar bAZ')
     run('upcase-word', 'downcase-word', 'capitalize-word')

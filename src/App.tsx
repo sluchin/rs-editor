@@ -189,6 +189,8 @@ function App() {
   const [showBufferList, setShowBufferList] = useState(false)
   // 進めている置換
   const [replace, setReplace] = useState<ReplaceState | null>(null)
+  // 置き換えてよいか聞いている, ファイルのパス (C-x C-w で, ほかのファイルに書くとき)
+  const [overwritePath, setOverwritePath] = useState<string | null>(null)
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
   const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
@@ -487,6 +489,36 @@ function App() {
   }
 
   /**
+   * 書くファイルの名前を, ミニバッファで聞きます (C-x C-w). 入力の始めは, バッファのファイルのディレクトリ
+   * (ファイルのないバッファは, ホームディレクトリ).
+   */
+  const handleWriteFile = () => {
+    const path = currentBuffer.filePath
+    setPendingAction('write-file')
+    setMinibufferState({
+      mode: 'input',
+      prompt: 'Write file: ',
+      input: path ? path.slice(0, path.lastIndexOf('/') + 1) : homeDir,
+      complete: completeFile,
+    })
+  }
+
+  /**
+   * バッファを, ファイルに書いて, そのファイルのバッファにします (バッファの名前も, ファイルの名前にする).
+   *
+   * @param path - ファイルのパス.
+   */
+  const writeBufferTo = async (path: string) => {
+    try {
+      await writeFile(path, currentBuffer.content)
+      updateCurrentBuffer({ filePath: path, name: bufferNameFromPath(path), modified: false })
+      showMessage(`Wrote ${path}`)
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
    * 出すバッファの名前を, ミニバッファで聞きます (C-x b).
    */
   const handleSwitchBuffer = () => {
@@ -675,11 +707,22 @@ function App() {
   }
 
   /**
-   * query-replace の問いに答えます.
+   * 1 つのキーで答える問い (ファイルを置き換えてよいか, query-replace) に答えます.
    *
    * @param key - 押したキー.
    */
   const handleQueryKey = (key: string) => {
+    // ファイルを置き換えてよいかの問い (y か n のほかのキーは, 答えにしない)
+    if (overwritePath !== null) {
+      if (key === 'y') {
+        setOverwritePath(null)
+        void writeBufferTo(overwritePath)
+      } else if (key === 'n') {
+        setOverwritePath(null)
+        showMessage('Canceled')
+      }
+      return
+    }
     const state = replace as ReplaceState
     const match = state.match as ReplaceMatch
     const handle = editor.current as EditorHandle
@@ -798,6 +841,7 @@ function App() {
   const actions: Record<string, () => void> = {
     'find-file': handleFindFile,
     'save-buffer': () => void handleSaveBuffer(),
+    'write-file': handleWriteFile,
     'switch-to-buffer': handleSwitchBuffer,
     'kill-buffer': handleKillBuffer,
     'list-buffers': handleListBuffers,
@@ -852,12 +896,22 @@ function App() {
         setMinibufferState({ mode: 'message', text: `Error: ${err}` })
       }
     } else if (action === 'write-file') {
+      // バッファのファイルでない, ほかのファイルを置き換えるときは, 聞く (Emacs と同じ)
+      let exists: boolean
       try {
-        await writeFile(value, currentBuffer.content)
-        updateCurrentBuffer({ filePath: value, modified: false })
-        setMinibufferState({ mode: 'message', text: `Wrote ${value}` })
+        exists = value !== currentBuffer.filePath && (await pathExists(value))
       } catch (err) {
-        setMinibufferState({ mode: 'message', text: `Error: ${err}` })
+        showMessage(`Error: ${err}`)
+        return
+      }
+      if (exists) {
+        setOverwritePath(value)
+        setMinibufferState({
+          mode: 'query',
+          prompt: `File ‘${value}’ exists; overwrite? (y or n) `,
+        })
+      } else {
+        await writeBufferTo(value)
       }
     } else if (action === 'switch-buffer') {
       const targetBuffer = buffers.find((b) => b.name === value.trim())
@@ -933,6 +987,7 @@ function App() {
     const current = minibufferState
     setPendingAction(null)
     setReplace(null)
+    setOverwritePath(null)
 
     if (current.mode === 'isearch') {
       editor.current?.setCursor(current.originalCursor)
