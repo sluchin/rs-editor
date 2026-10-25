@@ -179,6 +179,25 @@ fn test_define_lambda_and_closures() {
 }
 
 #[test]
+fn test_releases_the_environments_after_evaluation() {
+    // 名前付き let, letrec, 内側の define は, 環境と手続きの輪を作る. 評価のあとに放す
+    let ev = Evaluator::new();
+    let code = "(let loop ((i 0)) (if (< i 100) (loop (+ i 1)) i))
+                (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+                         (odd? (lambda (n) (if (= n 0) #f (even? (- n 1))))))
+                  (even? 10))
+                (define (f) (define (g) 1) (g))
+                (f)";
+    assert_eq!(ev.eval(code).unwrap(), "100\n#t\nf\n1");
+    assert_eq!(ev.live_frames(), 0);
+    // 一番外側の変数から指す手続き (クロージャ) の環境は, 残す
+    ev.eval("(define counter (let ((n 0)) (lambda () (set! n (+ n 1)) n)))")
+        .unwrap();
+    assert_eq!(ev.eval("(counter) (counter)").unwrap(), "1\n2");
+    assert_eq!(ev.live_frames(), 1);
+}
+
+#[test]
 fn test_control_forms() {
     assert_eq!(eval("(if #t 1 2) (if #f 1 2) (if #f 1)"), "1\n2\nnil");
     assert_eq!(eval("(if 0 'yes 'no)"), "yes");

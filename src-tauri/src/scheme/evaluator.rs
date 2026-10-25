@@ -139,6 +139,15 @@ impl Evaluator {
         self.keys.lock().unwrap().clone()
     }
 
+    /// 評価で作って, まだ放していない環境の数を返します (評価のあとに, 環境を放したかを確かめる).
+    ///
+    /// # Returns
+    ///
+    /// 環境の数.
+    pub fn live_frames(&self) -> usize {
+        self.global.live_frames()
+    }
+
     /// 一番外側の環境を返します (`load` で使う).
     ///
     /// # Returns
@@ -204,7 +213,12 @@ impl Evaluator {
         std::thread::scope(|scope| {
             std::thread::Builder::new()
                 .stack_size(STACK_SIZE)
-                .spawn_scoped(scope, || task(&mut Machine::new(self, host)))
+                .spawn_scoped(scope, || {
+                    let result = task(&mut Machine::new(self, host));
+                    // 評価で作った, 環境と手続きの輪を切る (放すと深く入れ子になるので, 大きなスタックで)
+                    self.global.collect();
+                    result
+                })
                 .map_err(|e| e.to_string())?
                 .join()
                 .unwrap_or_else(|_| Err("The evaluator crashed".to_string()))
