@@ -2,7 +2,9 @@
  * バッファの一覧 (C-x C-b). 画面の上に重ねて出し, 選んだバッファに切り替えます.
  */
 
+import { useEffect } from 'react'
 import { Buffer } from '../App'
+import { majorMode } from '../lib/modes'
 import '../styles/BufferList.css'
 
 /** {@link BufferList} のプロパティ. */
@@ -13,7 +15,7 @@ interface BufferListProps {
   currentBufferId: string
   /** バッファを選んだときに呼びます. */
   onSelectBuffer: (bufferId: string) => void
-  /** 一覧を閉じるときに呼びます (外側か, 閉じるボタンを押したとき). */
+  /** 一覧を閉じるときに呼びます (外側か, 閉じるボタンを押したとき, `q` を押したとき). */
   onClose: () => void
 }
 
@@ -29,6 +31,18 @@ export default function BufferList({
   onSelectBuffer,
   onClose,
 }: BufferListProps) {
+  // `q` で閉じる (Emacs の Buffer Menu と同じ). 修飾キーと一緒なら, ほかのコマンドなので閉じない
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'q' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <div className="buffer-list-overlay" onClick={onClose}>
       <div className="buffer-list-container" onClick={(e) => e.stopPropagation()}>
@@ -64,7 +78,9 @@ export default function BufferList({
                   </td>
                   <td className="buffer-name">{buffer.name}</td>
                   <td className="buffer-size">{buffer.content.length}</td>
-                  <td className="buffer-mode">Lisp</td>
+                  <td className="buffer-mode">
+                    {majorMode(buffer.name, buffer.filePath, buffer.content).name}
+                  </td>
                   <td className="buffer-file">{buffer.filePath || '--'}</td>
                 </tr>
               ))}

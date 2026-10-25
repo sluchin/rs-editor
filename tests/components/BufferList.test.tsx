@@ -28,6 +28,49 @@ describe('BufferList Component', () => {
     expect(rows[1].textContent).toContain('--')
   })
 
+  it('モードの列に, バッファのメジャーモードを出す', () => {
+    const { container } = render(
+      <BufferList
+        buffers={[
+          ...buffers,
+          { id: '3', name: 'a.el', filePath: '/tmp/a.el', content: '', modified: false },
+          { id: '4', name: 'a.txt', filePath: '/tmp/a.txt', content: '', modified: false },
+        ]}
+        currentBufferId="1"
+        onSelectBuffer={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+    const modes = [...container.querySelectorAll('.buffer-mode')].map((td) => td.textContent)
+
+    expect(modes).toEqual(['Scheme', 'Lisp Interaction', 'ELisp/d', 'Fundamental'])
+  })
+
+  it('q で閉じる (修飾キーと一緒なら, 閉じない). 閉じた後は, キーを受けない', () => {
+    const onClose = vi.fn()
+    const { unmount } = render(
+      <BufferList
+        buffers={buffers}
+        currentBufferId="1"
+        onSelectBuffer={vi.fn()}
+        onClose={onClose}
+      />,
+    )
+
+    fireEvent.keyDown(window, { key: 'q', ctrlKey: true })
+    fireEvent.keyDown(window, { key: 'q', altKey: true })
+    fireEvent.keyDown(window, { key: 'q', metaKey: true })
+    fireEvent.keyDown(window, { key: 'a' })
+    expect(onClose).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(window, { key: 'q' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+
+    unmount()
+    fireEvent.keyDown(window, { key: 'q' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it('行を押すと選び, × と外側で閉じる (中を押しても閉じない)', () => {
     const onSelectBuffer = vi.fn()
     const onClose = vi.fn()
