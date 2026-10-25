@@ -126,6 +126,8 @@ fn test_files() {
     fs::write(dir.path().join("a/c.md"), "").unwrap();
     fs::create_dir_all(dir.path().join(".git")).unwrap();
     fs::write(dir.path().join(".git/h.txt"), "").unwrap();
+    // ディレクトリへのシンボリックリンクは, たどらない (輪になっていても, 終わる)
+    std::os::unix::fs::symlink(dir.path(), dir.path().join("a/loop")).unwrap();
     let listed = ev
         .eval(&format!(
             "(directory-files-recursively {} \"\\\\.txt$\")",

@@ -94,7 +94,8 @@ pub fn grep_directory(pattern: &str, dir: &Path) -> Result<Vec<GrepMatch>, Strin
     Ok(found)
 }
 
-/// ディレクトリの下 (深くまで) のファイルを, 名前の順に集めます. 探さないディレクトリは, 除きます.
+/// ディレクトリの下 (深くまで) のファイルを, 名前の順に集めます. 探さないディレクトリと, ディレクトリへの
+/// シンボリックリンク (輪になっていると終わらない. `grep -r` と同じく, たどらない) は, 除きます.
 ///
 /// # Arguments
 ///
@@ -109,7 +110,10 @@ fn collect_files(dir: &Path, files: &mut Vec<PathBuf>) {
     for path in paths {
         if path.is_dir() {
             let name = path.file_name().unwrap_or_default().to_string_lossy();
-            if !name.starts_with('.') && !IGNORED_DIRECTORIES.contains(&name.as_ref()) {
+            if !path.is_symlink()
+                && !name.starts_with('.')
+                && !IGNORED_DIRECTORIES.contains(&name.as_ref())
+            {
                 collect_files(&path, files);
             }
         } else {

@@ -222,6 +222,7 @@ fn path_string(path: &Path) -> String {
 }
 
 /// ディレクトリの下 (深くまで) の, 名前が正規表現に合うファイルを集めます. `.` で始まるものは, 除きます.
+/// ディレクトリへのシンボリックリンクは, たどりません (輪になっていると終わらない. Emacs と同じ).
 ///
 /// # Arguments
 ///
@@ -239,7 +240,9 @@ fn collect_files(dir: &Path, pattern: &Regex, files: &mut Vec<String>) {
             continue;
         }
         if path.is_dir() {
-            collect_files(&path, pattern, files);
+            if !path.is_symlink() {
+                collect_files(&path, pattern, files);
+            }
         } else if pattern.is_match(&name) {
             files.push(path_string(&path));
         }

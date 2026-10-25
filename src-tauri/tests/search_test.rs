@@ -50,6 +50,8 @@ fn test_grep_directory() {
     fs::write(root.join("latin1.txt"), b"foo \xff\n").unwrap();
     // . で始まるファイルは探す
     fs::write(root.join(".env"), "FOO=foo\n").unwrap();
+    // ディレクトリへのシンボリックリンクは, たどらない (輪になっていても, 終わる)
+    std::os::unix::fs::symlink(root, root.join("src/loop")).unwrap();
 
     // 小文字だけなら, 大文字と小文字を区別しない
     assert_eq!(
