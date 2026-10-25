@@ -112,6 +112,10 @@ export interface EditorHandle {
    * ファイルから読み直すとき (revert-buffer).
    */
   setText: (content: string) => void
+  /** 次にヤンクする文字を返します (isearch の `M-y`). 何もキルしていなければ, `undefined`. */
+  currentKill: () => string | undefined
+  /** ヤンクする文字を, 1 つ古い方へ進めて, その文字を返します (isearch の続けた `M-y`). */
+  rotateKill: () => string | undefined
   /**
    * 矩形の各行を, 文字で置き換えます (C-x r t).
    *
@@ -337,6 +341,8 @@ export default function CodeEditor({
         const change = syncChange(current().state, content)
         if (change) current().dispatch({ changes: change.changes, scrollIntoView: true })
       },
+      currentKill: () => killRing.current.current(),
+      rotateKill: () => killRing.current.rotate(),
     }
   })
 

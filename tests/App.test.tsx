@@ -1369,4 +1369,208 @@ describe('App', () => {
       expect(editor.text()).toContain('Error: No such file or directory')
     })
   })
+
+  describe('isearch の取り込みと履歴, ミニバッファの履歴', () => {
+    /**
+     * ミニバッファで, キーを押します.
+     *
+     * @param editor - エディタ.
+     * @param key - キー.
+     * @param mods - 修飾.
+     */
+    const press = (editor: Awaited<ReturnType<typeof setup>>, key: string, mods: Mods = {}) =>
+      act(async () => {
+        fireEvent.keyDown(editor.input(), {
+          key,
+          ctrlKey: mods.ctrl ?? false,
+          altKey: mods.alt ?? false,
+        })
+      })
+
+    /** 選んでいる範囲. */
+    const selection = (editor: Awaited<ReturnType<typeof setup>>) => {
+      const { from, to } = editor.editor.state.selection.main
+      return [from, to]
+    }
+
+    it('isearch の C-w で, 単語か文字を取り込み, 正規表現では, そのまま合うようにする', async () => {
+      const editor = await setup()
+      await editor.type('foo.bar foo.bar', 0)
+      editor.key('s', { ctrl: true })
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('foo')
+      expect(selection(editor)).toEqual([0, 3])
+      // 合った所の終わりから取り込む
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('foo.bar')
+      expect(selection(editor)).toEqual([0, 7])
+      await press(editor, 'Enter')
+      // 正規表現では, 取り込んだ文字を, そのまま合うようにする
+      await editor.type('foo.bar foo.bar', 0)
+      editor.key('s', { ctrl: true, alt: true })
+      expect(editor.text()).toContain('Regexp I-search: ')
+      await press(editor, 'w', { ctrl: true })
+      await press(editor, 'w', { ctrl: true })
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('foo\\.bar foo')
+      expect(selection(editor)).toEqual([0, 11])
+      await press(editor, 'Enter')
+      // 本文の終わりからは, 取り込まない
+      await editor.type('foo.bar foo.bar')
+      editor.key('s', { ctrl: true })
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('')
+      await press(editor, 'Enter')
+      // 前へ探していても, 合った所の終わりから取り込む
+      editor.key('r', { ctrl: true })
+      fireEvent.change(editor.input(), { target: { value: 'foo' } })
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('foo.bar')
+      expect(selection(editor)).toEqual([8, 15])
+    })
+
+    it('合わないときの C-w は, 前に取り込んだ所の続きから取り込む', async () => {
+      const editor = await setup()
+      await editor.type('ab ac', 0)
+      editor.key('s', { ctrl: true })
+      fireEvent.change(editor.input(), { target: { value: 'z' } })
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('zab')
+      await press(editor, 'w', { ctrl: true })
+      expect(editor.input().value).toBe('zab ac')
+      expect(editor.text()).toContain('Failing I-search: ')
+    })
+
+    it('isearch の M-y で, キルした文字を取り込み, 続けると, 古いキルした文字に替える', async () => {
+      const editor = await setup()
+      // キルした文字が無ければ, 取り込まない
+      editor.key('s', { ctrl: true })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('')
+      await press(editor, 'Enter')
+      await editor.type('xyz\nabc\nxyz abc', 0)
+      editor.key('k', { ctrl: true })
+      editor.key('d', { ctrl: true })
+      editor.key('k', { ctrl: true })
+      expect(editor.doc()).toBe('\nxyz abc')
+      editor.key('s', { ctrl: true })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('abc')
+      expect(selection(editor)).toEqual([5, 8])
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('xyz')
+      expect(selection(editor)).toEqual([1, 4])
+      // ほかのコマンドの後の M-y は, 足す
+      await press(editor, 's', { ctrl: true })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('xyzxyz')
+      fireEvent.change(editor.input(), { target: { value: 'x' } })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('xxyz')
+      await press(editor, 'r', { ctrl: true })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('xxyzxyz')
+      // 正規表現では, そのまま合うようにする
+      await press(editor, 'Enter')
+      await editor.type('a.b', 0)
+      editor.key('k', { ctrl: true })
+      editor.key('s', { ctrl: true, alt: true })
+      await press(editor, 'y', { alt: true })
+      expect(editor.input().value).toBe('a\\.b')
+    })
+
+    it('isearch の M-p と M-n で検索の履歴を出し, C-s を続けると, 最後に探した文字で探す', async () => {
+      const editor = await setup()
+      await editor.type('ab cd ab cd', 0)
+      const search = async (query: string) => {
+        editor.key('s', { ctrl: true })
+        fireEvent.change(editor.input(), { target: { value: query } })
+        await press(editor, 'Enter')
+      }
+      // 履歴が無ければ, 何もしない
+      editor.key('s', { ctrl: true })
+      await press(editor, 'p', { alt: true })
+      await press(editor, 's', { ctrl: true })
+      expect(editor.input().value).toBe('')
+      await press(editor, 'Enter')
+      await search('ab')
+      await search('cd')
+      // C-g でやめた文字と, 空の文字は, 履歴に入れない
+      editor.key('s', { ctrl: true })
+      fireEvent.change(editor.input(), { target: { value: 'zz' } })
+      await press(editor, 'g', { ctrl: true })
+      await search('')
+      await editor.type('ab cd ab cd', 0)
+      editor.key('s', { ctrl: true })
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('cd')
+      expect(selection(editor)).toEqual([3, 5])
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('ab')
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('cd')
+      await press(editor, 'n', { alt: true })
+      expect(editor.input().value).toBe('ab')
+      await press(editor, 'Enter')
+      // 同じ文字は, 前の方から除く
+      editor.key('s', { ctrl: true })
+      await press(editor, 'n', { alt: true })
+      expect(editor.input().value).toBe('cd')
+      await press(editor, 'g', { ctrl: true })
+      // C-s を続けると, 最後に探した文字. その後の M-p は, 1 つ古い文字
+      await editor.type('ab cd ab cd', 0)
+      editor.key('s', { ctrl: true })
+      await press(editor, 's', { ctrl: true })
+      expect(editor.input().value).toBe('ab')
+      expect(selection(editor)).toEqual([0, 2])
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('cd')
+      await press(editor, 'g', { ctrl: true })
+      // 正規表現の履歴は, 別. 向きを変えた C-r は, 履歴を使わない
+      editor.key('s', { ctrl: true, alt: true })
+      await press(editor, 'p', { alt: true })
+      await press(editor, 's', { ctrl: true })
+      await press(editor, 'r', { ctrl: true })
+      expect(editor.input().value).toBe('')
+    })
+
+    it('ミニバッファの M-p と M-n で, 入力の履歴を出し, 端では知らせる', async () => {
+      const editor = await setup()
+      await editor.type('abc', 0)
+      editor.key('x', { alt: true })
+      await press(editor, 'p', { alt: true })
+      expect(editor.text()).toContain('[Beginning of history; no preceding item]')
+      await press(editor, 'n', { alt: true })
+      expect(editor.text()).toContain('[End of history; no default available]')
+      // 入力すると, 知らせを消す
+      fireEvent.change(editor.input(), { target: { value: 'forward-char' } })
+      expect(editor.text()).not.toContain('[End of history')
+      await press(editor, 'Enter')
+      expect(editor.cursor()).toBe(1)
+      editor.key('x', { alt: true })
+      await editor.submit('forward-word')
+      editor.key('x', { alt: true })
+      fireEvent.change(editor.input(), { target: { value: 'typed' } })
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('forward-word')
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('forward-char')
+      await press(editor, 'p', { alt: true })
+      expect(editor.text()).toContain('[Beginning of history; no preceding item]')
+      await press(editor, 'n', { alt: true })
+      await press(editor, 'n', { alt: true })
+      // 履歴を出す前に入力していた文字に戻る
+      expect(editor.input().value).toBe('typed')
+      await press(editor, 'g', { ctrl: true })
+      // 履歴は, コマンドの種類ごと (C-x C-f と C-x C-w は, 同じ履歴)
+      mocked.pathExists.mockResolvedValue(false)
+      editor.ctrlX('f')
+      await editor.submit('/tmp/a.txt')
+      editor.ctrlX('w')
+      await press(editor, 'p', { alt: true })
+      expect(editor.input().value).toBe('/tmp/a.txt')
+      await press(editor, 'p', { alt: true })
+      expect(editor.text()).toContain('[Beginning of history; no preceding item]')
+    })
+  })
 })

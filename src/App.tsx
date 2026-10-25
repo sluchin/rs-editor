@@ -8,6 +8,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import CodeEditor, { CursorInfo, EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, {
+  type IsearchCommand,
   MinibufferInputState,
   MinibufferIsearchState,
   MinibufferState,
@@ -36,7 +37,8 @@ import {
 import { DIRED_MODE, majorMode } from './lib/modes'
 import { diredBufferName, diredListing } from './lib/dired'
 import { autoSaveFileName, directoryFileName, fileDirectory } from './lib/paths'
-import { compileRegexp, findNextMatch } from './lib/isearch'
+import { compileRegexp, findNextMatch, quoteRegexp, yankWordOrCharEnd } from './lib/isearch'
+import { HISTORY_LENGTH, SEARCH_RING_MAX, addToHistory } from './lib/history'
 import {
   type ReplaceMatch,
   type ReplaceSpec,
@@ -103,6 +105,28 @@ type PendingAction =
   | 'confirm-recover'
   | 'dired'
   | null
+
+/** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
+const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
+  'find-file': 'file-name',
+  'write-file': 'file-name',
+  'insert-file': 'file-name',
+  'find-alternate-file': 'file-name',
+  dired: 'file-name',
+  'execute-command': 'extended-command',
+  'switch-buffer': 'buffer-name',
+  'eval-expression': 'read-expression',
+  'goto-line': 'goto-line',
+  'replace-from': 'query-replace',
+  'replace-to': 'query-replace',
+  'string-rectangle': 'string-rectangle',
+  'bookmark-set': 'bookmark',
+  'bookmark-jump': 'bookmark',
+  'confirm-exit': 'yes-or-no-p',
+  'confirm-alternate': 'yes-or-no-p',
+  'confirm-revert': 'yes-or-no-p',
+  'confirm-recover': 'yes-or-no-p',
+}
 
 /** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
 interface ReplaceKind {
@@ -255,6 +279,10 @@ function App() {
   const [saveQueue, setSaveQueue] = useState<{ buffers: Buffer[]; saved: number } | null>(null)
   // バッファごとの, 最後に自動保存した本文
   const autoSaved = useRef(new Map<string, string>())
+  // ミニバッファの入力の履歴 (履歴の名前ごと. 新しい順)
+  const [histories, setHistories] = useState<Record<string, string[]>>({})
+  // isearch の検索の履歴 (文字と, 正規表現. 新しい順)
+  const searchRing = useRef({ plain: [] as string[], regexp: [] as string[] })
 
   // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
@@ -1279,8 +1307,14 @@ function App() {
     direction: 'forward' | 'backward',
     current: MinibufferIsearchState,
   ) => {
+    // 探す文字が空なら, 最後に探した文字で探す
+    if (current.query === '' && direction === current.direction) {
+      const ring = searchRing.current[current.regexp ? 'regexp' : 'plain']
+      if (ring.length > 0) searchIsearch(current, ring[0], { ringIndex: 0 })
+      return
+    }
     if (direction === 'backward' && current.matchStart !== null && current.matchStart <= 0) {
-      setMinibufferState({ ...current, matchStart: null, matchEnd: null })
+      setMinibufferState({ ...current, matchStart: null, matchEnd: null, yankBase: undefined })
       return
     }
 
@@ -1306,9 +1340,76 @@ function App() {
         direction,
         matchStart: match.start,
         matchEnd: match.end,
+        yankBase: undefined,
       })
     } else {
-      setMinibufferState({ ...current, matchStart: null, matchEnd: null })
+      setMinibufferState({ ...current, matchStart: null, matchEnd: null, yankBase: undefined })
+    }
+  }
+
+  /**
+   * isearch の探す文字を変えて, 探し始めた位置から探し直します.
+   *
+   * @param current - isearch の状態.
+   * @param query - 探す文字.
+   * @param changes - ほかに変える項目 (続けた M-y の文字などは, 変えなければ捨てる).
+   */
+  const searchIsearch = (
+    current: MinibufferIsearchState,
+    query: string,
+    changes: Partial<MinibufferIsearchState> = {},
+  ) => {
+    const match = findNextMatch(
+      currentBuffer.content,
+      query,
+      current.originalCursor,
+      current.direction,
+      current.regexp,
+    )
+    if (match) selectMatch(current.direction, match)
+    setMinibufferState({
+      ...current,
+      yankBase: undefined,
+      ...changes,
+      query,
+      matchStart: match ? match.start : null,
+      matchEnd: match ? match.end : null,
+    })
+  }
+
+  /**
+   * isearch の中のコマンドを行います. C-w でカーソルの後ろの単語か文字を, M-y でキルした文字を取り込み,
+   * M-p と M-n で, 検索の履歴を出します.
+   *
+   * @param command - コマンド.
+   * @param current - isearch の状態.
+   */
+  const handleIsearchCommand = (command: IsearchCommand, current: MinibufferIsearchState) => {
+    const quote = (text: string) => (current.regexp ? quoteRegexp(text) : text)
+    const handle = editor.current as EditorHandle
+    if (command === 'yank-word-or-char') {
+      // 合っていれば, 合った所の終わりから (前へ探していても)
+      const text = currentBuffer.content
+      const from = current.matchEnd ?? current.yankPoint ?? current.originalCursor
+      const end = yankWordOrCharEnd(text, from)
+      if (end === from) return
+      const failing = current.matchStart === null && current.query !== ''
+      searchIsearch(current, current.query + quote(text.slice(from, end)), {
+        yankPoint: failing ? end : null,
+      })
+    } else if (command === 'yank-pop') {
+      // 続けた M-y は, 取り込んだ文字を, 1 つ古いキルした文字に置き換える
+      const base = current.yankBase ?? current.query
+      const kill = current.yankBase === undefined ? handle.currentKill() : handle.rotateKill()
+      if (kill === undefined) return
+      searchIsearch(current, base + quote(kill), { yankBase: base })
+    } else {
+      const ring = searchRing.current[current.regexp ? 'regexp' : 'plain']
+      if (ring.length === 0) return
+      const advance = command === 'ring-advance'
+      const index =
+        ((current.ringIndex ?? (advance ? 0 : -1)) + (advance ? -1 : 1) + ring.length) % ring.length
+      searchIsearch(current, ring[index], { ringIndex: index })
     }
   }
 
@@ -1338,24 +1439,7 @@ function App() {
     if (current.mode === 'input') {
       setMinibufferState({ ...current, input: value })
     } else {
-      const match = findNextMatch(
-        currentBuffer.content,
-        value,
-        current.originalCursor,
-        current.direction,
-        current.regexp,
-      )
-      if (match) {
-        selectMatch(current.direction, match)
-        setMinibufferState({
-          ...current,
-          query: value,
-          matchStart: match.start,
-          matchEnd: match.end,
-        })
-      } else {
-        setMinibufferState({ ...current, query: value, matchStart: null, matchEnd: null })
-      }
+      searchIsearch(current, value)
     }
   }
 
@@ -1410,6 +1494,13 @@ function App() {
   const handleMinibufferSubmit = async (value: string) => {
     const action = pendingAction
     setPendingAction(null)
+    const historyName = action && HISTORY_NAMES[action]
+    if (historyName) {
+      setHistories((prev) => ({
+        ...prev,
+        [historyName]: addToHistory(prev[historyName] ?? [], value, HISTORY_LENGTH),
+      }))
+    }
 
     if (action === 'find-file') {
       try {
@@ -1532,6 +1623,14 @@ function App() {
       // 保留中のコマンドがなければ, isearch の確定 (コマンドのない入力欄は, isearch だけ).
       // 見つかったところの, 探した向きの側にカーソルを置く
       const current = minibufferState as MinibufferIsearchState
+      // 探した文字を, 検索の履歴に加える
+      const kind = current.regexp ? 'regexp' : 'plain'
+      searchRing.current[kind] = addToHistory(
+        searchRing.current[kind],
+        current.query,
+        SEARCH_RING_MAX,
+        true,
+      )
       if (current.matchStart !== null) {
         editor.current?.setCursor(
           current.direction === 'forward' ? (current.matchEnd as number) : current.matchStart,
@@ -1556,6 +1655,9 @@ function App() {
     }
     setMinibufferState({ mode: 'message', text: 'Quit' })
   }
+
+  // 入力を待っているコマンドの, 入力の履歴の名前
+  const historyName = pendingAction ? HISTORY_NAMES[pendingAction] : undefined
 
   return (
     <div className="app">
@@ -1612,11 +1714,16 @@ function App() {
         })}
       </div>
       <Minibuffer
-        state={minibufferState}
+        state={
+          minibufferState.mode === 'input'
+            ? { ...minibufferState, history: histories[historyName as string] }
+            : minibufferState
+        }
         onInputChange={handleMinibufferInputChange}
         onSubmit={handleMinibufferSubmit}
         onCancel={handleMinibufferCancel}
         onIsearchRepeat={handleIsearchRepeat}
+        onIsearchCommand={handleIsearchCommand}
         onQueryKey={handleQueryKey}
       />
       {showBufferList && (

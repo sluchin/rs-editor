@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compileRegexp, findNextMatch } from '@/lib/isearch'
+import { compileRegexp, findNextMatch, quoteRegexp, yankWordOrCharEnd } from '@/lib/isearch'
 
 describe('isearch utilities', () => {
   describe('findNextMatch', () => {
@@ -83,5 +83,23 @@ describe('findNextMatch (正規表現)', () => {
     expect(findNextMatch(text, 'x*', 0, 'forward', true)).toBeNull()
     expect(findNextMatch(text, '(', 0, 'forward', true)).toBeNull()
     expect(compileRegexp('(')).toBeNull()
+  })
+})
+
+describe('isearch の取り込み', () => {
+  it('文字を, そのまま合う正規表現にすること', () => {
+    const special = '.*+?^${}()|[]\\'
+    expect(new RegExp(quoteRegexp(special)).test(`a${special}b`)).toBe(true)
+    expect(quoteRegexp('ab')).toBe('ab')
+  })
+
+  it('C-w は, 位置か次の文字が単語の文字なら単語の終わりまで, でなければ 1 文字を取り込むこと', () => {
+    const text = 'foo bar. (x'
+    expect(yankWordOrCharEnd(text, 0)).toBe(3)
+    // 次の文字が単語の文字なら, 区切りを飛ばして, 単語の終わりまで
+    expect(yankWordOrCharEnd(text, 3)).toBe(7)
+    expect(yankWordOrCharEnd(text, 7)).toBe(8)
+    expect(yankWordOrCharEnd(text, 9)).toBe(11)
+    expect(yankWordOrCharEnd(text, 11)).toBe(11)
   })
 })

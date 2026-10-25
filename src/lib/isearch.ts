@@ -2,6 +2,8 @@
  * isearch の検索 (文字と, 正規表現).
  */
 
+import { wordForward } from './text'
+
 /** 合った所. */
 export interface IsearchMatch {
   /** 始まりの位置. */
@@ -72,4 +74,29 @@ export function findNextMatch(
 
   const idx = text.lastIndexOf(query, Math.max(0, fromPos))
   return idx === -1 ? null : { start: idx, end: idx + query.length }
+}
+
+/**
+ * 文字を, そのまま合う正規表現にします (Emacs の `regexp-quote`).
+ *
+ * @param text - 文字.
+ * @returns 正規表現.
+ */
+export function quoteRegexp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * isearch の C-w で, 位置から取り込む所の終わりを返します (Emacs の `isearch-yank-word-or-char`).
+ * 位置か, その次の文字が単語の文字なら, 単語の終わりまで, そうでなければ 1 文字です.
+ *
+ * @param text - 本文.
+ * @param pos - 位置.
+ * @returns 終わりの位置.
+ */
+export function yankWordOrCharEnd(text: string, pos: number): number {
+  const word = (c: string | undefined) => c !== undefined && /\w/.test(c)
+  return word(text[pos]) || word(text[pos + 1])
+    ? wordForward(text, pos)
+    : Math.min(pos + 1, text.length)
 }

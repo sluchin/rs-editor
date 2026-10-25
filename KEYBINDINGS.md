@@ -133,10 +133,14 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-r` | isearch-backward | 後方に検索 |
 | `C-M-s` | isearch-forward-regexp | 正規表現で前方に検索 |
 | `C-M-r` | isearch-backward-regexp | 正規表現で後方に検索 |
-| `C-s` （検索中） | 次のマッチへ | 検索結果の次へ |
+| `C-s` （検索中） | 次のマッチへ | 検索結果の次へ（探す文字が空なら, 最後に探した文字で探す） |
+| `C-w` （検索中） | isearch-yank-word-or-char | カーソルの後ろの単語（単語でなければ 1 文字）を, 探す文字に足す |
+| `M-y` （検索中） | isearch-yank-pop-only | 最後にキルした文字を, 探す文字に足す（続けると, 1 つ古いキルした文字に替える） |
+| `M-p` / `M-n` （検索中） | isearch-ring-retreat / isearch-ring-advance | 検索の履歴の, 古い方・新しい方の文字で探す |
 | `C-g` （検索中） | quit | 検索をキャンセル |
 
-正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。
+正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。`C-w` と `M-y` で足した文字は, 正規表現の検索でも, そのまま合います。
+検索の履歴は, 文字と正規表現で別です（16 個まで. `RET` で確定した文字を覚え, `C-g` でやめた文字は覚えない）。
 
 ## 置換
 
@@ -215,6 +219,7 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 |------|---------|------|
 | `M-x` | execute-extended-command | コマンドを名前で実行（この一覧のコマンドの名前は, 全て使える） |
 | `TAB` （ミニバッファ） | 補完 | `M-x` のコマンドの名前, `C-x b` のバッファの名前, `C-x C-f` と保存先のファイルの名前を補完する（候補が複数なら一覧を出す） |
+| `M-p` / `M-n` （ミニバッファ） | previous-history-element / next-history-element | 入力の履歴の, 古い方・新しい方を出す（履歴は, コマンドの種類ごと。ファイルの名前は, `C-x C-f`, `C-x C-w`, `C-x d` などで共通） |
 
 ## ヘルプ
 
@@ -371,14 +376,14 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - リージョン選択（C-SPC, C-x C-x, C-x h, M-@, C-M-SPC, C-M-h）
 - 矩形・レジスタ・ブックマーク（C-x r k, C-x r y, C-x r t, C-x r s, C-x r i, C-x r m, C-x r b）
 - 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
-- 検索（C-s, C-r, C-M-s, C-M-r）
+- 検索（C-s, C-r, C-M-s, C-M-r. 検索中の C-w, M-y, M-p, M-n）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）
 - 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
 - ファイル操作（C-x C-f, C-x C-s, C-x C-w, C-x C-v, C-x i, C-x s, revert-buffer, recover-this-file）, 自動保存とバックアップ
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）
-- コマンド実行（M-x）
+- コマンド実行（M-x）, ミニバッファの入力の履歴（M-p, M-n）
 - ヘルプ（C-h k, C-h b）
 - その他（C-g）
 
@@ -440,7 +445,7 @@ M-: でプロンプト「Eval: 」を表示
 
 ### 検索中にキーが効かない
 - Esc または C-g で検索をキャンセル
-- 検索中は検索専用のキーバインド（C-s など）のみが有効
+- 検索中は検索専用のキーバインド（C-s, C-w, M-y, M-p, M-n など）のみが有効
 
 ### バッファが閉じられない
 - 未保存の変更がある場合、先に C-x C-s で保存が必要

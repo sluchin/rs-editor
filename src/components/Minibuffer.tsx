@@ -24,6 +24,12 @@ export interface MinibufferInputState {
   completions?: readonly string[]
   /** Tab で補完する関数 (ファイルの名前など, 候補を入力から探すとき. `completions` より先に使う). */
   complete?: (input: string) => Promise<Completion>
+  /** M-p と M-n で出す, 入力の履歴 (新しい順). */
+  history?: readonly string[]
+  /** 出している履歴の位置 (1 から数える. 0 なら, 入力していた文字). */
+  historyPos?: number
+  /** 履歴を出す前に, 入力していた文字. */
+  historySaved?: string
 }
 
 /** isearch の状態. */
@@ -41,6 +47,23 @@ export interface MinibufferIsearchState {
   matchStart: number | null
   /** 合った所の終わり. 合わなければ `null`. */
   matchEnd: number | null
+  /** M-p と M-n で出した, 検索の履歴の位置 (Emacs の `search-ring-yank-pointer`. 出していなければ無し). */
+  ringIndex?: number
+  /** 続けた M-y で, 取り込んだ文字を除いた, 探す文字 (直前のコマンドが M-y でなければ無し). */
+  yankBase?: string
+  /** 合わないときに C-w で取り込んだ所の終わり (次の C-w は, ここから取り込む). */
+  yankPoint?: number | null
+}
+
+/** isearch の中のコマンド (C-w, M-y, M-p, M-n). */
+export type IsearchCommand = 'yank-word-or-char' | 'yank-pop' | 'ring-retreat' | 'ring-advance'
+
+/** isearch の中のキーと, コマンド. */
+const ISEARCH_KEYS: Record<string, IsearchCommand> = {
+  'C-w': 'yank-word-or-char',
+  'M-y': 'yank-pop',
+  'M-p': 'ring-retreat',
+  'M-n': 'ring-advance',
 }
 
 /** 1 つのキーで答える問い (query-replace の `y`, `n` など). */
@@ -68,6 +91,8 @@ interface MinibufferProps {
   onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
   /** 問いに答えたキー (`y`, `n`, `!` など). */
   onQueryKey?: (key: string) => void
+  /** isearch で, C-w, M-y, M-p, M-n を押したときに呼びます. */
+  onIsearchCommand?: (command: IsearchCommand, state: MinibufferIsearchState) => void
 }
 
 /** メッセージが空のときに出す, 既定のメッセージ. */
@@ -86,6 +111,7 @@ export default function Minibuffer({
   onCancel,
   onIsearchRepeat,
   onQueryKey,
+  onIsearchCommand,
 }: MinibufferProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   // Tab で補完したときの, 候補の一覧 (`[No match]` のときは null). 別の入力 (プロンプト) に移ったら, 出さない
@@ -96,6 +122,9 @@ export default function Minibuffer({
   })
   const shown = completion.key === inputKey ? completion.list : []
   const setShown = (list: string[] | null) => setCompletion({ key: inputKey, list })
+  // 入力の後ろに出す知らせ (履歴の端). 入力を変えたら, 出さない
+  const [note, setNote] = useState({ key: '', text: '' })
+  const shownNote = note.key === inputKey ? note.text : ''
 
   // 入力を待つときは, 入力欄にフォーカスを移す
   useEffect(() => {
@@ -170,6 +199,35 @@ export default function Minibuffer({
           onIsearchRepeat?.(dir, state)
           return
         }
+        const command = ISEARCH_KEYS[`${e.ctrlKey ? 'C-' : e.altKey ? 'M-' : ''}${e.key}`]
+        if (command) {
+          e.preventDefault()
+          onIsearchCommand?.(command, state)
+          return
+        }
+      }
+
+      // 入力の履歴 (M-p で古い方へ, M-n で新しい方へ)
+      if (state.mode === 'input' && e.altKey && (e.key === 'p' || e.key === 'n')) {
+        e.preventDefault()
+        const items = state.history ?? []
+        const current = state.historyPos ?? 0
+        const pos = current + (e.key === 'p' ? 1 : -1)
+        if (pos > items.length) {
+          setNote({ key: inputKey, text: '[Beginning of history; no preceding item]' })
+        } else if (pos < 0) {
+          setNote({ key: inputKey, text: '[End of history; no default available]' })
+        } else {
+          const saved = current === 0 ? state.input : (state.historySaved as string)
+          setShown([])
+          setNote({ key: '', text: '' })
+          onInputChange(pos === 0 ? saved : items[pos - 1], {
+            ...state,
+            historyPos: pos,
+            historySaved: saved,
+          })
+        }
+        return
       }
 
       if (e.key === 'Tab' && state.mode === 'input' && (state.complete || state.completions)) {
@@ -207,12 +265,14 @@ export default function Minibuffer({
           value={getValue()}
           onChange={(e) => {
             setShown([])
+            setNote({ key: '', text: '' })
             onInputChange(e.target.value, state)
           }}
           onKeyDown={handleKeyDown}
           spellCheck={false}
         />
         {shown === null && <span className="minibuffer-note">[No match]</span>}
+        {shownNote !== '' && <span className="minibuffer-note">{` ${shownNote}`}</span>}
         {shown !== null && shown.length > 0 && (
           <div className="minibuffer-completions">
             <div className="minibuffer-completions-title">Possible completions:</div>

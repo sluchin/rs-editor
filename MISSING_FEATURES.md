@@ -61,6 +61,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 **検索と置換**
 - C-s, C-r - 前方・後方検索（isearch）
 - C-M-s, C-M-r - 正規表現の検索
+- isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み, 検索の履歴（isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance）
 - M-%, C-M-% - 置換（query-replace, query-replace-regexp）. M-x replace-string, replace-regexp
 
 **ファイル操作**
@@ -98,6 +99,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **その他**
 - M-x - コマンド実行（Tab で補完）
+- ミニバッファの M-p, M-n - 入力の履歴（previous-history-element, next-history-element）
 - C-g - キャンセル（keyboard-quit）
 
 ---
@@ -136,8 +138,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 |------|---------|------|
 | `M-s o` | occur | 合う行の一覧 |
 | `M-s .` | isearch-forward-symbol-at-point | カーソルの記号を検索 |
-| isearch 中の `C-w` / `M-y` / `M-p` / `M-n` | isearch-yank-word-or-char など | 検索の文字の取り込みと履歴 |
-| ミニバッファの `M-p` / `M-n` | previous-history-element など | 入力の履歴 |
 
 ### ヘルプ
 
