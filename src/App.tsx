@@ -15,6 +15,14 @@ import Minibuffer, {
 import BufferList from './components/BufferList'
 import { readFile, writeFile, pathExists, getHomeDir, listDirectory } from './lib/fileOps'
 import { completeFileName } from './lib/complete'
+import {
+  type Bookmark,
+  bookmarkPosition,
+  loadBookmarks,
+  makeBookmark,
+  saveBookmarks,
+  storeBookmark,
+} from './lib/bookmarks'
 import { majorMode } from './lib/modes'
 import { compileRegexp, findNextMatch } from './lib/isearch'
 import {
@@ -70,6 +78,8 @@ type PendingAction =
   | 'replace-from'
   | 'replace-to'
   | 'string-rectangle'
+  | 'bookmark-set'
+  | 'bookmark-jump'
   | null
 
 /** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
@@ -209,6 +219,11 @@ function App() {
   const lispHost = useRef<LispHost>(undefined)
   // 最後に C-x r t で入れた文字 (次の既定)
   const rectangleString = useRef<string | null>(null)
+  // ブックマークの一覧 (新しい順) と, 最後に使ったブックマークの名前 (C-x r b の既定)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const lastBookmark = useRef<string | null>(null)
+  // バッファを出したら置く, カーソルの位置 (ブックマークへ移るとき)
+  const pendingPoint = useRef<number | null>(null)
 
   // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
@@ -310,6 +325,20 @@ function App() {
       .then((dir) => setHomeDir(dir.endsWith('/') ? dir : dir + '/'))
       .catch(() => {})
   }, [])
+
+  // 保存したブックマークを, 始めに 1 回だけ読む
+  useEffect(() => {
+    loadBookmarks()
+      .then(setBookmarks)
+      .catch((err) => setMinibufferState({ mode: 'message', text: `Bookmark file error: ${err}` }))
+  }, [])
+
+  // ブックマークへ移るときは, バッファを出してから, カーソルを置く
+  useEffect(() => {
+    if (pendingPoint.current === null) return
+    editor.current?.setCursor(pendingPoint.current)
+    pendingPoint.current = null
+  }, [currentBufferId, editor])
 
   // Lisp から動かすエディタを, 今の状態で作り直す
   useEffect(() => {
@@ -639,6 +668,94 @@ function App() {
   }
 
   /**
+   * ブックマークの名前を, ミニバッファで聞きます (C-x r m). 既定は, ファイルの名前です.
+   */
+  const handleBookmarkSet = () => {
+    if (!currentBuffer.filePath) {
+      showMessage('Buffer not visiting a file or directory')
+      return
+    }
+    setPendingAction('bookmark-set')
+    setMinibufferState({
+      mode: 'input',
+      prompt: `Set bookmark named (default ${bufferNameFromPath(currentBuffer.filePath)}): `,
+      input: '',
+      completions: bookmarks.map((b) => b.name),
+    })
+  }
+
+  /**
+   * 移るブックマークの名前を, ミニバッファで聞きます (C-x r b). 既定は, 最後に使ったブックマークです.
+   */
+  const handleBookmarkJump = () => {
+    const last = lastBookmark.current
+    setPendingAction('bookmark-jump')
+    setMinibufferState({
+      mode: 'input',
+      prompt: last === null ? 'Jump to bookmark: ' : `Jump to bookmark (default ${last}): `,
+      input: '',
+      completions: bookmarks.map((b) => b.name),
+    })
+  }
+
+  /**
+   * ブックマークを付けて, 保存します.
+   *
+   * @param value - 入力した名前 (空なら, ファイルの名前).
+   */
+  const setBookmark = async (value: string) => {
+    const filePath = currentBuffer.filePath as string
+    const name = value === '' ? bufferNameFromPath(filePath) : value
+    const handle = editor.current as EditorHandle
+    const next = storeBookmark(
+      bookmarks,
+      makeBookmark(name, filePath, handle.text(), handle.point()),
+    )
+    setBookmarks(next)
+    lastBookmark.current = name
+    showMessage('')
+    try {
+      await saveBookmarks(next)
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
+   * ブックマークのファイルを出して, 位置へ動きます. ファイルを開いたバッファがあれば, それを使います.
+   *
+   * @param value - 入力した名前 (空なら, 最後に使ったブックマーク).
+   */
+  const jumpToBookmark = async (value: string) => {
+    const name = value === '' ? lastBookmark.current : value
+    const bookmark = bookmarks.find((b) => b.name === name)
+    if (!bookmark) {
+      showMessage(name ? `Invalid bookmark ${name}` : 'No bookmark specified')
+      return
+    }
+    lastBookmark.current = bookmark.name
+    showMessage('')
+    const open = buffers.find((b) => b.filePath === bookmark.filename)
+    if (open) {
+      const pos = bookmarkPosition(bookmark, open.content)
+      if (open.id === currentBufferId) {
+        editor.current?.setCursor(pos)
+      } else {
+        pendingPoint.current = pos
+        switchToBuffer(open.id)
+      }
+      return
+    }
+    try {
+      const content = await readFile(bookmark.filename)
+      pendingPoint.current = bookmarkPosition(bookmark, content)
+      createNewBuffer(bufferNameFromPath(bookmark.filename), bookmark.filename, content)
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
    * 移動する行の番号を, ミニバッファで聞きます (M-g g).
    */
   const handleGotoLine = () => {
@@ -885,6 +1002,8 @@ function App() {
     'replace-regexp': () => handleReplace({ query: false, regexp: true }),
     'goto-line': handleGotoLine,
     'string-rectangle': handleStringRectangle,
+    'bookmark-set': handleBookmarkSet,
+    'bookmark-jump': handleBookmarkJump,
     ...Object.fromEntries(
       lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
     ),
@@ -984,6 +1103,10 @@ function App() {
       if (string !== '') rectangleString.current = string
       editor.current?.stringRectangle(string)
       showMessage('')
+    } else if (action === 'bookmark-set') {
+      await setBookmark(value)
+    } else if (action === 'bookmark-jump') {
+      await jumpToBookmark(value)
     } else if (action === 'replace-to') {
       const state = replace as ReplaceState
       const spec = { from: state.from as string, to: value, regexp: state.kind.regexp }

@@ -164,6 +164,9 @@
 - [ ] 矩形とレジスタの前置引数: `C-u C-x r k` (短い行も空白で埋める), `C-u C-x r s` (リージョンを消す),
       `C-u C-x r i` (カーソルを入れた文字の後ろに置く)。
 - [ ] `C-x r t` (string-rectangle): Emacs は, 入力しているあいだ, 置き換えた結果を見せる (`rectangle-preview`)。
+- [ ] ブックマーク: Emacs は, `~/.emacs.d/bookmarks` に, Lisp の形で, 終わるときに保存する。
+      今は, `~/.config/rseditor/bookmarks` に, JSON で, 付けるたびに保存する。位置は, Emacs と違い, 0 から数える (UTF-16 の位置)。
+- [ ] `C-x r b` (bookmark-jump): ファイルが無いとき, Emacs は, 新しい場所を聞く。今は, 読めないと知らせるだけ。
 - [ ] `M-SPC`: Linux のデスクトップ (GNOME など) は, Alt+Space をウィンドウのメニューに使うので, エディタにキーが届かないことがある。
       Emacs と同じく, `ESC SPC` でも動くようにするか, 届かないことを README に書く。
 

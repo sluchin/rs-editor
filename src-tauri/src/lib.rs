@@ -37,7 +37,8 @@ pub fn run() {
             commands::write_file_content,
             commands::path_exists,
             commands::list_directory,
-            commands::home_dir
+            commands::home_dir,
+            commands::bookmark_file_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

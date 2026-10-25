@@ -31,6 +31,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - M-= - 行、文、単語、文字の数（count-words-region. M-x count-words）
 - C-x r k, C-x r y, C-x r t - 矩形（kill-rectangle, yank-rectangle, string-rectangle）
 - C-x r s, C-x r i - レジスタ（copy-to-register, insert-register. 文字だけ）
+- C-x r m, C-x r b - ブックマーク（bookmark-set, bookmark-jump）
 - C-o - 改行を入れる（open-line）
 - M-; - コメントの付け外し（comment-dwim）
 - M-/ - 単語の補完（dabbrev-expand。今のバッファの中だけを探す）
@@ -96,7 +97,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 | `C-x r c` / `C-x r o` / `C-x r M-w` など | clear-rectangle など | そのほかの矩形の操作 |
 | `C-x SPC` | rectangle-mark-mode | 矩形を選ぶ |
 | `C-x r SPC` / `C-x r j` / `C-x r r` / `C-x r n` / `C-x r +` | point-to-register など | 位置, 矩形, 数のレジスタ |
-| `C-x r m` / `C-x r b` | bookmark-set / bookmark-jump | ブックマーク |
+| `C-x r l` | bookmark-bmenu-list | ブックマークの一覧 |
 | `C-x n n` / `C-x n w` | narrow-to-region / widen | ナローイング |
 
 ### 移動

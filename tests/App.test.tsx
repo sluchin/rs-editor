@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import App from '@/App'
 import * as fileOps from '@/lib/fileOps'
+import * as bookmarks from '@/lib/bookmarks'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
@@ -20,7 +21,15 @@ vi.mock('@/lib/fileOps', () => ({
   listDirectory: vi.fn(),
 }))
 
+// ブックマークのファイルの読み書きだけを, 偽物にする
+vi.mock('@/lib/bookmarks', async (original) => ({
+  ...(await original<typeof import('@/lib/bookmarks')>()),
+  loadBookmarks: vi.fn(),
+  saveBookmarks: vi.fn(),
+}))
+
 const mocked = vi.mocked(fileOps)
+const mockedBookmarks = vi.mocked(bookmarks)
 const mockedInvoke = vi.mocked(invoke)
 const mockedListen = vi.mocked(listen)
 /** エディタの操作の頼みを受けるのをやめる関数の偽物. */
@@ -104,6 +113,8 @@ describe('App', () => {
     mocked.getHomeDir.mockResolvedValue('/home/u')
     mocked.writeFile.mockResolvedValue(undefined)
     mockedListen.mockResolvedValue(unlisten)
+    mockedBookmarks.loadBookmarks.mockResolvedValue([])
+    mockedBookmarks.saveBookmarks.mockResolvedValue(undefined)
     // 初期設定ファイル (と, エディタの操作の返事) は, 何もしない
     mockedInvoke.mockResolvedValue(response(''))
   })
@@ -851,7 +862,7 @@ describe('App', () => {
     expect(editor.text()).toContain('Quit')
   })
 
-  describe('矩形', () => {
+  describe('矩形とブックマーク', () => {
     /**
      * C-x r に続けて, キーを押します.
      *
@@ -862,6 +873,24 @@ describe('App', () => {
       editor.key('x', { ctrl: true })
       editor.key('r')
       editor.key(k)
+    }
+
+    /**
+     * ファイルを開きます (C-x C-f).
+     *
+     * @param editor - エディタ.
+     * @param path - パス.
+     * @param content - 中身.
+     */
+    const open = async (
+      editor: Awaited<ReturnType<typeof setup>>,
+      path: string,
+      content: string,
+    ) => {
+      mocked.pathExists.mockResolvedValueOnce(true)
+      mocked.readFile.mockResolvedValueOnce(content)
+      editor.ctrlX('f')
+      await editor.submit(path)
     }
 
     it('C-x r t で, 文字を聞いて, 矩形を置き換えること (2 回目からは, 前の文字が既定)', async () => {
@@ -889,6 +918,81 @@ describe('App', () => {
       expect(editor.text()).toContain('String rectangle (default XY): ')
       await editor.submit('')
       expect(editor.doc()).toBe('XYXYc\ndXYf')
+    })
+
+    it('C-x r m は, ファイルのないバッファでは, 知らせること', async () => {
+      const editor = await setup()
+      ctrlXr(editor, 'm')
+      expect(editor.text()).toContain('Buffer not visiting a file or directory')
+    })
+
+    it('C-x r m で, ファイルの名前を既定の名前として, ブックマークを付けて保存すること', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.scm', '(define x 1)\n')
+      act(() => editor.editor.dispatch({ selection: { anchor: 8 } }))
+      ctrlXr(editor, 'm')
+      expect(editor.text()).toContain('Set bookmark named (default a.scm): ')
+      await editor.submit('')
+      expect(mockedBookmarks.saveBookmarks).toHaveBeenCalledWith([
+        { name: 'a.scm', filename: '/tmp/a.scm', position: 8, front: 'x 1)\n', rear: '(define ' },
+      ])
+      // 保存できなければ, 知らせる
+      mockedBookmarks.saveBookmarks.mockRejectedValueOnce('disk full')
+      ctrlXr(editor, 'm')
+      await editor.submit('other')
+      expect(editor.text()).toContain('Error: disk full')
+    })
+
+    it('C-x r b で, ブックマークの位置へ動くこと (既定は, 最後に使ったもの)', async () => {
+      const editor = await setup()
+      await open(editor, '/tmp/a.scm', '(define x 1)\n')
+      act(() => editor.editor.dispatch({ selection: { anchor: 8 } }))
+      ctrlXr(editor, 'm')
+      await editor.submit('here')
+      // 同じバッファ
+      act(() => editor.editor.dispatch({ selection: { anchor: 0 } }))
+      ctrlXr(editor, 'b')
+      expect(editor.text()).toContain('Jump to bookmark (default here): ')
+      await editor.submit('')
+      expect(editor.cursor()).toBe(8)
+      // 別のバッファから
+      editor.ctrlX('b', false)
+      await editor.submit('*scratch*')
+      ctrlXr(editor, 'b')
+      await editor.submit('here')
+      expect(editor.doc()).toBe('(define x 1)\n')
+      expect(editor.cursor()).toBe(8)
+      // 無い名前
+      ctrlXr(editor, 'b')
+      await editor.submit('nope')
+      expect(editor.text()).toContain('Invalid bookmark nope')
+    })
+
+    it('C-x r b で, 開いていないファイルを開き, 前後の文字で位置を直すこと', async () => {
+      mockedBookmarks.loadBookmarks.mockResolvedValue([
+        { name: 'b', filename: '/tmp/b.scm', position: 2, front: 'cd', rear: 'ab' },
+      ])
+      const editor = await setup()
+      ctrlXr(editor, 'b')
+      expect(editor.text()).toContain('Jump to bookmark: ')
+      await editor.submit('')
+      expect(editor.text()).toContain('No bookmark specified')
+      // 読めなければ, 知らせる
+      mocked.readFile.mockRejectedValueOnce('gone')
+      ctrlXr(editor, 'b')
+      await editor.submit('b')
+      expect(editor.text()).toContain('Error: gone')
+      mocked.readFile.mockResolvedValueOnce('xxabcd')
+      ctrlXr(editor, 'b')
+      await editor.submit('b')
+      expect(editor.text()).toContain('b.scm')
+      expect(editor.cursor()).toBe(4)
+    })
+
+    it('ブックマークのファイルを読めなければ, 知らせること', async () => {
+      mockedBookmarks.loadBookmarks.mockRejectedValue('bad json')
+      const editor = await setup()
+      expect(editor.text()).toContain('Bookmark file error: bad json')
     })
   })
 })

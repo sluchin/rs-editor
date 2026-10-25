@@ -1080,7 +1080,7 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Alt-q', 'fill-paragraph'],
   ['Ctrl-q', 'quoted-insert'],
   ['Alt-=', 'count-words-region'],
-  // 矩形とレジスタ
+  // 矩形, レジスタ, ブックマーク
   ['Ctrl-x r k', 'kill-rectangle'],
   ['Ctrl-x r y', 'yank-rectangle'],
   ['Ctrl-x r t', 'string-rectangle'],
@@ -1088,6 +1088,8 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-x r x', 'copy-to-register'],
   ['Ctrl-x r i', 'insert-register'],
   ['Ctrl-x r g', 'insert-register'],
+  ['Ctrl-x r m', 'bookmark-set'],
+  ['Ctrl-x r b', 'bookmark-jump'],
   ['Alt-Space', 'just-one-space'],
   ['Alt-\\', 'delete-horizontal-space'],
   ['Alt-^', 'delete-indentation'],

@@ -5,8 +5,9 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    eval_code, eval_code_with, home_dir, init_file_path, init_file_path_from, list_directory,
-    load_init_file, path_exists, read_file_content, run_command, write_file_content, EvalResponse,
+    bookmark_file_path, bookmark_file_path_from, eval_code, eval_code_with, home_dir,
+    init_file_path, init_file_path_from, list_directory, load_init_file, path_exists,
+    read_file_content, run_command, write_file_content, EvalResponse,
 };
 use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
 use rseditor::scheme::host::NoHost;
@@ -123,4 +124,27 @@ fn test_load_init_file() {
         .error
         .unwrap()
         .starts_with(&format!("{}: ", unreadable.display())));
+}
+
+#[test]
+fn test_bookmark_file_path_makes_the_directory() {
+    let dir = tempdir().unwrap();
+    let path = bookmark_file_path_from(Some(dir.path())).unwrap();
+    assert!(path.ends_with("rseditor/bookmarks"));
+    assert!(dir.path().join("rseditor").is_dir());
+    assert_eq!(
+        bookmark_file_path_from(None).unwrap_err(),
+        "No config directory"
+    );
+    // 作れない (ファイルの下の) ディレクトリ
+    let file = dir.path().join("file");
+    std::fs::write(&file, "").unwrap();
+    assert!(bookmark_file_path_from(Some(&file)).is_err());
+}
+
+#[test]
+fn test_bookmark_file_path_uses_the_config_directory() {
+    assert!(bookmark_file_path()
+        .unwrap()
+        .ends_with("rseditor/bookmarks"));
 }

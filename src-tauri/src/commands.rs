@@ -115,6 +115,33 @@ pub fn init_file_path() -> Option<PathBuf> {
     dirs::config_dir().map(|dir| init_file_path_from(&dir))
 }
 
+/// 設定のディレクトリから, ブックマークのファイルのパスを作ります. ディレクトリが無ければ, 作ります.
+///
+/// # Arguments
+///
+/// * `config_dir` - 設定のディレクトリ (Linux は `~/.config`. 分からなければ `None`).
+///
+/// # Returns
+///
+/// `<config_dir>/rseditor/bookmarks`. 設定のディレクトリが分からないか, 作れなければ, 理由の文字列の [`Err`].
+pub fn bookmark_file_path_from(config_dir: Option<&Path>) -> Result<String, String> {
+    let dir = config_dir
+        .ok_or_else(|| "No config directory".to_string())?
+        .join("rseditor");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir.join("bookmarks").to_string_lossy().into_owned())
+}
+
+/// ブックマークのファイルのパス (`~/.config/rseditor/bookmarks`) を返します. ディレクトリが無ければ, 作ります.
+///
+/// # Returns
+///
+/// パス. 設定のディレクトリが分からないか, 作れなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn bookmark_file_path() -> Result<String, String> {
+    bookmark_file_path_from(dirs::config_dir().as_deref())
+}
+
 /// 初期設定ファイルを読んで, 評価します. ファイルがなければ, 何もしません.
 ///
 /// # Arguments
