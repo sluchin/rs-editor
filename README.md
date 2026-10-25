@@ -11,7 +11,10 @@
   - リスト: `car`、`cdr`、`cons`、`list`、`length`、`append`、`reverse`、`map`、`for-each`、`filter`、`apply`、`assoc`、`member` など
   - 文字列: `string-append`、`substring`、`string-length`、`format` など
   - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
-- 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.config/rseditor/init.scm` を読む (「Lisp でのカスタマイズ」)
+- 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` を読む (「Lisp でのカスタマイズ」)
+- 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.sl`)。`M-x howm` でメニューを出す (「howm」)
+- 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
+- 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
 - 📊 **出力表示** - 評価結果とエラーメッセージを表示
 
@@ -20,9 +23,11 @@
 ```
 .
 ├── src/                      # React フロントエンド
-│   ├── components/          # エディタ、ミニバッファ、モードライン、バッファの一覧
+│   ├── components/          # エディタ、ミニバッファ、モードライン、バッファの一覧、プロジェクトのツリー
 │   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
 │   ├── styles/              # コンポーネントスタイルシート
+│   ├── lib/theme.ts         # 色とフォント (set-background-color, set-frame-font)
+│   ├── lib/grep.ts          # M-x grep の結果のバッファ (*grep*)
 │   ├── App.tsx              # メインアプリケーション
 │   └── main.tsx             # エントリーポイント
 ├── src-tauri/               # Tauri バックエンド
@@ -31,16 +36,19 @@
 │   │   ├── lib.rs           # アプリの起動と、コマンドの登録
 │   │   ├── commands.rs      # 画面から呼ぶコマンド (評価、ファイルの読み書き)
 │   │   ├── logging.rs       # ログ
+│   │   ├── search.rs        # M-x grep (ディレクトリの下を探す) と、プロジェクトの根を探す
 │   │   └── scheme/          # Scheme インタプリタ
 │   │       ├── parser.rs    # Scheme パーサー
 │   │       ├── evaluator.rs # Scheme 評価器 (特別な形)
 │   │       ├── builtins.rs  # 組み込みの手続き (エディタの操作を含む)
+│   │       ├── system.rs    # 組み込みの手続き (ファイル、時刻、正規表現、load)
 │   │       ├── env.rs       # 変数の環境
 │   │       ├── host.rs      # エディタ (画面) に操作を頼む仕組み
 │   │       ├── keys.rs      # キーの書き方の変換 (Emacs → CodeMirror)
 │   │       ├── value.rs     # 値型定義
 │   │       └── mod.rs       # モジュール定義
 │   └── Cargo.toml           # Rust 依存関係
+├── lisp/howm.sl             # howm の Scheme 版
 ├── package.json             # Node 依存関係
 ├── vite.config.ts           # Vite ビルド設定
 └── tsconfig.json            # TypeScript 設定
@@ -203,6 +211,32 @@ M-:            ; ミニバッファが開く
 | `(buffer-name)` | バッファの名前 |
 | `(message "形式" 引数 ...)` | ミニバッファに出す (`%s`、`%S`、`%d`、`%%`) |
 | `(call-interactively 'name)` / `(command-execute 'name)` | コマンドを名前で実行する (`M-x` と同じ) |
+| `(find-file "path")` | ファイルを開く (開いていれば、そのバッファを出す) |
+| `(switch-to-buffer "name")` | バッファを出す (無ければ作る) |
+| `(buffer-file-name)` | バッファのファイル (無ければ `#f`) |
+| `(set-buffer-modified-p #f)` | バッファを、書き換えていないことにする |
+| `(read-string "Prompt: " "初め")` | ミニバッファで入力してもらう (`C-g` でやめると `Quit`) |
+| `(local-set-key "c" 'name)` | バッファだけのキー (Lisp のキーより先に使う) |
+| `(set-background-color "black")` / `(set-foreground-color "white")` | 背景と文字の色 (背景が暗いと、色分けも暗い背景のものにする) |
+| `(set-frame-font "DejaVu Sans Mono-14")` | フォント (ファミリーと、大きさ (ポイント)) |
+| `(set-face-attribute 'default #f :family "Mono" :height 140)` | フォント (`:height` は 1/10 ポイント)、`:foreground`、`:background` |
+
+### ファイル、時刻、文字列の関数
+
+| 関数 | 内容 |
+|------|------|
+| `(load "path")` | ファイルを読んで評価する (相対パスは、読み込んでいるファイルのディレクトリから) |
+| `(expand-file-name "~/x")` | 絶対パスにする (`~` はホーム) |
+| `(file-exists? "path")` / `(file-directory? "path")` | あるか / ディレクトリか |
+| `(read-file-string "path")` / `(write-file-string "path" "text")` | ファイルを読む / 書く (ディレクトリも作る) |
+| `(make-directory "path")` | ディレクトリを作る (親も) |
+| `(directory-files-recursively "dir" "\\.txt$")` | 名前が正規表現に合うファイル (深くまで) |
+| `(file-modification-time "path")` / `(current-time)` | 時刻 (1970 年からの秒数) |
+| `(format-time-string "%Y-%m-%d" time)` / `(date-to-time "2026-10-25")` | 時刻と日付 (その土地の時刻) |
+| `(regexp-match "a(b)" "xab")` / `(regexp-quote "a.b")` | 正規表現 (Rust の regex の書き方) |
+| `(grep "regexp" files)` | 合う行 (`(パス 行の番号 行)` のリスト) |
+| `(string-search "b" "abc")`, `string-prefix?`, `string-suffix?`, `string-trim`, `string-join`, `split-string` | 文字列 |
+| `(sort list less?)`, `cadr` など, `(random n)` | リスト、乱数 |
 
 ### コマンドとキー
 
@@ -221,7 +255,28 @@ M-:            ; ミニバッファが開く
 
 ### 初期設定ファイル
 
-起動のときに、`~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読んで評価します。ファイルがなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
+起動のときに、`~/.rseditor` を読んで評価します。無ければ、`~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。どちらもなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
+
+```scheme
+;; ~/.rseditor
+(set-background-color "black")
+(set-foreground-color "white")
+(set-frame-font "Noto Sans Mono CJK JP-12")
+(load "~/src/rs-editor/lisp/howm.sl")
+(global-set-key "C-c h" 'howm-menu)
+```
+
+### howm
+
+`lisp/howm.sl` は、Emacs の howm (メモ) の主な機能を Scheme で書き直したものです。初期設定ファイルで `load` すると、`M-x howm` (または `C-c , ,`) でメニューを出します。メモは `~/howm` に置きます (`(set! howm-directory "~/memo")` で変える)。
+
+- メニュー: ボタン (`[新規]` など) の上で `RET`、またはボタンの前の文字 (`c` など) で動かします。予定・todo、最近のメモ、ランダムなメモを出します。メニューは `~/howm/0000-00-00-000000.txt` から作ります (無ければ、既定のメニューを書く。`[menu 編集]` で直せる)。
+- メモを作る (`c`、`C-c , c`): `~/howm/2026/10/2026-10-25-184012.txt` のような名前で作り、題 (`= `) と日時を入れます。
+- 一覧 (`a`)、最近 (`l`)、検索 (`s` は文字、`g` は正規表現。大文字を含まなければ、大文字と小文字を区別しない)、今日 (`.`)、昨日 (`:`)、予定 (`y`)、todo (`t`)。一覧のバッファ (`*howmS*`) で `RET` を押すと、その行のメモを開きます。
+- リンク: メモの中の `>>> 言葉` と `<<< 言葉` の上で `RET` を押すと、その言葉を探します。`<<< 言葉` の行を、一覧の先に出します。
+- 予定と todo の書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。
+
+移していないもの: 下線 (色付け)、一覧の窓 (中身の表示)、複製、速記、ローマ字検索、前後、履歴、酔歩、キーワードの補完、日付の入力、メニューの `%eval%` と `%call%`。
 
 ## キーバインド
 
@@ -319,19 +374,22 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 - **Minibuffer.tsx** - ミニバッファ (メッセージ、入力と補完、isearch、query-replace の問い)
 - **ModeLine.tsx** - モードライン (バッファの名前、変更、カーソルの位置、メジャーモード)
 - **BufferList.tsx** - バッファの一覧 (`C-x C-b`)
+- **ProjectTree.tsx** - 左のサイドバーの、プロジェクトのファイルのツリー (`F8`。ディレクトリは、開いたときに読む)
 - **App.tsx** - バッファとウィンドウの状態と、ファイル、バッファ、検索、評価のコマンドを持つメインアプリコンポーネント
+- **lib/theme.ts** - 色とフォント (CSS の変数。背景が暗いと `data-background-mode="dark"` にして、暗い背景の色分けを使う)
 
 ### バックエンド (Rust)
 
 - **Parser** - Scheme 式をトークン化して AST にパース
 - **Evaluator** - シンプルな環境/スコープシステムを使用して AST ノードを評価
+- **search.rs** - `M-x grep` (正規表現に大文字が無ければ、大文字と小文字を区別しない。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは探さない) と、プロジェクトの根 (`.git` のある所)
 - **Value** - Scheme 値を表現し、表示フォーマットを処理
 
 ### 通信
 
 Tauri のコマンドシステムを使用して React から `eval_scheme` 関数を呼び出し、コード文字列を送信して結果/エラーを受け取ります。結果には、Lisp で作ったコマンドと、割り当てたキーも含みます。
 
-評価の途中のエディタの操作 (`insert` など) は、評価器が `editor-request` のイベントで画面に頼み、画面が操作をして `editor_reply` で返事をします。評価は別のスレッドで行い、返事を待ちます (5 秒で失敗にする)。Lisp で作ったコマンドは `run_lisp_command`、初期設定ファイルは `load_init` で評価します。
+評価の途中のエディタの操作 (`insert` など) は、評価器が `editor-request` のイベントで画面に頼み、画面が操作をして `editor_reply` で返事をします。評価は別のスレッドで行い、返事を待ちます (5 秒で失敗にする。`read-string` は 1 時間)。バッファを出す操作 (`find-file`、`switch-to-buffer`) は、画面を描き直してから返事をします (続きの操作を、出したバッファで行うため)。Lisp で作ったコマンドは `run_lisp_command`、初期設定ファイルは `load_init` で評価します。
 
 ## ライセンス
 

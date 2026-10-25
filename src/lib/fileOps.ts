@@ -91,3 +91,35 @@ export async function fileNewerThan(file1: string, file2: string): Promise<boole
 export async function listDirectoryLong(path: string): Promise<string> {
   return await invoke<string>('list_directory_long', { path })
 }
+
+/** `M-x grep` で, 合った行. */
+export interface GrepMatch {
+  /** ファイル (探したディレクトリからのパス). */
+  file: string
+  /** 行の番号 (1 から). */
+  line: number
+  /** 行. */
+  text: string
+}
+
+/**
+ * ディレクトリの下のファイルから, 正規表現 (Rust の regex の書き方) に合う行を探します.
+ * 正規表現に大文字が無ければ, 大文字と小文字を区別しません.
+ *
+ * @param pattern - 正規表現.
+ * @param directory - ディレクトリ.
+ * @returns 合った行 (ファイルの名前の順, 行の順).
+ */
+export async function grepDirectory(pattern: string, directory: string): Promise<GrepMatch[]> {
+  return await invoke<GrepMatch[]>('grep_directory', { pattern, directory })
+}
+
+/**
+ * プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
+ *
+ * @param directory - ディレクトリ.
+ * @returns プロジェクトの根.
+ */
+export async function projectRoot(directory: string): Promise<string> {
+  return await invoke<string>('project_root', { directory })
+}

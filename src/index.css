@@ -1,3 +1,42 @@
+/* 色とフォント (初期設定ファイルの set-background-color, set-frame-font などで, 変える) */
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --font-family: 'Courier New', monospace;
+  --font-size: 14px;
+  /* Emacs の明るい背景の face の色 */
+  --font-lock-keyword: #a020f0;
+  --font-lock-comment: #b22222;
+  --font-lock-string: #8b2252;
+  --font-lock-function-name: #0000ff;
+  --font-lock-variable-name: #a0522d;
+  --font-lock-type: #228b22;
+  --font-lock-constant: #008b8b;
+  --font-lock-builtin: #483d8b;
+  --font-lock-warning: #ff0000;
+  --escape-glyph: brown;
+  --show-paren-match: turquoise;
+  --mode-line-inactive-background: #eeeeee;
+  --mode-line-inactive-foreground: #666666;
+}
+
+/* 背景が暗いとき (Emacs の暗い背景の face の色) */
+:root[data-background-mode='dark'] {
+  --font-lock-keyword: #00ffff;
+  --font-lock-comment: #ff7f24;
+  --font-lock-string: #ffa07a;
+  --font-lock-function-name: #87cefa;
+  --font-lock-variable-name: #eedd82;
+  --font-lock-type: #98fb98;
+  --font-lock-constant: #7fffd4;
+  --font-lock-builtin: #b0c4de;
+  --font-lock-warning: #ffc0cb;
+  --escape-glyph: cyan;
+  --show-paren-match: #4f94cd;
+  --mode-line-inactive-background: #4d4d4d;
+  --mode-line-inactive-foreground: #cccccc;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,9 +47,9 @@ html,
 body {
   width: 100%;
   height: 100%;
-  background: #ffffff;
-  color: #000000;
-  font-family: 'Courier New', monospace;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -23,5 +62,5 @@ body {
 input,
 textarea,
 button {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-family);
 }

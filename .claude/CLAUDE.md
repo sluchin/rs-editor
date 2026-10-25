@@ -21,7 +21,11 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 - 位置の計算 (単語, 行) は `src/lib/text.ts`, kill-ring は `src/lib/killRing.ts`, `C-x C-e` の S 式の範囲は `src/lib/bracketMatch.ts`。
 - 構文表と式の走査 (Emacs の `scan-lists`, `syntax-ppss`) は `src/lib/syntax.ts`, S 式, リスト, defun の移動 (`C-M-f`, `C-M-u`, `C-M-a`, `C-M-h` など) は `src/lib/sexp.ts`, 段落と文の移動 (`M-{`, `M-e` など) は `src/lib/paragraph.ts`。`emacs -Q --batch` で, 本文の全ての位置からコマンドを動かした結果 (`tests/lib/motion.json`) と比べて確かめる。
 - Lisp からのエディタの操作: 評価器は, 操作を `Host` (`src-tauri/src/scheme/host.rs`) に頼む。アプリでは `Bridge` が `editor-request` のイベントで画面に頼み, 画面 (`src/lib/lisp.ts`) が操作をして `editor_reply` で返事をする。テストでは, 偽の `Host` を使う。位置は Emacs と同じく 1 から数える。
-- 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。
+- 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。バッファだけのキー (`local-set-key`) は, 画面がバッファ (`Buffer.keys`) に持つ。バッファを出す操作 (`find-file`, `switch-to-buffer`) は, 描き直してから返事をする (`bufferWaiters`)。`read-string` は, 返事を長く待つ (`READ_TIMEOUT`)。
+- 初期設定ファイルは `~/.rseditor` (無ければ `~/.config/rseditor/init.scm`)。ファイル, 時刻, 正規表現の組み込みの手続き (`load`, `read-file-string`, `grep` など) は `src-tauri/src/scheme/system.rs`。色とフォント (`set-background-color`, `set-frame-font`) は `src/lib/theme.ts` で, CSS の変数 (`src/index.css`) に置く (背景が暗いと, Emacs の暗い背景の face の色にする)。
+- `M-x grep` は外のコマンドを使わず, Rust (`src-tauri/src/search.rs` の `grep_directory`) が探す。結果のバッファ (`*grep*`) の本文は `src/lib/grep.ts` で作り, 行は行の番号で合った行と結ぶ (`GREP_HEADER_LINES`)。`RET`, `M-g n`, `M-g p` は `App.tsx`。
+- サイドバーのプロジェクトのツリー (`F8`) は `src/components/ProjectTree.tsx`。根は `search.rs` の `project_root` (`.git` のある所)。押してもフォーカスを取らない。
+- howm の Scheme 版は `lisp/howm.sl`。テストは `src-tauri/tests/howm_test.rs` (偽のエディタの上で動かす)。
 - `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。フロントエンドのテストは `tests/` に, `src/` と同じ構成で置く (`src/lib/text.ts` のテストは `tests/lib/text.test.ts`。`src/` は `@/` で参照する)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
 
 ## 開発ワークフロー
@@ -61,7 +65,10 @@ React から呼び出し可能な新しいバックエンド関数を追加:
 - ✅ lambda (残りの引数も)、末尾の呼び出し
 - ✅ リスト操作: quote, list, car, cdr, cons, append, length, map など
 - ✅ 型チェック: number?, string?, symbol? など
-- ✅ エディタの操作と, Lisp でのカスタマイズ (define-command, global-set-key, 初期設定ファイル)
+- ✅ エディタの操作と, Lisp でのカスタマイズ (define-command, global-set-key, local-set-key, 初期設定ファイル `~/.rseditor`, load)
+- ✅ ファイル, 時刻, 正規表現, 文字列の組み込みの手続きと, 色とフォントの設定
+- ✅ howm の Scheme 版 (`lisp/howm.sl`)
+- ✅ `M-x grep` (エディタが探す) と, サイドバーのプロジェクトのツリー
 - ✅ 評価: カーソルの前の S 式 (`C-x C-e`) と, ミニバッファに入力した式 (`M-:`)。結果はミニバッファに出す
 - ✅ エラーハンドリングと表示
 - ✅ ダークテーマ UI

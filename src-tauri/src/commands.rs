@@ -93,26 +93,32 @@ pub fn run_command(evaluator: &Evaluator, name: &str, host: &dyn Host) -> EvalRe
     respond(evaluator, evaluator.run_command(name, host))
 }
 
-/// 設定のディレクトリから, 初期設定ファイルのパスを作ります.
+/// 初期設定ファイルの候補を, 探す順に返します.
 ///
 /// # Arguments
 ///
-/// * `config_dir` - 設定のディレクトリ (Linux は `~/.config`).
+/// * `home` - ホームディレクトリ (分からなければ `None`).
+/// * `config_dir` - 設定のディレクトリ (Linux は `~/.config`. 分からなければ `None`).
 ///
 /// # Returns
 ///
-/// `<config_dir>/rseditor/init.scm`.
-pub fn init_file_path_from(config_dir: &Path) -> PathBuf {
-    config_dir.join("rseditor").join("init.scm")
+/// `<home>/.rseditor` と, `<config_dir>/rseditor/init.scm`.
+pub fn init_file_candidates(home: Option<&Path>, config_dir: Option<&Path>) -> Vec<PathBuf> {
+    home.map(|dir| dir.join(".rseditor"))
+        .into_iter()
+        .chain(config_dir.map(|dir| dir.join("rseditor").join("init.scm")))
+        .collect()
 }
 
-/// 初期設定ファイルのパスを返します.
+/// 初期設定ファイルのパスを返します. `~/.rseditor` が無ければ, `~/.config/rseditor/init.scm` を使います.
 ///
 /// # Returns
 ///
-/// パス. 設定のディレクトリが分からなければ `None`.
+/// あるファイルのパス. どちらも無ければ `None`.
 pub fn init_file_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| init_file_path_from(&dir))
+    init_file_candidates(dirs::home_dir().as_deref(), dirs::config_dir().as_deref())
+        .into_iter()
+        .find(|path| path.exists())
 }
 
 /// 設定のディレクトリから, ブックマークのファイルのパスを作ります. ディレクトリが無ければ, 作ります.
@@ -248,7 +254,7 @@ pub async fn run_lisp_command(
     .map_err(|e| e.to_string())
 }
 
-/// 初期設定ファイル (`~/.config/rseditor/init.scm`) を読んで, 評価します (アプリの評価器を使う).
+/// 初期設定ファイル (`~/.rseditor`, または `~/.config/rseditor/init.scm`) を読んで, 評価します (アプリの評価器を使う).
 ///
 /// # Arguments
 ///
@@ -489,4 +495,43 @@ pub fn list_directory_long_with(program: &str, path: &str) -> Result<String, Str
 #[tauri::command]
 pub fn list_directory_long(path: String) -> Result<String, String> {
     list_directory_long_with("ls", &path)
+}
+
+/// ディレクトリの下のファイルから, 正規表現に合う行を探します (`M-x grep`). 探すのは, 別のスレッドで行います.
+///
+/// # Arguments
+///
+/// * `pattern` - 正規表現.
+/// * `directory` - ディレクトリ.
+///
+/// # Returns
+///
+/// 合った行. 正規表現が誤っているか, ディレクトリを読めなければ, 理由の文字列の [`Err`].
+#[cfg(not(tarpaulin_include))]
+#[tauri::command]
+pub async fn grep_directory(
+    pattern: String,
+    directory: String,
+) -> Result<Vec<crate::search::GrepMatch>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::search::grep_directory(&pattern, Path::new(&directory))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
+///
+/// # Arguments
+///
+/// * `directory` - ディレクトリ.
+///
+/// # Returns
+///
+/// プロジェクトの根.
+#[tauri::command]
+pub fn project_root(directory: String) -> String {
+    crate::search::project_root(Path::new(&directory))
+        .to_string_lossy()
+        .into_owned()
 }

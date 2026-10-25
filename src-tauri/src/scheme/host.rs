@@ -12,6 +12,9 @@ use serde::Serialize;
 
 use crate::scheme::value::Value;
 
+/// ミニバッファの入力 (`read-string`) を待つ長さ (人が入力するので, 長くする).
+pub const READ_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+
 /// エディタ. 操作の名前と引数を受け取って, 結果を返します.
 pub trait Host: Sync {
     /// エディタを操作します.
@@ -53,7 +56,7 @@ pub struct Bridge {
     next_id: AtomicU64,
     /// 返事を待っている頼み (番号と, 返事を渡す先).
     pending: Mutex<HashMap<u64, mpsc::Sender<Result<Value, String>>>>,
-    /// 返事を待つ長さ (過ぎたら, 失敗にする).
+    /// 返事を待つ長さ (過ぎたら, 失敗にする. `read-string` は [`READ_TIMEOUT`]).
     timeout: Duration,
 }
 
@@ -100,9 +103,14 @@ impl Bridge {
             op: op.to_string(),
             args: args.iter().map(to_json).collect(),
         });
+        let timeout = if op == "read-string" {
+            READ_TIMEOUT
+        } else {
+            self.timeout
+        };
         let answer = sent.and_then(|()| {
             receiver
-                .recv_timeout(self.timeout)
+                .recv_timeout(timeout)
                 .unwrap_or_else(|_| Err(format!("The editor did not answer ({})", op)))
         });
         self.pending.lock().unwrap().remove(&id);
@@ -286,6 +294,22 @@ mod tests {
             bridge.request("point", vec![], &|_| Ok(()))
         });
         assert_eq!(result, Err("bad".to_string()));
+    }
+
+    #[test]
+    fn bridge_waits_longer_for_the_input() {
+        // 返事を待つ長さが 0 でも, 入力 (read-string) は待つ
+        let bridge = Bridge::new(Duration::ZERO);
+        let result = std::thread::scope(|scope| {
+            scope.spawn(|| {
+                std::thread::sleep(Duration::from_millis(20));
+                while !bridge.reply(1, json!("abc"), None) {
+                    std::thread::yield_now();
+                }
+            });
+            bridge.request("read-string", vec![], &|_| Ok(()))
+        });
+        assert_eq!(result, Ok(Value::String("abc".to_string())));
     }
 
     #[test]

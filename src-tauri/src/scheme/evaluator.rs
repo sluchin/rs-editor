@@ -13,6 +13,7 @@ use crate::scheme::builtins;
 use crate::scheme::env::Env;
 use crate::scheme::host::{Host, NoHost};
 use crate::scheme::parser::Parser;
+use crate::scheme::system;
 use crate::scheme::value::{Lambda, Value};
 
 /// 評価の入れ子の深さの上限.
@@ -56,7 +57,7 @@ impl Evaluator {
     /// 評価器.
     pub fn new() -> Self {
         let global = Env::new();
-        for name in builtins::NAMES {
+        for name in builtins::NAMES.iter().chain(system::NAMES) {
             global.define(name, Value::Function(name.to_string()));
         }
         Evaluator {
@@ -136,6 +137,15 @@ impl Evaluator {
     /// 割り当て (割り当てた順).
     pub fn key_bindings(&self) -> Vec<KeyBinding> {
         self.keys.lock().unwrap().clone()
+    }
+
+    /// 一番外側の環境を返します (`load` で使う).
+    ///
+    /// # Returns
+    ///
+    /// 環境.
+    pub(crate) fn global(&self) -> &Env {
+        &self.global
     }
 
     /// コマンドとして覚えます (覚えていれば, 何もしない).
@@ -218,6 +228,8 @@ pub(crate) struct Machine<'a> {
     pub(crate) host: &'a dyn Host,
     /// 今の評価の入れ子の深さ ([`MAX_DEPTH`] まで).
     depth: usize,
+    /// 読み込んでいるファイル (`load`) のディレクトリ (入れ子の順. 相対パスの基).
+    pub(crate) load_dirs: Vec<std::path::PathBuf>,
 }
 
 impl<'a> Machine<'a> {
@@ -236,7 +248,25 @@ impl<'a> Machine<'a> {
             evaluator,
             host,
             depth: 0,
+            load_dirs: Vec::new(),
         }
+    }
+
+    /// パスを, 絶対パスにします. 相対パスは, 読み込んでいるファイル (`load`) のディレクトリ, またはホームディレクトリから数えます.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - パス (`~` も使える).
+    ///
+    /// # Returns
+    ///
+    /// 絶対パス.
+    pub(crate) fn expand_file_name(&self, path: &str) -> String {
+        let home = dirs::home_dir().unwrap_or_default();
+        let base = self.load_dirs.last().unwrap_or(&home);
+        system::expand_file_name(path, base, &home)
+            .to_string_lossy()
+            .into_owned()
     }
 
     /// 式を評価します.
@@ -272,6 +302,7 @@ impl<'a> Machine<'a> {
     fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
         loop {
             let items = match &expr {
+                Value::Symbol(name) if name.starts_with(':') => return Ok(expr.clone()),
                 Value::Symbol(name) => {
                     return env
                         .get(name)

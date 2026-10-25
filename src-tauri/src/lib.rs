@@ -1,10 +1,11 @@
 //! rseditor: Emacs のように使えるエディタ (Scheme の評価器付き) のバックエンド.
 //!
-//! ファイルの読み書き ([`commands`]), Scheme の評価 ([`scheme`]), ログ ([`logging`]) を受け持ちます.
+//! ファイルの読み書き ([`commands`]), Scheme の評価 ([`scheme`]), ディレクトリの中の検索 ([`search`]), ログ ([`logging`]) を受け持ちます.
 
 pub mod commands;
 pub mod logging;
 pub mod scheme;
+pub mod search;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -42,7 +43,9 @@ pub fn run() {
             commands::backup_file,
             commands::delete_file,
             commands::file_newer_than,
-            commands::list_directory_long
+            commands::list_directory_long,
+            commands::grep_directory,
+            commands::project_root
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

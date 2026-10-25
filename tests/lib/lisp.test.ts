@@ -23,7 +23,13 @@ const mockedListen = vi.mocked(listen)
  * @returns エディタと, 今の本文とカーソル.
  */
 function fakeHost(text: string) {
-  const state = { text, point: 0, message: '' }
+  const state = {
+    text,
+    point: 0,
+    message: '',
+    calls: [] as string[],
+    modified: true,
+  }
   const host: LispHost = {
     text: () => state.text,
     point: () => state.point,
@@ -42,6 +48,29 @@ function fakeHost(text: string) {
       state.message = s
     },
     command: (name) => name === 'forward-char',
+    findFile: async (path) => {
+      state.calls.push(`find-file ${path}`)
+    },
+    switchToBuffer: async (name) => {
+      state.calls.push(`switch-to-buffer ${name}`)
+    },
+    bufferFileName: () => null,
+    setModified: (modified) => {
+      state.modified = modified
+    },
+    localSetKey: (key, command) => {
+      state.calls.push(`local-set-key ${key} ${command}`)
+    },
+    readString: async (prompt, initial) => `${prompt}${initial}`,
+    setBackgroundColor: (color) => {
+      state.calls.push(`background ${color}`)
+    },
+    setForegroundColor: (color) => {
+      state.calls.push(`foreground ${color}`)
+    },
+    setFont: (family, size) => {
+      state.calls.push(`font ${family} ${size}`)
+    },
   }
   return { host, state }
 }
@@ -86,6 +115,34 @@ describe('lisp', () => {
     expect(() => run('fly')).toThrow('Unknown editor operation: fly')
   })
 
+  it('ファイルとバッファを出し, 入力を受け, 色とフォントを変える', async () => {
+    const { host, state } = fakeHost('')
+    const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
+    expect(await run('find-file', '/a.txt')).toBeNull()
+    expect(await run('switch-to-buffer', '*howm*')).toBeNull()
+    expect(run('buffer-file-name')).toBeNull()
+    expect(run('set-buffer-modified-p', false)).toBeNull()
+    expect(state.modified).toBe(false)
+    expect(run('set-buffer-modified-p', true)).toBeNull()
+    expect(state.modified).toBe(true)
+    expect(run('local-set-key', 'c', 'howm-create')).toBeNull()
+    expect(await run('read-string', 'Search: ', 'x')).toBe('Search: x')
+    expect(await run('read-string', 'Name: ')).toBe('Name: ')
+    expect(run('set-background-color', 'black')).toBeNull()
+    expect(run('set-foreground-color', 'white')).toBeNull()
+    expect(run('set-font', 'Mono', 14)).toBeNull()
+    expect(run('set-font', null, null)).toBeNull()
+    expect(state.calls).toEqual([
+      'find-file /a.txt',
+      'switch-to-buffer *howm*',
+      'local-set-key c howm-create',
+      'background black',
+      'foreground white',
+      'font Mono 14',
+      'font null null',
+    ])
+  })
+
   it('頼みを受けて, 結果か失敗の内容を返事する', async () => {
     const unlisten = vi.fn()
     mockedListen.mockResolvedValue(unlisten)
@@ -98,17 +155,30 @@ describe('lisp', () => {
       handler({ event: 'editor-request', id: 0, payload: { id, op, args } })
 
     send(1, 'point-max')
-    expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
-      id: 1,
-      value: 4,
-      error: null,
-    })
+    await vi.waitFor(() =>
+      expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
+        id: 1,
+        value: 4,
+        error: null,
+      }),
+    )
     send(2, 'fly')
-    expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
-      id: 2,
-      value: null,
-      error: 'Unknown editor operation: fly',
-    })
+    await vi.waitFor(() =>
+      expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
+        id: 2,
+        value: null,
+        error: 'Unknown editor operation: fly',
+      }),
+    )
+    // 終わるのを待つ操作は, 終わってから返事する
+    send(4, 'read-string', ['Name: ', 'a'])
+    await vi.waitFor(() =>
+      expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
+        id: 4,
+        value: 'Name: a',
+        error: null,
+      }),
+    )
     // Error でない失敗も, 文字にする
     const broken = {
       ...host,
@@ -123,10 +193,12 @@ describe('lisp', () => {
       id: 0,
       payload: { id: 3, op: 'point', args: [] },
     })
-    expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
-      id: 3,
-      value: null,
-      error: 'broken',
-    })
+    await vi.waitFor(() =>
+      expect(mockedInvoke).toHaveBeenLastCalledWith('editor_reply', {
+        id: 3,
+        value: null,
+        error: 'broken',
+      }),
+    )
   })
 })

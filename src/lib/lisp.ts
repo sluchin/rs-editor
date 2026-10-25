@@ -61,6 +61,24 @@ export interface LispHost {
    * @returns コマンドがあれば `true`.
    */
   command: (name: string) => boolean
+  /** ファイルを開いて (開いていれば, そのバッファを) 出します. 出したら, 終わります. */
+  findFile: (path: string) => Promise<void>
+  /** 名前のバッファ (無ければ, 作る) を出します. 出したら, 終わります. */
+  switchToBuffer: (name: string) => Promise<void>
+  /** バッファのファイルのパス (ファイルのないバッファは `null`). */
+  bufferFileName: () => string | null
+  /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). */
+  setModified: (modified: boolean) => void
+  /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
+  localSetKey: (key: string, command: string) => void
+  /** ミニバッファで, 文字を入力してもらいます (C-g でやめたら, 失敗). */
+  readString: (prompt: string, initial: string) => Promise<string>
+  /** 背景の色を変えます. */
+  setBackgroundColor: (color: string) => void
+  /** 文字の色を変えます. */
+  setForegroundColor: (color: string) => void
+  /** フォントを変えます (`null` の項目は, 変えない. 大きさはポイント). */
+  setFont: (family: string | null, size: number | null) => void
 }
 
 /**
@@ -84,7 +102,7 @@ export function runLispCommand(name: string): Promise<EvalResponse> {
 }
 
 /**
- * 初期設定ファイル (`~/.config/rseditor/init.scm`) を読んで, 評価します.
+ * 初期設定ファイル (`~/.rseditor`. 無ければ `~/.config/rseditor/init.scm`) を読んで, 評価します.
  *
  * @returns 結果.
  */
@@ -112,7 +130,7 @@ function offset(value: unknown, length: number): number {
  * @param host - エディタ.
  * @param op - 操作の名前.
  * @param args - 引数.
- * @returns 結果 (値がなければ `null`).
+ * @returns 結果 (値がなければ `null`). 画面が変わるのを待つ操作 (`find-file` など) は, 結果の `Promise`.
  * @throws 操作が失敗したとき.
  */
 export function performEditorRequest(host: LispHost, op: string, args: unknown[]): unknown {
@@ -153,6 +171,32 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       if (!host.command(name)) throw new Error(`Undefined command: ${name}`)
       return true
     }
+    case 'find-file':
+      return host.findFile(String(args[0])).then(() => null)
+    case 'switch-to-buffer':
+      return host.switchToBuffer(String(args[0])).then(() => null)
+    case 'buffer-file-name':
+      return host.bufferFileName()
+    case 'set-buffer-modified-p':
+      host.setModified(args[0] === true)
+      return null
+    case 'local-set-key':
+      host.localSetKey(String(args[0]), String(args[1]))
+      return null
+    case 'read-string':
+      return host.readString(String(args[0]), String(args[1] ?? ''))
+    case 'set-background-color':
+      host.setBackgroundColor(String(args[0]))
+      return null
+    case 'set-foreground-color':
+      host.setForegroundColor(String(args[0]))
+      return null
+    case 'set-font':
+      host.setFont(
+        typeof args[0] === 'string' ? args[0] : null,
+        typeof args[1] === 'number' ? args[1] : null,
+      )
+      return null
     default:
       throw new Error(`Unknown editor operation: ${op}`)
   }
@@ -166,12 +210,15 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
  */
 export function listenEditorRequests(host: () => LispHost): Promise<UnlistenFn> {
   return listen<EditorRequest>('editor-request', ({ payload: { id, op, args } }) => {
-    let reply: { id: number; value: unknown; error: string | null }
-    try {
-      reply = { id, value: performEditorRequest(host(), op, args), error: null }
-    } catch (err) {
-      reply = { id, value: null, error: err instanceof Error ? err.message : String(err) }
-    }
-    void invoke('editor_reply', reply)
+    // 結果が Promise の操作は, 終わるのを待って返事をする
+    void new Promise((resolve) => resolve(performEditorRequest(host(), op, args))).then(
+      (value) => invoke('editor_reply', { id, value, error: null }),
+      (err) =>
+        invoke('editor_reply', {
+          id,
+          value: null,
+          error: err instanceof Error ? err.message : String(err),
+        }),
+    )
   })
 }

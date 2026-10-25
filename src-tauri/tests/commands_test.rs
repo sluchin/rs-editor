@@ -6,9 +6,9 @@ use tempfile::tempdir;
 
 use rseditor::commands::{
     backup_file, bookmark_file_path, bookmark_file_path_from, delete_file, eval_code,
-    eval_code_with, file_newer_than, home_dir, init_file_path, init_file_path_from, list_directory,
-    list_directory_long, list_directory_long_with, load_init_file, path_exists, read_file_content,
-    run_command, write_file_content, EvalResponse,
+    eval_code_with, file_newer_than, home_dir, init_file_candidates, init_file_path,
+    list_directory, list_directory_long, list_directory_long_with, load_init_file, path_exists,
+    read_file_content, run_command, write_file_content, EvalResponse,
 };
 use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
 use rseditor::scheme::host::NoHost;
@@ -93,9 +93,18 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
 #[test]
 fn test_load_init_file() {
     let dir = tempdir().unwrap();
-    let path = init_file_path_from(dir.path());
-    assert!(path.ends_with("rseditor/init.scm"));
-    assert!(init_file_path().unwrap().ends_with("rseditor/init.scm"));
+    let home = dir.path().join("home");
+    let config = dir.path().join("config");
+    assert_eq!(
+        init_file_candidates(Some(&home), Some(&config)),
+        vec![home.join(".rseditor"), config.join("rseditor/init.scm")]
+    );
+    assert!(init_file_candidates(None, None).is_empty());
+    // あるファイルだけ (どちらも無いこともある)
+    if let Some(found) = init_file_path() {
+        assert!(found.exists());
+    }
+    let path = config.join("rseditor/init.scm");
     let evaluator = Evaluator::new();
     // ファイルがなければ, 何もしない
     assert_eq!(

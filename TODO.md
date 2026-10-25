@@ -6,18 +6,10 @@
 
 ## 現状整理
 
-- `src/lib/prefixKeymap.ts` … `C-x C-f` / `C-x C-s` のみ実装。`CodeEditor.tsx` から実際に呼ばれている。
-- `src/lib/emacsKeymap.ts` … `C-f/b/n/p/a/e/d/k/y/w`, `M-f/b/w`, `C-space`（mark）, `C-g` を実装済みだが
-  **`CodeEditor.tsx` に未接続**。また `C-x C-s` を独自に処理しており `prefixKeymap.ts` と役割が重複している。
-- `src/lib/bracketAutoClose.ts` … 括弧・文字列の自動補完/skip-over/ペア削除を実装済みだが未接続。
-- `src/lib/bracketMatch.ts` / `src/lib/schemeTokenizer.ts` … 括弧対応検出・字句解析を実装済みだが
-  どこからも呼ばれておらず、シンタックスハイライトやハイライト表示に未使用。
-- `src/components/REPL.tsx` … 実装済みだが `App.tsx` からマウントされていない（コメントで「currently unused」）。
-- ミニバッファは `find-file` / `write-file` の2種類の `input` モードのみ対応。`M-x` のようなコマンド実行や
-  `isearch` は未対応。
-
-これを踏まえ、まず「実装済みだが配線されていないコード」を統合するところから着手し、
-その後に新規機能を積み上げる。
+- Phase 1 から Phase 12.5 までと, Phase 14 の必須の項目は, 実装した ([x])。Phase 12 は, 実装したコマンドの, Emacs 30 と違うところ。
+- エディタは CodeMirror 6 (Phase 8)。Phase 1 から Phase 7 の, `<textarea>` と `prefixKeymap.ts`, `emacsKeymap.ts` などの記述は, 当時のもの
+  (今は `src/components/CodeEditor.tsx` と `src/lib/emacs.ts`)。
+- まだ無い Emacs の標準機能は, Phase 13 に並べた。
 
 ---
 
@@ -38,6 +30,8 @@
 - [x] 上記3ファイルの単体テストを追加・拡充する（`bracketMatch.test.ts` / `schemeTokenizer.test.ts` に倣う）。
 
 ## Phase 2: シンタックスハイライト
+
+(この Phase の `<textarea>` と `<pre>` の作りは, Phase 8 で CodeMirror 6 に置き換え, 色分けは Phase 10 で Emacs と同じにした。)
 
 - [x] `CodeEditor.tsx` を「透明な `<textarea>` を実入力に使い、背後に色付き `<pre>` を重ねる」構成に変更する
       （スクロール位置を `onScroll` で同期）。既存の `bracketAutoClose` / `emacsKeymap` はそのまま `<textarea>` に効かせる。
@@ -115,7 +109,7 @@
 - [x] Lisp から, 既にあるコマンドを名前で呼べるようにする (`call-interactively`, `command-execute`)。
 - [x] Lisp で定義した関数を, コマンドとして登録する (`define-command`。`M-x` から呼べる)。
 - [x] キーの割り当てを Lisp から変える (`global-set-key`)。
-- [x] 起動のときに, 初期設定ファイル (`~/.config/rseditor/init.scm`) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
+- [x] 起動のときに, 初期設定ファイル (`~/.rseditor`. 無ければ `~/.config/rseditor/init.scm`) を読んで評価する。誤りがあっても起動は続け, ミニバッファに知らせる。
 
 ## Phase 10: ファイルの名前の補完と, シンタックスハイライト
 
@@ -188,6 +182,38 @@
       Emacs 30 は, 始めの行に空きの量 (`available`) を出す。今は, 出さない。
 - [ ] isearch の `M-p`, `M-n`: Emacs (`search-ring-update` が `nil`) は, 履歴の文字を, ミニバッファで直させる。今は, すぐに探す。
 - [ ] ミニバッファの `M-n`: Emacs は, 履歴の先で, 既定の値 (`C-x C-f` なら, 今のファイルの名前など) を出す。今は, 出さない。
+- [ ] `M-x grep`: Emacs は, grep のコマンドの行 (`grep --color=auto -nH --null -e `) を聞き, 外の grep を動かす。今は, 正規表現とディレクトリを聞き,
+      エディタが, ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ, 大文字と小文字を区別しない
+      (Emacs の `rgrep` の `case-fold-search` と同じ)。`.` で始まるディレクトリ, `node_modules`, `target` と, 文字のファイルでないものは, 探さない。
+      既定の正規表現 (カーソルの所の言葉) は, まだ。
+
+## Phase 12.5: 初期設定ファイルと howm
+
+- [x] 初期設定ファイルを `~/.rseditor` にする (無ければ, 前の `~/.config/rseditor/init.scm`)。
+- [x] 色とフォントを, 初期設定ファイルで変える: `set-background-color`, `set-foreground-color`, `set-frame-font`, `set-face-attribute` (`default` の `:family`, `:height`, `:foreground`, `:background`)。
+      背景が暗いと, 色分けを Emacs の暗い背景の face の色にする (`src/lib/theme.ts`, `src/index.css`)。
+- [x] Lisp の手続きを足す: `load`, ファイル (`read-file-string`, `write-file-string`, `directory-files-recursively` など), 時刻 (`format-time-string`, `date-to-time`),
+      正規表現 (`regexp-match`, `grep`), 文字列 (`string-search`, `split-string` など), `sort`, `cadr` など, `random`。
+      エディタの操作: `find-file`, `switch-to-buffer`, `buffer-file-name`, `set-buffer-modified-p`, `read-string`, `local-set-key`。
+- [x] howm を Scheme で書き直す (`lisp/howm.sl`)。`M-x howm` でメニュー, メモを作る, 一覧, 検索, 今日と昨日, 予定と todo, リンク (`>>>`, `<<<`)。
+- [ ] howm の, まだ移していない機能: 下線 (action-lock の色付け), 一覧の窓 (中身の表示), `[複製]`, `[速記]`, ローマ字検索 (migemo), `[前後]`, `[履歴]`, `[酔歩]`,
+      キーワードの補完, 日付の入力 (`[日↓]`, `[時↓]`), タイトルとファイル名のコピー, `[全消]`, メニューの `%eval%`, `%call%`, 別のメニュー (`%○○%`),
+      保存したときのメニューの更新, `C-x C-f` で開いたメモの howm-mode (今は, howm から開いたメモだけ)。
+- [ ] `read-string` の補完と, 既定の値 (Emacs の `completing-read`)。
+- [ ] Lisp の文字列の位置は文字の数, 画面の位置は UTF-16 の数で数える (絵文字など, BMP の外の文字があると, ずれる)。
+
+## Phase 14: M-x grep と, サイドバーのプロジェクトのツリー
+
+- [x] `M-x grep`: 外のコマンドを使わず, エディタ (Rust の `src-tauri/src/search.rs`) が, ディレクトリの下のファイルから探す。
+      正規表現とディレクトリを聞き, 結果を `*grep*` バッファ (Emacs の grep-mode の形. `ファイル:行:行の文字`) に, ほかのウィンドウに出す。
+      `RET` (compile-goto-error) で, その行のファイルを, ほかのウィンドウに開く。`M-g n`, `M-g p`, `` C-x ` `` で, 次・前の合った行へ。
+- [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー. `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で, 出すか消す。
+      根は, バッファのディレクトリから上へたどって `.git` のある所 (無ければ, バッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
+      ファイルを押すと, 選んでいるウィンドウに開く。今のバッファのファイルを強調する。`.git` は出さない。↻ で読み直す。
+- [ ] ツリー: キーで動かす (フォーカスを移して, `n`, `p`, `RET` など), 幅を変える, 今のファイルまで開く (VS Code の Reveal),
+      ファイルを作る・名前を変える・消す, ファイルが変わったら読み直す, 根を選ぶコマンド, 起動のときに出す設定 (今は, 初期設定ファイルで `(call-interactively 'project-tree)`)。
+- [ ] `*grep*` の中のキー: `n` / `p` (next-error-no-select など), `g` (探し直す), `TAB` / `S-TAB` (次・前のファイル), `C-c C-k` (止める)。
+- [ ] grep: 探しているあいだに, 見つけた行を順に出す (今は, 終わってから出す)。止める (`C-c C-k`)。
 
 ---
 
@@ -203,7 +229,8 @@
 - [ ] `C-x [` / `C-x ]` (backward-page / forward-page), `C-x C-p` (mark-page), `C-x l` (count-lines-page): ページ (`^L`) の単位。
 - [ ] `M-r` (move-to-window-line-top-bottom): カーソルを, 画面の中, 上, 下の行へ。
 - [ ] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置, 桁へ。
-- [ ] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): エラーや, 検索の結果の次・前へ。
+- [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 14)。
+- [ ] `next-error` で, `compile` と `occur` の結果も使う。`*grep*` の中の, 今の行の印 (`=>`) と強調。
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
 - [ ] `C-x C-@` (pop-global-mark), `C-u C-SPC` (前のマークへ戻る. mark-ring): マークの履歴。
@@ -251,7 +278,9 @@
       合わないときの `C-g` (合った所までに戻す), 本文の端で折り返す (`Wrapped I-search`)。
 - [ ] isearch の, 合った所の全てを強調する (`isearch-lazy-highlight`) と, 合った数を出す (`isearch-lazy-count`)。
 - [ ] `M-s w` (isearch-forward-word), `M-s _` (isearch-forward-symbol), `M-s .` (isearch-forward-symbol-at-point), `M-s M-.` (isearch-forward-thing-at-point)。
-- [ ] `M-s o` (occur): 合う行の一覧。`multi-occur`, `grep`, `rgrep`。
+- [ ] `M-s o` (occur): 合う行の一覧。`multi-occur`。
+- [x] `grep` (Phase 14. 外のコマンドを使わず, エディタが探す)。
+- [ ] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く), `zrgrep`, `find-grep`。
 - [ ] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
 - [ ] query-replace の中の `^` (前へ戻る), `,` (置き換えて, 止まる), `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
       `u` / `U` (置き換えを戻す), `?` (説明)。大文字と小文字を合わせる置換 (`case-replace`)。
@@ -323,7 +352,8 @@
 - [ ] `delete-selection-mode`, `electric-pair-mode`, `electric-indent-mode` (既定で有効. `RET` で字下げする, は実装済み), `show-paren-mode` の設定。
 - [ ] `text-mode`, `prog-mode` などの, ほかのメジャーモードと, `M-x` でのメジャーモードの切り替え (`scheme-mode`, `emacs-lisp-mode`, `fundamental-mode`)。
 - [ ] `M-!` / `M-&` / `M-|` (shell-command / async-shell-command / shell-command-on-region), `shell`, `eshell`, `term`。
-- [ ] `compile`, `recompile`, `grep`, `C-x p ...` (project. プロジェクトのファイルを開く, 探すなど)。
+- [ ] `compile`, `recompile`, `C-x p ...` (project. `C-x p f` (プロジェクトのファイルを開く), `C-x p g` (プロジェクトの中を探す) など)。
+      プロジェクトの根を探すのは, サイドバーのツリーで実装した (`.git` のある所)。
 - [ ] `C-x v ...` (vc. バージョン管理. `C-x v v`, `C-x v =`, `C-x v l` など), `diff`, `ediff`。
 - [ ] `M-$` (ispell-word), `flyspell-mode`: 綴り。
 - [ ] `C-x *` (calc), `calendar`, `C-x m` (compose-mail), `eww`, `M-s M-w` (eww-search-words)。
@@ -333,9 +363,4 @@
 
 ## 実装順序の目安
 
-1. Phase 1（配線の統合）→ 2. Phase 2（ハイライト）→ 3. Phase 3（ミニバッファ拡張）
-4. Phase 4（編集コマンド強化）→ 5. Phase 6（REPL 統合、Scheme エディタとしての核心機能）
-6. Phase 5（複数バッファ/ウィンドウ、UI 的に大掛かりなので後回し）→ 7. Phase 7（仕上げ）
-
-Phase 1 は既存コードの接続のみで大きな新規実装が不要なため最優先。
-Phase 6（REPL 統合）は「Scheme エディタ」としての価値に直結するため、Phase 5 より先に着手する方が良い。
+Phase 1 から Phase 12 は, 済んだ。これからは, Phase 12, 12.5, 14 の残りと, Phase 13 から, よく使うものを選んで進める。

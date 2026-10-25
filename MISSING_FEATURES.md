@@ -87,7 +87,13 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **Lisp**
 - C-x C-e, M-: - 式の評価（eval-last-sexp, eval-expression）
-- 初期設定ファイル（`~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key）
+- 初期設定ファイル（`~/.rseditor`。無ければ `~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load
+- 色とフォント（set-background-color, set-foreground-color, set-frame-font, set-face-attribute）
+- howm（`lisp/howm.sl`。M-x howm, C-c , ,）
+
+**検索とプロジェクト**
+- M-x grep（外のコマンドを使わず、エディタが探す）、`*grep*` の RET（compile-goto-error）、M-g n, M-g p, C-x `（next-error, previous-error）
+- F8, M-x project-tree - 左のサイドバーの、プロジェクトのファイルのツリー
 
 **ヘルプ**
 - C-h k - キーの説明（describe-key）
@@ -154,7 +160,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 | `C-x C-q` | read-only-mode | 読み込み専用 |
 | - | auto-fill-mode / display-line-numbers-mode / visual-line-mode | 自動の折り返し, 行番号, 見た目の行 |
 | `C-x C-+` / `C-x C--` | text-scale-adjust | 文字の大きさ |
-| - | shell / eshell / compile / grep | 外部のプログラム |
+| - | shell / eshell / compile / rgrep | 外部のプログラム (`grep` は, 実装済み) |
 | `C-x v ...` | vc-* | バージョン管理 |
 | `M-$` | ispell-word | 綴りの確かめ |
 

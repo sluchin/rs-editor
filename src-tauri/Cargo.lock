@@ -2596,9 +2596,11 @@ dependencies = [
 name = "rseditor"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dirs",
  "env_logger",
  "log",
+ "regex",
  "serde",
  "serde_json",
  "tauri",

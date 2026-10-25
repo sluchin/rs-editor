@@ -142,6 +142,17 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。`C-w` と `M-y` で足した文字は, 正規表現の検索でも, そのまま合います。
 検索の履歴は, 文字と正規表現で別です（16 個まで. `RET` で確定した文字を覚え, `C-g` でやめた文字は覚えない）。
 
+### grep（ファイルから探す）
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `M-x grep` | grep | 正規表現とディレクトリを聞き, ディレクトリの下（深くまで）のファイルから探して, 結果を `*grep*` バッファに出す（外のコマンドは使わない） |
+| `RET` （`*grep*`） | compile-goto-error | その行のファイルを, ほかのウィンドウに開く |
+| `M-g n` / `M-g M-n` / `` C-x ` `` | next-error | 次の合った行へ |
+| `M-g p` / `M-g M-p` | previous-error | 前の合った行へ |
+
+正規表現は Rust の regex の書き方です。大文字が無ければ, 大文字と小文字を区別しません。`.` で始まるディレクトリ, `node_modules`, `target` と, 文字のファイルでないものは探しません。
+
 ## 置換
 
 | キー | コマンド | 説明 |
@@ -233,6 +244,7 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-g` | keyboard-quit | 操作をキャンセル（Quit メッセージ表示） |
+| `F8` | project-tree | 左のサイドバーに, プロジェクト（`.git` のある所）のファイルのツリーを出すか消す（ディレクトリを押すと開き, ファイルを押すと開く） |
 
 ## Dired（ディレクトリの編集）
 
@@ -390,6 +402,22 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 ### 未実装
 - そのほかのヘルプ（C-h f, C-h v など）
 - Dired の中の全てのキー（C-x d は, 一覧を出すだけ）
+
+## howm (`lisp/howm.sl` を読み込んだとき)
+
+| キー | コマンド | 説明 |
+|------|----------|------|
+| `M-x howm`, `C-c , ,` | `howm-menu` | メニューを出す |
+| `C-c , c` | `howm-create` | メモを作る |
+| `C-c , a` / `C-c , l` | `howm-list-all` / `howm-list-recent` | 一覧 / 最近のメモ |
+| `C-c , s` / `C-c , g` | `howm-search-fixed` / `howm-search-regexp` | 文字 / 正規表現で探す |
+| `C-c , .` / `C-c , :` | `howm-today` / `howm-yesterday` | 今日 / 昨日のメモ |
+| `C-c , y` / `C-c , t` | `howm-list-schedule` / `howm-list-todo` | 予定 / todo |
+| `C-c , RET` | `howm-action` | ボタン, 項目, リンクを動かす |
+
+メニューでは, ボタンの前の文字 (`c`, `s`, `g`, `:`, `.`, `a`, `l`, `y`, `t`, `R`) と, ボタンや項目の上の `RET` が使えます。
+一覧 (`*howmS*`) では, `RET` でその行のメモを開き, `n` と `p` で行を動きます。
+howm から開いたメモでは, `>>> 言葉` と `<<< 言葉` の上の `RET` で, その言葉を探します (ほかの所では, 改行)。
 
 ## よくある操作パターン
 

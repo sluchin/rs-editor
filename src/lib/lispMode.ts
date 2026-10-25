@@ -647,28 +647,31 @@ export const schemeParser = lispParser('scheme', scheme)
 /** Emacs Lisp の字句を読む関数. */
 export const elispParser = lispParser('elisp', elisp)
 
-/** Emacs の既定の色 (明るい背景の font-lock の face). */
+/** Emacs の既定の色 (font-lock の face. 色は CSS の変数で, 背景が明るいか暗いかで変わる (`src/index.css`)). */
 const emacsHighlightStyle = HighlightStyle.define([
   // font-lock-keyword-face (Purple)
-  { tag: tags.keyword, color: '#a020f0' },
+  { tag: tags.keyword, color: 'var(--font-lock-keyword)' },
   // font-lock-comment-face (Firebrick)
-  { tag: tags.comment, color: '#b22222' },
+  { tag: tags.comment, color: 'var(--font-lock-comment)' },
   // font-lock-string-face (VioletRed4). font-lock-doc-face も同じ色
-  { tag: tags.string, color: '#8b2252' },
+  { tag: tags.string, color: 'var(--font-lock-string)' },
   // font-lock-function-name-face (Blue1)
-  { tag: tags.function(tags.definition(tags.variableName)), color: '#0000ff' },
+  {
+    tag: tags.function(tags.definition(tags.variableName)),
+    color: 'var(--font-lock-function-name)',
+  },
   // font-lock-variable-name-face (sienna)
-  { tag: tags.definition(tags.variableName), color: '#a0522d' },
+  { tag: tags.definition(tags.variableName), color: 'var(--font-lock-variable-name)' },
   // font-lock-type-face (ForestGreen)
-  { tag: tags.typeName, color: '#228b22' },
+  { tag: tags.typeName, color: 'var(--font-lock-type)' },
   // font-lock-constant-face (dark cyan)
-  { tag: tags.constant(tags.name), color: '#008b8b' },
+  { tag: tags.constant(tags.name), color: 'var(--font-lock-constant)' },
   // font-lock-builtin-face (dark slate blue)
-  { tag: tags.standard(tags.name), color: '#483d8b' },
+  { tag: tags.standard(tags.name), color: 'var(--font-lock-builtin)' },
   // font-lock-warning-face (Red1, 太字)
-  { tag: warningTag, color: '#ff0000', fontWeight: 'bold' },
+  { tag: warningTag, color: 'var(--font-lock-warning)', fontWeight: 'bold' },
   // font-lock-regexp-grouping-backslash と -construct (文字列の色の, 太字)
-  { tag: regexpGroupTag, color: '#8b2252', fontWeight: 'bold' },
+  { tag: regexpGroupTag, color: 'var(--font-lock-string)', fontWeight: 'bold' },
 ])
 
 /** 言語ごとの, シンタックスハイライトの拡張. */

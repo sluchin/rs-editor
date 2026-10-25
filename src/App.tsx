@@ -14,6 +14,7 @@ import Minibuffer, {
   MinibufferState,
 } from './components/Minibuffer'
 import BufferList from './components/BufferList'
+import ProjectTree from './components/ProjectTree'
 import {
   readFile,
   writeFile,
@@ -24,6 +25,9 @@ import {
   deleteFile,
   fileNewerThan,
   listDirectoryLong,
+  grepDirectory,
+  projectRoot,
+  type GrepMatch,
 } from './lib/fileOps'
 import { completeFileName } from './lib/complete'
 import {
@@ -34,11 +38,13 @@ import {
   saveBookmarks,
   storeBookmark,
 } from './lib/bookmarks'
-import { DIRED_MODE, majorMode } from './lib/modes'
+import { DIRED_MODE, GREP_MODE, majorMode } from './lib/modes'
+import { GREP_BUFFER_NAME, grepBufferText, grepMatchIndex, lineStart } from './lib/grep'
 import { diredBufferName, diredListing } from './lib/dired'
 import { autoSaveFileName, directoryFileName, fileDirectory } from './lib/paths'
 import { compileRegexp, findNextMatch, quoteRegexp, yankWordOrCharEnd } from './lib/isearch'
 import { HISTORY_LENGTH, SEARCH_RING_MAX, addToHistory } from './lib/history'
+import { setBackgroundColor, setFont, setForegroundColor } from './lib/theme'
 import {
   type ReplaceMatch,
   type ReplaceSpec,
@@ -81,6 +87,10 @@ export interface Buffer {
   backedUp?: boolean
   /** dired のバッファなら, そのディレクトリ (後ろに `/` は付けない). */
   directory?: string
+  /** バッファだけのキー (Lisp の `local-set-key`. Lisp の割り当てより先に使う). */
+  keys?: KeyBinding[]
+  /** `M-x grep` の結果のバッファなら, 探したディレクトリ (`/` で終わる) と, 合った行. */
+  grep?: { directory: string; matches: GrepMatch[] }
 }
 
 /** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
@@ -104,6 +114,9 @@ type PendingAction =
   | 'confirm-revert'
   | 'confirm-recover'
   | 'dired'
+  | 'read-string'
+  | 'grep'
+  | 'grep-directory'
   | null
 
 /** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
@@ -126,7 +139,13 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'confirm-alternate': 'yes-or-no-p',
   'confirm-revert': 'yes-or-no-p',
   'confirm-recover': 'yes-or-no-p',
+  'read-string': 'minibuffer',
+  grep: 'grep',
+  'grep-directory': 'file-name',
 }
+
+/** `M-x grep` の結果のバッファのキー (Emacs の grep-mode). */
+const GREP_KEYS: KeyBinding[] = [{ key: 'Enter', command: 'compile-goto-error' }]
 
 /** 置換の種類 (query-replace, replace-string と, その正規表現の版). */
 interface ReplaceKind {
@@ -203,6 +222,12 @@ function createScratchBuffer(): Buffer {
     modified: false,
   }
 }
+
+/**
+ * バッファだけのキーと, Lisp のキーを合わせたもの (同じなら同じ配列にして, エディタが割り当てを作り直さないように).
+ * バッファだけのキーの配列ごとに, 合わせた Lisp のキーと, 合わせたものを覚えます.
+ */
+const mergedKeys = new WeakMap<KeyBinding[], { base: KeyBinding[]; merged: KeyBinding[] }>()
 
 /** 始めのウィンドウ. */
 const FIRST_WINDOW = 'window-1'
@@ -283,6 +308,15 @@ function App() {
   const [histories, setHistories] = useState<Record<string, string[]>>({})
   // isearch の検索の履歴 (文字と, 正規表現. 新しい順)
   const searchRing = useRef({ plain: [] as string[], regexp: [] as string[] })
+  // 探す正規表現 (M-x grep で, ディレクトリを聞いているあいだ) と, next-error で出した, 合った行の添え字 (`*grep*` は 1 つ)
+  const grepPattern = useRef('')
+  const nextErrorIndex = useRef(-1)
+  // サイドバーのプロジェクトのツリーの根 (出していなければ null)
+  const [treeRoot, setTreeRoot] = useState<string | null>(null)
+  // Lisp が, バッファを出してから続けるために, 描き直すのを待っている関数
+  const bufferWaiters = useRef<(() => void)[]>([])
+  // Lisp が待っている, ミニバッファの入力 (read-string)
+  const lispInput = useRef<{ resolve: (value: string) => void; reject: (err: Error) => void }>(null)
 
   // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
@@ -436,21 +470,6 @@ function App() {
     return () => clearTimeout(timer)
   }, [buffers])
 
-  // Lisp から動かすエディタを, 今の状態で作り直す
-  useEffect(() => {
-    const handle = () => editor.current as EditorHandle
-    lispHost.current = {
-      text: () => handle().text(),
-      point: () => handle().point(),
-      setPoint: (pos) => handle().setCursor(pos),
-      insert: (text) => handle().insert(text),
-      deleteRegion: (from, to) => handle().deleteRegion(from, to),
-      bufferName: () => currentBuffer.name,
-      message: (text) => setMinibufferState({ mode: 'message', text }),
-      command: (name) => handle().run(name),
-    }
-  })
-
   /**
    * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
    *
@@ -524,7 +543,10 @@ function App() {
   const showEvalResult = (response: EvalResponse, quiet = false) => {
     setLispCommands(response.commands)
     setLispKeys(response.keys)
-    if (response.error) {
+    if (response.error === 'Quit') {
+      // read-string を C-g でやめた
+      showMessage('Quit')
+    } else if (response.error) {
       showMessage(`Error: ${response.error}`)
     } else if (!quiet) {
       showMessage(response.result)
@@ -686,18 +708,139 @@ function App() {
     return { buffer, message: exists ? '' : '(New file)' }
   }
 
+  // Lisp から動かすエディタを, 今の状態で作り直す
+  useEffect(() => {
+    const handle = () => editor.current as EditorHandle
+    const root = document.documentElement
+    /**
+     * バッファを出して, 出し終わるのを待ちます (出したバッファで, Lisp が続きの操作をするため).
+     *
+     * @param id - バッファ.
+     * @returns 出し終わったら, 終わる Promise.
+     */
+    const showBuffer = (id: string) => {
+      if (id === currentBufferId) return Promise.resolve()
+      setCurrentBufferId(id)
+      return new Promise<void>((resolve) => bufferWaiters.current.push(resolve))
+    }
+    lispHost.current = {
+      text: () => handle().text(),
+      point: () => handle().point(),
+      setPoint: (pos) => handle().setCursor(pos),
+      insert: (text) => handle().insert(text),
+      deleteRegion: (from, to) => handle().deleteRegion(from, to),
+      bufferName: () => currentBuffer.name,
+      message: (text) => setMinibufferState({ mode: 'message', text }),
+      command: (name) => handle().run(name),
+      findFile: async (path) => {
+        const open = buffers.find((b) => b.filePath === path)
+        if (open) return showBuffer(open.id)
+        const { buffer, message } = await visitFile(path)
+        setBuffers((prev) => [...prev, buffer])
+        showMessage(message)
+        return showBuffer(buffer.id)
+      },
+      switchToBuffer: (name) => {
+        const open = buffers.find((b) => b.name === name)
+        if (open) return showBuffer(open.id)
+        const buffer: Buffer = {
+          id: generateBufferId(),
+          name,
+          filePath: null,
+          content: '',
+          modified: false,
+        }
+        setBuffers((prev) => [...prev, buffer])
+        return showBuffer(buffer.id)
+      },
+      bufferFileName: () => currentBuffer.filePath,
+      setModified: (modified) => updateCurrentBuffer({ modified }),
+      localSetKey: (key, command) =>
+        setBuffers((prev) =>
+          prev.map((b) =>
+            b.id === currentBufferId
+              ? { ...b, keys: [{ key, command }, ...(b.keys ?? []).filter((k) => k.key !== key)] }
+              : b,
+          ),
+        ),
+      readString: (prompt, initial) =>
+        new Promise((resolve, reject) => {
+          lispInput.current = { resolve, reject }
+          setPendingAction('read-string')
+          setMinibufferState({ mode: 'input', prompt, input: initial })
+        }),
+      setBackgroundColor: (color) => setBackgroundColor(root, color),
+      setForegroundColor: (color) => setForegroundColor(root, color),
+      setFont: (family, size) => setFont(root, family, size),
+    }
+    // 出すのを待っていたバッファは, 描き直したので, 出している (待つのを終える)
+    for (const resolve of bufferWaiters.current) resolve()
+    bufferWaiters.current = []
+  })
+
   /**
-   * 選んでいるウィンドウのバッファを, 別のバッファに置き換えます (同じバッファを出しているウィンドウも).
+   * バッファを, 別のバッファに置き換えます (出しているウィンドウも).
    *
+   * @param old - 置き換えるバッファ.
    * @param next - 新しいバッファ.
    */
-  const replaceCurrentBuffer = (next: Buffer) => {
-    const old = currentBuffer.id
+  const replaceBuffer = (old: string, next: Buffer) => {
     for (const handle of handles.current.values()) handle.forget(old)
     setBuffers((prev) => prev.map((b) => (b.id === old ? next : b)))
     setWindowBuffers((prev) =>
       Object.fromEntries(Object.entries(prev).map(([w, b]) => [w, b === old ? next.id : b])),
     )
+  }
+
+  /**
+   * 選んでいるウィンドウのバッファを, 別のバッファに置き換えます (同じバッファを出しているウィンドウも).
+   *
+   * @param next - 新しいバッファ.
+   */
+  const replaceCurrentBuffer = (next: Buffer) => replaceBuffer(currentBuffer.id, next)
+
+  /**
+   * ほかのウィンドウに, バッファを出します. ウィンドウが 1 つなら, 下に分けます (Emacs の `display-buffer`).
+   *
+   * @param bufferId - バッファ.
+   * @param select - そのウィンドウを選ぶなら `true`.
+   */
+  const displayInOtherWindow = (bufferId: string, select: boolean) => {
+    const ids = windowIds(layout)
+    let target: string
+    if (ids.length === 1) {
+      target = generateWindowId()
+      setLayout((prev) => splitWindow(prev, activeWindowRef.current, target, 'below'))
+    } else {
+      target = ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length]
+    }
+    setWindowBuffers((prev) => ({ ...prev, [target]: bufferId }))
+    if (select) selectWindow(target)
+  }
+
+  /**
+   * ファイルを開いて (開いていれば, そのバッファを出して), 行の始めへ動きます.
+   *
+   * @param path - ファイルのパス.
+   * @param line - 行の番号 (1 から).
+   * @param other - ほかのウィンドウに出して, 選ぶなら `true`. `false` なら, 選んでいるウィンドウに出す.
+   */
+  const visitLocation = async (path: string, line: number, other: boolean) => {
+    let buffer = buffers.find((b) => b.filePath === path)
+    if (!buffer) {
+      const visited = (await visitFile(path)).buffer
+      setBuffers((prev) => [...prev, visited])
+      buffer = visited
+    }
+    const pos = lineStart(buffer.content, line)
+    if (!other && buffer.id === currentBufferId) {
+      editor.current?.setCursor(pos)
+      return
+    }
+    // バッファを出してから, カーソルを置く
+    pendingPoint.current = pos
+    if (other) displayInOtherWindow(buffer.id, true)
+    else setCurrentBufferId(buffer.id)
   }
 
   /**
@@ -955,6 +1098,141 @@ function App() {
         setCurrentBufferId(buffer.id)
       }
       showMessage('')
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
+   * 探す正規表現を, ミニバッファで聞きます (M-x grep). 続けて, 探すディレクトリを聞きます.
+   */
+  const handleGrep = () => {
+    setPendingAction('grep')
+    setMinibufferState({ mode: 'input', prompt: 'Grep (regexp): ', input: '' })
+  }
+
+  /**
+   * ディレクトリの下のファイルから, 正規表現に合う行を探して, `*grep*` バッファに出します
+   * (ほかのウィンドウに出し, 選んでいるウィンドウは変えない. Emacs と同じ). 探すのは, エディタ (Rust) が行います.
+   *
+   * @param pattern - 正規表現.
+   * @param dir - ディレクトリ.
+   */
+  const runGrep = async (pattern: string, dir: string) => {
+    const directory = dir.endsWith('/') ? dir : dir + '/'
+    try {
+      const matches = await grepDirectory(pattern, directory)
+      const content = grepBufferText(directory, homeDir, pattern, matches, new Date())
+      const buffer: Buffer = {
+        id: generateBufferId(),
+        name: GREP_BUFFER_NAME,
+        filePath: null,
+        content,
+        modified: false,
+        keys: GREP_KEYS,
+        grep: { directory, matches },
+      }
+      const old = buffers.find((b) => b.grep)
+      if (old) replaceBuffer(old.id, buffer)
+      else setBuffers((prev) => [...prev, buffer])
+      nextErrorIndex.current = -1
+      // 選んでいるウィンドウに前の結果を出していれば, そこで置き換える
+      if (old?.id !== currentBufferId) displayInOtherWindow(buffer.id, false)
+      const count = matches.length === 1 ? '1 match' : `${matches.length || 'no'} matches`
+      showMessage(`Grep finished with ${count} found`)
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
+   * `*grep*` バッファの, 合った行のファイルを開きます.
+   *
+   * @param buffer - `*grep*` バッファ.
+   * @param index - 合った行の添え字.
+   */
+  const gotoGrepMatch = async (buffer: Buffer, index: number) => {
+    const { directory, matches } = buffer.grep as NonNullable<Buffer['grep']>
+    const match = matches[index]
+    nextErrorIndex.current = index
+    try {
+      // 結果のバッファから開くときは, ほかのウィンドウに出す
+      await visitLocation(directory + match.file, match.line, currentBufferId === buffer.id)
+      showMessage('')
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
+   * カーソルの行の, 合った行のファイルを開きます (`*grep*` の RET. Emacs の `compile-goto-error`).
+   */
+  const handleCompileGotoError = () => {
+    const handle = editor.current as EditorHandle
+    const line = handle.text().slice(0, handle.point()).split('\n').length
+    const index = currentBuffer.grep ? grepMatchIndex(currentBuffer.grep.matches, line) : null
+    if (index === null) {
+      showMessage('No error here')
+      return
+    }
+    void gotoGrepMatch(currentBuffer, index)
+  }
+
+  /**
+   * `*grep*` の, 次 (前) の合った行のファイルを開きます (M-g n, M-g p. Emacs の `next-error`).
+   *
+   * @param delta - 進む数 (前は -1).
+   */
+  const handleNextError = (delta: number) => {
+    const buffer = buffers.find((b) => b.grep)
+    if (!buffer) {
+      showMessage('No buffers contain error message locations')
+      return
+    }
+    const index = nextErrorIndex.current + delta
+    const { matches } = buffer.grep as NonNullable<Buffer['grep']>
+    if (index < 0) {
+      showMessage('Moved back before first grep hit')
+    } else if (index >= matches.length) {
+      showMessage('Moved past last grep hit')
+    } else {
+      void gotoGrepMatch(buffer, index)
+    }
+  }
+
+  /**
+   * サイドバーのプロジェクトのツリーを, 出すか, 消します (F8). 根は, バッファのディレクトリから上へたどって,
+   * `.git` のある所 (無ければ, バッファのディレクトリ) です.
+   */
+  const handleProjectTree = async () => {
+    if (treeRoot !== null) {
+      setTreeRoot(null)
+      return
+    }
+    try {
+      const root = await projectRoot(defaultDirectory(currentBuffer))
+      setTreeRoot(root.replace(/\/+$/, '') || '/')
+    } catch (err) {
+      showMessage(`Error: ${err}`)
+    }
+  }
+
+  /**
+   * ツリーで選んだファイルを, 選んでいるウィンドウに出します (開いていれば, そのバッファ).
+   *
+   * @param path - ファイルのパス.
+   */
+  const openFromTree = async (path: string) => {
+    const open = buffers.find((b) => b.filePath === path)
+    if (open) {
+      switchToBuffer(open.id)
+      return
+    }
+    try {
+      const { buffer, message } = await visitFile(path)
+      setBuffers((prev) => [...prev, buffer])
+      setCurrentBufferId(buffer.id)
+      showMessage(message)
     } catch (err) {
       showMessage(`Error: ${err}`)
     }
@@ -1480,6 +1758,11 @@ function App() {
     'revert-buffer': handleRevertBuffer,
     'recover-this-file': () => void handleRecoverThisFile(),
     dired: handleDired,
+    grep: handleGrep,
+    'compile-goto-error': handleCompileGotoError,
+    'next-error': () => handleNextError(1),
+    'previous-error': () => handleNextError(-1),
+    'project-tree': () => void handleProjectTree(),
     ...Object.fromEntries(
       lispCommands.map((name) => [name, () => void handleRunLispCommand(name)]),
     ),
@@ -1502,7 +1785,26 @@ function App() {
       }))
     }
 
-    if (action === 'find-file') {
+    if (action === 'grep') {
+      if (value === '') {
+        showMessage('')
+        return
+      }
+      grepPattern.current = value
+      setPendingAction('grep-directory')
+      setMinibufferState({
+        mode: 'input',
+        prompt: 'In directory: ',
+        input: defaultDirectory(currentBuffer),
+        complete: completeFile,
+      })
+    } else if (action === 'grep-directory') {
+      await runGrep(grepPattern.current, value)
+    } else if (action === 'read-string') {
+      showMessage('')
+      lispInput.current?.resolve(value)
+      lispInput.current = null
+    } else if (action === 'find-file') {
       try {
         const { buffer, message } = await visitFile(value)
         setBuffers((prev) => [...prev, buffer])
@@ -1653,65 +1955,94 @@ function App() {
     if (current.mode === 'isearch') {
       editor.current?.setCursor(current.originalCursor)
     }
+    lispInput.current?.reject(new Error('Quit'))
+    lispInput.current = null
     setMinibufferState({ mode: 'message', text: 'Quit' })
   }
 
   // 入力を待っているコマンドの, 入力の履歴の名前
   const historyName = pendingAction ? HISTORY_NAMES[pendingAction] : undefined
 
+  /**
+   * バッファで使うキーの割り当て (バッファだけのキーを, Lisp のキーより先に置く) を返します.
+   *
+   * @param buffer - バッファ.
+   * @returns 割り当て. 前と同じなら, 前と同じ配列.
+   */
+  const keysFor = (buffer: Buffer): KeyBinding[] => {
+    if (!buffer.keys) return lispKeys
+    const cached = mergedKeys.get(buffer.keys)
+    if (cached?.base === lispKeys) return cached.merged
+    const merged = [...buffer.keys, ...lispKeys]
+    mergedKeys.set(buffer.keys, { base: lispKeys, merged })
+    return merged
+  }
+
   return (
     <div className="app">
-      <div className="windows">
-        {windowRects(layout).map((rect) => {
-          const bufferId = windowBuffers[rect.id]
-          const buffer = buffers.find((b) => b.id === bufferId) as Buffer
-          const active = rect.id === activeWindow
-          const mode =
-            buffer.directory === undefined
-              ? majorMode(buffer.name, buffer.filePath, buffer.content)
-              : DIRED_MODE
-          return (
-            <div
-              key={rect.id}
-              className={`window${rect.left + rect.width < 100 ? ' window-left-of' : ''}`}
-              style={{
-                left: `${rect.left}%`,
-                top: `${rect.top}%`,
-                width: `${rect.width}%`,
-                height: `${rect.height}%`,
-              }}
-              onFocus={() => selectWindow(rect.id)}
-            >
-              <CodeEditor
-                bufferId={bufferId}
-                initialContent={buffer.content}
-                onChange={(value) => handleEditorChange(rect.id, value)}
-                onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
-                actions={actions}
-                keyBindings={lispKeys}
-                onMessage={showMessage}
-                disabled={minibufferState.mode !== 'message' || showBufferList}
-                active={active}
-                language={mode.language}
-                indentTabs={mode.indentTabs}
-                tabWidth={mode.tabWidth}
-                handle={(handle) => {
-                  if (handle) handles.current.set(rect.id, handle)
-                  else handles.current.delete(rect.id)
+      <div className="main">
+        {treeRoot !== null && (
+          <ProjectTree
+            root={treeRoot}
+            currentFile={currentBuffer.filePath}
+            listDirectory={listDirectory}
+            onOpenFile={(path) => void openFromTree(path)}
+          />
+        )}
+        <div className="windows">
+          {windowRects(layout).map((rect) => {
+            const bufferId = windowBuffers[rect.id]
+            const buffer = buffers.find((b) => b.id === bufferId) as Buffer
+            const active = rect.id === activeWindow
+            const mode =
+              buffer.directory !== undefined
+                ? DIRED_MODE
+                : buffer.grep
+                  ? GREP_MODE
+                  : majorMode(buffer.name, buffer.filePath, buffer.content)
+            return (
+              <div
+                key={rect.id}
+                className={`window${rect.left + rect.width < 100 ? ' window-left-of' : ''}`}
+                style={{
+                  left: `${rect.left}%`,
+                  top: `${rect.top}%`,
+                  width: `${rect.width}%`,
+                  height: `${rect.height}%`,
                 }}
-              />
-              <ModeLine
-                bufferName={buffer.name}
-                modified={buffer.modified}
-                cursor={cursors[rect.id] ?? START_CURSOR}
-                mode={mode.name}
-                bufferCount={buffers.length}
-                currentBufferIndex={buffers.findIndex((b) => b.id === bufferId) + 1}
-                active={active}
-              />
-            </div>
-          )
-        })}
+                onFocus={() => selectWindow(rect.id)}
+              >
+                <CodeEditor
+                  bufferId={bufferId}
+                  initialContent={buffer.content}
+                  onChange={(value) => handleEditorChange(rect.id, value)}
+                  onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
+                  actions={actions}
+                  keyBindings={keysFor(buffer)}
+                  onMessage={showMessage}
+                  disabled={minibufferState.mode !== 'message' || showBufferList}
+                  active={active}
+                  language={mode.language}
+                  indentTabs={mode.indentTabs}
+                  tabWidth={mode.tabWidth}
+                  handle={(handle) => {
+                    if (handle) handles.current.set(rect.id, handle)
+                    else handles.current.delete(rect.id)
+                  }}
+                />
+                <ModeLine
+                  bufferName={buffer.name}
+                  modified={buffer.modified}
+                  cursor={cursors[rect.id] ?? START_CURSOR}
+                  mode={mode.name}
+                  bufferCount={buffers.length}
+                  currentBufferIndex={buffers.findIndex((b) => b.id === bufferId) + 1}
+                  active={active}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
       <Minibuffer
         state={

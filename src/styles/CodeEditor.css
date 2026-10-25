@@ -2,14 +2,14 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--background);
 }
 
 /* エディタ (CodeMirror) */
 .code-editor-container .cm-editor {
   height: 100%;
-  color: #000000;
-  font-size: 14px;
+  color: var(--foreground);
+  font-size: var(--font-size);
 }
 
 .code-editor-container .cm-editor.cm-focused {
@@ -17,7 +17,7 @@
 }
 
 .code-editor-container .cm-scroller {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-family);
   line-height: 1.5;
 }
 
@@ -35,17 +35,17 @@
 }
 
 .code-editor-container .cm-cursor {
-  border-left: 2px solid #000000;
+  border-left: 2px solid var(--foreground);
 }
 
 /* 制御文字の `^A` (Emacs の escape-glyph の face) */
 .code-editor-container .cm-control-char {
-  color: brown;
+  color: var(--escape-glyph);
 }
 
 /* 括弧の強調 (Emacs の show-paren-match と show-paren-mismatch の face) */
 .code-editor-container .cm-show-paren-match {
-  background: turquoise;
+  background: var(--show-paren-match);
 }
 
 .code-editor-container .cm-show-paren-mismatch {

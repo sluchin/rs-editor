@@ -9,6 +9,8 @@ import {
   deleteFile,
   fileNewerThan,
   listDirectoryLong,
+  grepDirectory,
+  projectRoot,
 } from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
@@ -161,5 +163,20 @@ describe('fileOps', () => {
     vi.mocked(tauri.invoke).mockResolvedValueOnce('total 0\n')
     expect(await listDirectoryLong('/d')).toBe('total 0\n')
     expect(tauri.invoke).toHaveBeenLastCalledWith('list_directory_long', { path: '/d' })
+  })
+
+  describe('grepDirectory, projectRoot', () => {
+    it('ディレクトリの中を探し, プロジェクトの根を聞く', async () => {
+      const matches = [{ file: 'a.txt', line: 1, text: 'foo' }]
+      vi.mocked(tauri.invoke).mockResolvedValueOnce(matches)
+      expect(await grepDirectory('foo', '/p')).toEqual(matches)
+      expect(tauri.invoke).toHaveBeenCalledWith('grep_directory', {
+        pattern: 'foo',
+        directory: '/p',
+      })
+      vi.mocked(tauri.invoke).mockResolvedValueOnce('/p')
+      expect(await projectRoot('/p/src')).toBe('/p')
+      expect(tauri.invoke).toHaveBeenCalledWith('project_root', { directory: '/p/src' })
+    })
   })
 })

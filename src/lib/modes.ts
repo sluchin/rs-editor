@@ -86,6 +86,14 @@ export const DIRED_MODE: MajorMode = {
   tabWidth: 8,
 }
 
+/** `M-x grep` の結果のバッファのモード. */
+export const GREP_MODE: MajorMode = {
+  name: 'Grep',
+  language: null,
+  indentTabs: true,
+  tabWidth: 8,
+}
+
 /**
  * バッファのメジャーモードを返します.
  *

@@ -4,6 +4,7 @@
 
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::keys;
+use crate::scheme::system;
 use crate::scheme::value::Value;
 
 /// 組み込みの手続きの名前.
@@ -39,6 +40,11 @@ pub const NAMES: &[&str] = &[
     // リスト
     "car",
     "cdr",
+    "caar",
+    "cadr",
+    "cdar",
+    "cddr",
+    "caddr",
     "cons",
     "list",
     "length",
@@ -54,6 +60,7 @@ pub const NAMES: &[&str] = &[
     "apply",
     "assoc",
     "member",
+    "sort",
     // 文字列
     "string-length",
     "string-append",
@@ -67,6 +74,12 @@ pub const NAMES: &[&str] = &[
     "symbol->string",
     "string->symbol",
     "format",
+    "string-search",
+    "string-prefix?",
+    "string-suffix?",
+    "string-trim",
+    "string-join",
+    "split-string",
     // エディタ
     "point",
     "point-min",
@@ -81,6 +94,16 @@ pub const NAMES: &[&str] = &[
     "call-interactively",
     "command-execute",
     "global-set-key",
+    "local-set-key",
+    "find-file",
+    "switch-to-buffer",
+    "buffer-file-name",
+    "set-buffer-modified-p",
+    "read-string",
+    "set-background-color",
+    "set-foreground-color",
+    "set-frame-font",
+    "set-face-attribute",
 ];
 
 /// 組み込みの手続きを呼びます.
@@ -190,6 +213,17 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 _ => Err(format!("{} expects a non-empty list", name)),
             }
         }
+        "caar" | "cadr" | "cdar" | "cddr" | "caddr" => {
+            let [v] = fixed::<1>(name, args)?;
+            // 名前の a と d を, 後ろから順に, car と cdr にする
+            name[1..name.len() - 1]
+                .chars()
+                .rev()
+                .try_fold(v, |v, c| {
+                    call(machine, if c == 'a' { "car" } else { "cdr" }, vec![v])
+                })
+                .map_err(|_| format!("{} expects a list with enough elements", name))
+        }
         "cons" => {
             let [head, tail] = fixed::<2>(name, args)?;
             match tail {
@@ -285,6 +319,11 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }
             Ok(Value::Boolean(false))
         }
+        "sort" => {
+            let [v, procedure] = fixed::<2>(name, args)?;
+            let items = list(name, &v)?.clone();
+            Ok(Value::List(merge_sort(machine, &procedure, items)?))
+        }
         "member" => {
             let [key, v] = fixed::<2>(name, args)?;
             let items = list(name, &v)?;
@@ -357,6 +396,71 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             Ok(Value::Symbol(string(name, &s)?.to_string()))
         }
         "format" => Ok(Value::String(format(&args)?)),
+        "string-search" => {
+            if !(2..=3).contains(&args.len()) {
+                return Err("string-search expects 2 or 3 arguments".to_string());
+            }
+            let needle = string(name, &args[0])?;
+            let haystack = string(name, &args[1])?;
+            let start = match args.get(2) {
+                Some(start) => index(name, start)?,
+                None => 0,
+            };
+            let chars: Vec<char> = haystack.chars().collect();
+            if start > chars.len() {
+                return Err("string-search: index out of range".to_string());
+            }
+            let rest: String = chars[start..].iter().collect();
+            Ok(match rest.find(needle) {
+                Some(found) => Value::Number((start + rest[..found].chars().count()) as f64),
+                None => Value::Boolean(false),
+            })
+        }
+        "string-prefix?" | "string-suffix?" => {
+            let [affix, text] = fixed::<2>(name, args)?;
+            let (affix, text) = (string(name, &affix)?, string(name, &text)?);
+            Ok(Value::Boolean(if name == "string-prefix?" {
+                text.starts_with(affix)
+            } else {
+                text.ends_with(affix)
+            }))
+        }
+        "string-trim" => {
+            let [text] = fixed::<1>(name, args)?;
+            Ok(Value::String(string(name, &text)?.trim().to_string()))
+        }
+        "string-join" => {
+            let (items, separator) = match args.as_slice() {
+                [items] => (items, ""),
+                [items, separator] => (items, string(name, separator)?),
+                _ => return Err("string-join expects 1 or 2 arguments".to_string()),
+            };
+            let items = list(name, items)?
+                .iter()
+                .map(|item| string(name, item))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(Value::String(items.join(separator)))
+        }
+        "split-string" => {
+            let pieces: Vec<String> = match args.as_slice() {
+                [text] => string(name, text)?
+                    .split_whitespace()
+                    .map(str::to_string)
+                    .collect(),
+                [text, separator] => {
+                    let separator = string(name, separator)?;
+                    if separator.is_empty() {
+                        return Err("split-string expects a non-empty separator".to_string());
+                    }
+                    string(name, text)?
+                        .split(separator)
+                        .map(str::to_string)
+                        .collect()
+                }
+                _ => return Err("split-string expects 1 or 2 arguments".to_string()),
+            };
+            Ok(Value::List(pieces.into_iter().map(Value::String).collect()))
+        }
         "point" | "point-min" | "point-max" | "buffer-string" | "buffer-name" => {
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
@@ -399,8 +503,198 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }
             _ => Err("global-set-key expects a key and a command name".to_string()),
         },
-        _ => Err(format!("Unknown procedure: {}", name)),
+        "local-set-key" => match fixed::<2>(name, args)? {
+            [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
+                let key = keys::to_codemirror(&key)?;
+                machine.host.call(
+                    name,
+                    vec![Value::String(key), Value::String(command.clone())],
+                )?;
+                Ok(Value::Symbol(command))
+            }
+            _ => Err("local-set-key expects a key and a command name".to_string()),
+        },
+        "find-file" => {
+            let [path] = fixed::<1>(name, args)?;
+            let path = machine.expand_file_name(string(name, &path)?);
+            machine.host.call(name, vec![Value::String(path)])?;
+            Ok(Value::Nil)
+        }
+        "switch-to-buffer" | "set-background-color" | "set-foreground-color" => {
+            let [text] = fixed::<1>(name, args)?;
+            string(name, &text)?;
+            machine.host.call(name, vec![text])?;
+            Ok(Value::Nil)
+        }
+        "buffer-file-name" => {
+            fixed::<0>(name, args)?;
+            Ok(match machine.host.call(name, vec![])? {
+                Value::String(path) => Value::String(path),
+                _ => Value::Boolean(false),
+            })
+        }
+        "set-buffer-modified-p" => {
+            let [flag] = fixed::<1>(name, args)?;
+            machine
+                .host
+                .call(name, vec![Value::Boolean(flag.is_true())])?;
+            Ok(flag)
+        }
+        "read-string" => {
+            let (prompt, initial) = match args.as_slice() {
+                [prompt] => (prompt, ""),
+                [prompt, initial] => (prompt, string(name, initial)?),
+                _ => return Err("read-string expects 1 or 2 arguments".to_string()),
+            };
+            let prompt = string(name, prompt)?;
+            match machine.host.call(
+                name,
+                vec![
+                    Value::String(prompt.to_string()),
+                    Value::String(initial.to_string()),
+                ],
+            )? {
+                Value::String(input) => Ok(Value::String(input)),
+                other => Err(format!("read-string: unexpected input {}", other)),
+            }
+        }
+        "set-frame-font" => {
+            let [font] = fixed::<1>(name, args)?;
+            let (family, size) = parse_font(string(name, &font)?);
+            set_font(machine, family, size)
+        }
+        "set-face-attribute" => set_face_attribute(machine, args),
+        _ => system::call(machine, name, args)
+            .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name))),
     }
+}
+
+/// リストを, 安定に並べ替えます (マージソート).
+///
+/// # Arguments
+///
+/// * `machine` - 評価 (比べる手続きを呼ぶ).
+/// * `less` - 比べる手続き (1 つ目が前なら, 真を返す).
+/// * `items` - リストの要素.
+///
+/// # Returns
+///
+/// 並べ替えた要素, または, 比べる手続きの失敗の内容.
+fn merge_sort(
+    machine: &mut Machine,
+    less: &Value,
+    mut items: Vec<Value>,
+) -> Result<Vec<Value>, String> {
+    if items.len() <= 1 {
+        return Ok(items);
+    }
+    let right = items.split_off(items.len() / 2);
+    let mut left = merge_sort(machine, less, items)?.into_iter().peekable();
+    let mut right = merge_sort(machine, less, right)?.into_iter().peekable();
+    let mut merged = Vec::new();
+    while let (Some(a), Some(b)) = (left.peek(), right.peek()) {
+        // 右が左より前のときだけ, 右を先にする (同じなら, 元の順)
+        if machine
+            .apply(less.clone(), vec![b.clone(), a.clone()])?
+            .is_true()
+        {
+            merged.extend(right.next());
+        } else {
+            merged.extend(left.next());
+        }
+    }
+    merged.extend(left);
+    merged.extend(right);
+    Ok(merged)
+}
+
+/// Emacs のフォントの名前 (`DejaVu Sans Mono-14`) を, ファミリーと大きさ (ポイント) に分けます.
+///
+/// # Arguments
+///
+/// * `font` - フォントの名前 (最後の `-` の後が数なら, 大きさ).
+///
+/// # Returns
+///
+/// ファミリーと大きさ (大きさが無ければ `None`).
+pub fn parse_font(font: &str) -> (String, Option<f64>) {
+    if let Some((family, size)) = font.rsplit_once('-') {
+        if let Ok(size) = size.trim().parse::<f64>() {
+            return (family.trim().to_string(), Some(size));
+        }
+    }
+    (font.trim().to_string(), None)
+}
+
+/// エディタのフォントを変えます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価 (エディタに頼む).
+/// * `family` - ファミリー (空なら, 変えない).
+/// * `size` - 大きさ (ポイント. `None` なら, 変えない).
+///
+/// # Returns
+///
+/// `nil`, または失敗の内容.
+fn set_font(machine: &mut Machine, family: String, size: Option<f64>) -> Result<Value, String> {
+    let family = if family.is_empty() {
+        Value::Nil
+    } else {
+        Value::String(family)
+    };
+    let size = size.map_or(Value::Nil, Value::Number);
+    machine.host.call("set-font", vec![family, size])?;
+    Ok(Value::Nil)
+}
+
+/// `(set-face-attribute 'default #f :family "Monospace" :height 140)` を行います.
+/// 変えられるのは, `default` の face の, `:family`, `:height` (1/10 ポイント), `:foreground`, `:background` です.
+///
+/// # Arguments
+///
+/// * `machine` - 評価 (エディタに頼む).
+/// * `args` - face, フレーム (使わない), 属性と値の組.
+///
+/// # Returns
+///
+/// `nil`, または失敗の内容.
+fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, String> {
+    let name = "set-face-attribute";
+    let [face, _frame, attributes @ ..] = args.as_slice() else {
+        return Err("set-face-attribute expects a face, a frame and attributes".to_string());
+    };
+    if *face != Value::Symbol("default".to_string()) {
+        return Err(format!("set-face-attribute: unsupported face {}", face));
+    }
+    if attributes.len() % 2 != 0 {
+        return Err("set-face-attribute expects pairs of an attribute and a value".to_string());
+    }
+    let (mut family, mut size) = (String::new(), None);
+    for pair in attributes.chunks(2) {
+        match (&pair[0], &pair[1]) {
+            (Value::Symbol(key), value) if key == ":family" => {
+                family = string(name, value)?.to_string()
+            }
+            (Value::Symbol(key), value) if key == ":height" => {
+                size = Some(number(name, value)? / 10.0)
+            }
+            (Value::Symbol(key), value) if key == ":foreground" || key == ":background" => {
+                string(name, value)?;
+                let op = if key == ":foreground" {
+                    "set-foreground-color"
+                } else {
+                    "set-background-color"
+                };
+                machine.host.call(op, vec![value.clone()])?;
+            }
+            (key, _) => return Err(format!("set-face-attribute: unsupported attribute {}", key)),
+        }
+    }
+    if family.is_empty() && size.is_none() {
+        return Ok(Value::Nil);
+    }
+    set_font(machine, family, size)
 }
 
 /// 引数の数を確かめて, 配列にします.
@@ -413,7 +707,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
 /// # Returns
 ///
 /// `N` 個の引数の配列. 数が違う場合は [`Err`].
-fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], String> {
+pub(crate) fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], String> {
     let count = args.len();
     args.try_into().map_err(|_| arity_error(name, N, count))
 }
@@ -447,7 +741,7 @@ fn arity_error(name: &str, expected: usize, given: usize) -> String {
 /// # Returns
 ///
 /// 数. 数でない場合は [`Err`].
-fn number(name: &str, v: &Value) -> Result<f64, String> {
+pub(crate) fn number(name: &str, v: &Value) -> Result<f64, String> {
     match v {
         Value::Number(n) => Ok(*n),
         _ => Err(format!("{} expects numbers", name)),
@@ -478,7 +772,7 @@ fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, String> {
 /// # Returns
 ///
 /// 添え字. 0 以上の整数でない場合は [`Err`].
-fn index(name: &str, v: &Value) -> Result<usize, String> {
+pub(crate) fn index(name: &str, v: &Value) -> Result<usize, String> {
     match v {
         Value::Number(n) if *n >= 0.0 && n.fract() == 0.0 => Ok(*n as usize),
         _ => Err(format!("{} expects a non-negative integer index", name)),
@@ -495,7 +789,7 @@ fn index(name: &str, v: &Value) -> Result<usize, String> {
 /// # Returns
 ///
 /// 文字列. 文字列でない場合は [`Err`].
-fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
+pub(crate) fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
     match v {
         Value::String(s) => Ok(s),
         _ => Err(format!("{} expects strings", name)),

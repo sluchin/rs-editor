@@ -23,6 +23,8 @@ vi.mock('@/lib/fileOps', () => ({
   deleteFile: vi.fn(),
   fileNewerThan: vi.fn(),
   listDirectoryLong: vi.fn(),
+  grepDirectory: vi.fn(),
+  projectRoot: vi.fn(),
 }))
 
 // ブックマークのファイルの読み書きだけを, 偽物にする
@@ -1571,6 +1573,398 @@ describe('App', () => {
       expect(editor.input().value).toBe('/tmp/a.txt')
       await press(editor, 'p', { alt: true })
       expect(editor.text()).toContain('[Beginning of history; no preceding item]')
+    })
+  })
+
+  describe('Lisp からの, バッファ, 入力, キー, 色とフォント', () => {
+    afterEach(() => {
+      document.documentElement.removeAttribute('style')
+      delete document.documentElement.dataset.backgroundMode
+    })
+
+    /**
+     * 評価器の頼みを送る関数と, 最後の返事を返す関数を作ります.
+     *
+     * @returns 送る関数と, 返事を返す関数.
+     */
+    const requests = () => {
+      const handler = mockedListen.mock.calls[0][1]
+      let id = 100
+      /** 頼みを送って, 返事を待つ. */
+      const send = async (op: string, ...args: unknown[]) => {
+        const sent = ++id
+        await act(async () => {
+          handler({ event: 'editor-request', id: 0, payload: { id: sent, op, args } })
+        })
+        await vi.waitFor(() =>
+          expect(
+            mockedInvoke.mock.calls.some(
+              ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
+            ),
+          ).toBe(true),
+        )
+        const [, reply] = mockedInvoke.mock.calls.find(
+          ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
+        ) as [string, { value: unknown; error: string | null }]
+        return reply
+      }
+      return { send }
+    }
+
+    it('バッファを出してから, 続きの操作をする', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      expect(await send('switch-to-buffer', '*howm*')).toMatchObject({ value: null, error: null })
+      expect(editor.text()).toContain('*howm*')
+      await send('insert', 'menu')
+      expect(editor.doc()).toBe('menu')
+      expect(editor.text()).toContain('**')
+      await send('set-buffer-modified-p', false)
+      expect(editor.text()).not.toContain('**')
+      // 前からあるバッファと, 出しているバッファ
+      await send('switch-to-buffer', '*scratch*')
+      expect(editor.doc()).toContain('This buffer is for text')
+      expect(await send('switch-to-buffer', '*scratch*')).toMatchObject({ error: null })
+      await send('switch-to-buffer', '*howm*')
+      expect(editor.doc()).toBe('menu')
+      expect(await send('buffer-file-name')).toMatchObject({ value: null })
+    })
+
+    it('ファイルを開く (開いていれば, そのバッファを出す)', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockResolvedValue('note')
+      await send('find-file', '/home/u/howm/a.txt')
+      expect(editor.doc()).toBe('note')
+      expect(await send('buffer-file-name')).toMatchObject({ value: '/home/u/howm/a.txt' })
+      await send('switch-to-buffer', '*scratch*')
+      await send('find-file', '/home/u/howm/a.txt')
+      expect(editor.doc()).toBe('note')
+      expect(mocked.readFile).toHaveBeenCalledTimes(1)
+      // 無いファイル
+      mocked.pathExists.mockResolvedValue(false)
+      await send('find-file', '/home/u/howm/new.txt')
+      expect(editor.doc()).toBe('')
+      expect(editor.text()).toContain('(New file)')
+      // 読めない
+      mocked.pathExists.mockRejectedValueOnce(new Error('denied'))
+      expect(await send('find-file', '/x')).toMatchObject({ error: 'denied' })
+    })
+
+    it('バッファだけのキーを, Lisp のキーより先に使う', async () => {
+      const defined = { commands: ['hello'], keys: [{ key: 'Ctrl-c h', command: 'hello' }] }
+      mockedInvoke.mockResolvedValueOnce(response('', null, defined))
+      const editor = await setup()
+      const { send } = requests()
+      await send('switch-to-buffer', '*howm*')
+      await send('local-set-key', 'c', 'hello')
+      await send('local-set-key', 'Ctrl-c h', 'other')
+      await send('local-set-key', 'c', 'hello')
+      mockedInvoke.mockResolvedValueOnce(response('', null, defined))
+      await act(async () => {
+        editor.key('c')
+      })
+      expect(mockedInvoke).toHaveBeenCalledWith('run_lisp_command', { name: 'hello' })
+      expect(editor.doc()).toBe('')
+      // Lisp のキーが変わっても, バッファだけのキーを先に使う
+      const more = { commands: ['hello', 'bye'], keys: [{ key: 'c', command: 'bye' }] }
+      mockedInvoke.mockResolvedValueOnce(response('', null, more))
+      editor.key(':', { alt: true })
+      await editor.submit('(global-set-key "c" (quote bye))')
+      mockedInvoke.mockClear()
+      mockedInvoke.mockResolvedValue(response('', null, more))
+      await act(async () => {
+        editor.key('c')
+      })
+      expect(mockedInvoke).toHaveBeenCalledWith('run_lisp_command', { name: 'hello' })
+      // ほかのバッファでは, 使わない
+      await send('switch-to-buffer', '*scratch*')
+      mockedInvoke.mockClear()
+      await act(async () => {
+        editor.key('c')
+      })
+      expect(mockedInvoke).toHaveBeenCalledWith('run_lisp_command', { name: 'bye' })
+    })
+
+    it('ミニバッファで入力してもらう (C-g でやめたら, Quit)', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      const handler = mockedListen.mock.calls[0][1]
+      await act(async () => {
+        handler({
+          event: 'editor-request',
+          id: 0,
+          payload: { id: 1, op: 'read-string', args: ['Search: ', 'ab'] },
+        })
+      })
+      expect(editor.text()).toContain('Search: ')
+      expect(editor.input().value).toBe('ab')
+      await editor.submit('abc')
+      await vi.waitFor(() =>
+        expect(mockedInvoke).toHaveBeenCalledWith('editor_reply', {
+          id: 1,
+          value: 'abc',
+          error: null,
+        }),
+      )
+      await act(async () => {
+        handler({
+          event: 'editor-request',
+          id: 0,
+          payload: { id: 2, op: 'read-string', args: ['Search: ', ''] },
+        })
+      })
+      await act(async () => {
+        fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
+      })
+      await vi.waitFor(() =>
+        expect(mockedInvoke).toHaveBeenCalledWith('editor_reply', {
+          id: 2,
+          value: null,
+          error: 'Quit',
+        }),
+      )
+      // 評価が Quit で終わったら, Quit とだけ出す
+      mockedInvoke.mockResolvedValueOnce(response('', 'Quit'))
+      editor.key(':', { alt: true })
+      await editor.submit('(read-string "a")')
+      expect(editor.text()).toContain('Quit')
+      expect(editor.text()).not.toContain('Error: Quit')
+      expect(await send('point')).toMatchObject({ error: null })
+    })
+
+    it('背景, 文字の色と, フォントを変える', async () => {
+      await setup()
+      const { send } = requests()
+      const root = document.documentElement
+      await send('set-background-color', 'black')
+      expect(root.style.getPropertyValue('--background')).toBe('black')
+      expect(root.dataset.backgroundMode).toBe('dark')
+      await send('set-foreground-color', 'white')
+      expect(root.style.getPropertyValue('--foreground')).toBe('white')
+      await send('set-font', 'DejaVu Sans Mono', 12)
+      expect(root.style.getPropertyValue('--font-size')).toBe('12pt')
+      expect(await send('set-foreground-color', 'nocolor')).toMatchObject({
+        error: 'Undefined color: nocolor',
+      })
+    })
+  })
+
+  describe('M-x grep と, プロジェクトのツリー', () => {
+    /** 2 つ目のウィンドウのエディタ. */
+    const secondEditor = (editor: Awaited<ReturnType<typeof setup>>) =>
+      EditorView.findFromDOM(
+        editor.container.querySelectorAll('.cm-editor')[1] as HTMLElement,
+      ) as EditorView
+
+    /** M-x でコマンドを実行する. */
+    const mx = async (editor: Awaited<ReturnType<typeof setup>>, command: string) => {
+      editor.key('x', { alt: true })
+      await editor.submit(command)
+    }
+
+    /** M-x grep で探す. */
+    const grep = async (
+      editor: Awaited<ReturnType<typeof setup>>,
+      pattern: string,
+      dir: string,
+    ) => {
+      await mx(editor, 'grep')
+      expect(editor.text()).toContain('Grep (regexp): ')
+      await editor.submit(pattern)
+      expect(editor.text()).toContain('In directory: ')
+      await editor.submit(dir)
+    }
+
+    const matches = [
+      { file: 'a.txt', line: 3, text: 'foo 1' },
+      { file: 'a.txt', line: 5, text: 'foo 2' },
+      { file: 'src/b.ts', line: 1, text: 'foo 3' },
+    ]
+
+    it('探して, 結果をほかのウィンドウに出し, M-g n と M-g p で, 合った行へ動く', async () => {
+      const editor = await setup()
+      mocked.grepDirectory.mockResolvedValue(matches)
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockImplementation(async (path) =>
+        path.endsWith('a.txt') ? 'l1\nl2\nl3\nl4\nl5\n' : 'b1\n',
+      )
+      await grep(editor, 'foo', '/home/u/p')
+      expect(mocked.grepDirectory).toHaveBeenCalledWith('foo', '/home/u/p/')
+      expect(editor.container.querySelectorAll('.cm-editor')).toHaveLength(2)
+      expect(secondEditor(editor).state.doc.toString()).toContain('a.txt:3:foo 1\na.txt:5:foo 2')
+      expect(editor.text()).toContain('Grep finished with 3 matches found')
+      expect(editor.text()).toContain('(Grep)')
+      // 選んでいるウィンドウは, そのまま
+      expect(editor.doc()).toContain('This buffer is for text')
+
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('n'))
+      expect(editor.doc()).toBe('l1\nl2\nl3\nl4\nl5\n')
+      expect(editor.cursor()).toBe(6)
+      // 同じファイルの, 次の行
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('n', { alt: true }))
+      expect(editor.cursor()).toBe(12)
+      await act(async () => {
+        editor.key('x', { ctrl: true })
+        editor.key('`')
+      })
+      expect(editor.doc()).toBe('b1\n')
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('n'))
+      expect(editor.text()).toContain('Moved past last grep hit')
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('p'))
+      expect(editor.cursor()).toBe(12)
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('p', { alt: true }))
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('p'))
+      expect(editor.text()).toContain('Moved back before first grep hit')
+    })
+
+    it('結果のバッファの RET で, ほかのウィンドウに開く', async () => {
+      const editor = await setup()
+      mocked.grepDirectory.mockResolvedValue([matches[0]])
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockResolvedValue('l1\nl2\nl3\n')
+      await grep(editor, 'foo', '/home/u/p/')
+      expect(editor.text()).toContain('Grep finished with 1 match found')
+      editor.ctrlX('o', false)
+      const second = secondEditor(editor)
+      // 始めの行 (合った行でない)
+      await act(async () => {
+        fireEvent.keyDown(second.contentDOM, { key: 'Enter' })
+      })
+      expect(editor.text()).toContain('No error here')
+      act(() => second.dispatch({ selection: { anchor: second.state.doc.line(5).from } }))
+      await act(async () => {
+        fireEvent.keyDown(second.contentDOM, { key: 'Enter' })
+      })
+      // 1 つ目のウィンドウに開いて, 選ぶ
+      expect(editor.doc()).toBe('l1\nl2\nl3\n')
+      expect(editor.cursor()).toBe(6)
+      expect(mocked.readFile).toHaveBeenCalledWith('/home/u/p/a.txt')
+
+      // 結果を出しているウィンドウで探し直すと, そこで置き換える
+      editor.ctrlX('o', false)
+      mocked.grepDirectory.mockResolvedValue([])
+      await act(async () => {
+        fireEvent.keyDown(second.contentDOM, { key: 'x', altKey: true })
+      })
+      await editor.submit('grep')
+      await editor.submit('zzz')
+      await editor.submit('/home/u/p/')
+      expect(editor.container.querySelectorAll('.cm-editor')).toHaveLength(2)
+      expect(editor.text()).toContain('Grep finished with no matches found')
+      expect(secondEditor(editor).state.doc.toString()).toContain('with no matches found')
+    })
+
+    it('空の正規表現, 探せないとき, 開けないとき, 結果が無いとき', async () => {
+      const editor = await setup()
+      await mx(editor, 'grep')
+      await editor.submit('')
+      expect(mocked.grepDirectory).not.toHaveBeenCalled()
+
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('n'))
+      expect(editor.text()).toContain('No buffers contain error message locations')
+      await mx(editor, 'compile-goto-error')
+      expect(editor.text()).toContain('No error here')
+
+      mocked.grepDirectory.mockRejectedValueOnce('Invalid regexp: (')
+      await grep(editor, '(', '/home/u/')
+      expect(editor.text()).toContain('Error: Invalid regexp: (')
+
+      mocked.grepDirectory.mockResolvedValue([matches[0]])
+      await grep(editor, 'foo', '/home/u/')
+      mocked.pathExists.mockRejectedValueOnce(new Error('denied'))
+      editor.key('g', { alt: true })
+      await act(async () => editor.key('n'))
+      expect(editor.text()).toContain('Error: Error: denied')
+    })
+
+    it('F8 で, プロジェクトのツリーを出し, ファイルを開く', async () => {
+      const editor = await setup()
+      mocked.projectRoot.mockResolvedValue('/home/u/p')
+      mocked.listDirectory.mockImplementation(async (path) => {
+        if (path === '/home/u/p/') return ['.git/', 'a.txt', 'src/']
+        if (path === '/home/u/p/src/') return ['b.ts']
+        throw new Error('denied')
+      })
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockResolvedValue('A')
+      await act(async () => editor.key('F8'))
+      expect(mocked.projectRoot).toHaveBeenCalledWith('/home/u/')
+      const tree = () => editor.container.querySelector('.project-tree') as HTMLElement
+      expect(tree().textContent).toContain('P')
+      expect(tree().textContent).toContain('a.txt')
+      expect(tree().textContent).not.toContain('.git')
+      const item = (name: string) =>
+        Array.from(tree().querySelectorAll('.project-tree-item')).find((e) =>
+          e.textContent?.endsWith(name),
+        ) as HTMLElement
+
+      // ディレクトリを開く, 閉じる
+      await act(async () => fireEvent.click(item('src')))
+      expect(tree().textContent).toContain('b.ts')
+      await act(async () => fireEvent.click(item('src')))
+      expect(tree().textContent).not.toContain('b.ts')
+
+      // ファイルを開く (開いていれば, そのバッファ)
+      await act(async () => fireEvent.click(item('a.txt')))
+      expect(editor.doc()).toBe('A')
+      expect(item('a.txt').className).toContain('project-tree-current')
+      editor.ctrlX('b', false)
+      await editor.submit('*scratch*')
+      await act(async () => fireEvent.click(item('a.txt')))
+      expect(editor.doc()).toBe('A')
+      expect(mocked.readFile).toHaveBeenCalledTimes(1)
+
+      // 開けない
+      mocked.pathExists.mockRejectedValueOnce(new Error('gone'))
+      await act(async () => {
+        fireEvent.click(item('src'))
+      })
+      await act(async () => fireEvent.click(item('b.ts')))
+      expect(editor.text()).toContain('Error: Error: gone')
+
+      // 読み直す (読めないディレクトリは, 理由を出す)
+      mocked.listDirectory.mockImplementation(async (path) => {
+        if (path === '/home/u/p/') return ['a.txt', 'src/']
+        throw new Error('denied')
+      })
+      await act(async () =>
+        fireEvent.click(tree().querySelector('.project-tree-refresh') as HTMLElement),
+      )
+      expect(tree().textContent).toContain('Error: denied')
+      // 押してもフォーカスを取らない
+      expect(fireEvent.mouseDown(tree())).toBe(false)
+
+      // 消す
+      await act(async () => editor.key('F8'))
+      expect(editor.container.querySelector('.project-tree')).toBeNull()
+    })
+
+    it('根が / のときと, 根が分からないとき', async () => {
+      const editor = await setup()
+      mocked.projectRoot.mockResolvedValueOnce('/')
+      mocked.listDirectory.mockResolvedValue(['etc/'])
+      await act(async () => editor.key('F8'))
+      expect(mocked.listDirectory).toHaveBeenCalledWith('/')
+      const tree = editor.container.querySelector('.project-tree') as HTMLElement
+      expect(tree.querySelector('.project-tree-title')?.textContent).toBe('/')
+      await act(async () =>
+        fireEvent.click(tree.querySelector('.project-tree-item') as HTMLElement),
+      )
+      expect(mocked.listDirectory).toHaveBeenCalledWith('/etc/')
+      await act(async () => editor.key('F8'))
+
+      mocked.projectRoot.mockRejectedValueOnce('no backend')
+      await act(async () => editor.key('F8'))
+      expect(editor.text()).toContain('Error: no backend')
     })
   })
 })
