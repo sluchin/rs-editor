@@ -264,7 +264,7 @@ Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring 
       docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は, Emacs と同じく置き換える。
       引数の形は, Emacs の書き方 (`&optional`) にする (今は, 残りの引数で受けて `&rest ARGS`)。
 - [x] `lisp/howm.scm` の `;;` の説明を, docstring (英語) に書き直す (元の日本語は, `po/ja.po` の翻訳にした)。
-- [ ] `lisp/org.scm` の `;;` の説明を, docstring に書き直す。
+- [x] `lisp/org.scm` の `;;` の説明を, docstring (英語) に書き直す (訳は `po/ja.po`)。
 - [ ] 多言語化の仕組み (Emacs には無い. rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし, 読むのは Rust で行う
       (gettext の実行時の仕組み (libintl, `setlocale`) は使わない. エディタの中で言語を変えるため, C のライブラリに頼らないため):
   - docstring は, Emacs と同じく英語で書く (元の文. 翻訳が無ければ, これを出す)。

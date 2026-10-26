@@ -1289,3 +1289,1748 @@ msgstr ""
 msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
 msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-directory"
+msgid "Directory where Org files are kept."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-default-notes-file"
+msgid "Default file for capture."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-files"
+msgid ""
+"Files shown in the agenda.\n"
+"A directory means the .org files in it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-todo-keywords"
+msgid ""
+"TODO states, written like ((sequence \"TODO\" \"|\" \"DONE\")).\n"
+"The words after | are done states; without |, the last word is the done state.\n"
+"A key to select the state can be written in parentheses, like \"TODO(t)\"."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-log-done"
+msgid ""
+"Whether to record the time when an entry is marked done.\n"
+"If it is 'time or 'note, write CLOSED: [DATE]; if #f, write nothing."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-log-repeat"
+msgid ""
+"Whether to record the time when a repeating entry is marked done.\n"
+"If #f, write nothing."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-tags-column"
+msgid ""
+"Column to align tags to.\n"
+"If negative, align the end of the tags to its absolute value."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-priority-highest"
+msgid "Highest priority."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-priority-lowest"
+msgid "Lowest priority."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-priority-default"
+msgid "Priority of an entry without one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-capture-templates"
+msgid ""
+"Capture templates, a list of (KEY DESCRIPTION TYPE (TARGET) TEMPLATE).\n"
+"If empty, use the default one.\n"
+"TYPE is entry (heading), item (list item), checkitem (checkbox) or plain (text).\n"
+"TARGET is (file \"FILE\") or (file+headline \"FILE\" \"HEADING\"); \"\" means `org-default-notes-file'."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-hide-leading-stars"
+msgid "If true, show only the last star of a heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-return-follows-link"
+msgid "If true, RET opens the link at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-deadline-warning-days"
+msgid "Number of days before a deadline to show it in today's agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-span"
+msgid "Number of days in the agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-start-on-weekday"
+msgid ""
+"Weekday the agenda starts on (1 is Monday).\n"
+"If #f, start from today."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-mode-hook"
+msgid "Procedures called when Org mode is turned on."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-capture-after-finalize-hook"
+msgid "Procedures called when a capture is finished."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-take"
+msgid "Return the first N elements of ITEMS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-drop"
+msgid "Return ITEMS without the first N elements."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-last"
+msgid "Return the last element of ITEMS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-index-of"
+msgid "Return the index of X in ITEMS, counted from 0, or #f if it is not found."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-unique"
+msgid "Return ITEMS without duplicates, keeping the first ones."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-range"
+msgid "Return the list of numbers from 0 to N - 1."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-repeat"
+msgid "Return the string S repeated N times."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-spaces"
+msgid "Return a string of N spaces."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-pad-right"
+msgid ""
+"Pad S with spaces on the right to WIDTH.\n"
+"If S is longer, return it as it is."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-pad-left"
+msgid "Pad S with spaces on the left to WIDTH."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-2d"
+msgid "Return N as two digits, padded with 0."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-blank?"
+msgid "Return #t if S consists only of whitespace."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-indentation"
+msgid "Return the width of the indentation of LINE."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-all-matches"
+msgid ""
+"Return all matches of REGEXP in S.\n"
+"Each match is a list with (START END) or #f for each group."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-match-string"
+msgid "Return the string of group N of the match M in S, or #f if the group did not match."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-replace-all"
+msgid "Replace all occurrences of FROM in S with TO."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-char"
+msgid "Return the Nth character of S as a string, counted from 0."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-lines"
+msgid ""
+"Return the lines of the buffer.\n"
+"If the buffer ends with a newline, the last line is empty."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-line-count"
+msgid "Return the number of LINES, not counting the empty line after the last newline."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-line"
+msgid "Return line N of LINES, counted from 1."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-line-start"
+msgid "Return the position of the start of line N."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-line-end"
+msgid "Return the position of the end of line N, before the newline."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-pos-line"
+msgid ""
+"Return the line and column of POS as (LINE COLUMN).\n"
+"The column is counted from 0."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-current-line"
+msgid "Return the line of point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-current-column"
+msgid "Return the column of point, counted from 0."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-goto-line-column"
+msgid "Move to column COL of line N."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-replace-region"
+msgid ""
+"Replace the text between START and END with NEW.\n"
+"If point is after the replaced text, it moves with the text."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-replace-lines"
+msgid "Replace lines FROM to TO with the list of lines NEW."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-line"
+msgid "Replace line N with NEW."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-line-changed"
+msgid ""
+"Replace line N with NEW, changing only the part that differs.\n"
+"Point moves with the unchanged text."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-lines-after"
+msgid "Insert the lines NEW after line N."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-delete-lines"
+msgid "Delete lines FROM to TO, including the newlines."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-level"
+msgid "Return the level of the heading LINE, or #f if it is not a heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-headings"
+msgid "Return the headings of LINES as a list of (LINE LEVEL)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-heading-line"
+msgid "Return the nearest heading line at or before line N, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-subtree-end"
+msgid "Return the last line of the subtree of the heading at line N."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-end"
+msgid "Return the last line of the body of the heading at line N, before the next heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-back-to-heading"
+msgid ""
+"Return the heading line of point.\n"
+"Signal an error if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-at-heading-p"
+msgid "Return #t if point is on a heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-regexp"
+msgid "Return the regexp of the TODO keywords, in a group."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-parse-heading"
+msgid ""
+"Split the heading LINE into (STARS TODO PRIORITY TITLE TAGS).\n"
+"Missing parts are #f. Return #f if LINE is not a heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-make-heading"
+msgid "Return a heading line made of STARS, TODO, PRIORITY, TITLE and TAGS, with the tags aligned."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-tags-line"
+msgid "Return HEAD followed by TAGS aligned to `org-tags-column'."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-heading-tags"
+msgid "Return the tags of the parsed heading PARSED as a list."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-tags-string"
+msgid "Return TAGS as a string like :a:b:, or #f if TAGS is empty."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-keyword-name"
+msgid "Return the name of the keyword WORD: \"TODO\" for \"TODO(t)\"."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-keyword-key"
+msgid ""
+"Return the key to select the keyword WORD: \"t\" for \"TODO(t)\".\n"
+"Return #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-sets"
+msgid "Return the sets of TODO keywords as a list of ((NOT-DONE...) (DONE...))."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-keywords-1"
+msgid "Return all the TODO keywords."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-done-keywords"
+msgid "Return the done keywords."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-done-keyword?"
+msgid "Return #t if WORD is a done keyword."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-set"
+msgid "Return the set of keywords containing WORD, or the first set if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-keys"
+msgid "Return the keys and keywords as a list of (KEY KEYWORD)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-font-lock-keywords"
+msgid ""
+"Return the regexps and faces for highlighting, as a list of (REGEXP FACE GROUP).\n"
+"The regexps are JavaScript regexps of the editor, matched line by line.\n"
+"Later ones are drawn over earlier ones."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fontify"
+msgid "Highlight the buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-mode-keys"
+msgid "Key bindings of Org mode."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-mode"
+msgid "Turn on Org mode: set the keys and highlighting, and read #+STARTUP."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-find-file-hook"
+msgid ""
+"Turn on Org mode if the visited file is an .org file.\n"
+"This is called from `find-file-hook'."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-startup-visibility"
+msgid "Set the visibility by #+STARTUP: (overview, content or showall)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-cycle-last"
+msgid ""
+"Last cycling state, as (BUFFER POINT STATUS).\n"
+"Whether the key was pressed again is decided by whether point has moved."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-repeated?"
+msgid "Return #t if the key is pressed again and the previous state was STATUS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-remember"
+msgid "Remember STATUS as the last cycling state."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fold-end"
+msgid ""
+"Return the end of the region to hide: the end of line TO.\n"
+"On the last line, it is before the last newline."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fold-showing"
+msgid ""
+"Show the headings SHOWN (a list of lines), hiding the body of each one\n"
+"up to the next shown heading (up to line LAST)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-local"
+msgid ""
+"Cycle the subtree of the heading at line N.\n"
+"The order is EMPTY ENTRY, CHILDREN, SUBTREE and FOLDED."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-overview"
+msgid "Show only the top-level headings."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-content"
+msgid "Show all the headings, hiding the bodies."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-global-cycle"
+msgid "Cycle the whole buffer: OVERVIEW, CONTENTS and SHOW ALL."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle"
+msgid ""
+"Move to the next table field, cycle the heading, or indent.\n"
+"In a table, move to the next field; on a heading, cycle its subtree; otherwise indent."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shifttab"
+msgid "Move to the previous table field, or cycle the whole buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-reveal"
+msgid "Show POS if it is hidden."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-heading-title-range"
+msgid "Return the range of the title in the heading LINE as (START END), or #f if there is no title."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-new-heading-todo"
+msgid ""
+"Return the TODO state of a new heading after line N.\n"
+"If TODO is true, it is the not-done state of the previous heading, or the first state."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-heading-1"
+msgid ""
+"Insert a heading (M-RET).\n"
+"If TODO is true, insert a TODO heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-heading-after-subtree"
+msgid ""
+"Insert a heading after the current subtree (C-RET).\n"
+"If TODO is true, insert a TODO heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-heading"
+msgid "Insert a heading, even in a list item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-heading-respect-content"
+msgid "Insert a heading after the current subtree."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-todo-heading-respect-content"
+msgid "Insert a TODO heading after the current subtree."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-meta-return"
+msgid ""
+"Insert a list item or a heading.\n"
+"In a table, do nothing; in a list, insert an item; otherwise insert a heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-todo-heading"
+msgid "Insert a TODO heading, or a checkbox item in a list."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shift-headings"
+msgid "Change the level of the headings from line FROM to line TO by DELTA."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shift-heading"
+msgid ""
+"Change the level of the heading at line N by DELTA.\n"
+"Add or remove stars and realign the tags; point moves with the text."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-promote-1"
+msgid ""
+"Promote or demote the heading by DELTA.\n"
+"If SUBTREE is true, change the whole subtree."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-do-promote"
+msgid "Promote the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-do-demote"
+msgid "Demote the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-promote-subtree"
+msgid "Promote the current subtree."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-demote-subtree"
+msgid "Demote the current subtree."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-sibling"
+msgid ""
+"Return the line of the previous or next heading at the same level as line N.\n"
+"FORWARD selects the next one. Return #f if it would cross the parent."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-move-subtree"
+msgid ""
+"Swap the current subtree with the previous or next one at the same level.\n"
+"FORWARD selects the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-move-subtree-up"
+msgid "Move the current subtree up past the previous one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-move-subtree-down"
+msgid "Move the current subtree down past the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-drag-line"
+msgid ""
+"Swap the current line with the previous or next line.\n"
+"FORWARD selects the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-ctrl-c-star"
+msgid ""
+"Turn a heading into text, or an item or text into a heading.\n"
+"Point moves with the text."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-goto-heading"
+msgid "Move to the heading at line N, showing it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-visible-heading"
+msgid ""
+"Move to the next or previous visible heading.\n"
+"FORWARD selects the next one. Without one, move to the end or start of the buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-next-visible-heading"
+msgid "Move to the next visible heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-previous-visible-heading"
+msgid "Move to the previous visible heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-heading-same-level"
+msgid ""
+"Move to the next or previous heading at the same level, within the parent.\n"
+"FORWARD selects the next one. Without one, do not move."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-forward-heading-same-level"
+msgid "Move to the next heading at the same level."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-backward-heading-same-level"
+msgid "Move to the previous heading at the same level."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-parent"
+msgid "Return the line of the parent heading of line N, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:outline-up-heading"
+msgid "Move to the parent heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-parse-item"
+msgid ""
+"Split the list item LINE into (INDENT BULLET CHECKBOX TEXT).\n"
+"CHECKBOX is #f if there is none. Return #f if LINE is not an item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-make-item"
+msgid "Return an item line made of INDENT, BULLET, BOX and TEXT."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-ordered-bullet?"
+msgid "Return #t if BULLET is a number."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-end"
+msgid ""
+"Return the last line of the item at line N.\n"
+"It includes the child items and continuation lines, but not trailing empty lines."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-at"
+msgid "Return the line of the item containing line N, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-in-item"
+msgid "Return the line of the item at point, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-sibling"
+msgid ""
+"Return the previous or next item at the same level as line N, or #f if there is none.\n"
+"FORWARD selects the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-siblings"
+msgid "Return the lines of the items at the same level as line N in the list, from the first."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-parent"
+msgid "Return the parent item of line N, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-children"
+msgid "Return the child items of line N, one level deeper."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fix-bullets"
+msgid ""
+"Make the bullets of the list at line N the same, and renumber them.\n"
+"They follow the bullet of the first item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-item"
+msgid ""
+"Insert a list item.\n"
+"If CHECKBOX is true, add a checkbox."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-move-item"
+msgid ""
+"Swap the current item with the previous or next one.\n"
+"FORWARD selects the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-indent-item"
+msgid ""
+"Change the indentation of the current item by DELTA (1 deeper, -1 shallower).\n"
+"If SUBTREE is true, change the children too."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-list-bullets"
+msgid "Order of the bullets used by S-left, S-right and C-c -."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-cycle-list-bullet"
+msgid ""
+"Change the bullet of the list.\n"
+"If FORWARD is #f, use the previous bullet."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-item-move-point"
+msgid ""
+"Move to the next or previous item (S-up, S-down).\n"
+"FORWARD selects the next one."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-ctrl-c-minus"
+msgid "Insert a table rule, change the list bullet, or turn a heading or text into an item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-toggle-checkbox"
+msgid "Toggle the checkbox of the current item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fix-parent-checkboxes"
+msgid ""
+"Update the checkboxes of the parents of item I from their children.\n"
+"A parent is [X] if all children are done, and [-] if some are."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-statistics"
+msgid "Return the done and total counts for the statistics cookie at line N, as (DONE TOTAL)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-update-cookies-in-line"
+msgid "Rewrite the statistics cookies in line N."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-update-statistics-cookies"
+msgid "Rewrite all the statistics cookies in the buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-update-statistics"
+msgid "Rewrite all the statistics cookies in the headings and items of the buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-today"
+msgid "Return today's date, like 2026-10-26."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-date-time"
+msgid ""
+"Return the time of noon on DATE, in seconds.\n"
+"Noon keeps the date right when adding days across daylight saving time."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-date-add"
+msgid "Add DAYS days to DATE."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-make-date"
+msgid ""
+"Return the date of YEAR, MONTH and DAY.\n"
+"A month or day out of range carries over."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-date-parts"
+msgid "Return DATE as (YEAR MONTH DAY)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-date-add-months"
+msgid "Add MONTHS months to DATE."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-days-between"
+msgid "Return the number of days from A to B."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-weekday"
+msgid "Return the weekday of DATE, like Mon."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-date-shift"
+msgid "Add N units to DATE. UNIT is d, w, m or y."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-make-timestamp"
+msgid ""
+"Return a timestamp of DATE and TIME, like <2026-10-26 Mon 10:00 +1w>.\n"
+"If ACTIVE is #f, use [ ] instead of < >."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-now-inactive"
+msgid "Return the current date and time, like [2026-10-26 Mon 10:00]."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-ts-regexp"
+msgid ""
+"Regexp of a timestamp.\n"
+"Groups: 1 bracket, 2 date, 3 time, 4 end time, 5 repeater and warning."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-parse-timestamp"
+msgid ""
+"Split the timestamp S into (BRACKET DATE TIME END-TIME REPEATER).\n"
+"Return #f if S is not a timestamp."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-string"
+msgid "Return the timestamp of the parsed timestamp PARSED."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-repeater"
+msgid "Return the repeater of PARSED as (MARK NUMBER UNIT), or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-warning"
+msgid "Return the warning period of PARSED, like -3d, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-weekdays"
+msgid "Names of the weekdays."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-read-date-analyze"
+msgid ""
+"Read the date INPUT relative to DEFAULT, and return (DATE TIME).\n"
+"TIME is #f if there is none. This is part of the syntax of `org-read-date':\n"
+"empty (DEFAULT), +3 (3 days from today), +2w, -1d, ++1w (from DEFAULT),\n"
+"2026-10-30, 10-30, 10/30, 30, fri (next Friday), 10:00, 10:00-11:00 and 3pm."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-normalize-time"
+msgid "Make the hour of TIME two digits (9:00 to 09:00)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-read-date"
+msgid ""
+"Read a date in the minibuffer with PROMPT, and return (DATE TIME).\n"
+"DEFAULT is the default date."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-at"
+msgid ""
+"Return the timestamp at column COL of line N as (START END PARSED), or #f if there is none.\n"
+"START and END are columns."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-timestamp-command"
+msgid ""
+"Insert a timestamp, or change the one at point (C-c . and C-c !).\n"
+"If ACTIVE is #f, insert an inactive timestamp."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-time-stamp"
+msgid "Insert a timestamp, or change the one at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-time-stamp-inactive"
+msgid "Insert an inactive timestamp, or change the one at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-change"
+msgid ""
+"Change the part WHAT of PARSED by N (S-arrows).\n"
+"WHAT is year, month, day, hour or minute."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-part"
+msgid "Return the part of the timestamp AT at column COL: year, month, day, hour or minute."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shift-timestamp"
+msgid ""
+"Change the timestamp at point by N.\n"
+"If BY-DAY is true, change the day; otherwise the part at point.\n"
+"Return #f if there is no timestamp at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-planning-line?"
+msgid "Return #t if LINE is a planning line (SCHEDULED: and so on)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-planning-items"
+msgid "Return the planning items of LINE as ((KEYWORD TIMESTAMP) ...)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-get-planning"
+msgid "Return the timestamp of KEYWORD in the planning of the heading at line N, or #f."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-planning"
+msgid ""
+"Set the timestamp of KEYWORD in the planning of the heading at line N to STAMP.\n"
+"If STAMP is #f, remove it. A new one is written at the start of the line."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-planning-command"
+msgid "Read a date and write it as KEYWORD (C-c C-s and C-c C-d)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-schedule"
+msgid "Write the SCHEDULED date of the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-deadline"
+msgid "Write the DEADLINE date of the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-next-todo"
+msgid ""
+"Return the state after or before OLD.\n"
+"FORWARD selects the next one. If ALL is true, cycle through all the states;\n"
+"otherwise cycle within the set of OLD (C-c C-t)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-fast-todo-selection"
+msgid "Select a state by its key (SPC removes the state)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-todo"
+msgid ""
+"Set the state of the heading at line H to NEW, or remove it if NEW is #f.\n"
+"Marking it done writes CLOSED, and moves a repeating date forward."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-repeating-stamps"
+msgid "Return the repeating timestamps of the heading at line H as ((KEYWORD TIMESTAMP) ...)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-auto-repeat"
+msgid ""
+"Move the repeating timestamps REPEATS forward, and reset the state of line H.\n"
+"DONE-WORD is the done state. LAST_REPEAT and a log of the state change are written."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-log-beginning"
+msgid ""
+"Return the line to write a log of the heading at line H.\n"
+"It is after the heading, the planning line and PROPERTIES."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-put"
+msgid "Set the property NAME of the heading at line H to VALUE, creating PROPERTIES if needed."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-get"
+msgid "Return the property NAME of the heading at line H, or #f if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo"
+msgid ""
+"Change the TODO state of the current heading.\n"
+"If some states have keys, select one by its key."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-priority-chars"
+msgid "Return the priority characters, highest first."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-priority"
+msgid "Set the priority of the current heading to NEW, or remove it if NEW is #f."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-priority-shift"
+msgid ""
+"Raise the priority if UP is true, or lower it (S-up, S-down).\n"
+"Going out of range removes it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-priority-up"
+msgid "Raise the priority of the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-priority-down"
+msgid "Lower the priority of the current heading."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-priority"
+msgid "Select the priority of the current heading (SPC removes it)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-buffer-tags"
+msgid "Return all the tags in LINES."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-tags"
+msgid "Set the tags of the heading at line H to TAGS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-set-tags-command"
+msgid "Read the tags of the current heading, separated by : or spaces."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-line?"
+msgid "Return #t if LINE is a table line."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-hline?"
+msgid "Return #t if LINE is a table rule."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-bounds"
+msgid "Return the first and last lines of the table containing line N, as (START END)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-cells"
+msgid "Return the fields of the table LINE, or 'hline for a rule."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-number?"
+msgid "Return #t if the field S is a number."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-render"
+msgid ""
+"Return the aligned lines of the table ROWS, indented by INDENT.\n"
+"ROWS is a list of field lists or 'hline."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-context"
+msgid ""
+"Return the table at point as (START END INDENT ROW COLUMN OFFSET).\n"
+"OFFSET is the column within the field."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-align-and-go"
+msgid ""
+"Align the table and move to row ROW, field COLUMN, OFFSET from the start of its text.\n"
+"ROWS-CHANGE changes the rows before aligning."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-cell-column"
+msgid ""
+"Return the column OFFSET from the start of the text of field COLUMN in the aligned LINE.\n"
+"For an empty field, it is after the space after |."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-columns"
+msgid "Return the number of fields of ROWS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-align"
+msgid "Align the table at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-empty-row"
+msgid "Return an empty row for ROWS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-next-field"
+msgid "Move to the next field; in the last field, add a row."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-previous-field"
+msgid "Move to the previous field."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-next-row"
+msgid ""
+"Move to the same field in the next row.\n"
+"If there is no next row or it is a rule, add a row."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-insert-hline"
+msgid "Insert a rule below the current row."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-swap"
+msgid "Swap elements I and J of ITEMS."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-map-cells"
+msgid "Apply F to the fields of each row of ROWS, keeping rules."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-pad"
+msgid "Pad each row of ROWS to the number of fields."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-move-column"
+msgid ""
+"Move the current column left or right (M-left, M-right).\n"
+"FORWARD moves it right."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-move-row"
+msgid ""
+"Move the current row up or down (M-up, M-down).\n"
+"FORWARD moves it down."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-delete-column"
+msgid "Delete the current column (M-S-left)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-insert-column"
+msgid "Insert a column on the left (M-S-right)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-kill-row"
+msgid "Delete the current row (M-S-up)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-insert-row"
+msgid "Insert a row above (M-S-down)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-table-create-or-convert-from-region"
+msgid "Create a table."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-sort"
+msgid ""
+"Sort the children of the current heading.\n"
+"Sort by a (title), n (number), o (TODO order), p (priority) or t (date);\n"
+"uppercase letters sort in reverse."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-modifier-cursor-error"
+msgid "Signal an error for a key pressed outside tables, headings and items."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftselect-error"
+msgid "Signal an error for a shift key pressed where Org mode does not use it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-context"
+msgid "Return the kind of the line of point: table, heading, item or text."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-metaleft"
+msgid "Move the column left, promote the heading, outdent the item, or move back a word."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-metaright"
+msgid "Move the column right, demote the heading, indent the item, or move forward a word."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-metaup"
+msgid "Move the table row, subtree, item or line up."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-metadown"
+msgid "Move the table row, subtree, item or line down."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftmetaleft"
+msgid "Delete the table column, promote the subtree, or outdent the item with its children."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftmetaright"
+msgid "Insert a table column, demote the subtree, or indent the item with its children."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftmetaup"
+msgid "Delete the table row, or move the subtree, item or line up."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftmetadown"
+msgid "Insert a table row, or move the subtree, item or line down."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-at-item-bullet-p"
+msgid "Return #t if point is on the bullet of a list item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftup"
+msgid "Change the timestamp, raise the priority, or move to the previous item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftdown"
+msgid "Change the timestamp, lower the priority, or move to the next item."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftright"
+msgid "Change the timestamp by a day, the TODO state, or the list bullet."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-shiftleft"
+msgid "Change the timestamp back by a day, the TODO state, or the list bullet."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-ctrl-c-ctrl-c"
+msgid "Align the table, toggle the checkbox, set the heading tags, or reread the #+ lines."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-return"
+msgid ""
+"Move to the next table row, open the link at point, or insert a newline.\n"
+"Links are opened if `org-return-follows-link' is true."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-stored-links"
+msgid "Stored links, a list of (LINK DESCRIPTION), newest first."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-abbreviate-file-name"
+msgid "Replace the home directory in FILE with ~."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-file-directory"
+msgid "Return the directory of FILE, up to the last /."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-file-base"
+msgid "Return the name of FILE without the directory and extension."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-link-at-point"
+msgid ""
+"Return the link at point as (LINK DESCRIPTION START END), or #f if there is none.\n"
+"START and END are columns."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-make-link-string"
+msgid "Return the link LINK with DESCRIPTION, like [[LINK][DESCRIPTION]]."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-store-link"
+msgid "Store a link to the current location."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-strip-cookies"
+msgid "Remove the statistics cookies ([2/3] [66%]) from TITLE."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-insert-link"
+msgid "Insert a link, or change the link at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-open-at-point"
+msgid "Open the link at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-link-open"
+msgid ""
+"Open LINK.\n"
+"http and so on use `browse-url', file: opens in the editor,\n"
+"and others are searched in the buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-link-search"
+msgid ""
+"Search the buffer for TARGET.\n"
+"TARGET is *HEADING, #ID, a line number, /REGEXP/, <<TARGET>>, a title or words."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-buffer-name"
+msgid "Name of the agenda buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-markers"
+msgid "Entries of the agenda lines, a list of (LINE FILE HEADING-LINE)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-redo-command"
+msgid "Procedure to rebuild the agenda (called by r and g)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-start-day"
+msgid "First day of the weekly agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-agenda-previous-buffer"
+msgid "Buffer shown before the agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-file-list"
+msgid ""
+"Return the agenda files.\n"
+"A directory in `org-agenda-files' means the .org files in it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-file-text"
+msgid "Return the contents of FILE, or of its buffer if the buffer is modified."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-entries"
+msgid ""
+"Return the headings of FILE as a list of\n"
+"(FILE LINE TODO PRIORITY TITLE TAGS CATEGORY SCHEDULED DEADLINE (DATES...) BODY)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-all-entries"
+msgid "Return the headings of all the agenda files."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-file"
+msgid "Return the file of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-line"
+msgid "Return the line of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-todo"
+msgid "Return the TODO state of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-priority"
+msgid "Return the priority of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-title"
+msgid "Return the title of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-tags"
+msgid "Return the tags of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-entry-category"
+msgid "Return the category of the agenda entry E."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-timestamp-on?"
+msgid "Return #t if the timestamp PARSED falls on DAY, including repeats."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-line"
+msgid ""
+"Return an agenda line of the entry E with TIME and EXTRA.\n"
+"It shows the category, time, planning mark, state, title and tags."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-time"
+msgid ""
+"Return the time of PARSED as shown in the agenda, like 10:00...... or 10:00-11:00.\n"
+"A one-digit hour is padded with a space."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-day-items"
+msgid ""
+"Return the agenda lines of DAY from ENTRIES, as a list of (TIME LINE ENTRY PRIORITY).\n"
+"TODAY is today's date."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-priority"
+msgid ""
+"Return the priority of the entry E as a number, like `org-get-priority' in Emacs.\n"
+"The lowest priority is 0, and each step up adds 1000."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-sort"
+msgid ""
+"Sort ITEMS: lines with a time first, in time order;\n"
+"lines with the same time or no time by priority, highest first.\n"
+"This is the default of `org-agenda-sorting-strategy' in Emacs\n"
+"(time-up priority-down category-keep)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-show"
+msgid ""
+"Show ROWS in the agenda buffer, and remember REDO to rebuild it.\n"
+"ROWS is a list of (LINE ENTRY); ENTRY is #f for a heading line."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-mode"
+msgid "Set the keys and highlighting of the agenda buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-date-line"
+msgid "Return the line of DAY, like \"Monday     26 October 2026 W44\"."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-list-from"
+msgid "Show the weekly agenda for `org-agenda-span' days from START."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-week-start"
+msgid "Return the first day of the week of DAY, on `org-agenda-start-on-weekday'."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-list"
+msgid "Show the weekly agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-todo-list"
+msgid "Show the list of TODO entries."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-tags-view"
+msgid ""
+"Show the entries matching tags.\n"
+"a+b means both, a|b either, and -a without a."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-tags-match?"
+msgid "Return #t if TAGS match MATCH."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-search-view"
+msgid "Show the headings containing all the words, ignoring case."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda"
+msgid "Select an agenda view."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-marker"
+msgid ""
+"Return the entry of the agenda line at point as (FILE LINE).\n"
+"Signal an error if there is none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-switch-to"
+msgid "Open the file of the entry at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-show-and-scroll-up"
+msgid "Show the entry at point in another window."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-goto"
+msgid "Show the entry at point in another window."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-next-line"
+msgid "Move to the next line of the agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-previous-line"
+msgid "Move to the previous line of the agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-move"
+msgid "Move the weekly agenda by DAYS days (f and b)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-later"
+msgid "Show the next week."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-earlier"
+msgid "Show the previous week."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-goto-today"
+msgid "Show the week of today."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-redo"
+msgid "Rebuild the agenda."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-todo"
+msgid "Change the TODO state of the entry at point."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-agenda-quit"
+msgid "Kill the agenda buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-capture-buffer-name"
+msgid "Name of the capture buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "variable:org-capture-current"
+msgid ""
+"Current capture, as (TEMPLATE BUFFER POSITION).\n"
+"BUFFER and POSITION are where the capture started."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-templates-list"
+msgid "Return the capture templates, or the default ones if there are none."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-expand-file"
+msgid ""
+"Return the target file of FILE.\n"
+"\"\" means `org-default-notes-file'; a relative name is in `org-directory'."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-fill-template"
+msgid ""
+"Fill TEMPLATE, and return (TEXT POSITION).\n"
+"ANNOTATION is the link to the original location, and FILE is its file."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture"
+msgid "Select a template and write in *Capture*."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-place"
+msgid ""
+"Insert the captured TEXT of TYPE into TARGET.\n"
+"This is called in the target buffer."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-adjust-level"
+msgid "Change the levels of the headings in TEXT to LEVEL."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-finalize"
+msgid "Finish the capture, add it to the target and save it."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-capture-kill"
+msgid "Abort the capture."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-buffer-list"
+msgid "Return the Org buffers (.org files)."
+msgstr ""
+
+#: lisp/org.scm
+msgctxt "function:org-switchb"
+msgid "Switch to an Org buffer."
+msgstr ""

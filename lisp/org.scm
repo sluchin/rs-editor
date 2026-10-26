@@ -37,104 +37,108 @@
 
 ;;; 設定 (初期設定ファイルで, (set! org-directory "~/notes") のように変える)
 
-;; Org のファイルを置くディレクトリ
-(define org-directory "~/org")
-;; キャプチャの既定のファイル
-(define org-default-notes-file "~/.notes")
-;; アジェンダに出すファイル (ディレクトリなら, その中の .org のファイル)
-(define org-agenda-files '())
-;; TODO の状態 ((sequence "TODO" "|" "DONE") のように書く. | の後が済み. | が無ければ, 最後が済み.
-;; "TODO(t)" のように, 括弧の中に, 選ぶキーを書ける)
-(define org-todo-keywords '((sequence "TODO" "DONE")))
-;; 済みにした時刻を書く (#f なら書かない. 'time か 'note なら, CLOSED: [日時] を書く)
-(define org-log-done #f)
-;; 繰り返しの予定を済みにしたとき, 時刻を書く (#f なら書かない)
-(define org-log-repeat 'time)
-;; タグを揃える桁 (負なら, タグの終わりを, その桁 (の絶対値) に揃える)
-(define org-tags-column -77)
-;; 優先度 (一番高いもの, 一番低いもの, 無いときの既定)
-(define org-priority-highest "A")
-(define org-priority-lowest "C")
-(define org-priority-default "B")
-;; キャプチャのテンプレート ((キー 説明 種類 (行き先) テンプレート) のリスト. 空なら, 既定のもの)
-;; 種類: entry (見出し), item (リストの項目), checkitem (チェックボックス), plain (文)
-;; 行き先: (file "ファイル"), (file+headline "ファイル" "見出し"). "" は org-default-notes-file
-(define org-capture-templates '())
-;; 前の見出しを重ねて見せない (#t なら, 見出しの * を, 最後の 1 つだけ見せる)
-(define org-hide-leading-stars #f)
-;; RET でリンクを開く
-(define org-return-follows-link #f)
-;; 締め切りの何日前から, 今日のアジェンダに出すか
-(define org-deadline-warning-days 14)
-;; アジェンダの日数
-(define org-agenda-span 7)
-;; アジェンダの始めの曜日 (1 が月曜. #f なら今日から)
-(define org-agenda-start-on-weekday 1)
-;; Org mode にしたとき, 呼ぶ手続き
-(define org-mode-hook '())
-;; キャプチャを終えたとき, 呼ぶ手続き
-(define org-capture-after-finalize-hook '())
+(define org-directory "~/org" "Directory where Org files are kept.")
+(define org-default-notes-file "~/.notes" "Default file for capture.")
+(define org-agenda-files '()
+  "Files shown in the agenda.
+A directory means the .org files in it.")
+(define org-todo-keywords '((sequence "TODO" "DONE"))
+  "TODO states, written like ((sequence \"TODO\" \"|\" \"DONE\")).
+The words after | are done states; without |, the last word is the done state.
+A key to select the state can be written in parentheses, like \"TODO(t)\".")
+(define org-log-done #f
+  "Whether to record the time when an entry is marked done.
+If it is 'time or 'note, write CLOSED: [DATE]; if #f, write nothing.")
+(define org-log-repeat 'time
+  "Whether to record the time when a repeating entry is marked done.
+If #f, write nothing.")
+(define org-tags-column -77
+  "Column to align tags to.
+If negative, align the end of the tags to its absolute value.")
+(define org-priority-highest "A" "Highest priority.")
+(define org-priority-lowest "C" "Lowest priority.")
+(define org-priority-default "B" "Priority of an entry without one.")
+(define org-capture-templates '()
+  "Capture templates, a list of (KEY DESCRIPTION TYPE (TARGET) TEMPLATE).
+If empty, use the default one.
+TYPE is entry (heading), item (list item), checkitem (checkbox) or plain (text).
+TARGET is (file \"FILE\") or (file+headline \"FILE\" \"HEADING\"); \"\" means `org-default-notes-file'.")
+(define org-hide-leading-stars #f "If true, show only the last star of a heading.")
+(define org-return-follows-link #f "If true, RET opens the link at point.")
+(define org-deadline-warning-days 14
+  "Number of days before a deadline to show it in today's agenda.")
+(define org-agenda-span 7 "Number of days in the agenda.")
+(define org-agenda-start-on-weekday 1
+  "Weekday the agenda starts on (1 is Monday).
+If #f, start from today.")
+(define org-mode-hook '() "Procedures called when Org mode is turned on.")
+(define org-capture-after-finalize-hook '() "Procedures called when a capture is finished.")
 
 ;;; 文字列とリスト
 
-;; リストの始めの n 個
 (define (org-take items n)
+  "Return the first N elements of ITEMS."
   (if (or (<= n 0) (null? items)) '() (cons (car items) (org-take (cdr items) (- n 1)))))
 
-;; リストの始めの n 個を除いたもの
 (define (org-drop items n)
+  "Return ITEMS without the first N elements."
   (if (or (<= n 0) (null? items)) items (org-drop (cdr items) (- n 1))))
 
-;; リストの最後
-(define (org-last items) (list-ref items (- (length items) 1)))
+(define (org-last items)
+  "Return the last element of ITEMS."
+  (list-ref items (- (length items) 1)))
 
-;; リストの中の位置 (0 から. 無ければ #f)
 (define (org-index-of x items)
+  "Return the index of X in ITEMS, counted from 0, or #f if it is not found."
   (let loop ((rest items) (i 0))
     (cond ((null? rest) #f)
           ((equal? (car rest) x) i)
           (else (loop (cdr rest) (+ i 1))))))
 
-;; 重なりを除く (始めのものを残す)
 (define (org-unique items)
+  "Return ITEMS without duplicates, keeping the first ones."
   (let loop ((rest items) (seen '()))
     (cond ((null? rest) (reverse seen))
           ((member (car rest) seen) (loop (cdr rest) seen))
           (else (loop (cdr rest) (cons (car rest) seen))))))
 
-;; 0 から n - 1 までの数
 (define (org-range n)
+  "Return the list of numbers from 0 to N - 1."
   (let loop ((i (- n 1)) (result '()))
     (if (< i 0) result (loop (- i 1) (cons i result)))))
 
-;; 文字列を n 回つなげる
 (define (org-repeat s n)
+  "Return the string S repeated N times."
   (if (<= n 0) "" (string-append s (org-repeat s (- n 1)))))
 
-;; 空白 n 個
-(define (org-spaces n) (org-repeat " " n))
+(define (org-spaces n)
+  "Return a string of N spaces."
+  (org-repeat " " n))
 
-;; 右を空白で埋めて, 幅を width にする (長ければ, そのまま)
 (define (org-pad-right s width)
+  "Pad S with spaces on the right to WIDTH.
+If S is longer, return it as it is."
   (string-append s (org-spaces (- width (string-width s)))))
 
-;; 左を空白で埋めて, 幅を width にする
 (define (org-pad-left s width)
+  "Pad S with spaces on the left to WIDTH."
   (string-append (org-spaces (- width (string-width s))) s))
 
-;; 2 桁の数 (前を 0 で埋める)
 (define (org-2d n)
+  "Return N as two digits, padded with 0."
   (if (< n 10) (format "0%d" n) (format "%d" n)))
 
-;; 空白だけの文字列なら #t
-(define (org-blank? s) (if (regexp-match "^[ \\t]*$" s) #t #f))
+(define (org-blank? s)
+  "Return #t if S consists only of whitespace."
+  (if (regexp-match "^[ \\t]*$" s) #t #f))
 
-;; 行の始めの空白の幅
 (define (org-indentation line)
+  "Return the width of the indentation of LINE."
   (string-length (car (regexp-match "^[ \\t]*" line))))
 
-;; 文字列の中の, 正規表現に合う所を全て返す (それぞれ, 括弧ごとの (始め 終わり) か #f のリスト)
 (define (org-all-matches regexp s)
+  "Return all matches of REGEXP in S.
+Each match is a list with (START END) or #f for each group."
   (let loop ((start 0) (found '()))
     (let ((m (and (<= start (string-length s)) (regexp-match-positions regexp s start))))
       (if (not m)
@@ -142,62 +146,70 @@
           (let ((from (car (car m))) (to (cadr (car m))))
             (loop (if (= to from) (+ to 1) to) (cons m found)))))))
 
-;; 合った所の, n 番目の括弧の文字列 (無ければ #f)
 (define (org-match-string s m n)
+  "Return the string of group N of the match M in S, or #f if the group did not match."
   (let ((p (list-ref m n)))
     (and p (substring s (car p) (cadr p)))))
 
-;; 文字列の中の from を, 全て to にする
 (define (org-replace-all s from to)
+  "Replace all occurrences of FROM in S with TO."
   (string-join (split-string s from) to))
 
-;; 文字列の n 文字目 (0 から)
-(define (org-char s n) (substring s n (+ n 1)))
+(define (org-char s n)
+  "Return the Nth character of S as a string, counted from 0."
+  (substring s n (+ n 1)))
 
 ;;; バッファの行
 
-;; バッファの行 (改行で分けたもの. 最後が改行なら, 最後は空の文字列)
-(define (org-lines) (split-string (buffer-string) "\n"))
+(define (org-lines)
+  "Return the lines of the buffer.
+If the buffer ends with a newline, the last line is empty."
+  (split-string (buffer-string) "\n"))
 
-;; 行の数 (最後の改行の後の, 空の行は数えない)
 (define (org-line-count lines)
+  "Return the number of LINES, not counting the empty line after the last newline."
   (let ((n (length lines)))
     (if (and (> n 1) (equal? (org-last lines) "")) (- n 1) n)))
 
-;; n 行目 (1 から)
-(define (org-line lines n) (list-ref lines (- n 1)))
+(define (org-line lines n)
+  "Return line N of LINES, counted from 1."
+  (list-ref lines (- n 1)))
 
-;; n 行目の始めの位置
 (define (org-line-start lines n)
+  "Return the position of the start of line N."
   (let loop ((i 1) (rest lines) (pos 1))
     (if (or (>= i n) (null? rest))
         pos
         (loop (+ i 1) (cdr rest) (+ pos (string-length (car rest)) 1)))))
 
-;; n 行目の終わりの位置 (改行の前)
 (define (org-line-end lines n)
+  "Return the position of the end of line N, before the newline."
   (+ (org-line-start lines n) (string-length (org-line lines n))))
 
-;; 位置の行と桁 ((行 桁). 桁は 0 から)
 (define (org-pos-line lines pos)
+  "Return the line and column of POS as (LINE COLUMN).
+The column is counted from 0."
   (let loop ((n 1) (rest lines) (start 1))
     (let ((end (+ start (string-length (car rest)))))
       (if (or (<= pos end) (null? (cdr rest)))
           (list n (- pos start))
           (loop (+ n 1) (cdr rest) (+ end 1))))))
 
-;; カーソルの行
-(define (org-current-line lines) (car (org-pos-line lines (point))))
+(define (org-current-line lines)
+  "Return the line of point."
+  (car (org-pos-line lines (point))))
 
-;; カーソルの桁 (0 から)
-(define (org-current-column lines) (cadr (org-pos-line lines (point))))
+(define (org-current-column lines)
+  "Return the column of point, counted from 0."
+  (cadr (org-pos-line lines (point))))
 
-;; n 行目の桁 col へ動く
 (define (org-goto-line-column lines n col)
+  "Move to column COL of line N."
   (goto-char (+ (org-line-start lines n) (min col (string-length (org-line lines n))))))
 
-;; 始めと終わりの間を, 文字列に置き換える. カーソルは, 置き換えた所の後なら, 一緒に動く
 (define (org-replace-region start end new)
+  "Replace the text between START and END with NEW.
+If point is after the replaced text, it moves with the text."
   (let ((p (point)))
     (unless (equal? (buffer-substring start end) new)
       (delete-region start end)
@@ -207,15 +219,17 @@
                        ((>= p end) (+ p (- (string-length new) (- end start))))
                        (else (min p (+ start (string-length new)))))))))
 
-;; from 行から to 行までを, 新しい行 (のリスト) に置き換える
 (define (org-replace-lines lines from to new)
+  "Replace lines FROM to TO with the list of lines NEW."
   (org-replace-region (org-line-start lines from) (org-line-end lines to) (string-join new "\n")))
 
-;; n 行目を置き換える
-(define (org-set-line lines n new) (org-replace-lines lines n n (list new)))
+(define (org-set-line lines n new)
+  "Replace line N with NEW."
+  (org-replace-lines lines n n (list new)))
 
-;; n 行目を置き換える. 変わった所だけを置き換える (カーソルは, 変わらない所と一緒に動く)
 (define (org-set-line-changed lines n new)
+  "Replace line N with NEW, changing only the part that differs.
+Point moves with the unchanged text."
   (let* ((line (org-line lines n))
          (len (min (string-length line) (string-length new)))
          (same (lambda (i j) (equal? (substring line i (+ i 1)) (substring new j (+ j 1)))))
@@ -229,13 +243,13 @@
     (org-replace-region (+ start prefix) (+ start (- (string-length line) suffix))
                         (substring new prefix (- (string-length new) suffix)))))
 
-;; n 行目の後に, 行を入れる
 (define (org-insert-lines-after lines n new)
+  "Insert the lines NEW after line N."
   (let ((end (org-line-end lines n)))
     (org-replace-region end end (string-append "\n" (string-join new "\n")))))
 
-;; from 行から to 行までを消す (改行も)
 (define (org-delete-lines lines from to)
+  "Delete lines FROM to TO, including the newlines."
   (let ((start (org-line-start lines from))
         (count (length lines)))
     (cond ((< to count) (org-replace-region start (org-line-start lines (+ to 1)) ""))
@@ -244,27 +258,27 @@
 
 ;;; 見出し
 
-;; 見出しの深さ (見出しでなければ #f)
 (define (org-level line)
+  "Return the level of the heading LINE, or #f if it is not a heading."
   (let ((m (regexp-match "^(\\*+)(?: |$)" line)))
     (and m (string-length (cadr m)))))
 
-;; 見出しの行と深さ ((行 深さ) のリスト)
 (define (org-headings lines)
+  "Return the headings of LINES as a list of (LINE LEVEL)."
   (let loop ((rest lines) (n 1) (found '()))
     (if (null? rest)
         (reverse found)
         (let ((level (org-level (car rest))))
           (loop (cdr rest) (+ n 1) (if level (cons (list n level) found) found))))))
 
-;; n 行目か, その前の, 一番近い見出しの行 (無ければ #f)
 (define (org-heading-line lines n)
+  "Return the nearest heading line at or before line N, or #f if there is none."
   (let loop ((headings (org-headings lines)) (found #f))
     (cond ((or (null? headings) (> (car (car headings)) n)) found)
           (else (loop (cdr headings) (car (car headings)))))))
 
-;; n 行目の見出しの木の, 最後の行
 (define (org-subtree-end lines n)
+  "Return the last line of the subtree of the heading at line N."
   (let ((level (org-level (org-line lines n))))
     (let loop ((headings (org-headings lines)))
       (cond ((null? headings) (org-line-count lines))
@@ -272,72 +286,76 @@
              (- (car (car headings)) 1))
             (else (loop (cdr headings)))))))
 
-;; n 行目の見出しの, 本文の最後の行 (次の見出しの前)
 (define (org-entry-end lines n)
+  "Return the last line of the body of the heading at line N, before the next heading."
   (let loop ((headings (org-headings lines)))
     (cond ((null? headings) (org-line-count lines))
           ((> (car (car headings)) n) (- (car (car headings)) 1))
           (else (loop (cdr headings))))))
 
-;; カーソルの見出しの行 (無ければ, 失敗にする)
 (define (org-back-to-heading lines)
+  "Return the heading line of point.
+Signal an error if there is none."
   (or (org-heading-line lines (org-current-line lines))
       (error "Before first headline at position %d in buffer %s" (point) (buffer-name))))
 
-;; カーソルが見出しにあれば #t
 (define (org-at-heading-p)
+  "Return #t if point is on a heading."
   (let ((lines (org-lines)))
     (if (org-level (org-line lines (org-current-line lines))) #t #f)))
 
-;; TODO のキーワードの正規表現 (括弧の中)
 (define (org-todo-regexp)
+  "Return the regexp of the TODO keywords, in a group."
   (let ((words (org-todo-keywords-1)))
     (if (null? words) "[^\\s\\S]" (string-join (map regexp-quote words) "|"))))
 
-;; 見出しを分ける ((星 TODO 優先度 題 タグ). 無いものは #f. 見出しでなければ #f)
 (define (org-parse-heading line)
+  "Split the heading LINE into (STARS TODO PRIORITY TITLE TAGS).
+Missing parts are #f. Return #f if LINE is not a heading."
   (let ((m (regexp-match
             (string-append "^(\\*+)(?: +(" (org-todo-regexp) "))?(?: +(\\[#.\\]))?"
                            "(?: +(.*?))??(?:[ \\t]+(:[\\w@#%:]+:))?[ \\t]*$")
             line)))
     (and m (org-level line) (cdr m))))
 
-;; 見出しの行を作る (タグは揃える)
 (define (org-make-heading stars todo priority title tags)
+  "Return a heading line made of STARS, TODO, PRIORITY, TITLE and TAGS, with the tags aligned."
   (let ((head (string-join (filter (lambda (x) (and x (not (equal? x ""))))
                                    (list stars todo priority title))
                            " ")))
     (if tags (org-tags-line head tags) head)))
 
-;; タグを揃えた行 (org-tags-column)
 (define (org-tags-line head tags)
+  "Return HEAD followed by TAGS aligned to `org-tags-column'."
   (let* ((width (string-width head))
          (column (if (< org-tags-column 0)
                      (- (- org-tags-column) (string-width tags))
                      org-tags-column)))
     (string-append head (org-spaces (max 1 (- column width))) tags)))
 
-;; 見出しのタグ (リスト)
 (define (org-heading-tags parsed)
+  "Return the tags of the parsed heading PARSED as a list."
   (let ((tags (list-ref parsed 4)))
     (if tags (filter (lambda (t) (not (equal? t ""))) (split-string tags ":")) '())))
 
-;; タグのリストを, :a:b: にする (空なら #f)
 (define (org-tags-string tags)
+  "Return TAGS as a string like :a:b:, or #f if TAGS is empty."
   (if (null? tags) #f (string-append ":" (string-join tags ":") ":")))
 
 ;;; TODO のキーワード
 
-;; キーワードの名前 ("TODO(t)" なら "TODO")
-(define (org-keyword-name word) (car (split-string word "(")))
+(define (org-keyword-name word)
+  "Return the name of the keyword WORD: \"TODO\" for \"TODO(t)\"."
+  (car (split-string word "(")))
 
-;; キーワードを選ぶキー ("TODO(t)" なら "t". 無ければ #f)
 (define (org-keyword-key word)
+  "Return the key to select the keyword WORD: \"t\" for \"TODO(t)\".
+Return #f if there is none."
   (let ((m (regexp-match "\\(([^@!/)])" word)))
     (and m (cadr m))))
 
-;; TODO の組 (((未完の言葉) (済みの言葉)) のリスト)
 (define (org-todo-sets)
+  "Return the sets of TODO keywords as a list of ((NOT-DONE...) (DONE...))."
   (map (lambda (set)
          (let* ((words (if (string? (car set)) set (cdr set)))
                 (bar (org-index-of "|" words)))
@@ -350,26 +368,27 @@
            (list org-todo-keywords)
            org-todo-keywords)))
 
-;; 全ての TODO のキーワード
 (define (org-todo-keywords-1)
+  "Return all the TODO keywords."
   (org-unique (apply append (map (lambda (set) (append (car set) (cadr set))) (org-todo-sets)))))
 
-;; 済みのキーワード
 (define (org-done-keywords)
+  "Return the done keywords."
   (apply append (map cadr (org-todo-sets))))
 
-;; キーワードが済みなら #t
-(define (org-done-keyword? word) (if (and word (member word (org-done-keywords))) #t #f))
+(define (org-done-keyword? word)
+  "Return #t if WORD is a done keyword."
+  (if (and word (member word (org-done-keywords))) #t #f))
 
-;; キーワードの組 (無ければ, 始めの組)
 (define (org-todo-set word)
+  "Return the set of keywords containing WORD, or the first set if there is none."
   (let loop ((sets (org-todo-sets)))
     (cond ((null? sets) (car (org-todo-sets)))
           ((member word (append (car (car sets)) (cadr (car sets)))) (car sets))
           (else (loop (cdr sets))))))
 
-;; キーとキーワード ((キー キーワード) のリスト)
 (define (org-todo-keys)
+  "Return the keys and keywords as a list of (KEY KEYWORD)."
   (apply append
          (map (lambda (set)
                 (apply append
@@ -383,9 +402,10 @@
 
 ;;; 色 (face)
 
-;; 色付けの正規表現と face (画面のエディタの, JavaScript の正規表現. 行ごとに合わせる.
-;; (正規表現 face 括弧の番号) のリスト. 後のものを上に重ねる)
 (define (org-font-lock-keywords)
+  "Return the regexps and faces for highlighting, as a list of (REGEXP FACE GROUP).
+The regexps are JavaScript regexps of the editor, matched line by line.
+Later ones are drawn over earlier ones."
   (let ((todo (string-join (map regexp-quote (filter (lambda (w) (not (org-done-keyword? w)))
                                                      (org-todo-keywords-1)))
                            "|"))
@@ -422,14 +442,13 @@
        ("\\[\\[[^\\]\\n]+\\](?:\\[[^\\]\\n]+\\])?\\]" "org-link" 0)
        ("(?:https?|ftp|mailto|file):[^\\s\\]>)\"']+" "org-link" 0)))))
 
-;; 色を付ける
 (define (org-fontify)
+  "Highlight the buffer."
   (unhighlight-regexp #t)
   (for-each (lambda (k) (highlight-regexp (car k) (cadr k) (caddr k))) (org-font-lock-keywords)))
 
 ;;; Org mode
 
-;; Org mode のキー
 (define org-mode-keys
   '(("TAB" org-cycle)
     ("S-TAB" org-shifttab)
@@ -470,23 +489,24 @@
     ("C-c #" org-update-statistics-cookies)
     ("C-c C-x C-b" org-toggle-checkbox)
     ("C-c C-l" org-insert-link)
-    ("C-c C-o" org-open-at-point)))
+    ("C-c C-o" org-open-at-point)) "Key bindings of Org mode.")
 
-;; Org mode にする (キー, 色, #+STARTUP)
 (define-command (org-mode)
+  "Turn on Org mode: set the keys and highlighting, and read #+STARTUP."
   (for-each (lambda (key) (local-set-key (car key) (cadr key))) org-mode-keys)
   (org-fontify)
   (org-set-startup-visibility)
   (run-hooks 'org-mode-hook))
 
-;; ファイルを開いたとき (find-file-hook): .org なら Org mode にする
 (define (org-find-file-hook)
+  "Turn on Org mode if the visited file is an .org file.
+This is called from `find-file-hook'."
   (let ((file (buffer-file-name)))
     (when (and file (regexp-match "\\.org$" file))
       (org-mode))))
 
-;; #+STARTUP: の見せ方 (overview, content, showall)
 (define (org-set-startup-visibility)
+  "Set the visibility by #+STARTUP: (overview, content or showall)."
   (let ((m (regexp-match "(?mi)^#\\+STARTUP:.*\\b(overview|fold|content|showall|showeverything)\\b"
                          (buffer-string))))
     (when m
@@ -496,24 +516,28 @@
 
 ;;; 開け閉め
 
-;; 直前の開け閉め ((バッファ カーソル 状態). 続けて押したかを, カーソルが動いていないかで決める)
-(define org-cycle-last #f)
+(define org-cycle-last #f
+  "Last cycling state, as (BUFFER POINT STATUS).
+Whether the key was pressed again is decided by whether point has moved.")
 
-;; 続けて押していて, 前の状態が status なら #t
 (define (org-cycle-repeated? status)
+  "Return #t if the key is pressed again and the previous state was STATUS."
   (and org-cycle-last
        (equal? (org-take org-cycle-last 2) (list (buffer-name) (point)))
        (eq? (caddr org-cycle-last) status)))
 
-;; 状態を覚える
 (define (org-cycle-remember status)
+  "Remember STATUS as the last cycling state."
   (set! org-cycle-last (list (buffer-name) (point) status)))
 
-;; 隠す範囲の終わり (to 行の終わり. 最後の行なら, 最後の改行の前)
-(define (org-fold-end lines to) (org-line-end lines to))
+(define (org-fold-end lines to)
+  "Return the end of the region to hide: the end of line TO.
+On the last line, it is before the last newline."
+  (org-line-end lines to))
 
-;; 見せる見出し (行のリスト) の, それぞれの本文を, 次の見せる見出しの前まで隠す (last 行まで)
 (define (org-fold-showing lines shown last)
+  "Show the headings SHOWN (a list of lines), hiding the body of each one
+up to the next shown heading (up to line LAST)."
   (let loop ((rest shown))
     (unless (null? rest)
       (let* ((n (car rest))
@@ -523,8 +547,9 @@
         (when (> end from) (outline-flag-region from end #t))
         (loop (cdr rest))))))
 
-;; 見出しの木の開け閉め (EMPTY ENTRY, CHILDREN, SUBTREE, FOLDED の順)
 (define (org-cycle-local lines n)
+  "Cycle the subtree of the heading at line N.
+The order is EMPTY ENTRY, CHILDREN, SUBTREE and FOLDED."
   (let* ((level (org-level (org-line lines n)))
          (last (org-subtree-end lines n))
          (eoh (org-line-end lines n))
@@ -553,21 +578,21 @@
       (message "FOLDED")
       (org-cycle-remember 'folded)))))
 
-;; 一番上の見出しだけを見せる
 (define (org-cycle-overview lines)
+  "Show only the top-level headings."
   (let* ((headings (org-headings lines))
          (top (if (null? headings) 1 (apply min (map cadr headings)))))
     (outline-flag-region 1 (point-max) #f)
     (org-fold-showing lines (map car (filter (lambda (h) (<= (cadr h) top)) headings))
                       (org-line-count lines))))
 
-;; 全ての見出しを見せる (本文は隠す)
 (define (org-cycle-content lines)
+  "Show all the headings, hiding the bodies."
   (outline-flag-region 1 (point-max) #f)
   (org-fold-showing lines (map car (org-headings lines)) (org-line-count lines)))
 
-;; 全体の開け閉め (OVERVIEW, CONTENTS, SHOW ALL の順)
 (define-command (org-global-cycle)
+  "Cycle the whole buffer: OVERVIEW, CONTENTS and SHOW ALL."
   (let ((lines (org-lines)))
     (cond
      ((org-cycle-repeated? 'overview)
@@ -583,38 +608,40 @@
       (message "OVERVIEW")
       (org-cycle-remember 'overview)))))
 
-;; TAB: 表なら次の欄, 見出しなら開け閉め, ほかは字下げ
 (define-command (org-cycle)
+  "Move to the next table field, cycle the heading, or indent.
+In a table, move to the next field; on a heading, cycle its subtree; otherwise indent."
   (let* ((lines (org-lines))
          (n (org-current-line lines)))
     (cond ((org-table-line? (org-line lines n)) (org-table-next-field))
           ((org-level (org-line lines n)) (org-cycle-local lines n))
           (else (call-interactively 'indent-for-tab-command)))))
 
-;; S-TAB: 表なら前の欄, ほかは全体の開け閉め
 (define-command (org-shifttab)
+  "Move to the previous table field, or cycle the whole buffer."
   (let ((lines (org-lines)))
     (if (org-table-line? (org-line lines (org-current-line lines)))
         (org-table-previous-field)
         (org-global-cycle))))
 
-;; 位置が隠れていれば, 見せる
 (define (org-reveal pos)
+  "Show POS if it is hidden."
   (when (outline-invisible-p pos)
     (outline-flag-region (max 1 (- pos 1)) (+ pos 1) #f)))
 
 ;;; 見出しを作る
 
-;; 見出しの題の, 行の中の範囲 ((始め 終わり). 題が無ければ #f)
 (define (org-heading-title-range line)
+  "Return the range of the title in the heading LINE as (START END), or #f if there is no title."
   (let ((m (regexp-match-positions
             (string-append "^(\\*+)(?: +(" (org-todo-regexp) "))?(?: +(\\[#.\\]))?"
                            "(?: +(.*?))??(?:[ \\t]+(:[\\w@#%:]+:))?[ \\t]*$")
             line)))
     (and m (list-ref m 4))))
 
-;; 新しい見出しの TODO (todo が #t なら, 前の見出しの, 済みでない状態. 無ければ, 始めの状態)
 (define (org-new-heading-todo lines n todo)
+  "Return the TODO state of a new heading after line N.
+If TODO is true, it is the not-done state of the previous heading, or the first state."
   (and todo
        (let* ((h (org-heading-line lines n))
               (current (and h (cadr (org-parse-heading (org-line lines h))))))
@@ -622,8 +649,9 @@
              current
              (car (org-todo-keywords-1))))))
 
-;; 見出しを入れる (M-RET). todo が #t なら, TODO の見出し
 (define (org-insert-heading-1 todo)
+  "Insert a heading (M-RET).
+If TODO is true, insert a TODO heading."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (col (org-current-column lines))
@@ -665,8 +693,9 @@
       (org-replace-lines lines n n (list (substring line 0 col) (string-append prefix (substring line col))))
       (goto-char (+ start col 1 (string-length prefix)))))))
 
-;; 木の後に見出しを入れる (C-RET)
 (define (org-insert-heading-after-subtree todo)
+  "Insert a heading after the current subtree (C-RET).
+If TODO is true, insert a TODO heading."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (h (org-heading-line lines n))
@@ -689,31 +718,38 @@
                 (insert prefix "\n")
                 (goto-char (- (point) 1))))))))
 
-;; 見出しを入れる (リストの項目でなくても)
-(define-command (org-insert-heading) (org-insert-heading-1 #f))
-(define-command (org-insert-heading-respect-content) (org-insert-heading-after-subtree #f))
-(define-command (org-insert-todo-heading-respect-content) (org-insert-heading-after-subtree #t))
+(define-command (org-insert-heading)
+  "Insert a heading, even in a list item."
+  (org-insert-heading-1 #f))
+(define-command (org-insert-heading-respect-content)
+  "Insert a heading after the current subtree."
+  (org-insert-heading-after-subtree #f))
+(define-command (org-insert-todo-heading-respect-content)
+  "Insert a TODO heading after the current subtree."
+  (org-insert-heading-after-subtree #t))
 
-;; M-RET: 表なら何もしない, リストなら項目, ほかは見出し
 (define-command (org-meta-return)
+  "Insert a list item or a heading.
+In a table, do nothing; in a list, insert an item; otherwise insert a heading."
   (cond ((org-in-item) (org-insert-item #f))
         (else (org-insert-heading-1 #f))))
 
-;; M-S-RET: TODO の見出し (リストなら, チェックボックスの項目)
 (define-command (org-insert-todo-heading)
+  "Insert a TODO heading, or a checkbox item in a list."
   (if (org-in-item) (org-insert-item #t) (org-insert-heading-1 #t)))
 
 ;;; 見出しを動かす
 
-;; from 行から to 行までの見出しの深さを変える
 (define (org-shift-headings lines from to delta)
+  "Change the level of the headings from line FROM to line TO by DELTA."
   (when (and (< delta 0) (= (org-level (org-line lines from)) 1))
     (error "Cannot promote to level 0.  UNDO to recover if necessary"))
   (for-each (lambda (n) (when (org-level (org-line lines n)) (org-shift-heading n delta)))
             (map (lambda (i) (+ from i)) (org-range (+ (- to from) 1)))))
 
-;; n 行目の見出しの深さを変える. 星を足すか消して, タグを揃え直す (カーソルは, 文と一緒に動く)
 (define (org-shift-heading n delta)
+  "Change the level of the heading at line N by DELTA.
+Add or remove stars and realign the tags; point moves with the text."
   (let* ((lines (org-lines))
          (end (+ (org-line-start lines n) (org-level (org-line lines n)))))
     (if (> delta 0)
@@ -724,19 +760,29 @@
       (when (list-ref parsed 4)
         (org-set-line-changed lines n (apply org-make-heading parsed))))))
 
-;; 見出しを浅く, 深くする (subtree が #t なら, 木ごと)
 (define (org-promote-1 delta subtree)
+  "Promote or demote the heading by DELTA.
+If SUBTREE is true, change the whole subtree."
   (let* ((lines (org-lines))
          (n (org-back-to-heading lines)))
     (org-shift-headings lines n (if subtree (org-subtree-end lines n) n) delta)))
 
-(define-command (org-do-promote) (org-promote-1 -1 #f))
-(define-command (org-do-demote) (org-promote-1 1 #f))
-(define-command (org-promote-subtree) (org-promote-1 -1 #t))
-(define-command (org-demote-subtree) (org-promote-1 1 #t))
+(define-command (org-do-promote)
+  "Promote the current heading."
+  (org-promote-1 -1 #f))
+(define-command (org-do-demote)
+  "Demote the current heading."
+  (org-promote-1 1 #f))
+(define-command (org-promote-subtree)
+  "Promote the current subtree."
+  (org-promote-1 -1 #t))
+(define-command (org-demote-subtree)
+  "Demote the current subtree."
+  (org-promote-1 1 #t))
 
-;; 同じ深さの, 前か後の見出しの行 (親を越えるなら #f)
 (define (org-sibling lines n forward)
+  "Return the line of the previous or next heading at the same level as line N.
+FORWARD selects the next one. Return #f if it would cross the parent."
   (let ((level (org-level (org-line lines n)))
         (headings (if forward
                       (filter (lambda (h) (> (car h) n)) (org-headings lines))
@@ -747,8 +793,9 @@
             ((= (cadr (car rest)) level) (car (car rest)))
             (else (loop (cdr rest)))))))
 
-;; 木を, 前か後の, 同じ深さの木と入れ換える
 (define (org-move-subtree forward)
+  "Swap the current subtree with the previous or next one at the same level.
+FORWARD selects the next one."
   (let* ((lines (org-lines))
          (n (org-back-to-heading lines))
          (sibling (or (org-sibling lines n forward)
@@ -770,11 +817,16 @@
                              (org-line-end new-lines (org-subtree-end new-lines moved)) #t))
       (org-goto-line-column new-lines (+ moved offset) col))))
 
-(define-command (org-move-subtree-up) (org-move-subtree #f))
-(define-command (org-move-subtree-down) (org-move-subtree #t))
+(define-command (org-move-subtree-up)
+  "Move the current subtree up past the previous one."
+  (org-move-subtree #f))
+(define-command (org-move-subtree-down)
+  "Move the current subtree down past the next one."
+  (org-move-subtree #t))
 
-;; 2 つの行を入れ換える (n 行目と, その前か後の行)
 (define (org-drag-line forward)
+  "Swap the current line with the previous or next line.
+FORWARD selects the next one."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (m (if forward (+ n 1) (- n 1)))
@@ -785,8 +837,9 @@
       (org-replace-lines lines from to (list (org-line lines to) (org-line lines from)))
       (org-goto-line-column (org-lines) m col))))
 
-;; C-c *: 見出しを文に, 項目と文を見出しにする (カーソルは, 文と一緒に動く)
 (define-command (org-ctrl-c-star)
+  "Turn a heading into text, or an item or text into a heading.
+Point moves with the text."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (line (org-line lines n))
@@ -811,13 +864,14 @@
 
 ;;; 動く
 
-;; 見出しへ動く (見せる)
 (define (org-goto-heading lines n)
+  "Move to the heading at line N, showing it."
   (goto-char (org-line-start lines n))
   (org-reveal (point)))
 
-;; 次と前の, 見えている見出し (無ければ, バッファの終わりと始め)
 (define (org-visible-heading forward)
+  "Move to the next or previous visible heading.
+FORWARD selects the next one. Without one, move to the end or start of the buffer."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (candidates (filter (lambda (h)
@@ -828,11 +882,16 @@
           (forward (goto-char (org-line-start lines (car (car candidates)))))
           (else (goto-char (org-line-start lines (car (org-last candidates))))))))
 
-(define-command (org-next-visible-heading) (org-visible-heading #t))
-(define-command (org-previous-visible-heading) (org-visible-heading #f))
+(define-command (org-next-visible-heading)
+  "Move to the next visible heading."
+  (org-visible-heading #t))
+(define-command (org-previous-visible-heading)
+  "Move to the previous visible heading."
+  (org-visible-heading #f))
 
-;; 同じ深さの, 次と前の見出し (親の中だけ. 無ければ動かない)
 (define (org-heading-same-level forward)
+  "Move to the next or previous heading at the same level, within the parent.
+FORWARD selects the next one. Without one, do not move."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (h (org-back-to-heading lines)))
@@ -841,19 +900,23 @@
         (let ((sibling (org-sibling lines h forward)))
           (when sibling (goto-char (org-line-start lines sibling)))))))
 
-(define-command (org-forward-heading-same-level) (org-heading-same-level #t))
-(define-command (org-backward-heading-same-level) (org-heading-same-level #f))
+(define-command (org-forward-heading-same-level)
+  "Move to the next heading at the same level."
+  (org-heading-same-level #t))
+(define-command (org-backward-heading-same-level)
+  "Move to the previous heading at the same level."
+  (org-heading-same-level #f))
 
-;; 上の見出しの行 (無ければ #f)
 (define (org-parent lines n)
+  "Return the line of the parent heading of line N, or #f if there is none."
   (let ((level (org-level (org-line lines n))))
     (let loop ((rest (reverse (filter (lambda (h) (< (car h) n)) (org-headings lines)))))
       (cond ((null? rest) #f)
             ((< (cadr (car rest)) level) (car (car rest)))
             (else (loop (cdr rest)))))))
 
-;; C-c C-u: 上の見出しへ
 (define-command (outline-up-heading)
+  "Move to the parent heading."
   (let* ((lines (org-lines))
          (parent (org-parent lines (org-back-to-heading lines))))
     (if parent
@@ -862,22 +925,25 @@
 
 ;;; リスト
 
-;; リストの項目を分ける ((字下げ 印 チェックボックス 文). チェックボックスが無ければ #f. 項目でなければ #f)
 (define (org-parse-item line)
+  "Split the list item LINE into (INDENT BULLET CHECKBOX TEXT).
+CHECKBOX is #f if there is none. Return #f if LINE is not an item."
   (let ((m (regexp-match "^([ \\t]*)([-+*]|[0-9]+[.)])(?:[ \\t]+|$)(?:(\\[[ X-]\\])(?:[ \\t]+|$))?(.*)$" line)))
     (and m
          (not (and (equal? (cadr m) "") (equal? (caddr m) "*")))
          (cdr m))))
 
-;; 項目の行を作る
 (define (org-make-item indent bullet box text)
+  "Return an item line made of INDENT, BULLET, BOX and TEXT."
   (string-append indent bullet " " (if box (string-append box " ") "") text))
 
-;; 印が数なら #t
-(define (org-ordered-bullet? bullet) (if (regexp-match "^[0-9]" bullet) #t #f))
+(define (org-ordered-bullet? bullet)
+  "Return #t if BULLET is a number."
+  (if (regexp-match "^[0-9]" bullet) #t #f))
 
-;; n 行目の項目の, 最後の行 (子の項目と, 続きの行を含む. 後ろの空の行は含まない)
 (define (org-item-end lines n)
+  "Return the last line of the item at line N.
+It includes the child items and continuation lines, but not trailing empty lines."
   (let ((indent (org-indentation (org-line lines n)))
         (count (org-line-count lines)))
     (let loop ((k (+ n 1)) (last n) (blanks 0))
@@ -889,8 +955,8 @@
                   ((or (org-level line) (<= (org-indentation line) indent)) last)
                   (else (loop (+ k 1) k 0))))))))
 
-;; n 行目を含む項目の行 (無ければ #f)
 (define (org-item-at lines n)
+  "Return the line of the item containing line N, or #f if there is none."
   (let loop ((k n))
     (if (< k 1)
         #f
@@ -902,13 +968,14 @@
                  #f)
                 (else (loop (- k 1))))))))
 
-;; カーソルの項目の行 (無ければ #f)
 (define (org-in-item)
+  "Return the line of the item at point, or #f if there is none."
   (let ((lines (org-lines)))
     (org-item-at lines (org-current-line lines))))
 
-;; 同じ深さの, 前か後の項目 (無ければ #f)
 (define (org-item-sibling lines n forward)
+  "Return the previous or next item at the same level as line N, or #f if there is none.
+FORWARD selects the next one."
   (let ((indent (org-indentation (org-line lines n))))
     (if forward
         (let loop ((k (+ (org-item-end lines n) 1)))
@@ -930,16 +997,16 @@
                       ((> (org-indentation line) indent) (loop (- k 1)))
                       (else #f))))))))
 
-;; リストの, 同じ深さの項目の行 (始めから)
 (define (org-item-siblings lines n)
+  "Return the lines of the items at the same level as line N in the list, from the first."
   (let ((first (let loop ((k n))
                  (let ((previous (org-item-sibling lines k #f)))
                    (if previous (loop previous) k)))))
     (let loop ((k first) (found '()))
       (if k (loop (org-item-sibling lines k #t) (cons k found)) (reverse found)))))
 
-;; 項目の上の項目 (無ければ #f)
 (define (org-item-parent lines n)
+  "Return the parent item of line N, or #f if there is none."
   (let ((indent (org-indentation (org-line lines n))))
     (let loop ((k (- n 1)))
       (if (< k 1)
@@ -951,16 +1018,17 @@
                    k)
                   (else (loop (- k 1)))))))))
 
-;; 項目の子の項目 (すぐ下の深さのもの)
 (define (org-item-children lines n)
+  "Return the child items of line N, one level deeper."
   (let* ((end (org-item-end lines n))
          (items (filter (lambda (k) (org-parse-item (org-line lines k)))
                         (map (lambda (i) (+ n 1 i)) (org-range (- end n)))))
          (indent (if (null? items) 0 (apply min (map (lambda (k) (org-indentation (org-line lines k))) items)))))
     (filter (lambda (k) (= (org-indentation (org-line lines k)) indent)) items)))
 
-;; リストの印を揃え, 数を振り直す (始めの項目の印に合わせる)
 (define (org-fix-bullets lines n)
+  "Make the bullets of the list at line N the same, and renumber them.
+They follow the bullet of the first item."
   (let* ((siblings (org-item-siblings lines n))
          (first (org-parse-item (org-line lines (car siblings))))
          (bullet (cadr first))
@@ -974,8 +1042,9 @@
            (org-set-line lines k (org-make-item (car item) new (caddr item) (list-ref item 3))))))
      siblings (org-range (length siblings)))))
 
-;; 項目を入れる (checkbox が #t なら, チェックボックスを付ける)
 (define (org-insert-item checkbox)
+  "Insert a list item.
+If CHECKBOX is true, add a checkbox."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (col (org-current-column lines))
@@ -1006,8 +1075,9 @@
         (goto-char (+ (org-line-start lines k) (- (string-length line) (string-length (list-ref item 3)))))
         (when checkbox (org-update-statistics))))))
 
-;; 項目を, 前か後の項目と入れ換える
 (define (org-move-item forward)
+  "Swap the current item with the previous or next one.
+FORWARD selects the next one."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (col (org-current-column lines))
@@ -1026,8 +1096,9 @@
       (org-fix-bullets (org-lines) moved)
       (org-goto-line-column (org-lines) moved col))))
 
-;; 項目の字下げを変える (subtree が #t なら, 子も. delta は 1 (深く) か -1 (浅く))
 (define (org-indent-item delta subtree)
+  "Change the indentation of the current item by DELTA (1 deeper, -1 shallower).
+If SUBTREE is true, change the children too."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (col (org-current-column lines))
@@ -1070,11 +1141,12 @@
         (org-goto-line-column (org-lines) n (max 0 (+ col shift)))
         (org-update-statistics)))))
 
-;; 印の順 (S-左右, C-c -)
-(define org-list-bullets '("-" "+" "*" "1." "1)"))
+(define org-list-bullets '("-" "+" "*" "1." "1)")
+  "Order of the bullets used by S-left, S-right and C-c -.")
 
-;; リストの印を変える (forward が #f なら, 前の印)
 (define (org-cycle-list-bullet forward)
+  "Change the bullet of the list.
+If FORWARD is #f, use the previous bullet."
   (let* ((lines (org-lines))
          (i (or (org-in-item) (error "Not at an item")))
          (siblings (org-item-siblings lines i))
@@ -1097,8 +1169,9 @@
     (org-fix-bullets (org-lines) (car siblings))
     (org-goto-line-column (org-lines) n col)))
 
-;; 次と前の項目へ (S-上下)
 (define (org-item-move-point forward)
+  "Move to the next or previous item (S-up, S-down).
+FORWARD selects the next one."
   (let* ((lines (org-lines))
          (i (or (org-in-item) (error "Not in an item")))
          (sibling (org-item-sibling lines i forward)))
@@ -1106,8 +1179,8 @@
         (goto-char (org-line-start lines sibling))
         (error (if forward "On last item" "On first item")))))
 
-;; C-c -: 表なら横線, 項目なら印を変える, 見出しと文は項目にする
 (define-command (org-ctrl-c-minus)
+  "Insert a table rule, change the list bullet, or turn a heading or text into an item."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (line (org-line lines n)))
@@ -1122,8 +1195,8 @@
 
 ;;; チェックボックスと, 数える印 ([2/3] [66%])
 
-;; チェックボックスを切り換える
 (define-command (org-toggle-checkbox)
+  "Toggle the checkbox of the current item."
   (let* ((lines (org-lines))
          (i (or (org-in-item) (error "Cannot toggle checkbox outside of a list")))
          (item (org-parse-item (org-line lines i))))
@@ -1136,8 +1209,9 @@
           (org-update-statistics))
         (message "Item has no checkbox"))))
 
-;; 上の項目のチェックボックスを, 子に合わせる (全て済みなら [X], 一部なら [-])
 (define (org-fix-parent-checkboxes lines i)
+  "Update the checkboxes of the parents of item I from their children.
+A parent is [X] if all children are done, and [-] if some are."
   (let ((parent (org-item-parent lines i)))
     (when parent
       (let* ((item (org-parse-item (org-line lines parent)))
@@ -1156,8 +1230,8 @@
                                        (list-ref item 3)))
           (org-fix-parent-checkboxes (org-lines) parent))))))
 
-;; 数える印の, 済みと全ての数 ((済み 全て))
 (define (org-statistics lines n)
+  "Return the done and total counts for the statistics cookie at line N, as (DONE TOTAL)."
   (let ((line (org-line lines n)))
     (if (org-level line)
         (let* ((end (org-entry-end lines n))
@@ -1185,8 +1259,8 @@
                                   (org-item-children lines n)))))
           (list (length (filter (lambda (b) (equal? b "[X]")) boxes)) (length boxes))))))
 
-;; 行の, 数える印を書き直す
 (define (org-update-cookies-in-line lines n)
+  "Rewrite the statistics cookies in line N."
   (let* ((line (org-line lines n))
          (stats (org-statistics lines n))
          (cookies (org-all-matches "\\[([0-9]*)(%|/([0-9]*))\\]" line)))
@@ -1205,10 +1279,12 @@
                (loop (cdr rest) (cadr (car m))
                      (string-append result (substring line start (car (car m))) new)))))))))
 
-;; バッファの, 全ての数える印を書き直す (C-c #)
-(define-command (org-update-statistics-cookies) (org-update-statistics))
+(define-command (org-update-statistics-cookies)
+  "Rewrite all the statistics cookies in the buffer."
+  (org-update-statistics))
 
 (define (org-update-statistics)
+  "Rewrite all the statistics cookies in the headings and items of the buffer."
   (let ((lines (org-lines)))
     (for-each (lambda (n)
                 (let ((line (org-line lines n)))
@@ -1219,87 +1295,96 @@
 
 ;;; 日付
 
-;; 今日 (2026-10-26 の形)
-(define (org-today) (format-time-string "%Y-%m-%d"))
+(define (org-today)
+  "Return today's date, like 2026-10-26."
+  (format-time-string "%Y-%m-%d"))
 
-;; 日付の昼の時刻 (秒. 夏時間でも, 日を足して日付がずれないように, 昼にする)
-(define (org-date-time date) (date-to-time (string-append date " 12:00")))
+(define (org-date-time date)
+  "Return the time of noon on DATE, in seconds.
+Noon keeps the date right when adding days across daylight saving time."
+  (date-to-time (string-append date " 12:00")))
 
-;; 日付に日を足す
 (define (org-date-add date days)
+  "Add DAYS days to DATE."
   (format-time-string "%Y-%m-%d" (+ (org-date-time date) (* days 86400))))
 
-;; 年, 月, 日から日付を作る (月と日が範囲を越えれば, 繰り上げる)
 (define (org-make-date year month day)
+  "Return the date of YEAR, MONTH and DAY.
+A month or day out of range carries over."
   (let* ((m (- month 1))
          (y (+ year (/ (- m (modulo m 12)) 12)))
          (first (format "%d-%s-01" y (org-2d (+ (modulo m 12) 1)))))
     (org-date-add first (- day 1))))
 
-;; 日付の (年 月 日)
-(define (org-date-parts date) (map string->number (split-string date "-")))
+(define (org-date-parts date)
+  "Return DATE as (YEAR MONTH DAY)."
+  (map string->number (split-string date "-")))
 
-;; 日付に月を足す
 (define (org-date-add-months date months)
+  "Add MONTHS months to DATE."
   (let ((p (org-date-parts date)))
     (org-make-date (car p) (+ (cadr p) months) (caddr p))))
 
-;; a から b までの日数
 (define (org-days-between a b)
+  "Return the number of days from A to B."
   (let ((d (- (org-date-time b) (org-date-time a))))
     (if (>= d 0)
         (quotient (+ d 43200) 86400)
         (- (quotient (+ (- d) 43200) 86400)))))
 
-;; 曜日 (Mon など)
-(define (org-weekday date) (format-time-string "%a" (org-date-time date)))
+(define (org-weekday date)
+  "Return the weekday of DATE, like Mon."
+  (format-time-string "%a" (org-date-time date)))
 
-;; 日付に, 数と単位 (d w m y) で足す
 (define (org-date-shift date n unit)
+  "Add N units to DATE. UNIT is d, w, m or y."
   (cond ((equal? unit "d") (org-date-add date n))
         ((equal? unit "w") (org-date-add date (* 7 n)))
         ((equal? unit "m") (org-date-add-months date n))
         ((equal? unit "y") (org-date-add-months date (* 12 n)))
         (else date)))
 
-;; 日付の文字 (<2026-10-26 Mon 10:00 +1w> の形. active が #f なら [ ])
 (define (org-make-timestamp date time active . rest)
+  "Return a timestamp of DATE and TIME, like <2026-10-26 Mon 10:00 +1w>.
+If ACTIVE is #f, use [ ] instead of < >."
   (string-append (if active "<" "[") date " " (org-weekday date)
                  (if time (string-append " " time) "")
                  (if (and (pair? rest) (car rest) (not (equal? (car rest) ""))) (car rest) "")
                  (if active ">" "]")))
 
-;; 今の日時 ([2026-10-26 Mon 10:00])
 (define (org-now-inactive)
+  "Return the current date and time, like [2026-10-26 Mon 10:00]."
   (org-make-timestamp (org-today) (format-time-string "%H:%M") #f))
 
-;; 日付の正規表現 (括弧: 1 括弧 2 日付 3 時刻 4 終わりの時刻 5 繰り返しと警告)
 (define org-ts-regexp
   (string-append "([<\\[])([0-9]{4}-[0-9]{2}-[0-9]{2})(?: +[^ \\]>0-9+-]+)?"
                  "(?: +([0-9]{1,2}:[0-9]{2})(?:-([0-9]{1,2}:[0-9]{2}))?)?"
-                 "((?: +[.+]?\\+[0-9]+[hdwmy])?(?: +-[0-9]+[hdwmy])?)[ ]*([>\\]])"))
+                 "((?: +[.+]?\\+[0-9]+[hdwmy])?(?: +-[0-9]+[hdwmy])?)[ ]*([>\\]])")
+  "Regexp of a timestamp.
+Groups: 1 bracket, 2 date, 3 time, 4 end time, 5 repeater and warning.")
 
-;; 日付を分ける ((括弧 日付 時刻 終わりの時刻 繰り返しと警告). 日付でなければ #f)
 (define (org-parse-timestamp s)
+  "Split the timestamp S into (BRACKET DATE TIME END-TIME REPEATER).
+Return #f if S is not a timestamp."
   (let ((m (regexp-match (string-append "^" org-ts-regexp "$") s)))
     (and m (equal? (if (equal? (cadr m) "<") ">" "]") (list-ref m 6))
          (list (cadr m) (caddr m) (list-ref m 3) (list-ref m 4) (list-ref m 5)))))
 
-;; 分けた日付から, 文字を作る
 (define (org-timestamp-string parsed)
+  "Return the timestamp of the parsed timestamp PARSED."
   (let ((time (and (caddr parsed)
                    (if (list-ref parsed 3)
                        (string-append (caddr parsed) "-" (list-ref parsed 3))
                        (caddr parsed)))))
     (org-make-timestamp (cadr parsed) time (equal? (car parsed) "<") (list-ref parsed 4))))
 
-;; 繰り返し ((印 数 単位). 無ければ #f)
 (define (org-timestamp-repeater parsed)
+  "Return the repeater of PARSED as (MARK NUMBER UNIT), or #f if there is none."
   (let ((m (regexp-match " +([.+]?\\+)([0-9]+)([hdwmy])" (or (list-ref parsed 4) ""))))
     (and m (list (cadr m) (string->number (caddr m)) (list-ref m 3)))))
 
-;; 警告の日数 (-3d など. 無ければ #f)
 (define (org-timestamp-warning parsed)
+  "Return the warning period of PARSED, like -3d, or #f if there is none."
   (let ((m (regexp-match " +-([0-9]+)([hdwmy])" (or (list-ref parsed 4) ""))))
     (and m (let ((n (string->number (cadr m))))
              (cond ((equal? (caddr m) "w") (* 7 n))
@@ -1307,13 +1392,13 @@
                    ((equal? (caddr m) "y") (* 365 n))
                    (else n))))))
 
-;; 曜日の名前
-(define org-weekdays '("sun" "mon" "tue" "wed" "thu" "fri" "sat"))
+(define org-weekdays '("sun" "mon" "tue" "wed" "thu" "fri" "sat") "Names of the weekdays.")
 
-;; 入れた日付を読む ((日付 時刻). 時刻が無ければ #f. org-read-date と同じ書き方の一部)
-;; 空 (既定), +3 (今日から 3 日後), +2w, -1d, ++1w (既定から), 2026-10-30, 10-30, 10/30, 30,
-;; fri (次の金曜), 10:00, 10:00-11:00, 3pm
 (define (org-read-date-analyze input default)
+  "Read the date INPUT relative to DEFAULT, and return (DATE TIME).
+TIME is #f if there is none. This is part of the syntax of `org-read-date':
+empty (DEFAULT), +3 (3 days from today), +2w, -1d, ++1w (from DEFAULT),
+2026-10-30, 10-30, 10/30, 30, fri (next Friday), 10:00, 10:00-11:00 and 3pm."
   (let* ((today (org-today))
          (s (string-downcase (string-trim input)))
          (tm (regexp-match "([0-9]{1,2}):([0-9]{2})(?:-([0-9]{1,2}):([0-9]{2}))?" s))
@@ -1362,20 +1447,22 @@
            (else (error "Cannot read date: %s" input)))))
     (list date (and time (org-normalize-time time)))))
 
-;; 時刻の時を 2 桁にする (9:00 → 09:00)
 (define (org-normalize-time time)
+  "Make the hour of TIME two digits (9:00 to 09:00)."
   (string-join (map (lambda (t)
                       (let ((p (split-string t ":")))
                         (string-append (org-2d (string->number (car p))) ":" (cadr p))))
                     (split-string time "-"))
                "-"))
 
-;; 日付を聞く ((日付 時刻))
 (define (org-read-date prompt default)
+  "Read a date in the minibuffer with PROMPT, and return (DATE TIME).
+DEFAULT is the default date."
   (org-read-date-analyze (read-string (format "%sDate+time [%s]: " prompt default)) default))
 
-;; カーソルの行の, カーソルのある日付 ((始め 終わり 分けたもの). 桁で. 無ければ #f)
 (define (org-timestamp-at lines n col)
+  "Return the timestamp at column COL of line N as (START END PARSED), or #f if there is none.
+START and END are columns."
   (let ((line (org-line lines n)))
     (let loop ((ms (org-all-matches org-ts-regexp line)))
       (cond ((null? ms) #f)
@@ -1385,8 +1472,9 @@
                (if parsed (list (car range) (cadr range) parsed) (loop (cdr ms)))))
             (else (loop (cdr ms)))))))
 
-;; C-c . と C-c !: 日付を入れる (日付の上なら, 変える)
 (define (org-insert-timestamp-command active)
+  "Insert a timestamp, or change the one at point (C-c . and C-c !).
+If ACTIVE is #f, insert an inactive timestamp."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (at (org-timestamp-at lines n (org-current-column lines)))
@@ -1399,11 +1487,16 @@
           (goto-char (+ start (car at) (string-length stamp))))
         (insert stamp))))
 
-(define-command (org-time-stamp) (org-insert-timestamp-command #t))
-(define-command (org-time-stamp-inactive) (org-insert-timestamp-command #f))
+(define-command (org-time-stamp)
+  "Insert a timestamp, or change the one at point."
+  (org-insert-timestamp-command #t))
+(define-command (org-time-stamp-inactive)
+  "Insert an inactive timestamp, or change the one at point."
+  (org-insert-timestamp-command #f))
 
-;; 日付を変える (S-上下左右). what: year month day hour minute
 (define (org-timestamp-change parsed what n)
+  "Change the part WHAT of PARSED by N (S-arrows).
+WHAT is year, month, day, hour or minute."
   (let* ((date (cadr parsed))
          (time (caddr parsed)))
     (if (member what '("hour" "minute"))
@@ -1428,8 +1521,8 @@
                     (else (org-date-add date n)))
               time (list-ref parsed 3) (list-ref parsed 4)))))
 
-;; カーソルの所の, 日付の部分 (year month day hour minute)
 (define (org-timestamp-part at col)
+  "Return the part of the timestamp AT at column COL: year, month, day, hour or minute."
   (let* ((k (- col (car at)))
          (parsed (caddr at))
          (time (caddr parsed))
@@ -1443,8 +1536,10 @@
           ((and time (> k hour-end) (<= k (+ time-start (string-length time)))) "minute")
           (else "day"))))
 
-;; カーソルの日付を変える (無ければ #f)
 (define (org-shift-timestamp n by-day)
+  "Change the timestamp at point by N.
+If BY-DAY is true, change the day; otherwise the part at point.
+Return #f if there is no timestamp at point."
   (let* ((lines (org-lines))
          (line-n (org-current-line lines))
          (col (org-current-column lines))
@@ -1459,24 +1554,25 @@
 
 ;;; SCHEDULED, DEADLINE, CLOSED
 
-;; 行が予定の行 (SCHEDULED: など) なら #t
 (define (org-planning-line? line)
+  "Return #t if LINE is a planning line (SCHEDULED: and so on)."
   (if (regexp-match "^[ \\t]*(?:SCHEDULED|DEADLINE|CLOSED): *[<\\[]" line) #t #f))
 
-;; 予定の行の, ((言葉 日付) ...)
 (define (org-planning-items line)
+  "Return the planning items of LINE as ((KEYWORD TIMESTAMP) ...)."
   (map (lambda (m) (list (org-match-string line m 1) (org-match-string line m 2)))
        (org-all-matches "(SCHEDULED|DEADLINE|CLOSED): *([<\\[][^>\\]\\n]*[>\\]])" line)))
 
-;; n 行目の見出しの, 予定 (言葉 → 日付. 無ければ #f)
 (define (org-get-planning lines n keyword)
+  "Return the timestamp of KEYWORD in the planning of the heading at line N, or #f."
   (and (< n (org-line-count lines))
        (org-planning-line? (org-line lines (+ n 1)))
        (let ((found (assoc keyword (org-planning-items (org-line lines (+ n 1))))))
          (and found (cadr found)))))
 
-;; n 行目の見出しの予定を変える (stamp が #f なら消す. 新しいものは, 行の始めに書く)
 (define (org-set-planning lines n keyword stamp)
+  "Set the timestamp of KEYWORD in the planning of the heading at line N to STAMP.
+If STAMP is #f, remove it. A new one is written at the start of the line."
   (let* ((has (and (< n (org-line-count lines)) (org-planning-line? (org-line lines (+ n 1)))))
          (line (and has (org-line lines (+ n 1))))
          (indent (if has (car (regexp-match "^[ \\t]*" line)) ""))
@@ -1488,8 +1584,8 @@
           (has (org-set-line lines (+ n 1) text))
           ((not (null? new)) (org-insert-lines-after lines n (list text))))))
 
-;; C-c C-s と C-c C-d: 予定と締め切りを書く
 (define (org-planning-command keyword)
+  "Read a date and write it as KEYWORD (C-c C-s and C-c C-d)."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (old (org-get-planning lines h keyword))
@@ -1499,13 +1595,19 @@
     (org-set-planning lines h keyword stamp)
     (message (if (equal? keyword "SCHEDULED") "Scheduled to %s" "Deadline on %s") stamp)))
 
-(define-command (org-schedule) (org-planning-command "SCHEDULED"))
-(define-command (org-deadline) (org-planning-command "DEADLINE"))
+(define-command (org-schedule)
+  "Write the SCHEDULED date of the current heading."
+  (org-planning-command "SCHEDULED"))
+(define-command (org-deadline)
+  "Write the DEADLINE date of the current heading."
+  (org-planning-command "DEADLINE"))
 
 ;;; TODO
 
-;; 次か前の状態 (C-c C-t は, 同じ組の中で回す. S-左右は, 全ての状態を回す)
 (define (org-next-todo old forward all)
+  "Return the state after or before OLD.
+FORWARD selects the next one. If ALL is true, cycle through all the states;
+otherwise cycle within the set of OLD (C-c C-t)."
   (let ((words (if all
                    (org-todo-keywords-1)
                    (let ((set (org-todo-set old))) (append (car set) (cadr set))))))
@@ -1516,8 +1618,8 @@
                 (forward (and (< (+ i 1) (length words)) (list-ref words (+ i 1))))
                 (else (and (> i 0) (list-ref words (- i 1)))))))))
 
-;; 状態をキーで選ぶ (SPC で消す)
 (define (org-fast-todo-selection)
+  "Select a state by its key (SPC removes the state)."
   (let* ((keys (org-todo-keys))
          (answer (read-string
                   (string-append (string-join (map (lambda (k) (format "[%s] %s" (car k) (cadr k))) keys) "  ")
@@ -1528,8 +1630,9 @@
           ((member (string-upcase answer) (org-todo-keywords-1)) (string-upcase answer))
           (else (error "Quit")))))
 
-;; 見出しの状態を変える (new が #f なら消す). 済みにすれば CLOSED を書き, 繰り返しなら日付を進める
 (define (org-set-todo h new)
+  "Set the state of the heading at line H to NEW, or remove it if NEW is #f.
+Marking it done writes CLOSED, and moves a repeating date forward."
   (let* ((lines (org-lines))
          (parsed (org-parse-heading (org-line lines h)))
          (old (cadr parsed))
@@ -1547,8 +1650,8 @@
         (org-set-planning (org-lines) h "CLOSED" #f))))
     (org-update-statistics)))
 
-;; 繰り返す予定 ((言葉 日付) ...)
 (define (org-repeating-stamps lines h)
+  "Return the repeating timestamps of the heading at line H as ((KEYWORD TIMESTAMP) ...)."
   (if (and (< h (org-line-count lines)) (org-planning-line? (org-line lines (+ h 1))))
       (filter (lambda (i) (and (member (car i) '("SCHEDULED" "DEADLINE"))
                                (let ((p (org-parse-timestamp (cadr i))))
@@ -1556,8 +1659,9 @@
               (org-planning-items (org-line lines (+ h 1))))
       '()))
 
-;; 繰り返しの予定を進め, 始めの状態に戻す (LAST_REPEAT と, 状態の変わった記録を書く)
 (define (org-auto-repeat h done-word repeats)
+  "Move the repeating timestamps REPEATS forward, and reset the state of line H.
+DONE-WORD is the done state. LAST_REPEAT and a log of the state change are written."
   (let* ((head (car (car (org-todo-set done-word))))
          (old-word (let ((set (org-todo-set done-word))) (and (not (null? (car set))) (car (car set)))))
          (lines (org-lines))
@@ -1596,8 +1700,9 @@
       (message "Entry repeats: %s"
                (if (org-planning-line? (org-line lines (+ h 1))) (string-trim (org-line lines (+ h 1))) "")))))
 
-;; 記録を書く行 (見出しと, 予定の行と, PROPERTIES の後)
 (define (org-log-beginning lines h)
+  "Return the line to write a log of the heading at line H.
+It is after the heading, the planning line and PROPERTIES."
   (let* ((n (if (and (< h (org-line-count lines)) (org-planning-line? (org-line lines (+ h 1)))) (+ h 1) h)))
     (if (and (< n (org-line-count lines))
              (regexp-match "^[ \\t]*:PROPERTIES:[ \\t]*$" (org-line lines (+ n 1))))
@@ -1607,8 +1712,8 @@
                 (else (loop (+ k 1)))))
         n)))
 
-;; 見出しの PROPERTIES に, 値を書く (無ければ, 作る)
 (define (org-entry-put lines h name value)
+  "Set the property NAME of the heading at line H to VALUE, creating PROPERTIES if needed."
   (let* ((n (if (and (< h (org-line-count lines)) (org-planning-line? (org-line lines (+ h 1)))) (+ h 1) h))
          (line (format ":%s: %s" name value)))
     (if (and (< n (org-line-count lines))
@@ -1621,8 +1726,8 @@
                 (else (loop (+ k 1)))))
         (org-insert-lines-after lines n (list ":PROPERTIES:" line ":END:")))))
 
-;; 見出しの PROPERTIES の値 (無ければ #f)
 (define (org-entry-get lines h name)
+  "Return the property NAME of the heading at line H, or #f if there is none."
   (let ((end (org-entry-end lines h)))
     (let loop ((k (+ h 1)))
       (if (> k end)
@@ -1630,8 +1735,9 @@
           (let ((m (regexp-match (format "^[ \\t]*:%s:[ \\t]*(.*?)[ \\t]*$" (regexp-quote name)) (org-line lines k))))
             (if m (cadr m) (loop (+ k 1))))))))
 
-;; C-c C-t: 状態を変える (キーの付いた状態があれば, キーで選ぶ)
 (define-command (org-todo)
+  "Change the TODO state of the current heading.
+If some states have keys, select one by its key."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (old (cadr (org-parse-heading (org-line lines h)))))
@@ -1641,15 +1747,15 @@
 
 ;;; 優先度
 
-;; 優先度の文字 (高い順)
 (define (org-priority-chars)
+  "Return the priority characters, highest first."
   (let* ((letters "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
          (from (string-search org-priority-highest letters))
          (to (string-search org-priority-lowest letters)))
     (map (lambda (i) (org-char letters (+ from i))) (org-range (+ (- to from) 1)))))
 
-;; 見出しの優先度を変える (new が #f なら消す)
 (define (org-set-priority new)
+  "Set the priority of the current heading to NEW, or remove it if NEW is #f."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (parsed (org-parse-heading (org-line lines h))))
@@ -1659,8 +1765,9 @@
         (message "Priority of current item set to %s" new)
         (message "Priority removed"))))
 
-;; 優先度を上げる, 下げる (S-上下. 範囲を越えれば消す)
 (define (org-priority-shift up)
+  "Raise the priority if UP is true, or lower it (S-up, S-down).
+Going out of range removes it."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (current (caddr (org-parse-heading (org-line lines h))))
@@ -1670,11 +1777,15 @@
         (let ((i (+ (or (org-index-of (substring current 2 3) chars) 0) (if up -1 1))))
           (org-set-priority (and (>= i 0) (< i (length chars)) (list-ref chars i)))))))
 
-(define-command (org-priority-up) (org-priority-shift #t))
-(define-command (org-priority-down) (org-priority-shift #f))
+(define-command (org-priority-up)
+  "Raise the priority of the current heading."
+  (org-priority-shift #t))
+(define-command (org-priority-down)
+  "Lower the priority of the current heading."
+  (org-priority-shift #f))
 
-;; C-c ,: 優先度を選ぶ (SPC で消す)
 (define-command (org-priority)
+  "Select the priority of the current heading (SPC removes it)."
   (let ((answer (string-upcase
                  (read-string (format "Priority %s-%s, SPC to remove: " org-priority-highest org-priority-lowest)))))
     (cond ((org-blank? answer) (org-set-priority #f))
@@ -1683,22 +1794,22 @@
 
 ;;; タグ
 
-;; バッファの全てのタグ
 (define (org-buffer-tags lines)
+  "Return all the tags in LINES."
   (org-unique (apply append (map (lambda (line)
                                    (let ((parsed (org-parse-heading line)))
                                      (if parsed (org-heading-tags parsed) '())))
                                  lines))))
 
-;; 見出しのタグを変える
 (define (org-set-tags h tags)
+  "Set the tags of the heading at line H to TAGS."
   (let* ((lines (org-lines))
          (parsed (org-parse-heading (org-line lines h))))
     (org-set-line lines h (org-make-heading (car parsed) (cadr parsed) (caddr parsed) (list-ref parsed 3)
                                             (org-tags-string tags)))))
 
-;; C-c C-q: タグを入れる (: か空白で分ける)
 (define-command (org-set-tags-command)
+  "Read the tags of the current heading, separated by : or spaces."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (parsed (org-parse-heading (org-line lines h)))
@@ -1710,14 +1821,16 @@
 
 ;;; 表
 
-;; 表の行なら #t
-(define (org-table-line? line) (if (regexp-match "^[ \\t]*\\|" line) #t #f))
+(define (org-table-line? line)
+  "Return #t if LINE is a table line."
+  (if (regexp-match "^[ \\t]*\\|" line) #t #f))
 
-;; 横線の行なら #t
-(define (org-table-hline? line) (if (regexp-match "^[ \\t]*\\|-" line) #t #f))
+(define (org-table-hline? line)
+  "Return #t if LINE is a table rule."
+  (if (regexp-match "^[ \\t]*\\|-" line) #t #f))
 
-;; n 行目を含む表の, 始めと終わりの行 ((始め 終わり))
 (define (org-table-bounds lines n)
+  "Return the first and last lines of the table containing line N, as (START END)."
   (let ((first (let loop ((k n))
                  (if (and (> k 1) (org-table-line? (org-line lines (- k 1)))) (loop (- k 1)) k)))
         (last (let loop ((k n))
@@ -1726,19 +1839,20 @@
                     k))))
     (list first last)))
 
-;; 表の行の欄 (横線なら 'hline)
 (define (org-table-cells line)
+  "Return the fields of the table LINE, or 'hline for a rule."
   (if (org-table-hline? line)
       'hline
       (let* ((body (cadr (regexp-match "^[ \\t]*\\|(.*?)\\|?[ \\t]*$" line))))
         (map string-trim (split-string body "|")))))
 
-;; 欄が数なら #t
 (define (org-table-number? s)
+  "Return #t if the field S is a number."
   (if (regexp-match "^[<>]?[-+^.0-9]*[0-9][-+^.0-9eEdDx()%:]*$" s) #t #f))
 
-;; 表の行を揃える (rows は, 欄のリストか 'hline のリスト. 揃えた行のリストを返す)
 (define (org-table-render indent rows)
+  "Return the aligned lines of the table ROWS, indented by INDENT.
+ROWS is a list of field lists or 'hline."
   (let* ((data (filter pair? rows))
          (columns (if (null? data) 1 (apply max (map length data))))
          (cell (lambda (row i) (if (< i (length row)) (list-ref row i) "")))
@@ -1765,8 +1879,9 @@
                               " |")))
          rows)))
 
-;; カーソルの表 ((始め 終わり 字下げ 行 欄の番号 欄の中の桁))
 (define (org-table-context)
+  "Return the table at point as (START END INDENT ROW COLUMN OFFSET).
+OFFSET is the column within the field."
   (let* ((lines (org-lines))
          (n (org-current-line lines))
          (col (org-current-column lines))
@@ -1783,8 +1898,9 @@
                            (string-length (car (regexp-match "^[ ]*" (substring line cell-start))))))))
     (list first (cadr bounds) indent (- n first) column offset)))
 
-;; 表を揃え, 行 row, 欄 column (の, 文字の始めから offset) へ動く. rows-change で, 行を変えてから揃える
 (define (org-table-align-and-go rows-change row column offset)
+  "Align the table and move to row ROW, field COLUMN, OFFSET from the start of its text.
+ROWS-CHANGE changes the rows before aligning."
   (let* ((ctx (org-table-context))
          (lines (org-lines))
          (rows (rows-change (map org-table-cells (org-take (org-drop lines (- (car ctx) 1))
@@ -1798,8 +1914,9 @@
                                 (string-length (caddr ctx))
                                 (org-table-cell-column line column offset))))))
 
-;; 揃えた行の, 欄 column の文字の始めから offset の桁 (空の欄なら, | の後の空白の後)
 (define (org-table-cell-column line column offset)
+  "Return the column OFFSET from the start of the text of field COLUMN in the aligned LINE.
+For an empty field, it is after the space after |."
   (let* ((start (let loop ((i 0) (pos (string-search "|" line)))
                   (let ((next (string-search "|" line (+ pos 1))))
                     (if (or (= i column) (not next) (= next (- (string-length line) 1)))
@@ -1813,21 +1930,22 @@
         (+ start 1)
         (+ start spaces (min offset (string-length text))))))
 
-;; 欄の数
 (define (org-table-columns rows)
+  "Return the number of fields of ROWS."
   (let ((data (filter pair? rows)))
     (if (null? data) 1 (apply max (map length data)))))
 
-;; 揃える (C-c C-c)
 (define-command (org-table-align)
+  "Align the table at point."
   (let ((ctx (org-table-context)))
     (org-table-align-and-go (lambda (rows) rows) (list-ref ctx 3) (list-ref ctx 4) (list-ref ctx 5))))
 
-;; 空の行
-(define (org-table-empty-row rows) (map (lambda (i) "") (org-range (org-table-columns rows))))
+(define (org-table-empty-row rows)
+  "Return an empty row for ROWS."
+  (map (lambda (i) "") (org-range (org-table-columns rows))))
 
-;; 次の欄へ (TAB. 最後の欄なら, 行を足す)
 (define-command (org-table-next-field)
+  "Move to the next field; in the last field, add a row."
   (let* ((ctx (org-table-context))
          (row (list-ref ctx 3))
          (column (list-ref ctx 4))
@@ -1844,8 +1962,8 @@
         (org-table-align-and-go (lambda (rows) (append rows (list (org-table-empty-row rows))))
                                 (length rows) 0 0))))
 
-;; 前の欄へ (S-TAB)
 (define-command (org-table-previous-field)
+  "Move to the previous field."
   (let* ((ctx (org-table-context))
          (lines (org-lines))
          (rows (map org-table-cells (org-take (org-drop lines (- (car ctx) 1)) (+ (- (cadr ctx) (car ctx)) 1))))
@@ -1859,8 +1977,9 @@
         (org-table-align-and-go (lambda (rows) rows) (car previous) (cadr previous) 0)
         (org-table-align-and-go (lambda (rows) rows) (list-ref ctx 3) (list-ref ctx 4) 0))))
 
-;; 次の行の, 同じ欄へ (RET. 次が無いか横線なら, 行を足す)
 (define-command (org-table-next-row)
+  "Move to the same field in the next row.
+If there is no next row or it is a rule, add a row."
   (let* ((ctx (org-table-context))
          (row (list-ref ctx 3))
          (lines (org-lines))
@@ -1872,28 +1991,29 @@
                                                        (org-drop rows (+ row 1))))
                                 (+ row 1) (list-ref ctx 4) 0))))
 
-;; 横線を下に入れる (C-c -)
 (define (org-table-insert-hline)
+  "Insert a rule below the current row."
   (let ((ctx (org-table-context)))
     (org-table-align-and-go (lambda (rows) (append (org-take rows (+ (list-ref ctx 3) 1)) (list 'hline)
                                                    (org-drop rows (+ (list-ref ctx 3) 1))))
                             (list-ref ctx 3) (list-ref ctx 4) (list-ref ctx 5))))
 
-;; リストの i 番目と j 番目を入れ換える
 (define (org-swap items i j)
+  "Swap elements I and J of ITEMS."
   (map (lambda (k) (list-ref items (cond ((= k i) j) ((= k j) i) (else k)))) (org-range (length items))))
 
-;; 行の欄を変える (横線はそのまま)
 (define (org-table-map-cells rows f)
+  "Apply F to the fields of each row of ROWS, keeping rules."
   (map (lambda (row) (if (eq? row 'hline) row (f row))) rows))
 
-;; 行を, 欄の数に揃える
 (define (org-table-pad rows)
+  "Pad each row of ROWS to the number of fields."
   (let ((columns (org-table-columns rows)))
     (org-table-map-cells rows (lambda (row) (append row (map (lambda (i) "") (org-range (- columns (length row)))))))))
 
-;; 列を動かす (M-左右)
 (define (org-table-move-column forward)
+  "Move the current column left or right (M-left, M-right).
+FORWARD moves it right."
   (let* ((ctx (org-table-context))
          (c (list-ref ctx 4))
          (d (if forward (+ c 1) (- c 1)))
@@ -1904,8 +2024,9 @@
     (org-table-align-and-go (lambda (rows) (org-table-map-cells (org-table-pad rows) (lambda (row) (org-swap row c d))))
                             (list-ref ctx 3) d (list-ref ctx 5))))
 
-;; 行を動かす (M-上下)
 (define (org-table-move-row forward)
+  "Move the current row up or down (M-up, M-down).
+FORWARD moves it down."
   (let* ((ctx (org-table-context))
          (r (list-ref ctx 3))
          (d (if forward (+ r 1) (- r 1))))
@@ -1913,8 +2034,8 @@
       (error "Cannot move row further"))
     (org-table-align-and-go (lambda (rows) (org-swap rows r d)) d (list-ref ctx 4) (list-ref ctx 5))))
 
-;; 列を消す (M-S-左)
 (define (org-table-delete-column)
+  "Delete the current column (M-S-left)."
   (let* ((ctx (org-table-context))
          (c (list-ref ctx 4)))
     (org-table-align-and-go
@@ -1922,8 +2043,8 @@
                                          (lambda (row) (append (org-take row c) (org-drop row (+ c 1))))))
      (list-ref ctx 3) (max 0 (- c 1)) 0)))
 
-;; 列を左に足す (M-S-右)
 (define (org-table-insert-column)
+  "Insert a column on the left (M-S-right)."
   (let* ((ctx (org-table-context))
          (c (list-ref ctx 4)))
     (org-table-align-and-go
@@ -1931,8 +2052,8 @@
                                          (lambda (row) (append (org-take row c) (list "") (org-drop row c)))))
      (list-ref ctx 3) c 0)))
 
-;; 行を消す (M-S-上)
 (define (org-table-kill-row)
+  "Delete the current row (M-S-up)."
   (let* ((ctx (org-table-context))
          (r (list-ref ctx 3)))
     (if (= (car ctx) (cadr ctx))
@@ -1941,15 +2062,15 @@
         (org-table-align-and-go (lambda (rows) (append (org-take rows r) (org-drop rows (+ r 1))))
                                 (min r (- (cadr ctx) (car ctx) 1)) (list-ref ctx 4) 0))))
 
-;; 行を上に足す (M-S-下)
 (define (org-table-insert-row)
+  "Insert a row above (M-S-down)."
   (let* ((ctx (org-table-context))
          (r (list-ref ctx 3)))
     (org-table-align-and-go (lambda (rows) (append (org-take rows r) (list (org-table-empty-row rows)) (org-drop rows r)))
                             r (list-ref ctx 4) 0)))
 
-;; C-c |: 表を作る
 (define-command (org-table-create-or-convert-from-region)
+  "Create a table."
   (let* ((lines (org-lines))
          (n (org-current-line lines)))
     (if (org-table-line? (org-line lines n))
@@ -1974,8 +2095,10 @@
 
 ;;; 並べ替え
 
-;; C-c ^: 見出しの子を並べ替える (a: 題, n: 数, o: TODO の順, p: 優先度, t: 日付. 大文字は逆)
 (define-command (org-sort)
+  "Sort the children of the current heading.
+Sort by a (title), n (number), o (TODO order), p (priority) or t (date);
+uppercase letters sort in reverse."
   (let* ((lines (org-lines))
          (h (org-back-to-heading lines))
          (last (org-subtree-end lines h))
@@ -2011,14 +2134,15 @@
 
 ;;; キーの振り分け (表, 見出し, リスト, 日付で, 動きを変える)
 
-;; ほかの所で押したとき
 (define (org-modifier-cursor-error)
+  "Signal an error for a key pressed outside tables, headings and items."
   (error "This command is active in special context like tables, headlines or items"))
 (define (org-shiftselect-error)
+  "Signal an error for a shift key pressed where Org mode does not use it."
   (error "To use shift-selection with Org mode, customize `org-support-shift-select'"))
 
-;; カーソルの行の種類 (table heading item text)
 (define (org-context)
+  "Return the kind of the line of point: table, heading, item or text."
   (let* ((lines (org-lines))
          (line (org-line lines (org-current-line lines))))
     (cond ((org-table-line? line) 'table)
@@ -2027,6 +2151,7 @@
           (else 'text))))
 
 (define-command (org-metaleft)
+  "Move the column left, promote the heading, outdent the item, or move back a word."
   (case (org-context)
     ((table) (org-table-move-column #f))
     ((heading) (org-do-promote))
@@ -2034,6 +2159,7 @@
     (else (call-interactively 'backward-word))))
 
 (define-command (org-metaright)
+  "Move the column right, demote the heading, indent the item, or move forward a word."
   (case (org-context)
     ((table) (org-table-move-column #t))
     ((heading) (org-do-demote))
@@ -2041,6 +2167,7 @@
     (else (call-interactively 'forward-word))))
 
 (define-command (org-metaup)
+  "Move the table row, subtree, item or line up."
   (case (org-context)
     ((table) (org-table-move-row #f))
     ((heading) (org-move-subtree #f))
@@ -2048,6 +2175,7 @@
     (else (org-drag-line #f))))
 
 (define-command (org-metadown)
+  "Move the table row, subtree, item or line down."
   (case (org-context)
     ((table) (org-table-move-row #t))
     ((heading) (org-move-subtree #t))
@@ -2055,6 +2183,7 @@
     (else (org-drag-line #t))))
 
 (define-command (org-shiftmetaleft)
+  "Delete the table column, promote the subtree, or outdent the item with its children."
   (case (org-context)
     ((table) (org-table-delete-column))
     ((heading) (org-promote-subtree))
@@ -2062,6 +2191,7 @@
     (else (org-modifier-cursor-error))))
 
 (define-command (org-shiftmetaright)
+  "Insert a table column, demote the subtree, or indent the item with its children."
   (case (org-context)
     ((table) (org-table-insert-column))
     ((heading) (org-demote-subtree))
@@ -2069,6 +2199,7 @@
     (else (org-modifier-cursor-error))))
 
 (define-command (org-shiftmetaup)
+  "Delete the table row, or move the subtree, item or line up."
   (case (org-context)
     ((table) (org-table-kill-row))
     ((heading) (org-move-subtree #f))
@@ -2076,32 +2207,36 @@
     (else (org-drag-line #f))))
 
 (define-command (org-shiftmetadown)
+  "Insert a table row, or move the subtree, item or line down."
   (case (org-context)
     ((table) (org-table-insert-row))
     ((heading) (org-move-subtree #t))
     ((item) (org-move-item #t))
     (else (org-drag-line #t))))
 
-;; カーソルがリストの印の上なら #t
 (define (org-at-item-bullet-p)
+  "Return #t if point is on the bullet of a list item."
   (let* ((lines (org-lines))
          (line (org-line lines (org-current-line lines)))
          (item (org-parse-item line)))
     (and item (< (org-current-column lines) (+ (string-length (car item)) (string-length (cadr item)) 1)))))
 
 (define-command (org-shiftup)
+  "Change the timestamp, raise the priority, or move to the previous item."
   (cond ((org-shift-timestamp 1 #f) #t)
         ((eq? (org-context) 'heading) (org-priority-up))
         ((org-in-item) (org-item-move-point #f))
         (else (org-shiftselect-error))))
 
 (define-command (org-shiftdown)
+  "Change the timestamp, lower the priority, or move to the next item."
   (cond ((org-shift-timestamp -1 #f) #t)
         ((eq? (org-context) 'heading) (org-priority-down))
         ((org-in-item) (org-item-move-point #t))
         (else (org-shiftselect-error))))
 
 (define-command (org-shiftright)
+  "Change the timestamp by a day, the TODO state, or the list bullet."
   (cond ((org-shift-timestamp 1 #t) #t)
         ((eq? (org-context) 'heading)
          (let* ((lines (org-lines)) (h (org-back-to-heading lines)))
@@ -2110,6 +2245,7 @@
         (else (org-shiftselect-error))))
 
 (define-command (org-shiftleft)
+  "Change the timestamp back by a day, the TODO state, or the list bullet."
   (cond ((org-shift-timestamp -1 #t) #t)
         ((eq? (org-context) 'heading)
          (let* ((lines (org-lines)) (h (org-back-to-heading lines)))
@@ -2117,8 +2253,8 @@
         ((org-at-item-bullet-p) (org-cycle-list-bullet #f))
         (else (org-shiftselect-error))))
 
-;; C-c C-c: 表を揃える, チェックボックス, 見出しのタグ, #+ の行を読み直す
 (define-command (org-ctrl-c-ctrl-c)
+  "Align the table, toggle the checkbox, set the heading tags, or reread the #+ lines."
   (let* ((lines (org-lines))
          (line (org-line lines (org-current-line lines)))
          (item (org-in-item)))
@@ -2134,8 +2270,9 @@
           ((regexp-match "\\[[0-9]*(?:%|/[0-9]*)\\]" line) (org-update-statistics))
           (else (error "C-c C-c can do nothing useful here")))))
 
-;; RET: 表なら次の行, リンクの上なら開く (org-return-follows-link), ほかは改行
 (define-command (org-return)
+  "Move to the next table row, open the link at point, or insert a newline.
+Links are opened if `org-return-follows-link' is true."
   (let* ((lines (org-lines))
          (line (org-line lines (org-current-line lines))))
     (cond ((org-table-line? line) (org-table-next-row))
@@ -2144,28 +2281,28 @@
 
 ;;; リンク
 
-;; 覚えたリンク ((リンク 説明) のリスト. 新しい順)
-(define org-stored-links '())
+(define org-stored-links '() "Stored links, a list of (LINK DESCRIPTION), newest first.")
 
-;; ホームを ~ にする
 (define (org-abbreviate-file-name file)
+  "Replace the home directory in FILE with ~."
   (let ((home (expand-file-name "~")))
     (if (string-prefix? (string-append home "/") file)
         (string-append "~" (substring file (string-length home)))
         file)))
 
-;; ディレクトリ (最後の / まで)
 (define (org-file-directory file)
+  "Return the directory of FILE, up to the last /."
   (let ((m (regexp-match "^(.*/)[^/]*$" file)))
     (if m (cadr m) "./")))
 
-;; ファイルの名前 (ディレクトリと拡張子を除く)
 (define (org-file-base file)
+  "Return the name of FILE without the directory and extension."
   (let ((m (regexp-match "([^/]*?)(?:\\.[^./]*)?$" file)))
     (cadr m)))
 
-;; カーソルの所のリンク ((リンク 説明 始め 終わり). 桁で. 無ければ #f)
 (define (org-link-at-point)
+  "Return the link at point as (LINK DESCRIPTION START END), or #f if there is none.
+START and END are columns."
   (let* ((lines (org-lines))
          (line (org-line lines (org-current-line lines)))
          (col (org-current-column lines)))
@@ -2179,14 +2316,14 @@
                    (list (org-match-string line m 0) #f (car (car m)) (cadr (car m))))))
             (else (loop (cdr ms)))))))
 
-;; リンクの文字 ([[リンク][説明]])
 (define (org-make-link-string link description)
+  "Return the link LINK with DESCRIPTION, like [[LINK][DESCRIPTION]]."
   (if (and description (not (equal? description "")) (not (equal? description link)))
       (format "[[%s][%s]]" link description)
       (format "[[%s]]" link)))
 
-;; C-c l: 今の所へのリンクを覚える
 (define-command (org-store-link)
+  "Store a link to the current location."
   (let ((file (buffer-file-name)))
     (if (not file)
         (message "Cannot link to a buffer which is not visiting a file")
@@ -2207,8 +2344,8 @@
           (message "Stored: %s" (or (cadr link) (car link)))
           link))))
 
-;; 題から, 数える印 ([2/3] [66%]) を除く
 (define (org-strip-cookies title)
+  "Remove the statistics cookies ([2/3] [66%]) from TITLE."
   (let loop ((ms (reverse (org-all-matches " *\\[[0-9]*(?:%|/[0-9]*)\\] *" title))) (s title))
     (if (null? ms)
         (string-trim s)
@@ -2218,8 +2355,8 @@
                                           "" " ")
                                       (substring s (cadr (car (car ms)))))))))
 
-;; C-c C-l: リンクを入れる (リンクの上なら, 変える)
 (define-command (org-insert-link)
+  "Insert a link, or change the link at point."
   (let* ((at (org-link-at-point))
          (link (if at
                    (read-string "Link: " (car at))
@@ -2239,13 +2376,15 @@
           (goto-char (+ start (caddr at) (string-length new))))
         (insert (org-make-link-string link description)))))
 
-;; C-c C-o: カーソルの所のリンクを開く
 (define-command (org-open-at-point)
+  "Open the link at point."
   (let ((at (org-link-at-point)))
     (if at (org-link-open (car at)) (message "No link found"))))
 
-;; リンクを開く (http などは browse-url, file: はエディタ, ほかはバッファの中を探す)
 (define (org-link-open link)
+  "Open LINK.
+http and so on use `browse-url', file: opens in the editor,
+and others are searched in the buffer."
   (cond
    ((regexp-match "^(?:https?|ftp|mailto|news):" link) (browse-url link))
    ((or (string-prefix? "file:" link) (regexp-match "^(?:/|\\./|\\.\\./|~/)" link))
@@ -2265,8 +2404,9 @@
    ((regexp-match "^[a-z]+:" link) (error "Unknown link type: %s" link))
    (else (org-link-search link))))
 
-;; バッファの中を探す (*見出し, #id, 行の数, /正規表現/, <<目当て>>, 題, 言葉)
 (define (org-link-search target)
+  "Search the buffer for TARGET.
+TARGET is *HEADING, #ID, a line number, /REGEXP/, <<TARGET>>, a title or words."
   (let* ((lines (org-lines))
          (count (org-line-count lines))
          (find (lambda (pred)
@@ -2300,19 +2440,15 @@
 
 ;;; アジェンダ
 
-;; アジェンダのバッファの名前
-(define org-agenda-buffer-name "*Org Agenda*")
-;; アジェンダの行の項目 ((行 ファイル 見出しの行) のリスト)
-(define org-agenda-markers '())
-;; アジェンダを作り直す手続き (r と g で呼ぶ)
-(define org-agenda-redo-command #f)
-;; 週のアジェンダの始めの日
-(define org-agenda-start-day #f)
-;; アジェンダを出す前のバッファ
-(define org-agenda-previous-buffer #f)
+(define org-agenda-buffer-name "*Org Agenda*" "Name of the agenda buffer.")
+(define org-agenda-markers '() "Entries of the agenda lines, a list of (LINE FILE HEADING-LINE).")
+(define org-agenda-redo-command #f "Procedure to rebuild the agenda (called by r and g).")
+(define org-agenda-start-day #f "First day of the weekly agenda.")
+(define org-agenda-previous-buffer #f "Buffer shown before the agenda.")
 
-;; アジェンダのファイル (ディレクトリは, その中の .org のファイル)
 (define (org-agenda-file-list)
+  "Return the agenda files.
+A directory in `org-agenda-files' means the .org files in it."
   (apply append
          (map (lambda (f)
                 (let ((path (expand-file-name f)))
@@ -2324,8 +2460,8 @@
                       (list path))))
               (if (string? org-agenda-files) (list org-agenda-files) org-agenda-files))))
 
-;; ファイルの中身 (書き換えたバッファがあれば, そのバッファ)
 (define (org-agenda-file-text file)
+  "Return the contents of FILE, or of its buffer if the buffer is modified."
   (let ((buffer (let loop ((names (buffer-list)))
                   (cond ((null? names) #f)
                         ((equal? (buffer-file-name (car names)) file) (car names))
@@ -2338,8 +2474,9 @@
             text))
         (if (file-exists? file) (read-file-string file) ""))))
 
-;; ファイルの見出し ((ファイル 行 状態 優先度 題 タグ 分類 予定 締め切り (日付...) 本文) のリスト)
 (define (org-agenda-entries file)
+  "Return the headings of FILE as a list of
+(FILE LINE TODO PRIORITY TITLE TAGS CATEGORY SCHEDULED DEADLINE (DATES...) BODY)."
   (let* ((lines (split-string (org-agenda-file-text file) "\n"))
          (category-m (regexp-match "(?m)^#\\+CATEGORY:[ \\t]*(\\S+)" (string-join lines "\n")))
          (category (if category-m (cadr category-m) (org-file-base file)))
@@ -2364,21 +2501,34 @@
                    (get "SCHEDULED") (get "DEADLINE") stamps (string-join (cons (org-line lines n) body) "\n"))))
          headings)))
 
-;; 全てのアジェンダのファイルの見出し
 (define (org-agenda-all-entries)
+  "Return the headings of all the agenda files."
   (apply append (map org-agenda-entries (org-agenda-file-list))))
 
-;; 項目の部分
-(define (org-entry-file e) (list-ref e 0))
-(define (org-entry-line e) (list-ref e 1))
-(define (org-entry-todo e) (list-ref e 2))
-(define (org-entry-priority e) (list-ref e 3))
-(define (org-entry-title e) (list-ref e 4))
-(define (org-entry-tags e) (list-ref e 5))
-(define (org-entry-category e) (list-ref e 6))
+(define (org-entry-file e)
+  "Return the file of the agenda entry E."
+  (list-ref e 0))
+(define (org-entry-line e)
+  "Return the line of the agenda entry E."
+  (list-ref e 1))
+(define (org-entry-todo e)
+  "Return the TODO state of the agenda entry E."
+  (list-ref e 2))
+(define (org-entry-priority e)
+  "Return the priority of the agenda entry E."
+  (list-ref e 3))
+(define (org-entry-title e)
+  "Return the title of the agenda entry E."
+  (list-ref e 4))
+(define (org-entry-tags e)
+  "Return the tags of the agenda entry E."
+  (list-ref e 5))
+(define (org-entry-category e)
+  "Return the category of the agenda entry E."
+  (list-ref e 6))
 
-;; 日付が, 繰り返しも含めて, その日に当たれば #t
 (define (org-timestamp-on? parsed day)
+  "Return #t if the timestamp PARSED falls on DAY, including repeats."
   (let ((base (cadr parsed))
         (r (org-timestamp-repeater parsed)))
     (cond ((equal? base day) #t)
@@ -2394,8 +2544,9 @@
                                            (= 0 (modulo (- (car d) (car b)) n))))
                    (else #f)))))))
 
-;; アジェンダの 1 行 (分類, 時刻, 予定の印, 状態, 題, タグ)
 (define (org-agenda-line e time extra)
+  "Return an agenda line of the entry E with TIME and EXTRA.
+It shows the category, time, planning mark, state, title and tags."
   (let* ((head (string-append "  " (org-pad-right (string-append (org-entry-category e) ":") 12)
                               (if time (org-pad-right time 12) "")
                               (if (equal? extra "") "" (string-append extra " "))
@@ -2407,8 +2558,9 @@
         (string-append head (org-spaces (max 1 (- 80 (string-width head) (string-width tags)))) tags)
         head)))
 
-;; 時刻の見せ方 (10:00...... か 10:00-11:00. 時が 1 桁なら, 前に空白)
 (define (org-agenda-time parsed)
+  "Return the time of PARSED as shown in the agenda, like 10:00...... or 10:00-11:00.
+A one-digit hour is padded with a space."
   (and parsed (caddr parsed)
        (let ((pad (lambda (t) (let ((h (string->number (car (split-string t ":")))))
                                 (string-append (if (< h 10) " " "") (format "%d" h) ":" (cadr (split-string t ":")))))))
@@ -2416,8 +2568,9 @@
              (string-append (pad (caddr parsed)) "-" (pad (list-ref parsed 3)))
              (string-append (pad (caddr parsed)) "......")))))
 
-;; その日の行 ((時刻 行 項目 優先度) のリスト)
 (define (org-agenda-day-items entries day today)
+  "Return the agenda lines of DAY from ENTRIES, as a list of (TIME LINE ENTRY PRIORITY).
+TODAY is today's date."
   (apply append
          (map (lambda (e)
                 (let* ((done (org-done-keyword? (org-entry-todo e)))
@@ -2453,24 +2606,28 @@
                        '()))))
               entries)))
 
-;; 見出しの優先度の数 (Emacs の org-get-priority. 一番低いものが 0 で, 1 つ上がるごとに 1000)
 (define (org-agenda-priority e)
+  "Return the priority of the entry E as a number, like `org-get-priority' in Emacs.
+The lowest priority is 0, and each step up adds 1000."
   (let* ((chars (org-priority-chars))
          (m (regexp-match "[A-Z0-9]" (or (org-entry-priority e) "")))
          (i (or (and m (org-index-of (car m) chars)) (org-index-of org-priority-default chars))))
     (* 1000 (- (length chars) 1 i))))
 
-;; 時刻のある行を先に, 時刻の順に並べる. 同じ時刻と, 時刻の無い行は, 優先度の高い順
-;; (Emacs の org-agenda-sorting-strategy の既定 time-up priority-down category-keep)
 (define (org-agenda-sort items)
+  "Sort ITEMS: lines with a time first, in time order;
+lines with the same time or no time by priority, highest first.
+This is the default of `org-agenda-sorting-strategy' in Emacs
+(time-up priority-down category-keep)."
   (let ((by-priority (lambda (a b) (> (list-ref a 3) (list-ref b 3)))))
     (append (sort (filter car items)
                   (lambda (a b) (or (string<? (car a) (car b))
                                     (and (equal? (car a) (car b)) (by-priority a b)))))
             (sort (filter (lambda (i) (not (car i))) items) by-priority))))
 
-;; アジェンダのバッファに出す (rows は (行 項目) のリスト. 項目が #f なら, 見出しの行)
 (define (org-agenda-show rows redo)
+  "Show ROWS in the agenda buffer, and remember REDO to rebuild it.
+ROWS is a list of (LINE ENTRY); ENTRY is #f for a heading line."
   (unless (equal? (buffer-name) org-agenda-buffer-name)
     (set! org-agenda-previous-buffer (buffer-name)))
   (switch-to-buffer org-agenda-buffer-name)
@@ -2487,8 +2644,8 @@
   (org-agenda-mode)
   (goto-char (point-min)))
 
-;; アジェンダのキーと色
 (define (org-agenda-mode)
+  "Set the keys and highlighting of the agenda buffer."
   (for-each (lambda (key) (local-set-key (car key) (cadr key)))
             '(("RET" org-agenda-switch-to) ("SPC" org-agenda-show-and-scroll-up)
               ("TAB" org-agenda-goto) ("n" org-agenda-next-line) ("p" org-agenda-previous-line)
@@ -2511,8 +2668,8 @@
                (append (if (equal? todo "") '() (list (list (format "^  .*?\\b(%s)\\b" todo) "org-todo" 1)))
                        (if (equal? done "") '() (list (list (format "^  .*?\\b(%s)\\b" done) "org-done" 1))))))))
 
-;; 日の行 (Monday     26 October 2026 W44)
 (define (org-agenda-date-line day)
+  "Return the line of DAY, like \"Monday     26 October 2026 W44\"."
   (let* ((time (org-date-time day))
          (weekday (format-time-string "%A" time))
          (week (if (equal? (format-time-string "%u" time) "1")
@@ -2522,8 +2679,8 @@
             (org-pad-left (format "%d" (string->number (format-time-string "%d" time))) 2)
             (format-time-string "%B" time) (format-time-string "%Y" time) week)))
 
-;; 週のアジェンダ (始めの日から, org-agenda-span 日)
 (define (org-agenda-list-from start)
+  "Show the weekly agenda for `org-agenda-span' days from START."
   (let* ((entries (org-agenda-all-entries))
          (today (org-today))
          (days (map (lambda (i) (org-date-add start i)) (org-range org-agenda-span)))
@@ -2542,18 +2699,19 @@
     ;; 週のアジェンダでだけ, f と b と . が使える
     (set! org-agenda-start-day start)))
 
-;; 週の始め (org-agenda-start-on-weekday の曜日)
 (define (org-agenda-week-start day)
+  "Return the first day of the week of DAY, on `org-agenda-start-on-weekday'."
   (if org-agenda-start-on-weekday
       (let ((w (string->number (format-time-string "%u" (org-date-time day)))))
         (org-date-add day (- (modulo (- w org-agenda-start-on-weekday) 7))))
       day))
 
-;; 週のアジェンダ (a)
-(define-command (org-agenda-list) (org-agenda-list-from (org-agenda-week-start (org-today))))
+(define-command (org-agenda-list)
+  "Show the weekly agenda."
+  (org-agenda-list-from (org-agenda-week-start (org-today))))
 
-;; TODO の一覧 (t)
 (define-command (org-todo-list)
+  "Show the list of TODO entries."
   (let ((entries (filter (lambda (e) (and (org-entry-todo e) (not (org-done-keyword? (org-entry-todo e)))))
                          (org-agenda-all-entries))))
     (org-agenda-show
@@ -2561,8 +2719,9 @@
              (map (lambda (e) (list (org-agenda-line e #f "") e)) entries))
      org-todo-list)))
 
-;; タグの一覧 (m. a+b は両方, a|b はどちらか, -a は無いもの)
 (define-command (org-tags-view)
+  "Show the entries matching tags.
+a+b means both, a|b either, and -a without a."
   (let* ((match (read-string "Match: "))
          (entries (filter (lambda (e) (org-tags-match? match (org-entry-tags e))) (org-agenda-all-entries))))
     (org-agenda-show
@@ -2570,8 +2729,8 @@
            (map (lambda (e) (list (org-agenda-line e #f "") e)) entries))
      (lambda () #t))))
 
-;; タグが合えば #t
 (define (org-tags-match? match tags)
+  "Return #t if TAGS match MATCH."
   (let ((any (split-string match "|")))
     (if (> (length any) 1)
         (if (null? (filter (lambda (m) (org-tags-match? m tags)) any)) #f #t)
@@ -2584,8 +2743,8 @@
                         (has (if (member tag tags) #t #f)))
                    (if (equal? has (not (equal? sign "-"))) (loop (cdr terms)) #f))))))))
 
-;; 言葉の一覧 (s. 全ての言葉を含む見出し. 大文字と小文字は区別しない)
 (define-command (org-search-view)
+  "Show the headings containing all the words, ignoring case."
   (let* ((words (map string-downcase (split-string (read-string "Search for: "))))
          (entries (filter (lambda (e)
                             (let ((text (string-downcase (list-ref e 10))))
@@ -2596,8 +2755,8 @@
            (map (lambda (e) (list (org-agenda-line e #f "") e)) entries))
      (lambda () #t))))
 
-;; C-c a: アジェンダを選ぶ
 (define-command (org-agenda)
+  "Select an agenda view."
   (let ((answer (completing-read "Press key for an agenda command: "
                                  '("a Agenda for current week" "t List of all TODO entries"
                                    "m Match a TAGS query" "s Search for keywords")
@@ -2609,46 +2768,58 @@
       ((s) (org-search-view))
       (else (error "Invalid agenda command: %s" answer)))))
 
-;; カーソルの行の項目 ((ファイル 行). 無ければ失敗)
 (define (org-agenda-marker)
+  "Return the entry of the agenda line at point as (FILE LINE).
+Signal an error if there is none."
   (let* ((n (org-current-line (org-lines)))
          (found (assoc n org-agenda-markers)))
     (if found (cdr found) (error "Command not allowed in this line"))))
 
-;; RET: 項目のファイルを開く
 (define-command (org-agenda-switch-to)
+  "Open the file of the entry at point."
   (let ((m (org-agenda-marker)))
     (find-file (car m))
     (org-mode)
     (org-goto-heading (org-lines) (cadr m))))
 
-;; SPC と TAB: 項目を, ほかの窓に出す
 (define-command (org-agenda-show-and-scroll-up)
+  "Show the entry at point in another window."
   (let ((m (org-agenda-marker)))
     (display-buffer (find-file-noselect (car m)) (cadr m))))
-(define-command (org-agenda-goto) (org-agenda-show-and-scroll-up))
+(define-command (org-agenda-goto)
+  "Show the entry at point in another window."
+  (org-agenda-show-and-scroll-up))
 
-(define-command (org-agenda-next-line) (call-interactively 'next-line))
-(define-command (org-agenda-previous-line) (call-interactively 'previous-line))
+(define-command (org-agenda-next-line)
+  "Move to the next line of the agenda."
+  (call-interactively 'next-line))
+(define-command (org-agenda-previous-line)
+  "Move to the previous line of the agenda."
+  (call-interactively 'previous-line))
 
-;; f と b: 次と前の週
 (define (org-agenda-move days)
+  "Move the weekly agenda by DAYS days (f and b)."
   (if org-agenda-start-day
       (org-agenda-list-from (org-date-add org-agenda-start-day days))
       (error "Not allowed in this agenda")))
-(define-command (org-agenda-later) (org-agenda-move org-agenda-span))
-(define-command (org-agenda-earlier) (org-agenda-move (- org-agenda-span)))
+(define-command (org-agenda-later)
+  "Show the next week."
+  (org-agenda-move org-agenda-span))
+(define-command (org-agenda-earlier)
+  "Show the previous week."
+  (org-agenda-move (- org-agenda-span)))
 (define-command (org-agenda-goto-today)
+  "Show the week of today."
   (if org-agenda-start-day (org-agenda-list) (error "Not allowed in this agenda")))
 
-;; r と g: 作り直す
 (define-command (org-agenda-redo)
+  "Rebuild the agenda."
   (let ((n (org-current-line (org-lines))))
     (org-agenda-redo-command)
     (org-goto-line-column (org-lines) (min n (org-line-count (org-lines))) 0)))
 
-;; t: 項目の状態を変える
 (define-command (org-agenda-todo)
+  "Change the TODO state of the entry at point."
   (let ((m (org-agenda-marker)))
     (find-file (car m))
     (org-mode)
@@ -2657,8 +2828,8 @@
     (switch-to-buffer org-agenda-buffer-name)
     (org-agenda-redo)))
 
-;; q: アジェンダを消す
 (define-command (org-agenda-quit)
+  "Kill the agenda buffer."
   (let ((previous org-agenda-previous-buffer))
     (kill-buffer org-agenda-buffer-name)
     (when (and previous (member previous (buffer-list)))
@@ -2666,25 +2837,27 @@
 
 ;;; キャプチャ
 
-;; キャプチャのバッファの名前
-(define org-capture-buffer-name "*Capture*")
-;; 書いているキャプチャ ((テンプレート 元のバッファ 元の位置))
-(define org-capture-current #f)
+(define org-capture-buffer-name "*Capture*" "Name of the capture buffer.")
+(define org-capture-current #f
+  "Current capture, as (TEMPLATE BUFFER POSITION).
+BUFFER and POSITION are where the capture started.")
 
-;; テンプレート (無ければ, 既定のもの)
 (define (org-capture-templates-list)
+  "Return the capture templates, or the default ones if there are none."
   (if (null? org-capture-templates)
       '(("t" "Task" entry (file+headline "" "Tasks") "* TODO %?\n  %u\n  %a"))
       org-capture-templates))
 
-;; 行き先のファイル ("" は org-default-notes-file. 相対なら org-directory から)
 (define (org-capture-expand-file file)
+  "Return the target file of FILE.
+\"\" means `org-default-notes-file'; a relative name is in `org-directory'."
   (cond ((or (not file) (equal? file "")) (expand-file-name org-default-notes-file))
         ((regexp-match "^(?:/|~)" file) (expand-file-name file))
         (else (expand-file-name file org-directory))))
 
-;; テンプレートを埋める ((文 カーソルの位置))
 (define (org-capture-fill-template template annotation file)
+  "Fill TEMPLATE, and return (TEXT POSITION).
+ANNOTATION is the link to the original location, and FILE is its file."
   (let loop ((rest template) (result "") (cursor #f))
     (let ((m (regexp-match-positions "%(\\?|[tTuUaAilfFk%]|\\^\\{[^}]*\\}|\\[[^\\]]*\\]|\\([^)]*\\))" rest)))
       (if (not m)
@@ -2719,8 +2892,8 @@
             (loop (substring rest end) (string-append before value)
                   (or cursor (and (equal? code "?") (string-length before)))))))))
 
-;; C-c c: テンプレートを選び, *Capture* で書く
 (define-command (org-capture)
+  "Select a template and write in *Capture*."
   (let* ((templates (org-capture-templates-list))
          (answer (completing-read "Select a capture template: "
                                   (map (lambda (t) (string-append (car t) " " (cadr t))) templates)
@@ -2741,8 +2914,9 @@
     (org-fontify)
     (message "Capture buffer.  Finish `C-c C-c', abort `C-c C-k'.")))
 
-;; キャプチャの文を, 行き先に入れる (行き先のバッファで呼ぶ)
 (define (org-capture-place type target text)
+  "Insert the captured TEXT of TYPE into TARGET.
+This is called in the target buffer."
   (let* ((lines (org-lines))
          (headline (and (equal? (car target) 'file+headline) (caddr target)))
          (h (and headline
@@ -2772,8 +2946,8 @@
         (goto-char (point-max))
         (unless (equal? (buffer-substring (- (point) 1) (point)) "\n") (insert "\n"))))))
 
-;; 見出しの深さを, level に合わせる
 (define (org-capture-adjust-level text level)
+  "Change the levels of the headings in TEXT to LEVEL."
   (let* ((lines (split-string text "\n"))
          (levels (filter (lambda (l) l) (map org-level lines))))
     (if (null? levels)
@@ -2785,8 +2959,8 @@
                             lines)
                        "\n")))))
 
-;; C-c C-c: キャプチャを終え, 行き先に足して保存する
 (define-command (org-capture-finalize)
+  "Finish the capture, add it to the target and save it."
   (unless org-capture-current (error "This does not seem to be a capture buffer for Org mode"))
   (let* ((template (car org-capture-current))
          (previous (cadr org-capture-current))
@@ -2802,8 +2976,8 @@
     (run-hooks 'org-capture-after-finalize-hook)
     (message "Captured to %s" (org-abbreviate-file-name file))))
 
-;; C-c C-k: キャプチャを止める
 (define-command (org-capture-kill)
+  "Abort the capture."
   (unless org-capture-current (error "This does not seem to be a capture buffer for Org mode"))
   (let ((previous (cadr org-capture-current)))
     (kill-buffer org-capture-buffer-name)
@@ -2813,15 +2987,15 @@
 
 ;;; バッファ
 
-;; Org のバッファ (.org のファイル)
 (define (org-buffer-list)
+  "Return the Org buffers (.org files)."
   (filter (lambda (name)
             (let ((file (buffer-file-name name)))
               (and file (regexp-match "\\.org$" file))))
           (buffer-list)))
 
-;; Org のバッファに移る
 (define-command (org-switchb)
+  "Switch to an Org buffer."
   (let ((buffers (org-buffer-list)))
     (if (null? buffers)
         (error "No Org buffers")
