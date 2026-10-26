@@ -87,16 +87,47 @@ def default_keys_cell(command, keys):
 
 
 def rs_editor(root, out):
-    """rs-editor のコマンド -> キー (Emacs の書き方)."""
+    """rs-editor のコマンド -> (キー (Emacs の書き方), 実装したファイル (リポジトリからのパス))."""
     data = json.loads((out / 'rs-editor.json').read_text())
     keys = defaultdict(list)
     for key, command in data['keys']:
         keys[command].append(key)
-    names = set(data['commands']) | set(keys)
-    # 画面のコマンド (ファイル, バッファ, 評価など)
-    for path in list((root / 'src' / 'hooks').glob('*.ts')) + [root / 'src' / 'App.tsx']:
-        names |= set(re.findall(r"^\s+'([a-z][a-z0-9*-]*)': ", path.read_text(), re.M))
-    return {n: keys.get(n, []) for n in names}
+    places = defaultdict(list)
+    # エディタのコマンド (createCommands)
+    for name in data['commands']:
+        places[name].append('src/lib/emacs.ts')
+    # 画面のコマンド (ファイル, バッファ, 評価など. useMinibuffer.ts は, 入力の履歴の名前で, コマンドでない)
+    hooks = [p for p in sorted((root / 'src' / 'hooks').glob('*.ts')) if p.name != 'useMinibuffer.ts']
+    for path in hooks + [root / 'src' / 'App.tsx']:
+        for name in sorted(screen_commands(path.read_text())):
+            places[name].append(str(path.relative_to(root)))
+    # キーだけで動くもの (前置引数. キーを受ける所で扱う)
+    for name in keys:
+        if not places[name]:
+            places[name].append('src/lib/emacs.ts')
+    # Lisp で書いたコマンド (define-command)
+    for path in sorted((root / 'lisp').glob('*.scm')):
+        for name in sorted(set(re.findall(r"^\(define-command \(([^\s()]+)", path.read_text(), re.M))):
+            places[name].append(str(path.relative_to(root)))
+    names = set(places) | set(keys)
+    return {n: (keys.get(n, []), places.get(n, [])) for n in names}
+
+
+def screen_commands(text):
+    """画面のコマンドの名前 (`'name': ` の形と, `actions: {` の中の `name: ` の形)."""
+    names = set(re.findall(r"^\s+'([a-z][a-z0-9*-]*)': ", text, re.M))
+    for block in re.findall(r"^(\s*)actions: \{\n(.*?)^\1\}", text, re.M | re.S):
+        names |= set(re.findall(r"^\s+([a-z][a-z0-9]*): ", block[1], re.M))
+    return names
+
+
+def place_cell(places):
+    """実装したファイル (Lisp か TypeScript か). 無ければ, 空."""
+    if not places:
+        return ''
+    language = 'Lisp' if all(p.endswith('.scm') for p in places) else 'TypeScript'
+    return f'{language} ({", ".join(code(p) for p in places)})'
+
 
 
 def main():
@@ -110,6 +141,13 @@ def main():
     implemented = sum(1 for c in commands if c in rs)
     essential_implemented = sum(1 for c in essential if c in rs)
 
+    def languages(names):
+        """実装済みのうち, Lisp と TypeScript の数."""
+        cells = [place_cell(rs[c][1]) for c in names if c in rs]
+        lisp = sum(1 for cell in cells if cell.startswith('Lisp'))
+        return f'Lisp {lisp} 個, TypeScript {len(cells) - lisp} 個'
+
+
     lines = [BEGIN, '']
     w = lines.append
     w('## Emacs の組み込みのコマンドと, エディタの基本のコマンド')
@@ -119,28 +157,32 @@ def main():
     w('')
     w('- **既定のキー**: `emacs -Q` の global-map のキー。global-map に無ければ, ほかのキーマップ (ミニバッファなど) のキーを, キーマップの名前と書く。')
     w('- **rs-editor**: rs-editor にあるコマンドは「実装済み」と, rs-editor のキーを書く。')
+    w('- **実装**: rs-editor で書いた言語とファイル。今は, ほとんどを TypeScript (画面) で書いている。'
+      'いずれ Lisp (`lisp/`) に移す (移したら「Lisp」になる)。Emacs の「C で書いたもの」「Lisp で書いたもの」は, '
+      'Emacs の中での区別で, rs-editor での書き方とは別。')
     w('- キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。')
     w('- 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, '
       'エディタの基本のライブラリ (' + ', '.join(f'`{l}`' for l in ESSENTIAL_LIBRARIES) + ') にあるもの。'
       'マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。')
     w('')
-    w(f'### 組み込みのコマンド ({len(commands)} 個. 実装済み {implemented} 個)')
+    w(f'### 組み込みのコマンド ({len(commands)} 個. 実装済み {implemented} 個: {languages(commands)})')
     w('')
-    w('| コマンド | 既定のキー | rs-editor | rs-editor のキー |')
-    w('|---|---|---|---|')
+    w('| コマンド | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
+    w('|---|---|---|---|---|')
     for c in commands:
         done = c in rs
         w(f'| {code(c)} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
-          f'{keys_cell(rs[c], 3) if done else ""} |')
+          f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} |')
     w('')
-    w(f'### エディタの基本のコマンド (Lisp で書いたもの. {len(essential)} 個. 実装済み {essential_implemented} 個)')
+    w(f'### エディタの基本のコマンド (Lisp で書いたもの. {len(essential)} 個. '
+      f'実装済み {essential_implemented} 個: {languages(essential)})')
     w('')
-    w('| コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー |')
-    w('|---|---|---|---|---|')
+    w('| コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
+    w('|---|---|---|---|---|---|')
     for c in essential:
         done = c in rs
         w(f'| {code(c)} | {all_commands[c]} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
-          f'{keys_cell(rs[c], 3) if done else ""} |')
+          f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} |')
     w('')
     w(END)
 

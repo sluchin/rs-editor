@@ -205,6 +205,45 @@
 - [x] Lisp の文字列の位置は文字の数, 画面の位置は UTF-16 の数で数える (絵文字など, BMP の外の文字があると, ずれる)。
       `performEditorRequest` (`src/lib/lisp.ts`) で, 文字の数と UTF-16 の位置を変える (`charCount`, `utf16Offset`)。
 
+## Phase 15: 起動の引数 (Emacs の Initial options)
+
+Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを, `rseditor` の起動の引数でできるようにする。
+今は, 起動の引数を読んでいない (初期設定ファイルは, 必ず `~/.rseditor` か `~/.rseditor.d/init.scm` を読む)。
+
+- [ ] 起動の引数を読む仕組み (Rust の `std::env::args` か `tauri-plugin-cli`)。知らない引数は, Emacs と同じく, 開くファイルとして扱う (Action options は別の項目)。
+      引数の値は, `--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
+- [ ] `--no-init-file`, `-q`: 初期設定ファイル (`~/.rseditor`, `~/.rseditor.d/init.scm`) を読まない。
+- [ ] `--quick`, `-Q`: `-q --no-site-file --no-site-lisp --no-splash --no-x-resources` と同じ。
+- [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に, rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
+- [ ] `--no-site-lisp`, `-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に, その場所を決めて, `load-path` に入れるようにする。
+- [ ] `--init-directory=DIR`: 初期設定ファイルを, `~/.rseditor.d` の代わりに DIR から探す (`user-emacs-directory` に当たる変数も足す)。
+- [ ] `--user USER`, `-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
+- [ ] `--debug-init`: 初期設定ファイルの失敗で, 止まった所 (式と, 呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。
+- [ ] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
+- [ ] `--no-splash`: 始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に, 始めの画面 (`inhibit-startup-screen` で消せる) を作る。
+- [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に, 戻す機能を作る。
+- [ ] `--batch`: 画面を出さずに動かす (`-q` を含む)。Lisp の `message` は標準エラーに出し, 終わったら終える。`noninteractive` に当たる変数を足す。
+- [ ] `--script FILE`: 画面を出さずに, Scheme のファイルを動かして終える (`--batch -l FILE` に当たる)。`-x` は, `#!/usr/bin/rseditor -x` で使う `-Q --script`。
+- [ ] `--daemon`, `--bg-daemon[=NAME]`, `--fg-daemon[=NAME]`: 窓を出さずに, 後ろで動かす (Emacs の server)。先に, `emacsclient` に当たるもの (動いている rs-editor でファイルを開く) を作る。
+- [ ] `--no-window-system`, `-nw`: 端末の中で動かす。画面が Tauri (WebView) なので, 作れるかを調べてから決める。
+- [ ] `--display DISPLAY`, `-d DISPLAY`: 窓を出す X のディスプレイを変える (Tauri に環境変数 `DISPLAY` を渡す)。
+- [ ] `--terminal DEVICE`, `-t DEVICE`: 端末の装置を変える (`-nw` を作ってから)。
+- [ ] `--no-x-resources`: X のリソース (`~/.Xresources` の `Emacs.font` など) を読まない。先に, X のリソースを読むかを決める (読まないなら, 受けて何もしない)。
+- [ ] Emacs の作り方のための引数 (`--dump-file`, `--no-loadup` / `-nl`, `--fingerprint`, `--seccomp`, `--no-build-details`, `--module-assertions`):
+      rs-editor には, 当たるもの (Lisp の状態を書き出したファイル, loadup.el, 動的なモジュール) が無い。受けて何もしないか, `--fingerprint` などは版を出すかを決める。
+
+## Phase 16: TypeScript のコマンドを, Lisp に移す
+
+今は, エディタのコマンド (`find-file`, `forward-word` など) を, ほとんど TypeScript (画面) で書いている。
+Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript) は小さくし, コマンドは Lisp (`lisp/`) で書くようにする。
+どのコマンドを, どこで書いているかは, FUNCTIONS.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
+
+- [ ] 起動のときに読む, 既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`, `files.el` などに当たる) を決める (`lisp/` に置き, アプリに入れる)。
+- [ ] Lisp から使う組み込みの関数を足す (カーソル, 文字, 行, マーク, 窓, バッファなど. Emacs の C の関数に当たるもの)。
+- [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を, Lisp に移す。移したら, TypeScript の方は消す。
+      速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。
+- [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は, 組み込みのまま残す (Emacs と同じ)。
+
 ## Phase 14: M-x grep と, サイドバーのプロジェクトのツリー
 
 - [x] `M-x grep`: 外のコマンドを使わず, エディタ (Rust の `src-tauri/src/search.rs`) が, ディレクトリの下のファイルから探す。
@@ -457,7 +496,7 @@
 | [ ] | `C-c e` | evernote-choice | 4659 | |
 | [ ] | `C-c p` | pomodoro-choice | 4089 | |
 | [ ] | `C-c d` | calendar-datetime-choice | 2156 | howm の `C-c , d` (日付を入れる) は有る |
-| [ ] | `C-c l` | org-store-link | 2521 | |
+| [x] | `C-c l` | org-store-link | 2521 | `lisp/org.scm` を `(require 'org)` で読む |
 | [ ] | `C-c o` | org-choice | 2550 | |
 | [x] | `C-c h` | howm-menu | 3673 | `lisp/howm.scm` を `(require 'howm)` で読む |
 | [ ] | `M-\` / `M-[` / `M-]` | bm-toggle / bm-previous / bm-next | 3198-3200 | |
@@ -481,4 +520,4 @@
 
 ## 実装順序の目安
 
-Phase 1 から Phase 12 は, 済んだ。これからは, Phase 12, 12.5, 14 の残りと, Phase 13 から, よく使うものを選んで進める。
+Phase 1 から Phase 12 は, 済んだ。これからは, Phase 12, 12.5, 14, 15, 16 の残りと, Phase 13 から, よく使うものを選んで進める。
