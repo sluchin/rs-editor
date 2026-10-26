@@ -210,6 +210,7 @@ export function useFiles(
               name,
               modified: b.modified && !b.doc.eq(buffer.doc),
               backedUp: true,
+              saveCount: (b.saveCount ?? 0) + 1,
             }
           : b,
       ),

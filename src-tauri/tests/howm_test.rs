@@ -1037,3 +1037,85 @@ fn test_random() {
         .count();
     assert_eq!(recent, 15);
 }
+
+#[test]
+fn test_find_file_and_after_save_hooks() {
+    let (ev, editor, dir) = setup();
+    // howm を読むと, エディタが実行するフックに入る
+    assert_eq!(ev.active_hooks(), vec!["find-file-hook", "after-save-hook"]);
+    let memo = write_memo(
+        dir.path(),
+        "2026/10/2026-10-25-120000.txt",
+        "= a\n<<< alpha\n",
+    );
+    let other = tempdir().unwrap();
+    let text = write_memo(other.path(), "x.txt", "<<< alpha\n");
+    let png = write_memo(dir.path(), "2026/10/a.png", "");
+    // C-x C-f で開いたメモは, メモのバッファにする (メモでなければ, 何もしない)
+    for (path, howm) in [(&memo, true), (&text, false), (&png, false)] {
+        ev.eval_with(
+            &format!("(find-file {:?}) (run-hooks 'find-file-hook)", path),
+            &editor,
+        )
+        .unwrap();
+        assert_eq!(editor.key("Enter").is_some(), howm, "{:?}", path);
+    }
+    ev.eval_with("(set! howm-set-mode-on-find-file #f)", &editor)
+        .unwrap();
+    let memo2 = write_memo(dir.path(), "2026/10/2026-10-25-130000.txt", "= b\n");
+    ev.eval_with(
+        &format!("(find-file {:?}) (run-hooks 'find-file-hook)", memo2),
+        &editor,
+    )
+    .unwrap();
+    assert_eq!(editor.key("Enter"), None);
+    // 保存したら, キーワードを集め直して下線を引き直し, メニューを出し直して, 戻る
+    ev.eval_with(
+        "(howm-menu) (define saved 0) (add-hook 'howm-after-save-hook (lambda () (set! saved (+ saved 1))))",
+        &editor,
+    )
+    .unwrap();
+    open(&ev, &editor, &memo);
+    let name = editor.name();
+    write_memo(
+        dir.path(),
+        "2026/10/2026-10-25-130000.txt",
+        "= b\n<<< beta\n",
+    );
+    // メニューは, 前のバッファ (メモ) を覚えている
+    ev.eval_with("(set! howm-menu-previous-buffer \"prev\")", &editor)
+        .unwrap();
+    ev.eval_with("(run-hooks 'after-save-hook)", &editor)
+        .unwrap();
+    assert_eq!(editor.name(), name);
+    assert!(editor
+        .buffer()
+        .highlights
+        .iter()
+        .any(|r| r.contains("beta")));
+    assert_eq!(
+        ev.eval_with("(list saved howm-menu-previous-buffer)", &editor)
+            .unwrap(),
+        "(1 \"prev\")"
+    );
+    // メモでないバッファ, 引き直さない設定, メニューを出していないとき
+    ev.eval_with(
+        "(switch-to-buffer \"*scratch*\") (run-hooks 'after-save-hook)",
+        &editor,
+    )
+    .unwrap();
+    ev.eval_with(
+        "(set! howm-refresh-after-save #f) (set! howm-menu-refresh-after-save #f) (kill-buffer howm-menu-name)",
+        &editor,
+    )
+    .unwrap();
+    open(&ev, &editor, &memo);
+    ev.eval_with(
+        "(unhighlight-regexp #t) (run-hooks 'after-save-hook) (howm-menu-refresh-background)",
+        &editor,
+    )
+    .unwrap();
+    assert!(editor.buffer().highlights.is_empty());
+    assert_eq!(editor.name(), name);
+    assert_eq!(ev.eval_with("saved", &editor).unwrap(), "2");
+}

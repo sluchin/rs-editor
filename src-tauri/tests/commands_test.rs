@@ -24,6 +24,7 @@ fn test_eval_code_returns_the_result_or_the_error() {
             // M-x ert は, 始めからある
             commands: vec!["ert".to_string()],
             keys: vec![],
+            hooks: vec![],
         }
     );
     assert_eq!(eval_code(&Evaluator::default(), "1").result, "1");

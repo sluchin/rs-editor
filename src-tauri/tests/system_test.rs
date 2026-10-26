@@ -11,6 +11,9 @@ use rseditor::scheme::system::expand_file_name;
 use rseditor::scheme::value::Value;
 use tempfile::tempdir;
 
+mod common;
+use common::FakeEditor;
+
 /// 評価して, 結果を返す.
 ///
 /// # Arguments
@@ -619,7 +622,7 @@ fn test_editor_settings() {
             "local-set-key expects a key and a command name",
         ),
         ("(local-set-key \"\" 'a)", "Invalid key: \"\""),
-        ("(read-string)", "read-string expects 1 or 2 arguments"),
+        ("(read-string)", "read-string expects 1 to 5 arguments"),
         ("(read-string 1)", "read-string expects strings"),
         ("(read-string \"a\" 1)", "read-string expects strings"),
         ("(switch-to-buffer 1)", "switch-to-buffer expects strings"),
@@ -633,7 +636,7 @@ fn test_editor_settings() {
 fn test_buffer_operations() {
     let ev = Evaluator::new();
     let editor = Recorder::new(Value::String("b".to_string()));
-    let code = "(buffer-list) (buffer-modified-p) (buffer-modified-p \"b\") (kill-buffer \"b\") (buffer-file-name \"b\") (kill-new \"k\") (completing-read \"P: \" '(\"a\" \"b\")) (completing-read \"P: \" '() \"i\") (display-buffer \"b\") (display-buffer \"b\" 3) (find-file-noselect \"~/y\") (highlight-regexp \"a+\") (unhighlight-regexp \"a+\") (unhighlight-regexp #t)";
+    let code = "(buffer-list) (buffer-modified-p) (buffer-modified-p \"b\") (kill-buffer \"b\") (buffer-file-name \"b\") (kill-new \"k\") (completing-read \"P: \" '(\"a\" \"b\")) (completing-read \"P: \" '() #f #f \"i\") (display-buffer \"b\") (display-buffer \"b\" 3) (find-file-noselect \"~/y\") (highlight-regexp \"a+\") (unhighlight-regexp \"a+\") (unhighlight-regexp #t)";
     assert_eq!(
         ev.eval_with(code, &editor).unwrap(),
         "(\"b\")\n#t\n#t\n#t\n\"b\"\nnil\n\"b\"\n\"b\"\nnil\nnil\n\"b\"\nnil\nnil\nnil"
@@ -673,15 +676,15 @@ fn test_buffer_operations() {
         ),
         (
             "(completing-read \"a\")",
-            "completing-read expects 2 or 3 arguments",
+            "completing-read expects 2 to 8 arguments",
         ),
         (
             "(completing-read \"a\" 1)",
-            "completing-read expects a list of strings",
+            "completing-read expects a list of candidates",
         ),
         (
             "(completing-read \"a\" '(1))",
-            "completing-read expects strings",
+            "completing-read: not a candidate: 1",
         ),
         (
             "(display-buffer)",
@@ -716,4 +719,115 @@ fn test_parse_font() {
         ("Noto Sans-Mono".to_string(), None)
     );
     assert_eq!(parse_font(" Mono "), ("Mono".to_string(), None));
+}
+
+#[test]
+fn test_read_with_defaults() {
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    *editor.answers.lock().unwrap() = ["", "x", "", "c", "zz", "", "q", "b", "alpha"]
+        .map(String::from)
+        .to_vec();
+    let code = r#"
+(list
+ (read-string "A: " #f #f "def")
+ (read-string "A: " '() 'hist '("first" "second"))
+ (read-string "A: ")
+ (completing-read "C: " '("a" "b" "c") #f #t)
+ (completing-read "C: " '("a" "b") #f #t "z" 'hist "b")
+ (completing-read "C: " '(("a" . 1) ("b" . 2)) (lambda (pair) (string=? (car pair) "b")) #t)
+ (completing-read "C: " '(alpha beta) #f '()))
+"#;
+    assert_eq!(
+        ev.eval_with(code, &editor).unwrap(),
+        "(\"def\" \"x\" \"\" \"c\" \"b\" \"b\" \"alpha\")"
+    );
+    assert_eq!(
+        editor.prompts.lock().unwrap().clone(),
+        vec![
+            "A: ",
+            "A: ",
+            "A: ",
+            "C: ",
+            "C: ",
+            "[No match] C: ",
+            "C: ",
+            "[No match] C: ",
+            "C: "
+        ]
+    );
+    assert_eq!(
+        editor.completions.lock().unwrap().clone(),
+        vec!["alpha", "beta"]
+    );
+    for (code, error) in [
+        ("(read-string \"a\" #f #f 1)", "read-string expects strings"),
+        (
+            "(completing-read \"a\" '(\"b\") #f #f #f #f '(1))",
+            "completing-read expects strings",
+        ),
+        (
+            "(completing-read \"a\" '(\"b\") (lambda (x) (car 1)))",
+            "car expects a non-empty list",
+        ),
+        (
+            "(completing-read \"a\" '(()))",
+            "completing-read: not a candidate: ()",
+        ),
+    ] {
+        assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error, "{}", code);
+    }
+}
+
+#[test]
+fn test_hooks() {
+    let ev = Evaluator::new();
+    assert!(ev.active_hooks().is_empty());
+    let code = r#"
+(define log '())
+(define (note x) (set! log (cons x log)))
+(define (first) (note 'first))
+(define (second) (note 'second))
+(add-hook 'find-file-hook 'first)
+(add-hook 'find-file-hook second #t)
+(add-hook 'find-file-hook 'first)
+(add-hook 'my-hook (lambda (a b) (note (+ a b))) '())
+(add-hook 'after-save-hook 'first #f #t)
+(run-hooks 'find-file-hook 'unbound-hook)
+(run-hook-with-args 'my-hook 1 2)
+(remove-hook 'find-file-hook 'first)
+(run-hooks 'find-file-hook)
+(set! my-hook #f)
+(run-hooks 'my-hook)
+(define single-hook (lambda () (note 'single)))
+(run-hooks 'single-hook)
+(reverse log)
+"#;
+    assert_eq!(
+        ev.eval(code).unwrap().lines().last().unwrap(),
+        "(first second 3 second single)"
+    );
+    assert_eq!(ev.active_hooks(), vec!["find-file-hook", "after-save-hook"]);
+    let response = rseditor::commands::eval_code(&ev, "1");
+    assert_eq!(response.hooks, vec!["find-file-hook", "after-save-hook"]);
+    for (code, error) in [
+        ("(add-hook 'h)", "add-hook expects 2 to 4 arguments"),
+        ("(add-hook 1 'f)", "add-hook expects a hook symbol, given 1"),
+        (
+            "(remove-hook 'h)",
+            "remove-hook expects 2 arguments, given 1",
+        ),
+        ("(run-hooks 1)", "run-hooks expects a hook symbol, given 1"),
+        ("(run-hook-with-args)", "run-hook-with-args expects a hook"),
+        (
+            "(add-hook 'h 'nothing) (run-hooks 'h)",
+            "Unbound variable: nothing",
+        ),
+        (
+            "(add-hook 'h2 (lambda () (car 1))) (run-hooks 'h2)",
+            "car expects a non-empty list",
+        ),
+    ] {
+        assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);
+    }
 }

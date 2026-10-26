@@ -4,6 +4,7 @@
 ;;
 ;; 使い方: このファイルを ~/.rseditor.d/lisp/howm.scm に置き, 初期設定ファイル
 ;; (~/.rseditor.d/init.scm) に (require 'howm) と書く. M-x howm か C-c , , でメニューを出す.
+;; C-x C-f で開いたメモも howm のバッファにし, 保存したらメニューを出し直す (find-file-hook, after-save-hook).
 ;; メモのディレクトリは, (set! howm-directory "~/memo") のように変える (既定は ~/howm).
 ;;
 ;; できること (キーは C-c , に続けて押す. メニューでは, " の前の文字のキーだけで動く):
@@ -65,6 +66,13 @@
 (define howm-menu-name "*howmM:%menu%*")
 (define howm-summary-name "*howmS*")
 (define howm-remember-name "*howm-remember*")
+;; C-x C-f などで開いたメモも, メモのバッファ (howm-mode) にする (#f なら, howm から開いたメモだけ)
+(define howm-set-mode-on-find-file #t)
+;; 保存したら, 下線を引き直す. メニューを出していれば, 出し直す
+(define howm-refresh-after-save #t)
+(define howm-menu-refresh-after-save #t)
+;; メモを保存したあとに実行するフック
+(define howm-after-save-hook '())
 
 ;; 既定のメニュー (howm の ja/0000-00-00-000000.txt から, この版で使えるものを残した)
 (define howm-default-menu
@@ -583,6 +591,37 @@ S 式を eval: %eval%(message (buffer-name))
   (set! howm-keyword-cache #f)
   (local-set-key "RET" 'howm-action-or-newline)
   (howm-highlight '()))
+
+;; 今のバッファが, メモのファイルなら #t (howm-directory の下で, howm-file-name-regexp に合う)
+(define (howm-set-mode-p)
+  (let ((file (buffer-file-name)))
+    (and (howm-memo-file? file)
+         (regexp-match howm-file-name-regexp file)
+         #t)))
+
+;; ファイルを開いたとき (find-file-hook): メモなら, メモのバッファにする
+(define (howm-find-file-hook)
+  (when (and howm-set-mode-on-find-file (howm-set-mode-p))
+    (howm-mode)))
+
+;; 保存したとき (after-save-hook): メモなら, キーワードを集め直し, 下線を引き直し, メニューを出し直す
+(define (howm-after-save)
+  (when (howm-set-mode-p)
+    (set! howm-keyword-cache #f)
+    (when howm-refresh-after-save
+      (howm-highlight '()))
+    (when howm-menu-refresh-after-save
+      (howm-menu-refresh-background))
+    (run-hooks 'howm-after-save-hook)))
+
+;; メニューを出していれば, 出し直して, 今のバッファに戻る
+(define (howm-menu-refresh-background)
+  (when (member howm-menu-name (buffer-list))
+    (let ((buffer (buffer-name))
+          (previous howm-menu-previous-buffer))
+      (howm-menu)
+      (set! howm-menu-previous-buffer previous)
+      (switch-to-buffer buffer))))
 
 ;; 下線を引く正規表現 (画面のエディタの, JavaScript の正規表現で書く)
 (define howm-highlight-regexps
@@ -1536,6 +1575,11 @@ S 式を eval: %eval%(message (buffer-name))
 
 (define (howm-menu-last-update)
   (format-time-string howm-dtime-format))
+
+;;; フック (エディタが, ファイルを開いたときと, 保存したときに実行する)
+
+(add-hook 'find-file-hook 'howm-find-file-hook)
+(add-hook 'after-save-hook 'howm-after-save)
 
 ;;; キー (howm と同じく C-c , に続けて押す)
 

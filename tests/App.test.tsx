@@ -57,9 +57,19 @@ const unlisten = vi.fn()
 function response(
   result: string,
   error: string | null = null,
-  extra: { commands?: string[]; keys?: { key: string; command: string }[] } = {},
+  extra: {
+    commands?: string[]
+    keys?: { key: string; command: string }[]
+    hooks?: string[]
+  } = {},
 ) {
-  return { result, error, commands: extra.commands ?? [], keys: extra.keys ?? [] }
+  return {
+    result,
+    error,
+    commands: extra.commands ?? [],
+    keys: extra.keys ?? [],
+    ...(extra.hooks ? { hooks: extra.hooks } : {}),
+  }
 }
 
 /** キーの修飾. */
@@ -484,6 +494,47 @@ describe('App', () => {
     expect(editor.text()).toContain('Error: init.scm: bad')
     editor.unmount()
     expect(unlisten).toHaveBeenCalled()
+  })
+
+  it('ファイルを開いたら find-file-hook を, 保存したら after-save-hook を, そのバッファで実行する', async () => {
+    const hooks = { hooks: ['find-file-hook', 'after-save-hook'] }
+    mockedInvoke.mockResolvedValue(response('', null, hooks))
+    const editor = await setup()
+    const ran = (hook: string) =>
+      mockedInvoke.mock.calls.filter(
+        ([cmd, args]) =>
+          cmd === 'eval_scheme' && (args as { code: string }).code === `(run-hooks '${hook})`,
+      ).length
+    mocked.pathExists.mockResolvedValue(false)
+    editor.ctrlX('f')
+    await editor.submit('/tmp/a.txt')
+    expect(ran('find-file-hook')).toBe(1)
+    // 開いたバッファは, 1 度だけ
+    await act(async () => editor.type('x'))
+    await act(async () => editor.ctrlX('s'))
+    expect(ran('find-file-hook')).toBe(1)
+    expect(ran('after-save-hook')).toBe(1)
+    // 開いたが, 今のバッファにしていないバッファは, 今のバッファにしたときに実行する
+    editor.ctrlX('f')
+    await editor.submit('/tmp/b.txt')
+    expect(ran('find-file-hook')).toBe(2)
+    editor.ctrlX('b', false)
+    await editor.submit('a.txt')
+    expect(ran('find-file-hook')).toBe(2)
+    // フックが失敗した
+    mockedInvoke.mockRejectedValueOnce('down')
+    mockedInvoke.mockResolvedValue(response(''))
+    await act(async () => editor.type('y'))
+    await act(async () => editor.ctrlX('s'))
+    expect(ran('after-save-hook')).toBe(2)
+    expect(editor.text()).toContain('Eval error: down')
+    // 評価の結果で, フックに手続きが無くなったら, 実行しない
+    await act(async () => editor.type('z'))
+    await act(async () => editor.ctrlX('s'))
+    expect(ran('after-save-hook')).toBe(3)
+    await act(async () => editor.type('w'))
+    await act(async () => editor.ctrlX('s'))
+    expect(ran('after-save-hook')).toBe(3)
   })
 
   it('初期設定ファイルを読めなくても, 起動する', async () => {

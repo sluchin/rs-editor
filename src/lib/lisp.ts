@@ -27,6 +27,8 @@ export interface EvalResponse {
   commands: string[]
   /** Lisp で割り当てたキー. */
   keys: KeyBinding[]
+  /** 手続きのある, エディタが実行するフック (`find-file-hook`, `after-save-hook`). */
+  hooks?: string[]
 }
 
 /** 評価器からの, エディタの操作の頼み. */
@@ -113,6 +115,16 @@ export interface LispHost {
  */
 export function evalLisp(code: string): Promise<EvalResponse> {
   return invoke<EvalResponse>('eval_scheme', { code })
+}
+
+/**
+ * フック (`find-file-hook` など) を, 今のバッファで実行します.
+ *
+ * @param hook - フックの名前.
+ * @returns 結果.
+ */
+export function runHooks(hook: string): Promise<EvalResponse> {
+  return evalLisp(`(run-hooks '${hook})`)
 }
 
 /**

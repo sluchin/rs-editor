@@ -26,6 +26,8 @@ pub struct EvalResponse {
     pub commands: Vec<String>,
     /// Lisp で割り当てたキー (`global-set-key`).
     pub keys: Vec<KeyBinding>,
+    /// 手続きのある, エディタが実行するフック (`find-file-hook`, `after-save-hook`).
+    pub hooks: Vec<String>,
 }
 
 /// 評価の結果に, 評価器が覚えているコマンドとキーを添えます.
@@ -48,6 +50,7 @@ fn respond(evaluator: &Evaluator, outcome: Result<String, String>) -> EvalRespon
         error,
         commands: evaluator.commands(),
         keys: evaluator.key_bindings(),
+        hooks: evaluator.active_hooks(),
     }
 }
 

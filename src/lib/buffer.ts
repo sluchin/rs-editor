@@ -29,6 +29,8 @@ export interface Buffer {
   doc: Text
   /** 保存してから, 書き換えたら `true`. */
   modified: boolean
+  /** 保存した回数 (保存したら, Lisp の `after-save-hook` を実行する). */
+  saveCount?: number
   /** 開いてから, ファイルのバックアップ (`<file>~`) を作ったら `true` (Emacs の `buffer-backed-up`). */
   backedUp?: boolean
   /** dired のバッファなら, そのディレクトリ (後ろに `/` は付けない). */

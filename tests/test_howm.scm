@@ -263,4 +263,23 @@
        (should (string-prefix? "= 題名\n[" (read-file-string memo)))
        (should (string-suffix? "]\n\n本文\n" (read-file-string memo)))))))
 
+;; ファイルを開いたときと, 保存したときのフック
+(ert-deftest howm-test-hooks ()
+  (should (member 'howm-find-file-hook find-file-hook))
+  (should (member 'howm-after-save after-save-hook))
+  (howm-test-with-memos
+   '(("m.txt" "= A\n<<< foo\n"))
+   (lambda (dir)
+     (let ((memo (string-append dir "/m.txt")))
+       (find-file memo)
+       (run-hooks 'find-file-hook)
+       (should (howm-set-mode-p))
+       (should (equal (howm-keywords) '("foo")))
+       ;; 保存したら, キーワードを集め直す
+       (write-file-string memo "= A\n<<< bar\n")
+       (run-hooks 'after-save-hook)
+       (should (equal howm-keyword-cache '("bar")))
+       (switch-to-buffer "*scratch*")
+       (should-not (howm-set-mode-p))))))
+
 ;;; test_howm.scm ends here

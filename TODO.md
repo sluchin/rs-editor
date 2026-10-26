@@ -6,7 +6,7 @@
 
 ## 現状整理
 
-- Phase 1 から Phase 12.5 までと, Phase 14 の必須の項目は, 実装した ([x])。Phase 12 は, 実装したコマンドの, Emacs 30 と違うところ。
+- Phase 1 から Phase 12.5 までと, Phase 14 の必須の項目は, 実装した ([x])。Phase 12.5 は, 全て済んだ。Phase 12 は, 実装したコマンドの, Emacs 30 と違うところ。
 - エディタは CodeMirror 6 (Phase 8)。Phase 1 から Phase 7 の, `<textarea>` と `prefixKeymap.ts`, `emacsKeymap.ts` などの記述は, 当時のもの
   (今は `src/components/CodeEditor.tsx` と `src/lib/emacs.ts`)。
 - まだ無い Emacs の標準機能は, Phase 13 に並べた。
@@ -196,11 +196,14 @@
       正規表現 (`regexp-match`, `grep`), 文字列 (`string-search`, `split-string` など), `sort`, `cadr` など, `random`。
       エディタの操作: `find-file`, `switch-to-buffer`, `buffer-file-name`, `set-buffer-modified-p`, `read-string`, `local-set-key`。
 - [x] howm を Scheme で書き直す (`lisp/howm.scm`)。`M-x howm` でメニュー, メモを作る, 一覧, 検索, 今日と昨日, 予定と todo, リンク (`>>>`, `<<<`)。
-- [ ] howm の, まだ移していない機能: 下線 (action-lock の色付け), 一覧の窓 (中身の表示), `[複製]`, `[速記]`, ローマ字検索 (migemo), `[前後]`, `[履歴]`, `[酔歩]`,
+- [x] howm の, まだ移していない機能: 下線 (action-lock の色付け), 一覧の窓 (中身の表示), `[複製]`, `[速記]`, ローマ字検索 (migemo), `[前後]`, `[履歴]`, `[酔歩]`,
       キーワードの補完, 日付の入力 (`[日↓]`, `[時↓]`), タイトルとファイル名のコピー, `[全消]`, メニューの `%eval%`, `%call%`, 別のメニュー (`%○○%`),
-      保存したときのメニューの更新, `C-x C-f` で開いたメモの howm-mode (今は, howm から開いたメモだけ)。
-- [ ] `read-string` の補完と, 既定の値 (Emacs の `completing-read`)。
-- [ ] Lisp の文字列の位置は文字の数, 画面の位置は UTF-16 の数で数える (絵文字など, BMP の外の文字があると, ずれる)。
+      保存したときのメニューの更新 (`after-save-hook`), `C-x C-f` で開いたメモの howm-mode (`find-file-hook`)。
+      フック (`add-hook`, `remove-hook`, `run-hooks`, `run-hook-with-args`) を足し, エディタが, ファイルを開いたバッファを初めて出したときと, 保存したときに実行する。
+- [x] `read-string` の補完と, 既定の値 (Emacs の `completing-read`)。`read-string` と `completing-read` は, Emacs と同じ引数
+      (`completing-read` の PREDICATE, REQUIRE-MATCH (候補に無ければ `[No match]` で聞き直す), INITIAL-INPUT, DEF。候補は文字列, 記号, alist)。
+- [x] Lisp の文字列の位置は文字の数, 画面の位置は UTF-16 の数で数える (絵文字など, BMP の外の文字があると, ずれる)。
+      `performEditorRequest` (`src/lib/lisp.ts`) で, 文字の数と UTF-16 の位置を変える (`charCount`, `utf16Offset`)。
 
 ## Phase 14: M-x grep と, サイドバーのプロジェクトのツリー
 

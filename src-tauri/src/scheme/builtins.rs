@@ -4,6 +4,7 @@
 
 use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
+use crate::scheme::hooks;
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
@@ -587,31 +588,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             };
             Ok(Value::Nil)
         }
-        "completing-read" => {
-            let (prompt, collection, initial) = match args.as_slice() {
-                [prompt, collection] => (prompt, collection, ""),
-                [prompt, collection, initial] => (prompt, collection, string(name, initial)?),
-                _ => return Err("completing-read expects 2 or 3 arguments".to_string()),
-            };
-            let prompt = string(name, prompt)?;
-            let Value::List(items) = collection else {
-                return Err("completing-read expects a list of strings".to_string());
-            };
-            for item in items.iter() {
-                string(name, item)?;
-            }
-            match machine.host.call(
-                name,
-                vec![
-                    Value::String(prompt.to_string()),
-                    collection.clone(),
-                    Value::String(initial.to_string()),
-                ],
-            )? {
-                Value::String(input) => Ok(Value::String(input)),
-                other => Err(format!("completing-read: unexpected input {}", other)),
-            }
-        }
+        "completing-read" => completing_read(machine, args),
         "display-buffer" => {
             // 行 (1 から) を渡すと, そのウィンドウのカーソルを, その行に置く
             let args = match args.as_slice() {
@@ -641,22 +618,15 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             Ok(flag)
         }
         "read-string" => {
-            let (prompt, initial) = match args.as_slice() {
-                [prompt] => (prompt, ""),
-                [prompt, initial] => (prompt, string(name, initial)?),
-                _ => return Err("read-string expects 1 or 2 arguments".to_string()),
-            };
-            let prompt = string(name, prompt)?;
-            match machine.host.call(
-                name,
-                vec![
-                    Value::String(prompt.to_string()),
-                    Value::String(initial.to_string()),
-                ],
-            )? {
-                Value::String(input) => Ok(Value::String(input)),
-                other => Err(format!("read-string: unexpected input {}", other)),
+            // (read-string PROMPT [INITIAL-INPUT [HISTORY [DEFAULT-VALUE]]])
+            if args.is_empty() || args.len() > 5 {
+                return Err("read-string expects 1 to 5 arguments".to_string());
             }
+            let prompt = string(name, &args[0])?;
+            let initial = optional_string(name, args.get(1))?;
+            let default = default_value(name, args.get(3))?;
+            let input = read_input(machine, name, vec![prompt.to_string(), initial])?;
+            Ok(Value::String(or_default(input, default)))
         }
         "set-frame-font" => {
             let [font] = fixed::<1>(name, args)?;
@@ -665,6 +635,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         }
         "set-face-attribute" => set_face_attribute(machine, args),
         _ if ert::NAMES.contains(&name) => ert::call(machine, name, args),
+        _ if hooks::NAMES.contains(&name) => hooks::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name))),
     }
@@ -796,6 +767,157 @@ fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, 
         return Ok(Value::Nil);
     }
     set_font(machine, family, size)
+}
+
+/// `(completing-read PROMPT COLLECTION [PREDICATE [REQUIRE-MATCH [INITIAL-INPUT [HIST [DEF]]]]])`.
+/// 候補を Tab で補完しながら, 入力してもらいます (Emacs と同じ引数).
+///
+/// - COLLECTION は, 文字列, 記号, リスト (`car` を候補にする. alist) のリスト.
+/// - PREDICATE が non-nil なら, 候補の要素を渡して, 真のものだけを候補にする.
+/// - REQUIRE-MATCH が non-nil なら, 候補に無い入力は, 聞き直す (空の入力は, 認める).
+/// - 入力が空で, DEF (文字列か, 文字列のリスト. リストなら最初) があれば, DEF を返す.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 入力. 引数が誤っているか, やめたら [`Err`].
+fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, String> {
+    let name = "completing-read";
+    if args.len() < 2 || args.len() > 8 {
+        return Err("completing-read expects 2 to 8 arguments".to_string());
+    }
+    let prompt = string(name, &args[0])?.to_string();
+    let Value::List(items) = &args[1] else {
+        return Err("completing-read expects a list of candidates".to_string());
+    };
+    let predicate = args.get(2).filter(|p| p.is_non_nil()).cloned();
+    let require_match = args.get(3).is_some_and(Value::is_non_nil);
+    let initial = optional_string(name, args.get(4))?;
+    let default = default_value(name, args.get(6))?;
+    let mut candidates = Vec::new();
+    for item in items.iter() {
+        let label = match item {
+            Value::List(pair) if !pair.is_empty() => &pair[0],
+            other => other,
+        };
+        let label = match label {
+            Value::String(text) | Value::Symbol(text) => text.clone(),
+            other => return Err(format!("completing-read: not a candidate: {}", other)),
+        };
+        if let Some(predicate) = &predicate {
+            if !machine
+                .apply(predicate.clone(), vec![item.clone()])?
+                .is_non_nil()
+            {
+                continue;
+            }
+        }
+        candidates.push(label);
+    }
+    let collection: Value = Value::List(
+        candidates
+            .iter()
+            .map(|c| Value::String(c.clone()))
+            .collect(),
+    );
+    let mut ask = (prompt.clone(), initial);
+    loop {
+        let input = match machine.host.call(
+            name,
+            vec![
+                Value::String(ask.0.clone()),
+                collection.clone(),
+                Value::String(ask.1.clone()),
+            ],
+        )? {
+            Value::String(input) => input,
+            other => return Err(format!("completing-read: unexpected input {}", other)),
+        };
+        if !require_match || input.is_empty() || candidates.contains(&input) {
+            return Ok(Value::String(or_default(input, default)));
+        }
+        // 候補に無い (Emacs は [No match] と出して, 入力を続けさせる)
+        ask = (format!("[No match] {}", prompt), input);
+    }
+}
+
+/// ミニバッファで, 入力してもらいます (`read-string` の, エディタへの頼み).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 操作の名前.
+/// * `args` - 引数 (文字列).
+///
+/// # Returns
+///
+/// 入力. やめたら [`Err`].
+fn read_input(machine: &mut Machine, name: &str, args: Vec<String>) -> Result<String, String> {
+    match machine
+        .host
+        .call(name, args.into_iter().map(Value::String).collect())?
+    {
+        Value::String(input) => Ok(input),
+        other => Err(format!("{}: unexpected input {}", name, other)),
+    }
+}
+
+/// 省ける, 文字列の引数を返します (省くか, nil なら空).
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前.
+/// * `v` - 引数.
+///
+/// # Returns
+///
+/// 文字列. 文字列でも nil でもなければ [`Err`].
+fn optional_string(name: &str, v: Option<&Value>) -> Result<String, String> {
+    match v {
+        Some(v) if v.is_non_nil() => string(name, v).map(str::to_string),
+        _ => Ok(String::new()),
+    }
+}
+
+/// 既定の値の引数 (Emacs の DEFAULT-VALUE, DEF) を返します. 文字列のリストなら, 最初.
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前.
+/// * `v` - 引数.
+///
+/// # Returns
+///
+/// 既定の値 (省くか, nil なら `None`).
+fn default_value(name: &str, v: Option<&Value>) -> Result<Option<String>, String> {
+    match v {
+        Some(Value::List(items)) if !items.is_empty() => {
+            string(name, &items[0]).map(|s| Some(s.to_string()))
+        }
+        Some(v) if v.is_non_nil() => string(name, v).map(|s| Some(s.to_string())),
+        _ => Ok(None),
+    }
+}
+
+/// 入力が空で, 既定の値があれば, 既定の値を返します.
+///
+/// # Arguments
+///
+/// * `input` - 入力.
+/// * `default` - 既定の値.
+///
+/// # Returns
+///
+/// 入力, または既定の値.
+fn or_default(input: String, default: Option<String>) -> String {
+    match default {
+        Some(default) if input.is_empty() => default,
+        _ => input,
+    }
 }
 
 /// 引数の数を確かめて, 配列にします.

@@ -16,6 +16,7 @@ import {
   evalLisp,
   listenEditorRequests,
   loadInitFile,
+  runHooks,
   runLispCommand,
 } from '../lib/lisp'
 import { setBackgroundColor, setFont, setForegroundColor } from '../lib/theme'
@@ -50,6 +51,12 @@ export function useLisp(ctx: AppContext) {
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
   const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
+  // 手続きのある, エディタが実行するフック (find-file-hook, after-save-hook)
+  const [lispHooks, setLispHooks] = useState<string[]>([])
+  // ファイルを開いたバッファ (覚えたものと, find-file-hook をまだ実行していないもの) と, 保存した回数
+  const visitedBuffers = useRef(new Set<string>())
+  const unhookedBuffers = useRef(new Set<string>())
+  const saveCounts = useRef(new Map<string, number>())
   // Lisp から動かすエディタ (画面の今の状態を使うので, 描くたびに作り直す)
   const lispHost = useRef<LispHost>(undefined)
   // Lisp が, バッファを出してから続けるために, 描き直すのを待っている関数
@@ -68,6 +75,7 @@ export function useLisp(ctx: AppContext) {
   const showEvalResult = (response: EvalResponse, quiet = false) => {
     setLispCommands(response.commands)
     setLispKeys(response.keys)
+    setLispHooks(response.hooks ?? [])
     if (response.error === 'Quit') {
       // read-string を C-g でやめた
       showMessage('Quit')
@@ -277,6 +285,29 @@ export function useLisp(ctx: AppContext) {
     // 出すのを待っていたバッファは, 描き直したので, 出している (待つのを終える)
     for (const resolve of bufferWaiters.current) resolve()
     bufferWaiters.current = []
+  })
+
+  // ファイルを開いたバッファが, 初めて今のバッファになったら find-file-hook を,
+  // 今のバッファを保存したら after-save-hook を, 今のバッファで実行する (フックに手続きがあるときだけ)
+  useEffect(() => {
+    const hooks: string[] = []
+    for (const b of buffers) {
+      if (b.filePath && !visitedBuffers.current.has(b.id)) {
+        visitedBuffers.current.add(b.id)
+        unhookedBuffers.current.add(b.id)
+      }
+      const saves = b.saveCount ?? 0
+      if (b.id === currentBufferId && saves > (saveCounts.current.get(b.id) ?? 0)) {
+        hooks.push('after-save-hook')
+      }
+      saveCounts.current.set(b.id, saves)
+    }
+    if (unhookedBuffers.current.delete(currentBufferId)) hooks.unshift('find-file-hook')
+    for (const hook of hooks.filter((h) => lispHooks.includes(h))) {
+      runHooks(hook)
+        .then((response) => showEvalResult(response, true))
+        .catch((err) => showMessage(`Eval error: ${err}`))
+    }
   })
 
   /**

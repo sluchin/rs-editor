@@ -257,6 +257,19 @@ impl Value {
     pub fn is_true(&self) -> bool {
         !matches!(self, Value::Boolean(false))
     }
+
+    /// Emacs の non-nil かを返します (`#f`, 値が無いこと, 空のリストだけが nil). 省ける引数に使う.
+    ///
+    /// # Returns
+    ///
+    /// non-nil なら `true`.
+    pub fn is_non_nil(&self) -> bool {
+        match self {
+            Value::Boolean(false) | Value::Nil => false,
+            Value::List(items) => !items.is_empty(),
+            _ => true,
+        }
+    }
 }
 
 /// i64 で表せる数の境 (2^63). これより小さい整数は, `-0` を `0` と書くように, i64 で書く.

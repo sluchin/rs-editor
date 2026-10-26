@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::scheme::builtins;
 use crate::scheme::env::Env;
 use crate::scheme::ert::{self, ErtTest};
+use crate::scheme::hooks;
 use crate::scheme::host::{Host, NoHost};
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
@@ -67,6 +68,7 @@ impl Evaluator {
             .iter()
             .chain(system::NAMES)
             .chain(ert::NAMES)
+            .chain(hooks::NAMES)
         {
             global.define(name, Value::Function(name.to_string()));
         }
@@ -82,6 +84,10 @@ impl Evaluator {
         );
         // 読んだ初期設定ファイル (読む前と, 無いときは #f)
         global.define("user-init-file", Value::Boolean(false));
+        // エディタが実行するフック (find-file-hook, after-save-hook)
+        for hook in hooks::EDITOR_HOOKS {
+            global.define(hook, Value::List(Vec::new().into()));
+        }
         let evaluator = Evaluator {
             global,
             commands: Mutex::new(Vec::new()),
@@ -180,6 +186,15 @@ impl Evaluator {
     /// 環境の数.
     pub fn live_frames(&self) -> usize {
         self.global.live_frames()
+    }
+
+    /// 手続きのある, エディタが実行するフック (`find-file-hook` など) の名前を返します.
+    ///
+    /// # Returns
+    ///
+    /// 名前.
+    pub fn active_hooks(&self) -> Vec<String> {
+        hooks::active(&self.global)
     }
 
     /// 一番外側の環境を返します (`load` で使う).

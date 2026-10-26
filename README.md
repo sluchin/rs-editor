@@ -217,7 +217,12 @@ M-:            ; ミニバッファが開く
 | `(switch-to-buffer "name")` | バッファを出す (無ければ作る) |
 | `(buffer-file-name)` | バッファのファイル (無ければ `#f`) |
 | `(set-buffer-modified-p #f)` | バッファを、書き換えていないことにする |
-| `(read-string "Prompt: " "初め")` | ミニバッファで入力してもらう (`C-g` でやめると `Quit`) |
+| `(read-string "Prompt: " "初め" hist "既定")` | ミニバッファで入力してもらう (Emacs と同じ引数。空で確定すると、既定の値。`C-g` でやめると `Quit`) |
+| `(completing-read "Prompt: " '("a" "b") pred require-match "初め" hist "既定")` | 候補を `Tab` で補完しながら入力してもらう (Emacs と同じ引数。候補は文字列、記号、alist。`require-match` が non-nil なら、候補に無い入力は聞き直す) |
+| `(buffer-list)` / `(kill-buffer "name")` / `(buffer-modified-p)` | バッファの名前 / バッファを消す / 書き換えたか |
+| `(display-buffer "name" 行)` / `(find-file-noselect "path")` | ほかのウィンドウに出す / 出さずに開く |
+| `(highlight-regexp "re")` / `(unhighlight-regexp "re")` | 下線を引く / 消す (`#t` で全て。正規表現は JavaScript の書き方) |
+| `(kill-new "text")` | kill ring に入れる |
 | `(local-set-key "c" 'name)` | バッファだけのキー (Lisp のキーより先に使う) |
 | `(set-background-color "black")` / `(set-foreground-color "white")` | 背景と文字の色 (背景が暗いと、色分けも暗い背景のものにする) |
 | `(set-frame-font "DejaVu Sans Mono-14")` | フォント (ファミリーと、大きさ (ポイント)) |
@@ -259,6 +264,15 @@ M-:            ; ミニバッファが開く
 - `define-command` は `(define-command (名前) 本体 ...)` か、`(define-command 名前 手続き)`。同じ名前の既にあるコマンドより、先に使います。
 - `global-set-key` の割り当ては、既定の割り当てより先に使います。名前の付いたキーは `SPC`、`RET`、`TAB`、`DEL`、`ESC`、`<f1>` から `<f12>`、`<left>` などです。
 
+### フック
+
+Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-args` が使えます。エディタは、ファイルを開いたバッファを初めて出したときに `find-file-hook` を、今のバッファを保存したときに `after-save-hook` を、そのバッファで実行します。
+
+```scheme
+(add-hook 'after-save-hook
+          (lambda () (message "Saved %s" (buffer-file-name))))
+```
+
 ### 初期設定ファイル
 
 起動のときに、`~/.rseditor` を読んで評価します。無ければ `~/.rseditor.d/init.scm` (Emacs の `~/.emacs.d/init.el` と同じ)、それも無ければ `~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。読んだファイルは `user-init-file` に入ります。自分の Lisp のファイルは `~/.rseditor.d/lisp/` (または `~/.rseditor.d/`) に置くと、`(require 'name)` で読めます。どちらもなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
@@ -282,6 +296,7 @@ M-:            ; ミニバッファが開く
 - リンク: `>>> 言葉`、`<<< 言葉`、`[[言葉]]` (wiki)、キーワード、`file://` に下線を引き、その上の `RET` で探す (開く) ことができます。`<<< 言葉` の行を、一覧の先に出します。
 - 予定と todo: 書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。項目の上の `RET` で、済み (`.`)、取り消し、種類、怠け具合を変えます。日付の上の `RET` で、日付を変える (`+1` など)、繰り返して写す (`every` など)、その日付で探すことができます。日付と日時を入れる (`C-c , d`、`C-c , T`)、キーワードを入れる (`C-c , i`)。
 - そのほか: howm のバッファを全て消す (`C-c , Q`)、バッファの一覧 (`C-c , b`)、出し直す (`C-c , r`)。
+- フック: `C-x C-f` で開いたメモも、メモのバッファにします (`howm-set-mode-on-find-file`)。メモを保存すると、キーワードを集め直して下線を引き直し、メニューを出していれば出し直します (`howm-refresh-after-save`、`howm-menu-refresh-after-save`、`howm-after-save-hook`)。
 
 #### テスト (ERT)
 
