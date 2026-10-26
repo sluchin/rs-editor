@@ -3,9 +3,15 @@
  * ウィンドウのコマンド (C-x 2, C-x 3, C-x o, C-x 0, C-x 1) を受け持ちます.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import type { CursorInfo, EditorHandle } from '../components/CodeEditor'
-import { type Buffer, createScratchBuffer, generateBufferId, visitFile } from '../lib/buffer'
+import {
+  type Buffer,
+  createScratchBuffer,
+  generateBufferId,
+  uniquifyBufferNames,
+  visitFile,
+} from '../lib/buffer'
 import { getHomeDir } from '../lib/fileOps'
 import { lineStart } from '../lib/grep'
 import { fileDirectory } from '../lib/paths'
@@ -35,7 +41,15 @@ function generateWindowId(): string {
  */
 export function useBuffers(showMessage: (text: string) => void) {
   // 開いているバッファ (開いた順)
-  const [buffers, setBuffers] = useState<Buffer[]>([createScratchBuffer()])
+  const [buffers, setBuffersRaw] = useState<Buffer[]>(() => [createScratchBuffer()])
+  // バッファを変えるたびに, 同じ名前のファイルのバッファの名前を, ディレクトリで区別する (Emacs の uniquify)
+  const setBuffers = useCallback(
+    (update: SetStateAction<Buffer[]>) =>
+      setBuffersRaw((prev) =>
+        uniquifyBufferNames(typeof update === 'function' ? update(prev) : update),
+      ),
+    [],
+  )
   // ウィンドウの分け方と, 各ウィンドウに出すバッファと, カーソルの位置
   const [layout, setLayout] = useState<Layout>({ kind: 'window', id: FIRST_WINDOW })
   const [windowBuffers, setWindowBuffers] = useState<Record<string, string>>({

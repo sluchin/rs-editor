@@ -218,6 +218,38 @@ describe('App', () => {
     expect(editor.text()).toContain('Error: denied')
   })
 
+  it('同じ名前のファイルは, バッファの名前をディレクトリで区別し, 開いているファイルはそのバッファを出す', async () => {
+    const editor = await setup()
+    mocked.pathExists.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
+    mocked.readFile.mockResolvedValueOnce('').mockResolvedValueOnce('')
+    editor.ctrlX('f')
+    await editor.submit('/p/src/index.ts')
+    expect(editor.text()).toContain('-:--- index.ts')
+    editor.ctrlX('f')
+    await editor.submit('/p/lib/index.ts')
+    expect(editor.text()).toContain('-:--- index.ts<lib>')
+    expect(editor.text()).toContain('[3/3]')
+
+    // C-x b で, 区別した名前で移る
+    editor.ctrlX('b', false)
+    await editor.submit('index.ts<src>')
+    expect(editor.text()).toContain('-:--- index.ts<src>')
+    expect(editor.text()).toContain('[2/3]')
+
+    // 開いているファイルは, 読み直さずに, そのバッファを出す
+    mocked.readFile.mockClear()
+    editor.ctrlX('f')
+    await editor.submit('/p/lib/index.ts')
+    expect(mocked.readFile).not.toHaveBeenCalled()
+    expect(editor.text()).toContain('[3/3]')
+
+    // 消すと, 残ったバッファの名前を戻す
+    editor.ctrlX('k', false)
+    editor.ctrlX('b', false)
+    await editor.submit('index.ts')
+    expect(editor.text()).toContain('-:--- index.ts ')
+  })
+
   it('C-x C-s で, ファイルのあるバッファは上書きし, 失敗はメッセージにする', async () => {
     const editor = await setup()
     mocked.pathExists.mockResolvedValueOnce(true)

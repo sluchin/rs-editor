@@ -92,11 +92,17 @@ export function useFiles(
   }
 
   /**
-   * ファイルを開いて, 選んでいるウィンドウに出します.
+   * ファイルを開いて, 選んでいるウィンドウに出します. 開いていれば, そのバッファを出します (Emacs と同じ).
    *
    * @param path - ファイルのパス.
    */
   const findFile = async (path: string) => {
+    const open = buffers.find((b) => b.filePath === path)
+    if (open) {
+      setCurrentBufferId(open.id)
+      showMessage('')
+      return
+    }
     try {
       const { buffer, message } = await visitFile(path)
       setBuffers((prev) => [...prev, buffer])
