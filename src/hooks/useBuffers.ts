@@ -179,21 +179,26 @@ export function useBuffers(showMessage: (text: string) => void) {
   }
 
   /**
-   * 選んでいるウィンドウのバッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
+   * バッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
+   *
+   * @param id - 消すバッファ.
    */
-  const killCurrentBuffer = () => {
-    for (const handle of handles.current.values()) handle.forget(currentBuffer.id)
-    const newBuffers = buffers.filter((b) => b.id !== currentBuffer.id)
+  const killBuffer = (id: string) => {
+    for (const handle of handles.current.values()) handle.forget(id)
+    const newBuffers = buffers.filter((b) => b.id !== id)
     // 全て消したら, *scratch* を作り直す
     const next = newBuffers.length === 0 ? createScratchBuffer() : newBuffers[0]
     setBuffers(newBuffers.length === 0 ? [next] : newBuffers)
     // 消したバッファを出していたウィンドウには, 別のバッファを出す
     setWindowBuffers((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).map(([w, b]) => [w, b === currentBuffer.id ? next.id : b]),
-      ),
+      Object.fromEntries(Object.entries(prev).map(([w, b]) => [w, b === id ? next.id : b])),
     )
   }
+
+  /**
+   * 選んでいるウィンドウのバッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
+   */
+  const killCurrentBuffer = () => killBuffer(currentBuffer.id)
 
   /**
    * バッファを, 別のバッファに置き換えます (出しているウィンドウも).
@@ -231,8 +236,9 @@ export function useBuffers(showMessage: (text: string) => void) {
    *
    * @param bufferId - バッファ.
    * @param select - そのウィンドウを選ぶなら `true`.
+   * @returns 出したウィンドウ.
    */
-  const displayInOtherWindow = (bufferId: string, select: boolean) => {
+  const displayInOtherWindow = (bufferId: string, select: boolean): string => {
     const ids = windowIds(layout)
     let target: string
     if (ids.length === 1) {
@@ -243,6 +249,7 @@ export function useBuffers(showMessage: (text: string) => void) {
     }
     setWindowBuffers((prev) => ({ ...prev, [target]: bufferId }))
     if (select) selectWindow(target)
+    return target
   }
 
   /**
@@ -340,6 +347,7 @@ export function useBuffers(showMessage: (text: string) => void) {
     setCurrentText,
     createNewBuffer,
     defaultDirectory,
+    killBuffer,
     killCurrentBuffer,
     replaceBuffer,
     handleEditorChange,

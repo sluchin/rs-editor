@@ -54,3 +54,8 @@
   background: purple;
   color: white;
 }
+
+/* Lisp の highlight-regexp で引いた下線 (howm のリンクなど) */
+.code-editor-container .cm-lisp-highlight {
+  text-decoration: underline;
+}

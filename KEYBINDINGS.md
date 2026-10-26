@@ -403,21 +403,34 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - そのほかのヘルプ（C-h f, C-h v など）
 - Dired の中の全てのキー（C-x d は, 一覧を出すだけ）
 
-## howm (`lisp/howm.sl` を読み込んだとき)
+## howm (`lisp/howm.scm` を読み込んだとき)
+
+`(require 'howm)` で読みます。キーは howm と同じく, `C-c ,` に続けて押します。
 
 | キー | コマンド | 説明 |
 |------|----------|------|
 | `M-x howm`, `C-c , ,` | `howm-menu` | メニューを出す |
 | `C-c , c` | `howm-create` | メモを作る |
-| `C-c , a` / `C-c , l` | `howm-list-all` / `howm-list-recent` | 一覧 / 最近のメモ |
-| `C-c , s` / `C-c , g` | `howm-search-fixed` / `howm-search-regexp` | 文字 / 正規表現で探す |
+| `C-c , e` | `howm-remember` | 速記 (`*howm-remember*` で `C-c C-c` でメモにする. `C-c C-k` で取り消す) |
+| `C-c , D` | `howm-dup` | カーソルのメモを複製する |
+| `C-c , s` / `C-c , g` | `howm-search-fixed` / `howm-search-regexp` | 言葉 (キーワードを補完) / 正規表現で探す |
+| `C-c , m` | `howm-search-migemo` | ローマ字で探す (ひらがなとカタカナにも合う) |
+| `C-c , o` | `howm-occur` | 今のバッファの中を探す |
+| `C-c , h` | `howm-history` | 探した言葉の履歴 |
+| `C-c , a` / `C-c , l` / `C-c , A` | `howm-list-all` / `howm-list-recent` / `howm-list-around` | 一覧 / 最近のメモ / 前後のメモ |
+| `C-c , w` | `howm-random-walk` | 酔歩 (1 回に 1 歩) |
 | `C-c , .` / `C-c , :` | `howm-today` / `howm-yesterday` | 今日 / 昨日のメモ |
 | `C-c , y` / `C-c , t` | `howm-list-schedule` / `howm-list-todo` | 予定 / todo |
-| `C-c , RET` | `howm-action` | ボタン, 項目, リンクを動かす |
+| `C-c , d` / `C-c , T` | `howm-insert-date` / `howm-insert-dtime` | 日付 / 日時を入れる |
+| `C-c , i` | `howm-insert-keyword` | キーワードを補完して入れる |
+| `C-c , K` | `howm-title-to-kill-ring` | メモの題を kill ring に入れる |
+| `C-c , b` / `C-c , Q` | `howm-list-buffers` / `howm-kill-all` | howm のバッファの一覧 / 全て消す |
+| `C-c , r` | `howm-refresh` | 下線を引き直す (メニューなら出し直す) |
+| `C-c , RET` | `howm-action` | ボタン, 項目, リンク, 日付を動かす |
 
-メニューでは, ボタンの前の文字 (`c`, `s`, `g`, `:`, `.`, `a`, `l`, `y`, `t`, `R`) と, ボタンや項目の上の `RET` が使えます。
-一覧 (`*howmS*`) では, `RET` でその行のメモを開き, `n` と `p` で行を動きます。
-howm から開いたメモでは, `>>> 言葉` と `<<< 言葉` の上の `RET` で, その言葉を探します (ほかの所では, 改行)。
+メニューでは, ボタンの前の `"` の前の文字 (`c`, `s`, `g`, `m`, `a`, `l`, `y`, `t` など) と, ボタンや項目の上の `RET` が使えます。
+一覧 (`*howmS*`) では, `n` と `p` で行を動くと, 別のウィンドウにメモを出し, `RET` でその行のメモを開きます。
+howm から開いたメモでは, リンク (`>>>`, `<<<`, `[[ ]]`, キーワード, `file://`) と, 予定と todo の項目と, 日付の上の `RET` で動きます (ほかの所では, 改行)。
 
 ## よくある操作パターン
 

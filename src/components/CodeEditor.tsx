@@ -14,7 +14,16 @@ import {
   type Text,
   Transaction,
 } from '@codemirror/state'
-import { EditorView, drawSelection, keymap } from '@codemirror/view'
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  MatchDecorator,
+  ViewPlugin,
+  type ViewUpdate,
+  drawSelection,
+  keymap,
+} from '@codemirror/view'
 import { controlChars } from '../lib/controlChars'
 import {
   type Command,
@@ -102,6 +111,38 @@ function syncChange(state: EditorState, doc: Text | string) {
   }
 }
 
+/** 下線を引かないとき (描くたびに, 違う配列にしない). */
+const NO_HIGHLIGHTS: readonly string[] = []
+
+/** 下線 (Lisp の `highlight-regexp`). */
+const highlightMark = Decoration.mark({ class: 'cm-lisp-highlight' })
+
+/**
+ * 正規表現に合う所に, 下線を引く拡張を作ります.
+ *
+ * @param regexps - 正規表現 (JavaScript の書き方).
+ * @returns 拡張. 正規表現が無ければ, 空.
+ */
+function regexpHighlighting(regexps: readonly string[]) {
+  if (regexps.length === 0) return []
+  const decorator = new MatchDecorator({
+    regexp: new RegExp(regexps.map((r) => `(?:${r})`).join('|'), 'g'),
+    decoration: highlightMark,
+  })
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
+      constructor(view: EditorView) {
+        this.decorations = decorator.createDeco(view)
+      }
+      update(update: ViewUpdate) {
+        this.decorations = decorator.updateDeco(update, this.decorations)
+      }
+    },
+    { decorations: (plugin) => plugin.decorations },
+  )
+}
+
 /** カーソルの位置. */
 export interface CursorInfo {
   /** 行 (1 から数える). */
@@ -151,6 +192,8 @@ export interface EditorHandle {
    * ファイルから読み直すとき (revert-buffer).
    */
   setText: (content: string) => void
+  /** 文字を, kill-ring に入れます (Lisp の `kill-new`). */
+  killNew: (text: string) => void
   /** 次にヤンクする文字を返します (isearch の `M-y`). 何もキルしていなければ, `undefined`. */
   currentKill: () => string | undefined
   /** ヤンクする文字を, 1 つ古い方へ進めて, その文字を返します (isearch の続けた `M-y`). */
@@ -185,6 +228,8 @@ interface CodeEditorProps {
   active?: boolean
   /** シンタックスハイライトと字下げの言語 (省くと, 色を付けず, Fundamental モードの字下げ). */
   language?: MajorMode['language']
+  /** 下線を引く所の正規表現 (Lisp の `highlight-regexp`). 省くと, 引かない. */
+  highlights?: readonly string[]
   /** 字下げにタブを使うなら `true`. 省くと `true` (Emacs の既定). */
   indentTabs?: boolean
   /** タブの幅. 省くと 8 (Emacs の既定). */
@@ -222,6 +267,7 @@ export default function CodeEditor({
   disabled,
   active = true,
   language = null,
+  highlights = NO_HIGHLIGHTS,
   indentTabs = true,
   tabWidth = 8,
   handle,
@@ -234,6 +280,7 @@ export default function CodeEditor({
   const readOnly = useRef(new Compartment())
   const keys = useRef(new Compartment())
   const highlight = useRef(new Compartment())
+  const underline = useRef(new Compartment())
   // キーボードマクロと kill-ring (全てのバッファで共通)
   const macro = useRef(new KeyboardMacro())
   const killRing = useRef(new KillRing())
@@ -311,6 +358,7 @@ export default function CodeEditor({
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
         highlight.current.of(highlightExtension()),
+        underline.current.of(regexpHighlighting(highlights)),
         // キーボードマクロを記録する (キーの割り当てより先に見る)
         Prec.highest(
           EditorView.domEventHandlers({
@@ -397,6 +445,7 @@ export default function CodeEditor({
         const change = syncChange(current().state, content)
         if (change) current().dispatch({ changes: change.changes, scrollIntoView: true })
       },
+      killNew: (text) => killRing.current.push(text),
       currentKill: () => killRing.current.current(),
       rotateKill: () => killRing.current.rotate(),
     }
@@ -438,6 +487,7 @@ export default function CodeEditor({
         readOnly.current.reconfigure(EditorState.readOnly.of(disabled)),
         keys.current.reconfigure(keyExtension()),
         highlight.current.reconfigure(highlightExtension()),
+        underline.current.reconfigure(regexpHighlighting(highlights)),
       ],
     })
     // 隠していたあいだに, 別のウィンドウで書き換えたかもしれない
@@ -448,6 +498,16 @@ export default function CodeEditor({
     // initialContent は, 始めて表示するときと, 切り替えたときにだけ使う. disabled は, 下の効果で合わせる
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bufferId])
+
+  // 下線 (highlight-regexp) が変わったら, 引き直す
+  const shownHighlights = useRef(highlights)
+  useEffect(() => {
+    if (shownHighlights.current === highlights) return
+    shownHighlights.current = highlights
+    ;(view.current as EditorView).dispatch({
+      effects: underline.current.reconfigure(regexpHighlighting(highlights)),
+    })
+  }, [highlights])
 
   // Lisp でキーを割り当てたら, 割り当てを作り直す
   useEffect(() => {

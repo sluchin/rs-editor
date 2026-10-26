@@ -35,6 +35,8 @@ export interface Buffer {
   directory?: string
   /** バッファだけのキー (Lisp の `local-set-key`. Lisp の割り当てより先に使う). */
   keys?: KeyBinding[]
+  /** 下線を引く所の正規表現 (Lisp の `highlight-regexp`. JavaScript の書き方). */
+  highlights?: string[]
   /** `M-x grep` の結果のバッファなら, 探したディレクトリ (`/` で終わる) と, 合った行. */
   grep?: { directory: string; matches: GrepMatch[] }
 }

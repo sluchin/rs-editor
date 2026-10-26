@@ -195,7 +195,7 @@
 - [x] Lisp の手続きを足す: `load`, ファイル (`read-file-string`, `write-file-string`, `directory-files-recursively` など), 時刻 (`format-time-string`, `date-to-time`),
       正規表現 (`regexp-match`, `grep`), 文字列 (`string-search`, `split-string` など), `sort`, `cadr` など, `random`。
       エディタの操作: `find-file`, `switch-to-buffer`, `buffer-file-name`, `set-buffer-modified-p`, `read-string`, `local-set-key`。
-- [x] howm を Scheme で書き直す (`lisp/howm.sl`)。`M-x howm` でメニュー, メモを作る, 一覧, 検索, 今日と昨日, 予定と todo, リンク (`>>>`, `<<<`)。
+- [x] howm を Scheme で書き直す (`lisp/howm.scm`)。`M-x howm` でメニュー, メモを作る, 一覧, 検索, 今日と昨日, 予定と todo, リンク (`>>>`, `<<<`)。
 - [ ] howm の, まだ移していない機能: 下線 (action-lock の色付け), 一覧の窓 (中身の表示), `[複製]`, `[速記]`, ローマ字検索 (migemo), `[前後]`, `[履歴]`, `[酔歩]`,
       キーワードの補完, 日付の入力 (`[日↓]`, `[時↓]`), タイトルとファイル名のコピー, `[全消]`, メニューの `%eval%`, `%call%`, 別のメニュー (`%○○%`),
       保存したときのメニューの更新, `C-x C-f` で開いたメモの howm-mode (今は, howm から開いたメモだけ)。
@@ -360,6 +360,121 @@
 - [ ] `C-z` (suspend-frame), `C-x C-z`。
 - [ ] 2 段の表示 (`C-x 6 ...`), `C-x $` (set-selective-display), `C-x 4 a` (add-change-log-entry-other-window)。
 - [ ] `M-x customize` と, 設定の保存 (`custom-file`)。`desktop-save-mode` (開いていたバッファを, 次に起動したときに開く)。
+
+## dotfiles/.emacs.el の global-map の関数
+
+`~/dotfiles/.emacs.el` で `define-key global-map` にしているキーと関数 (103 個。同じキーを後で付け直したものも, 並べた)。
+「状態」は, rs-editor に, 同じ働きのコマンドがあるか (キーは, rs-editor では違うことがある)。[x] は有る, [~] は一部, [ ] は無い。行は `.emacs.el` の行の番号。
+
+### 編集と移動
+
+| 状態 | キー | 関数 | 行 | 備考 |
+|---|---|---|---|---|
+| [ ] | (tty の erase) | backward-delete-char-untabify | 473 | タブを空白に崩して消す |
+| [~] | `C-x %` | (括弧の対へ移る lambda) | 1269 | `forward-list` / `backward-list`。rs-editor は `C-M-f` / `C-M-b` (forward-sexp) で代わりになる |
+| [ ] | `C-;` / `C-x ;` | hippie-expand | 1367, 1368 | `M-/` (dabbrev-expand) は有る |
+| [x] | `RET` | newline-and-indent | 1382 | rs-editor の `RET` は字下げする (electric-indent-mode) |
+| [ ] | `<C-insert>` | clipboard-kill-ring-save | 1406 | |
+| [ ] | `S-DEL` | clipboard-kill-region | 1409 | |
+| [ ] | `<S-insert>` | clipboard-yank | 1412 | |
+| [x] | `C-S-k` | just-one-space | 1424 | rs-editor は `M-SPC` |
+| [x] | `C-S-t` | transpose-chars | 1429 | `C-t` は nil にしている |
+| [x] | `C-i` | self-insert-command | 1432 | タブを入れる |
+| [x] | `M-g` | goto-line | 1443 | |
+| [~] | `C-c ;` | comment-or-uncomment-region | 1446 | `M-;` (comment-dwim) のリージョンの働きとして有る。コマンドとしては無い |
+| [~] | `C-<return>` / `C-x j` | cua-set-rectangle-mark | 2666, 2667 | 矩形の選択は無い。`C-x r k` などは有る |
+| [ ] | `C-c C-m` | mark-symbol | 2978 | |
+| [~] | `C-c C-w` | mark-word* | 2979 | `M-@` (mark-word) は有る |
+| [ ] | `C-c C-s` | mark-string | 2980 | |
+| [x] | `C-?` | redo | 3117 | `C-x C-/` |
+| [ ] | `M-3` | delete-mark-ring | 1221 | |
+| [ ] | `<f7>` / `<S-f7>` | point-undo / point-redo | 3229, 3230 | |
+| [ ] | `<f8>` / `<S-f8>` | goto-last-change / goto-last-change-reverse | 3235, 3236 | rs-editor の `F8` は project-tree |
+| [x] | `<up>` `<down>` `<right>` `<left>` | previous-line / next-line / forward-char / backward-char | 6520-6523 | |
+| [x] | `<C-up>` `<C-down>` | backward-paragraph / forward-paragraph | 6524, 6525 | |
+| [x] | `<C-right>` `<C-left>` | forward-word / backward-word | 6526, 6527 | |
+
+### 表示とモード
+
+| 状態 | キー | 関数 | 行 | 備考 |
+|---|---|---|---|---|
+| [ ] | `M-1` | toggle-which-func-mode | 631 | |
+| [ ] | `<f11>` | resize-frame-interactively | 763 | |
+| [ ] | `<f2>` | toggle-debug-on-error | 1262 | |
+| [ ] | `C-^` | global-whitespace-mode | 1403 | |
+| [ ] | `C-\` | skk-mode | 1415, 3784 | 先に nil にして, 後で skk-mode |
+| [ ] | `C-c C-l` | toggle-truncate-lines | 1418 | |
+| [x] | `C-c C-g` | (message nil) | 1421 | エコー領域を消す。`C-g` で消える |
+| [ ] | `<f10>` | other-window-or-split | 1440 | `C-x o` と `C-x 2` は有る |
+| [ ] | `C-c t` | tabbar-mode | 3520 | |
+| [ ] | `<f4>` | toggle-auto-complete-mode | 5256 | |
+| [ ] | `<f5>` | toggle-yas-minor-mode | 5401 | |
+| [ ] | `M-2` | se/make-summary-buffer | 5221 | |
+| [ ] | `C-x t` | (nil) | 3785 | 外しているだけ |
+
+### ファイル, ディレクトリ, バッファ
+
+| 状態 | キー | 関数 | 行 | 備考 |
+|---|---|---|---|---|
+| [~] | `C-c r` | bookmark-choice | 1063 | `C-x r m` / `C-x r b` は有る |
+| [~] | `C-x C-o` | occur-by-moccur | 1123 | howm の `C-c , o` (howm-occur) は有る。occur, moccur は無い |
+| [ ] | `<f9>` / `<S-f9>` | desktop-recover / desktop-save* | 1346, 1353 | |
+| [ ] | `C-x M-l` | find-file-at-point-goto-line | 1398 | |
+| [ ] | `C-x M-f` | find-file-at-point | 1399 | |
+| [ ] | `C-x M-d` | dired-at-point | 1400 | |
+| [ ] | `C-x C-j` | dired-jump | 1564 | |
+| [ ] | `C-x j` | dired-jump-other-window | 1565 | 後で cua-set-rectangle-mark に付け直している |
+| [~] | `C-c x` / `<f6>` | speedbar-get-focus / sr-speedbar-toggle | 1842, 1843, 1957, 1958 | `F8` (project-tree) が近い |
+| [ ] | `C-c C-x` / `<f12>` | recentf-open-files | 2651, 2652 | |
+| [ ] | `C-c C-f` | file-cache-choice | 2720 | |
+| [~] | `C-c C-j` | direx:jump-to-directory-other-window | 2992 | `F8` (project-tree) が近い |
+| [ ] | `C-c a` | anything-choice (eshell では anything-eshell) | 3408 | |
+| [ ] | `C-x a` | anything-filelist+ | 3415 | |
+| [ ] | `C-c s` | helm-choice (eshell では helm-choice-for-eshell) | 3490 | |
+| [ ] | `C-c n` | helm-mini | 3508 | |
+| [ ] | `C-x C-z` | open-junk-file | 3981 | |
+
+### 調べる, 外のツール
+
+| 状態 | キー | 関数 | 行 | 備考 |
+|---|---|---|---|---|
+| [ ] | `C-c C-i` | info-apropos-region-or-word | 779 | |
+| [ ] | `C-h C-i` | info-lookup-symbol | 780 | |
+| [ ] | `<f1>` | (manual-entry (current-word)) | 826 | |
+| [ ] | `<S-f1>` | (woman (current-word)) | 871 | |
+| [ ] | `<M-f1>` | iman | 2954 | |
+| [ ] | `C-c m` | w3m-gtk-lookup | 923 | |
+| [ ] | `C-c 3` | w3m-choice | 4585 | |
+| [ ] | `C-c f` | default-browser-or-vlc-choice | 1339 | |
+| [ ] | `C-c w` | sdcv-search-input | 4222 | |
+| [ ] | `C-c i` | sdcv-search-pointer+ | 4224 | |
+| [ ] | `C-c C-h` | hyperspec-lookup | 5458 | |
+| [ ] | `C-c v` | vc-choice | 4873 | |
+| [ ] | `C-c 2` | navi2ch | 3614 | |
+| [ ] | `C-c e` | evernote-choice | 4659 | |
+| [ ] | `C-c p` | pomodoro-choice | 4089 | |
+| [ ] | `C-c d` | calendar-datetime-choice | 2156 | howm の `C-c , d` (日付を入れる) は有る |
+| [ ] | `C-c l` | org-store-link | 2521 | |
+| [ ] | `C-c o` | org-choice | 2550 | |
+| [x] | `C-c h` | howm-menu | 3673 | `lisp/howm.scm` を `(require 'howm)` で読む |
+| [ ] | `M-\` / `M-[` / `M-]` | bm-toggle / bm-previous / bm-next | 3198-3200 | |
+
+### cscope
+
+| 状態 | キー | 関数 | 行 |
+|---|---|---|---|
+| [ ] | `C-<f3>` | cscope-set-initial-directory | 5133 |
+| [ ] | `C-<f4>` | cscope-unset-initial-directory | 5134 |
+| [ ] | `C-<f5>` | cscope-find-this-symbol | 5135 |
+| [ ] | `C-<f6>` | cscope-find-global-definition | 5136 |
+| [ ] | `C-<f7>` | cscope-find-global-definition-no-prompting | 5137 |
+| [ ] | `C-<f8>` | cscope-pop-mark | 5138 |
+| [ ] | `C-<f9>` | cscope-history-forward-line | 5139 |
+| [ ] | `C-<f10>` | cscope-history-forward-file | 5140 |
+| [ ] | `C-<f11>` | cscope-history-backward-line | 5141 |
+| [ ] | `C-<f12>` | cscope-history-backward-file | 5142 |
+| [ ] | `M-<f9>` | cscope-display-buffer | 5143 |
+| [ ] | `M-<f10>` | cscope-display-buffer-toggle | 5144 |
 
 ## 実装順序の目安
 

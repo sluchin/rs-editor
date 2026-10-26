@@ -403,7 +403,7 @@ fn test_define_command_and_global_set_key() {
             .unwrap(),
         "say-hi"
     );
-    assert_eq!(ev.commands(), vec!["say-hi", "shout"]);
+    assert_eq!(ev.commands(), vec!["ert", "say-hi", "shout"]);
     assert_eq!(ev.run_command("say-hi", &editor).unwrap(), "nil");
     assert_eq!(editor.text(), "hi!");
     // Lisp のコマンドは, エディタに頼まずに呼ぶ

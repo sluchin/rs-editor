@@ -1,16 +1,18 @@
 //! Scheme の評価器. 定義 (`define`) は, アプリが持ち続ける評価器の環境に覚えます.
 //!
 //! - 特別な形: `quote` (`'`), `if`, `define`, `set!`, `lambda`, `begin`, `let` (名前付きも), `let*`, `letrec`,
-//!   `cond`, `case`, `and`, `or`, `when`, `unless`, `define-command`.
+//!   `cond`, `case`, `and`, `or`, `when`, `unless`, `unwind-protect`, `define-command`.
+//! - テスト ([`ert`]): `ert-deftest`, `should`, `should-not`, `should-error`, `skip-unless`.
 //! - 組み込みの手続きは [`builtins`].
 //! - 末尾の呼び出しは, 深さを使いません. それ以外の入れ子は, [`MAX_DEPTH`] までです.
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use serde::{Deserialize, Serialize};
 
 use crate::scheme::builtins;
 use crate::scheme::env::Env;
+use crate::scheme::ert::{self, ErtTest};
 use crate::scheme::host::{Host, NoHost};
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
@@ -41,6 +43,10 @@ pub struct Evaluator {
     keys: Mutex<Vec<KeyBinding>>,
     /// 評価中は, 持ち続けるロック (評価は, 1 度に 1 つ).
     running: Mutex<()>,
+    /// `provide` した機能の名前 (`require` で, 2 度読まない).
+    features: Mutex<Vec<String>>,
+    /// `ert-deftest` で定義したテスト (定義した順).
+    tests: Mutex<Vec<ErtTest>>,
 }
 
 impl Default for Evaluator {
@@ -57,15 +63,42 @@ impl Evaluator {
     /// 評価器.
     pub fn new() -> Self {
         let global = Env::new();
-        for name in builtins::NAMES.iter().chain(system::NAMES) {
+        for name in builtins::NAMES
+            .iter()
+            .chain(system::NAMES)
+            .chain(ert::NAMES)
+        {
             global.define(name, Value::Function(name.to_string()));
         }
-        Evaluator {
+        // load と require が, ファイルを探すディレクトリ
+        global.define(
+            "load-path",
+            Value::List(
+                system::DEFAULT_LOAD_PATH
+                    .iter()
+                    .map(|dir| Value::String(dir.to_string()))
+                    .collect(),
+            ),
+        );
+        // 読んだ初期設定ファイル (読む前と, 無いときは #f)
+        global.define("user-init-file", Value::Boolean(false));
+        let evaluator = Evaluator {
             global,
             commands: Mutex::new(Vec::new()),
             keys: Mutex::new(Vec::new()),
             running: Mutex::new(()),
+            // テスト (ERT) は, require しなくても使える
+            features: Mutex::new(vec!["ert".to_string()]),
+            tests: Mutex::new(Vec::new()),
+        };
+        // M-x ert
+        let mut machine = Machine::new(&evaluator, &NoHost);
+        for expr in ert::prelude() {
+            machine
+                .eval(&expr, &evaluator.global)
+                .expect("the ERT prelude evaluates");
         }
+        evaluator
     }
 
     /// コードを評価します (エディタの操作は, 失敗します).
@@ -156,6 +189,40 @@ impl Evaluator {
     /// 環境.
     pub(crate) fn global(&self) -> &Env {
         &self.global
+    }
+
+    /// 機能を覚えます (Emacs の `provide`. 覚えていれば, 何もしない).
+    ///
+    /// # Arguments
+    ///
+    /// * `feature` - 機能の名前.
+    pub(crate) fn provide(&self, feature: &str) {
+        let mut features = self.features.lock().unwrap();
+        if !features.iter().any(|f| f == feature) {
+            features.push(feature.to_string());
+        }
+    }
+
+    /// 機能を `provide` したかを返します.
+    ///
+    /// # Arguments
+    ///
+    /// * `feature` - 機能の名前.
+    ///
+    /// # Returns
+    ///
+    /// `provide` していれば `true`.
+    pub(crate) fn featurep(&self, feature: &str) -> bool {
+        self.features.lock().unwrap().iter().any(|f| f == feature)
+    }
+
+    /// `ert-deftest` で定義したテストを返します.
+    ///
+    /// # Returns
+    ///
+    /// テスト (定義した順. 書き換えられる).
+    pub(crate) fn tests(&self) -> MutexGuard<'_, Vec<ErtTest>> {
+        self.tests.lock().unwrap()
     }
 
     /// コマンドとして覚えます (覚えていれば, 何もしない).
@@ -578,7 +645,18 @@ impl<'a> Machine<'a> {
                 }
                 _ => return Err(format!("{} expects a test", op)),
             },
-            _ => return Ok(None),
+            "unwind-protect" => match args {
+                [body, cleanup @ ..] => {
+                    // 本体が失敗しても, 後始末を評価する
+                    let result = self.eval(body, env);
+                    for expr in cleanup {
+                        self.eval(expr, env)?;
+                    }
+                    Step::Done(result?)
+                }
+                _ => return Err("unwind-protect expects a body form".to_string()),
+            },
+            _ => return Ok(ert::special_form(self, op, args, env)?.map(Step::Done)),
         };
         Ok(Some(step))
     }
@@ -722,7 +800,7 @@ impl<'a> Machine<'a> {
 /// # Returns
 ///
 /// 手続き. 引数のリストが誤っている場合は [`Err`].
-fn make_lambda(
+pub(crate) fn make_lambda(
     name: Option<&str>,
     params: &Value,
     body: &[Value],

@@ -1832,6 +1832,123 @@ describe('App', () => {
       expect(await send('point')).toMatchObject({ error: null })
     })
 
+    it('バッファの一覧, 書き換えたか, 消す', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      await send('switch-to-buffer', '*b*')
+      expect(await send('buffer-modified-p')).toMatchObject({ value: false })
+      await send('insert', 'x')
+      expect(await send('buffer-modified-p', '*b*')).toMatchObject({ value: true })
+      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*b*'] })
+      expect(await send('buffer-file-name', 'zz')).toMatchObject({ error: 'No such buffer: zz' })
+      // 書き換えていても, ファイルの無いバッファは消す
+      expect(await send('kill-buffer', '*b*')).toMatchObject({ value: true, error: null })
+      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*'] })
+      // 書き換えたファイルのバッファは, 消さない
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockResolvedValue('note')
+      await send('find-file', '/home/u/a.txt')
+      await send('insert', 'x')
+      expect(await send('kill-buffer')).toMatchObject({ error: 'Buffer a.txt is modified' })
+      await send('set-buffer-modified-p', false)
+      expect(await send('kill-buffer')).toMatchObject({ error: null })
+      expect(editor.doc()).toContain('This buffer is for text')
+    })
+
+    it('kill ring に入れ, 補完して入力してもらう', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      await send('kill-new', 'killed')
+      await act(async () => {
+        editor.key('y', { ctrl: true })
+      })
+      expect(editor.doc()).toContain('killed')
+      const handler = mockedListen.mock.calls[0][1]
+      await act(async () => {
+        handler({
+          event: 'editor-request',
+          id: 0,
+          payload: { id: 1, op: 'completing-read', args: ['Keyword: ', ['Emacs', 'howm'], 'h'] },
+        })
+      })
+      expect(editor.text()).toContain('Keyword: ')
+      expect(editor.input().value).toBe('h')
+      await editor.submit('howm')
+      await vi.waitFor(() =>
+        expect(mockedInvoke).toHaveBeenCalledWith('editor_reply', {
+          id: 1,
+          value: 'howm',
+          error: null,
+        }),
+      )
+    })
+
+    it('バッファを, ほかのウィンドウに出す', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      const editors = () => editor.container.querySelectorAll('.cm-editor')
+      const cursorLine = (index: number) => {
+        const view = EditorView.findFromDOM(editors()[index] as HTMLElement) as EditorView
+        return view.state.doc.lineAt(view.state.selection.main.head).number
+      }
+      await send('switch-to-buffer', '*b*')
+      await send('insert', 'a\nb\nc')
+      await send('switch-to-buffer', '*scratch*')
+      // 出していないバッファは, ほかのウィンドウに出して, 行へ動く
+      expect(await send('display-buffer', '*b*', 3)).toMatchObject({ error: null })
+      expect(editors()).toHaveLength(2)
+      expect(cursorLine(1)).toBe(3)
+      expect(editor.doc()).toContain('This buffer is for text')
+      // 出しているバッファは, そのウィンドウ
+      await send('display-buffer', '*b*', 1)
+      expect(cursorLine(1)).toBe(1)
+      await send('display-buffer', '*scratch*')
+      expect(editors()).toHaveLength(2)
+      // 無いバッファは作る
+      await send('display-buffer', '*new*', 1)
+      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*b*', '*new*'] })
+    })
+
+    it('ファイルを, 出さずに開く', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      mocked.pathExists.mockResolvedValue(true)
+      mocked.readFile.mockResolvedValue('note')
+      expect(await send('find-file-noselect', '/home/u/a.txt')).toMatchObject({ value: 'a.txt' })
+      expect(editor.doc()).toContain('This buffer is for text')
+      expect(await send('find-file-noselect', '/home/u/a.txt')).toMatchObject({ value: 'a.txt' })
+      expect(mocked.readFile).toHaveBeenCalledTimes(1)
+      // 同じ名前のファイルは, 名前を変える
+      const other = await send('find-file-noselect', '/home/v/a.txt')
+      expect(other.value).not.toBe('a.txt')
+      expect(await send('buffer-file-name', other.value)).toMatchObject({ value: '/home/v/a.txt' })
+    })
+
+    it('正規表現に合う所に, 下線を引く (バッファごと)', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      const marks = () =>
+        [...editor.container.querySelectorAll('.cm-lisp-highlight')].map((e) => e.textContent)
+      await send('switch-to-buffer', '*b*')
+      await send('insert', 'menu memo')
+      await send('highlight-regexp', 'me.')
+      await send('highlight-regexp', 'mo')
+      await send('highlight-regexp', 'me.')
+      expect(marks()).toEqual(['men', 'mem'])
+      expect(await send('highlight-regexp', '(')).toMatchObject({
+        error: expect.stringContaining('Invalid regular expression'),
+      })
+      // ほかのバッファには引かない. 戻ると, また引く
+      await send('switch-to-buffer', '*scratch*')
+      expect(marks()).toEqual([])
+      await send('switch-to-buffer', '*b*')
+      expect(marks()).toEqual(['men', 'mem'])
+      await send('unhighlight-regexp', 'me.')
+      expect(marks()).toEqual(['mo'])
+      await send('unhighlight-regexp', true)
+      expect(marks()).toEqual([])
+    })
+
     it('背景, 文字の色と, フォントを変える', async () => {
       await setup()
       const { send } = requests()

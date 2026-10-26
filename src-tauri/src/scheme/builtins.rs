@@ -2,8 +2,10 @@
 //!
 //! エディタの位置は, Emacs と同じく 1 から数えます (`point-min` は 1).
 
+use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::keys;
+use crate::scheme::parser::Parser;
 use crate::scheme::system;
 use crate::scheme::value::Value;
 
@@ -34,6 +36,8 @@ pub const NAMES: &[&str] = &[
     "eq?",
     "eqv?",
     "equal?",
+    "eq",
+    "equal",
     "symbol?",
     "string?",
     "procedure?",
@@ -58,6 +62,8 @@ pub const NAMES: &[&str] = &[
     "for-each",
     "filter",
     "apply",
+    "read",
+    "eval",
     "assoc",
     "member",
     "sort",
@@ -100,6 +106,15 @@ pub const NAMES: &[&str] = &[
     "buffer-file-name",
     "set-buffer-modified-p",
     "read-string",
+    "buffer-list",
+    "buffer-modified-p",
+    "kill-buffer",
+    "kill-new",
+    "completing-read",
+    "display-buffer",
+    "find-file-noselect",
+    "highlight-regexp",
+    "unhighlight-regexp",
     "set-background-color",
     "set-foreground-color",
     "set-frame-font",
@@ -198,7 +213,8 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 _ => matches!(v, Value::List(_)),
             }))
         }
-        "eq?" | "eqv?" | "equal?" => {
+        // eq と equal は, Emacs Lisp の名前 (ERT のテストで使う)
+        "eq?" | "eqv?" | "equal?" | "eq" | "equal" => {
             let [a, b] = fixed::<2>(name, args)?;
             Ok(Value::Boolean(a == b))
         }
@@ -292,6 +308,19 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 }
             }
             Ok(Value::List(results.into()))
+        }
+        "read" => {
+            // 文字列の始めの式を読む (Emacs の, 文字列を渡した read)
+            let [text] = fixed::<1>(name, args)?;
+            Parser::new(string(name, &text)?)
+                .parse_first()?
+                .ok_or_else(|| "End of file during parsing".to_string())
+        }
+        "eval" => {
+            // 一番外側の環境で評価する
+            let [expr] = fixed::<1>(name, args)?;
+            let global = machine.evaluator.global().clone();
+            machine.eval(&expr, &global)
         }
         "apply" => {
             let Some((procedure, rest)) = args.split_first() else {
@@ -528,11 +557,81 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             Ok(Value::Nil)
         }
         "buffer-file-name" => {
-            fixed::<0>(name, args)?;
-            Ok(match machine.host.call(name, vec![])? {
+            // バッファの名前を省くと, 今のバッファ
+            let args = optional_buffer(name, args)?;
+            Ok(match machine.host.call(name, args)? {
                 Value::String(path) => Value::String(path),
                 _ => Value::Boolean(false),
             })
+        }
+        "buffer-modified-p" | "kill-buffer" => {
+            let args = optional_buffer(name, args)?;
+            Ok(Value::Boolean(machine.host.call(name, args)?.is_true()))
+        }
+        "buffer-list" => {
+            fixed::<0>(name, args)?;
+            machine.host.call(name, vec![])
+        }
+        "kill-new" | "highlight-regexp" => {
+            let [text] = fixed::<1>(name, args)?;
+            string(name, &text)?;
+            machine.host.call(name, vec![text])?;
+            Ok(Value::Nil)
+        }
+        "unhighlight-regexp" => {
+            // #t なら, 全て消す
+            let [regexp] = fixed::<1>(name, args)?;
+            match regexp {
+                Value::String(_) | Value::Boolean(true) => machine.host.call(name, vec![regexp])?,
+                _ => return Err("unhighlight-regexp expects a regexp or #t".to_string()),
+            };
+            Ok(Value::Nil)
+        }
+        "completing-read" => {
+            let (prompt, collection, initial) = match args.as_slice() {
+                [prompt, collection] => (prompt, collection, ""),
+                [prompt, collection, initial] => (prompt, collection, string(name, initial)?),
+                _ => return Err("completing-read expects 2 or 3 arguments".to_string()),
+            };
+            let prompt = string(name, prompt)?;
+            let Value::List(items) = collection else {
+                return Err("completing-read expects a list of strings".to_string());
+            };
+            for item in items.iter() {
+                string(name, item)?;
+            }
+            match machine.host.call(
+                name,
+                vec![
+                    Value::String(prompt.to_string()),
+                    collection.clone(),
+                    Value::String(initial.to_string()),
+                ],
+            )? {
+                Value::String(input) => Ok(Value::String(input)),
+                other => Err(format!("completing-read: unexpected input {}", other)),
+            }
+        }
+        "display-buffer" => {
+            // 行 (1 から) を渡すと, そのウィンドウのカーソルを, その行に置く
+            let args = match args.as_slice() {
+                [buffer] => vec![Value::String(string(name, buffer)?.to_string())],
+                [buffer, line] => {
+                    number(name, line)?;
+                    vec![
+                        Value::String(string(name, buffer)?.to_string()),
+                        line.clone(),
+                    ]
+                }
+                _ => return Err("display-buffer expects 1 or 2 arguments".to_string()),
+            };
+            machine.host.call(name, args)?;
+            Ok(Value::Nil)
+        }
+        "find-file-noselect" => {
+            let [path] = fixed::<1>(name, args)?;
+            let path = machine.expand_file_name(string(name, &path)?);
+            machine.host.call(name, vec![Value::String(path)])
         }
         "set-buffer-modified-p" => {
             let [flag] = fixed::<1>(name, args)?;
@@ -565,6 +664,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             set_font(machine, family, size)
         }
         "set-face-attribute" => set_face_attribute(machine, args),
+        _ if ert::NAMES.contains(&name) => ert::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name))),
     }
@@ -794,6 +894,27 @@ pub(crate) fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
     match v {
         Value::String(s) => Ok(s),
         _ => Err(format!("{} expects strings", name)),
+    }
+}
+
+/// 省ける, バッファの名前の引数を返します (Emacs の, BUFFER を省ける手続き).
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `args` - 引数 (無いか, バッファの名前).
+///
+/// # Returns
+///
+/// エディタに渡す引数. 多すぎるか, 名前が文字列でなければ [`Err`].
+fn optional_buffer(name: &str, args: Vec<Value>) -> Result<Vec<Value>, String> {
+    match args.as_slice() {
+        [] => Ok(vec![]),
+        [buffer] => {
+            string(name, buffer)?;
+            Ok(args)
+        }
+        _ => Err(format!("{} expects 0 or 1 arguments", name)),
     }
 }
 

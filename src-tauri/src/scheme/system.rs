@@ -20,12 +20,18 @@ use crate::scheme::value::Value;
 /// 組み込みの手続きの名前 (ファイル, 時刻, 正規表現).
 pub const NAMES: &[&str] = &[
     "load",
+    "require",
+    "provide",
+    "featurep",
     "expand-file-name",
     "file-exists?",
     "file-directory?",
     "read-file-string",
     "write-file-string",
     "make-directory",
+    "make-temp-file",
+    "delete-file",
+    "delete-directory",
     "directory-files-recursively",
     "file-modification-time",
     "current-time",
@@ -33,9 +39,16 @@ pub const NAMES: &[&str] = &[
     "date-to-time",
     "random",
     "regexp-match",
+    "regexp-match-positions",
     "regexp-quote",
     "grep",
 ];
+
+/// `load-path` の始めの値 (Emacs の `~/.emacs.d` のように, `~/.rseditor.d` に Lisp のファイルを置く).
+pub const DEFAULT_LOAD_PATH: &[&str] = &["~/.rseditor.d/lisp", "~/.rseditor.d"];
+
+/// Lisp のファイルの拡張子 (`load` で, 省ける).
+pub const LISP_SUFFIX: &str = ".scm";
 
 /// 正規表現を覚えておく数 (超えたら, 全て忘れる).
 const REGEXP_CACHE_SIZE: usize = 64;
@@ -62,7 +75,23 @@ pub(crate) fn call(
     args: Vec<Value>,
 ) -> Option<Result<Value, String>> {
     let result = match name {
-        "load" => load(machine, name, args),
+        "load" => fixed::<1>(name, args).and_then(|[file]| {
+            let file = string(name, &file)?;
+            let path = locate_library(machine, file)?;
+            load_file(machine, &path)
+        }),
+        "require" => require(machine, name, args),
+        "provide" => fixed::<1>(name, args).and_then(|[feature]| match feature {
+            Value::Symbol(feature) => {
+                machine.evaluator.provide(&feature);
+                Ok(Value::Symbol(feature))
+            }
+            _ => Err("provide expects a symbol".to_string()),
+        }),
+        "featurep" => fixed::<1>(name, args).and_then(|[feature]| match feature {
+            Value::Symbol(feature) => Ok(Value::Boolean(machine.evaluator.featurep(&feature))),
+            _ => Err("featurep expects a symbol".to_string()),
+        }),
         "expand-file-name" => {
             if !(1..=2).contains(&args.len()) {
                 return Some(Err("expand-file-name expects 1 or 2 arguments".to_string()));
@@ -98,6 +127,32 @@ pub(crate) fn call(
             std::fs::create_dir_all(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
             Ok(Value::Nil)
         }),
+        "make-temp-file" => make_temp_file(name, &args),
+        "delete-file" => fixed::<1>(name, args).and_then(|args| {
+            let path = expand_args(machine, name, &args)?;
+            std::fs::remove_file(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
+            Ok(Value::Nil)
+        }),
+        "delete-directory" => {
+            // 2 つ目の引数が真なら, 中身ごと消す
+            let (path, recursive) = match args.as_slice() {
+                [path] => (path, false),
+                [path, recursive] => (path, recursive.is_true()),
+                _ => return Some(Err("delete-directory expects 1 or 2 arguments".to_string())),
+            };
+            let path = match expand_args(machine, name, std::slice::from_ref(path)) {
+                Ok(path) => path,
+                Err(e) => return Some(Err(e)),
+            };
+            let removed = if recursive {
+                std::fs::remove_dir_all(&path)
+            } else {
+                std::fs::remove_dir(&path)
+            };
+            removed
+                .map(|_| Value::Nil)
+                .map_err(|e| format!("{}: {}", path.display(), e))
+        }
         "directory-files-recursively" => fixed::<2>(name, args).and_then(|[dir, pattern]| {
             let dir = expand_args(machine, name, &[dir])?;
             let pattern = regexp(string(name, &pattern)?)?;
@@ -127,7 +182,7 @@ pub(crate) fn call(
                 .finish();
             Ok(Value::Number((random % limit as u64) as f64))
         }),
-        "regexp-match" => regexp_match(name, &args),
+        "regexp-match" | "regexp-match-positions" => regexp_match(name, &args),
         "regexp-quote" => fixed::<1>(name, args)
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
         "grep" => fixed::<2>(name, args)
@@ -137,19 +192,112 @@ pub(crate) fn call(
     Some(result)
 }
 
-/// ファイルを読んで, 一番外側の環境で評価します (Emacs の `load`).
+/// `load` で読むファイルを探します (Emacs の `load` と同じく, 拡張子 ([`LISP_SUFFIX`]) は省ける).
+///
+/// - 名前だけ (`"howm"`, `"lib/howm.scm"` のように, `/`, `~`, `./`, `../` で始まらない) なら,
+///   読み込んでいるファイルのディレクトリ, `load-path` のディレクトリの順に探す.
+///   読み込んでいるファイルが無ければ (初期設定ファイルなど), 最後にホームディレクトリも探す.
+/// - そのほかは, そのパス (相対パスは, 読み込んでいるファイルのディレクトリから数える) だけを探す.
+/// - それぞれの所で, 拡張子を付けた名前, そのままの名前の順に探す (ファイルだけ).
+///
+/// # Arguments
+///
+/// * `machine` - 評価 (読み込んでいるファイルのディレクトリと, `load-path`).
+/// * `file` - ファイルの名前かパス.
+///
+/// # Returns
+///
+/// 見つけたファイルのパス. 無ければ, `Cannot open load file` の [`Err`].
+fn locate_library(machine: &Machine, file: &str) -> Result<PathBuf, String> {
+    let home = dirs::home_dir().unwrap_or_default();
+    let plain = !(file.starts_with('/')
+        || file.starts_with('~')
+        || file.starts_with("./")
+        || file.starts_with("../"));
+    let loading = machine.load_dirs.last().cloned();
+    let mut dirs: Vec<PathBuf> = loading.clone().into_iter().collect();
+    if plain {
+        dirs.extend(
+            load_path(machine)?
+                .iter()
+                .map(|dir| expand_file_name(dir, &home, &home)),
+        );
+    }
+    if loading.is_none() {
+        dirs.push(home.clone());
+    }
+    dirs.iter()
+        .flat_map(|dir| {
+            [format!("{}{}", file, LISP_SUFFIX), file.to_string()]
+                .map(|name| expand_file_name(&name, dir, &home))
+        })
+        .find(|path| path.is_file())
+        .ok_or_else(|| format!("Cannot open load file: {}", file))
+}
+
+/// `load-path` (ディレクトリの文字列のリスト) を返します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+///
+/// # Returns
+///
+/// ディレクトリ. `load-path` が文字列のリストでなければ [`Err`].
+fn load_path(machine: &Machine) -> Result<Vec<String>, String> {
+    let invalid = || "load-path must be a list of directories".to_string();
+    match machine.evaluator.global().get("load-path") {
+        Some(Value::List(dirs)) => dirs
+            .iter()
+            .map(|dir| match dir {
+                Value::String(dir) => Ok(dir.clone()),
+                _ => Err(invalid()),
+            })
+            .collect(),
+        _ => Err(invalid()),
+    }
+}
+
+/// 機能 (`provide` した名前) が無ければ, ファイルを読み込みます (Emacs の `require`).
+/// ファイルは, 引数で渡すか, 機能の名前で, `load` と同じく探します.
 ///
 /// # Arguments
 ///
 /// * `machine` - 評価.
 /// * `name` - 手続きの名前 (失敗の内容に書く).
-/// * `args` - 引数 (ファイルのパス).
+/// * `args` - 機能 (記号) と, 省ける, ファイルの名前.
+///
+/// # Returns
+///
+/// 機能. 読み込んでも, 機能を `provide` しなければ [`Err`].
+fn require(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+    let (feature, file) = match args.as_slice() {
+        [Value::Symbol(feature)] => (feature.clone(), feature.clone()),
+        [Value::Symbol(feature), file] => (feature.clone(), string(name, file)?.to_string()),
+        _ => return Err("require expects a feature (symbol) and an optional file".to_string()),
+    };
+    if !machine.evaluator.featurep(&feature) {
+        let path = locate_library(machine, &file)?;
+        load_file(machine, &path)?;
+        if !machine.evaluator.featurep(&feature) {
+            return Err(format!("Required feature was not provided: {}", feature));
+        }
+    }
+    Ok(Value::Symbol(feature))
+}
+
+/// ファイルを読んで, 一番外側の環境で評価します (Emacs の `load`).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `path` - ファイルのパス.
 ///
 /// # Returns
 ///
 /// `#t`. 読めないときと, 評価が失敗したときは, ファイルのパスを添えた失敗の内容.
-fn load(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
-    let path = expand_args(machine, name, &fixed::<1>(name, args)?)?;
+fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, String> {
+    let path = path.to_path_buf();
     log::info!("Loading {}", path.display());
     let code = std::fs::read_to_string(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
     let values = Parser::new(&code)
@@ -330,7 +478,7 @@ fn date_to_time(date: &str) -> Result<f64, String> {
 /// # Returns
 ///
 /// 正規表現. 誤っていれば [`Err`].
-fn regexp(pattern: &str) -> Result<Regex, String> {
+pub(crate) fn regexp(pattern: &str) -> Result<Regex, String> {
     REGEXPS.with(|cache| {
         let mut cache = cache.borrow_mut();
         if let Some(regex) = cache.get(pattern) {
@@ -345,6 +493,34 @@ fn regexp(pattern: &str) -> Result<Regex, String> {
     })
 }
 
+/// 一時ディレクトリに, 新しいファイルかディレクトリを作ります (Emacs の `make-temp-file`).
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前 (失敗の内容に書く).
+/// * `args` - 名前の始めと, 省ける, 真ならディレクトリを作る印.
+///
+/// # Returns
+///
+/// 作ったファイルかディレクトリのパス. 作れなければ [`Err`].
+fn make_temp_file(name: &str, args: &[Value]) -> Result<Value, String> {
+    let (prefix, directory) = match args {
+        [prefix] => (string(name, prefix)?, false),
+        [prefix, flag] => (string(name, prefix)?, flag.is_true()),
+        _ => return Err("make-temp-file expects 1 or 2 arguments".to_string()),
+    };
+    let builder = tempfile::Builder::new().prefix(prefix).to_owned();
+    let path = if directory {
+        builder.tempdir().map(|dir| dir.keep())
+    } else {
+        builder
+            .tempfile()
+            .and_then(|file| file.keep().map(|(_, path)| path).map_err(|e| e.error))
+    }
+    .map_err(|e| format!("make-temp-file: {}", e))?;
+    Ok(Value::String(path_string(&path)))
+}
+
 /// 文字列から, 正規表現に合う所を探します (`(regexp-match "a(b)" "xab")` → `("ab" "b")`).
 ///
 /// # Arguments
@@ -355,6 +531,8 @@ fn regexp(pattern: &str) -> Result<Regex, String> {
 /// # Returns
 ///
 /// 合った所の全体と, 括弧ごとの文字列 (合わなかった括弧は `#f`) のリスト. 合わなければ `#f`.
+/// `regexp-match-positions` なら, 文字列の代わりに, 始めと終わりの位置 (文字の数) のリスト
+/// (`(regexp-match-positions "a(b)" "xab")` → `((1 3) (2 3))`).
 fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
     let (pattern, text, start) = match args {
         [pattern, text] => (pattern, text, 0),
@@ -376,7 +554,14 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
             captures
                 .iter()
                 .map(|group| match group {
-                    Some(group) => Value::String(group.as_str().to_string()),
+                    Some(group) if name == "regexp-match" => {
+                        Value::String(group.as_str().to_string())
+                    }
+                    Some(group) => {
+                        let start = text[..group.start()].chars().count();
+                        let end = start + group.as_str().chars().count();
+                        Value::List([Value::Number(start as f64), Value::Number(end as f64)].into())
+                    }
                     None => Value::Boolean(false),
                 })
                 .collect(),

@@ -11,8 +11,8 @@
   - リスト: `car`、`cdr`、`cons`、`list`、`length`、`append`、`reverse`、`map`、`for-each`、`filter`、`apply`、`assoc`、`member` など
   - 文字列: `string-append`、`substring`、`string-length`、`format` など
   - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
-- 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` を読む (「Lisp でのカスタマイズ」)
-- 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.sl`)。`M-x howm` でメニューを出す (「howm」)
+- 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` (または `~/.rseditor.d/init.scm`) を読む (「Lisp でのカスタマイズ」)
+- 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み, `M-x howm` でメニューを出す (「howm」)
 - 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
 - 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
@@ -42,14 +42,15 @@
 │   │       ├── parser.rs    # Scheme パーサー
 │   │       ├── evaluator.rs # Scheme 評価器 (特別な形)
 │   │       ├── builtins.rs  # 組み込みの手続き (エディタの操作を含む)
-│   │       ├── system.rs    # 組み込みの手続き (ファイル、時刻、正規表現、load)
+│   │       ├── system.rs    # 組み込みの手続き (ファイル、時刻、正規表現、load、require)
+│   │       ├── ert.rs       # テスト (Emacs の ERT と同じ書き方)
 │   │       ├── env.rs       # 変数の環境
 │   │       ├── host.rs      # エディタ (画面) に操作を頼む仕組み
 │   │       ├── keys.rs      # キーの書き方の変換 (Emacs → CodeMirror)
 │   │       ├── value.rs     # 値型定義
 │   │       └── mod.rs       # モジュール定義
 │   └── Cargo.toml           # Rust 依存関係
-├── lisp/howm.sl             # howm の Scheme 版
+├── lisp/howm.scm             # howm の Scheme 版
 ├── package.json             # Node 依存関係
 ├── vite.config.ts           # Vite ビルド設定
 └── tsconfig.json            # TypeScript 設定
@@ -226,7 +227,10 @@ M-:            ; ミニバッファが開く
 
 | 関数 | 内容 |
 |------|------|
-| `(load "path")` | ファイルを読んで評価する (相対パスは、読み込んでいるファイルのディレクトリから) |
+| `(load "path")` | ファイルを読んで評価する (相対パスは、読み込んでいるファイルのディレクトリから。見つからなければ、`load-path` のディレクトリから探す。`.scm` は省ける) |
+| `(require 'name)` / `(provide 'name)` / `(featurep 'name)` | `load-path` から `name.scm` を 1 度だけ読む / 読んだことにする / 読んだか |
+| `load-path` | ファイルを探すディレクトリのリスト (始めは `("~/.rseditor.d/lisp" "~/.rseditor.d")`) |
+| `(make-temp-file "prefix" #t)` / `(delete-file "path")` / `(delete-directory "path" #t)` | 一時ファイル (`#t` ならディレクトリ) を作る / ファイルを消す / ディレクトリを消す (`#t` なら中身も) |
 | `(expand-file-name "~/x")` | 絶対パスにする (`~` はホーム) |
 | `(file-exists? "path")` / `(file-directory? "path")` | あるか / ディレクトリか |
 | `(read-file-string "path")` / `(write-file-string "path" "text")` | ファイルを読む / 書く (ディレクトリも作る) |
@@ -235,6 +239,7 @@ M-:            ; ミニバッファが開く
 | `(file-modification-time "path")` / `(current-time)` | 時刻 (1970 年からの秒数) |
 | `(format-time-string "%Y-%m-%d" time)` / `(date-to-time "2026-10-25")` | 時刻と日付 (その土地の時刻) |
 | `(regexp-match "a(b)" "xab")` / `(regexp-quote "a.b")` | 正規表現 (Rust の regex の書き方) |
+| `(regexp-match-positions "b" "abcb")` | 合った所の全て (`((始め 終わり) ...)`。位置は文字で、0 から) |
 | `(grep "regexp" files)` | 合う行 (`(パス 行の番号 行)` のリスト) |
 | `(string-search "b" "abc")`, `string-prefix?`, `string-suffix?`, `string-trim`, `string-join`, `split-string` | 文字列 |
 | `(sort list less?)`, `cadr` など, `(random n)` | リスト、乱数 |
@@ -256,28 +261,40 @@ M-:            ; ミニバッファが開く
 
 ### 初期設定ファイル
 
-起動のときに、`~/.rseditor` を読んで評価します。無ければ、`~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。どちらもなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
+起動のときに、`~/.rseditor` を読んで評価します。無ければ `~/.rseditor.d/init.scm` (Emacs の `~/.emacs.d/init.el` と同じ)、それも無ければ `~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。読んだファイルは `user-init-file` に入ります。自分の Lisp のファイルは `~/.rseditor.d/lisp/` (または `~/.rseditor.d/`) に置くと、`(require 'name)` で読めます。どちらもなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
 
 ```scheme
-;; ~/.rseditor
+;; ~/.rseditor.d/init.scm
 (set-background-color "black")
 (set-foreground-color "white")
 (set-frame-font "Noto Sans Mono CJK JP-12")
-(load "~/src/rs-editor/lisp/howm.sl")
+(require 'howm)                   ; ~/.rseditor.d/lisp/howm.scm を読む
 (global-set-key "C-c h" 'howm-menu)
 ```
 
 ### howm
 
-`lisp/howm.sl` は、Emacs の howm (メモ) の主な機能を Scheme で書き直したものです。初期設定ファイルで `load` すると、`M-x howm` (または `C-c , ,`) でメニューを出します。メモは `~/howm` に置きます (`(set! howm-directory "~/memo")` で変える)。
+`lisp/howm.scm` は、Emacs の howm (メモ) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/howm.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'howm)` と書くと、`M-x howm` (または `C-c , ,`) でメニューを出します。メモは `~/howm` に置きます (`(set! howm-directory "~/memo")` で変える)。
 
-- メニュー: ボタン (`[新規]` など) の上で `RET`、またはボタンの前の文字 (`c` など) で動かします。予定・todo、最近のメモ、ランダムなメモを出します。メニューは `~/howm/0000-00-00-000000.txt` から作ります (無ければ、既定のメニューを書く。`[menu 編集]` で直せる)。
-- メモを作る (`c`、`C-c , c`): `~/howm/2026/10/2026-10-25-184012.txt` のような名前で作り、題 (`= `) と日時を入れます。
-- 一覧 (`a`)、最近 (`l`)、検索 (`s` は文字、`g` は正規表現。大文字を含まなければ、大文字と小文字を区別しない)、今日 (`.`)、昨日 (`:`)、予定 (`y`)、todo (`t`)。一覧のバッファ (`*howmS*`) で `RET` を押すと、その行のメモを開きます。
-- リンク: メモの中の `>>> 言葉` と `<<< 言葉` の上で `RET` を押すと、その言葉を探します。`<<< 言葉` の行を、一覧の先に出します。
-- 予定と todo の書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。
+- メニュー: howm の日本語のメニューと同じです。ボタン (`[新規]` など) の上で `RET`、またはボタンの前の文字 (`c` など) で動かします。`%here%` (予定、todo、最近、ランダムなど)、`%eval%`、`%call%`、`%|...%|` (隠す)、`%"x"` (キー)、`>>> %名前%` (別のメニュー) が使えます。メニューは `~/howm/0000-00-00-000000.txt` から作ります (無ければ、既定のメニューを書く。`[menu 編集]` で直せる)。
+- メモ: 作る (`C-c , c`)、速記 (`C-c , e`。`C-c C-c` でメモにする)、複製 (`C-c , D`)、題と名前を kill ring へ (`C-c , K`)。
+- 一覧と検索: 一覧 (`a`)、最近 (`l`)、前後 (`A`)、検索 (`s` はキーワードを補完、`g` は正規表現、`m` はローマ字、`o` は今のバッファ)、履歴 (`h`)、酔歩 (`w`)、今日 (`.`)、昨日 (`:`)、予定 (`y`)、todo (`t`)。一覧のバッファ (`*howmS*`) は、`n` と `p` で動くと、別のウィンドウにメモの中身を出し、`RET` でその行のメモを開きます。
+- リンク: `>>> 言葉`、`<<< 言葉`、`[[言葉]]` (wiki)、キーワード、`file://` に下線を引き、その上の `RET` で探す (開く) ことができます。`<<< 言葉` の行を、一覧の先に出します。
+- 予定と todo: 書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。項目の上の `RET` で、済み (`.`)、取り消し、種類、怠け具合を変えます。日付の上の `RET` で、日付を変える (`+1` など)、繰り返して写す (`every` など)、その日付で探すことができます。日付と日時を入れる (`C-c , d`、`C-c , T`)、キーワードを入れる (`C-c , i`)。
+- そのほか: howm のバッファを全て消す (`C-c , Q`)、バッファの一覧 (`C-c , b`)、出し直す (`C-c , r`)。
 
-移していないもの: 下線 (色付け)、一覧の窓 (中身の表示)、複製、速記、ローマ字検索、前後、履歴、酔歩、キーワードの補完、日付の入力、メニューの `%eval%` と `%call%`。
+#### テスト (ERT)
+
+Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-error`、`skip-unless` でテストを書けます。`M-x ert` で、テストを走らせて、結果を `*ert*` に出します (`(ert-run-tests-batch)` は、結果を文字列で返す)。
+
+```scheme
+(ert-deftest my-test ()
+  "足し算."
+  (should (= (+ 1 2) 3))
+  (should-error (car 1)))
+```
+
+howm のテストは `tests/test_howm.scm` です。`npm run test:scheme` (`cargo test --test lisp_ert_test`) で、`tests/*.scm` を全て走らせます。
 
 ## キーバインド
 

@@ -51,6 +51,19 @@ impl Parser {
         Ok(values)
     }
 
+    /// 始めの式だけを読み込みます (後ろは読まない. Emacs の, 文字列を渡した `read`).
+    ///
+    /// # Returns
+    ///
+    /// 読み込んだ式. 式が無ければ `None`. 書き方が誤っている場合は, その内容の [`Err`].
+    pub fn parse_first(&mut self) -> Result<Option<Value>, String> {
+        self.skip_whitespace();
+        if self.pos >= self.input.len() {
+            return Ok(None);
+        }
+        self.parse_value().map(Some)
+    }
+
     /// 式を 1 つ読み込みます. `'x` は `(quote x)` にします. 入れ子は, [`MAX_DEPTH`] までです.
     ///
     /// # Returns

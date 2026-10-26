@@ -36,8 +36,13 @@ export function useLisp(ctx: AppContext) {
     currentBufferId,
     cursor,
     editor,
+    handles,
+    windowBuffers,
+    activeWindow,
     setCurrentBufferId,
     updateCurrentBuffer,
+    killBuffer,
+    displayInOtherWindow,
     setPendingAction,
     setMinibufferState,
     showMessage,
@@ -49,6 +54,8 @@ export function useLisp(ctx: AppContext) {
   const lispHost = useRef<LispHost>(undefined)
   // Lisp が, バッファを出してから続けるために, 描き直すのを待っている関数
   const bufferWaiters = useRef<(() => void)[]>([])
+  // 最後に描いたときのバッファ (描き直すのを待った後で, バッファの名前を引くため)
+  const latestBuffers = useRef(buffers)
   // Lisp が待っている, ミニバッファの入力 (read-string)
   const lispInput = useRef<{ resolve: (value: string) => void; reject: (err: Error) => void }>(null)
 
@@ -133,8 +140,56 @@ export function useLisp(ctx: AppContext) {
     const showBuffer = (id: string) => {
       if (id === currentBufferId) return Promise.resolve()
       setCurrentBufferId(id)
-      return new Promise<void>((resolve) => bufferWaiters.current.push(resolve))
+      return waitRender()
     }
+    /**
+     * 描き直すのを待ちます (状態を変えた後に呼ぶ. 変えていなければ, 描き直さないので, 待ち続ける).
+     *
+     * @returns 描き直したら, 終わる Promise.
+     */
+    const waitRender = () => new Promise<void>((resolve) => bufferWaiters.current.push(resolve))
+    /**
+     * 名前のバッファを返します (省くと, 今のバッファ).
+     *
+     * @param name - バッファの名前.
+     * @returns バッファ.
+     * @throws バッファが無いとき.
+     */
+    const bufferNamed = (name?: string): Buffer => {
+      const found = name === undefined ? currentBuffer : buffers.find((b) => b.name === name)
+      if (!found) throw new Error(`No such buffer: ${name}`)
+      return found
+    }
+    /**
+     * 名前のバッファ (無ければ, 作る) を返します.
+     *
+     * @param name - バッファの名前.
+     * @returns バッファと, 作ったら `true`.
+     */
+    const getBufferCreate = (name: string): { buffer: Buffer; created: boolean } => {
+      const open = buffers.find((b) => b.name === name)
+      if (open) return { buffer: open, created: false }
+      const buffer: Buffer = {
+        id: generateBufferId(),
+        name,
+        filePath: null,
+        doc: Text.empty,
+        modified: false,
+      }
+      setBuffers((prev) => [...prev, buffer])
+      return { buffer, created: true }
+    }
+    /**
+     * 今のバッファの下線を, 変えます.
+     *
+     * @param change - 今の下線から, 新しい下線を作る関数.
+     */
+    const updateHighlights = (change: (highlights: string[]) => string[]) =>
+      setBuffers((prev) =>
+        prev.map((b) =>
+          b.id === currentBufferId ? { ...b, highlights: change(b.highlights ?? []) } : b,
+        ),
+      )
     lispHost.current = {
       text: () => handle().text(),
       point: () => handle().point(),
@@ -152,20 +207,53 @@ export function useLisp(ctx: AppContext) {
         showMessage(message)
         return showBuffer(buffer.id)
       },
-      switchToBuffer: (name) => {
-        const open = buffers.find((b) => b.name === name)
-        if (open) return showBuffer(open.id)
-        const buffer: Buffer = {
-          id: generateBufferId(),
-          name,
-          filePath: null,
-          doc: Text.empty,
-          modified: false,
+      switchToBuffer: (name) => showBuffer(getBufferCreate(name).buffer.id),
+      bufferFileName: (name) => bufferNamed(name).filePath,
+      bufferModified: (name) => bufferNamed(name).modified,
+      bufferList: () => buffers.map((b) => b.name),
+      killBuffer: (name) => {
+        const buffer = bufferNamed(name)
+        // Emacs は聞くが, Lisp からは, 書き換えたファイルのバッファを消さない
+        if (buffer.filePath && buffer.modified) {
+          throw new Error(`Buffer ${buffer.name} is modified`)
         }
-        setBuffers((prev) => [...prev, buffer])
-        return showBuffer(buffer.id)
+        killBuffer(buffer.id)
+        return waitRender()
       },
-      bufferFileName: () => currentBuffer.filePath,
+      killNew: (text) => handle().killNew(text),
+      completingRead: (prompt, candidates, initial) =>
+        new Promise((resolve, reject) => {
+          lispInput.current = { resolve, reject }
+          setPendingAction('read-string')
+          setMinibufferState({ mode: 'input', prompt, input: initial, completions: candidates })
+        }),
+      displayBuffer: async (name, line) => {
+        const { buffer, created } = getBufferCreate(name)
+        // 出していれば, そのウィンドウ. 出していなければ, ほかのウィンドウに出す
+        const shown =
+          buffer.id === currentBufferId
+            ? activeWindow
+            : Object.keys(windowBuffers).find((w) => windowBuffers[w] === buffer.id)
+        const target = shown ?? displayInOtherWindow(buffer.id, false)
+        if (created || !shown) await waitRender()
+        if (line !== null) handles.current.get(target)?.gotoLine(line)
+      },
+      findFileNoselect: async (path) => {
+        const open = buffers.find((b) => b.filePath === path)
+        if (open) return open.name
+        const { buffer } = await visitFile(path)
+        setBuffers((prev) => [...prev, buffer])
+        await waitRender()
+        // 同じ名前のファイルがあれば, 名前を変えているので, 描き直した後のバッファから引く
+        return (latestBuffers.current.find((b) => b.id === buffer.id) as Buffer).name
+      },
+      highlightRegexp: (regexp) => {
+        // 誤った正規表現は, ここで失敗にする
+        new RegExp(regexp)
+        updateHighlights((prev) => [...prev.filter((r) => r !== regexp), regexp])
+      },
+      unhighlightRegexp: (regexp) =>
+        updateHighlights((prev) => (regexp === true ? [] : prev.filter((r) => r !== regexp))),
       setModified: (modified) => updateCurrentBuffer({ modified }),
       localSetKey: (key, command) =>
         setBuffers((prev) =>
@@ -185,6 +273,7 @@ export function useLisp(ctx: AppContext) {
       setForegroundColor: (color) => setForegroundColor(root, color),
       setFont: (family, size) => setFont(root, family, size),
     }
+    latestBuffers.current = buffers
     // 出すのを待っていたバッファは, 描き直したので, 出している (待つのを終える)
     for (const resolve of bufferWaiters.current) resolve()
     bufferWaiters.current = []

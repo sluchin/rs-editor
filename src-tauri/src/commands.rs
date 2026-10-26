@@ -13,6 +13,7 @@ use crate::scheme::evaluator::{Evaluator, KeyBinding};
 #[cfg(not(tarpaulin_include))]
 use crate::scheme::host::{Bridge, BridgeHost, EditorRequest};
 use crate::scheme::host::{Host, NoHost};
+use crate::scheme::value::Value;
 
 /// Scheme の評価の結果.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -103,15 +104,22 @@ pub fn run_command(evaluator: &Evaluator, name: &str, host: &dyn Host) -> EvalRe
 ///
 /// # Returns
 ///
-/// `<home>/.rseditor` と, `<config_dir>/rseditor/init.scm`.
+/// `<home>/.rseditor`, `<home>/.rseditor.d/init.scm` (Emacs の `~/.emacs.d/init.el` と同じ) と,
+/// `<config_dir>/rseditor/init.scm`.
 pub fn init_file_candidates(home: Option<&Path>, config_dir: Option<&Path>) -> Vec<PathBuf> {
-    home.map(|dir| dir.join(".rseditor"))
-        .into_iter()
+    home.into_iter()
+        .flat_map(|dir| {
+            [
+                dir.join(".rseditor"),
+                dir.join(".rseditor.d").join("init.scm"),
+            ]
+        })
         .chain(config_dir.map(|dir| dir.join("rseditor").join("init.scm")))
         .collect()
 }
 
-/// 初期設定ファイルのパスを返します. `~/.rseditor` が無ければ, `~/.config/rseditor/init.scm` を使います.
+/// 初期設定ファイルのパスを返します. `~/.rseditor`, `~/.rseditor.d/init.scm`,
+/// `~/.config/rseditor/init.scm` の順に探して, 初めにあるものを使います.
 ///
 /// # Returns
 ///
@@ -165,6 +173,11 @@ pub fn load_init_file(evaluator: &Evaluator, path: Option<&Path>, host: &dyn Hos
         return respond(evaluator, Ok(String::new()));
     };
     log::info!("Loading {}", path.display());
+    // 読んだ初期設定ファイル (Emacs の user-init-file)
+    evaluator.global().define(
+        "user-init-file",
+        Value::String(path.to_string_lossy().into_owned()),
+    );
     let outcome = std::fs::read_to_string(path)
         .map_err(|e| e.to_string())
         .and_then(|code| evaluator.eval_with(&code, host))

@@ -2,6 +2,7 @@
 
 pub mod builtins;
 pub mod env;
+pub mod ert;
 pub mod evaluator;
 pub mod host;
 pub mod keys;

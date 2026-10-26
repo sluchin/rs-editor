@@ -93,7 +93,10 @@ impl Host for Recorder {
             .unwrap()
             .push(format!("{} {}", op, shown.join(" ")).trim().to_string());
         Ok(match op {
-            "buffer-file-name" | "read-string" => self.answer.clone(),
+            "buffer-file-name" | "read-string" | "completing-read" | "find-file-noselect" => {
+                self.answer.clone()
+            }
+            "buffer-list" => Value::List([self.answer.clone()].into()),
             _ => Value::Nil,
         })
     }
@@ -240,10 +243,17 @@ fn test_load() {
     );
     // 読めない, 読み込めない, 評価が失敗する
     let missing = dir.path().join("none.sl");
+    assert_eq!(
+        ev.eval(&format!("(load {})", quoted(&missing)))
+            .unwrap_err(),
+        format!("Cannot open load file: {}", missing.display())
+    );
+    let invalid = dir.path().join("invalid.sl");
+    fs::write(&invalid, [0xff, 0xfe]).unwrap();
     assert!(ev
-        .eval(&format!("(load {})", quoted(&missing)))
+        .eval(&format!("(load {})", quoted(&invalid)))
         .unwrap_err()
-        .starts_with(&format!("{}: ", missing.display())));
+        .starts_with(&format!("{}: ", invalid.display())));
     let broken = dir.path().join("broken.sl");
     fs::write(&broken, "(define").unwrap();
     assert_eq!(
@@ -262,6 +272,72 @@ fn test_load() {
         ev.eval("(expand-file-name \"x\")").unwrap(),
         format!("\"{}/x\"", dirs::home_dir().unwrap().display())
     );
+}
+
+#[test]
+fn test_load_path_and_require() {
+    let dir = tempdir().unwrap();
+    let lisp = dir.path().join("lisp");
+    fs::create_dir_all(lisp.join("sub")).unwrap();
+    // 拡張子 (.scm) は省ける. 読み込んでいるファイルからの相対パス
+    fs::write(
+        lisp.join("feat.scm"),
+        "(define count (+ count 1)) (load \"./sub/inner\") (provide 'feat)",
+    )
+    .unwrap();
+    fs::write(lisp.join("sub/inner.scm"), "(define inner 'yes)").unwrap();
+    fs::write(lisp.join("plain"), "(define plain 1)").unwrap();
+    fs::write(lisp.join("silent.scm"), "(define silent 1)").unwrap();
+    let ev = Evaluator::new();
+    // 始めの load-path は, ~/.rseditor.d/lisp と ~/.rseditor.d
+    assert_eq!(
+        ev.eval("load-path").unwrap(),
+        "(\"~/.rseditor.d/lisp\" \"~/.rseditor.d\")"
+    );
+    ev.eval(&format!(
+        "(define count 0) (set! load-path (list {}))",
+        quoted(&lisp)
+    ))
+    .unwrap();
+    // load-path から探す (拡張子の無いファイルも)
+    assert_eq!(ev.eval("(load \"plain\") plain").unwrap(), "#t\n1");
+    assert_eq!(ev.eval("(featurep 'feat)").unwrap(), "#f");
+    // require: 読み込むのは, 1 回だけ
+    assert_eq!(
+        ev.eval("(require 'feat) (require 'feat) count inner (featurep 'feat)")
+            .unwrap(),
+        "feat\nfeat\n1\nyes\n#t"
+    );
+    // ファイルを渡す
+    fs::write(lisp.join("other.scm"), "(provide 'named)").unwrap();
+    assert_eq!(ev.eval("(require 'named \"other\")").unwrap(), "named");
+    // provide しないと, 失敗にする
+    assert_eq!(
+        ev.eval("(require 'silent)").unwrap_err(),
+        "Required feature was not provided: silent"
+    );
+    assert_eq!(
+        ev.eval("(require 'nothing)").unwrap_err(),
+        "Cannot open load file: nothing"
+    );
+    // ./ で始まる名前は, load-path から探さない
+    assert_eq!(
+        ev.eval("(load \"./plain\")").unwrap_err(),
+        "Cannot open load file: ./plain"
+    );
+    // 書き方の誤り
+    assert_eq!(
+        eval_err("(require \"feat\")"),
+        "require expects a feature (symbol) and an optional file"
+    );
+    assert_eq!(eval_err("(provide \"x\")"), "provide expects a symbol");
+    assert_eq!(eval_err("(featurep 1)"), "featurep expects a symbol");
+    for value in ["1", "(list 1)"] {
+        assert_eq!(
+            eval_err(&format!("(set! load-path {}) (load \"x\")", value)),
+            "load-path must be a list of directories"
+        );
+    }
 }
 
 #[test]
@@ -339,6 +415,11 @@ fn test_regexp() {
     assert_eq!(
         eval_err("(regexp-match \"a\")"),
         "regexp-match expects 2 or 3 arguments"
+    );
+    // 位置 (文字の数)
+    assert_eq!(
+        eval("(regexp-match-positions \"い(う)?(x)?\" \"あいう\") (regexp-match-positions \"z\" \"a\")"),
+        "((1 3) (2 3) #f)\n#f"
     );
     assert_eq!(eval("(regexp-quote \"a.b*\")"), "\"a\\\\.b\\\\*\"");
     // 同じ正規表現を何度も使い, 覚えておく数を超える (覚えるのは, 1 回の評価のあいだ)
@@ -543,6 +624,82 @@ fn test_editor_settings() {
         ("(read-string \"a\" 1)", "read-string expects strings"),
         ("(switch-to-buffer 1)", "switch-to-buffer expects strings"),
         ("(find-file 1)", "find-file expects strings"),
+    ] {
+        assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
+    }
+}
+
+#[test]
+fn test_buffer_operations() {
+    let ev = Evaluator::new();
+    let editor = Recorder::new(Value::String("b".to_string()));
+    let code = "(buffer-list) (buffer-modified-p) (buffer-modified-p \"b\") (kill-buffer \"b\") (buffer-file-name \"b\") (kill-new \"k\") (completing-read \"P: \" '(\"a\" \"b\")) (completing-read \"P: \" '() \"i\") (display-buffer \"b\") (display-buffer \"b\" 3) (find-file-noselect \"~/y\") (highlight-regexp \"a+\") (unhighlight-regexp \"a+\") (unhighlight-regexp #t)";
+    assert_eq!(
+        ev.eval_with(code, &editor).unwrap(),
+        "(\"b\")\n#t\n#t\n#t\n\"b\"\nnil\n\"b\"\n\"b\"\nnil\nnil\n\"b\"\nnil\nnil\nnil"
+    );
+    let home = dirs::home_dir().unwrap();
+    assert_eq!(
+        editor.calls(),
+        vec![
+            "buffer-list".to_string(),
+            "buffer-modified-p".to_string(),
+            "buffer-modified-p \"b\"".to_string(),
+            "kill-buffer \"b\"".to_string(),
+            "buffer-file-name \"b\"".to_string(),
+            "kill-new \"k\"".to_string(),
+            "completing-read \"P: \" (\"a\" \"b\") \"\"".to_string(),
+            "completing-read \"P: \" () \"i\"".to_string(),
+            "display-buffer \"b\"".to_string(),
+            "display-buffer \"b\" 3".to_string(),
+            format!("find-file-noselect {:?}", home.join("y").to_string_lossy()),
+            "highlight-regexp \"a+\"".to_string(),
+            "unhighlight-regexp \"a+\"".to_string(),
+            "unhighlight-regexp #t".to_string(),
+        ]
+    );
+    // read は始めの式だけを読む. eval は一番外側の環境で評価する
+    assert_eq!(
+        ev.eval_with("(read \"(a b) %|\") (eval (list '+ 1 2))", &editor)
+            .unwrap(),
+        "(a b)\n3"
+    );
+    let nothing = Recorder::new(Value::Nil);
+    for (code, error) in [
+        ("(read \" \")", "End of file during parsing"),
+        (
+            "(completing-read \"a\" '(\"b\"))",
+            "completing-read: unexpected input nil",
+        ),
+        (
+            "(completing-read \"a\")",
+            "completing-read expects 2 or 3 arguments",
+        ),
+        (
+            "(completing-read \"a\" 1)",
+            "completing-read expects a list of strings",
+        ),
+        (
+            "(completing-read \"a\" '(1))",
+            "completing-read expects strings",
+        ),
+        (
+            "(display-buffer)",
+            "display-buffer expects 1 or 2 arguments",
+        ),
+        (
+            "(display-buffer \"b\" \"x\")",
+            "display-buffer expects numbers",
+        ),
+        (
+            "(unhighlight-regexp 1)",
+            "unhighlight-regexp expects a regexp or #t",
+        ),
+        (
+            "(buffer-file-name \"a\" \"b\")",
+            "buffer-file-name expects 0 or 1 arguments",
+        ),
+        ("(kill-buffer 1)", "kill-buffer expects strings"),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }

@@ -56,7 +56,27 @@ function fakeHost(text: string) {
     switchToBuffer: async (name) => {
       state.calls.push(`switch-to-buffer ${name}`)
     },
-    bufferFileName: () => null,
+    bufferFileName: (name) => (name ? `/${name}` : null),
+    bufferModified: (name) => name === 'mod',
+    bufferList: () => ['*scratch*', 'a'],
+    killBuffer: async (name) => {
+      state.calls.push(`kill-buffer ${name}`)
+    },
+    killNew: (text) => {
+      state.calls.push(`kill-new ${text}`)
+    },
+    completingRead: async (prompt, candidates, initial) =>
+      `${prompt}${candidates.join(',')}${initial}`,
+    displayBuffer: async (name, line) => {
+      state.calls.push(`display-buffer ${name} ${line}`)
+    },
+    findFileNoselect: async (path) => `buffer of ${path}`,
+    highlightRegexp: (regexp) => {
+      state.calls.push(`highlight ${regexp}`)
+    },
+    unhighlightRegexp: (regexp) => {
+      state.calls.push(`unhighlight ${regexp}`)
+    },
     setModified: (modified) => {
       state.modified = modified
     },
@@ -168,6 +188,36 @@ describe('lisp', () => {
       'foreground white',
       'font Mono 14',
       'font null null',
+    ])
+  })
+
+  it('バッファの一覧, 消す, kill ring, 補完, 別のウィンドウ, 下線', async () => {
+    const { host, state } = fakeHost('')
+    const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
+    expect(run('buffer-file-name', 'a')).toBe('/a')
+    expect(run('buffer-modified-p')).toBe(false)
+    expect(run('buffer-modified-p', 'mod')).toBe(true)
+    expect(run('buffer-list')).toEqual(['*scratch*', 'a'])
+    expect(await run('kill-buffer', 'a')).toBe(true)
+    expect(await run('kill-buffer')).toBe(true)
+    expect(run('kill-new', 'k')).toBeNull()
+    expect(await run('completing-read', 'P: ', ['a', 'b'], 'i')).toBe('P: a,bi')
+    expect(await run('completing-read', 'P: ', [])).toBe('P: ')
+    expect(await run('display-buffer', 'a', 3)).toBeNull()
+    expect(await run('display-buffer', 'a')).toBeNull()
+    expect(await run('find-file-noselect', '/x')).toBe('buffer of /x')
+    expect(run('highlight-regexp', 'a+')).toBeNull()
+    expect(run('unhighlight-regexp', 'a+')).toBeNull()
+    expect(run('unhighlight-regexp', true)).toBeNull()
+    expect(state.calls).toEqual([
+      'kill-buffer a',
+      'kill-buffer undefined',
+      'kill-new k',
+      'display-buffer a 3',
+      'display-buffer a null',
+      'highlight a+',
+      'unhighlight a+',
+      'unhighlight true',
     ])
   })
 

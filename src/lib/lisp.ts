@@ -65,8 +65,32 @@ export interface LispHost {
   findFile: (path: string) => Promise<void>
   /** 名前のバッファ (無ければ, 作る) を出します. 出したら, 終わります. */
   switchToBuffer: (name: string) => Promise<void>
-  /** バッファのファイルのパス (ファイルのないバッファは `null`). */
-  bufferFileName: () => string | null
+  /** バッファ (省くと, 今のバッファ) のファイルのパス (ファイルのないバッファは `null`). */
+  bufferFileName: (name?: string) => string | null
+  /** バッファ (省くと, 今のバッファ) を, 書き換えていれば `true`. */
+  bufferModified: (name?: string) => boolean
+  /** バッファの名前 (開いた順). */
+  bufferList: () => string[]
+  /**
+   * バッファ (省くと, 今のバッファ) を消します. 消したら, 終わります (出していたウィンドウには, 別のバッファを出す).
+   * 書き換えていれば, 消さずに失敗します.
+   */
+  killBuffer: (name?: string) => Promise<void>
+  /** 文字を, kill-ring に入れます (C-y で貼れる). */
+  killNew: (text: string) => void
+  /** ミニバッファで, 候補を Tab で補完しながら, 入力してもらいます (C-g でやめたら, 失敗). */
+  completingRead: (prompt: string, candidates: string[], initial: string) => Promise<string>
+  /**
+   * バッファを, ほかのウィンドウに出します (選ばない. ウィンドウが 1 つなら, 下に分ける). 出したら, 終わります.
+   * 行 (1 から) を渡すと, そのウィンドウのカーソルを, その行に置きます.
+   */
+  displayBuffer: (name: string, line: number | null) => Promise<void>
+  /** ファイルを開いて (開いていれば, そのバッファ), 出さずに, バッファの名前を返します. */
+  findFileNoselect: (path: string) => Promise<string>
+  /** 今のバッファの, 正規表現 (JavaScript の書き方) に合う所に, 下線を引きます. */
+  highlightRegexp: (regexp: string) => void
+  /** 今のバッファの下線を消します (`true` なら, 全て). */
+  unhighlightRegexp: (regexp: string | true) => void
   /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). */
   setModified: (modified: boolean) => void
   /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
@@ -176,6 +200,16 @@ function offset(value: unknown, length: number): number {
 }
 
 /**
+ * 省ける, バッファの名前の引数を返します.
+ *
+ * @param args - 引数.
+ * @returns バッファの名前. 省いたら `undefined`.
+ */
+function optionalName(args: unknown[]): string | undefined {
+  return args.length > 0 ? String(args[0]) : undefined
+}
+
+/**
  * エディタの操作をします. Lisp との位置のやり取りは, 文字 (Unicode のコードポイント) で数え, 1 から数えます.
  * エディタの位置 (UTF-16 の単位) とは, ここで変えます.
  *
@@ -229,7 +263,34 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
     case 'switch-to-buffer':
       return host.switchToBuffer(String(args[0])).then(() => null)
     case 'buffer-file-name':
-      return host.bufferFileName()
+      return host.bufferFileName(optionalName(args))
+    case 'buffer-modified-p':
+      return host.bufferModified(optionalName(args))
+    case 'buffer-list':
+      return host.bufferList()
+    case 'kill-buffer':
+      return host.killBuffer(optionalName(args)).then(() => true)
+    case 'kill-new':
+      host.killNew(String(args[0]))
+      return null
+    case 'completing-read':
+      return host.completingRead(
+        String(args[0]),
+        (args[1] as unknown[]).map(String),
+        String(args[2] ?? ''),
+      )
+    case 'display-buffer':
+      return host
+        .displayBuffer(String(args[0]), typeof args[1] === 'number' ? args[1] : null)
+        .then(() => null)
+    case 'find-file-noselect':
+      return host.findFileNoselect(String(args[0]))
+    case 'highlight-regexp':
+      host.highlightRegexp(String(args[0]))
+      return null
+    case 'unhighlight-regexp':
+      host.unhighlightRegexp(args[0] === true ? true : String(args[0]))
+      return null
     case 'set-buffer-modified-p':
       host.setModified(args[0] === true)
       return null

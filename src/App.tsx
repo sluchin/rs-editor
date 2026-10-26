@@ -376,6 +376,7 @@ function App() {
                 <CodeEditor
                   bufferId={bufferId}
                   initialContent={buffer.doc}
+                  highlights={buffer.highlights}
                   onChange={(change) => handleEditorChange(rect.id, change)}
                   onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
                   actions={actions}

@@ -20,6 +20,7 @@
     "pretest": "vite build",
     "test": "vitest run",
     "test:rust": "cd src-tauri && cargo test",
+    "test:scheme": "cd src-tauri && cargo test --test lisp_ert_test -- --nocapture",
     "test:all": "npm run test && npm run test:rust",
     "coverage:fe": "vitest run --coverage",
     "coverage:be": "cd src-tauri && cargo tarpaulin --skip-clean --engine llvm --fail-under 100 --out Html",

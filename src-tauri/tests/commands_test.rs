@@ -21,7 +21,8 @@ fn test_eval_code_returns_the_result_or_the_error() {
         EvalResponse {
             result: "3".to_string(),
             error: None,
-            commands: vec![],
+            // M-x ert は, 始めからある
+            commands: vec!["ert".to_string()],
             keys: vec![],
         }
     );
@@ -79,7 +80,7 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
         &NoHost,
     );
     assert_eq!(defined.result, "hi\nhi");
-    assert_eq!(defined.commands, vec!["hi"]);
+    assert_eq!(defined.commands, vec!["ert", "hi"]);
     assert_eq!(
         defined.keys,
         vec![KeyBinding {
@@ -101,7 +102,11 @@ fn test_load_init_file() {
     let config = dir.path().join("config");
     assert_eq!(
         init_file_candidates(Some(&home), Some(&config)),
-        vec![home.join(".rseditor"), config.join("rseditor/init.scm")]
+        vec![
+            home.join(".rseditor"),
+            home.join(".rseditor.d/init.scm"),
+            config.join("rseditor/init.scm")
+        ]
     );
     assert!(init_file_candidates(None, None).is_empty());
     // あるファイルだけ (どちらも無いこともある)
@@ -119,9 +124,15 @@ fn test_load_init_file() {
 
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(&path, "(define-command (hello) 1)").unwrap();
+    assert_eq!(eval_code(&evaluator, "user-init-file").result, "#f");
     let loaded = load_init_file(&evaluator, Some(&path), &NoHost);
     assert_eq!(loaded.error, None);
-    assert_eq!(loaded.commands, vec!["hello"]);
+    assert_eq!(loaded.commands, vec!["ert", "hello"]);
+    // 読んだファイルは, user-init-file に入れる
+    assert_eq!(
+        eval_code(&evaluator, "user-init-file").result,
+        format!("{:?}", path.to_string_lossy())
+    );
 
     fs::write(&path, "(car 1)").unwrap();
     assert_eq!(
