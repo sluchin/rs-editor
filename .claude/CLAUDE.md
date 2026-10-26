@@ -27,7 +27,7 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 - サイドバーのプロジェクトのツリー (`F8`) は `src/components/ProjectTree.tsx`。根は `search.rs` の `project_root` (`.git` のある所)。押してもフォーカスを取らない。
 - howm の Scheme 版は `lisp/howm.scm` (`(require 'howm)` で読む)。テストは `src-tauri/tests/howm_test.rs` と `tests/test_howm.scm` (どちらも偽のエディタ (`src-tauri/tests/common/mod.rs`) の上で動かす)。
 - ERT (`ert-deftest`, `should` など) は `src-tauri/src/scheme/ert.rs`。特別な形は `ert::special_form`, `M-x ert` のコマンドは Scheme の `PRELUDE` で定義する。`tests/*.scm` は `src-tauri/tests/lisp_ert_test.rs` が走らせる (`npm run test:scheme`)。
-- `FUNCTIONS.md` の「Emacs の組み込みのコマンド」は, `tools/emacs-commands/run.sh` で作る (`emacs -Q --batch` で, C で書いたコマンドと既定のキーを書き出し, rs-editor で実装済みかを書く)。印 (`<!-- emacs-commands:begin -->`) の間は, 手で直さない。
+- `FUNCTIONS.md` の「Emacs の組み込みのコマンドと, エディタの基本のコマンド」は, `tools/emacs-commands/run.sh` で作る (`emacs -Q --batch` で, C で書いたコマンドと, エディタの基本の Lisp のコマンドと, 既定のキーを書き出し, rs-editor で実装済みかを書く)。印 (`<!-- emacs-commands:begin -->`) の間は, 手で直さない。
 - `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。フロントエンドのテストは `tests/` に, `src/` と同じ構成で置く (`src/lib/text.ts` のテストは `tests/lib/text.test.ts`。`src/` は `@/` で参照する)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
 
 ## 開発ワークフロー

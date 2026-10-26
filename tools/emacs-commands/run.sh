@@ -1,5 +1,5 @@
 #!/bin/sh
-# Emacs の組み込みのコマンドと, その既定のキーの一覧を作り, FUNCTIONS.md に書く.
+# Emacs の組み込みのコマンドと, エディタの基本のコマンドと, その既定のキーの一覧を作り, FUNCTIONS.md に書く.
 #
 # 使い方: tools/emacs-commands/run.sh
 #   OUT        途中のファイルを置くディレクトリ (既定は一時ディレクトリ)

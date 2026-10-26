@@ -51,7 +51,7 @@
 │   │       └── mod.rs       # モジュール定義
 │   └── Cargo.toml           # Rust 依存関係
 ├── lisp/howm.scm             # howm の Scheme 版
-├── tools/emacs-commands/     # Emacs の組み込みのコマンドと既定のキーの一覧 (FUNCTIONS.md) を作る
+├── tools/emacs-commands/     # Emacs の組み込みと基本のコマンドと, 既定のキーの一覧 (FUNCTIONS.md) を作る
 ├── package.json             # Node 依存関係
 ├── vite.config.ts           # Vite ビルド設定
 └── tsconfig.json            # TypeScript 設定
