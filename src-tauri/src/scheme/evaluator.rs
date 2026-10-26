@@ -92,8 +92,9 @@ impl Evaluator {
     ///
     /// 式ごとの結果 (改行で区切る), または失敗の内容.
     pub fn eval_with(&self, code: &str, host: &dyn Host) -> Result<String, String> {
-        let values = Parser::new(code).parse()?;
+        // 読むのも, 大きなスタックのスレッドで (パーサは, 入れ子を再帰で読むため)
         self.run(host, |machine| {
+            let values = Parser::new(code).parse()?;
             let mut results = Vec::new();
             for value in &values {
                 results.push(machine.eval(value, &self.global)?.to_string());

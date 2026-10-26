@@ -1,5 +1,6 @@
 //! Scheme のコードの文字列を, 値 ([`Value`]) の並びに読み込むパーサ.
 
+use crate::scheme::evaluator::MAX_DEPTH;
 use crate::scheme::value::Value;
 
 /// 記号に使える, 英数字のほかの文字 (`.` だけの記号は, 引数のリストの `(a . rest)` に使う).
@@ -11,6 +12,8 @@ pub struct Parser {
     input: Vec<char>,
     /// 次に読む文字の位置 (`input` の添字).
     pos: usize,
+    /// 今読んでいる式の, 入れ子の深さ ([`MAX_DEPTH`] まで. 深すぎる入れ子で, スタックがあふれないように).
+    depth: usize,
 }
 
 impl Parser {
@@ -27,6 +30,7 @@ impl Parser {
         Parser {
             input: input.chars().collect(),
             pos: 0,
+            depth: 0,
         }
     }
 
@@ -47,12 +51,27 @@ impl Parser {
         Ok(values)
     }
 
-    /// 式を 1 つ読み込みます. `'x` は `(quote x)` にします.
+    /// 式を 1 つ読み込みます. `'x` は `(quote x)` にします. 入れ子は, [`MAX_DEPTH`] までです.
+    ///
+    /// # Returns
+    ///
+    /// 読み込んだ式. 入力が終わっているか, 式を始められない文字か, 入れ子が深すぎる場合は [`Err`].
+    fn parse_value(&mut self) -> Result<Value, String> {
+        if self.depth >= MAX_DEPTH {
+            return Err("Too deeply nested".to_string());
+        }
+        self.depth += 1;
+        let value = self.parse_nested();
+        self.depth -= 1;
+        value
+    }
+
+    /// 式を 1 つ読み込みます (入れ子の深さは, [`Parser::parse_value`] が数える).
     ///
     /// # Returns
     ///
     /// 読み込んだ式. 入力が終わっているか, 式を始められない文字の場合は [`Err`].
-    fn parse_value(&mut self) -> Result<Value, String> {
+    fn parse_nested(&mut self) -> Result<Value, String> {
         self.skip_whitespace();
         let c = self
             .current()
@@ -69,12 +88,7 @@ impl Parser {
             }
             '"' => self.parse_string(),
             '#' => self.parse_boolean(),
-            c if c.is_numeric()
-                || ("-.".contains(c) && self.peek().is_some_and(|ch| ch.is_numeric())) =>
-            {
-                self.parse_number()
-            }
-            c if c.is_alphabetic() || SYMBOL_CHARS.contains(c) => self.parse_symbol(),
+            c if is_symbol_char(c) => Ok(self.parse_atom()),
             c => Err(format!("Unexpected character: {}", c)),
         }
     }
@@ -135,64 +149,49 @@ impl Parser {
         Ok(Value::String(result))
     }
 
-    /// 真偽値 (`#t` / `#f`) を読み込みます.
+    /// 真偽値 (`#t` / `#f`. R7RS の `#true` / `#false` も) を読み込みます.
     ///
     /// # Returns
     ///
-    /// 真偽値. `#` の後が `t` でも `f` でもない場合は [`Err`].
+    /// 真偽値. `#` の後が `t`, `f`, `true`, `false` でない場合は [`Err`].
     fn parse_boolean(&mut self) -> Result<Value, String> {
         self.advance('#');
-        match self.current() {
-            Some('t') => {
-                self.pos += 1;
-                Ok(Value::Boolean(true))
-            }
-            Some('f') => {
-                self.pos += 1;
-                Ok(Value::Boolean(false))
-            }
+        match self.token().as_str() {
+            "t" | "true" => Ok(Value::Boolean(true)),
+            "f" | "false" => Ok(Value::Boolean(false)),
             _ => Err("Invalid boolean".to_string()),
         }
     }
 
-    /// 数 (`-` で始まる負の数, 小数を含む) を読み込みます.
+    /// 数か記号を読み込みます. 記号に使える文字の並びを読み, 数の形 (数字, または符号か `.` の後に数字で
+    /// 始まる) で, 数として読めれば数, そうでなければ記号にします (Emacs と同じく, `1+` や `1.2.3` は記号).
     ///
     /// # Returns
     ///
-    /// 数. 数として読めない場合 (`1.2.3` など) は [`Err`].
-    fn parse_number(&mut self) -> Result<Value, String> {
-        let start = self.pos;
-        if self.current() == Some('-') {
-            self.pos += 1;
+    /// 数か記号.
+    fn parse_atom(&mut self) -> Value {
+        let token = self.token();
+        let digits = token.strip_prefix(['+', '-']).unwrap_or(&token);
+        let digits = digits.strip_prefix('.').unwrap_or(digits);
+        if digits.starts_with(|c: char| c.is_ascii_digit()) {
+            if let Ok(n) = token.parse::<f64>() {
+                return Value::Number(n);
+            }
         }
-
-        while self.current().is_some_and(|c| c.is_numeric() || c == '.') {
-            self.pos += 1;
-        }
-
-        let num_str: String = self.input[start..self.pos].iter().collect();
-        match num_str.parse::<f64>() {
-            Ok(n) => Ok(Value::Number(n)),
-            Err(_) => Err(format!("Invalid number: {}", num_str)),
-        }
+        Value::Symbol(token)
     }
 
-    /// 記号 (英数字と [`SYMBOL_CHARS`] の並び) を読み込みます.
+    /// 記号に使える文字の並びを読みます.
     ///
     /// # Returns
     ///
-    /// 記号 (失敗しない).
-    fn parse_symbol(&mut self) -> Result<Value, String> {
+    /// 読んだ文字 (無ければ空).
+    fn token(&mut self) -> String {
         let start = self.pos;
-        while self
-            .current()
-            .is_some_and(|c| c.is_alphanumeric() || SYMBOL_CHARS.contains(c))
-        {
+        while self.current().is_some_and(is_symbol_char) {
             self.pos += 1;
         }
-
-        let symbol: String = self.input[start..self.pos].iter().collect();
-        Ok(Value::Symbol(symbol))
+        self.input[start..self.pos].iter().collect()
     }
 
     /// 次に読む文字を返します.
@@ -203,19 +202,6 @@ impl Parser {
     fn current(&self) -> Option<char> {
         if self.pos < self.input.len() {
             Some(self.input[self.pos])
-        } else {
-            None
-        }
-    }
-
-    /// 次に読む文字の, 1 つ後の文字を返します (読み進めない).
-    ///
-    /// # Returns
-    ///
-    /// 1 つ後の文字. 無い場合は [`None`].
-    fn peek(&self) -> Option<char> {
-        if self.pos + 1 < self.input.len() {
-            Some(self.input[self.pos + 1])
         } else {
             None
         }
@@ -246,6 +232,19 @@ impl Parser {
         debug_assert_eq!(self.current(), Some(expected));
         self.pos += 1;
     }
+}
+
+/// 記号 (と数) に使える文字かを返します. 英数字 (Unicode の文字と数字も) と, [`SYMBOL_CHARS`] です.
+///
+/// # Arguments
+///
+/// * `c` - 文字.
+///
+/// # Returns
+///
+/// 使えれば `true`.
+fn is_symbol_char(c: char) -> bool {
+    c.is_alphanumeric() || SYMBOL_CHARS.contains(c)
 }
 
 #[cfg(test)]
@@ -356,5 +355,50 @@ mod tests {
     #[test]
     fn errors_on_invalid_boolean() {
         assert!(Parser::new("#x").parse().is_err());
+        assert!(Parser::new("#tx").parse().is_err());
+    }
+
+    #[test]
+    fn parses_long_booleans() {
+        assert_eq!(parse_one("#true"), Value::Boolean(true));
+        assert_eq!(parse_one("#false"), Value::Boolean(false));
+    }
+
+    #[test]
+    fn parses_atoms_like_emacs() {
+        // 数として読めない, 数字で始まる並びは, 記号
+        assert_eq!(parse_one("1+"), Value::Symbol("1+".to_string()));
+        assert_eq!(parse_one("1.2.3"), Value::Symbol("1.2.3".to_string()));
+        assert_eq!(parse_one("+5"), Value::Number(5.0));
+        assert_eq!(parse_one("-.5"), Value::Number(-0.5));
+        assert_eq!(parse_one("1e3"), Value::Number(1000.0));
+        // 数の形でないものは, 数として読めても記号
+        assert_eq!(parse_one("inf"), Value::Symbol("inf".to_string()));
+        assert_eq!(parse_one("-"), Value::Symbol("-".to_string()));
+        // Unicode の数字の文字は, 記号
+        assert_eq!(parse_one("①"), Value::Symbol("①".to_string()));
+        assert_eq!(parse_one("x①"), Value::Symbol("x①".to_string()));
+    }
+
+    #[test]
+    fn errors_on_too_deep_nesting() {
+        // 上限まで潜るので, 評価と同じく, 大きなスタックで読む
+        std::thread::Builder::new()
+            .stack_size(256 * 1024 * 1024)
+            .spawn(|| {
+                let deep = format!("{}{}", "(".repeat(MAX_DEPTH + 1), ")".repeat(MAX_DEPTH + 1));
+                assert_eq!(Parser::new(&deep).parse().unwrap_err(), "Too deeply nested");
+                let quoted = format!("{}x", "'".repeat(MAX_DEPTH + 1));
+                assert_eq!(
+                    Parser::new(&quoted).parse().unwrap_err(),
+                    "Too deeply nested"
+                );
+                // 上限までは, 読める
+                let ok = format!("{}{}", "(".repeat(MAX_DEPTH), ")".repeat(MAX_DEPTH));
+                assert!(Parser::new(&ok).parse().is_ok());
+            })
+            .unwrap()
+            .join()
+            .unwrap();
     }
 }

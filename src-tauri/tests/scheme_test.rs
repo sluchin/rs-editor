@@ -557,12 +557,22 @@ fn test_parser_reads_escapes_and_trailing_spaces() {
 }
 
 #[test]
+fn test_parses_deep_nesting_on_the_big_stack() {
+    // 読むのも, 評価の大きなスタックのスレッドで行う (呼ぶスレッドのスタックはあふれない)
+    let depth = 2000;
+    let code = format!("{}1{}", "(begin ".repeat(depth), ")".repeat(depth));
+    assert_eq!(eval(&code), "1");
+    // 深すぎる入れ子は, 読むときに断る
+    let deep = format!("'{}{}", "(".repeat(MAX_DEPTH), ")".repeat(MAX_DEPTH));
+    assert_eq!(eval_err(&deep), "Too deeply nested");
+}
+
+#[test]
 fn test_parser_reports_the_errors() {
     let err = |code: &str| Parser::new(code).parse().unwrap_err();
     assert_eq!(err("@"), "Unexpected character: @");
     assert_eq!(err("\"a\\x\""), "Invalid escape sequence");
     assert_eq!(err("\"abc"), "Unclosed string");
-    assert_eq!(err("1.2.3"), "Invalid number: 1.2.3");
     assert_eq!(err("'"), "Unexpected end of input");
 }
 
