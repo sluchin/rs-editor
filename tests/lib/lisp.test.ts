@@ -3,11 +3,13 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import {
   type LispHost,
+  charCount,
   evalLisp,
   listenEditorRequests,
   loadInitFile,
   performEditorRequest,
   runLispCommand,
+  utf16Offset,
 } from '@/lib/lisp'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
@@ -113,6 +115,32 @@ describe('lisp', () => {
     expect(() => run('goto-char', 'a')).toThrow('Expected a position: a')
     expect(() => run('goto-char', NaN)).toThrow('Expected a position: NaN')
     expect(() => run('fly')).toThrow('Unknown editor operation: fly')
+  })
+
+  it('位置は, 文字 (コードポイント) で数える (絵文字は 1 文字)', () => {
+    // 😀 は UTF-16 で 2 つ. 日本語は 1 つ
+    const { host, state } = fakeHost('a😀b日c')
+    const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
+    expect(run('point-max')).toBe(6)
+    expect(run('goto-char', 3)).toBe(3)
+    expect(state.point).toBe(3)
+    expect(run('point')).toBe(3)
+    expect(run('buffer-substring', 2, 4)).toBe('😀b')
+    expect(run('goto-char', 99)).toBe(6)
+    expect(state.point).toBe(6)
+    expect(run('delete-region', 2, 3)).toBeNull()
+    expect(state.text).toBe('ab日c')
+  })
+
+  it('UTF-16 の位置と, 文字の数を変える (対になっていない半分は 1 文字)', () => {
+    expect(charCount('a😀b')).toBe(3)
+    expect(charCount('a😀b', 3)).toBe(2)
+    expect(utf16Offset('a😀b', 2)).toBe(3)
+    expect(utf16Offset('a😀b', 3)).toBe(4)
+    // 対になっていない半分
+    expect(charCount('\ud83d\ud83dx')).toBe(3)
+    expect(charCount('\ude00\ude00')).toBe(2)
+    expect(utf16Offset('\ud83dx', 2)).toBe(2)
   })
 
   it('ファイルとバッファを出し, 入力を受け, 色とフォントを変える', async () => {

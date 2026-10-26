@@ -111,6 +111,57 @@ export function loadInitFile(): Promise<EvalResponse> {
 }
 
 /**
+ * UTF-16 の単位の位置 (エディタの位置) までの, 文字 (Unicode のコードポイント) の数を返します.
+ * Lisp の位置と文字列の長さは, Emacs と同じく文字で数えるため, 絵文字などの BMP の外の文字を 1 つと数えます.
+ *
+ * @param text - 本文.
+ * @param end - UTF-16 の単位の位置.
+ * @returns 文字の数.
+ */
+export function charCount(text: string, end: number = text.length): number {
+  let count = end
+  for (let i = 1; i < end; i++) {
+    if (isLowSurrogate(text.charCodeAt(i)) && isHighSurrogate(text.charCodeAt(i - 1))) count--
+  }
+  return count
+}
+
+/**
+ * 文字 (Unicode のコードポイント) の数で数えた位置を, UTF-16 の単位の位置 (エディタの位置) にします.
+ *
+ * @param text - 本文.
+ * @param chars - 文字の数で数えた位置 (本文の文字の数を超えない).
+ * @returns UTF-16 の単位の位置.
+ */
+export function utf16Offset(text: string, chars: number): number {
+  let i = 0
+  for (let n = 0; n < chars; n++) {
+    i += isHighSurrogate(text.charCodeAt(i)) && isLowSurrogate(text.charCodeAt(i + 1)) ? 2 : 1
+  }
+  return i
+}
+
+/**
+ * サロゲートペアの前の半分かを返します.
+ *
+ * @param code - UTF-16 の単位.
+ * @returns 前の半分なら `true`.
+ */
+function isHighSurrogate(code: number): boolean {
+  return code >= 0xd800 && code <= 0xdbff
+}
+
+/**
+ * サロゲートペアの後ろの半分かを返します.
+ *
+ * @param code - UTF-16 の単位.
+ * @returns 後ろの半分なら `true`.
+ */
+function isLowSurrogate(code: number): boolean {
+  return code >= 0xdc00 && code <= 0xdfff
+}
+
+/**
  * 1 から数えた位置を, 0 から数えた位置 (本文の中) にします.
  *
  * @param value - 位置 (数でなければ, 失敗).
@@ -125,7 +176,8 @@ function offset(value: unknown, length: number): number {
 }
 
 /**
- * エディタの操作をします.
+ * エディタの操作をします. Lisp との位置のやり取りは, 文字 (Unicode のコードポイント) で数え, 1 から数えます.
+ * エディタの位置 (UTF-16 の単位) とは, ここで変えます.
  *
  * @param host - エディタ.
  * @param op - 操作の名前.
@@ -134,21 +186,22 @@ function offset(value: unknown, length: number): number {
  * @throws 操作が失敗したとき.
  */
 export function performEditorRequest(host: LispHost, op: string, args: unknown[]): unknown {
-  const length = host.text().length
+  const text = host.text()
+  const length = charCount(text)
   const range = (): [number, number] => {
     const [a, b] = [offset(args[0], length), offset(args[1], length)]
-    return [Math.min(a, b), Math.max(a, b)]
+    return [utf16Offset(text, Math.min(a, b)), utf16Offset(text, Math.max(a, b))]
   }
   switch (op) {
     case 'point':
-      return host.point() + 1
+      return charCount(text, host.point()) + 1
     case 'point-min':
       return 1
     case 'point-max':
       return length + 1
     case 'goto-char': {
       const pos = offset(args[0], length)
-      host.setPoint(pos)
+      host.setPoint(utf16Offset(text, pos))
       return pos + 1
     }
     case 'insert':
@@ -158,9 +211,9 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       host.deleteRegion(...range())
       return null
     case 'buffer-string':
-      return host.text()
+      return text
     case 'buffer-substring':
-      return host.text().slice(...range())
+      return text.slice(...range())
     case 'buffer-name':
       return host.bufferName()
     case 'message':
