@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import type { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import { type Buffer, bufferNameFromPath, visitFile } from '../lib/buffer'
 import {
@@ -52,20 +53,20 @@ export function useFiles(
   const alternatePath = useRef('')
   // 保存するか聞いているバッファ (C-x s) と, 保存した数
   const [saveQueue, setSaveQueue] = useState<{ buffers: Buffer[]; saved: number } | null>(null)
-  // バッファごとの, 最後に自動保存した本文
-  const autoSaved = useRef(new Map<string, string>())
+  // バッファごとの, 最後に自動保存した本文 (本文は変えられないので, 同じものかで比べる)
+  const autoSaved = useRef(new Map<string, Text>())
 
   // 書き換えが止まってから, しばらくしたら, 変更したファイルのバッファを自動保存する (`#名前#`)
   useEffect(() => {
     const timer = setTimeout(() => {
       const targets = buffers.filter(
-        (b) => b.filePath && b.modified && autoSaved.current.get(b.id) !== b.content,
+        (b) => b.filePath && b.modified && autoSaved.current.get(b.id) !== b.doc,
       )
       if (targets.length === 0) return
       void Promise.all(
         targets.map(async (b) => {
-          await writeFile(autoSaveFileName(b.filePath as string), b.content)
-          autoSaved.current.set(b.id, b.content)
+          await writeFile(autoSaveFileName(b.filePath as string), b.doc.toString())
+          autoSaved.current.set(b.id, b.doc)
         }),
       )
         .then(() =>
@@ -191,7 +192,7 @@ export function useFiles(
     try {
       // バックアップを作れなくても, 保存はする
       if (!buffer.backedUp || buffer.filePath !== path) await backupFile(path).catch(() => {})
-      await writeFile(path, buffer.content)
+      await writeFile(path, buffer.doc.toString())
     } catch (err) {
       showMessage(`Error: ${err}`)
       return false
@@ -207,7 +208,7 @@ export function useFiles(
               ...b,
               filePath: path,
               name,
-              modified: b.modified && b.content !== buffer.content,
+              modified: b.modified && !b.doc.eq(buffer.doc),
               backedUp: true,
             }
           : b,

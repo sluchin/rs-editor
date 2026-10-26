@@ -117,7 +117,7 @@ export function useBookmarks(ctx: AppContext): CommandSet {
     showMessage('')
     const open = buffers.find((b) => b.filePath === bookmark.filename)
     if (open) {
-      const pos = bookmarkPosition(bookmark, open.content)
+      const pos = bookmarkPosition(bookmark, open.doc.toString())
       if (open.id === currentBufferId) {
         editor.current?.setCursor(pos)
       } else {

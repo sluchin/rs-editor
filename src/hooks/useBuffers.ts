@@ -4,11 +4,12 @@
  */
 
 import { type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
-import type { CursorInfo, EditorHandle } from '../components/CodeEditor'
+import type { CursorInfo, DocChange, EditorHandle } from '../components/CodeEditor'
 import {
   type Buffer,
   createScratchBuffer,
   generateBufferId,
+  toText,
   uniquifyBufferNames,
   visitFile,
 } from '../lib/buffer'
@@ -136,8 +137,9 @@ export function useBuffers(showMessage: (text: string) => void) {
    * @param modified - 置き換えた後に, 変更ありにするなら `true`.
    */
   const setCurrentText = (content: string, modified: boolean) => {
-    ;(editor.current as EditorHandle).setText(content)
-    updateCurrentBuffer({ content, modified })
+    const handle = editor.current as EditorHandle
+    handle.setText(content)
+    updateCurrentBuffer({ doc: handle.doc(), modified })
   }
 
   /**
@@ -154,7 +156,7 @@ export function useBuffers(showMessage: (text: string) => void) {
       id: generateBufferId(),
       name,
       filePath,
-      content,
+      doc: toText(content),
       modified: false,
     }
     setBuffers((prev) => [...prev, newBuffer])
@@ -209,17 +211,18 @@ export function useBuffers(showMessage: (text: string) => void) {
 
   /**
    * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
+   * 本文は, エディタの `Text` をそのまま覚え, 別のウィンドウには, 変更だけを写します (本文の全体を写さない).
    *
    * @param windowId - 書き換えたウィンドウ.
-   * @param value - 本文.
+   * @param change - 書き換え.
    */
-  const handleEditorChange = (windowId: string, value: string) => {
+  const handleEditorChange = (windowId: string, change: DocChange) => {
     const bufferId = windowBuffers[windowId]
     setBuffers((prev) =>
-      prev.map((b) => (b.id === bufferId ? { ...b, content: value, modified: true } : b)),
+      prev.map((b) => (b.id === bufferId ? { ...b, doc: change.doc, modified: true } : b)),
     )
     for (const [w, b] of Object.entries(windowBuffers)) {
-      if (w !== windowId && b === bufferId) handles.current.get(w)?.sync(value)
+      if (w !== windowId && b === bufferId) handles.current.get(w)?.sync(change)
     }
   }
 
@@ -256,7 +259,7 @@ export function useBuffers(showMessage: (text: string) => void) {
       setBuffers((prev) => [...prev, visited])
       buffer = visited
     }
-    const pos = lineStart(buffer.content, line)
+    const pos = lineStart(buffer.doc.toString(), line)
     if (!other && buffer.id === currentBufferId) {
       editor.current?.setCursor(pos)
       return

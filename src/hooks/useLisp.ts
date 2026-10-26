@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { UnlistenFn } from '@tauri-apps/api/event'
+import { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
 import { type Buffer, generateBufferId, visitFile } from '../lib/buffer'
@@ -158,7 +159,7 @@ export function useLisp(ctx: AppContext) {
           id: generateBufferId(),
           name,
           filePath: null,
-          content: '',
+          doc: Text.empty,
           modified: false,
         }
         setBuffers((prev) => [...prev, buffer])
@@ -195,15 +196,16 @@ export function useLisp(ctx: AppContext) {
   const handleEvalLastSexp = async () => {
     // カーソルの直前の S 式の範囲を求める
     const cursorPos = cursor.offset
-    const startPos = backwardSexp(currentBuffer.content, cursorPos)
-    const endPos = forwardSexp(currentBuffer.content, startPos)
+    const text = currentBuffer.doc.toString()
+    const startPos = backwardSexp(text, cursorPos)
+    const endPos = forwardSexp(text, startPos)
 
     if (startPos === endPos) {
       setMinibufferState({ mode: 'message', text: 'No S-expression found before cursor' })
       return
     }
 
-    await evaluate(currentBuffer.content.slice(startPos, endPos))
+    await evaluate(text.slice(startPos, endPos))
   }
 
   /**

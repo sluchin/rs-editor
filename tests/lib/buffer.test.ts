@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { type Buffer, uniquifyBufferNames } from '@/lib/buffer'
+import { type Buffer, headLines, toText, uniquifyBufferNames } from '@/lib/buffer'
 
 /**
  * バッファを作ります.
@@ -9,7 +9,7 @@ import { type Buffer, uniquifyBufferNames } from '@/lib/buffer'
  * @returns バッファ.
  */
 function buffer(name: string, fields: Partial<Buffer> = {}): Buffer {
-  return { id: name, name, filePath: null, content: '', modified: false, ...fields }
+  return { id: name, name, filePath: null, doc: toText(''), modified: false, ...fields }
 }
 
 /**
@@ -73,5 +73,16 @@ describe('uniquifyBufferNames', () => {
     ])
     // ファイルのないバッファの名前は, 変えない
     expect(names([buffer('notes'), file('/a/notes')])).toEqual(['notes', 'notes<2>'])
+  })
+})
+
+describe('toText と headLines', () => {
+  it('行の区切りを CodeMirror と同じく読み, 始めの 2 行だけを返すこと', () => {
+    expect(toText('a\r\nb\rc\nd').toString()).toBe('a\nb\nc\nd')
+    expect(headLines(toText('-*- mode: scheme -*-\nsecond\nthird'))).toBe(
+      '-*- mode: scheme -*-\nsecond',
+    )
+    expect(headLines(toText('only'))).toBe('only')
+    expect(headLines(toText(''))).toBe('')
   })
 })

@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import BufferList from '@/components/BufferList'
+import { toText } from '@/lib/buffer'
 
 describe('BufferList Component', () => {
   const buffers = [
-    { id: '1', name: 'a.scm', filePath: '/tmp/a.scm', content: '(+ 1 2)', modified: true },
-    { id: '2', name: '*scratch*', filePath: null, content: '', modified: false },
+    { id: '1', name: 'a.scm', filePath: '/tmp/a.scm', doc: toText('(+ 1 2)'), modified: true },
+    { id: '2', name: '*scratch*', filePath: null, doc: toText(''), modified: false },
   ]
 
   it('バッファの一覧 (今のバッファ, 変更, 大きさ, ファイル) を表示する', () => {
@@ -33,8 +34,8 @@ describe('BufferList Component', () => {
       <BufferList
         buffers={[
           ...buffers,
-          { id: '3', name: 'a.el', filePath: '/tmp/a.el', content: '', modified: false },
-          { id: '4', name: 'a.txt', filePath: '/tmp/a.txt', content: '', modified: false },
+          { id: '3', name: 'a.el', filePath: '/tmp/a.el', doc: toText(''), modified: false },
+          { id: '4', name: 'a.txt', filePath: '/tmp/a.txt', doc: toText(''), modified: false },
         ]}
         currentBufferId="1"
         onSelectBuffer={vi.fn()}

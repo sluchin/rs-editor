@@ -4,6 +4,7 @@
  */
 
 import { useRef, useState } from 'react'
+import type { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import type {
   IsearchCommand,
@@ -67,6 +68,20 @@ export function useSearch(ctx: AppContext) {
   const [replace, setReplace] = useState<ReplaceState | null>(null)
   // isearch の検索の履歴 (文字と, 正規表現. 新しい順)
   const searchRing = useRef({ plain: [] as string[], regexp: [] as string[] })
+  // 探す本文 (isearch のキーごとに, 本文の全体を作らないように, 本文が変わるまで使い回す)
+  const searched = useRef<{ doc: Text; text: string } | null>(null)
+
+  /**
+   * 今のバッファの本文を, 文字列で返します (本文が前と同じなら, 前に作った文字列).
+   *
+   * @returns 本文.
+   */
+  const bufferText = (): string => {
+    if (searched.current?.doc !== currentBuffer.doc) {
+      searched.current = { doc: currentBuffer.doc, text: currentBuffer.doc.toString() }
+    }
+    return searched.current.text
+  }
 
   /**
    * 見つかったところを選びます. カーソルは, 前へ探すときは終わりに, 後ろへ探すときは始めに置きます.
@@ -132,13 +147,7 @@ export function useSearch(ctx: AppContext) {
           ? current.matchStart + 1
           : current.matchStart - 1
 
-    const match = findNextMatch(
-      currentBuffer.content,
-      current.query,
-      fromPos,
-      direction,
-      current.regexp,
-    )
+    const match = findNextMatch(bufferText(), current.query, fromPos, direction, current.regexp)
 
     if (match) {
       selectMatch(direction, match)
@@ -167,7 +176,7 @@ export function useSearch(ctx: AppContext) {
     changes: Partial<MinibufferIsearchState> = {},
   ) => {
     const match = findNextMatch(
-      currentBuffer.content,
+      bufferText(),
       query,
       current.originalCursor,
       current.direction,
@@ -196,7 +205,7 @@ export function useSearch(ctx: AppContext) {
     const handle = editor.current as EditorHandle
     if (command === 'yank-word-or-char') {
       // 合っていれば, 合った所の終わりから (前へ探していても)
-      const text = currentBuffer.content
+      const text = bufferText()
       const from = current.matchEnd ?? current.yankPoint ?? current.originalCursor
       const end = yankWordOrCharEnd(text, from)
       if (end === from) return

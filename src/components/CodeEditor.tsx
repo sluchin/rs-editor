@@ -6,10 +6,12 @@ import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { standardKeymap } from '@codemirror/commands'
 import {
   Annotation,
+  type ChangeSet,
   Compartment,
   EditorSelection,
   EditorState,
   Prec,
+  type Text,
   Transaction,
 } from '@codemirror/state'
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
@@ -36,14 +38,49 @@ import '../styles/CodeEditor.css'
 const syncAnnotation = Annotation.define<boolean>()
 
 /**
+ * 本文の版 (同じ中身の本文に, 同じ印を付ける). 同じバッファを出しているウィンドウは, 本文を別々に持つので,
+ * 写したときに, 同じ版の印を付ける. 版が同じなら, 本文を比べずに, 変更をそのまま写せる.
+ */
+const versions = new WeakMap<Text, object>()
+
+/**
+ * 本文の版の印を返します (無ければ, 新しく作る).
+ *
+ * @param doc - 本文.
+ * @returns 版の印.
+ */
+function versionOf(doc: Text): object {
+  let version = versions.get(doc)
+  if (!version) {
+    version = {}
+    versions.set(doc, version)
+  }
+  return version
+}
+
+/** 本文の書き換え (書き換えた後の本文と, 前の本文からの変更). */
+export interface DocChange {
+  /** 書き換える前の本文. */
+  startDoc: Text
+  /** 変更. */
+  changes: ChangeSet
+  /** 書き換えた後の本文. */
+  doc: Text
+}
+
+/**
  * 本文を, 新しい本文に合わせる変更を作ります (前と後ろの同じ部分は, そのまま).
  *
  * @param state - エディタの状態.
- * @param content - 新しい本文.
+ * @param doc - 新しい本文.
  * @returns 変更. 同じなら `null`.
  */
-function syncChange(state: EditorState, content: string) {
+function syncChange(state: EditorState, doc: Text | string) {
+  if (typeof doc !== 'string' && (state.doc === doc || versionOf(state.doc) === versionOf(doc))) {
+    return null
+  }
   const old = state.doc.toString()
+  const content = doc.toString()
   if (old === content) return null
   let start = 0
   while (start < old.length && start < content.length && old[start] === content[start]) start++
@@ -91,6 +128,8 @@ export interface EditorHandle {
   gotoLine: (line: number) => void
   /** 本文を返します. */
   text: () => string
+  /** 本文を, CodeMirror の `Text` のまま返します (写さない). */
+  doc: () => Text
   /** カーソルの位置を返します. */
   point: () => number
   /** カーソルの位置に入れて, カーソルを入れた文字の後へ動かします. */
@@ -99,8 +138,8 @@ export interface EditorHandle {
   deleteRegion: (from: number, to: number) => void
   /** エディタのコマンドの名前を返します (M-x の補完). */
   commandNames: () => string[]
-  /** 別のウィンドウで書き換えた本文を写します (元に戻す履歴には入れない). */
-  sync: (content: string) => void
+  /** 別のウィンドウでの書き換えを写します (元に戻す履歴には入れない). */
+  sync: (change: DocChange) => void
   /** 範囲を置き換えて, カーソルを置き換えた文字の後へ動かします. */
   replace: (from: number, to: number, text: string) => void
   /** 消したバッファの状態 (元に戻す履歴など) を捨てます. */
@@ -128,10 +167,10 @@ export interface EditorHandle {
 interface CodeEditorProps {
   /** 表示するバッファ. 変わると, そのバッファの状態 (カーソル, 元に戻す履歴) に切り替えます. */
   bufferId: string
-  /** バッファの始めの本文 (始めて表示するときだけ使う). */
-  initialContent: string
-  /** 本文が変わったときに呼びます. */
-  onChange: (value: string) => void
+  /** バッファの本文 (始めて表示するときと, バッファを切り替えたときだけ使う). */
+  initialContent: Text
+  /** 本文が変わったときに呼びます (本文の全体は写さない). */
+  onChange: (change: DocChange) => void
   /** カーソルが動いたときに呼びます. */
   onCursorChange: (info: CursorInfo) => void
   /** 画面のコマンド (ファイル, バッファ, 検索, 評価, Lisp で作ったコマンド). 名前で引きます. */
@@ -261,7 +300,7 @@ export default function CodeEditor({
    * @param isReadOnly - 書き換えさせないなら `true`.
    * @returns 状態.
    */
-  const createState = (doc: string, isReadOnly: boolean): EditorState =>
+  const createState = (doc: Text, isReadOnly: boolean): EditorState =>
     EditorState.create({
       doc,
       extensions: [
@@ -285,7 +324,13 @@ export default function CodeEditor({
         keymap.of(standardKeymap.filter((b) => b.mac !== 'Ctrl-h')),
         EditorView.updateListener.of((update) => {
           const synced = update.transactions.some((tr) => tr.annotation(syncAnnotation))
-          if (update.docChanged && !synced) latest.current.onChange(update.state.doc.toString())
+          if (update.docChanged && !synced) {
+            latest.current.onChange({
+              startDoc: update.startState.doc,
+              changes: update.changes,
+              doc: update.state.doc,
+            })
+          }
           if (update.docChanged || update.selectionSet) {
             latest.current.onCursorChange(cursorInfo(update.state))
           }
@@ -308,6 +353,7 @@ export default function CodeEditor({
       },
       gotoLine: (line) => gotoLine(current(), line),
       text: () => current().state.doc.toString(),
+      doc: () => current().state.doc,
       point: () => current().state.selection.main.head,
       insert: (text) => {
         const pos = current().state.selection.main.head
@@ -321,9 +367,19 @@ export default function CodeEditor({
         current().dispatch({ changes: { from, to }, scrollIntoView: true })
       },
       commandNames: () => Object.keys(commands.current as Record<string, Command>),
-      sync: (content) => {
-        const change = syncChange(current().state, content)
-        if (change) current().dispatch(change)
+      sync: ({ startDoc, changes, doc }) => {
+        const state = current().state
+        // 同じ版の本文なら, 変更をそのまま写す (本文の全体を比べない)
+        if (versionOf(state.doc) === versionOf(startDoc)) {
+          current().dispatch({
+            changes,
+            annotations: [syncAnnotation.of(true), Transaction.addToHistory.of(false)],
+          })
+        } else {
+          const change = syncChange(state, doc)
+          if (change) current().dispatch(change)
+        }
+        versions.set(current().state.doc, versionOf(doc))
       },
       replace: (from, to, text) => {
         current().dispatch({
@@ -387,6 +443,7 @@ export default function CodeEditor({
     // 隠していたあいだに, 別のウィンドウで書き換えたかもしれない
     const change = syncChange(current.state, initialContent)
     if (change) current.dispatch(change)
+    versions.set(current.state.doc, versionOf(initialContent))
     latest.current.onCursorChange(cursorInfo(current.state))
     // initialContent は, 始めて表示するときと, 切り替えたときにだけ使う. disabled は, 下の効果で合わせる
     // eslint-disable-next-line react-hooks/exhaustive-deps

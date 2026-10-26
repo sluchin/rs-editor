@@ -10,7 +10,7 @@ import ModeLine from './components/ModeLine'
 import Minibuffer, { MinibufferInputState, MinibufferIsearchState } from './components/Minibuffer'
 import BufferList from './components/BufferList'
 import ProjectTree from './components/ProjectTree'
-import type { Buffer } from './lib/buffer'
+import { type Buffer, headLines } from './lib/buffer'
 import { listDirectory } from './lib/fileOps'
 import { DIRED_MODE, GREP_MODE, majorMode } from './lib/modes'
 import { KEY_BINDINGS, toEmacsKey } from './lib/emacs'
@@ -360,7 +360,7 @@ function App() {
                 ? DIRED_MODE
                 : buffer.grep
                   ? GREP_MODE
-                  : majorMode(buffer.name, buffer.filePath, buffer.content)
+                  : majorMode(buffer.name, buffer.filePath, headLines(buffer.doc))
             return (
               <div
                 key={rect.id}
@@ -375,8 +375,8 @@ function App() {
               >
                 <CodeEditor
                   bufferId={bufferId}
-                  initialContent={buffer.content}
-                  onChange={(value) => handleEditorChange(rect.id, value)}
+                  initialContent={buffer.doc}
+                  onChange={(change) => handleEditorChange(rect.id, change)}
                   onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
                   actions={actions}
                   keyBindings={keysFor(buffer)}

@@ -3,7 +3,8 @@ import { createRef } from 'react'
 import { act, render, fireEvent } from '@testing-library/react'
 import { EditorView } from '@codemirror/view'
 import { language } from '@codemirror/language'
-import CodeEditor, { EditorHandle } from '@/components/CodeEditor'
+import CodeEditor, { type DocChange, EditorHandle } from '@/components/CodeEditor'
+import { toText } from '@/lib/buffer'
 
 /**
  * CodeEditor を表示します.
@@ -22,7 +23,7 @@ function renderEditor(props: Partial<Parameters<typeof CodeEditor>[0]> = {}) {
   const element = (extra: Partial<Parameters<typeof CodeEditor>[0]> = {}) => (
     <CodeEditor
       bufferId="a"
-      initialContent="(+ 1 2)"
+      initialContent={toText('(+ 1 2)')}
       keyBindings={[]}
       disabled={false}
       handle={handle}
@@ -59,15 +60,46 @@ describe('CodeEditor Component', () => {
   })
 
   it('別のウィンドウの書き換えを写し, 元に戻す履歴には入れないこと', () => {
+    // 同じバッファを, 2 つのウィンドウに出す
+    const doc = toText('(+ 1 2)')
+    const a = renderEditor({ initialContent: doc })
+    const b = renderEditor({ initialContent: doc })
+    // a で書き換えたら, 本文の全体でなく, 変更を知らせる
+    act(() => a.editor.dispatch({ changes: { from: 6, insert: ' 3' } }))
+    const change = a.onChange.mock.calls[0][0] as DocChange
+    expect(change.startDoc).toBe(doc)
+    expect(change.doc).toBe(a.editor.state.doc)
+    // b は, 同じ版の本文なので, 変更をそのまま写す
+    act(() => b.handle.current?.sync(change))
+    expect(b.editor.state.doc.toString()).toBe('(+ 1 2 3)')
+    expect(b.onChange).not.toHaveBeenCalled()
+    // b で書き換えたものも, a へ写せる (写した後も, 版は同じ)
+    act(() => b.editor.dispatch({ changes: { from: 0, to: 1, insert: '[' } }))
+    act(() => a.handle.current?.sync(b.onChange.mock.calls[0][0] as DocChange))
+    expect(a.editor.state.doc.toString()).toBe('[+ 1 2 3)')
+    // 写したものは, 元に戻す履歴に入れない
+    expect(b.handle.current?.run('undo')).toBe(true)
+    expect(b.editor.state.doc.toString()).toBe('(+ 1 2 3)')
+    // a の元に戻すは, a で書き換えた分だけを戻す
+    expect(a.handle.current?.run('undo')).toBe(true)
+    expect(a.editor.state.doc.toString()).toBe('[+ 1 2)')
+  })
+
+  it('版の違う本文の書き換えは, 本文を比べて写すこと', () => {
     const { editor, handle, onChange } = renderEditor()
-    act(() => handle.current?.sync('(+ 1 2 3)'))
+    const other = toText('(+ 1 2)')
+    const doc = toText('(+ 1 2 3)')
+    const changes = editor.state.changes({ from: 6, insert: ' 3' })
+    act(() => handle.current?.sync({ startDoc: other, changes, doc }))
     expect(editor.state.doc.toString()).toBe('(+ 1 2 3)')
-    act(() => handle.current?.sync('(+ 1 2 3)'))
-    act(() => handle.current?.sync('x'))
-    expect(editor.state.doc.toString()).toBe('x')
+    // 写した後は, 同じ版になるので, 次の変更はそのまま写す
+    act(() => handle.current?.sync({ startDoc: doc, changes: changes.invert(other), doc: other }))
+    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
+    // 中身が同じなら, 何もしない
+    act(() => handle.current?.sync({ startDoc: toText('x'), changes, doc: toText('(+ 1 2)') }))
+    expect(editor.state.doc.toString()).toBe('(+ 1 2)')
     expect(onChange).not.toHaveBeenCalled()
-    expect(handle.current?.run('undo')).toBe(true)
-    expect(editor.state.doc.toString()).toBe('x')
+    expect(handle.current?.doc()).toBe(editor.state.doc)
   })
 
   it('言語を渡すと色を付け, 言語やバッファが変わると付け直すこと', () => {
@@ -135,7 +167,10 @@ describe('CodeEditor Component', () => {
   it('書き換えと, カーソルの移動を知らせること', () => {
     const { editor, onChange, onCursorChange } = renderEditor()
     editor.dispatch({ changes: { from: 0, insert: 'a\n' }, selection: { anchor: 3 } })
-    expect(onChange).toHaveBeenCalledWith('a\n(+ 1 2)')
+    const change = onChange.mock.calls[0][0] as DocChange
+    expect(change.startDoc.toString()).toBe('(+ 1 2)')
+    expect(change.changes.length).toBe(7)
+    expect(change.doc.toString()).toBe('a\n(+ 1 2)')
     expect(onCursorChange).toHaveBeenLastCalledWith({ line: 2, column: 2, offset: 3 })
     editor.dispatch({ selection: { anchor: 0 } })
     expect(onCursorChange).toHaveBeenLastCalledWith({ line: 1, column: 1, offset: 0 })
@@ -160,7 +195,7 @@ describe('CodeEditor Component', () => {
   })
 
   it('範囲を選び, カーソルを置き, 行へ動くこと', () => {
-    const { editor, handle } = renderEditor({ initialContent: 'ab\ncd' })
+    const { editor, handle } = renderEditor({ initialContent: toText('ab\ncd') })
     act(() => handle.current?.select(1, 2))
     expect(editor.state.selection.main).toMatchObject({ from: 1, to: 2 })
     act(() => handle.current?.setCursor(4))
@@ -185,23 +220,23 @@ describe('CodeEditor Component', () => {
   it('バッファを切り替えると, バッファごとの本文とカーソルに切り替え, 消したバッファは作り直すこと', () => {
     const { editor, rerender, element, handle, onChange } = renderEditor()
     editor.dispatch({ selection: { anchor: 3 } })
-    rerender(element({ bufferId: 'b', initialContent: 'other' }))
+    rerender(element({ bufferId: 'b', initialContent: toText('other') }))
     expect(editor.state.doc.toString()).toBe('other')
-    rerender(element({ bufferId: 'a', initialContent: '(+ 1 2)' }))
+    rerender(element({ bufferId: 'a', initialContent: toText('(+ 1 2)') }))
     expect(editor.state.doc.toString()).toBe('(+ 1 2)')
     expect(editor.state.selection.main.head).toBe(3)
     // 隠していたあいだに (別のウィンドウで) 書き換えた本文は, 写す (書き換えとしては知らせない)
-    rerender(element({ bufferId: 'b', initialContent: 'other' }))
+    rerender(element({ bufferId: 'b', initialContent: toText('other') }))
     onChange.mockClear()
-    rerender(element({ bufferId: 'a', initialContent: '(+ 10 2) ;' }))
+    rerender(element({ bufferId: 'a', initialContent: toText('(+ 10 2) ;') }))
     expect(editor.state.doc.toString()).toBe('(+ 10 2) ;')
     expect(editor.state.selection.main.head).toBe(3)
     expect(onChange).not.toHaveBeenCalled()
     // 同じバッファのまま描き直しても, 状態を変えない
-    rerender(element({ bufferId: 'a', initialContent: 'ignored' }))
+    rerender(element({ bufferId: 'a', initialContent: toText('ignored') }))
     expect(editor.state.doc.toString()).toBe('(+ 10 2) ;')
     act(() => handle.current?.forget('b'))
-    rerender(element({ bufferId: 'b', initialContent: 'new' }))
+    rerender(element({ bufferId: 'b', initialContent: toText('new') }))
     expect(editor.state.doc.toString()).toBe('new')
   })
 })

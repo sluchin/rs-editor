@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react'
-import type { Buffer } from '../lib/buffer'
+import { type Buffer, headLines } from '../lib/buffer'
 import { majorMode } from '../lib/modes'
 import '../styles/BufferList.css'
 
@@ -77,9 +77,9 @@ export default function BufferList({
                     {buffer.modified ? '*' : ' '}
                   </td>
                   <td className="buffer-name">{buffer.name}</td>
-                  <td className="buffer-size">{buffer.content.length}</td>
+                  <td className="buffer-size">{buffer.doc.length}</td>
                   <td className="buffer-mode">
-                    {majorMode(buffer.name, buffer.filePath, buffer.content).name}
+                    {majorMode(buffer.name, buffer.filePath, headLines(buffer.doc)).name}
                   </td>
                   <td className="buffer-file">{buffer.filePath || '--'}</td>
                 </tr>

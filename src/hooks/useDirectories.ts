@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react'
 import type { EditorHandle } from '../components/CodeEditor'
-import { type Buffer, generateBufferId, visitFile } from '../lib/buffer'
+import { type Buffer, generateBufferId, toText, visitFile } from '../lib/buffer'
 import { diredBufferName, diredListing } from '../lib/dired'
 import { grepDirectory, listDirectoryLong, projectRoot } from '../lib/fileOps'
 import { GREP_BUFFER_NAME, grepBufferText, grepMatchIndex } from '../lib/grep'
@@ -83,7 +83,7 @@ export function useDirectories(ctx: AppContext) {
           id: generateBufferId(),
           name: diredBufferName(dir),
           filePath: null,
-          content,
+          doc: toText(content),
           modified: false,
           directory: dir,
         }
@@ -140,7 +140,7 @@ export function useDirectories(ctx: AppContext) {
         id: generateBufferId(),
         name: GREP_BUFFER_NAME,
         filePath: null,
-        content,
+        doc: toText(content),
         modified: false,
         keys: GREP_KEYS,
         grep: { directory, matches },

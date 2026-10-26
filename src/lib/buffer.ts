@@ -2,6 +2,7 @@
  * バッファ (ファイルを開いたもの, または *scratch* などの, ファイルのないもの) と, バッファを作る関数.
  */
 
+import { Text } from '@codemirror/state'
 import { diredBufferName } from './dired'
 import type { GrepMatch } from './fileOps'
 import { fileNewerThan, pathExists, readFile } from './fileOps'
@@ -21,8 +22,11 @@ export interface Buffer {
   name: string
   /** バッファのファイルのパス. ファイルのないバッファは `null`. */
   filePath: string | null
-  /** 本文. */
-  content: string
+  /**
+   * 本文 (CodeMirror の `Text`. 変えられないので, エディタの本文を写さずに共有する).
+   * 文字列が要るときだけ, `toString()` で作る.
+   */
+  doc: Text
   /** 保存してから, 書き換えたら `true`. */
   modified: boolean
   /** 開いてから, ファイルのバックアップ (`<file>~`) を作ったら `true` (Emacs の `buffer-backed-up`). */
@@ -33,6 +37,26 @@ export interface Buffer {
   keys?: KeyBinding[]
   /** `M-x grep` の結果のバッファなら, 探したディレクトリ (`/` で終わる) と, 合った行. */
   grep?: { directory: string; matches: GrepMatch[] }
+}
+
+/**
+ * 文字列から, 本文 (`Text`) を作ります. 行の区切りは, CodeMirror と同じく `\r\n`, `\r`, `\n` です.
+ *
+ * @param content - 文字列.
+ * @returns 本文.
+ */
+export function toText(content: string): Text {
+  return Text.of(content.split(/\r\n?|\n/))
+}
+
+/**
+ * 本文の始めの 2 行を返します (ファイルの変数 `-*- ... -*-` を読むため. 本文の全体は作らない).
+ *
+ * @param doc - 本文.
+ * @returns 始めの 2 行 (`\n` でつなぐ).
+ */
+export function headLines(doc: Text): string {
+  return doc.lines < 2 ? doc.line(1).text : `${doc.line(1).text}\n${doc.line(2).text}`
 }
 
 /**
@@ -65,7 +89,7 @@ export function createScratchBuffer(): Buffer {
     id: generateBufferId(),
     name: '*scratch*',
     filePath: null,
-    content: INITIAL_TEXT,
+    doc: toText(INITIAL_TEXT),
     modified: false,
   }
 }
@@ -84,7 +108,7 @@ export async function visitFile(path: string): Promise<{ buffer: Buffer; message
     id: generateBufferId(),
     name,
     filePath: path,
-    content,
+    doc: toText(content),
     modified: false,
   }
   if (await fileNewerThan(autoSaveFileName(path), path)) {
