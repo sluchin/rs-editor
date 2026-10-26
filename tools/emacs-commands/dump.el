@@ -1,10 +1,9 @@
 ;;; dump.el --- コマンドとキーの割り当てを書き出す -*- lexical-binding: t -*-
 
-;; 環境変数 DUMP_PREFIX に, 出力のファイルの接頭辞を渡す. 次の 3 つを書く.
+;; 環境変数 DUMP_PREFIX に, 出力のファイルの接頭辞を渡す. 次のものを書く.
 ;;   <接頭辞>-commands.tsv  コマンド (M-x で使える記号), ライブラリ, ファイル
 ;;   <接頭辞>-keys.tsv      キーマップ, キー, コマンド
 ;;   <接頭辞>-maps.txt      書き出したキーマップの変数
-;;   <接頭辞>-features.el   load-path と, 読んだ機能 (default.el が使う)
 ;; global-map から辿れるキーマップ (ctl-x-map, esc-map など) は, global-map のキーとして書く.
 
 (defvar dump-prefix (getenv "DUMP_PREFIX"))
@@ -74,8 +73,5 @@
     (dolist (l (car out)) (insert l "\n")))
   (with-temp-file (concat dump-prefix "-maps.txt")
     (dolist (n names) (insert n "\n"))))
-
-(with-temp-file (concat dump-prefix "-features.el")
-  (prin1 (list load-path features) (current-buffer)))
 
 ;;; dump.el ends here
