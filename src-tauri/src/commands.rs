@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(not(tarpaulin_include))]
 use tauri::{AppHandle, Emitter, State};
 
+use crate::atomic::write_atomic;
 use crate::scheme::evaluator::{Evaluator, KeyBinding};
 #[cfg(not(tarpaulin_include))]
 use crate::scheme::host::{Bridge, BridgeHost, EditorRequest};
@@ -320,7 +321,7 @@ pub fn read_file_content(path: String) -> Result<String, String> {
     })
 }
 
-/// ファイルに書きます.
+/// ファイルに書きます. 原子的に書くので, 書いている途中で落ちても, ファイルが途中で切れません ([`write_atomic`]).
 ///
 /// # Arguments
 ///
@@ -333,7 +334,7 @@ pub fn read_file_content(path: String) -> Result<String, String> {
 #[tauri::command]
 pub fn write_file_content(path: String, content: String) -> Result<(), String> {
     log::debug!("Writing {}", path);
-    std::fs::write(&path, content).map_err(|e| {
+    write_atomic(Path::new(&path), content.as_bytes()).map_err(|e| {
         log::warn!("Could not write {}: {}", path, e);
         e.to_string()
     })

@@ -11,6 +11,7 @@ use chrono::format::{Item, StrftimeItems};
 use chrono::{Local, NaiveDate, NaiveDateTime, TimeZone};
 use regex::Regex;
 
+use crate::atomic::write_atomic;
 use crate::scheme::builtins::{fixed, index, number, string};
 use crate::scheme::evaluator::Machine;
 use crate::scheme::parser::Parser;
@@ -88,7 +89,8 @@ pub(crate) fn call(
             if let Some(dir) = path.parent() {
                 std::fs::create_dir_all(dir).map_err(|e| format!("{}: {}", dir.display(), e))?;
             }
-            std::fs::write(&path, text).map_err(|e| format!("{}: {}", path.display(), e))?;
+            write_atomic(&path, text.as_bytes())
+                .map_err(|e| format!("{}: {}", path.display(), e))?;
             Ok(Value::Nil)
         }),
         "make-directory" => fixed::<1>(name, args).and_then(|args| {
