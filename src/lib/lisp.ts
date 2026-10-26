@@ -98,8 +98,8 @@ export interface LispHost {
   outlineFlagRegion: (from: number, to: number, hide: boolean) => void
   /** 位置の文字を, 隠していれば `true` (Emacs の `outline-invisible-p`). */
   invisible: (pos: number) => boolean
-  /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). */
-  setModified: (modified: boolean) => void
+  /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). 画面に出したら, 終わります. */
+  setModified: (modified: boolean) => Promise<void>
   /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
   localSetKey: (key: string, command: string) => void
   /** コマンドに割り当てたキー (Emacs の書き方. `C-x C-f` など). */
@@ -113,6 +113,13 @@ export interface LispHost {
    * 入力の始めは, ディレクトリ (空なら, 今のバッファのディレクトリ).
    */
   readFileName: (prompt: string, dir: string) => Promise<string>
+  /** ミニバッファに問いを出して, キーを 1 つ押してもらいます (C-g でやめたら, 失敗). */
+  readKey: (prompt: string) => Promise<string>
+  /**
+   * バッファ (省くと, 今のバッファ) を, ファイルに書いて, そのファイルのバッファにします. 書いたら, 終わります.
+   * 書けなければ, 失敗します.
+   */
+  writeBuffer: (path: string, name?: string) => Promise<void>
   /** 背景の色を変えます. */
   setBackgroundColor: (color: string) => void
   /** 文字の色を変えます. */
@@ -284,7 +291,7 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       if (!host.command(name)) throw new Error(`Undefined command: ${name}`)
       return true
     }
-    case 'switch-to-buffer':
+    case 'pop-to-buffer-same-window':
       return host.switchToBuffer(String(args[0])).then(() => null)
     case 'buffer-file-name':
       return host.bufferFileName(optionalName(args))
@@ -327,8 +334,7 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       host.unhighlightRegexp(args[0] === true ? true : String(args[0]))
       return null
     case 'set-buffer-modified-p':
-      host.setModified(args[0] === true)
-      return null
+      return host.setModified(args[0] === true).then(() => null)
     case 'local-set-key':
       host.localSetKey(String(args[0]), String(args[1]))
       return null
@@ -340,6 +346,10 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       return host.readString(String(args[0]), String(args[1] ?? ''))
     case 'read-file-name':
       return host.readFileName(String(args[0]), String(args[1] ?? ''))
+    case 'read-key':
+      return host.readKey(String(args[0] ?? ''))
+    case 'files--write-buffer':
+      return host.writeBuffer(String(args[0]), optionalName(args.slice(1))).then(() => null)
     case 'set-background-color':
       host.setBackgroundColor(String(args[0]))
       return null

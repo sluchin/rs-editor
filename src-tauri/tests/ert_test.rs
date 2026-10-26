@@ -345,7 +345,7 @@ fn test_ert_command() {
             .map(|c| untimed(c))
             .collect();
         assert_eq!(calls[0], "read-string \"Run tests (default t): \" \"\"");
-        assert_eq!(calls[1], "switch-to-buffer \"*ert*\"");
+        assert_eq!(calls[1], "pop-to-buffer-same-window \"*ert*\"");
         assert!(
             calls[5].starts_with(&format!(
                 "insert \"Running {} (selector `{}')",

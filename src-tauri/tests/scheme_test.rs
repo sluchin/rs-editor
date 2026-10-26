@@ -405,7 +405,19 @@ fn test_define_command_and_global_set_key() {
     );
     assert_eq!(
         ev.commands(),
-        vec!["ert", "find-file", "describe-function", "say-hi", "shout"]
+        vec![
+            "ert",
+            "switch-to-buffer",
+            "find-file",
+            "find-alternate-file",
+            "insert-file",
+            "write-file",
+            "save-buffer",
+            "save-some-buffers",
+            "describe-function",
+            "say-hi",
+            "shout"
+        ]
     );
     assert_eq!(ev.run_command("say-hi", &editor).unwrap(), "nil");
     assert_eq!(editor.text(), "hi!");

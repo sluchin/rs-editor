@@ -12,6 +12,53 @@ msgid ""
 "Interactively, read FILENAME in the minibuffer with file name completion."
 msgstr ""
 
+#: lisp/files.scm
+msgctxt "function:find-alternate-file"
+msgid ""
+"Find file FILENAME, select its buffer, and kill the previous buffer.\n"
+"If the current buffer visits a file and is modified, ask before killing it.\n"
+"Interactively, read FILENAME in the minibuffer; the initial input is the current file."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:insert-file"
+msgid ""
+"Insert the contents of file FILENAME at point.\n"
+"Point stays before the inserted text.\n"
+"Interactively, read FILENAME in the minibuffer with file name completion."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:files--write-file"
+msgid ""
+"Write the current buffer into FILENAME, and make the buffer visit it.\n"
+"Ask before overwriting an existing file other than the visited one."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:write-file"
+msgid ""
+"Write the current buffer into file FILENAME, and make the buffer visit it.\n"
+"The buffer is renamed after the file. Ask before overwriting another existing file.\n"
+"Interactively, read FILENAME in the minibuffer with file name completion."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:save-buffer"
+msgid ""
+"Save the current buffer in its file, if it is modified.\n"
+"If the buffer visits no file, read a file name in the minibuffer and write it there.\n"
+"The first save after visiting a file keeps the old file as a backup (FILE~)."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:save-some-buffers"
+msgid ""
+"Save some modified file-visiting buffers, asking about each one.\n"
+"Answer y or SPC to save it, n or DEL to skip it, ! to save it and all the rest,\n"
+". to save it and stop, and q or RET to stop."
+msgstr ""
+
 #: lisp/help-fns.scm
 msgctxt "function:help-language-from-locale"
 msgid ""
@@ -3033,4 +3080,41 @@ msgstr ""
 #: lisp/org.scm
 msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:y-or-n-p"
+msgid ""
+"Ask the user a y or n question, and return #t if the answer is y.\n"
+"PROMPT is followed by \"(y or n) \". y or SPC means yes, and n or DEL means no.\n"
+"Other keys ask again."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:yes-or-no-p"
+msgid ""
+"Ask the user a yes or no question, and return #t if the answer is yes.\n"
+"PROMPT is followed by \"(yes or no) \". The answer must be typed in full, and ended with RET.\n"
+"Other answers ask again."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:file-name-directory"
+msgid ""
+"Return the directory part of FILENAME, up to and including the last /.\n"
+"Return #f if FILENAME has no /."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--other-buffer"
+msgid "Return the name of a buffer other than the current one, or #f if there is none."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:switch-to-buffer"
+msgid ""
+"Display buffer BUFFER-OR-NAME in the selected window.\n"
+"If there is no buffer named BUFFER-OR-NAME, create one.\n"
+"Interactively, read the name in the minibuffer with completion;\n"
+"the default is another buffer."
 msgstr ""

@@ -53,7 +53,9 @@
 │   └── Cargo.toml           # Rust 依存関係
 ├── lisp/howm.scm             # howm の Scheme 版
 ├── lisp/org.scm              # Org mode の Scheme 版
-├── lisp/files.scm            # 起動のときに読む Lisp (find-file など)
+├── lisp/subr.scm             # 起動のときに読む Lisp (y-or-n-p など)
+├── lisp/window.scm           # 起動のときに読む Lisp (switch-to-buffer)
+├── lisp/files.scm            # 起動のときに読む Lisp (find-file, save-buffer など)
 ├── lisp/help-fns.scm         # 起動のときに読む Lisp (C-h f)
 ├── po/                       # docstring の翻訳 (gettext の PO 形式. ja.po)
 ├── tools/emacs-commands/     # Emacs の組み込みと基本のコマンドと, 既定のキーの一覧 (FUNCTIONS.md) を作る

@@ -106,11 +106,13 @@ pub const NAMES: &[&str] = &[
     "command-execute",
     "global-set-key",
     "local-set-key",
-    "switch-to-buffer",
+    "pop-to-buffer-same-window",
     "buffer-file-name",
     "set-buffer-modified-p",
     "read-string",
     "read-file-name",
+    "read-key",
+    "files--write-buffer",
     "buffer-list",
     "buffer-modified-p",
     "kill-buffer",
@@ -560,7 +562,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }
             _ => Err("local-set-key expects a key and a command name".to_string()),
         },
-        "switch-to-buffer" | "set-background-color" | "set-foreground-color" => {
+        "pop-to-buffer-same-window" | "set-background-color" | "set-foreground-color" => {
             let [text] = fixed::<1>(name, args)?;
             string(name, &text)?;
             machine.host.call(name, vec![text])?;
@@ -697,6 +699,29 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 Some(default) if input.is_empty() || input == dir => default,
                 _ => input,
             }))
+        }
+        "read-key" => {
+            // (read-key [PROMPT]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの)
+            if args.len() > 1 {
+                return Err("read-key expects 0 or 1 arguments".to_string());
+            }
+            let prompt = optional_string(name, args.first())?;
+            Ok(Value::String(read_input(machine, name, vec![prompt])?))
+        }
+        "files--write-buffer" => {
+            // (files--write-buffer FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く
+            let (path, buffer) = match args.as_slice() {
+                [path] => (path, None),
+                [path, buffer] => (path, Some(string(name, buffer)?.to_string())),
+                _ => return Err("files--write-buffer expects 1 or 2 arguments".to_string()),
+            };
+            let path = machine.expand_file_name(string(name, path)?);
+            let args = std::iter::once(path)
+                .chain(buffer)
+                .map(Value::String)
+                .collect();
+            machine.host.call(name, args)?;
+            Ok(Value::Nil)
         }
         "set-frame-font" => {
             let [font] = fixed::<1>(name, args)?;

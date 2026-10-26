@@ -24,7 +24,13 @@ fn test_eval_code_returns_the_result_or_the_error() {
             // M-x ert と, 起動のときに読む Lisp (lisp/files.scm など) のコマンドとキーは, 始めからある
             commands: vec![
                 "ert".to_string(),
+                "switch-to-buffer".to_string(),
                 "find-file".to_string(),
+                "find-alternate-file".to_string(),
+                "insert-file".to_string(),
+                "write-file".to_string(),
+                "save-buffer".to_string(),
+                "save-some-buffers".to_string(),
                 "describe-function".to_string()
             ],
             keys: vec![KeyBinding {
@@ -90,7 +96,18 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
     assert_eq!(defined.result, "hi\nhi");
     assert_eq!(
         defined.commands,
-        vec!["ert", "find-file", "describe-function", "hi"]
+        vec![
+            "ert",
+            "switch-to-buffer",
+            "find-file",
+            "find-alternate-file",
+            "insert-file",
+            "write-file",
+            "save-buffer",
+            "save-some-buffers",
+            "describe-function",
+            "hi"
+        ]
     );
     assert_eq!(
         defined.keys,
@@ -146,7 +163,18 @@ fn test_load_init_file() {
     assert_eq!(loaded.error, None);
     assert_eq!(
         loaded.commands,
-        vec!["ert", "find-file", "describe-function", "hello"]
+        vec![
+            "ert",
+            "switch-to-buffer",
+            "find-file",
+            "find-alternate-file",
+            "insert-file",
+            "write-file",
+            "save-buffer",
+            "save-some-buffers",
+            "describe-function",
+            "hello"
+        ]
     );
     // 読んだファイルは, user-init-file に入れる
     assert_eq!(

@@ -239,10 +239,16 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 どのコマンドを, どこで書いているかは, FUNCTIONS.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
 
 - [x] 起動のときに読む, 既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`, `files.el` などに当たる) を決める (`lisp/` に置き, アプリに入れる)。
-      `src-tauri/src/scheme/loadup.rs` に並べたファイル (`lisp/files.scm`, `lisp/help-fns.scm`) を, ビルドのときに埋め込み, 評価器を作るときに評価する。
+      `src-tauri/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`, `lisp/window.scm`, `lisp/files.scm`, `lisp/help-fns.scm`) を, ビルドのときに埋め込み, 評価器を作るときに評価する。
       コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
-- [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`. `read-file-name`, `find-file-noselect`, `switch-to-buffer` を使う)。
-- [ ] 続けて移すもの: `save-buffer`, `write-file`, `switch-to-buffer`, `kill-buffer`, `insert-file`, `find-alternate-file` など (ファイルとバッファ)。
+- [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`. `read-file-name`, `find-file-noselect`, `pop-to-buffer-same-window` を使う)。
+- [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
+      `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
+      問いの `y-or-n-p`, `yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と,
+      `files--write-buffer` (バッファをファイルに書く. バックアップと自動保存のファイルは画面が受け持つ) を足した。
+      バッファを出す組み込みは, Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
+- [ ] 続けて移すもの: `revert-buffer` (dired のときは一覧を作り直すので, 分ける), `recover-this-file`, `save-buffers-kill-terminal` など。
+      `kill-buffer` は, Emacs で C の関数なので, 組み込みのまま残す。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル, 文字, 行, マーク, 窓, バッファなど. Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を, Lisp に移す。移したら, TypeScript の方は消す。
       速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。

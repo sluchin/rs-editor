@@ -104,7 +104,10 @@ impl Bridge {
             args: args.iter().map(to_json).collect(),
         });
         // ミニバッファの入力は, 人を待つ
-        let timeout = if matches!(op, "read-string" | "read-file-name" | "completing-read") {
+        let timeout = if matches!(
+            op,
+            "read-string" | "read-file-name" | "completing-read" | "read-key"
+        ) {
             READ_TIMEOUT
         } else {
             self.timeout

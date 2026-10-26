@@ -39,9 +39,9 @@ pub struct FakeEditor {
     pub current: Mutex<String>,
     /// 最後のメッセージ.
     pub message: Mutex<String>,
-    /// read-string と completing-read の答え (前から使う).
+    /// read-string, read-file-name, read-key と completing-read の答え (前から使う).
     pub answers: Mutex<Vec<String>>,
-    /// read-string と completing-read で出した問い.
+    /// read-string, read-file-name, read-key と completing-read で出した問い.
     pub prompts: Mutex<Vec<String>>,
     /// 最後の completing-read の候補.
     pub completions: Mutex<Vec<String>>,
@@ -384,10 +384,10 @@ impl Host for FakeEditor {
                 Value::Nil
             }
             "find-file-noselect" => Value::String(self.visit(&text(&args[0]))),
-            // 画面のキーとコマンド (save-buffer だけ. find-file は Lisp と重なる)
+            // 画面のキーとコマンド (list-buffers だけ. find-file は Lisp と重なる)
             "where-is-internal" => Value::List(
                 match text(&args[0]).as_str() {
-                    "save-buffer" => vec!["C-x C-s", "<f2>"],
+                    "list-buffers" => vec!["C-x C-b"],
                     "find-file" => vec!["C-x C-f"],
                     _ => vec![],
                 }
@@ -396,7 +396,7 @@ impl Host for FakeEditor {
                 .collect(),
             ),
             "editor-command-names" => Value::List(
-                ["save-buffer", "find-file"]
+                ["list-buffers", "find-file"]
                     .into_iter()
                     .map(|name| Value::String(name.to_string()))
                     .collect(),
@@ -457,7 +457,7 @@ impl Host for FakeEditor {
                 *self.message.lock().unwrap() = text(&args[0]);
                 Value::Nil
             }
-            "switch-to-buffer" => {
+            "pop-to-buffer-same-window" => {
                 self.show(&text(&args[0]), || FakeBuffer {
                     point: 1,
                     ..Default::default()
@@ -474,19 +474,24 @@ impl Host for FakeEditor {
                 self.with_buffer(|b| b.keys.insert(key, command));
                 Value::Nil
             }
-            "read-string" | "read-file-name" => {
+            "files--write-buffer" => {
+                // バッファ (省くと, 今のバッファ) を書いて, そのファイルのバッファにする
+                let path = text(&args[0]);
+                let name = self.named(&args[1..]);
+                let mut buffers = self.buffers.lock().unwrap();
+                let buffer = buffers.get_mut(&name).unwrap();
+                fs::write(&path, buffer.text.iter().collect::<String>())
+                    .map_err(|e| e.to_string())?;
+                buffer.file = Some(path.clone());
+                buffer.modified = false;
+                *self.message.lock().unwrap() = format!("Wrote {}", path);
+                Value::Nil
+            }
+            "read-string" | "read-file-name" | "read-key" => {
                 self.prompts.lock().unwrap().push(text(&args[0]));
                 Value::String(self.answers.lock().unwrap().remove(0))
             }
             "command" => match self.run_command(&args[0]).as_str() {
-                "save-buffer" => {
-                    let buffer = self.buffer();
-                    if let Some(file) = &buffer.file {
-                        fs::write(file, buffer.text.iter().collect::<String>()).unwrap();
-                    }
-                    self.with_buffer(|b| b.modified = false);
-                    Value::Boolean(true)
-                }
                 "indent-for-tab-command" | "forward-word" | "backward-word" => Value::Boolean(true),
                 "newline" => return self.call("insert", vec![Value::String("\n".to_string())]),
                 "next-line" | "previous-line" => {

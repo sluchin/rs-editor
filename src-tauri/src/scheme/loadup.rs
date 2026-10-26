@@ -2,6 +2,8 @@
 
 /// 読むファイル (`lisp/` からのパスと, 中身).
 pub const FILES: &[(&str, &str)] = &[
+    ("lisp/subr.scm", include_str!("../../../lisp/subr.scm")),
+    ("lisp/window.scm", include_str!("../../../lisp/window.scm")),
     ("lisp/files.scm", include_str!("../../../lisp/files.scm")),
     (
         "lisp/help-fns.scm",

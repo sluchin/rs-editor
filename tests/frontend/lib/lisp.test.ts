@@ -78,7 +78,7 @@ function fakeHost(text: string) {
     unhighlightRegexp: (regexp) => {
       state.calls.push(`unhighlight ${regexp}`)
     },
-    setModified: (modified) => {
+    setModified: async (modified) => {
       state.modified = modified
     },
     localSetKey: (key, command) => {
@@ -86,6 +86,10 @@ function fakeHost(text: string) {
     },
     readString: async (prompt, initial) => `${prompt}${initial}`,
     readFileName: async (prompt, dir) => `${prompt}|${dir}`,
+    readKey: async (prompt) => `${prompt}y`,
+    writeBuffer: async (path, name) => {
+      state.calls.push(`write ${path} ${name}`)
+    },
     whereIs: (command) => (command === 'find-file' ? ['C-x C-f'] : []),
     editorCommandNames: () => ['save-buffer'],
     setBackgroundColor: (color) => {
@@ -170,17 +174,21 @@ describe('lisp', () => {
   it('ファイルとバッファを出し, 入力を受け, 色とフォントを変える', async () => {
     const { host, state } = fakeHost('')
     const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
-    expect(await run('switch-to-buffer', '*howm*')).toBeNull()
+    expect(await run('pop-to-buffer-same-window', '*howm*')).toBeNull()
     expect(run('buffer-file-name')).toBeNull()
-    expect(run('set-buffer-modified-p', false)).toBeNull()
+    expect(await run('set-buffer-modified-p', false)).toBeNull()
     expect(state.modified).toBe(false)
-    expect(run('set-buffer-modified-p', true)).toBeNull()
+    expect(await run('set-buffer-modified-p', true)).toBeNull()
     expect(state.modified).toBe(true)
     expect(run('local-set-key', 'c', 'howm-create')).toBeNull()
     expect(await run('read-string', 'Search: ', 'x')).toBe('Search: x')
     expect(await run('read-string', 'Name: ')).toBe('Name: ')
     expect(await run('read-file-name', 'Find file: ', '/d/')).toBe('Find file: |/d/')
     expect(await run('read-file-name', 'Find file: ')).toBe('Find file: |')
+    expect(await run('read-key', 'Save? ')).toBe('Save? y')
+    expect(await run('read-key')).toBe('y')
+    expect(await run('files--write-buffer', '/a', 'a')).toBeNull()
+    expect(await run('files--write-buffer', '/b')).toBeNull()
     expect(run('where-is-internal', 'find-file')).toEqual(['C-x C-f'])
     expect(run('editor-command-names')).toEqual(['save-buffer'])
     expect(run('set-background-color', 'black')).toBeNull()
@@ -190,6 +198,8 @@ describe('lisp', () => {
     expect(state.calls).toEqual([
       'switch-to-buffer *howm*',
       'local-set-key c howm-create',
+      'write /a a',
+      'write /b undefined',
       'background black',
       'foreground white',
       'font Mono 14',

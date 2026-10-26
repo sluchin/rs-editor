@@ -248,7 +248,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `x-menu-bar-open-internal` |  |  |  |  |
 | `x-print-frames-dialog` |  |  |  |  |
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 93 個: Lisp 2 個, TypeScript 91 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 93 個: Lisp 8 個, TypeScript 85 個)
 
 | コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -321,22 +321,22 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `yank` | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | TypeScript (`src/lib/emacs.ts`) |
 | `yank-pop` | simple | `M-y` | 実装済み | `M-y` | TypeScript (`src/lib/emacs.ts`) |
 | `zap-to-char` | simple | `M-z` | 実装済み | `M-z` | TypeScript (`src/lib/emacs.ts`) |
-| `find-alternate-file` | files | `C-x C-v` | 実装済み | `C-x C-v` | TypeScript (`src/hooks/useFiles.ts`) |
+| `find-alternate-file` | files | `C-x C-v` | 実装済み | `C-x C-v` | Lisp (`lisp/files.scm`) |
 | `find-file` | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | Lisp (`lisp/files.scm`) |
 | `find-file-other-frame` | files | `C-x 5 f`, `C-x 5 C-f` |  |  |  |
 | `find-file-other-window` | files | `C-x 4 f`, `C-x 4 C-f` |  |  |  |
 | `find-file-read-only` | files | `C-x C-r` |  |  |  |
 | `find-file-read-only-other-frame` | files | `C-x 5 r` |  |  |  |
 | `find-file-read-only-other-window` | files | `C-x 4 r` |  |  |  |
-| `insert-file` | files | `C-x i` | 実装済み | `C-x i` | TypeScript (`src/hooks/useFiles.ts`) |
+| `insert-file` | files | `C-x i` | 実装済み | `C-x i` | Lisp (`lisp/files.scm`) |
 | `list-directory` | files | `C-x C-d` |  |  |  |
 | `not-modified` | files | `M-~` |  |  |  |
 | `rename-uniquely` | files | `C-x x u` |  |  |  |
 | `revert-buffer-quick` | files | `C-x x g` |  |  |  |
-| `save-buffer` | files | `C-x C-s` | 実装済み | `C-x C-s` | TypeScript (`src/hooks/useFiles.ts`) |
+| `save-buffer` | files | `C-x C-s` | 実装済み | `C-x C-s` | Lisp (`lisp/files.scm`) |
 | `save-buffers-kill-terminal` | files | `C-x C-c` | 実装済み | `C-x C-c` | TypeScript (`src/App.tsx`) |
-| `save-some-buffers` | files | `C-x s` | 実装済み | `C-x s` | TypeScript (`src/hooks/useFiles.ts`) |
-| `write-file` | files | `C-x C-w` | 実装済み | `C-x C-w` | TypeScript (`src/hooks/useFiles.ts`) |
+| `save-some-buffers` | files | `C-x s` | 実装済み | `C-x s` | Lisp (`lisp/files.scm`) |
+| `write-file` | files | `C-x C-w` | 実装済み | `C-x C-w` | Lisp (`lisp/files.scm`) |
 | `balance-windows` | window | `C-x +` |  |  |  |
 | `beginning-of-buffer-other-window` | window | `M-<home>`, `M-<begin>`, `ESC <home>`, `ESC <begin>` |  |  |  |
 | `delete-other-windows` | window | `C-x 1` | 実装済み | `C-x 1` | TypeScript (`src/hooks/useBuffers.ts`) |
@@ -369,7 +369,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `split-root-window-right` | window | `C-x w 3` |  |  |  |
 | `split-window-below` | window | `C-x 2` | 実装済み | `C-x 2` | TypeScript (`src/hooks/useBuffers.ts`) |
 | `split-window-right` | window | `C-x 3` | 実装済み | `C-x 3` | TypeScript (`src/hooks/useBuffers.ts`) |
-| `switch-to-buffer` | window | `C-x b` | 実装済み | `C-x b` | TypeScript (`src/App.tsx`) |
+| `switch-to-buffer` | window | `C-x b` | 実装済み | `C-x b` | Lisp (`lisp/window.scm`) |
 | `switch-to-buffer-other-frame` | window | `C-x 5 b` |  |  |  |
 | `switch-to-buffer-other-window` | window | `C-x 4 b` |  |  |  |
 | `toggle-window-dedicated` | window | `C-x w d` |  |  |  |

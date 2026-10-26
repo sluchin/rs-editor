@@ -29,9 +29,13 @@ import { type CommandSet, completeFile } from './useMinibuffer'
  * Lisp の評価と, Lisp で作ったコマンドを作ります.
  *
  * @param ctx - ミニバッファと, バッファとウィンドウ.
- * @returns コマンドと, Lisp で割り当てたキーと, やめるときの関数.
+ * @param saveBuffer - バッファを, ファイルに書く関数 (書けなければ, 失敗).
+ * @returns コマンドと, Lisp で割り当てたキーと, 1 つのキーで答える問いと, やめるときの関数.
  */
-export function useLisp(ctx: AppContext) {
+export function useLisp(
+  ctx: AppContext,
+  saveBuffer: (buffer: Buffer, path: string) => Promise<void>,
+) {
   const {
     buffers,
     setBuffers,
@@ -70,6 +74,8 @@ export function useLisp(ctx: AppContext) {
   const latestBuffers = useRef(buffers)
   // Lisp が待っている, ミニバッファの入力 (read-string)
   const lispInput = useRef<{ resolve: (value: string) => void; reject: (err: Error) => void }>(null)
+  // Lisp が待っている, 1 つのキーの答え (read-key)
+  const lispKey = useRef<{ resolve: (key: string) => void; reject: (err: Error) => void }>(null)
 
   /**
    * 評価の結果を出して, Lisp で作ったコマンドと, 割り当てたキーを覚えます.
@@ -82,7 +88,7 @@ export function useLisp(ctx: AppContext) {
     setLispKeys(response.keys)
     setLispHooks(response.hooks ?? [])
     if (response.error === 'Quit') {
-      // read-string を C-g でやめた
+      // read-string と read-key を C-g でやめた
       showMessage('Quit')
     } else if (response.error) {
       showMessage(`Error: ${response.error}`)
@@ -268,7 +274,11 @@ export function useLisp(ctx: AppContext) {
         ),
       outlineFlagRegion: (from, to, hide) => handle().foldRegion(from, to, hide),
       invisible: (pos) => handle().invisible(pos),
-      setModified: (modified) => updateCurrentBuffer({ modified }),
+      setModified: (modified) => {
+        if (currentBuffer.modified === modified) return Promise.resolve()
+        updateCurrentBuffer({ modified })
+        return waitRender()
+      },
       localSetKey: (key, command) =>
         setBuffers((prev) =>
           prev.map((b) =>
@@ -299,6 +309,15 @@ export function useLisp(ctx: AppContext) {
             complete: completeFile,
           })
         }),
+      readKey: (prompt) =>
+        new Promise((resolve, reject) => {
+          lispKey.current = { resolve, reject }
+          setMinibufferState({ mode: 'query', prompt })
+        }),
+      writeBuffer: async (path, name) => {
+        await saveBuffer(bufferNamed(name), path)
+        await waitRender()
+      },
       setBackgroundColor: (color) => setBackgroundColor(root, color),
       setForegroundColor: (color) => setForegroundColor(root, color),
       setFont: (family, size) => setFont(root, family, size),
@@ -359,11 +378,28 @@ export function useLisp(ctx: AppContext) {
   }
 
   /**
-   * Lisp が待っている入力 (read-string) を, やめます.
+   * Lisp が待っている, 1 つのキーの答え (read-key) を返します.
+   *
+   * @param key - 押したキー.
+   * @returns Lisp が待っていれば `true` (ほかの問いなら `false`).
+   */
+  const answerQuery = (key: string): boolean => {
+    const waiting = lispKey.current
+    if (!waiting) return false
+    lispKey.current = null
+    showMessage('')
+    waiting.resolve(key)
+    return true
+  }
+
+  /**
+   * Lisp が待っている入力 (read-string, read-key) を, やめます.
    */
   const cancel = () => {
     lispInput.current?.reject(new Error('Quit'))
     lispInput.current = null
+    lispKey.current?.reject(new Error('Quit'))
+    lispKey.current = null
   }
 
   // Lisp で作ったコマンドは, 同じ名前のコマンドより先に使う (コマンドを合わせるときは, 最後に置く)
@@ -399,5 +435,5 @@ export function useLisp(ctx: AppContext) {
     screenCommandNames.current = names
   }
 
-  return { commands, lispKeys, cancel, setScreenCommandNames }
+  return { commands, lispKeys, answerQuery, cancel, setScreenCommandNames }
 }

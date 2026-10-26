@@ -66,7 +66,7 @@ function App() {
   const files = useFiles(ctx, directories.listDirectoryInto)
   const search = useSearch(ctx)
   const bookmarks = useBookmarks(ctx)
-  const lisp = useLisp(ctx)
+  const lisp = useLisp(ctx, files.saveBuffer)
   const { lispKeys } = lisp
   // バッファの一覧 (C-x C-b) を出しているか
   const [showBufferList, setShowBufferList] = useState(false)
@@ -92,20 +92,6 @@ function App() {
       void unlisten.then((f) => f())
     }
   }, [setPendingAction, setMinibufferState])
-
-  /**
-   * 出すバッファの名前を, ミニバッファで聞きます (C-x b).
-   */
-  const handleSwitchBuffer = () => {
-    const bufferNames = buffers.map((b) => b.name).join(', ')
-    setPendingAction('switch-buffer')
-    setMinibufferState({
-      mode: 'input',
-      prompt: `Switch to buffer (${bufferNames}): `,
-      input: '',
-      completions: buffers.map((b) => b.name),
-    })
-  }
 
   /**
    * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消してよいか聞きます.
@@ -193,7 +179,6 @@ function App() {
   // 画面のコマンドのうち, ここで受け持つもの
   const appCommands: CommandSet = {
     actions: {
-      'switch-to-buffer': handleSwitchBuffer,
       'kill-buffer': handleKillBuffer,
       'list-buffers': () => setShowBufferList(true),
       'describe-bindings': handleDescribeBindings,
@@ -205,15 +190,6 @@ function App() {
       'abort-recursive-edit': () => abortMinibuffer('No recursive edit is in progress'),
     },
     submit: {
-      'switch-buffer': (value) => {
-        const targetBuffer = buffers.find((b) => b.name === value.trim())
-        if (targetBuffer) {
-          setCurrentBufferId(targetBuffer.id)
-          showMessage('')
-        } else {
-          showMessage(`No buffer named "${value}"`)
-        }
-      },
       'kill-buffer': (value) => {
         if (value.trim() === 'yes') killCurrentBuffer()
         showMessage('')
@@ -305,12 +281,12 @@ function App() {
   }
 
   /**
-   * 1 つのキーで答える問い (C-x s, ファイルを置き換えてよいか, query-replace) に答えます.
+   * 1 つのキーで答える問い (Lisp の read-key, query-replace) に答えます.
    *
    * @param key - 押したキー.
    */
   const handleQueryKey = (key: string) => {
-    if (!files.answerQuery(key)) search.answerQuery(key)
+    if (!lisp.answerQuery(key)) search.answerQuery(key)
   }
 
   /**
@@ -318,7 +294,6 @@ function App() {
    */
   const handleMinibufferCancel = () => {
     setPendingAction(null)
-    files.cancel()
     search.cancel(minibufferState)
     lisp.cancel()
     showMessage('Quit')

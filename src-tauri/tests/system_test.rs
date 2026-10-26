@@ -595,8 +595,8 @@ fn test_editor_settings() {
                 "find-file-noselect {:?}",
                 home.join("x.txt").to_string_lossy()
             ),
-            "switch-to-buffer \"/home/a.txt\"".to_string(),
-            "switch-to-buffer \"*howm*\"".to_string(),
+            "pop-to-buffer-same-window \"/home/a.txt\"".to_string(),
+            "pop-to-buffer-same-window \"*howm*\"".to_string(),
             "buffer-file-name".to_string(),
             "set-buffer-modified-p #f".to_string(),
             "read-string \"Search: \" \"\"".to_string(),
@@ -647,7 +647,10 @@ fn test_editor_settings() {
         ("(read-string)", "read-string expects 1 to 5 arguments"),
         ("(read-string 1)", "read-string expects strings"),
         ("(read-string \"a\" 1)", "read-string expects strings"),
-        ("(switch-to-buffer 1)", "switch-to-buffer expects strings"),
+        (
+            "(pop-to-buffer-same-window 1)",
+            "pop-to-buffer-same-window expects strings",
+        ),
         ("(find-file 1)", "find-file-noselect expects strings"),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
@@ -995,7 +998,7 @@ fn test_read_file_name() {
         vec![
             "read-file-name \"Find file: \" \"\"",
             "find-file-noselect \"/home/b.txt\"",
-            "switch-to-buffer \"/home/b.txt\"",
+            "pop-to-buffer-same-window \"/home/b.txt\"",
         ]
     );
     assert_eq!(
