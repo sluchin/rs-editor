@@ -1,6 +1,9 @@
 //! Scheme の値 ([`Value`]) と, `lambda` で作った手続き ([`Lambda`]).
 
+use std::cell::UnsafeCell;
 use std::fmt;
+use std::mem::MaybeUninit;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use crate::scheme::env::Env;
@@ -19,11 +22,197 @@ pub enum Value {
     /// 文字列.
     String(String),
     /// リスト (ドット対は扱わない). 写すときは, 要素を写さず, 参照を増やすだけ (評価のたびに, 式の木を写さないように).
-    List(Arc<[Value]>),
+    List(List),
     /// 組み込みの手続き (名前で引く).
     Function(String),
     /// `lambda` で作った手続き.
     Lambda(Arc<Lambda>),
+}
+
+/// リストの要素を入れる配列 (リストどうしで共有する). 前に空きを持ち, `cons` は, 空きに要素を置きます.
+///
+/// - `front` より後ろのマスは, 値が入っていて, もう変えない.
+/// - `front` より前のマスは, 空き. `cons` は, 比較交換で `front` を 1 つ前へ動かして, 空きを 1 マス取ってから, 値を入れる.
+///   取れるのは, リストの始めが `front` の所にあるとき (同じ配列に, まだ誰も前へ足していないとき) だけ.
+struct Block {
+    /// マス.
+    slots: Box<[UnsafeCell<MaybeUninit<Value>>]>,
+    /// 値の入った, 一番前のマスの位置.
+    front: AtomicUsize,
+}
+
+// SAFETY: 値の入ったマスは変えない (読むだけ). 空きのマスに書くのは, 比較交換でそのマスを取った 1 人だけで,
+// そのマスを含むリストは, 書いた後で作る. Value は Send と Sync.
+unsafe impl Send for Block {}
+// SAFETY: 上と同じ.
+unsafe impl Sync for Block {}
+
+impl Block {
+    /// 要素から, 前に空きを持つ配列を作ります.
+    ///
+    /// # Arguments
+    ///
+    /// * `spare` - 前の空きの数.
+    /// * `items` - 要素.
+    ///
+    /// # Returns
+    ///
+    /// 配列.
+    fn new(spare: usize, items: impl IntoIterator<Item = Value>) -> Block {
+        let slots: Box<[_]> = std::iter::repeat_with(|| UnsafeCell::new(MaybeUninit::uninit()))
+            .take(spare)
+            .chain(
+                items
+                    .into_iter()
+                    .map(|v| UnsafeCell::new(MaybeUninit::new(v))),
+            )
+            .collect();
+        Block {
+            slots,
+            front: AtomicUsize::new(spare),
+        }
+    }
+}
+
+impl Drop for Block {
+    fn drop(&mut self) {
+        let front = *self.front.get_mut();
+        for slot in &mut self.slots[front..] {
+            // SAFETY: front より後ろのマスには, 値が入っている
+            unsafe { slot.get_mut().assume_init_drop() };
+        }
+    }
+}
+
+/// リストの要素. 要素の配列を共有し, その中の始めの位置からを, リストとして見せます.
+/// 写すとき, `cdr` (始めの要素を除いたリスト) と, `cons` (前に要素を足したリスト) は,
+/// 配列を写さず, 参照を増やすだけです (`cons` は, ならして). 要素は, スライス (`&[Value]`) として読めます.
+#[derive(Clone)]
+pub struct List {
+    /// 要素の配列 (ほかのリストと共有する).
+    block: Arc<Block>,
+    /// リストの始めの要素の, 配列での位置.
+    start: usize,
+}
+
+impl List {
+    /// 始めの要素を除いたリスト (`cdr`) を返します. 配列は写しません.
+    ///
+    /// # Returns
+    ///
+    /// 残りのリスト. 空のリストなら, 空のリスト.
+    pub fn tail(&self) -> List {
+        self.drop_front(1)
+    }
+
+    /// 始めの `n` 個の要素を除いたリストを返します. 配列は写しません.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - 除く数 (長さを超えたら, 空のリスト).
+    ///
+    /// # Returns
+    ///
+    /// 残りのリスト.
+    pub fn drop_front(&self, n: usize) -> List {
+        List {
+            block: self.block.clone(),
+            start: (self.start + n).min(self.block.slots.len()),
+        }
+    }
+
+    /// 前に要素を足したリスト (`cons`) を返します. 配列の前の空きを取れれば, 配列は写しません.
+    /// 取れなければ (空きが無いか, 同じ配列に, 誰かが前へ足していれば), 長さと同じだけの空きを持つ配列に写します.
+    ///
+    /// # Arguments
+    ///
+    /// * `head` - 足す要素.
+    ///
+    /// # Returns
+    ///
+    /// 足したリスト.
+    pub fn cons(&self, head: Value) -> List {
+        let block = &self.block;
+        if self.start > 0
+            && block
+                .front
+                .compare_exchange(
+                    self.start,
+                    self.start - 1,
+                    Ordering::AcqRel,
+                    Ordering::Acquire,
+                )
+                .is_ok()
+        {
+            // SAFETY: 比較交換で, このマスを取った (ほかには, 誰も書かず, 読まない)
+            unsafe { (*block.slots[self.start - 1].get()).write(head) };
+            return List {
+                block: block.clone(),
+                start: self.start - 1,
+            };
+        }
+        let spare = self.len().max(MIN_SPARE);
+        List {
+            block: Arc::new(Block::new(
+                spare,
+                std::iter::once(head).chain(self.iter().cloned()),
+            )),
+            start: spare,
+        }
+    }
+}
+
+/// `cons` で写すときに, 前に取っておく空きの, 少なくともの数.
+const MIN_SPARE: usize = 4;
+
+impl std::ops::Deref for List {
+    type Target = [Value];
+
+    fn deref(&self) -> &[Value] {
+        let slots = &self.block.slots[self.start..];
+        // SAFETY: start より後ろのマスには, 値が入っていて, もう変えない.
+        // UnsafeCell<MaybeUninit<Value>> と Value は, 同じ並び
+        unsafe { std::slice::from_raw_parts(slots.as_ptr().cast::<Value>(), slots.len()) }
+    }
+}
+
+impl PartialEq for List {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+
+impl fmt::Debug for List {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl From<Vec<Value>> for List {
+    fn from(items: Vec<Value>) -> Self {
+        items.into_iter().collect()
+    }
+}
+
+impl From<&[Value]> for List {
+    fn from(items: &[Value]) -> Self {
+        items.iter().cloned().collect()
+    }
+}
+
+impl<const N: usize> From<[Value; N]> for List {
+    fn from(items: [Value; N]) -> Self {
+        items.into_iter().collect()
+    }
+}
+
+impl FromIterator<Value> for List {
+    fn from_iter<I: IntoIterator<Item = Value>>(iter: I) -> Self {
+        List {
+            block: Arc::new(Block::new(0, iter)),
+            start: 0,
+        }
+    }
 }
 
 /// `lambda` で作った手続き.
@@ -126,6 +315,101 @@ impl PartialEq for Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 数のリストを作る.
+    fn numbers(items: &[f64]) -> List {
+        items.iter().map(|n| Value::Number(*n)).collect()
+    }
+
+    #[test]
+    fn debug_shows_the_list_elements() {
+        assert_eq!(
+            format!("{:?}", Value::List(numbers(&[1.0, 2.0]).tail())),
+            "List([Number(2.0)])"
+        );
+    }
+
+    #[test]
+    fn values_are_send_and_sync() {
+        fn assert<T: Send + Sync>() {}
+        assert::<Value>();
+    }
+
+    #[test]
+    fn cons_shares_the_block_only_once() {
+        let a = numbers(&[1.0, 2.0]);
+        // 空きが無ければ写す. 写した配列は, 前に空きを持つ
+        let b = a.cons(Value::Number(0.0));
+        assert!(!Arc::ptr_eq(&a.block, &b.block));
+        // 前へ足していくと, 同じ配列の空きを使う
+        let c = b.cons(Value::Number(-1.0));
+        assert!(Arc::ptr_eq(&b.block, &c.block));
+        // 同じリストに, もう一度足すと (空きは取られている), 写す
+        let d = b.cons(Value::Number(9.0));
+        assert!(!Arc::ptr_eq(&b.block, &d.block));
+        // cdr で作ったリストの前は, 取られているので, 写す
+        let e = c.tail().cons(Value::Number(7.0));
+        assert!(!Arc::ptr_eq(&c.block, &e.block));
+        assert_eq!(*a, *numbers(&[1.0, 2.0]));
+        assert_eq!(*b, *numbers(&[0.0, 1.0, 2.0]));
+        assert_eq!(*c, *numbers(&[-1.0, 0.0, 1.0, 2.0]));
+        assert_eq!(*d, *numbers(&[9.0, 0.0, 1.0, 2.0]));
+        assert_eq!(*e, *numbers(&[7.0, 0.0, 1.0, 2.0]));
+        // 空きを使い切ったら, また写す
+        let mut list = List::from(vec![]);
+        for i in 0..100 {
+            list = list.cons(Value::Number(i as f64));
+        }
+        assert_eq!(list.len(), 100);
+        assert_eq!(list[0], Value::Number(99.0));
+        assert_eq!(list[99], Value::Number(0.0));
+        assert_eq!(list.drop_front(200).len(), 0);
+    }
+
+    #[test]
+    fn cons_from_threads_claims_the_slot_once() {
+        let base = numbers(&[1.0]).cons(Value::Number(0.0));
+        let results: Vec<List> = std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..8)
+                .map(|i| {
+                    let base = base.clone();
+                    scope.spawn(move || base.cons(Value::Number(10.0 + i as f64)))
+                })
+                .collect();
+            handles.into_iter().map(|h| h.join().unwrap()).collect()
+        });
+        for (i, list) in results.iter().enumerate() {
+            assert_eq!(**list, *numbers(&[10.0 + i as f64, 0.0, 1.0]));
+        }
+        // 同じ配列の空きを取れたのは, 1 つだけ
+        let shared = results
+            .iter()
+            .filter(|l| Arc::ptr_eq(&l.block, &base.block))
+            .count();
+        assert_eq!(shared, 1);
+    }
+
+    #[test]
+    fn lists_drop_each_element_once() {
+        let lambda = Arc::new(Lambda {
+            name: None,
+            params: vec![],
+            rest: None,
+            body: vec![],
+            env: Env::new(),
+        });
+        {
+            let mut list = List::from(vec![Value::Lambda(lambda.clone())]);
+            for _ in 0..10 {
+                list = list.cons(Value::Lambda(lambda.clone()));
+            }
+            let forked = list.tail().cons(Value::Lambda(lambda.clone()));
+            assert_eq!(Arc::strong_count(&lambda), 1 + 11 + 11);
+            drop(forked);
+            assert_eq!(Arc::strong_count(&lambda), 1 + 11);
+        }
+        assert_eq!(Arc::strong_count(&lambda), 1);
+    }
 
     #[test]
     fn displays_integer_numbers_without_decimal_point() {

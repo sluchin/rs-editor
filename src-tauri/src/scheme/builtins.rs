@@ -208,7 +208,8 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 Value::List(items) if !items.is_empty() => Ok(if name == "car" {
                     items[0].clone()
                 } else {
-                    Value::List(items[1..].into())
+                    // 配列は写さない (cdr でたどるループが, 長さの 2 乗にならないように)
+                    Value::List(items.tail())
                 }),
                 _ => Err(format!("{} expects a non-empty list", name)),
             }
@@ -227,9 +228,8 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "cons" => {
             let [head, tail] = fixed::<2>(name, args)?;
             match tail {
-                Value::List(items) => Ok(Value::List(
-                    std::iter::once(head).chain(items.iter().cloned()).collect(),
-                )),
+                // 配列の前の空きに置く (前へ足していくループが, 長さの 2 乗にならないように)
+                Value::List(items) => Ok(Value::List(items.cons(head))),
                 _ => Err("cons expects a list as the second argument".to_string()),
             }
         }
@@ -325,9 +325,11 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         }
         "member" => {
             let [key, v] = fixed::<2>(name, args)?;
-            let items = list(name, &v)?;
+            let Value::List(items) = v else {
+                return Err(format!("{} expects lists", name));
+            };
             Ok(match items.iter().position(|item| *item == key) {
-                Some(i) => Value::List(items[i..].into()),
+                Some(i) => Value::List(items.drop_front(i)),
                 None => Value::Boolean(false),
             })
         }

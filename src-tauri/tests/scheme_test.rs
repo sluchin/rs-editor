@@ -315,6 +315,7 @@ fn test_list_procedures() {
         "(b 2)\n#f"
     );
     assert_eq!(eval("(member 2 '(1 2 3)) (member 9 '(1))"), "(2 3)\n#f");
+    assert_eq!(eval_err("(member 1 2)"), "member expects lists");
     assert_eq!(eval("()"), "()");
 }
 
@@ -610,5 +611,22 @@ fn test_shared_lists_are_not_changed() {
             .last()
             .unwrap(),
         "((1 2) (0 1 2) (1 2))"
+    );
+}
+
+#[test]
+fn test_builds_and_walks_long_lists() {
+    // cons で前へ足していくのと, cdr でたどるのは, 配列を写さない (長さの 2 乗にならない)
+    assert_eq!(
+        eval(
+            "(define (iota n) (let loop ((i n) (acc '())) (if (= i 0) acc (loop (- i 1) (cons i acc))))) \
+             (define (sum l) (let loop ((l l) (s 0)) (if (null? l) s (loop (cdr l) (+ s (car l)))))) \
+             (define big (iota 20000)) \
+             (list (sum big) (length big) (car big) (list-ref big 19999))"
+        )
+        .lines()
+        .last()
+        .unwrap(),
+        "(200010000 20000 1 20000)"
     );
 }
