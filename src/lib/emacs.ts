@@ -214,6 +214,21 @@ const EMACS_MODIFIERS: Record<string, string> = {
 }
 
 /**
+ * 効いているキーの割り当てを返します. Lisp の割り当て (global-set-key) は, 同じキーの既定の割り当てより先に使います.
+ *
+ * @param lispKeys - Lisp で割り当てたキー (割り当てた順).
+ * @returns キー (CodeMirror の書き方) とコマンドの名前 (Lisp の割り当て, 既定の割り当ての順. キーは重ならない).
+ */
+export function activeKeyBindings(
+  lispKeys: readonly { key: string; command: string }[],
+): (readonly [key: string, command: string])[] {
+  const seen = new Set<string>()
+  return [...lispKeys.map(({ key, command }) => [key, command] as const), ...KEY_BINDINGS].filter(
+    ([key]) => !seen.has(key) && seen.add(key),
+  )
+}
+
+/**
  * CodeMirror のキーの書き方 (`Ctrl-x Ctrl-f`) を, Emacs の書き方 (`C-x C-f`) にします.
  *
  * @param keys - CodeMirror の書き方 (空白で区切ると, 続けて押すキー).

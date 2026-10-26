@@ -1,4 +1,4 @@
-//! リポジトリの `tests/*.scm` (ERT で書いた Scheme のテスト) を, 偽のエディタの上で実行する.
+//! リポジトリの `tests/lisp/*.scm` (ERT で書いた Scheme のテスト) を, 偽のエディタの上で実行する.
 //! Emacs の `emacs -batch -l ert -l test.el -f ert-run-tests-batch-and-exit` に当たる.
 //! `load-path` には, リポジトリの `lisp/` を入れる (テストは `(require 'howm)` で読める).
 
@@ -10,13 +10,13 @@ use rseditor::scheme::evaluator::Evaluator;
 mod common;
 use common::FakeEditor;
 
-/// リポジトリの `tests/*.scm` (名前の順).
+/// リポジトリの `tests/lisp/*.scm` (名前の順).
 ///
 /// # Returns
 ///
 /// パス.
 fn scheme_test_files() -> Vec<PathBuf> {
-    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests");
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/lisp");
     let mut files: Vec<PathBuf> = fs::read_dir(dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())

@@ -238,7 +238,11 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを,
 Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript) は小さくし, コマンドは Lisp (`lisp/`) で書くようにする。
 どのコマンドを, どこで書いているかは, FUNCTIONS.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
 
-- [ ] 起動のときに読む, 既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`, `files.el` などに当たる) を決める (`lisp/` に置き, アプリに入れる)。
+- [x] 起動のときに読む, 既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`, `files.el` などに当たる) を決める (`lisp/` に置き, アプリに入れる)。
+      `src-tauri/src/scheme/loadup.rs` に並べたファイル (`lisp/files.scm`, `lisp/help-fns.scm`) を, ビルドのときに埋め込み, 評価器を作るときに評価する。
+      コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
+- [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`. `read-file-name`, `find-file-noselect`, `switch-to-buffer` を使う)。
+- [ ] 続けて移すもの: `save-buffer`, `write-file`, `switch-to-buffer`, `kill-buffer`, `insert-file`, `find-alternate-file` など (ファイルとバッファ)。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル, 文字, 行, マーク, 窓, バッファなど. Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を, Lisp に移す。移したら, TypeScript の方は消す。
       速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。
@@ -249,29 +253,38 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring (引数の後の文字列) を出す。rs-editor も同じにする。
 今は, `define` と `define-command` の docstring を覚えておらず, `lisp/*.scm` の説明は, 全て `;;` のコメントで書いている。
 
-- [ ] `define`, `define-command`, `define-syntax` の docstring (引数の後の文字列. 本体が文字列だけなら, docstring でなく値) を覚える。
-      `(documentation 'name)` と, 変数の docstring (Emacs の `defvar` の 3 つ目) も。
+- [x] `define`, `define-command` の docstring (引数の後の文字列. 本体が文字列だけなら, docstring でなく値) を覚える。
+      `(documentation 'name)` と, 変数の docstring (Emacs の `defvar` の 3 つ目. `documentation-property`) も。
+- [ ] `define-syntax` の docstring。
 - [ ] 組み込みの関数 (Rust) と, 画面のコマンド (TypeScript) の docstring を, 1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
-- [ ] `C-h f` / `C-h v` / `C-h o` / `C-h x` (Phase 13 の項目): `*Help*` に, 定義したファイル (リンク), 引数の形 (`(name ARG)`), 割り当てたキー, docstring を出す。
-      docstring の無いものは `Not documented.`。docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は, Emacs と同じく置き換える。
-- [ ] `lisp/howm.scm` と `lisp/org.scm` の `;;` の説明を, docstring に書き直す。
+- [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を, ほかのウィンドウに出す。定義したファイル (`symbol-file`), 割り当てたキー (`where-is-internal`),
+      引数の形 (`help-function-arglist`. `(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
+      候補は, Lisp と Rust の関数 (`mapatoms`, `fboundp`) と, 画面のコマンド (`editor-command-names`)。
+- [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の, 定義したファイルへのリンク, `q` で閉じる。カーソルの所の名前を既定にする。
+      docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は, Emacs と同じく置き換える。
+      引数の形は, Emacs の書き方 (`&optional`) にする (今は, 残りの引数で受けて `&rest ARGS`)。
+- [x] `lisp/howm.scm` の `;;` の説明を, docstring (英語) に書き直す (元の日本語は, `po/ja.po` の翻訳にした)。
+- [ ] `lisp/org.scm` の `;;` の説明を, docstring に書き直す。
 - [ ] 多言語化の仕組み (Emacs には無い. rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし, 読むのは Rust で行う
       (gettext の実行時の仕組み (libintl, `setlocale`) は使わない. エディタの中で言語を変えるため, C のライブラリに頼らないため):
   - docstring は, Emacs と同じく英語で書く (元の文. 翻訳が無ければ, これを出す)。
   - 翻訳は `po/ja.po` のように, 言語ごとの PO のファイルに置く。`msgctxt` は名前 (`org-cycle` など. 関数と変数は `function:` と `variable:` を前に付ける),
     `msgid` は英語の docstring, `msgstr` は翻訳。
-  - 全ての docstring (Lisp, Rust, TypeScript) を集めて `po/rseditor.pot` を作る道具を作る。`msgmerge` で各言語の PO に混ぜ,
-    元の docstring が変わった翻訳は, `fuzzy` (古い翻訳) の印で分かるようにする。fuzzy の翻訳は出さず, 英語を出す。
-  - Rust で PO のファイルを読み (C のライブラリを使わない. 形が単純なので, 自分で読むか, 純粋な Rust のクレート), 名前と元の文から翻訳を引く表を作る。
-    Lisp の `documentation` も, 画面 (TypeScript) の `*Help*` も, Rust の同じ関数から翻訳を取る。
-  - 出す言語は, 変数 `help-language` (既定は `LANG` から. `"en"` なら元の文) で選ぶ。`*Help*` に, 元の文 (英語) を見るボタンも付ける。
+  - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り, 各言語の PO に混ぜる道具 (`tools/po/update.py`. `npm run po:update`)。
+    元の docstring が変わった翻訳は, `fuzzy` の印と, 前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず, 英語を出す。
+    `npm run po:check` (`npm run check` で動く) で, 作り直していない PO を見つける。
+  - [ ] Rust と TypeScript の docstring も集める (上の「1 か所に書く」の後)。
+  - [x] Rust で PO のファイルを読み (`src-tauri/src/scheme/po.rs`. ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
+    Lisp の `documentation` と `documentation-property` が, 翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら, 元の英語)。
+  - [x] 出す言語は, 変数 `help-language` (既定は `LANG` から. `"en"` なら元の文) で選ぶ。
+  - [ ] `*Help*` に, 元の文 (英語) を見るボタンを付ける。
   - 翻訳の無いものと, fuzzy の翻訳を, 一覧にする (Phase 19 の lint の 1 つ)。Poedit などの翻訳の道具で直せることを, README に書く。
   - Rust のエラーの文 (`Cannot move column further` など) は, Emacs と同じく訳さない。
     画面の文 (メニュー, `message`) を訳すことになったら, 複数形や語順を扱える Fluent (`fluent-rs`) と比べて決める。
 
 ## Phase 18: Scheme の整形 (format)
 
-`lisp/*.scm` と `tests/*.scm` を, 決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
+`lisp/*.scm` と `tests/lisp/*.scm` を, 決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
 
 - [ ] 字下げの決まりを, エディタ (`src/lib/lispIndent.ts`, `lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
       Rust で書くなら, 決まりの表をファイル (JSON か Scheme) にして, 両方から読む。
@@ -282,7 +295,7 @@ Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring 
 
 ## Phase 19: Scheme の lint
 
-`lisp/*.scm` と `tests/*.scm` の誤りを, 動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
+`lisp/*.scm` と `tests/lisp/*.scm` の誤りを, 動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
 
 - [ ] 定義していない名前 (変数と関数), 引数の数の違い (定義した関数と, 組み込みの関数)。
 - [ ] 使っていない変数 (`let` と引数), 同じ名前の定義の重なり。
@@ -412,7 +425,7 @@ Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring 
 
 ### ヘルプ
 
-- [ ] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 17)。
+- [~] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 17)。`C-h f` は済んだ。
 - [ ] `C-h c` (describe-key-briefly), `C-h w` (where-is), `C-h m` (describe-mode), `C-h s` (describe-syntax)。
 - [ ] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。
 - [ ] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。

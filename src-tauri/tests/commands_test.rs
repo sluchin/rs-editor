@@ -21,9 +21,16 @@ fn test_eval_code_returns_the_result_or_the_error() {
         EvalResponse {
             result: "3".to_string(),
             error: None,
-            // M-x ert は, 始めからある
-            commands: vec!["ert".to_string()],
-            keys: vec![],
+            // M-x ert と, 起動のときに読む Lisp (lisp/files.scm など) のコマンドとキーは, 始めからある
+            commands: vec![
+                "ert".to_string(),
+                "find-file".to_string(),
+                "describe-function".to_string()
+            ],
+            keys: vec![KeyBinding {
+                key: "Ctrl-h f".to_string(),
+                command: "describe-function".to_string(),
+            }],
             hooks: vec![],
         }
     );
@@ -81,13 +88,22 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
         &NoHost,
     );
     assert_eq!(defined.result, "hi\nhi");
-    assert_eq!(defined.commands, vec!["ert", "hi"]);
+    assert_eq!(
+        defined.commands,
+        vec!["ert", "find-file", "describe-function", "hi"]
+    );
     assert_eq!(
         defined.keys,
-        vec![KeyBinding {
-            key: "Ctrl-c h".to_string(),
-            command: "hi".to_string(),
-        }]
+        vec![
+            KeyBinding {
+                key: "Ctrl-h f".to_string(),
+                command: "describe-function".to_string(),
+            },
+            KeyBinding {
+                key: "Ctrl-c h".to_string(),
+                command: "hi".to_string(),
+            }
+        ]
     );
     assert_eq!(run_command(&evaluator, "hi", &NoHost).result, "1");
     assert_eq!(
@@ -128,7 +144,10 @@ fn test_load_init_file() {
     assert_eq!(eval_code(&evaluator, "user-init-file").result, "#f");
     let loaded = load_init_file(&evaluator, Some(&path), &NoHost);
     assert_eq!(loaded.error, None);
-    assert_eq!(loaded.commands, vec!["ert", "hello"]);
+    assert_eq!(
+        loaded.commands,
+        vec!["ert", "find-file", "describe-function", "hello"]
+    );
     // 読んだファイルは, user-init-file に入れる
     assert_eq!(
         eval_code(&evaluator, "user-init-file").result,

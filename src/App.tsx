@@ -13,7 +13,7 @@ import ProjectTree from './components/ProjectTree'
 import { type Buffer, headLines } from './lib/buffer'
 import { listDirectory } from './lib/fileOps'
 import { DIRED_MODE, GREP_MODE, majorMode } from './lib/modes'
-import { KEY_BINDINGS, toEmacsKey } from './lib/emacs'
+import { activeKeyBindings, toEmacsKey } from './lib/emacs'
 import type { KeyBinding } from './lib/lisp'
 import { windowRects } from './lib/windows'
 import { type CommandSet, type Submitters, useMinibuffer } from './hooks/useMinibuffer'
@@ -127,15 +127,9 @@ function App() {
    * キーの割り当ての一覧を, *Help* バッファに出します (前の *Help* は, 作り直す).
    */
   const handleDescribeBindings = () => {
-    // Lisp の割り当ては, 同じキーの既定の割り当てより先に使う
-    const bindings = [
-      ...lispKeys.map(({ key, command }) => [key, command] as const),
-      ...KEY_BINDINGS,
-    ]
-    const seen = new Set<string>()
-    const lines = bindings
-      .filter(([key]) => !seen.has(key) && seen.add(key))
-      .map(([key, command]) => `${toEmacsKey(key).padEnd(24)}${command}`)
+    const lines = activeKeyBindings(lispKeys).map(
+      ([key, command]) => `${toEmacsKey(key).padEnd(24)}${command}`,
+    )
     const old = buffers.find((b) => b.name === '*Help*')
     if (old) {
       for (const handle of handles.current.values()) handle.forget(old.id)
@@ -261,6 +255,10 @@ function App() {
     ...bookmarks.actions,
     ...lisp.commands.actions,
   }
+  // Lisp の editor-command-names (C-h f の候補) に, 画面のコマンドの名前を渡す
+  useEffect(() => {
+    lisp.setScreenCommandNames(Object.keys(actions))
+  })
   const submitters: Submitters = {
     ...appCommands.submit,
     ...bufs.windowCommands.submit,

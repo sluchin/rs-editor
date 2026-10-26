@@ -384,6 +384,23 @@ impl Host for FakeEditor {
                 Value::Nil
             }
             "find-file-noselect" => Value::String(self.visit(&text(&args[0]))),
+            // 画面のキーとコマンド (save-buffer だけ. find-file は Lisp と重なる)
+            "where-is-internal" => Value::List(
+                match text(&args[0]).as_str() {
+                    "save-buffer" => vec!["C-x C-s", "<f2>"],
+                    "find-file" => vec!["C-x C-f"],
+                    _ => vec![],
+                }
+                .into_iter()
+                .map(|key| Value::String(key.to_string()))
+                .collect(),
+            ),
+            "editor-command-names" => Value::List(
+                ["save-buffer", "find-file"]
+                    .into_iter()
+                    .map(|name| Value::String(name.to_string()))
+                    .collect(),
+            ),
             "highlight-regexp" => {
                 let regexp = text(&args[0]);
                 let face = match &args[1] {
@@ -447,11 +464,6 @@ impl Host for FakeEditor {
                 });
                 Value::Nil
             }
-            "find-file" => {
-                let name = self.visit(&text(&args[0]));
-                self.show(&name, FakeBuffer::default);
-                Value::Nil
-            }
             "set-buffer-modified-p" => {
                 let modified = args[0].is_true();
                 self.with_buffer(|b| b.modified = modified);
@@ -462,7 +474,7 @@ impl Host for FakeEditor {
                 self.with_buffer(|b| b.keys.insert(key, command));
                 Value::Nil
             }
-            "read-string" => {
+            "read-string" | "read-file-name" => {
                 self.prompts.lock().unwrap().push(text(&args[0]));
                 Value::String(self.answers.lock().unwrap().remove(0))
             }

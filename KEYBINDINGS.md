@@ -236,6 +236,7 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 
 | キー | コマンド | 説明 |
 |------|---------|------|
+| `C-h f` | describe-function | 関数とコマンドの説明 (定義したファイル, キー, 引数, docstring) を `*Help*` に出す（`lisp/help-fns.scm`。docstring は `help-language` の言語に訳す） |
 | `C-h k` | describe-key | 次に押すキーのコマンドを, 実行せずにミニバッファに出す |
 | `C-h b` | describe-bindings | キーの割り当ての一覧を `*Help*` バッファに出す（Lisp の割り当てを含む） |
 
@@ -398,7 +399,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）
 - コマンド実行（M-x）, ミニバッファの入力の履歴（M-p, M-n）
-- ヘルプ（C-h k, C-h b）
+- ヘルプ（C-h f, C-h k, C-h b）
 - その他（C-g）
 
 ### 未実装

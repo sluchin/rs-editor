@@ -96,9 +96,8 @@ impl Host for Recorder {
             .unwrap()
             .push(format!("{} {}", op, shown.join(" ")).trim().to_string());
         Ok(match op {
-            "buffer-file-name" | "read-string" | "completing-read" | "find-file-noselect" => {
-                self.answer.clone()
-            }
+            "buffer-file-name" | "read-string" | "read-file-name" | "completing-read"
+            | "find-file-noselect" => self.answer.clone(),
             "buffer-list" => Value::List([self.answer.clone()].into()),
             _ => Value::Nil,
         })
@@ -591,7 +590,12 @@ fn test_editor_settings() {
             "set-foreground-color \"red\"".to_string(),
             "set-font nil 10".to_string(),
             "local-set-key \"Ctrl-c a\" \"foo\"".to_string(),
-            format!("find-file {:?}", home.join("x.txt").to_string_lossy()),
+            // find-file は, Lisp (lisp/files.scm) で書いたもの
+            format!(
+                "find-file-noselect {:?}",
+                home.join("x.txt").to_string_lossy()
+            ),
+            "switch-to-buffer \"/home/a.txt\"".to_string(),
             "switch-to-buffer \"*howm*\"".to_string(),
             "buffer-file-name".to_string(),
             "set-buffer-modified-p #f".to_string(),
@@ -644,7 +648,7 @@ fn test_editor_settings() {
         ("(read-string 1)", "read-string expects strings"),
         ("(read-string \"a\" 1)", "read-string expects strings"),
         ("(switch-to-buffer 1)", "switch-to-buffer expects strings"),
-        ("(find-file 1)", "find-file expects strings"),
+        ("(find-file 1)", "find-file-noselect expects strings"),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }
@@ -939,5 +943,63 @@ fn test_browse_url() {
     assert_eq!(
         Evaluator::new().eval("browse-url-generic-program").unwrap(),
         format!("{:?}", rseditor::scheme::system::DEFAULT_BROWSER)
+    );
+}
+
+#[test]
+fn test_read_file_name() {
+    let ev = Evaluator::new();
+    // 入れた名前を返す. DIR を渡すと, 入力の始めにする
+    let editor = Recorder::new(Value::String("~/a.txt".to_string()));
+    assert_eq!(
+        ev.eval_with(
+            "(read-file-name \"Find file: \") (read-file-name \"F: \" \"~/\" \"~/d.txt\")",
+            &editor
+        )
+        .unwrap(),
+        "\"~/a.txt\"\n\"~/a.txt\""
+    );
+    assert_eq!(
+        editor.calls(),
+        vec![
+            "read-file-name \"Find file: \" \"\"",
+            "read-file-name \"F: \" \"~/\""
+        ]
+    );
+    // 入力を変えなければ (空か, DIR のまま), DEFAULT-FILENAME
+    for answer in ["", "~/"] {
+        let editor = Recorder::new(Value::String(answer.to_string()));
+        assert_eq!(
+            ev.eval_with(
+                "(read-file-name \"F: \" \"~/\" \"~/d.txt\") (read-file-name \"F: \" \"~/\")",
+                &editor
+            )
+            .unwrap(),
+            format!("\"~/d.txt\"\n{:?}", answer)
+        );
+    }
+    for (code, error) in [
+        (
+            "(read-file-name)",
+            "read-file-name expects 1 to 6 arguments",
+        ),
+        ("(read-file-name 1)", "read-file-name expects strings"),
+    ] {
+        assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error, "{}", code);
+    }
+    // find-file は, 引数を省くと, ファイルの名前を聞く (M-x と, キーから)
+    let editor = Recorder::new(Value::String("/home/b.txt".to_string()));
+    ev.run_command("find-file", &editor).unwrap();
+    assert_eq!(
+        editor.calls(),
+        vec![
+            "read-file-name \"Find file: \" \"\"",
+            "find-file-noselect \"/home/b.txt\"",
+            "switch-to-buffer \"/home/b.txt\"",
+        ]
+    );
+    assert_eq!(
+        ev.eval("(documentation 'find-file #t)").unwrap(),
+        format!("{:?}", "Edit file FILENAME.\nSwitch to a buffer visiting file FILENAME, creating one if none already exists.\nInteractively, read FILENAME in the minibuffer with file name completion.")
     );
 }

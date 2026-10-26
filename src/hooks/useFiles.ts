@@ -39,7 +39,6 @@ export function useFiles(
     currentBuffer,
     editor,
     homeDir,
-    setCurrentBufferId,
     setCurrentText,
     defaultDirectory,
     replaceBuffer,
@@ -78,41 +77,6 @@ export function useFiles(
     }, AUTO_SAVE_TIMEOUT)
     return () => clearTimeout(timer)
   }, [buffers, setMinibufferState])
-
-  /**
-   * 開くファイルの名前を, ミニバッファで聞きます (C-x C-f).
-   */
-  const handleFindFile = () => {
-    setPendingAction('find-file')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Find file: ',
-      input: defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * ファイルを開いて, 選んでいるウィンドウに出します. 開いていれば, そのバッファを出します (Emacs と同じ).
-   *
-   * @param path - ファイルのパス.
-   */
-  const findFile = async (path: string) => {
-    const open = buffers.find((b) => b.filePath === path)
-    if (open) {
-      setCurrentBufferId(open.id)
-      showMessage('')
-      return
-    }
-    try {
-      const { buffer, message } = await visitFile(path)
-      setBuffers((prev) => [...prev, buffer])
-      setCurrentBufferId(buffer.id)
-      showMessage(message)
-    } catch (err) {
-      setMinibufferState({ mode: 'message', text: `Error: ${err}` })
-    }
-  }
 
   /**
    * バッファを, ファイルに保存します (C-x C-s). ファイルのないバッファは, 保存するファイルの名前を聞きます.
@@ -473,7 +437,6 @@ export function useFiles(
 
   const commands: CommandSet = {
     actions: {
-      'find-file': handleFindFile,
       'save-buffer': () => void handleSaveBuffer(),
       'write-file': handleWriteFile,
       'insert-file': handleInsertFile,
@@ -483,7 +446,6 @@ export function useFiles(
       'recover-this-file': () => void handleRecoverThisFile(),
     },
     submit: {
-      'find-file': findFile,
       'find-alternate-file': findAlternateFileAsked,
       'confirm-alternate': async (value) => {
         if (value.trim() === 'yes') await findAlternateFile(alternatePath.current)

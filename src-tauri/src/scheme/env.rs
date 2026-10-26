@@ -136,6 +136,30 @@ impl Env {
         }
     }
 
+    /// この段の変数の名前を返します (外側の環境は, たどらない).
+    ///
+    /// # Returns
+    ///
+    /// 名前 (名前の順).
+    pub fn names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.0.lock().unwrap().vars.keys().cloned().collect();
+        names.sort();
+        names
+    }
+
+    /// 同じ環境か (複製したものも, 同じ環境).
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - 比べる環境.
+    ///
+    /// # Returns
+    ///
+    /// 同じ環境なら `true`.
+    pub fn same(&self, other: &Env) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
     /// この環境に, 変数を作ります (あれば, 値を変えます).
     ///
     /// # Arguments

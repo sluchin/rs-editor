@@ -403,7 +403,10 @@ fn test_define_command_and_global_set_key() {
             .unwrap(),
         "say-hi"
     );
-    assert_eq!(ev.commands(), vec!["ert", "say-hi", "shout"]);
+    assert_eq!(
+        ev.commands(),
+        vec!["ert", "find-file", "describe-function", "say-hi", "shout"]
+    );
     assert_eq!(ev.run_command("say-hi", &editor).unwrap(), "nil");
     assert_eq!(editor.text(), "hi!");
     // Lisp のコマンドは, エディタに頼まずに呼ぶ
@@ -433,6 +436,11 @@ fn test_define_command_and_global_set_key() {
     assert_eq!(
         ev.key_bindings(),
         vec![
+            // 起動のときに読む Lisp (lisp/help-fns.scm) のキー
+            KeyBinding {
+                key: "Ctrl-h f".to_string(),
+                command: "describe-function".to_string()
+            },
             KeyBinding {
                 key: "F5".to_string(),
                 command: "shout".to_string()
@@ -628,5 +636,40 @@ fn test_builds_and_walks_long_lists() {
         .last()
         .unwrap(),
         "(200010000 20000 1 20000)"
+    );
+}
+
+#[test]
+fn test_documentation() {
+    // 手続きの docstring (本体の始めの文字列. 本体が文字列だけなら, 値)
+    assert_eq!(
+        eval(
+            "(define (f x) \"Add 1 to X.\" (+ x 1)) (define (g) \"value\") (define h (lambda () 1)) \
+             (documentation 'f) (documentation f) (documentation 'g) (documentation 'h) (documentation 'car) (f 1)"
+        ),
+        "f\ng\nh\n\"Add 1 to X.\"\n\"Add 1 to X.\"\n#f\n#f\n#f\n2"
+    );
+    // 変数の docstring (Emacs の defvar と同じく, 3 つ目)
+    assert_eq!(
+        eval(
+            "(define v 1 \"The value.\") (define w 2) v \
+             (documentation-property 'v 'variable-documentation) \
+             (documentation-property 'w 'variable-documentation) \
+             (documentation-property 'v 'other)"
+        ),
+        "v\nw\n1\n\"The value.\"\n#f\n#f"
+    );
+    assert_eq!(
+        eval_err("(documentation 'nothing)"),
+        "Symbol's function definition is void: nothing"
+    );
+    assert_eq!(eval_err("(documentation 1)"), "Invalid function: 1");
+    assert_eq!(
+        eval_err("(documentation-property \"v\" 'variable-documentation)"),
+        "documentation-property expects symbols"
+    );
+    assert_eq!(
+        eval_err("(define v 1 2)"),
+        "define expects a docstring after the value"
     );
 }

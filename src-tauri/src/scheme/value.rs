@@ -229,6 +229,20 @@ pub struct Lambda {
     pub env: Env,
 }
 
+impl Lambda {
+    /// docstring (本体の始めの文字列. 本体が文字列だけなら, それは値で, docstring でない. Emacs と同じ).
+    ///
+    /// # Returns
+    ///
+    /// docstring. 無ければ [`None`].
+    pub fn docstring(&self) -> Option<&str> {
+        match self.body.as_slice() {
+            [Value::String(doc), _, ..] => Some(doc),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Debug for Lambda {
     // 環境は, 自分を含むことがあるので, 出さない
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

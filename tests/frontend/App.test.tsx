@@ -66,10 +66,65 @@ function response(
   return {
     result,
     error,
-    commands: extra.commands ?? [],
+    // find-file は, 起動したときに読む Lisp (lisp/files.scm) のコマンド
+    commands: [...new Set([...(extra.commands ?? []), 'find-file'])],
     keys: extra.keys ?? [],
     ...(extra.hooks ? { hooks: extra.hooks } : {}),
   }
+}
+
+/** 評価の結果の既定 (Lisp のバックエンドの偽物が返す). */
+let defaultResponse = response('')
+/** 返事を待っているエディタの操作の頼み (番号 -> 返事を受ける関数). */
+const pendingReplies = new Map<number, (reply: { value: unknown; error: string | null }) => void>()
+/** エディタの操作の頼みの番号. */
+let requestId = 1000
+
+/**
+ * Lisp のバックエンドの偽物から, エディタの操作を頼み, 返事を待ちます.
+ *
+ * @param op - 操作.
+ * @param args - 引数.
+ * @returns 返事の値 (失敗したら, その内容で失敗する).
+ */
+async function editorRequest(op: string, args: unknown[]) {
+  const id = ++requestId
+  const listened = mockedListen.mock.calls.filter(([name]) => name === 'editor-request')
+  const handler = listened[listened.length - 1][1]
+  const reply = new Promise<{ value: unknown; error: string | null }>((resolve) =>
+    pendingReplies.set(id, resolve),
+  )
+  handler({ event: 'editor-request', id: 0, payload: { id, op, args } })
+  const { value, error } = await reply
+  if (error !== null) throw error
+  return value
+}
+
+/**
+ * Lisp のバックエンド (invoke) の偽物. lisp/files.scm の find-file と同じ順で, エディタの操作を頼みます.
+ *
+ * @param cmd - バックエンドのコマンド.
+ * @param args - 引数.
+ * @returns 結果.
+ */
+async function lispBackend(cmd: string, args?: unknown) {
+  if (cmd === 'editor_reply') {
+    const reply = args as { id: number; value: unknown; error: string | null }
+    pendingReplies.get(reply.id)?.(reply)
+    pendingReplies.delete(reply.id)
+    return null
+  }
+  if (cmd === 'run_lisp_command' && (args as { name: string }).name === 'find-file') {
+    try {
+      const filename = await editorRequest('read-file-name', ['Find file: ', ''])
+      const buffer = await editorRequest('find-file-noselect', [filename])
+      await editorRequest('switch-to-buffer', [buffer])
+      return defaultResponse
+    } catch (error) {
+      return { ...defaultResponse, error: String(error) }
+    }
+  }
+  return defaultResponse
 }
 
 /** キーの修飾. */
@@ -110,6 +165,8 @@ async function setup() {
     await act(async () => {
       fireEvent.keyDown(input(), { key: 'Enter' })
     })
+    // Lisp のコマンドが, 続けて頼むエディタの操作を待つ
+    for (let i = 0; i < 5; i++) await act(async () => {})
   }
   /** エディタの文字を書き換えて, カーソルを置く (元に戻す履歴は, 前の変更とつなげない). */
   const type = (value: string, cursor = value.length) =>
@@ -141,7 +198,9 @@ describe('App', () => {
     mockedBookmarks.loadBookmarks.mockResolvedValue([])
     mockedBookmarks.saveBookmarks.mockResolvedValue(undefined)
     // 初期設定ファイル (と, エディタの操作の返事) は, 何もしない
-    mockedInvoke.mockResolvedValue(response(''))
+    defaultResponse = response('')
+    pendingReplies.clear()
+    mockedInvoke.mockImplementation(lispBackend as typeof invoke)
   })
 
   it('最初は *scratch* で, ホームのディレクトリを取れなくても動く', async () => {
@@ -185,7 +244,10 @@ describe('App', () => {
     })
     expect(mocked.listDirectory).toHaveBeenCalledWith('/home/u/')
     expect(editor.input().value).toBe('/home/u/init.scm')
-    fireEvent.keyDown(editor.input(), { key: 'Escape' })
+    // やめたら, Lisp の find-file が Quit で終わるのを待つ
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Escape' })
+    })
 
     await act(async () => editor.ctrlX('s'))
     fireEvent.change(editor.input(), { target: { value: '/home/u/' } })
@@ -498,7 +560,7 @@ describe('App', () => {
 
   it('ファイルを開いたら find-file-hook を, 保存したら after-save-hook を, そのバッファで実行する', async () => {
     const hooks = { hooks: ['find-file-hook', 'after-save-hook'] }
-    mockedInvoke.mockResolvedValue(response('', null, hooks))
+    defaultResponse = response('', null, hooks)
     const editor = await setup()
     const ran = (hook: string) =>
       mockedInvoke.mock.calls.filter(
@@ -523,7 +585,7 @@ describe('App', () => {
     expect(ran('find-file-hook')).toBe(2)
     // フックが失敗した
     mockedInvoke.mockRejectedValueOnce('down')
-    mockedInvoke.mockResolvedValue(response(''))
+    defaultResponse = response('')
     await act(async () => editor.type('y'))
     await act(async () => editor.ctrlX('s'))
     expect(ran('after-save-hook')).toBe(2)
@@ -866,7 +928,10 @@ describe('App', () => {
     editor.key('x', { alt: true })
     await editor.submit('find-file')
     expect(editor.input().value).toBe('/home/u/')
-    fireEvent.keyDown(editor.input(), { key: 'Escape' })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Escape' })
+    })
+    expect(editor.text()).toContain('Quit')
 
     editor.key('x', { alt: true })
     await editor.submit('save-buffer')
@@ -1779,7 +1844,12 @@ describe('App', () => {
         ) as [string, { value: unknown; error: string | null }]
         return reply
       }
-      return { send }
+      /** ファイルを開いて, そのバッファを出す (lisp/files.scm の find-file と同じ順). */
+      const findFile = async (path: string) => {
+        const opened = await send('find-file-noselect', path)
+        return opened.error === null ? send('switch-to-buffer', opened.value) : opened
+      }
+      return { send, findFile }
     }
 
     it('バッファを出してから, 続きの操作をする', async () => {
@@ -1801,26 +1871,48 @@ describe('App', () => {
       expect(await send('buffer-file-name')).toMatchObject({ value: null })
     })
 
+    it('コマンドのキーと, 画面のコマンドの名前を答える (C-h f)', async () => {
+      // Lisp のキーは, 同じキーの既定のキーより先に使う
+      const keys = [
+        { key: 'Ctrl-h f', command: 'describe-function' },
+        { key: 'Ctrl-x Ctrl-s', command: 'my-save' },
+      ]
+      defaultResponse = response('', null, { commands: ['describe-function', 'my-save'], keys })
+      await setup()
+      const { send } = requests()
+      expect(await send('where-is-internal', 'describe-function')).toMatchObject({
+        value: ['C-h f'],
+      })
+      expect(await send('where-is-internal', 'my-save')).toMatchObject({ value: ['C-x C-s'] })
+      expect(await send('where-is-internal', 'save-buffer')).toMatchObject({ value: [] })
+      expect(await send('where-is-internal', 'forward-char')).toMatchObject({
+        value: expect.arrayContaining(['C-f']),
+      })
+      const names = (await send('editor-command-names')).value as string[]
+      // エディタのコマンドと, 画面のコマンド
+      expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer', 'list-buffers']))
+    })
+
     it('ファイルを開く (開いていれば, そのバッファを出す)', async () => {
       const editor = await setup()
-      const { send } = requests()
+      const { send, findFile } = requests()
       mocked.pathExists.mockResolvedValue(true)
       mocked.readFile.mockResolvedValue('note')
-      await send('find-file', '/home/u/howm/a.txt')
+      await findFile('/home/u/howm/a.txt')
       expect(editor.doc()).toBe('note')
       expect(await send('buffer-file-name')).toMatchObject({ value: '/home/u/howm/a.txt' })
       await send('switch-to-buffer', '*scratch*')
-      await send('find-file', '/home/u/howm/a.txt')
+      await findFile('/home/u/howm/a.txt')
       expect(editor.doc()).toBe('note')
       expect(mocked.readFile).toHaveBeenCalledTimes(1)
       // 無いファイル
       mocked.pathExists.mockResolvedValue(false)
-      await send('find-file', '/home/u/howm/new.txt')
+      await findFile('/home/u/howm/new.txt')
       expect(editor.doc()).toBe('')
       expect(editor.text()).toContain('(New file)')
       // 読めない
       mocked.pathExists.mockRejectedValueOnce(new Error('denied'))
-      expect(await send('find-file', '/x')).toMatchObject({ error: 'denied' })
+      expect(await findFile('/x')).toMatchObject({ error: 'denied' })
     })
 
     it('バッファだけのキーを, Lisp のキーより先に使う', async () => {
@@ -1907,7 +1999,7 @@ describe('App', () => {
 
     it('バッファの一覧, 書き換えたか, 消す', async () => {
       const editor = await setup()
-      const { send } = requests()
+      const { send, findFile } = requests()
       await send('switch-to-buffer', '*b*')
       expect(await send('buffer-modified-p')).toMatchObject({ value: false })
       await send('insert', 'x')
@@ -1920,7 +2012,7 @@ describe('App', () => {
       // 書き換えたファイルのバッファは, 消さない
       mocked.pathExists.mockResolvedValue(true)
       mocked.readFile.mockResolvedValue('note')
-      await send('find-file', '/home/u/a.txt')
+      await findFile('/home/u/a.txt')
       await send('insert', 'x')
       expect(await send('kill-buffer')).toMatchObject({ error: 'Buffer a.txt is modified' })
       await send('set-buffer-modified-p', false)

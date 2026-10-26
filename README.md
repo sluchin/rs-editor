@@ -53,7 +53,11 @@
 │   └── Cargo.toml           # Rust 依存関係
 ├── lisp/howm.scm             # howm の Scheme 版
 ├── lisp/org.scm              # Org mode の Scheme 版
+├── lisp/files.scm            # 起動のときに読む Lisp (find-file など)
+├── lisp/help-fns.scm         # 起動のときに読む Lisp (C-h f)
+├── po/                       # docstring の翻訳 (gettext の PO 形式. ja.po)
 ├── tools/emacs-commands/     # Emacs の組み込みと基本のコマンドと, 既定のキーの一覧 (FUNCTIONS.md) を作る
+├── tools/po/                 # docstring を集めて, po/rseditor.pot と各言語の PO を作り直す
 ├── package.json             # Node 依存関係
 ├── vite.config.ts           # Vite ビルド設定
 └── tsconfig.json            # TypeScript 設定
@@ -326,7 +330,11 @@ Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-e
   (should-error (car 1)))
 ```
 
-howm のテストは `tests/test_howm.scm` です。`npm run test:scheme` (`cargo test --test lisp_ert_test`) で、`tests/*.scm` を全て走らせます。
+### ヘルプ (C-h f) と, 翻訳
+
+`C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。
+
+howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (`cargo test --test lisp_ert_test`) で、`tests/lisp/*.scm` を全て走らせます。
 
 ## キーバインド
 

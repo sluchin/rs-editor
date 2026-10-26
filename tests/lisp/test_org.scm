@@ -3,10 +3,10 @@
 ;; Emacs の ERT と同じ書き方で書いた, lisp/org.scm のテスト.
 ;;
 ;; 実行のしかた:
-;; - エディタで: lisp/ を load-path に入れて, このファイルを読み (M-: (load "…/tests/test_org.scm")),
+;; - エディタで: lisp/ を load-path に入れて, このファイルを読み (M-: (load "…/tests/lisp/test_org.scm")),
 ;;   M-x ert (RET で全て. 名前の正規表現で選べる). 結果は *ert* のバッファに出る.
 ;; - コマンドラインで: cd src-tauri && cargo test --test lisp_ert_test -- --nocapture
-;;   (偽のエディタの上で, tests/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
+;;   (偽のエディタの上で, tests/lisp/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
 ;;
 ;; バッファを変えるコマンドと, 入力を聞くもの (read-string) は, ここでは試さない
 ;; (src-tauri/tests/org_test.rs で試す).

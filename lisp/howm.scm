@@ -30,51 +30,49 @@
 
 ;;; 設定 (初期設定ファイルで, (set! howm-directory "~/memo") のように変える)
 
-;; メモを置くディレクトリ
-(define howm-directory "~/howm")
-;; メモのファイルの名前 (format-time-string の書式. howm-directory からのパス)
-(define howm-file-name-format "%Y/%m/%Y-%m-%d-%H%M%S.txt")
-;; メモのファイルの名前 (正規表現. これに合うファイルを, メモとして扱う)
-(define howm-file-name-regexp "\\.txt$")
-;; メモとして扱わないファイル (パスの正規表現. メニューのファイル, 履歴, バックアップなど)
+(define howm-directory "~/howm" "Directory where memos are stored.")
+(define howm-file-name-format "%Y/%m/%Y-%m-%d-%H%M%S.txt"
+  "Format of a new memo file name, relative to `howm-directory'.
+It is passed to `format-time-string'.")
+(define howm-file-name-regexp "\\.txt$" "Regexp of the file names treated as memos.")
 (define howm-excluded-file-regexp
-  "(^|/)([.]|(menu(_edit)?|0000-00-00-0+))|[~#]$|\\.bak$|/CVS/")
-;; メニューのファイル (無ければ, 既定のメニューを書く)
-(define howm-menu-file #f)
-;; メニューに出す, 予定の日数 (今日から), todo の数, 最近のメモの数, ランダムなメモの数
-(define howm-menu-schedule-days 7)
-(define howm-menu-todo-num 50)
-(define howm-menu-recent-num 20)
-(define howm-menu-random-num 10)
-;; メニューの %here% で呼べる手続き
+  "(^|/)([.]|(menu(_edit)?|0000-00-00-0+))|[~#]$|\\.bak$|/CVS/"
+  "Regexp of the paths not treated as memos.
+The menu file, the history, backups and so on match it.")
+(define howm-menu-file #f
+  "Menu file, or #f to use the default one in `howm-directory'.
+The default menu is written if the file does not exist.")
+(define howm-menu-schedule-days 7
+  "Number of days of the schedule shown in the menu, counted from today.")
+(define howm-menu-todo-num 50 "Number of todo items shown in the menu.")
+(define howm-menu-recent-num 20 "Number of recent memos shown in the menu.")
+(define howm-menu-random-num 10 "Number of random memos shown in the menu.")
 (define howm-menu-allow
   '(howm-menu-legend howm-menu-schedule howm-menu-todo howm-menu-reminder
-    howm-menu-recent howm-menu-random howm-menu-search howm-menu-last-update))
-;; メモの題の行の始め
-(define howm-view-title-header "=")
-;; 日付と日時の書式 (メモを作るとき, 日付を入れるときに使う)
-(define howm-date-format "[%Y-%m-%d]")
-(define howm-dtime-format "[%Y-%m-%d %H:%M]")
-;; 一覧で動くと, その行のメモを, もう 1 つの窓に出す (#f なら出さない)
-(define howm-view-contents #t)
-;; 検索の履歴のファイル (#f なら, howm-directory の .howm-history) と, 覚える数
-(define howm-history-file #f)
-(define howm-history-limit 50)
-;; 日付を繰り返すとき (~yymmdd) に, 足す行の数の上限
-(define howm-date-repeat-max 200)
-;; メニュー, 一覧, 速記のバッファの名前
-(define howm-menu-name "*howmM:%menu%*")
-(define howm-summary-name "*howmS*")
-(define howm-remember-name "*howm-remember*")
-;; C-x C-f などで開いたメモも, メモのバッファ (howm-mode) にする (#f なら, howm から開いたメモだけ)
-(define howm-set-mode-on-find-file #t)
-;; 保存したら, 下線を引き直す. メニューを出していれば, 出し直す
-(define howm-refresh-after-save #t)
-(define howm-menu-refresh-after-save #t)
-;; メモを保存したあとに実行するフック
-(define howm-after-save-hook '())
+    howm-menu-recent howm-menu-random howm-menu-search howm-menu-last-update)
+  "Procedures that %here% in the menu may call.")
+(define howm-view-title-header "=" "String that starts the title line of a memo.")
+(define howm-date-format "[%Y-%m-%d]" "Format of a date inserted into a memo.")
+(define howm-dtime-format "[%Y-%m-%d %H:%M]" "Format of a date and time inserted into a memo.")
+(define howm-view-contents #t
+  "If true, show the memo of the current line in the other window.
+This is used when moving in the summary buffer.")
+(define howm-history-file #f
+  "File of the search history.
+If #f, use .howm-history in `howm-directory'.")
+(define howm-history-limit 50 "Number of keywords kept in the search history.")
+(define howm-date-repeat-max 200 "Maximum number of lines added when repeating a date (~yymmdd).")
+(define howm-menu-name "*howmM:%menu%*" "Name of the menu buffer.")
+(define howm-summary-name "*howmS*" "Name of the summary buffer.")
+(define howm-remember-name "*howm-remember*"
+  "Name of the buffer for quick notes (`howm-remember').")
+(define howm-set-mode-on-find-file #t
+  "If true, turn on `howm-mode' for memos opened by \\[find-file].
+If #f, only memos opened from howm use it.")
+(define howm-refresh-after-save #t "If true, underline the memo again after saving it.")
+(define howm-menu-refresh-after-save #t "If true, refresh the menu after saving a memo.")
+(define howm-after-save-hook '() "Hook run after saving a memo.")
 
-;; 既定のメニュー (howm の ja/0000-00-00-000000.txt から, この版で使えるものを残した)
 (define howm-default-menu
   "= <<< %menu%
 %last-update %\"R\"[menu 更新]
@@ -221,9 +219,10 @@ S 式を eval: %eval%(message (buffer-name))
 ◆ 複数メニュー
 「%○○%」へのリンクは, 「＜＜＜ %○○%」をメニューモードで開きます: >>> %menu%
 指定ファイルをメニューモードで開く: %eval%(howm-menu-open \"00000000-000000.txt\")
-")
+"
+  "Default menu, written when the menu file does not exist.
+It is taken from ja/0000-00-00-000000.txt of howm.")
 
-;; ボタンの名前と, コマンド. menu と書いたものはメニューで, ほかはメニューを開く前のバッファで動かす
 (define howm-menu-buttons
   '(("速記" howm-remember)
     ("新規" howm-create)
@@ -252,23 +251,26 @@ S 式を eval: %eval%(message (buffer-name))
     ("鍵↓" howm-insert-keyword)
     ("設定" howm-settings)
     ("menu 更新" howm-menu-refresh menu)
-    ("menu 編集" howm-menu-edit menu)))
+    ("menu 編集" howm-menu-edit menu))
+  "Alist of button labels and commands.
+A command marked menu runs in the menu; the others run in the buffer
+shown before the menu.")
 
-;; 今の一覧の項目 ((ファイル 行の番号 文字) のリスト. ファイルが #f なら, 文字を探す)
-(define howm-summary-items '())
-;; メニューのバッファごとの, ((バッファの名前 出し直す手続き ショートカット 項目 ファイル) ...)
-(define howm-menu-data '())
-;; メニューと速記を開く前のバッファの名前
-(define howm-menu-previous-buffer #f)
-(define howm-remember-previous-buffer #f)
-;; 検索の履歴 (新しい順. 読む前は #f) と, キーワード ("<<< 言葉" の言葉. 集める前は #f)
-(define howm-history-list #f)
-(define howm-keyword-cache #f)
+(define howm-summary-items '()
+  "Items of the current summary, a list of (FILE LINE TEXT).
+If FILE is #f, TEXT is searched for.")
+(define howm-menu-data '()
+  "Data of each menu buffer.
+A list of (BUFFER-NAME REFRESH SHORTCUTS ITEMS FILE).")
+(define howm-menu-previous-buffer #f "Name of the buffer shown before the menu.")
+(define howm-remember-previous-buffer #f "Name of the buffer shown before `howm-remember'.")
+(define howm-history-list #f "Search history, newest first, or #f before it is loaded.")
+(define howm-keyword-cache #f "Keywords (words of \"<<< word\"), or #f before they are collected.")
 
 ;;; 文字列とリスト
 
-;; 文字列の中の from を, 全て to にする
 (define (howm-replace-all text from to)
+  "Return TEXT with every FROM replaced by TO."
   (let loop ((start 0) (acc '()))
     (let ((found (string-search from text start)))
       (if found
@@ -276,52 +278,56 @@ S 式を eval: %eval%(message (buffer-name))
                 (cons to (cons (substring text start found) acc)))
           (apply string-append (reverse (cons (substring text start) acc)))))))
 
-;; リストの始めの n 個と, 始めの n 個を除いたもの
 (define (howm-take items n)
+  "Return the first N elements of ITEMS."
   (if (or (null? items) (<= n 0))
       '()
       (cons (car items) (howm-take (cdr items) (- n 1)))))
 
 (define (howm-drop items n)
+  "Return ITEMS without the first N elements."
   (if (or (null? items) (<= n 0))
       items
       (howm-drop (cdr items) (- n 1))))
 
-;; 同じものを除く (始めのものを残す)
 (define (howm-unique items)
+  "Return ITEMS without duplicates, keeping the first ones."
   (let loop ((items items) (acc '()))
     (cond ((null? items) (reverse acc))
           ((member (car items) acc) (loop (cdr items) acc))
           (else (loop (cdr items) (cons (car items) acc))))))
 
-;; 0 から n - 1 までの数
 (define (howm-range n)
+  "Return the list of numbers from 0 to N - 1."
   (let loop ((i (- n 1)) (acc '()))
     (if (< i 0) acc (loop (- i 1) (cons i acc)))))
 
-;; リストの中の位置 (0 から. 無ければ #f)
 (define (howm-index-of item items)
+  "Return the position of ITEM in ITEMS, counted from 0, or #f."
   (let loop ((items items) (i 0))
     (cond ((null? items) #f)
           ((equal? (car items) item) i)
           (else (loop (cdr items) (+ i 1))))))
 
-;; ランダムに 1 つ
 (define (howm-pick items)
+  "Return a random element of ITEMS."
   (list-ref items (random (length items))))
 
-;; 数の切り捨て
 (define (howm-floor x)
+  "Return X rounded down."
   (- x (modulo x 1)))
 
-;; 大文字を含まなければ, 大文字と小文字を区別しない正規表現にする (howm と同じ)
 (define (howm-case-fold regexp keyword)
+  "Make REGEXP ignore case if KEYWORD has no upper case letters.
+This is the same as howm."
   (if (string=? keyword (string-downcase keyword))
       (string-append "(?i)" regexp)
       regexp))
 
-;; 行の中の, 正規表現に合う所の位置のリスト. それぞれ, 合った所と括弧ごとの (始め 終わり) (文字の数. 合わなかった括弧は #f)
 (define (howm-matches regexp line)
+  "Return the positions of the matches of REGEXP in LINE.
+Each element is the list of (START END) of the match and of each group,
+counted in characters.  A group that did not match is #f."
   (let loop ((start 0) (acc '()))
     (let ((found (and (<= start (string-length line))
                       (regexp-match-positions regexp line start))))
@@ -329,12 +335,12 @@ S 式を eval: %eval%(message (buffer-name))
           (loop (max (cadr (car found)) (+ (car (car found)) 1)) (cons found acc))
           (reverse acc)))))
 
-;; 位置 ((始め 終わり)) の文字
 (define (howm-group line position)
+  "Return the text of LINE at POSITION, a list of (START END)."
   (substring line (car position) (cadr position)))
 
-;; 正規表現に合う所を, 全て (proc 行 位置) の文字にする
 (define (howm-replace-matches regexp line proc)
+  "Replace each match of REGEXP in LINE with (PROC LINE POSITION)."
   (let loop ((matches (howm-matches regexp line)) (pos 0) (acc '()))
     (if (null? matches)
         (apply string-append (reverse (cons (substring line pos) acc)))
@@ -343,48 +349,51 @@ S 式を eval: %eval%(message (buffer-name))
                 (cadr span)
                 (cons (proc line (car matches)) (cons (substring line pos (car span)) acc)))))))
 
-;; 終わりの空の行を除く
 (define (howm-trim-trailing-lines lines)
+  "Return LINES without the empty lines at the end."
   (let loop ((rest (reverse lines)))
     (if (and (pair? rest) (string=? (car rest) ""))
         (loop (cdr rest))
         (reverse rest))))
 
-;; 2 桁の数 (1 → "01")
 (define (howm-pad2 n)
+  "Return N as a string of 2 digits, such as \"01\"."
   (if (< n 10) (string-append "0" (number->string n)) (number->string n)))
 
 ;;; 日付 (2026-10-25 の形)
 
-(define howm-day (* 24 60 60))
-(define howm-day-of-week-names '("日" "月" "火" "水" "木" "金" "土"))
+(define howm-day (* 24 60 60) "Number of seconds in a day.")
+(define howm-day-of-week-names '("日" "月" "火" "水" "木" "金" "土")
+  "Names of the days of the week in Japanese, from Sunday.")
 
-;; 日付の時刻 (その日の昼. 夏時間でずれないように)
 (define (howm-date-time date)
+  "Return the time of DATE at noon.
+Noon keeps the date right across daylight saving time."
   (date-to-time (string-append date " 12:00")))
 
-;; 今日の日付
 (define (howm-today-date)
+  "Return the date of today, such as \"2026-10-25\"."
   (format-time-string "%Y-%m-%d"))
 
-;; 日付の n 日後
 (define (howm-date-shift date days)
+  "Return the date DAYS days after DATE."
   (format-time-string "%Y-%m-%d" (+ (howm-date-time date) (* days howm-day))))
 
-;; 曜日 (日, 月, ...)
 (define (howm-day-of-week date)
+  "Return the day of the week of DATE in Japanese."
   (list-ref howm-day-of-week-names
             (string->number (format-time-string "%w" (howm-date-time date)))))
 
-;; 年, 月, 日の数と, 日付
 (define (howm-date-parts date)
+  "Return the year, the month and the day of DATE as numbers."
   (map string->number (split-string date "-")))
 
 (define (howm-make-date y m d)
+  "Return the date of year Y, month M and day D."
   (string-append (number->string y) "-" (howm-pad2 m) "-" (howm-pad2 d)))
 
-;; 月の日数
 (define (howm-days-in-month y m)
+  "Return the number of days of month M of year Y."
   (cond ((= m 2)
          (if (and (= (modulo y 4) 0) (or (not (= (modulo y 100) 0)) (= (modulo y 400) 0)))
              29
@@ -392,16 +401,18 @@ S 式を eval: %eval%(message (buffer-name))
         ((member m '(4 6 9 11)) 30)
         (else 31)))
 
-;; 日付の n か月後 (日は, その月の終わりまでにする)
 (define (howm-date-add-months date months)
+  "Return the date MONTHS months after DATE.
+The day is limited to the end of the month."
   (let* ((parts (howm-date-parts date))
          (index (+ (* (car parts) 12) (- (cadr parts) 1) months))
          (y (quotient index 12))
          (m (+ (modulo index 12) 1)))
     (howm-make-date y m (min (caddr parts) (howm-days-in-month y m)))))
 
-;; 数字 (yyyymmdd, yymmdd, mmdd, dd) の日付. 省いた所 (と 0 の所) は, base の年, 月, 日にする
 (define (howm-date-expand digits base)
+  "Return the date written as DIGITS (yyyymmdd, yymmdd, mmdd or dd).
+Omitted parts and parts of 0 are taken from BASE."
   (let* ((digits (if (> (string-length digits) 8)
                      (substring digits (- (string-length digits) 8))
                      digits))
@@ -417,58 +428,60 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; ファイル
 
-;; メモのディレクトリ (絶対パス)
 (define (howm-dir)
+  "Return the absolute path of `howm-directory'."
   (expand-file-name howm-directory))
 
-;; メモのファイル (名前の順). 除くファイルは, howm-directory からのパスで決める
 (define (howm-files)
+  "Return the memo files, sorted by name.
+Files matching `howm-excluded-file-regexp' are excluded."
   (let ((skip (+ (string-length (howm-dir)) 1)))
     (filter (lambda (file)
               (not (regexp-match howm-excluded-file-regexp (substring file skip))))
             (directory-files-recursively (howm-dir) howm-file-name-regexp))))
 
-;; howm-directory の下のファイルなら #t
 (define (howm-memo-file? file)
+  "Return #t if FILE is under `howm-directory'."
   (and (string? file) (string-prefix? (string-append (howm-dir) "/") file)))
 
-;; ファイルの名前 (ディレクトリと .txt を除く. 一覧に出す)
 (define (howm-file-label file)
+  "Return the name of FILE without its directory and .txt."
   (cadr (regexp-match "([^/]*?)(\\.txt)?$" file)))
 
-;; ファイルのディレクトリ
 (define (howm-file-directory file)
+  "Return the directory of FILE."
   (cadr (regexp-match "^(.*)/[^/]*$" file)))
 
-;; 題の行なら #t ("= " で始まる行)
 (define (howm-title-line? line)
+  "Return #t if LINE is a title line, which starts with \"= \"."
   (or (string=? line howm-view-title-header)
       (string-prefix? (string-append howm-view-title-header " ") line)))
 
-;; 題の行の, 題
 (define (howm-title-of line)
+  "Return the title of the title LINE."
   (string-trim (substring line (string-length howm-view-title-header))))
 
-;; メモの題 (最初の "= " の行. 無ければ空)
 (define (howm-title file)
+  "Return the title of the memo FILE, or \"\" if it has none.
+The title is the first line starting with \"= \"."
   (let ((found (regexp-match
                 (string-append "(?m)^" (regexp-quote howm-view-title-header) " ?(.*)$")
                 (read-file-string file))))
     (if found (string-trim (cadr found)) "")))
 
-;; 題 (無ければ, ファイルの名前)
 (define (howm-title-or-label file)
+  "Return the title of FILE, or its name if it has no title."
   (let ((title (howm-title file)))
     (if (string=? title "") (howm-file-label file) title)))
 
-;; 新しい順 (更新の時刻)
 (define (howm-recent-files)
+  "Return the memo files, newest first by modification time."
   (map cadr
        (sort (map (lambda (file) (list (file-modification-time file) file)) (howm-files))
              (lambda (a b) (> (car a) (car b))))))
 
-;; ランダムに n 個
 (define (howm-random-files n)
+  "Return N random memo files."
   (let loop ((files (howm-files)) (n n) (acc '()))
     (if (or (null? files) (<= n 0))
         (reverse acc)
@@ -477,14 +490,15 @@ S 式を eval: %eval%(message (buffer-name))
                 (- n 1)
                 (cons picked acc))))))
 
-;; 新しいメモのファイルのパス (同じ名前のファイルがあれば, 1 秒ずつ後の時刻にする)
 (define (howm-new-file)
+  "Return the path of a new memo file.
+If the file exists, use a time one second later."
   (let loop ((time (current-time)))
     (let ((file (string-append (howm-dir) "/" (format-time-string howm-file-name-format time))))
       (if (file-exists? file) (loop (+ time 1)) file))))
 
-;; 新しいメモを書く (題, 日時, 本文の行)
 (define (howm-write-memo title lines)
+  "Write a new memo with TITLE, the date and time, and LINES."
   (let ((file (howm-new-file)))
     (write-file-string file
                        (string-append howm-view-title-header " " title "\n"
@@ -493,10 +507,11 @@ S 式を eval: %eval%(message (buffer-name))
     (set! howm-keyword-cache #f)
     file))
 
-;; キーワード (メモの "<<< 言葉" の言葉. 集めたものを使い回す)
-(define howm-come-from-regexp "<<<\\s*(.*\\S)")
+(define howm-come-from-regexp "<<<\\s*(.*\\S)" "Regexp of a keyword definition, \"<<< word\".")
 
 (define (howm-keywords)
+  "Return the keywords, the words of \"<<< word\" in the memos.
+The collected keywords are reused."
   (unless howm-keyword-cache
     (set! howm-keyword-cache
           (howm-unique
@@ -504,46 +519,47 @@ S 式を eval: %eval%(message (buffer-name))
                 (grep howm-come-from-regexp (howm-files))))))
   howm-keyword-cache)
 
-;; キーワードのどれかに合う正規表現 (長いものを先に)
 (define (howm-keyword-regexp keywords)
+  "Return a regexp matching any of KEYWORDS, longer ones first."
   (string-join (map regexp-quote
                     (sort keywords (lambda (a b) (> (string-length a) (string-length b)))))
                "|"))
 
 ;;; バッファ
 
-;; バッファの本文を, 全て置き換える
 (define (howm-set-buffer-text text)
+  "Replace the whole text of the current buffer with TEXT."
   (delete-region (point-min) (point-max))
   (insert text)
   (goto-char (point-min))
   (set-buffer-modified-p #f))
 
-;; カーソルの行の番号 (1 から)
 (define (howm-current-line)
+  "Return the line number of point, counted from 1."
   (length (split-string (buffer-substring (point-min) (point)) "\n")))
 
-;; 行の始めの位置 (1 から)
 (define (howm-line-start text line)
+  "Return the position of the start of LINE in TEXT, counted from 1."
   (let loop ((lines (split-string text "\n")) (n 1) (pos 1))
     (if (or (null? lines) (>= n line))
         pos
         (loop (cdr lines) (+ n 1) (+ pos (string-length (car lines)) 1)))))
 
-;; カーソルの行の始めの位置
 (define (howm-current-line-start)
+  "Return the position of the start of the current line."
   (howm-line-start (buffer-string) (howm-current-line)))
 
-;; カーソルの行の文字と, 行の中の位置 (0 から)
 (define (howm-current-line-and-column)
+  "Return the current line and the column of point in it, counted from 0."
   (let* ((text (buffer-string))
          (start (howm-line-start text (howm-current-line)))
          (rest (substring text (- start 1)))
          (end (string-search "\n" rest)))
     (list (if end (substring rest 0 end) rest) (- (point) start))))
 
-;; カーソルの行の, from から to まで (行の中の位置) を, text にする. カーソルは動かさない
 (define (howm-replace-in-line from to text)
+  "Replace the text from FROM to TO in the current line with TEXT.
+FROM and TO are columns.  Point does not move."
   (let ((start (howm-current-line-start))
         (here (point)))
     (delete-region (+ start from) (+ start to))
@@ -551,61 +567,67 @@ S 式を eval: %eval%(message (buffer-name))
     (insert text)
     (goto-char here)))
 
-;; 行の中の, line 行目 (1 から) を含むメモ (題の行から, 次の題の行の前まで) の, 始めと終わりの行 (0 から. 終わりは含まない)
 (define (howm-section-range lines line)
+  "Return the range of the memo containing LINE in LINES.
+A memo runs from a title line to the line before the next title line.
+LINE counts from 1; the range is (START END), counted from 0, END excluded."
   (let loop ((rest lines) (i 0) (start 0))
     (cond ((null? rest) (list start i))
           ((and (howm-title-line? (car rest)) (> i start))
            (if (< i line) (loop (cdr rest) (+ i 1) i) (list start i)))
           (else (loop (cdr rest) (+ i 1) start)))))
 
-;; 行の中の, 範囲の行
 (define (howm-lines-in lines range)
+  "Return the lines of LINES in RANGE."
   (howm-take (howm-drop lines (car range)) (- (cadr range) (car range))))
 
-;; カーソルのメモ (題の行から, 次の題の行の前まで) の行
 (define (howm-current-section)
+  "Return the lines of the memo at point."
   (let ((lines (split-string (buffer-string) "\n")))
     (howm-lines-in lines (howm-section-range lines (howm-current-line)))))
 
-;; カーソルのメモの題 (無ければ #f)
 (define (howm-current-title)
+  "Return the title of the memo at point, or #f."
   (let ((titles (filter howm-title-line? (howm-current-section))))
     (and (pair? titles)
          (not (string=? (howm-title-of (car titles)) ""))
          (howm-title-of (car titles)))))
 
-;; バッファがあれば, そこへ移る
 (define (howm-switch-back name)
+  "Switch to the buffer NAME if it exists."
   (when (and name (member name (buffer-list)))
     (switch-to-buffer name)))
 
-;; ファイルを開いて, 行へ動く
 (define (howm-open file line)
+  "Open FILE and go to LINE."
   (find-file file)
   (goto-char (howm-line-start (buffer-string) line))
   (howm-mode))
 
-;; メモのバッファにする (RET で動かし, 下線を引く. キーワードは集め直す)
 (define (howm-mode)
+  "Make the current buffer a memo buffer.
+RET runs actions and links are underlined.  The keywords are collected again."
   (set! howm-keyword-cache #f)
   (local-set-key "RET" 'howm-action-or-newline)
   (howm-highlight '()))
 
-;; 今のバッファが, メモのファイルなら #t (howm-directory の下で, howm-file-name-regexp に合う)
 (define (howm-set-mode-p)
+  "Return #t if the current buffer visits a memo file.
+The file must be under `howm-directory' and match `howm-file-name-regexp'."
   (let ((file (buffer-file-name)))
     (and (howm-memo-file? file)
          (regexp-match howm-file-name-regexp file)
          #t)))
 
-;; ファイルを開いたとき (find-file-hook): メモなら, メモのバッファにする
 (define (howm-find-file-hook)
+  "Turn on `howm-mode' when a memo is opened.
+This is added to `find-file-hook'."
   (when (and howm-set-mode-on-find-file (howm-set-mode-p))
     (howm-mode)))
 
-;; 保存したとき (after-save-hook): メモなら, キーワードを集め直し, 下線を引き直し, メニューを出し直す
 (define (howm-after-save)
+  "Refresh keywords, underlines and the menu after saving a memo.
+This is added to `after-save-hook'."
   (when (howm-set-mode-p)
     (set! howm-keyword-cache #f)
     (when howm-refresh-after-save
@@ -614,8 +636,8 @@ S 式を eval: %eval%(message (buffer-name))
       (howm-menu-refresh-background))
     (run-hooks 'howm-after-save-hook)))
 
-;; メニューを出していれば, 出し直して, 今のバッファに戻る
 (define (howm-menu-refresh-background)
+  "Refresh the menu if it is shown, and return to the current buffer."
   (when (member howm-menu-name (buffer-list))
     (let ((buffer (buffer-name))
           (previous howm-menu-previous-buffer))
@@ -623,16 +645,16 @@ S 式を eval: %eval%(message (buffer-name))
       (set! howm-menu-previous-buffer previous)
       (switch-to-buffer buffer))))
 
-;; 下線を引く正規表現 (画面のエディタの, JavaScript の正規表現で書く)
 (define howm-highlight-regexps
   '(">>>[ \\t]*\\S.*"
     "<<<[ \\t]*\\S.*"
     "\\[[0-9]{4}-[0-9]{2}-[0-9]{2}\\]([-+@!.~][0-9]*)?"
     "\\[\\[[^\\]\\n]+\\]\\]"
-    "file://\\S+"))
+    "file://\\S+")
+  "Regexps to underline, written as JavaScript regexps for the editor.")
 
-;; 下線を引き直す (リンク, 日付, キーワードと, extra の正規表現)
 (define (howm-highlight extra)
+  "Underline links, dates, keywords and the regexps in EXTRA again."
   (let ((keywords (howm-keywords)))
     (unhighlight-regexp #t)
     (for-each highlight-regexp (append howm-highlight-regexps extra))
@@ -641,14 +663,15 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; 一覧 (*howmS*)
 
-;; 一覧の 1 行
 (define (howm-summary-line item)
+  "Return the line of the summary for ITEM."
   (if (car item)
       (format "%s | %s" (howm-file-label (car item)) (list-ref item 2))
       (list-ref item 2)))
 
-;; 項目 ((ファイル 行の番号 文字) のリスト) を, 一覧のバッファに出す
 (define (howm-show-summary items empty-message)
+  "Show ITEMS, a list of (FILE LINE TEXT), in the summary buffer.
+If there are no items, show EMPTY-MESSAGE."
   (if (null? items)
       (message empty-message)
       (begin
@@ -661,42 +684,45 @@ S 式を eval: %eval%(message (buffer-name))
         (howm-summary-contents)
         (message "%d items" (length items)))))
 
-;; カーソルの行の項目 (無ければ #f)
 (define (howm-summary-item)
+  "Return the item of the current line of the summary, or #f."
   (let ((n (howm-current-line)))
     (and (<= n (length howm-summary-items))
          (list-ref howm-summary-items (- n 1)))))
 
-;; カーソルの行のメモを, もう 1 つの窓に出す
 (define (howm-summary-contents)
+  "Show the memo of the current line in the other window."
   (let ((item (howm-summary-item)))
     (when (and howm-view-contents item (car item))
       (display-buffer (find-file-noselect (car item)) (cadr item)))))
 
-;; カーソルの行の項目を開く (ファイルが無ければ, 文字を探す)
 (define (howm-summary-open)
+  "Open the item of the current line.
+If the item has no file, search for its text."
   (let ((item (howm-summary-item)))
     (cond ((not item) #f)
           ((car item) (howm-open (car item) (cadr item)))
           (else (howm-search-keyword-with-history (list-ref item 2))))))
 
-;; 次と前の行へ動いて, その行のメモを出す (一覧の n と p)
 (define-command (howm-summary-next)
+  "Move to the next line and show its memo."
   (call-interactively 'next-line)
   (howm-summary-contents))
 
 (define-command (howm-summary-previous)
+  "Move to the previous line and show its memo."
   (call-interactively 'previous-line)
   (howm-summary-contents))
 
-;; ファイルごとに, 題の行を項目にする
 (define (howm-file-items files)
+  "Return the title lines of FILES as summary items."
   (map (lambda (file) (list file 1 (howm-title-or-label file))) files))
 
 ;;; 検索
 
-;; 正規表現で探して, come-from (<<< 言葉) の行を先に, あとは新しいファイルの順に並べる
 (define (howm-search regexp keyword)
+  "Search the memos for REGEXP.
+Lines of \"<<< KEYWORD\" come first, then newer files first."
   (let* ((found (grep regexp (howm-files)))
          (come-from (string-append (howm-case-fold "<<<\\s*" keyword) (regexp-quote keyword)))
          (rank (lambda (item) (if (regexp-match come-from (list-ref item 2)) 0 1))))
@@ -709,38 +735,41 @@ S 式を eval: %eval%(message (buffer-name))
                           (and (string=? (car a) (car b)) (< (cadr a) (cadr b))))))))
      (format "No match: %s" keyword))))
 
-;; 言葉 (そのままの文字) で探す
 (define (howm-search-keyword keyword)
+  "Search the memos for KEYWORD as a fixed string."
   (howm-search (howm-case-fold (regexp-quote keyword) keyword) keyword))
 
-;; 履歴に残して, 言葉で探す
 (define (howm-search-keyword-with-history keyword)
+  "Search the memos for KEYWORD and add it to the history."
   (howm-history-add keyword)
   (howm-search-keyword keyword))
 
-;; 言葉を (キーワードを補完して) 聞いて探す (C-c , s. メニューの s)
 (define-command (howm-search-fixed)
+  "Read a keyword with completion and search the memos for it."
   (let ((keyword (completing-read "Search: " (howm-keywords))))
     (unless (string=? keyword "")
       (howm-search-keyword-with-history keyword))))
 
-;; 正規表現を聞いて探す (C-c , g. メニューの g)
 (define-command (howm-search-regexp)
+  "Read a regexp and search the memos for it."
   (let ((regexp (read-string "Search (regexp): ")))
     (unless (string=? regexp "")
       (howm-history-add regexp)
       (howm-search (howm-case-fold regexp regexp) regexp))))
 
-;; 今日から n 日後の日付の, メモ
 (define (howm-search-day days)
+  "Search the memos for the date DAYS days after today."
   (howm-search-keyword (string-append "[" (howm-date-shift (howm-today-date) days))))
 
-;; 今日と昨日の日付のメモ (メニューの . と :)
-(define-command (howm-today) (howm-search-day 0))
-(define-command (howm-yesterday) (howm-search-day -1))
+(define-command (howm-today)
+  "Search the memos for the date of today."
+  (howm-search-day 0))
+(define-command (howm-yesterday)
+  "Search the memos for the date of yesterday."
+  (howm-search-day -1))
 
-;; 今のバッファの中を, 正規表現で探す (C-c , o. メニューの o)
 (define-command (howm-occur)
+  "Read a regexp and list its matches in the current buffer."
   (let ((file (buffer-file-name)))
     (if (not file)
         (message "Not a file buffer")
@@ -789,23 +818,28 @@ S 式を eval: %eval%(message (buffer-name))
     ("vu" "ゔ")
     ("xa" "ぁ") ("xi" "ぃ") ("xu" "ぅ") ("xe" "ぇ") ("xo" "ぉ")
     ("xtu" "っ") ("xya" "ゃ") ("xyu" "ゅ") ("xyo" "ょ")
-    ("-" "ー")))
+    ("-" "ー"))
+  "Alist of romaji and hiragana.")
 
 (define howm-hiragana
-  "ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔ")
+  "ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔ"
+  "Hiragana letters, in the same order as `howm-katakana'.")
 (define howm-katakana
-  "ァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴ")
+  "ァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴ"
+  "Katakana letters, in the same order as `howm-hiragana'.")
 
-;; ローマ字の, i 文字目からの綴り ((ローマ字 かな). 長いものを先に. 無ければ #f)
 (define (howm-roma-lookup roma i)
+  "Return the romaji spelling at index I of ROMA, or #f.
+The result is (ROMAJI KANA); longer spellings are tried first."
   (let loop ((n 3))
     (and (> n 0)
          (or (and (<= (+ i n) (string-length roma))
                   (assoc (substring roma i (+ i n)) howm-roma-table))
              (loop (- n 1))))))
 
-;; ローマ字を, ひらがなにする (かなにできない文字は, そのまま)
 (define (howm-roma-to-hiragana roma)
+  "Convert ROMA to hiragana.
+Letters that cannot be converted are kept."
   (let loop ((i 0) (acc '()))
     (if (>= i (string-length roma))
         (apply string-append (reverse acc))
@@ -819,8 +853,8 @@ S 式を eval: %eval%(message (buffer-name))
                       ((string=? c "n") (loop (+ i 1) (cons "ん" acc)))
                       (else (loop (+ i 1) (cons c acc))))))))))
 
-;; ひらがなを, カタカナにする
 (define (howm-hiragana-to-katakana text)
+  "Convert the hiragana in TEXT to katakana."
   (apply string-append
          (map (lambda (i)
                 (let* ((c (substring text i (+ i 1)))
@@ -828,8 +862,8 @@ S 式を eval: %eval%(message (buffer-name))
                   (if found (substring howm-katakana found (+ found 1)) c)))
               (howm-range (string-length text)))))
 
-;; ローマ字, ひらがな, カタカナのどれかに合う正規表現
 (define (howm-migemo-regexp roma)
+  "Return a regexp matching ROMA as romaji, hiragana or katakana."
   (let ((hiragana (howm-roma-to-hiragana (string-downcase roma))))
     (string-append "(?i)(?:"
                    (string-join (map regexp-quote
@@ -838,8 +872,9 @@ S 式を eval: %eval%(message (buffer-name))
                                 "|")
                    ")")))
 
-;; ローマ字を聞いて探す (C-c , m. メニューの m)
 (define-command (howm-search-migemo)
+  "Read romaji and search the memos for it.
+Hiragana and katakana are also searched for."
   (let ((roma (read-string "Search (roma): ")))
     (unless (string=? roma "")
       (howm-history-add roma)
@@ -847,12 +882,13 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; 履歴
 
-;; 履歴のファイル
 (define (howm-history-path)
+  "Return the path of the history file."
   (or howm-history-file (string-append (howm-dir) "/.howm-history")))
 
-;; 履歴 (新しい順. 始めに, ファイルから読む)
 (define (howm-history-load)
+  "Return the search history, newest first.
+The history is read from the file the first time."
   (unless howm-history-list
     (set! howm-history-list
           (if (file-exists? (howm-history-path))
@@ -861,30 +897,31 @@ S 式を eval: %eval%(message (buffer-name))
               '())))
   howm-history-list)
 
-;; 履歴に足して, ファイルに書く
 (define (howm-history-add keyword)
+  "Add KEYWORD to the search history and write the history file."
   (set! howm-history-list
         (howm-take (cons keyword (filter (lambda (k) (not (string=? k keyword))) (howm-history-load)))
                    howm-history-limit))
   (write-file-string (howm-history-path) (string-join howm-history-list "\n")))
 
-;; 履歴の一覧 (C-c , h. RET で, その言葉を探す)
 (define-command (howm-history)
+  "List the search history.
+RET on a line searches for its keyword."
   (howm-show-summary (map (lambda (k) (list #f 0 k)) (howm-history-load)) "No history"))
 
 ;;; 一覧
 
-;; 全てのメモの一覧 (新しい順. C-c , a)
 (define-command (howm-list-all)
+  "List all memos, newest first."
   (howm-show-summary (howm-file-items (reverse (howm-files))) "No memo"))
 
-;; 最近のメモの一覧 (C-c , l)
 (define-command (howm-list-recent)
+  "List the recent memos."
   (howm-show-summary (howm-file-items (howm-take (howm-recent-files) howm-menu-recent-num))
                      "No memo"))
 
-;; 前後のメモ (全てのメモの一覧で, 今のメモの行にカーソルを置く. C-c , A)
 (define-command (howm-list-around)
+  "List all memos with point on the current memo."
   (let ((file (buffer-file-name))
         (files (reverse (howm-files))))
     (howm-show-summary (howm-file-items files) "No memo")
@@ -893,8 +930,9 @@ S 式を eval: %eval%(message (buffer-name))
         (goto-char (howm-line-start (buffer-string) (+ index 1)))
         (howm-summary-contents)))))
 
-;; 今のバッファの, 探せる言葉 (リンクとキーワード)
 (define (howm-buffer-links)
+  "Return the words to search for in the current buffer.
+These are the links and the keywords."
   (howm-unique
    (apply append
           (map (lambda (line)
@@ -904,9 +942,10 @@ S 式を eval: %eval%(message (buffer-name))
                               (howm-line-actions line #f))))
                (split-string (buffer-string) "\n")))))
 
-;; 酔歩 (C-c , w): 一覧なら, ランダムな行を開く. メモなら, ランダムなリンクを探す.
-;; リンクが無ければ, ランダムなメモを開く. 1 回に 1 歩なので, 続けるときは, もう一度呼ぶ
 (define-command (howm-random-walk)
+  "Take one step of a random walk.
+In the summary, open a random line.  In a memo, search for a random link,
+or open a random memo if there are no links.  Call it again to continue."
   (if (string=? (buffer-name) howm-summary-name)
       (begin
         (goto-char (howm-line-start (buffer-string) (+ (random (length howm-summary-items)) 1)))
@@ -922,23 +961,26 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; 予定と todo
 
-;; 予定と todo の正規表現 ([2026-10-25]+7 の, 日付, 種類, 猶予, 残り)
 (define howm-reminder-regexp
-  "\\[([0-9]{4}-[0-9]{2}-[0-9]{2})\\]([-+@!.~])([0-9]*)(.*)$")
-;; RET で動かす所 (日付, 種類と猶予, 種類, 猶予)
+  "\\[([0-9]{4}-[0-9]{2}-[0-9]{2})\\]([-+@!.~])([0-9]*)(.*)$"
+  "Regexp of a reminder, such as [2026-10-25]+7.
+The groups are the date, the type, the laziness and the rest.")
 (define howm-reminder-action-regexp
-  "\\[([0-9]{4}-[0-9]{2}-[0-9]{2})\\](([-+@!.~])([0-9]*))")
+  "\\[([0-9]{4}-[0-9]{2}-[0-9]{2})\\](([-+@!.~])([0-9]*))"
+  "Regexp of the parts of a reminder that RET acts on.
+The groups are the date, the type and laziness, the type and the laziness.")
 
-;; 種類ごとの, 猶予の既定の日数
-(define howm-reminder-laziness '(("-" 1) ("+" 7) ("~" 30) ("!" 7) ("@" 1) ("." 1)))
+(define howm-reminder-laziness '(("-" 1) ("+" 7) ("~" 30) ("!" 7) ("@" 1) ("." 1))
+  "Alist of reminder types and their default laziness in days.")
 
-;; 底と天井 (howm の howm-huge)
-(define howm-huge 77777)
-(define howm-huge+ 88888)
-(define howm-huge++ 99999)
+(define howm-huge 77777 "Priority of the bottom and the top, as howm-huge of howm.")
+(define howm-huge+ 88888 "Priority above `howm-huge'.")
+(define howm-huge++ 99999 "Priority above `howm-huge+'.")
 
-;; 優先度 (howm の howm-todo-priority-*). late は, 日付から今までの日数
 (define (howm-priority type late laziness)
+  "Return the priority of a reminder of TYPE.
+LATE is the number of days since its date; LAZINESS is in days.
+This is howm-todo-priority-* of howm."
   (let ((r (/ late laziness)))
     (cond ((string=? type "+")
            (if (< r 0) (- r howm-huge) (* 7 (- r 1))))
@@ -955,8 +997,9 @@ S 式を eval: %eval%(message (buffer-name))
           (else
            (if (< r 0) (- r howm-huge) (- r))))))
 
-;; 予定と todo の項目 ((優先度 日付 種類 ファイル 行の番号 文字) のリスト)
 (define (howm-reminders)
+  "Return the reminders in the memos.
+Each is a list of (PRIORITY DATE TYPE FILE LINE TEXT)."
   (let ((now (current-time)))
     (map (lambda (found)
            (let* ((parts (regexp-match howm-reminder-regexp (list-ref found 2)))
@@ -970,12 +1013,13 @@ S 式を eval: %eval%(message (buffer-name))
                    (car found) (cadr found) (car parts))))
          (grep howm-reminder-regexp (howm-files)))))
 
-;; 項目を, 一覧の項目 ((ファイル 行の番号 文字)) にする
 (define (howm-reminder-item reminder)
+  "Return REMINDER as a summary item, (FILE LINE TEXT)."
   (list (list-ref reminder 3) (list-ref reminder 4) (list-ref reminder 5)))
 
-;; 予定 (@) を日付の順に. days が数なら, 今日からその日数先まで
 (define (howm-schedule days)
+  "Return the schedule (@), sorted by date.
+If DAYS is a number, only the next DAYS days from today."
   (let ((today (howm-today-date))
         (last (howm-date-shift (howm-today-date) (or days 0))))
     (sort (filter (lambda (r)
@@ -986,24 +1030,27 @@ S 式を eval: %eval%(message (buffer-name))
                   (howm-reminders))
           (lambda (a b) (string<? (list-ref a 1) (list-ref b 1))))))
 
-;; todo (@ と . のほか) を優先度の順に (底に沈んだものは除く)
 (define (howm-todo)
+  "Return the todo items, sorted by priority.
+Schedules, done items and items sunk to the bottom are excluded."
   (sort (filter (lambda (r)
                   (and (not (member (list-ref r 2) '("@" ".")))
                        (> (car r) (- howm-huge+))))
                 (howm-reminders))
         (lambda (a b) (> (car a) (car b)))))
 
-;; 予定と todo の一覧 (C-c , y と C-c , t)
 (define-command (howm-list-schedule)
+  "List the schedule."
   (howm-show-summary (map howm-reminder-item (howm-schedule #f)) "No schedule"))
 
 (define-command (howm-list-todo)
+  "List the todo items."
   (howm-show-summary (map howm-reminder-item (howm-todo)) "No todo"))
 
-;; 予定と todo の記号の上の RET: 済み (RET), 取り消し (x), 種類 (記号) と猶予 (数) を変える.
-;; from は, 行の中の, 日付の位置
 (define (howm-reminder-action from)
+  "Act on the type of the reminder in the current line.
+RET marks it done, x cancels it, a type letter or a number changes the
+type or the laziness.  FROM is the column of the date."
   (let* ((line (car (howm-current-line-and-column)))
          (found (regexp-match-positions howm-reminder-action-regexp line from))
          (date (howm-group line (list (car (car found)) (car (list-ref found 2)))))
@@ -1024,9 +1071,10 @@ S 式を eval: %eval%(message (buffer-name))
         (howm-replace-in-line from (string-length line) new)
         (message "Can't understand %s." c))))
 
-;; 日付の上の RET: 一覧 (RET. new? なら何もしない), ずらす (+3, -1), 変える (yymmdd), 今日 (.),
-;; 繰り返す (~yymmdd), 1 日ずつずらす ([ と ]). 日付は, カーソルの行の from から to まで
 (define (howm-date-action date from to new?)
+  "Act on the date from FROM to TO in the current line.
+RET lists it (unless NEW?), +3 or -1 shifts it, yymmdd changes it, . sets
+today, ~yymmdd repeats it, and [ or ] shifts it by one day."
   (let* ((replace (lambda (new) (howm-replace-in-line from to (string-append "[" new "]"))))
          (c (read-string
              (format "%s [%s] %s+num(shift), yymmdd(set), ~yymmdd(repeat), .(today), [(-1), ](+1): "
@@ -1042,8 +1090,10 @@ S 式を eval: %eval%(message (buffer-name))
           ((string=? c "]") (howm-date-quickshift 1 date replace))
           (else (message "Can't understand %s." c)))))
 
-;; 1 日ずつずらす (続けて [ か ] を入れる. . は今日. ほかは終わり)
 (define (howm-date-quickshift days date replace)
+  "Shift DATE by DAYS days and call REPLACE with the new date.
+Then read [ or ] to shift it by one more day, or . for today; anything
+else ends."
   (let ((new (howm-date-shift date days)))
     (replace new)
     (let ((c (read-string (format "%s [%s] RET(ok), [(-1), ](+1), .(today): "
@@ -1053,8 +1103,9 @@ S 式を eval: %eval%(message (buffer-name))
             ((string=? c ".") (howm-date-quickshift 0 (howm-today-date) replace))
             (else #t)))))
 
-;; カーソルの行を, until の日付まで, 日付を変えて繰り返す (下に足す)
 (define (howm-date-repeat until date from to)
+  "Repeat the current line below it with the date changed until UNTIL.
+The date is DATE, from FROM to TO in the line."
   (let* ((every (read-string "Every? [RET(all), num(days), w(week), m(month), y(year)] "))
          (next (cond ((string=? every "y") (lambda (d) (howm-date-add-months d 12)))
                      ((string=? every "m") (lambda (d) (howm-date-add-months d 1)))
@@ -1076,8 +1127,9 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; メモを作る
 
-;; 新しいメモを作って開く (題の行と日時を入れる. 題が空なら, 題の所にカーソルを置く)
 (define (howm-create-memo title)
+  "Create a new memo with TITLE and open it.
+If TITLE is empty, put point where the title goes."
   (let ((file (howm-new-file)))
     (make-directory (howm-file-directory file))
     (find-file file)
@@ -1086,20 +1138,24 @@ S 式を eval: %eval%(message (buffer-name))
       (goto-char (+ (string-length howm-view-title-header) 2)))
     (howm-mode)))
 
-;; 新しいメモ (C-c , c)
 (define-command (howm-create)
+  "Create a new memo."
   (howm-create-memo ""))
 
-;; [[言葉]] の上の RET: "<<< 言葉" のメモが無ければ作り, あれば探す. %名前% なら, そのメニューを開く
 (define (howm-wiki keyword)
+  "Act on [[KEYWORD]].
+Create a memo of \"<<< KEYWORD\" if there is none, or search for it.
+If KEYWORD is %name%, open that menu."
   (cond ((and (howm-menu-keyword? keyword) (howm-menu-find-section keyword))
          (howm-menu-open-section keyword))
         ((null? (grep (string-append "<<<\\s*" (regexp-quote keyword)) (howm-files)))
          (howm-create-memo (string-append "<<< " keyword)))
         (else (howm-search-keyword-with-history keyword))))
 
-;; 速記 (C-c , e): *howm-remember* に書いて, C-c C-c で新しいメモにする (1 行目が題). C-c C-k で取り消す
 (define-command (howm-remember)
+  "Write a quick note in a buffer of its own.
+\\[howm-remember-submit] saves it as a new memo whose title is its first line.
+\\[howm-remember-discard] discards it."
   (unless (string=? (buffer-name) howm-remember-name)
     (set! howm-remember-previous-buffer (buffer-name)))
   (switch-to-buffer howm-remember-name)
@@ -1107,14 +1163,15 @@ S 式を eval: %eval%(message (buffer-name))
   (local-set-key "C-c C-k" 'howm-remember-discard)
   (message "C-c C-c: save, C-c C-k: discard"))
 
-;; 速記のバッファを消して, 前のバッファに戻る
 (define (howm-remember-close)
+  "Kill the quick note buffer and return to the previous buffer."
   (let ((buffer (buffer-name)))
     (set-buffer-modified-p #f)
     (howm-switch-back howm-remember-previous-buffer)
     (kill-buffer buffer)))
 
 (define-command (howm-remember-submit)
+  "Save the quick note as a new memo."
   (let ((text (string-trim (buffer-string))))
     (if (string=? text "")
         (message "Empty memo")
@@ -1124,11 +1181,12 @@ S 式を eval: %eval%(message (buffer-name))
           (message "Saved: %s" file)))))
 
 (define-command (howm-remember-discard)
+  "Discard the quick note."
   (howm-remember-close)
   (message "Discarded"))
 
-;; 複製 (C-c , D): カーソルのメモ (題の行から, 次の題の行の前まで) を, 新しいメモにして開く
 (define-command (howm-dup)
+  "Copy the memo at point to a new memo and open it."
   (let ((file (howm-new-file)))
     (write-file-string file
                        (string-append (string-join (howm-trim-trailing-lines (howm-current-section)) "\n")
@@ -1137,46 +1195,48 @@ S 式を eval: %eval%(message (buffer-name))
 
 ;;; コピーと挿入
 
-;; カーソルのメモの題を, kill ring に入れる (無ければ, ファイルの名前. C-c , K)
 (define-command (howm-title-to-kill-ring)
+  "Put the title of the memo at point in the kill ring.
+If it has no title, use the file name."
   (let ((text (or (howm-current-title)
                   (let ((file (buffer-file-name)))
                     (if file (howm-file-label file) (buffer-name))))))
     (kill-new text)
     (message "%s" text)))
 
-;; ファイルの名前を, kill ring に入れる
 (define-command (howm-name-to-kill-ring)
+  "Put the file name of the current buffer in the kill ring."
   (let ((text (or (buffer-file-name) (buffer-name))))
     (kill-new text)
     (message "%s" text)))
 
-;; キーワードを補完して入れる (C-c , i)
 (define-command (howm-insert-keyword)
+  "Read a keyword with completion and insert it."
   (let ((keyword (completing-read "Keyword: " (howm-keywords))))
     (unless (string=? keyword "")
       (insert keyword))))
 
-;; 今日の日付を入れて, 日付の RET と同じく変えられるようにする (C-c , d)
 (define-command (howm-insert-date)
+  "Insert the date of today and act on it as RET on a date does."
   (let ((column (cadr (howm-current-line-and-column)))
         (date (format-time-string howm-date-format)))
     (insert date)
     (howm-date-action (howm-today-date) column (+ column (string-length date)) #t)))
 
-;; 今の日時を入れる (C-c , T)
 (define-command (howm-insert-dtime)
+  "Insert the current date and time."
   (insert (format-time-string howm-dtime-format)))
 
 ;;; バッファ
 
-;; howm のバッファ (メモ, メニュー, 一覧, 速記) なら #t
 (define (howm-buffer? name)
+  "Return #t if NAME is a howm buffer.
+Memos, the menu, the summary and quick notes are howm buffers."
   (or (string-prefix? "*howm" name)
       (howm-memo-file? (buffer-file-name name))))
 
-;; howm のバッファを全て消す (書き換えたものは残す. C-c , Q)
 (define-command (howm-kill-all)
+  "Kill all howm buffers except modified ones."
   (let loop ((names (buffer-list)) (n 0))
     (cond ((null? names) (message "%d buffers killed" n))
           ((and (howm-buffer? (car names)) (not (buffer-modified-p (car names))))
@@ -1184,30 +1244,33 @@ S 式を eval: %eval%(message (buffer-name))
            (loop (cdr names) (+ n 1)))
           (else (loop (cdr names) n)))))
 
-;; バッファの一覧 (C-c , b)
 (define-command (howm-list-buffers)
+  "List the buffers."
   (call-interactively 'list-buffers))
 
-;; 下線を引き直す (メニューなら, 出し直す. C-c , r)
 (define-command (howm-refresh)
+  "Underline the current buffer again, or refresh it if it is the menu."
   (if (howm-menu-buffer?)
       (howm-menu-refresh)
       (begin (howm-mode) (message "Refreshed"))))
 
-;; 初期設定ファイルを開く ([設定])
 (define-command (howm-settings)
+  "Open the init file."
   (if user-init-file
       (find-file user-init-file)
       (message "No init file")))
 
 ;;; RET (ボタン, リンク, 日付, 予定と todo, 一覧とメニューの項目)
 
-;; >>> の言葉 (%名前% なら, そのメニューを開く)
 (define (howm-link-action keyword)
+  "Act on the word of \">>> KEYWORD\".
+If KEYWORD is %name%, open that menu; otherwise search for it."
   (if (howm-menu-keyword? keyword) (list "menu" keyword) (list "search" keyword)))
 
-;; RET で動く所の規則 ((正規表現 位置の括弧 動きを作る手続き) のリスト). 先のものを優先する
 (define (howm-action-rules menu?)
+  "Return the rules of the parts that RET acts on.
+Each is (REGEXP GROUP MAKE-ACTION); earlier rules win.
+If MENU? is true, the rules of the menu are included."
   (append
    (if menu?
        (list (list "%eval%(.*)$" 0 (lambda (line found) (list "eval" (howm-group line (cadr found)))))
@@ -1232,8 +1295,9 @@ S 式を eval: %eval%(message (buffer-name))
          (list (list (howm-keyword-regexp keywords) 0
                      (lambda (line found) (list "search" (howm-group line (car found))))))))))
 
-;; 行の中の, RET で動く所 ((始め 終わり 動き) のリスト. 規則の順)
 (define (howm-line-actions line menu?)
+  "Return the parts of LINE that RET acts on, a list of (START END ACTION).
+If MENU? is true, the rules of the menu are used too."
   (apply append
          (map (lambda (rule)
                 (filter (lambda (x) x)
@@ -1244,16 +1308,17 @@ S 式を eval: %eval%(message (buffer-name))
                              (howm-matches (car rule) line))))
               (howm-action-rules menu?))))
 
-;; 行の中の, 位置 (0 から) で動くもの (無ければ #f)
 (define (howm-action-at line column menu?)
+  "Return the action at COLUMN of LINE, or #f.
+If MENU? is true, the rules of the menu are used too."
   (let loop ((actions (howm-line-actions line menu?)))
     (cond ((null? actions) #f)
           ((and (<= (car (car actions)) column) (< column (cadr (car actions))))
            (list-ref (car actions) 2))
           (else (loop (cdr actions))))))
 
-;; 動かす
 (define (howm-run-action action)
+  "Run ACTION."
   (let ((kind (car action))
         (arg (cadr action)))
     (cond ((string=? kind "search") (howm-search-keyword-with-history arg))
@@ -1269,14 +1334,15 @@ S 式を eval: %eval%(message (buffer-name))
            (let ((found (string-search arg (buffer-string))))
              (when found (goto-char (+ found 1))))))))
 
-;; カーソルの所のものを動かす. 動かしたら #t
 (define (howm-action-at-point)
+  "Run the action at point.  Return #t if there was one."
   (let* ((here (howm-current-line-and-column))
          (action (howm-action-at (car here) (cadr here) (howm-menu-buffer?))))
     (and action (begin (howm-run-action action) #t))))
 
-;; メニューの項目を開く. 予定と todo の記号か日付の上なら, メモのその所で RET を押す. 開いたら #t
 (define (howm-menu-open-item items)
+  "Open the menu item of the current line among ITEMS.
+On a reminder type or a date, act on it in the memo.  Return #t if opened."
   (let ((item (assoc (howm-current-line) items)))
     (and item
          (let* ((here (howm-current-line-and-column))
@@ -1289,54 +1355,59 @@ S 式を eval: %eval%(message (buffer-name))
                  (howm-action-at-point))))
            #t))))
 
-;; RET: 一覧なら, その行のメモを開く. メニューの項目なら開く. ボタンやリンクなら動かす
 (define-command (howm-action)
+  "Act on the thing at point.
+In the summary, open the memo of the line.  In the menu, open the item.
+On a button or a link, run it."
   (cond ((string=? (buffer-name) howm-summary-name) (howm-summary-open))
         ((and (howm-menu-buffer?) (howm-menu-open-item (howm-menu-items))) #t)
         ((howm-action-at-point) #t)
         (else (message "No action here"))))
 
-;; 動くものがあれば動かし, 無ければ改行する (メモのバッファの RET)
 (define-command (howm-action-or-newline)
+  "Act on the thing at point, or insert a newline if there is none.
+This is RET in memo buffers."
   (unless (howm-action-at-point)
     (call-interactively 'newline)))
 
 ;;; メニュー
 
-;; メニューのバッファなら #t
 (define (howm-menu-buffer?)
+  "Return #t if the current buffer is a menu."
   (string-prefix? "*howmM:" (buffer-name)))
 
-;; %名前% の形なら #t
 (define (howm-menu-keyword? keyword)
+  "Return #t if KEYWORD has the form %name%."
   (regexp-match "^%.*%$" keyword))
 
-;; ボタン ((名前 コマンド [menu])). 無ければ #f
 (define (howm-button label)
+  "Return the button of LABEL, (LABEL COMMAND [menu]), or #f."
   (assoc label howm-menu-buttons))
 
-;; メニューを開く前のバッファに戻って, 動かす
 (define (howm-menu-in-previous thunk)
+  "Call THUNK in the buffer shown before the menu."
   (when (howm-menu-buffer?)
     (howm-switch-back howm-menu-previous-buffer))
   (thunk))
 
-;; ボタンを押す
 (define (howm-run-button label)
+  "Press the button of LABEL."
   (let ((button (howm-button label)))
     (if (= (length button) 3)
         (call-interactively (cadr button))
         (howm-menu-in-previous (lambda () (call-interactively (cadr button)))))))
 
-;; メニューのファイル (無ければ, 既定のメニューを書く)
 (define (howm-menu-path)
+  "Return the path of the menu file.
+Write the default menu if the file does not exist."
   (let ((file (or howm-menu-file (string-append (howm-dir) "/0000-00-00-000000.txt"))))
     (unless (file-exists? file)
       (write-file-string file howm-default-menu))
     (expand-file-name file)))
 
-;; 文字の中の, "<<< 言葉" の題の行から, 次の題の行の前まで (無ければ #f)
 (define (howm-section-of text keyword)
+  "Return the memo of \"<<< KEYWORD\" in TEXT, or #f.
+It runs from the title line to the line before the next title line."
   (let ((lines (split-string text "\n"))
         (regexp (string-append "<<<\\s*" (regexp-quote keyword) "\\s*$")))
     (let loop ((rest lines) (n 1))
@@ -1345,61 +1416,69 @@ S 式を eval: %eval%(message (buffer-name))
              (string-join (howm-lines-in lines (howm-section-range lines n)) "\n"))
             (else (loop (cdr rest) (+ n 1)))))))
 
-;; "<<< %名前%" のメニュー ((ファイル 文字). メニューのファイル, メモの順に探す. 無ければ #f)
 (define (howm-menu-find-section keyword)
+  "Find the menu of \"<<< KEYWORD\".
+The menu file is searched first, then the memos.
+Return (FILE TEXT), or #f."
   (let loop ((files (cons (howm-menu-path) (howm-files))))
     (if (null? files)
         #f
         (let ((text (howm-section-of (read-file-string (car files)) keyword)))
           (if text (list (car files) text) (loop (cdr files)))))))
 
-;; 今のメニューのバッファの, データ (無ければ #f) と項目
 (define (howm-menu-current-data)
+  "Return the entry of `howm-menu-data' for the current buffer, or #f."
   (assoc (buffer-name) howm-menu-data))
 
 (define (howm-menu-items)
+  "Return the items of the current menu buffer."
   (let ((data (howm-menu-current-data)))
     (if data (list-ref data 3) '())))
 
-;; メニューを出す (M-x howm, C-c , ,)
 (define-command (howm-menu)
+  "Show the howm menu."
   (let* ((file (howm-menu-path))
          (text (read-file-string file)))
     (howm-menu-show "%menu%" file (or (howm-section-of text "%menu%") text)
                     (lambda () (howm-menu)))))
 
-(define-command (howm) (howm-menu))
+(define-command (howm)
+  "Show the howm menu."
+  (howm-menu))
 
-;; "<<< %名前%" のメニューを出す (>>> %名前%)
 (define (howm-menu-open-section keyword)
+  "Show the menu of \"<<< KEYWORD\" (>>> %name%)."
   (let ((found (howm-menu-find-section keyword)))
     (if found
         (howm-menu-show keyword (car found) (cadr found)
                         (lambda () (howm-menu-open-section keyword)))
         (message "No menu: %s" keyword))))
 
-;; ファイルを, メニューとして出す (howm-directory からのパス. %eval%(howm-menu-open "file.txt"))
 (define (howm-menu-open file)
+  "Show FILE, relative to `howm-directory', as a menu.
+For example, %eval%(howm-menu-open \"file.txt\")."
   (let ((path (expand-file-name file (howm-dir))))
     (howm-menu-show (howm-file-label path) path (read-file-string path)
                     (lambda () (howm-menu-open file)))))
 
-;; メニューを出し直す ([menu 更新])
 (define-command (howm-menu-refresh)
+  "Refresh the menu."
   (let ((data (howm-menu-current-data)))
     (if data ((list-ref data 1)) (howm-menu))))
 
-;; メニューのファイルを開く ([menu 編集])
 (define-command (howm-menu-edit)
+  "Open the menu file."
   (let ((data (howm-menu-current-data)))
     (find-file (if data (list-ref data 4) (howm-menu-path)))
     (howm-mode)))
 
-;; メニューのショートカット (%"c"[新規] と %"fuga%") の正規表現 (言葉, キー, 言葉の続き, 動くだけの %)
-(define howm-menu-key-regexp "%\"(([^\\n%\"])[^\\n%\"]*(%+[^\\n%\"]+)*)(%)?\"")
+(define howm-menu-key-regexp "%\"(([^\\n%\"])[^\\n%\"]*(%+[^\\n%\"]+)*)(%)?\""
+  "Regexp of a shortcut in the menu, such as %\"c\"[New] or %\"fuga%\".
+The groups are the word, the key, the rest of the word and the action-only %.")
 
-;; メニューの元の 1 行の, ショートカット ((キー 動き) のリスト). " の後の, 最初の動くものを動かす
 (define (howm-menu-line-shortcuts line)
+  "Return the shortcuts of LINE of the menu, a list of (KEY ACTION).
+A shortcut runs the first action after its \"."
   (let ((actions (if (string-search "%\"" line)
                      (sort (howm-line-actions line #t) (lambda (a b) (< (car a) (car b))))
                      '())))
@@ -1414,15 +1493,16 @@ S 式を eval: %eval%(message (buffer-name))
                                      (else (loop (cdr rest))))))))
                  (howm-matches howm-menu-key-regexp line)))))
 
-;; %| で切り替える, 見せる所だけの文字と, 行の終わりを見せないなら #t (改行も消す)
 (define (howm-menu-visible line)
+  "Return (TEXT HIDDEN) for LINE of the menu.
+TEXT is the part made visible by %|; HIDDEN is #t if the end of the line
+is hidden, and then the newline is removed too."
   (let loop ((parts (split-string line "%|")) (visible #t) (acc '()))
     (let ((acc (if visible (cons (car parts) acc) acc)))
       (if (null? (cdr parts))
           (list (apply string-append (reverse acc)) (not visible))
           (loop (cdr parts) (not visible) acc)))))
 
-;; %sdays などを, %here% の形にする
 (define howm-menu-display-rules
   '(("%sdays" "%here%howm-menu-schedule-days")
     ("%tnum" "%here%howm-menu-todo-num")
@@ -1431,20 +1511,24 @@ S 式を eval: %eval%(message (buffer-name))
     ("%reminder" "%here%(howm-menu-reminder)")
     ("%recent" "%here%(howm-menu-recent)")
     ("%random" "%here%(howm-menu-random)")
-    ("%last-update" "%here%(howm-menu-last-update)")))
+    ("%last-update" "%here%(howm-menu-last-update)"))
+  "Rules that turn %sdays and others into the form of %here%.")
 
-(define howm-menu-here-regexp "%here%(\\([^()\\n]*\\)|[^\\s()\",;']+)")
+(define howm-menu-here-regexp "%here%(\\([^()\\n]*\\)|[^\\s()\",;']+)" "Regexp of %here%.")
 
-;; %here% の式の値 (変数の値か, howm-menu-allow の手続きを呼んだ値. 引数は評価しない)
 (define (howm-menu-here text)
+  "Return the value of the %here% expression TEXT.
+It is the value of a variable, or of a procedure in `howm-menu-allow'.
+The arguments are not evaluated."
   (let ((expr (read text)))
     (cond ((symbol? expr) (eval expr))
           ((and (pair? expr) (member (car expr) howm-menu-allow))
            (apply (eval (car expr)) (cdr expr)))
           (else (format "Not allowed: %s" text)))))
 
-;; 値を, メニューの行 (文字か (文字 ファイル 行の番号)) のリストにする
 (define (howm-menu-value-lines value)
+  "Return VALUE as menu lines.
+Each line is a string or (STRING FILE LINE)."
   (cond ((string? value) (split-string value "\n"))
         ((list? value)
          (map (lambda (line)
@@ -1454,14 +1538,15 @@ S 式を eval: %eval%(message (buffer-name))
               value))
         (else (list (format "%s" value)))))
 
-;; 値を, 文字にする
 (define (howm-menu-value-text value)
+  "Return VALUE as a string."
   (string-join (map (lambda (line) (if (string? line) line (car line)))
                     (howm-menu-value-lines value))
                "\n"))
 
-;; 見せる 1 行の %here% を, 値にする (行が %here% だけなら, 値の行に置き換える)
 (define (howm-menu-expand line)
+  "Replace the %here% in the visible LINE with its value.
+If LINE is only %here%, it is replaced with the lines of the value."
   (let ((whole (regexp-match (string-append "^\\s*" howm-menu-here-regexp "\\s*$") line)))
     (if whole
         (howm-menu-value-lines (howm-menu-here (cadr whole)))
@@ -1471,13 +1556,14 @@ S 式を eval: %eval%(message (buffer-name))
                                                (howm-menu-here (howm-group line (cadr found))))))
                       "\n"))))
 
-;; ショートカットを, 見せる形にする (%"c" → c. %"fuga%" → fuga)
 (define (howm-menu-strip-keys line)
+  "Show the shortcuts of LINE as they look (%\"c\" to c, %\"fuga%\" to fuga)."
   (howm-replace-matches howm-menu-key-regexp line
                         (lambda (line found) (howm-group line (cadr found)))))
 
-;; メニューの元を, 行 (文字か (文字 ファイル 行の番号)) とショートカットにする
 (define (howm-menu-render template)
+  "Render the menu TEMPLATE into lines and shortcuts.
+Each line is a string or (STRING FILE LINE)."
   (let ((raw (split-string
               (let loop ((text template) (rules howm-menu-display-rules))
                 (if (null? rules)
@@ -1497,28 +1583,31 @@ S 式を eval: %eval%(message (buffer-name))
                 (loop (cdr raw) text lines keys)
                 (loop (cdr raw) "" (append (reverse (howm-menu-expand text)) lines) keys)))))))
 
-;; 行の中の, 項目の行 ((行の番号 ファイル 行の番号))
 (define (howm-menu-item-lines lines)
+  "Return the item lines of LINES, a list of (LINE FILE FILE-LINE)."
   (let loop ((lines lines) (n 1) (acc '()))
     (cond ((null? lines) (reverse acc))
           ((pair? (car lines))
            (loop (cdr lines) (+ n 1) (cons (list n (cadr (car lines)) (caddr (car lines))) acc)))
           (else (loop (cdr lines) (+ n 1) acc)))))
 
-;; ショートカットのキーのコマンド (キーごとに作る. 今のメニューの, そのキーの動きを動かす)
 (define (howm-menu-key-command key)
+  "Return the command of the shortcut KEY.
+It runs the action of KEY in the current menu."
   (let ((command (string->symbol (string-append "howm-menu-key-" key))))
     (eval (list 'define-command (list command) (list 'howm-menu-run-key key)))
     command))
 
 (define (howm-menu-run-key key)
+  "Run the action of the shortcut KEY in the current menu."
   (let* ((data (howm-menu-current-data))
          (found (and data (assoc key (list-ref data 2)))))
     (when found
       (howm-run-action (cadr found)))))
 
-;; メニューを出す. name は %menu% など, file は元のファイル, reload は出し直す手続き
 (define (howm-menu-show name file template reload)
+  "Show the menu NAME, such as %menu%, rendered from TEMPLATE.
+FILE is the file of the template; RELOAD refreshes the menu."
   (unless (howm-menu-buffer?)
     (set! howm-menu-previous-buffer (buffer-name)))
   (let* ((rendered (howm-menu-render template))
@@ -1539,41 +1628,50 @@ S 式を eval: %eval%(message (buffer-name))
                           ")\\]")
            "%(?:eval|call)%.*"))))
 
-;; %here% で呼べる手続き (予定と todo の説明, 予定, todo, 最近, ランダム, 検索, 出した時刻)
 (define (howm-menu-legend)
+  "Return the legend of the reminder types, for %here%."
   (format "[予定・Todo] … 予定@, 〆切! を %d 日先まで表示.\n〆切!, todo+, 覚書-, 保留~ を上位 %d 個まで表示."
           howm-menu-schedule-days howm-menu-todo-num))
 
 (define (howm-reminder-lines reminders)
+  "Return REMINDERS as menu lines."
   (map (lambda (r) (list (list-ref r 5) (list-ref r 3) (list-ref r 4))) reminders))
 
 (define (howm-menu-schedule)
+  "Return the schedule for the menu, for %here%."
   (howm-reminder-lines (howm-schedule howm-menu-schedule-days)))
 
 (define (howm-menu-todo)
+  "Return the todo items for the menu, for %here%."
   (howm-reminder-lines (howm-take (howm-todo) howm-menu-todo-num)))
 
 (define (howm-menu-reminder)
+  "Return the schedule and the todo items for the menu, for %here%."
   (append (howm-menu-schedule) (howm-menu-todo)))
 
 (define (howm-menu-file-lines files)
+  "Return FILES as menu lines."
   (map (lambda (file)
          (list (format "%s | %s" (howm-file-label file) (howm-title-or-label file)) file 1))
        files))
 
 (define (howm-menu-recent)
+  "Return the recent memos for the menu, for %here%."
   (howm-menu-file-lines (howm-take (howm-recent-files) howm-menu-recent-num)))
 
 (define (howm-menu-random)
+  "Return random memos for the menu, for %here%."
   (howm-menu-file-lines (howm-random-files howm-menu-random-num)))
 
 (define (howm-menu-search keyword)
+  "Return the memos matching KEYWORD for the menu, for %here%."
   (map (lambda (found)
          (list (format "%s | %s" (howm-file-label (car found)) (list-ref found 2))
                (car found) (cadr found)))
        (grep (howm-case-fold (regexp-quote keyword) keyword) (howm-files))))
 
 (define (howm-menu-last-update)
+  "Return the current date and time for the menu, for %here%."
   (format-time-string howm-dtime-format))
 
 ;;; フック (エディタが, ファイルを開いたときと, 保存したときに実行する)

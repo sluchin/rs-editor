@@ -6,6 +6,7 @@
 //! - 組み込みの手続きは [`builtins`].
 //! - 末尾の呼び出しは, 深さを使いません. それ以外の入れ子は, [`MAX_DEPTH`] までです.
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use serde::{Deserialize, Serialize};
@@ -13,8 +14,10 @@ use serde::{Deserialize, Serialize};
 use crate::scheme::builtins;
 use crate::scheme::env::Env;
 use crate::scheme::ert::{self, ErtTest};
+use crate::scheme::help;
 use crate::scheme::hooks;
 use crate::scheme::host::{Host, NoHost};
+use crate::scheme::loadup;
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
 use crate::scheme::value::{Lambda, Value};
@@ -48,6 +51,10 @@ pub struct Evaluator {
     features: Mutex<Vec<String>>,
     /// `ert-deftest` で定義したテスト (定義した順).
     tests: Mutex<Vec<ErtTest>>,
+    /// 変数の docstring (`(define name value "doc")`. Emacs の `variable-documentation`).
+    variable_docs: Mutex<HashMap<String, String>>,
+    /// 名前を定義したファイル (読み込んでいるファイルの, 一番外側の `define`. Emacs の `symbol-file`).
+    symbol_files: Mutex<HashMap<String, String>>,
 }
 
 impl Default for Evaluator {
@@ -69,6 +76,7 @@ impl Evaluator {
             .chain(system::NAMES)
             .chain(ert::NAMES)
             .chain(hooks::NAMES)
+            .chain(help::NAMES)
         {
             global.define(name, Value::Function(name.to_string()));
         }
@@ -101,6 +109,8 @@ impl Evaluator {
             // テスト (ERT) は, require しなくても使える
             features: Mutex::new(vec!["ert".to_string()]),
             tests: Mutex::new(Vec::new()),
+            variable_docs: Mutex::new(HashMap::new()),
+            symbol_files: Mutex::new(HashMap::new()),
         };
         // M-x ert
         let mut machine = Machine::new(&evaluator, &NoHost);
@@ -108,6 +118,19 @@ impl Evaluator {
             machine
                 .eval(&expr, &evaluator.global)
                 .expect("the ERT prelude evaluates");
+        }
+        // 起動のときに読む Lisp (find-file などのコマンド)
+        for (file, code) in loadup::FILES {
+            machine.load_files.push(file.to_string());
+            for expr in Parser::new(code)
+                .parse()
+                .unwrap_or_else(|e| panic!("{}: {}", file, e))
+            {
+                machine
+                    .eval(&expr, &evaluator.global)
+                    .unwrap_or_else(|e| panic!("{}: {}", file, e));
+            }
+            machine.load_files.pop();
         }
         evaluator
     }
@@ -209,6 +232,32 @@ impl Evaluator {
     /// 環境.
     pub(crate) fn global(&self) -> &Env {
         &self.global
+    }
+
+    /// 変数の docstring を返します (Emacs の `(documentation-property name 'variable-documentation)`).
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 変数の名前.
+    ///
+    /// # Returns
+    ///
+    /// docstring. 無ければ [`None`].
+    pub(crate) fn variable_documentation(&self, name: &str) -> Option<String> {
+        self.variable_docs.lock().unwrap().get(name).cloned()
+    }
+
+    /// 名前を定義したファイルを返します.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 名前.
+    ///
+    /// # Returns
+    ///
+    /// ファイル (起動のときに読む Lisp は `lisp/` からのパス, `load` したものは絶対パス). 分からなければ [`None`].
+    pub(crate) fn symbol_file(&self, name: &str) -> Option<String> {
+        self.symbol_files.lock().unwrap().get(name).cloned()
     }
 
     /// 機能を覚えます (Emacs の `provide`. 覚えていれば, 何もしない).
@@ -332,6 +381,8 @@ pub(crate) struct Machine<'a> {
     depth: usize,
     /// 読み込んでいるファイル (`load`) のディレクトリ (入れ子の順. 相対パスの基).
     pub(crate) load_dirs: Vec<std::path::PathBuf>,
+    /// 読み込んでいるファイル (入れ子の順. 定義したファイルを覚える).
+    pub(crate) load_files: Vec<String>,
 }
 
 impl<'a> Machine<'a> {
@@ -351,6 +402,7 @@ impl<'a> Machine<'a> {
             host,
             depth: 0,
             load_dirs: Vec::new(),
+            load_files: Vec::new(),
         }
     }
 
@@ -692,8 +744,44 @@ impl<'a> Machine<'a> {
     ///
     /// 定義した名前, または失敗の内容.
     fn define(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
+        let name = self.define_value(args, env)?;
+        // 読み込んでいるファイルの, 一番外側の定義なら, ファイルを覚える
+        if let Some(file) = self.load_files.last() {
+            if env.same(&self.evaluator.global) {
+                self.evaluator
+                    .symbol_files
+                    .lock()
+                    .unwrap()
+                    .insert(name.clone(), file.clone());
+            }
+        }
+        Ok(name)
+    }
+
+    /// `define` の値を, 環境に入れます ([`Machine::define`] の中身).
+    ///
+    /// # Arguments
+    ///
+    /// * `args` - `define` の後の式.
+    /// * `env` - 定義する環境.
+    ///
+    /// # Returns
+    ///
+    /// 定義した名前, または失敗の内容.
+    fn define_value(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
         match args {
-            [Value::Symbol(name), rest @ ..] if rest.len() <= 1 => {
+            [Value::Symbol(name), rest @ ..] if rest.len() <= 2 => {
+                // 3 つ目は, docstring (Emacs の defvar と同じ)
+                if let Some(doc) = rest.get(1) {
+                    let Value::String(doc) = doc else {
+                        return Err("define expects a docstring after the value".to_string());
+                    };
+                    self.evaluator
+                        .variable_docs
+                        .lock()
+                        .unwrap()
+                        .insert(name.clone(), doc.clone());
+                }
                 let value = match rest.first() {
                     Some(expr) => self.eval(expr, env)?,
                     None => Value::Nil,

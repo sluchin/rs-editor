@@ -38,6 +38,7 @@ pub const NAMES: &[&str] = &[
     "format-time-string",
     "date-to-time",
     "random",
+    "getenv",
     "regexp-match",
     "regexp-match-positions",
     "regexp-quote",
@@ -197,6 +198,13 @@ pub(crate) fn call(
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
         "grep" => fixed::<2>(name, args)
             .and_then(|[pattern, files]| grep(machine, name, &pattern, &files)),
+        // 環境変数の値. 無ければ #f
+        "getenv" => {
+            fixed::<1>(name, args).and_then(|[variable]| {
+                Ok(std::env::var(string(name, &variable)?)
+                    .map_or(Value::Boolean(false), Value::String))
+            })
+        }
         "browse-url" => fixed::<1>(name, args).and_then(|[url]| {
             let url = string(name, &url)?.to_string();
             let program = match machine.evaluator.global().get("browse-url-generic-program") {
@@ -325,11 +333,13 @@ fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, String> {
     machine
         .load_dirs
         .push(path.parent().map(Path::to_path_buf).unwrap_or_default());
+    machine.load_files.push(path.to_string_lossy().into_owned());
     let global = machine.evaluator.global().clone();
     let result = values
         .iter()
         .try_for_each(|value| machine.eval(value, &global).map(|_| ()));
     machine.load_dirs.pop();
+    machine.load_files.pop();
     result.map_err(|e| format!("{}: {}", path.display(), e))?;
     Ok(Value::Boolean(true))
 }

@@ -20,9 +20,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './tests/setup.ts',
-    // テストは tests/ に, src/ と同じ構成で置く
-    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: './tests/frontend/setup.ts',
+    // 画面のテストは tests/frontend/ に, src/ と同じ構成で置く (Lisp のテストは tests/lisp/)
+    include: ['tests/frontend/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

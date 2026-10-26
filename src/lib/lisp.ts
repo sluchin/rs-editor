@@ -63,8 +63,6 @@ export interface LispHost {
    * @returns コマンドがあれば `true`.
    */
   command: (name: string) => boolean
-  /** ファイルを開いて (開いていれば, そのバッファを) 出します. 出したら, 終わります. */
-  findFile: (path: string) => Promise<void>
   /** 名前のバッファ (無ければ, 作る) を出します. 出したら, 終わります. */
   switchToBuffer: (name: string) => Promise<void>
   /** バッファ (省くと, 今のバッファ) のファイルのパス (ファイルのないバッファは `null`). */
@@ -104,8 +102,17 @@ export interface LispHost {
   setModified: (modified: boolean) => void
   /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
   localSetKey: (key: string, command: string) => void
+  /** コマンドに割り当てたキー (Emacs の書き方. `C-x C-f` など). */
+  whereIs: (command: string) => string[]
+  /** 画面 (TypeScript) で書いたコマンドの名前. */
+  editorCommandNames: () => string[]
   /** ミニバッファで, 文字を入力してもらいます (C-g でやめたら, 失敗). */
   readString: (prompt: string, initial: string) => Promise<string>
+  /**
+   * ミニバッファで, ファイルの名前を, Tab で補完しながら入力してもらいます (C-g でやめたら, 失敗).
+   * 入力の始めは, ディレクトリ (空なら, 今のバッファのディレクトリ).
+   */
+  readFileName: (prompt: string, dir: string) => Promise<string>
   /** 背景の色を変えます. */
   setBackgroundColor: (color: string) => void
   /** 文字の色を変えます. */
@@ -277,8 +284,6 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       if (!host.command(name)) throw new Error(`Undefined command: ${name}`)
       return true
     }
-    case 'find-file':
-      return host.findFile(String(args[0])).then(() => null)
     case 'switch-to-buffer':
       return host.switchToBuffer(String(args[0])).then(() => null)
     case 'buffer-file-name':
@@ -327,8 +332,14 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
     case 'local-set-key':
       host.localSetKey(String(args[0]), String(args[1]))
       return null
+    case 'where-is-internal':
+      return host.whereIs(String(args[0]))
+    case 'editor-command-names':
+      return host.editorCommandNames()
     case 'read-string':
       return host.readString(String(args[0]), String(args[1] ?? ''))
+    case 'read-file-name':
+      return host.readFileName(String(args[0]), String(args[1] ?? ''))
     case 'set-background-color':
       host.setBackgroundColor(String(args[0]))
       return null

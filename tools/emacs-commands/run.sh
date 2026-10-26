@@ -14,7 +14,7 @@ mkdir -p "$out"
 DUMP_PREFIX="$out/q" emacs -Q --batch -l "$here/dump.el" 2>/dev/null
 
 # rs-editor のコマンドとキー (src/lib/emacs.ts を読むため, 一時的なテストで書き出す)
-test_file="$root/tests/zz-emacs-commands-dump.test.ts"
+test_file="$root/tests/frontend/zz-emacs-commands-dump.test.ts"
 trap 'rm -f "$test_file"' EXIT
 cat >"$test_file" <<EOF
 import { it } from 'vitest'

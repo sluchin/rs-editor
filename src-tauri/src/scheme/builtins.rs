@@ -4,6 +4,7 @@
 
 use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
+use crate::scheme::help;
 use crate::scheme::hooks;
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
@@ -105,11 +106,11 @@ pub const NAMES: &[&str] = &[
     "command-execute",
     "global-set-key",
     "local-set-key",
-    "find-file",
     "switch-to-buffer",
     "buffer-file-name",
     "set-buffer-modified-p",
     "read-string",
+    "read-file-name",
     "buffer-list",
     "buffer-modified-p",
     "kill-buffer",
@@ -125,6 +126,9 @@ pub const NAMES: &[&str] = &[
     "set-foreground-color",
     "set-frame-font",
     "set-face-attribute",
+    // ヘルプ (ほかは help.rs)
+    "where-is-internal",
+    "editor-command-names",
 ];
 
 /// 組み込みの手続きを呼びます.
@@ -556,12 +560,6 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }
             _ => Err("local-set-key expects a key and a command name".to_string()),
         },
-        "find-file" => {
-            let [path] = fixed::<1>(name, args)?;
-            let path = machine.expand_file_name(string(name, &path)?);
-            machine.host.call(name, vec![Value::String(path)])?;
-            Ok(Value::Nil)
-        }
         "switch-to-buffer" | "set-background-color" | "set-foreground-color" => {
             let [text] = fixed::<1>(name, args)?;
             string(name, &text)?;
@@ -685,6 +683,21 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             let input = read_input(machine, name, vec![prompt.to_string(), initial])?;
             Ok(Value::String(or_default(input, default)))
         }
+        "read-file-name" => {
+            // (read-file-name PROMPT [DIR [DEFAULT-FILENAME [MUSTMATCH [INITIAL [PREDICATE]]]]])
+            // DIR を省くと, 画面が今のバッファのディレクトリを入れる. 入力を変えなければ, DEFAULT-FILENAME
+            if args.is_empty() || args.len() > 6 {
+                return Err("read-file-name expects 1 to 6 arguments".to_string());
+            }
+            let prompt = string(name, &args[0])?;
+            let dir = optional_string(name, args.get(1))?;
+            let default = default_value(name, args.get(2))?;
+            let input = read_input(machine, name, vec![prompt.to_string(), dir.clone()])?;
+            Ok(Value::String(match default {
+                Some(default) if input.is_empty() || input == dir => default,
+                _ => input,
+            }))
+        }
         "set-frame-font" => {
             let [font] = fixed::<1>(name, args)?;
             let (family, size) = parse_font(string(name, &font)?);
@@ -692,7 +705,21 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         }
         "set-face-attribute" => set_face_attribute(machine, args),
         _ if ert::NAMES.contains(&name) => ert::call(machine, name, args),
+        "where-is-internal" => {
+            // 割り当てたキー (Emacs の書き方. 画面のキーと, Lisp のキー)
+            let [command] = fixed::<1>(name, args)?;
+            let Value::Symbol(command) = command else {
+                return Err("where-is-internal expects a symbol".to_string());
+            };
+            machine.host.call(name, vec![Value::String(command)])
+        }
+        "editor-command-names" => {
+            // 画面 (TypeScript) で書いたコマンドの名前
+            fixed::<0>(name, args)?;
+            machine.host.call(name, vec![])
+        }
         _ if hooks::NAMES.contains(&name) => hooks::call(machine, name, args),
+        _ if help::NAMES.contains(&name) => help::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name))),
     }

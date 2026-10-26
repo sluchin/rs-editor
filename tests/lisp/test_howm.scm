@@ -3,11 +3,11 @@
 ;; Emacs の ERT と同じ書き方で書いた, lisp/howm.scm のテスト.
 ;;
 ;; 実行のしかた:
-;; - エディタで: lisp/ を load-path に入れて, このファイルを読み (M-: (load "…/tests/test_howm.scm")),
+;; - エディタで: lisp/ を load-path に入れて, このファイルを読み (M-: (load "…/tests/lisp/test_howm.scm")),
 ;;   M-x ert (RET で全て. 名前の正規表現で選べる). 結果は *ert* のバッファに出る.
 ;;   メモのバッファなどを作るので, 試すときは, 保存していないバッファの無いときに.
 ;; - コマンドラインで: cd src-tauri && cargo test --test lisp_ert_test -- --nocapture
-;;   (偽のエディタの上で, tests/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
+;;   (偽のエディタの上で, tests/lisp/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
 ;;
 ;; 入力を聞くもの (read-string) は, ここでは試さない (src-tauri/tests/howm_test.rs で試す).
 
@@ -281,5 +281,24 @@
        (should (equal howm-keyword-cache '("bar")))
        (switch-to-buffer "*scratch*")
        (should-not (howm-set-mode-p))))))
+
+;;; docstring
+
+(ert-deftest howm-test-docstrings ()
+  ;; 関数, コマンド, 変数の docstring (Emacs の C-h f と C-h v で出すもの)
+  ;; 2 つ目の引数が真なら, 訳さない (元の英語)
+  (should (equal (documentation 'howm-take #t) "Return the first N elements of ITEMS."))
+  (should (equal (documentation 'howm-menu #t) "Show the howm menu."))
+  (should (equal (documentation-property 'howm-directory 'variable-documentation #t)
+                 "Directory where memos are stored."))
+  ;; help-language の言語の翻訳 (po/ja.po) を出す. "en" なら, 元の英語
+  (let ((saved help-language))
+    (set! help-language "ja")
+    (should (equal (documentation 'howm-take) "ITEMS の始めの N 個を返す"))
+    (should (equal (documentation-property 'howm-directory 'variable-documentation)
+                   "メモを置くディレクトリ"))
+    (set! help-language "en")
+    (should (equal (documentation 'howm-take) "Return the first N elements of ITEMS."))
+    (set! help-language saved)))
 
 ;;; test_howm.scm ends here

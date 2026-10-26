@@ -8,6 +8,7 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
+import { activeKeyBindings, toEmacsKey } from '../lib/emacs'
 import { type Buffer, generateBufferId, visitFile } from '../lib/buffer'
 import { checkHighlightRegexp, type Highlight } from '../lib/faces'
 import {
@@ -22,7 +23,7 @@ import {
 } from '../lib/lisp'
 import { setBackgroundColor, setFont, setForegroundColor } from '../lib/theme'
 import type { AppContext } from './useBuffers'
-import type { CommandSet } from './useMinibuffer'
+import { type CommandSet, completeFile } from './useMinibuffer'
 
 /**
  * Lisp の評価と, Lisp で作ったコマンドを作ります.
@@ -48,10 +49,13 @@ export function useLisp(ctx: AppContext) {
     setPendingAction,
     setMinibufferState,
     showMessage,
+    defaultDirectory,
   } = ctx
   // Lisp で作ったコマンドと, 割り当てたキー
   const [lispCommands, setLispCommands] = useState<string[]>([])
   const [lispKeys, setLispKeys] = useState<KeyBinding[]>([])
+  // 画面のコマンドの名前 (App が, 描くたびに入れる. Lisp の editor-command-names)
+  const screenCommandNames = useRef<string[]>([])
   // 手続きのある, エディタが実行するフック (find-file-hook, after-save-hook)
   const [lispHooks, setLispHooks] = useState<string[]>([])
   // ファイルを開いたバッファ (覚えたものと, find-file-hook をまだ実行していないもの) と, 保存した回数
@@ -208,14 +212,6 @@ export function useLisp(ctx: AppContext) {
       bufferName: () => currentBuffer.name,
       message: (text) => setMinibufferState({ mode: 'message', text }),
       command: (name) => handle().run(name),
-      findFile: async (path) => {
-        const open = buffers.find((b) => b.filePath === path)
-        if (open) return showBuffer(open.id)
-        const { buffer, message } = await visitFile(path)
-        setBuffers((prev) => [...prev, buffer])
-        showMessage(message)
-        return showBuffer(buffer.id)
-      },
       switchToBuffer: (name) => showBuffer(getBufferCreate(name).buffer.id),
       bufferFileName: (name) => bufferNamed(name).filePath,
       bufferModified: (name) => bufferNamed(name).modified,
@@ -250,8 +246,10 @@ export function useLisp(ctx: AppContext) {
       findFileNoselect: async (path) => {
         const open = buffers.find((b) => b.filePath === path)
         if (open) return open.name
-        const { buffer } = await visitFile(path)
+        // 新しいファイルなら, (New file) と出す (Emacs と同じ)
+        const { buffer, message } = await visitFile(path)
         setBuffers((prev) => [...prev, buffer])
+        showMessage(message)
         await waitRender()
         // 同じ名前のファイルがあれば, 名前を変えているので, 描き直した後のバッファから引く
         return (latestBuffers.current.find((b) => b.id === buffer.id) as Buffer).name
@@ -279,11 +277,27 @@ export function useLisp(ctx: AppContext) {
               : b,
           ),
         ),
+      whereIs: (command) =>
+        activeKeyBindings(lispKeys)
+          .filter(([, bound]) => bound === command)
+          .map(([key]) => toEmacsKey(key)),
+      editorCommandNames: () => [...handle().commandNames(), ...screenCommandNames.current],
       readString: (prompt, initial) =>
         new Promise((resolve, reject) => {
           lispInput.current = { resolve, reject }
           setPendingAction('read-string')
           setMinibufferState({ mode: 'input', prompt, input: initial })
+        }),
+      readFileName: (prompt, dir) =>
+        new Promise((resolve, reject) => {
+          lispInput.current = { resolve, reject }
+          setPendingAction('read-file-name')
+          setMinibufferState({
+            mode: 'input',
+            prompt,
+            input: dir || defaultDirectory(currentBuffer),
+            complete: completeFile,
+          })
         }),
       setBackgroundColor: (color) => setBackgroundColor(root, color),
       setForegroundColor: (color) => setForegroundColor(root, color),
@@ -367,9 +381,23 @@ export function useLisp(ctx: AppContext) {
         lispInput.current?.resolve(value)
         lispInput.current = null
       },
+      'read-file-name': (value) => {
+        showMessage('')
+        lispInput.current?.resolve(value)
+        lispInput.current = null
+      },
       'eval-expression': evaluate,
     },
   }
 
-  return { commands, lispKeys, cancel }
+  /**
+   * 画面のコマンドの名前を覚えます (Lisp の editor-command-names で返す).
+   *
+   * @param names - 画面のコマンドの名前.
+   */
+  const setScreenCommandNames = (names: string[]) => {
+    screenCommandNames.current = names
+  }
+
+  return { commands, lispKeys, cancel, setScreenCommandNames }
 }

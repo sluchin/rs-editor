@@ -90,7 +90,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - 初期設定ファイル（`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`, `~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load, require, load-path
 - 色とフォント（set-background-color, set-foreground-color, set-frame-font, set-face-attribute）
 - howm（`lisp/howm.scm`。`(require 'howm)` で読む。M-x howm, C-c , ,）
-- ERT（`ert-deftest`, `should`, `M-x ert`。`tests/*.scm` は `npm run test:scheme`）
+- ERT（`ert-deftest`, `should`, `M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`）
 
 **検索とプロジェクト**
 - M-x grep（外のコマンドを使わず、エディタが探す）、`*grep*` の RET（compile-goto-error）、M-g n, M-g p, C-x `（next-error, previous-error）

@@ -10,7 +10,6 @@ import { HISTORY_LENGTH, addToHistory } from '../lib/history'
 
 /** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
 export type PendingAction =
-  | 'find-file'
   | 'write-file'
   | 'execute-command'
   | 'switch-buffer'
@@ -30,13 +29,13 @@ export type PendingAction =
   | 'confirm-recover'
   | 'dired'
   | 'read-string'
+  | 'read-file-name'
   | 'grep'
   | 'grep-directory'
   | null
 
 /** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
 const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
-  'find-file': 'file-name',
   'write-file': 'file-name',
   'insert-file': 'file-name',
   'find-alternate-file': 'file-name',
@@ -56,6 +55,7 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'confirm-revert': 'yes-or-no-p',
   'confirm-recover': 'yes-or-no-p',
   'read-string': 'minibuffer',
+  'read-file-name': 'file-name',
   grep: 'grep',
   'grep-directory': 'file-name',
 }

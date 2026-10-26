@@ -101,14 +101,20 @@ def rs_editor(root, out):
     for path in hooks + [root / 'src' / 'App.tsx']:
         for name in sorted(screen_commands(path.read_text())):
             places[name].append(str(path.relative_to(root)))
-    # キーだけで動くもの (前置引数. キーを受ける所で扱う)
-    for name in keys:
-        if not places[name]:
-            places[name].append('src/lib/emacs.ts')
     # Lisp で書いたコマンド (define-command)
     for path in sorted((root / 'lisp').glob('*.scm')):
         for name in sorted(set(re.findall(r"^\(define-command \(([^\s()]+)", path.read_text(), re.M))):
             places[name].append(str(path.relative_to(root)))
+    # 起動のときに読む Lisp (loadup.rs) で割り当てたキー (global-set-key)
+    loadup = (root / 'src-tauri' / 'src' / 'scheme' / 'loadup.rs').read_text()
+    for file in re.findall(r'"(lisp/[^"]+\.scm)"', loadup):
+        text = (root / file).read_text()
+        for key, name in re.findall(r"^\(global-set-key \"([^\"]+)\" '([^\s()]+)\)", text, re.M):
+            keys[name].append(key)
+    # キーだけで動くもの (前置引数. キーを受ける所で扱う)
+    for name in keys:
+        if not places[name]:
+            places[name].append('src/lib/emacs.ts')
     names = set(places) | set(keys)
     return {n: (keys.get(n, []), places.get(n, [])) for n in names}
 

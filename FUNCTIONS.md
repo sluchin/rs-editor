@@ -248,7 +248,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `x-menu-bar-open-internal` |  |  |  |  |
 | `x-print-frames-dialog` |  |  |  |  |
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 92 個: Lisp 0 個, TypeScript 92 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 93 個: Lisp 2 個, TypeScript 91 個)
 
 | コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -322,7 +322,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `yank-pop` | simple | `M-y` | 実装済み | `M-y` | TypeScript (`src/lib/emacs.ts`) |
 | `zap-to-char` | simple | `M-z` | 実装済み | `M-z` | TypeScript (`src/lib/emacs.ts`) |
 | `find-alternate-file` | files | `C-x C-v` | 実装済み | `C-x C-v` | TypeScript (`src/hooks/useFiles.ts`) |
-| `find-file` | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | TypeScript (`src/hooks/useFiles.ts`) |
+| `find-file` | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | Lisp (`lisp/files.scm`) |
 | `find-file-other-frame` | files | `C-x 5 f`, `C-x 5 C-f` |  |  |  |
 | `find-file-other-window` | files | `C-x 4 f`, `C-x 4 C-f` |  |  |  |
 | `find-file-read-only` | files | `C-x C-r` |  |  |  |
@@ -503,7 +503,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `view-order-manuals` | help | `C-h RET`, `<f1> RET`, `<help> RET` |  |  |  |
 | `where-is` | help | `C-h w`, `<f1> w`, `<help> w` |  |  |  |
 | `describe-command` | help-fns | `C-h x`, `<f1> x`, `<help> x` |  |  |  |
-| `describe-function` | help-fns | `C-h f`, `<f1> f`, `<help> f` |  |  |  |
+| `describe-function` | help-fns | `C-h f`, `<f1> f`, `<help> f` | 実装済み | `C-h f` | Lisp (`lisp/help-fns.scm`) |
 | `describe-symbol` | help-fns | `C-h o`, `<f1> o`, `<help> o` |  |  |  |
 | `describe-syntax` | help-fns | `C-h s`, `<f1> s`, `<help> s` |  |  |  |
 | `describe-variable` | help-fns | `C-h v`, `<f1> v`, `<help> v` |  |  |  |

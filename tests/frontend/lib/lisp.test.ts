@@ -50,9 +50,6 @@ function fakeHost(text: string) {
       state.message = s
     },
     command: (name) => name === 'forward-char',
-    findFile: async (path) => {
-      state.calls.push(`find-file ${path}`)
-    },
     switchToBuffer: async (name) => {
       state.calls.push(`switch-to-buffer ${name}`)
     },
@@ -88,6 +85,9 @@ function fakeHost(text: string) {
       state.calls.push(`local-set-key ${key} ${command}`)
     },
     readString: async (prompt, initial) => `${prompt}${initial}`,
+    readFileName: async (prompt, dir) => `${prompt}|${dir}`,
+    whereIs: (command) => (command === 'find-file' ? ['C-x C-f'] : []),
+    editorCommandNames: () => ['save-buffer'],
     setBackgroundColor: (color) => {
       state.calls.push(`background ${color}`)
     },
@@ -170,7 +170,6 @@ describe('lisp', () => {
   it('ファイルとバッファを出し, 入力を受け, 色とフォントを変える', async () => {
     const { host, state } = fakeHost('')
     const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
-    expect(await run('find-file', '/a.txt')).toBeNull()
     expect(await run('switch-to-buffer', '*howm*')).toBeNull()
     expect(run('buffer-file-name')).toBeNull()
     expect(run('set-buffer-modified-p', false)).toBeNull()
@@ -180,12 +179,15 @@ describe('lisp', () => {
     expect(run('local-set-key', 'c', 'howm-create')).toBeNull()
     expect(await run('read-string', 'Search: ', 'x')).toBe('Search: x')
     expect(await run('read-string', 'Name: ')).toBe('Name: ')
+    expect(await run('read-file-name', 'Find file: ', '/d/')).toBe('Find file: |/d/')
+    expect(await run('read-file-name', 'Find file: ')).toBe('Find file: |')
+    expect(run('where-is-internal', 'find-file')).toEqual(['C-x C-f'])
+    expect(run('editor-command-names')).toEqual(['save-buffer'])
     expect(run('set-background-color', 'black')).toBeNull()
     expect(run('set-foreground-color', 'white')).toBeNull()
     expect(run('set-font', 'Mono', 14)).toBeNull()
     expect(run('set-font', null, null)).toBeNull()
     expect(state.calls).toEqual([
-      'find-file /a.txt',
       'switch-to-buffer *howm*',
       'local-set-key c howm-create',
       'background black',
