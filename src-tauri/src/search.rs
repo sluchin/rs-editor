@@ -8,6 +8,12 @@ use serde::{Deserialize, Serialize};
 /// 探さないディレクトリ (`.` で始まるディレクトリ (`.git` など) も, 探さない).
 pub const IGNORED_DIRECTORIES: &[&str] = &["node_modules", "target"];
 
+/// 探すファイルの大きさの上限 (これより大きなファイルは, 飛ばす).
+pub const MAX_GREP_FILE_SIZE: u64 = 8 * 1024 * 1024;
+
+/// 合った行の数の上限 (これだけ見つけたら, 探すのを止める).
+pub const MAX_GREP_MATCHES: usize = 10_000;
+
 /// 合った行.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct GrepMatch {
@@ -44,7 +50,9 @@ pub fn has_upper_case(pattern: &str) -> bool {
 
 /// ディレクトリの下 (深くまで) のファイルから, 正規表現に合う行を探します.
 /// 正規表現に大文字が無ければ, 大文字と小文字を区別しません (Emacs の `case-fold-search`).
-/// 読めないファイルと, 文字のファイルでないもの (NUL を含むか, UTF-8 でない) は, 飛ばします.
+/// 読めないファイルと, 文字のファイルでないもの (NUL を含むか, UTF-8 でない) と,
+/// [`MAX_GREP_FILE_SIZE`] より大きなファイルは, 飛ばします.
+/// 合った行が [`MAX_GREP_MATCHES`] になったら, そこで止めます.
 ///
 /// # Arguments
 ///
@@ -66,6 +74,10 @@ pub fn grep_directory(pattern: &str, dir: &Path) -> Result<Vec<GrepMatch>, Strin
     collect_files(dir, &mut files);
     let mut found = Vec::new();
     for path in files {
+        // 大きなファイルは, 読む前に飛ばす
+        if std::fs::metadata(&path).map_or(true, |m| m.len() > MAX_GREP_FILE_SIZE) {
+            continue;
+        }
         let Ok(bytes) = std::fs::read(&path) else {
             continue;
         };
@@ -88,6 +100,9 @@ pub fn grep_directory(pattern: &str, dir: &Path) -> Result<Vec<GrepMatch>, Strin
                     line: i + 1,
                     text: line.to_string(),
                 });
+                if found.len() == MAX_GREP_MATCHES {
+                    return Ok(found);
+                }
             }
         }
     }

@@ -70,13 +70,17 @@ impl Value {
     }
 }
 
+/// i64 で表せる数の境 (2^63). これより小さい整数は, `-0` を `0` と書くように, i64 で書く.
+const I64_LIMIT: f64 = 9_223_372_036_854_775_808.0;
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Nil => write!(f, "nil"),
             Value::Boolean(b) => write!(f, "{}", if *b { "#t" } else { "#f" }),
             Value::Number(n) => {
-                if n.fract() == 0.0 {
+                // i64 に収まる整数だけ, 整数で書く (大きな数を i64 にすると, 値が変わる)
+                if n.fract() == 0.0 && n.abs() < I64_LIMIT {
                     write!(f, "{}", *n as i64)
                 } else {
                     write!(f, "{}", n)
@@ -126,6 +130,21 @@ mod tests {
     #[test]
     fn displays_integer_numbers_without_decimal_point() {
         assert_eq!(Value::Number(42.0).to_string(), "42");
+    }
+
+    #[test]
+    fn displays_large_numbers_without_overflow() {
+        // i64 に収まる整数は, 整数で書く (-0 は 0)
+        assert_eq!(
+            Value::Number(-9.223372036854775e18).to_string(),
+            "-9223372036854774784"
+        );
+        assert_eq!(Value::Number(-0.0).to_string(), "0");
+        // 収まらない数は, i64 にしない (飽和して, 値が変わらないように)
+        assert_eq!(Value::Number(1e19).to_string(), "10000000000000000000");
+        assert_eq!(Value::Number(-1e19).to_string(), "-10000000000000000000");
+        assert_eq!(Value::Number(f64::INFINITY).to_string(), "inf");
+        assert_eq!(Value::Number(f64::NAN).to_string(), "NaN");
     }
 
     #[test]

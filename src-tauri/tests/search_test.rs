@@ -4,7 +4,9 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
 use rseditor::commands::project_root;
-use rseditor::search::{grep_directory, has_upper_case, GrepMatch};
+use rseditor::search::{
+    grep_directory, has_upper_case, GrepMatch, MAX_GREP_FILE_SIZE, MAX_GREP_MATCHES,
+};
 use tempfile::tempdir;
 
 /// 合った行を作る.
@@ -93,6 +95,34 @@ fn test_grep_skips_unreadable() {
     if fs::read(root.join("secret.txt")).is_err() {
         assert_eq!(result.unwrap(), vec![found("a.txt", 1, "foo")]);
     }
+}
+
+#[test]
+fn test_grep_skips_large_files() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    fs::write(root.join("a.txt"), "foo\n").unwrap();
+    let mut large = "foo\n".repeat(MAX_GREP_FILE_SIZE as usize / 4);
+    large.push('x');
+    fs::write(root.join("large.txt"), large).unwrap();
+    assert_eq!(
+        grep_directory("foo", root).unwrap(),
+        vec![found("a.txt", 1, "foo")]
+    );
+}
+
+#[test]
+fn test_grep_stops_at_the_limit() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    fs::write(root.join("a.txt"), "foo\n".repeat(MAX_GREP_MATCHES + 1)).unwrap();
+    fs::write(root.join("b.txt"), "foo\n").unwrap();
+    let result = grep_directory("foo", root).unwrap();
+    assert_eq!(result.len(), MAX_GREP_MATCHES);
+    assert_eq!(
+        result.last().unwrap(),
+        &found("a.txt", MAX_GREP_MATCHES, "foo")
+    );
 }
 
 #[test]

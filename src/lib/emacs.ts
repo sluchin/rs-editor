@@ -249,6 +249,9 @@ function eventKeyName(event: KeyboardEvent): string {
  */
 export type Command = (view: EditorView, prefix?: number) => boolean
 
+/** 前置引数の数の上限 (大きな数で, 繰り返しが終わらなくならないように). */
+export const MAX_PREFIX_COUNT = 10000
+
 /** 前置引数を, 繰り返しでなく, 引数として受け取るコマンド. */
 const ARGUMENT_COMMANDS = new Set(['set-goal-column'])
 
@@ -1420,6 +1423,7 @@ export interface KeymapOptions {
  *
  * 前置引数: `C-u` は 4 (続けて押すと 4 倍), `C-u` の後の数字と `M-0` から `M-9` は, その数です.
  * 次のコマンドを, その数だけ繰り返します. 割り当てのない文字は, その数だけ入れます.
+ * 数は {@link MAX_PREFIX_COUNT} までです.
  *
  * @param lookup - コマンドの名前から, コマンドを返す関数 (無ければ `undefined`).
  * @param options - 作り方.
@@ -1437,7 +1441,7 @@ export function emacsKeymap(
   }
   const addDigit = (digit: string) => {
     prefix.digits += digit
-    prefix.count = Number(prefix.digits)
+    prefix.count = Math.min(Number(prefix.digits), MAX_PREFIX_COUNT)
     message(`C-u ${prefix.count}-`)
   }
 
@@ -1475,8 +1479,8 @@ export function emacsKeymap(
     }
     if (name === 'universal-argument') {
       // 数字を入れた後は, 数を変えない
-      if (prefix.digits === '') prefix.count = (prefix.count ?? 1) * 4
-      message(`C-u ${prefix.digits === '' ? prefix.count : prefix.digits}-`)
+      if (prefix.digits === '') prefix.count = Math.min((prefix.count ?? 1) * 4, MAX_PREFIX_COUNT)
+      message(`C-u ${prefix.count}-`)
       return true
     }
     if (name === 'digit-argument') {

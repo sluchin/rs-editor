@@ -130,7 +130,8 @@ pub(crate) fn call(
         "regexp-match" => regexp_match(name, &args),
         "regexp-quote" => fixed::<1>(name, args)
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
-        "grep" => fixed::<2>(name, args).and_then(|[pattern, files]| grep(name, &pattern, &files)),
+        "grep" => fixed::<2>(name, args)
+            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files)),
         _ => return None,
     };
     Some(result)
@@ -388,14 +389,15 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
 ///
 /// # Arguments
 ///
+/// * `machine` - 評価 (相対パスの基のディレクトリ).
 /// * `name` - 手続きの名前 (失敗の内容に書く).
 /// * `pattern` - 正規表現.
-/// * `files` - ファイルのパスのリスト (読めないファイルは, 飛ばす).
+/// * `files` - ファイルのパスのリスト (`expand-file-name` と同じく読む. 読めないファイルは, 飛ばす).
 ///
 /// # Returns
 ///
 /// 合った行ごとの `(パス 行の番号 行)` のリスト (ファイルの順, 行の順. 行の番号は 1 から).
-fn grep(name: &str, pattern: &Value, files: &Value) -> Result<Value, String> {
+fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result<Value, String> {
     let regex = regexp(string(name, pattern)?)?;
     let Value::List(files) = files else {
         return Err("grep expects a list of files".to_string());
@@ -403,7 +405,7 @@ fn grep(name: &str, pattern: &Value, files: &Value) -> Result<Value, String> {
     let mut found = Vec::new();
     for file in files {
         let path = string(name, file)?;
-        let Ok(text) = std::fs::read_to_string(path) else {
+        let Ok(text) = std::fs::read_to_string(machine.expand_file_name(path)) else {
             continue;
         };
         for (i, line) in text.lines().enumerate() {

@@ -18,6 +18,7 @@ import {
   quotedChar,
   pageLines,
   toEmacsKey,
+  MAX_PREFIX_COUNT,
 } from '@/lib/emacs'
 import { KillRing } from '@/lib/killRing'
 import { KeyboardMacro } from '@/lib/macro'
@@ -759,6 +760,15 @@ describe('前置引数', () => {
     expect(message).toHaveBeenCalledWith('C-u 12-')
     press('M-3 C-b')
     expect(text().indexOf('|')).toBe(5)
+  })
+
+  it('前置引数の数は, MAX_PREFIX_COUNT までにすること', () => {
+    const { press, text, message } = setup('|')
+    press('C-u 9 9 9 9 9 9 9 9 a')
+    expect(message).toHaveBeenCalledWith(`C-u ${MAX_PREFIX_COUNT}-`)
+    expect(text()).toBe('a'.repeat(MAX_PREFIX_COUNT) + '|')
+    press('C-u C-u C-u C-u C-u C-u C-u C-u')
+    expect(message).toHaveBeenLastCalledWith(`C-u ${MAX_PREFIX_COUNT}-`)
   })
 
   it('割り当てのない文字は, その数だけ入れ, 繰り返さないコマンドは 1 回だけ動かすこと', () => {

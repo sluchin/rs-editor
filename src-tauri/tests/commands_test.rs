@@ -63,6 +63,10 @@ fn test_list_directory_marks_the_directories() {
 #[test]
 fn test_home_dir_reads_home() {
     // テストの実行環境には, HOME がある
+    assert_eq!(
+        home_dir().unwrap(),
+        dirs::home_dir().unwrap().to_string_lossy()
+    );
     assert_eq!(home_dir().unwrap(), std::env::var("HOME").unwrap());
 }
 
@@ -215,6 +219,8 @@ fn test_list_directory_long_runs_ls() {
     let path = dir.path().to_string_lossy().into_owned();
     let listing = list_directory_long(path.clone()).unwrap();
     assert!(listing.lines().any(|line| line.ends_with(" a.txt")));
+    // 言語の設定によらず, total の行は英語
+    assert!(listing.starts_with("total "));
     // ディレクトリを読めないか, ls が無いか, 失敗すれば, 理由を返す
     assert!(list_directory_long(format!("{}/none", path)).is_err());
     assert!(list_directory_long_with("/nonexistent-ls", &path).is_err());

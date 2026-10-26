@@ -382,14 +382,16 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-/// ホームディレクトリ (環境変数 `HOME`) を返します.
+/// ホームディレクトリを返します (Unix は環境変数 `HOME`, 無ければ passwd. Windows はユーザーのプロファイル).
 ///
 /// # Returns
 ///
-/// ホームディレクトリ. 環境変数がなければ, 理由の文字列の [`Err`].
+/// ホームディレクトリ. 分からなければ, 理由の文字列の [`Err`].
 #[tauri::command]
 pub fn home_dir() -> Result<String, String> {
-    std::env::var("HOME").map_err(|e| e.to_string())
+    dirs::home_dir()
+        .map(|home| home.to_string_lossy().into_owned())
+        .ok_or_else(|| "No home directory".to_string())
 }
 
 /// ファイルのバックアップ (`<path>~`) を作ります (Emacs の `make-backup-files`. 前の版を写す).
@@ -463,6 +465,7 @@ pub fn file_newer_than(file1: String, file2: String) -> bool {
 }
 
 /// ディレクトリの一覧を, `ls -al` で作ります (Emacs の dired の `dired-listing-switches`).
+/// 日付と `total` の行を, 言語の設定によらず英語で出すように, `LC_ALL=C` で動かします.
 ///
 /// # Arguments
 ///
@@ -476,6 +479,7 @@ pub fn list_directory_long_with(program: &str, path: &str) -> Result<String, Str
     std::fs::read_dir(path).map_err(|e| e.to_string())?;
     let output = std::process::Command::new(program)
         .args(["-al", "--", path])
+        .env("LC_ALL", "C")
         .output()
         .map_err(|e| e.to_string())?;
     if !output.status.success() {

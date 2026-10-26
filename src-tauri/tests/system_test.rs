@@ -379,6 +379,13 @@ fn test_grep() {
             quoted(&b)
         )
     );
+    // 相対のパスは, expand-file-name と同じく, 読み込んでいるファイルのディレクトリから読む
+    let script = dir.path().join("search.sl");
+    fs::write(&script, "(define found (grep \"bar\" (list \"a.txt\")))").unwrap();
+    assert_eq!(
+        eval(&format!("(load {}) found", quoted(&script))),
+        "#t\n((\"a.txt\" 2 \"foo bar\"))"
+    );
     assert_eq!(eval_err("(grep \"a\" 1)"), "grep expects a list of files");
     assert_eq!(eval_err("(grep \"a\" '(1))"), "grep expects strings");
 }
