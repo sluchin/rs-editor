@@ -179,7 +179,7 @@ fn push_envs(value: &Value, envs: &mut Vec<Env>) {
     match value {
         Value::Lambda(lambda) => envs.push(lambda.env.clone()),
         Value::List(items) => {
-            for item in items {
+            for item in items.iter() {
                 push_envs(item, envs);
             }
         }
@@ -233,7 +233,7 @@ mod tests {
         // 一番外側から, リストの中の手続きでたどれる輪
         let kept = global.child();
         kept.define("g", lambda(&kept));
-        global.define("h", Value::List(vec![lambda(&kept), Value::Nil]));
+        global.define("h", Value::List(vec![lambda(&kept), Value::Nil].into()));
         drop(kept);
         assert_eq!(global.live_frames(), 2);
 

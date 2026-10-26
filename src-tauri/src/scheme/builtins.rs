@@ -205,10 +205,10 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "car" | "cdr" => {
             let [v] = fixed::<1>(name, args)?;
             match v {
-                Value::List(mut items) if !items.is_empty() => Ok(if name == "car" {
-                    items.swap_remove(0)
+                Value::List(items) if !items.is_empty() => Ok(if name == "car" {
+                    items[0].clone()
                 } else {
-                    Value::List(items.split_off(1))
+                    Value::List(items[1..].into())
                 }),
                 _ => Err(format!("{} expects a non-empty list", name)),
             }
@@ -227,14 +227,13 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "cons" => {
             let [head, tail] = fixed::<2>(name, args)?;
             match tail {
-                Value::List(mut items) => {
-                    items.insert(0, head);
-                    Ok(Value::List(items))
-                }
+                Value::List(items) => Ok(Value::List(
+                    std::iter::once(head).chain(items.iter().cloned()).collect(),
+                )),
                 _ => Err("cons expects a list as the second argument".to_string()),
             }
         }
-        "list" => Ok(Value::List(args)),
+        "list" => Ok(Value::List(args.into())),
         "length" => {
             let [v] = fixed::<1>(name, args)?;
             Ok(Value::Number(list(name, &v)?.len() as f64))
@@ -244,7 +243,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             for v in &args {
                 result.extend(list(name, v)?.iter().cloned());
             }
-            Ok(Value::List(result))
+            Ok(Value::List(result.into()))
         }
         "reverse" => {
             let [v] = fixed::<1>(name, args)?;
@@ -276,7 +275,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 results.push(machine.apply(procedure.clone(), call_args)?);
             }
             Ok(if name == "map" {
-                Value::List(results)
+                Value::List(results.into())
             } else {
                 Value::Nil
             })
@@ -292,7 +291,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                     results.push(item.clone());
                 }
             }
-            Ok(Value::List(results))
+            Ok(Value::List(results.into()))
         }
         "apply" => {
             let Some((procedure, rest)) = args.split_first() else {
@@ -321,14 +320,14 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         }
         "sort" => {
             let [v, procedure] = fixed::<2>(name, args)?;
-            let items = list(name, &v)?.clone();
-            Ok(Value::List(merge_sort(machine, &procedure, items)?))
+            let items = list(name, &v)?.to_vec();
+            Ok(Value::List(merge_sort(machine, &procedure, items)?.into()))
         }
         "member" => {
             let [key, v] = fixed::<2>(name, args)?;
             let items = list(name, &v)?;
             Ok(match items.iter().position(|item| *item == key) {
-                Some(i) => Value::List(items[i..].to_vec()),
+                Some(i) => Value::List(items[i..].into()),
                 None => Value::Boolean(false),
             })
         }
@@ -806,7 +805,7 @@ pub(crate) fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
 /// # Returns
 ///
 /// リストの要素. リストでない場合は [`Err`].
-fn list<'v>(name: &str, v: &'v Value) -> Result<&'v Vec<Value>, String> {
+fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
     match v {
         Value::List(items) => Ok(items),
         _ => Err(format!("{} expects lists", name)),

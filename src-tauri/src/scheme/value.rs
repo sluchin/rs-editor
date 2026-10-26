@@ -18,8 +18,8 @@ pub enum Value {
     Symbol(String),
     /// 文字列.
     String(String),
-    /// リスト (ドット対は扱わない).
-    List(Vec<Value>),
+    /// リスト (ドット対は扱わない). 写すときは, 要素を写さず, 参照を増やすだけ (評価のたびに, 式の木を写さないように).
+    List(Arc<[Value]>),
     /// 組み込みの手続き (名前で引く).
     Function(String),
     /// `lambda` で作った手続き.
@@ -171,20 +171,20 @@ mod tests {
 
     #[test]
     fn displays_lists_with_spaces() {
-        let list = Value::List(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0),
-        ]);
+        let list =
+            Value::List(vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)].into());
         assert_eq!(list.to_string(), "(1 2 3)");
     }
 
     #[test]
     fn displays_nested_lists() {
-        let list = Value::List(vec![
-            Value::Symbol("a".to_string()),
-            Value::List(vec![Value::Number(1.0), Value::Number(2.0)]),
-        ]);
+        let list = Value::List(
+            vec![
+                Value::Symbol("a".to_string()),
+                Value::List(vec![Value::Number(1.0), Value::Number(2.0)].into()),
+            ]
+            .into(),
+        );
         assert_eq!(list.to_string(), "(a (1 2))");
     }
 
@@ -212,8 +212,8 @@ mod tests {
         assert_eq!(Value::Number(1.0), Value::Number(1.0));
         assert_ne!(Value::Number(1.0), Value::Boolean(true));
         assert_eq!(
-            Value::List(vec![Value::Number(1.0)]),
-            Value::List(vec![Value::Number(1.0)])
+            Value::List(vec![Value::Number(1.0)].into()),
+            Value::List(vec![Value::Number(1.0)].into())
         );
         assert_eq!(
             Value::Function("car".to_string()),
@@ -225,6 +225,6 @@ mod tests {
     fn only_false_is_false() {
         assert!(!Value::Boolean(false).is_true());
         assert!(Value::Nil.is_true());
-        assert!(Value::List(vec![]).is_true());
+        assert!(Value::List(vec![].into()).is_true());
     }
 }

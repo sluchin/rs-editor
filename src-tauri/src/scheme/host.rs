@@ -233,26 +233,32 @@ mod tests {
 
     #[test]
     fn converts_values_to_json_and_back() {
-        let value = Value::List(vec![
-            Value::Nil,
-            Value::Boolean(true),
-            Value::Number(1.5),
-            Value::String("a".to_string()),
-            Value::Symbol("b".to_string()),
-            Value::Function("car".to_string()),
-        ]);
-        let json = to_json(&value);
-        assert_eq!(json, json!([null, true, 1.5, "a", "b", "#<procedure:car>"]));
-        assert_eq!(
-            from_json(json),
-            Value::List(vec![
+        let value = Value::List(
+            vec![
                 Value::Nil,
                 Value::Boolean(true),
                 Value::Number(1.5),
                 Value::String("a".to_string()),
-                Value::String("b".to_string()),
-                Value::String("#<procedure:car>".to_string()),
-            ])
+                Value::Symbol("b".to_string()),
+                Value::Function("car".to_string()),
+            ]
+            .into(),
+        );
+        let json = to_json(&value);
+        assert_eq!(json, json!([null, true, 1.5, "a", "b", "#<procedure:car>"]));
+        assert_eq!(
+            from_json(json),
+            Value::List(
+                vec![
+                    Value::Nil,
+                    Value::Boolean(true),
+                    Value::Number(1.5),
+                    Value::String("a".to_string()),
+                    Value::String("b".to_string()),
+                    Value::String("#<procedure:car>".to_string()),
+                ]
+                .into()
+            )
         );
         assert_eq!(
             from_json(json!({"a": 1})),

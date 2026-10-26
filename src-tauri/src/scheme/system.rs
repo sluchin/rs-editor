@@ -403,20 +403,23 @@ fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result
         return Err("grep expects a list of files".to_string());
     };
     let mut found = Vec::new();
-    for file in files {
+    for file in files.iter() {
         let path = string(name, file)?;
         let Ok(text) = std::fs::read_to_string(machine.expand_file_name(path)) else {
             continue;
         };
         for (i, line) in text.lines().enumerate() {
             if regex.is_match(line) {
-                found.push(Value::List(vec![
-                    Value::String(path.to_string()),
-                    Value::Number((i + 1) as f64),
-                    Value::String(line.to_string()),
-                ]));
+                found.push(Value::List(
+                    [
+                        Value::String(path.to_string()),
+                        Value::Number((i + 1) as f64),
+                        Value::String(line.to_string()),
+                    ]
+                    .into(),
+                ));
             }
         }
     }
-    Ok(Value::List(found))
+    Ok(Value::List(found.into()))
 }

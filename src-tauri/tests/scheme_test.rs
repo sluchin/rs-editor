@@ -587,3 +587,28 @@ fn test_value_display_and_equality_of_nil_and_functions() {
     assert_ne!(Value::Nil, Value::Boolean(false));
     assert_eq!(eval("car"), "#<procedure:car>");
 }
+
+#[test]
+fn test_shared_lists_are_not_changed() {
+    // リストは要素を共有するので, 新しいリストを作る手続きが, 元のリストを変えないこと
+    assert_eq!(
+        eval(
+            "(define a '(3 1 2)) \
+             (define b (list (cons 0 a) (cdr a) (append a '(4)) (reverse a) \
+                             (sort a <) (member 1 a) (map (lambda (x) (* x 2)) a))) \
+             (list a b)"
+        )
+        .lines()
+        .last()
+        .unwrap(),
+        "((3 1 2) ((0 3 1 2) (1 2) (3 1 2 4) (2 1 3) (1 2 3) (1 2) (6 2 4)))"
+    );
+    // 同じ式 (lambda の本体) を何度評価しても, 同じ結果になること
+    assert_eq!(
+        eval("(define (f) '(1 2)) (define x (f)) (define y (cons 0 (f))) (list x y (f))")
+            .lines()
+            .last()
+            .unwrap(),
+        "((1 2) (0 1 2) (1 2))"
+    );
+}

@@ -81,10 +81,9 @@ impl Parser {
             '\'' => {
                 self.advance('\'');
                 let quoted = self.parse_value()?;
-                Ok(Value::List(vec![
-                    Value::Symbol("quote".to_string()),
-                    quoted,
-                ]))
+                Ok(Value::List(
+                    [Value::Symbol("quote".to_string()), quoted].into(),
+                ))
             }
             '"' => self.parse_string(),
             '#' => self.parse_boolean(),
@@ -112,7 +111,7 @@ impl Parser {
         }
 
         self.advance(')');
-        Ok(Value::List(items))
+        Ok(Value::List(items.into()))
     }
 
     /// `"` で囲んだ文字列を読み込みます. エスケープは `\n`, `\t`, `\"`, `\\` が使えます.
@@ -299,11 +298,14 @@ mod tests {
                 assert_eq!(items[1], Value::Number(1.0));
                 assert_eq!(
                     items[2],
-                    Value::List(vec![
-                        Value::Symbol("*".to_string()),
-                        Value::Number(2.0),
-                        Value::Number(3.0),
-                    ])
+                    Value::List(
+                        vec![
+                            Value::Symbol("*".to_string()),
+                            Value::Number(2.0),
+                            Value::Number(3.0),
+                        ]
+                        .into()
+                    )
                 );
             }
             _ => panic!("expected a list"),
@@ -312,7 +314,7 @@ mod tests {
 
     #[test]
     fn parses_empty_list() {
-        assert_eq!(parse_one("()"), Value::List(vec![]));
+        assert_eq!(parse_one("()"), Value::List(vec![].into()));
     }
 
     #[test]
@@ -334,14 +336,20 @@ mod tests {
     fn parses_quote_and_dots() {
         assert_eq!(
             parse_one("'(a . b)"),
-            Value::List(vec![
-                Value::Symbol("quote".to_string()),
-                Value::List(vec![
-                    Value::Symbol("a".to_string()),
-                    Value::Symbol(".".to_string()),
-                    Value::Symbol("b".to_string()),
-                ]),
-            ])
+            Value::List(
+                vec![
+                    Value::Symbol("quote".to_string()),
+                    Value::List(
+                        vec![
+                            Value::Symbol("a".to_string()),
+                            Value::Symbol(".".to_string()),
+                            Value::Symbol("b".to_string()),
+                        ]
+                        .into()
+                    ),
+                ]
+                .into()
+            )
         );
         assert_eq!(parse_one(".5"), Value::Number(0.5));
         assert_eq!(parse_one("a.b:c"), Value::Symbol("a.b:c".to_string()));

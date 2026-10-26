@@ -187,17 +187,16 @@ mod parser_edge_cases {
 
     #[test]
     fn test_parse_empty_list() {
-        assert_eq!(parse("()"), vec![Value::List(vec![])]);
+        assert_eq!(parse("()"), vec![Value::List(vec![].into())]);
     }
 
     #[test]
     fn test_parse_nested_lists() {
         assert_eq!(
             parse("((1 2) (3 4))"),
-            vec![Value::List(vec![
-                number_list(&[1.0, 2.0]),
-                number_list(&[3.0, 4.0]),
-            ])]
+            vec![Value::List(
+                vec![number_list(&[1.0, 2.0]), number_list(&[3.0, 4.0]),].into()
+            )]
         );
     }
 

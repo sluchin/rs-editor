@@ -295,6 +295,10 @@ impl<'a> Machine<'a> {
     ///
     /// 値. 失敗した場合 (入れ子が深すぎる場合も) は, その内容の [`Err`].
     pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, String> {
+        // リストでない式は, その場で値にする (式を写さない)
+        if !matches!(expr, Value::List(_)) {
+            return eval_atom(expr, env);
+        }
         if self.depth >= MAX_DEPTH {
             return Err("Too deep recursion".to_string());
         }
@@ -317,14 +321,8 @@ impl<'a> Machine<'a> {
     fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
         loop {
             let items = match &expr {
-                Value::Symbol(name) if name.starts_with(':') => return Ok(expr.clone()),
-                Value::Symbol(name) => {
-                    return env
-                        .get(name)
-                        .ok_or_else(|| format!("Unbound variable: {}", name))
-                }
                 Value::List(items) if !items.is_empty() => items.clone(),
-                other => return Ok(other.clone()),
+                atom => return eval_atom(atom, &env),
             };
             let special = match &items[0] {
                 Value::Symbol(op) => self.special_form(op, &items[1..], &env)?,
@@ -607,7 +605,7 @@ impl<'a> Machine<'a> {
             }
             [Value::List(signature), body @ ..] => match signature.split_first() {
                 Some((Value::Symbol(name), params)) => {
-                    let lambda = make_lambda(Some(name), &Value::List(params.to_vec()), body, env)?;
+                    let lambda = make_lambda(Some(name), &Value::List(params.into()), body, env)?;
                     env.define(name, lambda);
                     Ok(name.clone())
                 }
@@ -642,7 +640,7 @@ impl<'a> Machine<'a> {
             .map(|(name, expr)| (Value::Symbol(name), expr))
             .unzip();
         let inner = env.child();
-        let lambda = make_lambda(Some(name), &Value::List(names), body, &inner)?;
+        let lambda = make_lambda(Some(name), &Value::List(names.into()), body, &inner)?;
         inner.define(name, lambda.clone());
         let args = self.eval_all(&exprs, env)?;
         self.apply_step(lambda, args)
@@ -759,6 +757,25 @@ fn make_lambda(
     })))
 }
 
+/// リストでない式 (と, 空のリスト) を評価します. 記号は変数の値 (`:` で始まる記号は, そのまま), ほかは, それ自身です.
+///
+/// # Arguments
+///
+/// * `expr` - 式.
+/// * `env` - 評価する環境.
+///
+/// # Returns
+///
+/// 値. 変数が無ければ [`Err`].
+fn eval_atom(expr: &Value, env: &Env) -> Result<Value, String> {
+    match expr {
+        Value::Symbol(name) if !name.starts_with(':') => env
+            .get(name)
+            .ok_or_else(|| format!("Unbound variable: {}", name)),
+        other => Ok(other.clone()),
+    }
+}
+
 /// 名前のない `lambda` に, 名前を付けます (表示のため). ほかの値は, そのまま返します.
 ///
 /// # Arguments
@@ -843,7 +860,7 @@ fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, 
     items
         .iter()
         .map(|item| match item {
-            Value::List(pair) => match pair.as_slice() {
+            Value::List(pair) => match &**pair {
                 [Value::Symbol(name), expr] => Ok((name.clone(), expr.clone())),
                 _ => Err(invalid()),
             },
