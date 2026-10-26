@@ -89,10 +89,17 @@ export interface LispHost {
   displayBuffer: (name: string, line: number | null) => Promise<void>
   /** ファイルを開いて (開いていれば, そのバッファ), 出さずに, バッファの名前を返します. */
   findFileNoselect: (path: string) => Promise<string>
-  /** 今のバッファの, 正規表現 (JavaScript の書き方) に合う所に, 下線を引きます. */
-  highlightRegexp: (regexp: string) => void
+  /**
+   * 今のバッファの, 正規表現 (JavaScript の書き方) に合う所を, face の色にします (face が無ければ, 下線).
+   * 括弧の番号を渡すと, その括弧に合った所だけ.
+   */
+  highlightRegexp: (regexp: string, face: string | null, group: number | null) => void
   /** 今のバッファの下線を消します (`true` なら, 全て). */
   unhighlightRegexp: (regexp: string | true) => void
+  /** 範囲を隠すか (`true`), 出します (`false`) (Emacs の `outline-flag-region`). */
+  outlineFlagRegion: (from: number, to: number, hide: boolean) => void
+  /** 位置の文字を, 隠していれば `true` (Emacs の `outline-invisible-p`). */
+  invisible: (pos: number) => boolean
   /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). */
   setModified: (modified: boolean) => void
   /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
@@ -298,8 +305,19 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
     case 'find-file-noselect':
       return host.findFileNoselect(String(args[0]))
     case 'highlight-regexp':
-      host.highlightRegexp(String(args[0]))
+      host.highlightRegexp(
+        String(args[0]),
+        typeof args[1] === 'string' ? args[1] : null,
+        typeof args[2] === 'number' ? args[2] : null,
+      )
       return null
+    case 'outline-flag-region':
+      host.outlineFlagRegion(...range(), args[2] === true)
+      return null
+    case 'outline-invisible-p': {
+      const pos = offset(args[0], length)
+      return pos < length && host.invisible(utf16Offset(text, pos))
+    }
     case 'unhighlight-regexp':
       host.unhighlightRegexp(args[0] === true ? true : String(args[0]))
       return null

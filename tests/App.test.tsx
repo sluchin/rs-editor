@@ -1020,6 +1020,28 @@ describe('App', () => {
     expect(editor.text()).toContain('Quit')
   })
 
+  it('C-] (abort-recursive-edit) は, エディタに移っていても, ミニバッファをやめる', async () => {
+    const editor = await setup()
+    // ミニバッファを使っていなければ, 誤り
+    editor.key(']', { ctrl: true })
+    expect(editor.text()).toContain('No recursive edit is in progress')
+    editor.key('x', { alt: true })
+    expect(editor.text()).toContain('M-x')
+    editor.key(']', { ctrl: true })
+    expect(editor.text()).toContain('Quit')
+    expect(editor.text()).not.toContain('M-x')
+  })
+
+  it('M-x abort-minibuffers は, ミニバッファの外では誤り', async () => {
+    const editor = await setup()
+    editor.key('x', { alt: true })
+    fireEvent.change(editor.input(), { target: { value: 'abort-minibuffers' } })
+    await act(async () => {
+      fireEvent.keyDown(editor.input(), { key: 'Enter' })
+    })
+    expect(editor.text()).toContain('Not in a minibuffer')
+  })
+
   describe('矩形とブックマーク', () => {
     /**
      * C-x r に続けて, キーを押します.
@@ -1983,9 +2005,9 @@ describe('App', () => {
       await send('switch-to-buffer', '*b*')
       await send('insert', 'menu memo')
       await send('highlight-regexp', 'me.')
-      await send('highlight-regexp', 'mo')
+      await send('highlight-regexp', 'o')
       await send('highlight-regexp', 'me.')
-      expect(marks()).toEqual(['men', 'mem'])
+      expect(marks()).toEqual(['men', 'mem', 'o'])
       expect(await send('highlight-regexp', '(')).toMatchObject({
         error: expect.stringContaining('Invalid regular expression'),
       })
@@ -1993,11 +2015,56 @@ describe('App', () => {
       await send('switch-to-buffer', '*scratch*')
       expect(marks()).toEqual([])
       await send('switch-to-buffer', '*b*')
-      expect(marks()).toEqual(['men', 'mem'])
+      expect(marks()).toEqual(['men', 'mem', 'o'])
       await send('unhighlight-regexp', 'me.')
-      expect(marks()).toEqual(['mo'])
+      expect(marks()).toEqual(['o'])
       await send('unhighlight-regexp', true)
       expect(marks()).toEqual([])
+    })
+
+    it('face を渡すと, その face の色にする (括弧の番号を渡すと, その括弧だけ)', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      const faces = (face: string) =>
+        [...editor.container.querySelectorAll(`.cm-face-${face}`)].map((e) => e.textContent)
+      await send('switch-to-buffer', '*b*')
+      await send('insert', '* a\n** b c\nTODO x')
+      await send('highlight-regexp', '^\\*+ (.*)', 'org-level-1', 1)
+      await send('highlight-regexp', 'TODO', 'org-todo')
+      await send('highlight-regexp', 'x(y)?', 'org-done', 1)
+      await send('highlight-regexp', 'x', 'org-todo', 0)
+      expect(faces('org-level-1')).toEqual(['a', 'b c'])
+      expect(faces('org-todo')).toEqual(['TODO', 'x'])
+      expect(faces('org-done')).toEqual([])
+      expect(await send('highlight-regexp', '^', 'org-done')).toMatchObject({
+        error: 'Regexp matches the empty string: ^',
+      })
+    })
+
+    it('範囲を隠して, ... を出す. 隠した所に掛かる範囲を出すと, 隠すのをやめる', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      await send('switch-to-buffer', '*b*')
+      await send('insert', '* a\nbody\n* b\nmore')
+      const folded = () => editor.container.querySelectorAll('.cm-foldPlaceholder').length
+      await send('outline-flag-region', 4, 9, true)
+      expect(folded()).toBe(1)
+      expect(editor.text()).toContain('...')
+      expect(await send('outline-invisible-p', 5)).toMatchObject({ value: true })
+      expect(await send('outline-invisible-p', 9)).toMatchObject({ value: false })
+      // 隠した所を, 付け直す (前に隠した所は除く)
+      await send('outline-flag-region', 4, 9, true)
+      await send('outline-flag-region', 14, 19, true)
+      expect(folded()).toBe(2)
+      await send('outline-flag-region', 1, 9, false)
+      expect(folded()).toBe(1)
+      expect(await send('outline-invisible-p', 5)).toMatchObject({ value: false })
+      // 空の範囲は隠さない
+      await send('outline-flag-region', 3, 3, true)
+      expect(folded()).toBe(1)
+      // 隣の隠した所 (重ならない所) は, そのまま
+      await send('outline-flag-region', 9, 14, true)
+      expect(folded()).toBe(2)
     })
 
     it('背景, 文字の色と, フォントを変える', async () => {

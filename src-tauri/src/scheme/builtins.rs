@@ -81,12 +81,15 @@ pub const NAMES: &[&str] = &[
     "symbol->string",
     "string->symbol",
     "format",
+    "error",
+    "user-error",
     "string-search",
     "string-prefix?",
     "string-suffix?",
     "string-trim",
     "string-join",
     "split-string",
+    "string-width",
     // エディタ
     "point",
     "point-min",
@@ -116,6 +119,8 @@ pub const NAMES: &[&str] = &[
     "find-file-noselect",
     "highlight-regexp",
     "unhighlight-regexp",
+    "outline-flag-region",
+    "outline-invisible-p",
     "set-background-color",
     "set-foreground-color",
     "set-frame-font",
@@ -363,6 +368,10 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 None => Value::Boolean(false),
             })
         }
+        "string-width" => {
+            let [s] = fixed::<1>(name, args)?;
+            Ok(Value::Number(string_width(string(name, &s)?) as f64))
+        }
         "string-length" => {
             let [s] = fixed::<1>(name, args)?;
             Ok(Value::Number(string(name, &s)?.chars().count() as f64))
@@ -427,6 +436,8 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             Ok(Value::Symbol(string(name, &s)?.to_string()))
         }
         "format" => Ok(Value::String(format(&args)?)),
+        // (error "書式" 引数...): Emacs と同じく, 書式で作った文字を, 失敗の内容にする
+        "error" | "user-error" => Err(format(&args)?),
         "string-search" => {
             if !(2..=3).contains(&args.len()) {
                 return Err("string-search expects 2 or 3 arguments".to_string());
@@ -573,11 +584,57 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
         }
-        "kill-new" | "highlight-regexp" => {
+        "kill-new" => {
             let [text] = fixed::<1>(name, args)?;
             string(name, &text)?;
             machine.host.call(name, vec![text])?;
             Ok(Value::Nil)
+        }
+        "highlight-regexp" => {
+            // (highlight-regexp REGEXP [FACE [SUBEXP]]): FACE は記号か文字列, SUBEXP は括弧の番号
+            if args.is_empty() || args.len() > 3 {
+                return Err("highlight-regexp expects 1 to 3 arguments".to_string());
+            }
+            let regexp = string(name, &args[0])?.to_string();
+            let face = match args.get(1) {
+                Some(Value::Symbol(face)) | Some(Value::String(face)) => {
+                    Value::String(face.clone())
+                }
+                Some(v) if v.is_non_nil() => {
+                    return Err(format!("highlight-regexp: invalid face {}", v))
+                }
+                _ => Value::Nil,
+            };
+            let group = match args.get(2) {
+                Some(v) if v.is_non_nil() => Value::Number(index(name, v)? as f64),
+                _ => Value::Nil,
+            };
+            machine
+                .host
+                .call(name, vec![Value::String(regexp), face, group])?;
+            Ok(Value::Nil)
+        }
+        "outline-flag-region" => {
+            // (outline-flag-region FROM TO FLAG): FLAG が non-nil なら隠す, nil なら出す
+            let [from, to, flag] = fixed::<3>(name, args)?;
+            number(name, &from)?;
+            number(name, &to)?;
+            machine
+                .host
+                .call(name, vec![from, to, Value::Boolean(flag.is_non_nil())])?;
+            Ok(Value::Nil)
+        }
+        "outline-invisible-p" => {
+            // 省くと, カーソルの位置
+            let pos = match args.as_slice() {
+                [] => machine.host.call("point", vec![])?,
+                [pos] => {
+                    number(name, pos)?;
+                    pos.clone()
+                }
+                _ => return Err("outline-invisible-p expects 0 or 1 arguments".to_string()),
+            };
+            machine.host.call(name, vec![pos])
         }
         "unhighlight-regexp" => {
             // #t なら, 全て消す
@@ -767,6 +824,55 @@ fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, 
         return Ok(Value::Nil);
     }
     set_font(machine, family, size)
+}
+
+/// 文字の表示の幅 (Emacs の `char-width`). 全角の文字 (東アジアの幅の広い文字と, 絵文字) は 2, タブは 8, ほかは 1.
+///
+/// # Arguments
+///
+/// * `c` - 文字.
+///
+/// # Returns
+///
+/// 幅.
+pub fn char_width(c: char) -> usize {
+    const WIDE: &[(u32, u32)] = &[
+        (0x1100, 0x115f),
+        (0x2e80, 0x303e),
+        (0x3041, 0x33ff),
+        (0x3400, 0x4dbf),
+        (0x4e00, 0x9fff),
+        (0xa000, 0xa4cf),
+        (0xac00, 0xd7a3),
+        (0xf900, 0xfaff),
+        (0xfe30, 0xfe4f),
+        (0xff00, 0xff60),
+        (0xffe0, 0xffe6),
+        (0x1f300, 0x1f64f),
+        (0x1f900, 0x1f9ff),
+        (0x20000, 0x3fffd),
+    ];
+    let code = c as u32;
+    if c == '\t' {
+        8
+    } else if WIDE.iter().any(|(lo, hi)| (*lo..=*hi).contains(&code)) {
+        2
+    } else {
+        1
+    }
+}
+
+/// 文字列の表示の幅 (Emacs の `string-width`).
+///
+/// # Arguments
+///
+/// * `s` - 文字列.
+///
+/// # Returns
+///
+/// 幅 (文字の幅の和).
+pub fn string_width(s: &str) -> usize {
+    s.chars().map(char_width).sum()
 }
 
 /// `(completing-read PROMPT COLLECTION [PREDICATE [REQUIRE-MATCH [INITIAL-INPUT [HIST [DEF]]]]])`.

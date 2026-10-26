@@ -209,6 +209,21 @@ fn test_expand_file_name() {
     assert_eq!(expand_file_name("~/a", base, &home), home.join("a"));
     assert_eq!(expand_file_name("a", base, &home), base.join("a"));
     assert_eq!(expand_file_name("/abs", base, &home), Path::new("/abs"));
+    assert_eq!(expand_file_name("a", Path::new("."), &home), Path::new("a"));
+    // `.` と `..` は除く (根より上には行かない. 相対の基なら, 残す)
+    assert_eq!(
+        expand_file_name("./a/../b/.", base, &home),
+        Path::new("/base/b")
+    );
+    assert_eq!(expand_file_name("../../../a", base, &home), Path::new("/a"));
+    assert_eq!(
+        expand_file_name("../a", Path::new("rel"), &home),
+        Path::new("a")
+    );
+    assert_eq!(
+        expand_file_name("../../a", Path::new("rel"), &home),
+        Path::new("../a")
+    );
     let home = home.to_string_lossy();
     assert_eq!(
         eval("(expand-file-name \"~/x\") (expand-file-name \"x\") (expand-file-name \"x\" \"/d\") (expand-file-name \"x\" \"~/d\")"),
@@ -476,6 +491,9 @@ fn test_grep() {
 
 #[test]
 fn test_strings() {
+    assert_eq!(eval_err("(error \"Bad %s: %d\" \"x\" 3)"), "Bad x: 3");
+    assert_eq!(eval_err("(user-error \"Stop\")"), "Stop");
+    assert_eq!(eval_err("(error)"), "format expects a format string");
     assert_eq!(
         eval("(string-search \"b\" \"abcb\") (string-search \"b\" \"abcb\" 2) (string-search \"z\" \"abc\") (string-search \"う\" \"あいう\")"),
         "1\n3\n#f\n2"
@@ -656,7 +674,7 @@ fn test_buffer_operations() {
             "display-buffer \"b\"".to_string(),
             "display-buffer \"b\" 3".to_string(),
             format!("find-file-noselect {:?}", home.join("y").to_string_lossy()),
-            "highlight-regexp \"a+\"".to_string(),
+            "highlight-regexp \"a+\" nil nil".to_string(),
             "unhighlight-regexp \"a+\"".to_string(),
             "unhighlight-regexp #t".to_string(),
         ]
@@ -830,4 +848,96 @@ fn test_hooks() {
     ] {
         assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);
     }
+}
+
+#[test]
+fn test_org_editor_operations() {
+    let ev = Evaluator::new();
+    let editor = Recorder::new(Value::Number(4.0));
+    let code = "(highlight-regexp \"a\" 'org-level-1) (highlight-regexp \"b\" \"org-todo\" 1) (highlight-regexp \"c\" #f #f) (outline-flag-region 1 5 #t) (outline-flag-region 1 5 '()) (outline-invisible-p) (outline-invisible-p 2) (string-width \"a\\t日本\")";
+    assert_eq!(
+        ev.eval_with(code, &editor).unwrap(),
+        "nil\nnil\nnil\nnil\nnil\nnil\nnil\n13"
+    );
+    assert_eq!(
+        editor.calls(),
+        vec![
+            "highlight-regexp \"a\" \"org-level-1\" nil",
+            "highlight-regexp \"b\" \"org-todo\" 1",
+            "highlight-regexp \"c\" nil nil",
+            "outline-flag-region 1 5 #t",
+            "outline-flag-region 1 5 #f",
+            "point",
+            "outline-invisible-p nil",
+            "outline-invisible-p 2",
+        ]
+    );
+    for (code, error) in [
+        (
+            "(highlight-regexp)",
+            "highlight-regexp expects 1 to 3 arguments",
+        ),
+        (
+            "(highlight-regexp \"a\" 1)",
+            "highlight-regexp: invalid face 1",
+        ),
+        (
+            "(outline-flag-region 1 \"a\" #t)",
+            "outline-flag-region expects numbers",
+        ),
+        (
+            "(outline-invisible-p \"a\")",
+            "outline-invisible-p expects numbers",
+        ),
+        (
+            "(outline-invisible-p 1 2)",
+            "outline-invisible-p expects 0 or 1 arguments",
+        ),
+        ("(string-width 1)", "string-width expects strings"),
+    ] {
+        assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error, "{}", code);
+    }
+    // 幅の広い文字
+    for (c, width) in [
+        ('a', 1),
+        ('\t', 8),
+        ('あ', 2),
+        ('한', 2),
+        ('😀', 2),
+        ('Ａ', 2),
+    ] {
+        assert_eq!(rseditor::scheme::builtins::char_width(c), width, "{}", c);
+    }
+}
+
+#[test]
+fn test_browse_url() {
+    let ev = Evaluator::new();
+    assert_eq!(
+        ev.eval("(define browse-url-generic-program \"true\") (browse-url \"http://example.com\")")
+            .unwrap(),
+        "browse-url-generic-program\nnil"
+    );
+    let error = ev
+        .eval("(set! browse-url-generic-program \"/nonexistent-browser\") (browse-url \"x\")")
+        .unwrap_err();
+    assert!(
+        error.starts_with("browse-url: /nonexistent-browser: "),
+        "{}",
+        error
+    );
+    assert_eq!(
+        ev.eval("(browse-url 1)").unwrap_err(),
+        "browse-url expects strings"
+    );
+    assert_eq!(
+        ev.eval("(set! browse-url-generic-program 1) (browse-url \"x\")")
+            .unwrap_err(),
+        "browse-url-generic-program must be a program"
+    );
+    assert!(["open", "explorer", "xdg-open"].contains(&rseditor::scheme::system::DEFAULT_BROWSER));
+    assert_eq!(
+        Evaluator::new().eval("browse-url-generic-program").unwrap(),
+        format!("{:?}", rseditor::scheme::system::DEFAULT_BROWSER)
+    );
 }

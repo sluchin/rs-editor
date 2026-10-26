@@ -9,6 +9,7 @@ import { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
 import { type Buffer, generateBufferId, visitFile } from '../lib/buffer'
+import { checkHighlightRegexp, type Highlight } from '../lib/faces'
 import {
   type EvalResponse,
   type KeyBinding,
@@ -192,7 +193,7 @@ export function useLisp(ctx: AppContext) {
      *
      * @param change - 今の下線から, 新しい下線を作る関数.
      */
-    const updateHighlights = (change: (highlights: string[]) => string[]) =>
+    const updateHighlights = (change: (highlights: Highlight[]) => Highlight[]) =>
       setBuffers((prev) =>
         prev.map((b) =>
           b.id === currentBufferId ? { ...b, highlights: change(b.highlights ?? []) } : b,
@@ -255,13 +256,20 @@ export function useLisp(ctx: AppContext) {
         // 同じ名前のファイルがあれば, 名前を変えているので, 描き直した後のバッファから引く
         return (latestBuffers.current.find((b) => b.id === buffer.id) as Buffer).name
       },
-      highlightRegexp: (regexp) => {
+      highlightRegexp: (regexp, face, group) => {
         // 誤った正規表現は, ここで失敗にする
-        new RegExp(regexp)
-        updateHighlights((prev) => [...prev.filter((r) => r !== regexp), regexp])
+        checkHighlightRegexp(regexp)
+        const highlight: Highlight = { regexp }
+        if (face) highlight.face = face
+        if (group) highlight.group = group
+        updateHighlights((prev) => [...prev.filter((h) => h.regexp !== regexp), highlight])
       },
       unhighlightRegexp: (regexp) =>
-        updateHighlights((prev) => (regexp === true ? [] : prev.filter((r) => r !== regexp))),
+        updateHighlights((prev) =>
+          regexp === true ? [] : prev.filter((h) => h.regexp !== regexp),
+        ),
+      outlineFlagRegion: (from, to, hide) => handle().foldRegion(from, to, hide),
+      invisible: (pos) => handle().invisible(pos),
       setModified: (modified) => updateCurrentBuffer({ modified }),
       localSetKey: (key, command) =>
         setBuffers((prev) =>

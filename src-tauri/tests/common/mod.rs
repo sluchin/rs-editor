@@ -24,6 +24,10 @@ pub struct FakeBuffer {
     pub keys: HashMap<String, String>,
     /// 下線を引く正規表現.
     pub highlights: Vec<String>,
+    /// 色付けの face と括弧の番号 (正規表現ごと).
+    pub faces: HashMap<String, (Option<String>, Option<usize>)>,
+    /// 隠した範囲 (始めと終わり. 1 から数える).
+    pub folded: Vec<(usize, usize)>,
 }
 
 /// 偽のエディタ (バッファを名前で持つ).
@@ -45,6 +49,8 @@ pub struct FakeEditor {
     pub kill_ring: Mutex<Vec<String>>,
     /// display-buffer で出したもの (バッファの名前と行).
     pub displayed: Mutex<Vec<(String, Option<usize>)>>,
+    /// command で動かしたコマンドの名前.
+    pub commands: Mutex<Vec<String>>,
 }
 
 impl FakeEditor {
@@ -227,6 +233,21 @@ impl FakeEditor {
         });
     }
 
+    /// command で動かすコマンドの名前を覚えて, 返す.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - コマンドの名前.
+    ///
+    /// # Returns
+    ///
+    /// 名前.
+    pub fn run_command(&self, name: &Value) -> String {
+        let name = text(name);
+        self.commands.lock().unwrap().push(name.clone());
+        name
+    }
+
     /// 出しているバッファの, キーのコマンドを返す.
     ///
     /// # Arguments
@@ -365,13 +386,53 @@ impl Host for FakeEditor {
             "find-file-noselect" => Value::String(self.visit(&text(&args[0]))),
             "highlight-regexp" => {
                 let regexp = text(&args[0]);
-                self.with_buffer(|b| b.highlights.push(regexp));
+                let face = match &args[1] {
+                    Value::String(face) => Some(face.clone()),
+                    _ => None,
+                };
+                let group = match &args[2] {
+                    Value::Number(n) => Some(*n as usize),
+                    _ => None,
+                };
+                self.with_buffer(|b| {
+                    b.highlights.retain(|r| *r != regexp);
+                    b.highlights.push(regexp.clone());
+                    b.faces.insert(regexp, (face, group));
+                });
                 Value::Nil
+            }
+            "outline-flag-region" => {
+                let (from, to) = (pos(&args[0]), pos(&args[1]));
+                let (from, to) = (from.min(to), from.max(to));
+                let hide = args[2] == Value::Boolean(true);
+                self.with_buffer(|b| {
+                    b.folded.retain(|(a, z)| !(*a < to && *z > from));
+                    if hide && to > from {
+                        b.folded.push((from, to));
+                        b.folded.sort();
+                    }
+                });
+                Value::Nil
+            }
+            "outline-invisible-p" => {
+                let at = pos(&args[0]);
+                Value::Boolean(
+                    self.buffer()
+                        .folded
+                        .iter()
+                        .any(|(a, z)| *a <= at && at < *z),
+                )
             }
             "unhighlight-regexp" => {
                 self.with_buffer(|b| match &args[0] {
-                    Value::String(regexp) => b.highlights.retain(|r| r != regexp),
-                    _ => b.highlights.clear(),
+                    Value::String(regexp) => {
+                        b.highlights.retain(|r| r != regexp);
+                        b.faces.remove(regexp);
+                    }
+                    _ => {
+                        b.highlights.clear();
+                        b.faces.clear();
+                    }
                 });
                 Value::Nil
             }
@@ -405,7 +466,16 @@ impl Host for FakeEditor {
                 self.prompts.lock().unwrap().push(text(&args[0]));
                 Value::String(self.answers.lock().unwrap().remove(0))
             }
-            "command" => match text(&args[0]).as_str() {
+            "command" => match self.run_command(&args[0]).as_str() {
+                "save-buffer" => {
+                    let buffer = self.buffer();
+                    if let Some(file) = &buffer.file {
+                        fs::write(file, buffer.text.iter().collect::<String>()).unwrap();
+                    }
+                    self.with_buffer(|b| b.modified = false);
+                    Value::Boolean(true)
+                }
+                "indent-for-tab-command" | "forward-word" | "backward-word" => Value::Boolean(true),
                 "newline" => return self.call("insert", vec![Value::String("\n".to_string())]),
                 "next-line" | "previous-line" => {
                     self.move_line(text(&args[0]) == "next-line");

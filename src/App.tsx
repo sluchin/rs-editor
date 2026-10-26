@@ -207,6 +207,8 @@ function App() {
       'execute-extended-command': handleExecuteCommand,
       'goto-line': handleGotoLine,
       'string-rectangle': handleStringRectangle,
+      'abort-minibuffers': () => abortMinibuffer('Not in a minibuffer'),
+      'abort-recursive-edit': () => abortMinibuffer('No recursive edit is in progress'),
     },
     submit: {
       'switch-buffer': (value) => {
@@ -322,6 +324,17 @@ function App() {
     search.cancel(minibufferState)
     lisp.cancel()
     showMessage('Quit')
+  }
+
+  /**
+   * ミニバッファを使っていれば, やめます (Emacs の `abort-minibuffers` と `abort-recursive-edit`.
+   * エディタに移っていても, やめられる). 使っていなければ, 誤りを出します.
+   *
+   * @param error - ミニバッファを使っていないときに出す誤り.
+   */
+  const abortMinibuffer = (error: string) => {
+    if (minibuffer.isMinibufferActive()) handleMinibufferCancel()
+    else showMessage(error)
   }
 
   /**

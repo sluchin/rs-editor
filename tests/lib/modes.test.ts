@@ -90,6 +90,14 @@ describe('majorMode', () => {
       tabWidth: 8,
     })
     expect(majorMode('a.txt', '/tmp/a.txt', '; -*- scheme -*-').name).toBe('Scheme')
+    // Org mode (ファイルの名前と, ファイルの変数)
+    expect(majorMode('a.org', '/tmp/a.org', '* a')).toEqual({
+      name: 'Org',
+      language: null,
+      indentTabs: true,
+      tabWidth: 8,
+    })
+    expect(majorMode('a.txt', '/tmp/a.txt', '# -*- mode: org -*-').name).toBe('Org')
     expect(majorMode('a.scm', '/tmp/a.scm', '; -*- mode: fundamental -*-').name).toBe('Fundamental')
     expect(majorMode('a', '/tmp/a', '-*- mode: lisp-data; tab-width: 4 -*-')).toEqual({
       name: 'Lisp-Data',
@@ -98,7 +106,7 @@ describe('majorMode', () => {
       tabWidth: 4,
     })
     // 知らないモードは, ファイルの名前で決める
-    expect(majorMode('a.el', '/tmp/a.el', '-*- mode: org -*-').name).toBe('ELisp/d')
+    expect(majorMode('a.el', '/tmp/a.el', '-*- mode: python -*-').name).toBe('ELisp/d')
     // ファイルでないバッファは, 本文を見ない
     expect(majorMode('*scratch*', null, '-*- indent-tabs-mode: nil -*-').indentTabs).toBe(true)
   })

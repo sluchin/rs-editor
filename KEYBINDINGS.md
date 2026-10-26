@@ -244,6 +244,8 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-g` | keyboard-quit | 操作をキャンセル（Quit メッセージ表示） |
+| `C-g` （ミニバッファで） | abort-minibuffers | ミニバッファの入力（`M-x`, `C-x C-f`, Lisp の `read-string` など）をやめる（Quit メッセージ表示） |
+| `C-]` | abort-recursive-edit | ミニバッファの入力をやめる（エディタに移っていても. 使っていなければ `No recursive edit is in progress`） |
 | `F8` | project-tree | 左のサイドバーに, プロジェクト（`.git` のある所）のファイルのツリーを出すか消す（ディレクトリを押すと開き, ファイルを押すと開く） |
 
 ## Dired（ディレクトリの編集）
@@ -431,6 +433,37 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 メニューでは, ボタンの前の `"` の前の文字 (`c`, `s`, `g`, `m`, `a`, `l`, `y`, `t` など) と, ボタンや項目の上の `RET` が使えます。
 一覧 (`*howmS*`) では, `n` と `p` で行を動くと, 別のウィンドウにメモを出し, `RET` でその行のメモを開きます。
 howm から開いたメモと, `C-x C-f` で開いたメモ (`howm-directory` の下) では, リンク (`>>>`, `<<<`, `[[ ]]`, キーワード, `file://`) と, 予定と todo の項目と, 日付の上の `RET` で動きます (ほかの所では, 改行)。
+
+## Org mode (`lisp/org.scm` を読み込んだとき)
+
+`(require 'org)` で読みます。`.org` のファイルを開くと, Org mode のキーになります。キーは Emacs の Org mode と同じです。
+
+| キー | コマンド | 説明 |
+|------|----------|------|
+| `TAB` / `S-TAB` | `org-cycle` / `org-shifttab` | 見出しを開け閉めする / 全体を開け閉めする (表では, 次と前の欄) |
+| `RET` | `org-return` | 改行 (表では, 下の欄) |
+| `M-RET` / `M-S-RET` | `org-meta-return` / `org-insert-todo-heading` | 見出しか項目を足す / TODO の見出しか, チェックボックスの項目を足す |
+| `C-RET` / `C-S-RET` | `org-insert-heading-respect-content` / `org-insert-todo-heading-respect-content` | 木の後に見出しを足す |
+| `M-左右` / `M-S-左右` | `org-metaleft` など / `org-shiftmetaleft` など | 見出しと項目の深さ (木ごと) / 表の列を動かす, 消す, 足す |
+| `M-上下` / `M-S-上下` | `org-metaup` など / `org-shiftmetaup` など | 木と項目と表の行を動かす / 表の行を消す, 足す |
+| `S-左右` / `S-上下` | `org-shiftleft` など / `org-shiftup` など | TODO の状態, 項目の印, 日付 / 優先度, 日付 |
+| `C-c C-n` / `C-c C-p` | `org-next-visible-heading` / `org-previous-visible-heading` | 次 / 前の見出し |
+| `C-c C-f` / `C-c C-b` / `C-c C-u` | `org-forward-heading-same-level` など / `outline-up-heading` | 同じ深さの次 / 前の見出し / 上の見出し |
+| `C-c C-t` | `org-todo` | TODO の状態を変える |
+| `C-c ,` | `org-priority` | 優先度を変える |
+| `C-c C-q` | `org-set-tags-command` | タグを付ける |
+| `C-c .` / `C-c !` | `org-time-stamp` / `org-time-stamp-inactive` | 日付を入れる |
+| `C-c C-s` / `C-c C-d` | `org-schedule` / `org-deadline` | SCHEDULED / DEADLINE を書く |
+| `C-c C-c` | `org-ctrl-c-ctrl-c` | チェックボックス, 表を揃える, タグ, `[/]` を数え直す |
+| `C-c -` / `C-c *` | `org-ctrl-c-minus` / `org-ctrl-c-star` | リストにする (表では横線) / 見出しにする |
+| `C-c \|` | `org-table-create-or-convert-from-region` | 表を作る |
+| `C-c ^` | `org-sort` | 子の見出しか, 項目を並べる |
+| `C-c #` / `C-c C-x C-b` | `org-update-statistics-cookies` / `org-toggle-checkbox` | `[/]` を数え直す / チェックボックス |
+| `C-c C-l` / `C-c C-o` | `org-insert-link` / `org-open-at-point` | リンクを入れる / 開く |
+| `C-c l` / `C-c a` / `C-c c` | `org-store-link` / `org-agenda` / `org-capture` | リンクを覚える / アジェンダ / キャプチャ (Org の手引きの勧めるキー) |
+
+アジェンダ (`*Org Agenda*`) では, `RET` (開く), `SPC` と `TAB` (ほかのウィンドウに出す), `n` と `p` (行), `f` と `b` (次と前の週), `.` (今日), `r` と `g` (作り直す), `t` (TODO の状態), `q` (閉じる) が使えます。
+キャプチャ (`*Capture*`) では, `C-c C-c` でファイルに足して保存し, `C-c C-k` で止めます。
 
 ## よくある操作パターン
 

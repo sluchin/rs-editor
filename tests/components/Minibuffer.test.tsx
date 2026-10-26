@@ -98,8 +98,9 @@ describe('Minibuffer Component (問い)', () => {
     fireEvent.keyDown(input, { key: 'y' })
     expect(onQueryKey).toHaveBeenCalledWith('y')
     fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
+    fireEvent.keyDown(input, { key: ']', ctrlKey: true })
     fireEvent.keyDown(input, { key: 'Escape' })
-    expect(onCancel).toHaveBeenCalledTimes(2)
+    expect(onCancel).toHaveBeenCalledTimes(3)
     // 知らせる先がなくても, 落ちない
     view.rerender(<Minibuffer {...props} />)
     fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, { key: 'n' })
@@ -218,6 +219,11 @@ describe('Minibuffer Component', () => {
     fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
 
     expect(onCancel).toHaveBeenCalled()
+    // C-] (abort-recursive-edit) でも, やめる. Ctrl の無い ] は, 入力
+    fireEvent.keyDown(input, { key: ']', ctrlKey: true })
+    expect(onCancel).toHaveBeenCalledTimes(2)
+    fireEvent.keyDown(input, { key: ']' })
+    expect(onCancel).toHaveBeenCalledTimes(2)
   })
 
   it('renders isearch mode with forward prompt', () => {

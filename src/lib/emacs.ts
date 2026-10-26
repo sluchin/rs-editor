@@ -1307,6 +1307,7 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   ['Ctrl-Alt-Space', 'mark-sexp'],
   ['Ctrl-Alt-h', 'mark-defun'],
   ['Ctrl-g', 'keyboard-quit'],
+  ['Ctrl-]', 'abort-recursive-edit'],
   // ヘルプ
   ['Ctrl-h k', 'describe-key'],
   ['Ctrl-h b', 'describe-bindings'],

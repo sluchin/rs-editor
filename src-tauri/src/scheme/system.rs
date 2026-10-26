@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hasher};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use chrono::format::{Item, StrftimeItems};
@@ -42,7 +42,17 @@ pub const NAMES: &[&str] = &[
     "regexp-match-positions",
     "regexp-quote",
     "grep",
+    "browse-url",
 ];
+
+/// URL を開くプログラムの既定 (Lisp の `browse-url-generic-program` の始めの値).
+pub const DEFAULT_BROWSER: &str = if cfg!(target_os = "macos") {
+    "open"
+} else if cfg!(windows) {
+    "explorer"
+} else {
+    "xdg-open"
+};
 
 /// `load-path` の始めの値 (Emacs の `~/.emacs.d` のように, `~/.rseditor.d` に Lisp のファイルを置く).
 pub const DEFAULT_LOAD_PATH: &[&str] = &["~/.rseditor.d/lisp", "~/.rseditor.d"];
@@ -187,6 +197,15 @@ pub(crate) fn call(
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
         "grep" => fixed::<2>(name, args)
             .and_then(|[pattern, files]| grep(machine, name, &pattern, &files)),
+        "browse-url" => fixed::<1>(name, args).and_then(|[url]| {
+            let url = string(name, &url)?.to_string();
+            let program = match machine.evaluator.global().get("browse-url-generic-program") {
+                Some(Value::String(program)) => program,
+                _ => return Err("browse-url-generic-program must be a program".to_string()),
+            };
+            browse_url(&program, &url)?;
+            Ok(Value::Nil)
+        }),
         _ => return None,
     };
     Some(result)
@@ -338,7 +357,7 @@ fn expand_args(machine: &Machine, name: &str, args: &[Value]) -> Result<PathBuf,
     }))
 }
 
-/// パスを, 絶対パスにします. `~` はホームディレクトリにします.
+/// パスを, 絶対パスにします. `~` はホームディレクトリにします. `.` と `..` は除きます.
 ///
 /// # Arguments
 ///
@@ -350,13 +369,28 @@ fn expand_args(machine: &Machine, name: &str, args: &[Value]) -> Result<PathBuf,
 ///
 /// 絶対パス.
 pub fn expand_file_name(path: &str, base: &Path, home: &Path) -> PathBuf {
-    if path == "~" {
+    let joined = if path == "~" {
         home.to_path_buf()
     } else if let Some(rest) = path.strip_prefix("~/") {
         home.join(rest)
     } else {
         base.join(path)
+    };
+    // `.` を除き, `..` で 1 つ上に戻る (Emacs と同じく, ファイルを見ずに, 文字の上で)
+    let mut result = PathBuf::new();
+    for component in joined.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir
+                if matches!(result.components().next_back(), Some(Component::Normal(_))) =>
+            {
+                result.pop();
+            }
+            Component::ParentDir if result.has_root() => {}
+            _ => result.push(component),
+        }
     }
+    result
 }
 
 /// パスを, 文字列にします.
@@ -607,4 +641,26 @@ fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result
         }
     }
     Ok(Value::List(found.into()))
+}
+
+/// URL を, プログラムで開きます (終わるのを待たない).
+///
+/// # Arguments
+///
+/// * `program` - プログラム (`xdg-open` など).
+/// * `url` - URL.
+///
+/// # Returns
+///
+/// 動かせなければ, 失敗の内容.
+pub fn browse_url(program: &str, url: &str) -> Result<(), String> {
+    let mut child = std::process::Command::new(program)
+        .arg(url)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .map_err(|e| format!("browse-url: {}: {}", program, e))?;
+    // 終わったプログラムを片付ける
+    std::thread::spawn(move || child.wait());
+    Ok(())
 }

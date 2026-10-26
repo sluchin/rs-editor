@@ -85,7 +85,7 @@ interface MinibufferProps {
   onInputChange: (value: string, state: MinibufferInputState | MinibufferIsearchState) => void
   /** Enter で入力を確定したときに呼びます. */
   onSubmit: (value: string) => void
-  /** C-g か Escape で, やめたときに呼びます. */
+  /** C-g (`abort-minibuffers`), C-] (`abort-recursive-edit`) か Escape で, やめたときに呼びます. */
   onCancel: () => void
   /** isearch で, C-s か C-r を押したときに呼びます (次か前に合う所へ進む). */
   onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
@@ -93,6 +93,16 @@ interface MinibufferProps {
   onQueryKey?: (key: string) => void
   /** isearch で, C-w, M-y, M-p, M-n を押したときに呼びます. */
   onIsearchCommand?: (command: IsearchCommand, state: MinibufferIsearchState) => void
+}
+
+/**
+ * ミニバッファをやめるキーなら `true` (Emacs の `C-g` (`abort-minibuffers`) と `C-]` (`abort-recursive-edit`). Escape も).
+ *
+ * @param e - キーのイベント.
+ * @returns やめるキーなら `true`.
+ */
+function isQuitKey(e: KeyboardEvent<HTMLInputElement>): boolean {
+  return e.key === 'Escape' || (e.ctrlKey && (e.key === 'g' || e.key === ']'))
 }
 
 /** メッセージが空のときに出す, 既定のメッセージ. */
@@ -135,13 +145,13 @@ export default function Minibuffer({
 
   if (state.mode === 'query') {
     /**
-     * 問いに答えたキーを受けます. C-g か Escape なら, やめます.
+     * 問いに答えたキーを受けます. C-g, C-] か Escape なら, やめます.
      *
      * @param e - キーのイベント.
      */
     const handleQueryKey = (e: KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault()
-      if (e.key === 'Escape' || (e.ctrlKey && e.key === 'g')) {
+      if (isQuitKey(e)) {
         onCancel()
       } else {
         onQueryKey?.(e.key)
@@ -187,7 +197,7 @@ export default function Minibuffer({
     }
 
     /**
-     * 入力欄のキーを受けます. isearch の C-s / C-r, Tab での補完, Enter での確定, C-g / Escape でやめる.
+     * 入力欄のキーを受けます. isearch の C-s / C-r, Tab での補完, Enter での確定, C-g / C-] / Escape でやめる.
      *
      * @param e - キーのイベント.
      */
@@ -253,7 +263,7 @@ export default function Minibuffer({
       if (e.key === 'Enter') {
         e.preventDefault()
         onSubmit(getValue())
-      } else if (e.key === 'Escape' || (e.ctrlKey && e.key === 'g')) {
+      } else if (isQuitKey(e)) {
         e.preventDefault()
         onCancel()
       }

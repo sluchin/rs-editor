@@ -71,9 +71,13 @@ function fakeHost(text: string) {
       state.calls.push(`display-buffer ${name} ${line}`)
     },
     findFileNoselect: async (path) => `buffer of ${path}`,
-    highlightRegexp: (regexp) => {
-      state.calls.push(`highlight ${regexp}`)
+    highlightRegexp: (regexp, face, group) => {
+      state.calls.push(`highlight ${regexp} ${face} ${group}`)
     },
+    outlineFlagRegion: (from, to, hide) => {
+      state.calls.push(`outline ${from} ${to} ${hide}`)
+    },
+    invisible: (pos) => pos === 1,
     unhighlightRegexp: (regexp) => {
       state.calls.push(`unhighlight ${regexp}`)
     },
@@ -207,6 +211,7 @@ describe('lisp', () => {
     expect(await run('display-buffer', 'a')).toBeNull()
     expect(await run('find-file-noselect', '/x')).toBe('buffer of /x')
     expect(run('highlight-regexp', 'a+')).toBeNull()
+    expect(run('highlight-regexp', 'a(b)', 'org-todo', 1)).toBeNull()
     expect(run('unhighlight-regexp', 'a+')).toBeNull()
     expect(run('unhighlight-regexp', true)).toBeNull()
     expect(state.calls).toEqual([
@@ -215,10 +220,23 @@ describe('lisp', () => {
       'kill-new k',
       'display-buffer a 3',
       'display-buffer a null',
-      'highlight a+',
+      'highlight a+ null null',
+      'highlight a(b) org-todo 1',
       'unhighlight a+',
       'unhighlight true',
     ])
+  })
+
+  it('範囲を隠し, 隠したかを返す (位置は文字で数える)', () => {
+    const { host, state } = fakeHost('a😀bc')
+    const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
+    expect(run('outline-flag-region', 3, 2, true)).toBeNull()
+    expect(run('outline-flag-region', 1, 5, 'x')).toBeNull()
+    expect(state.calls).toEqual(['outline 1 3 true', 'outline 0 5 false'])
+    expect(run('outline-invisible-p', 2)).toBe(true)
+    expect(run('outline-invisible-p', 1)).toBe(false)
+    // 終わりの位置 (文字が無い) は, 隠していない
+    expect(run('outline-invisible-p', 5)).toBe(false)
   })
 
   it('頼みを受けて, 結果か失敗の内容を返事する', async () => {

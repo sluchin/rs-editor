@@ -11,20 +11,14 @@ import {
   EditorSelection,
   EditorState,
   Prec,
+  type StateEffect,
   type Text,
   Transaction,
 } from '@codemirror/state'
-import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  MatchDecorator,
-  ViewPlugin,
-  type ViewUpdate,
-  drawSelection,
-  keymap,
-} from '@codemirror/view'
+import { EditorView, drawSelection, keymap } from '@codemirror/view'
+import { codeFolding, foldEffect, foldedRanges, unfoldEffect } from '@codemirror/language'
 import { controlChars } from '../lib/controlChars'
+import { type Highlight, regexpHighlighting } from '../lib/faces'
 import {
   type Command,
   createCommands,
@@ -111,37 +105,11 @@ function syncChange(state: EditorState, doc: Text | string) {
   }
 }
 
-/** 下線を引かないとき (描くたびに, 違う配列にしない). */
-const NO_HIGHLIGHTS: readonly string[] = []
+/** 色付けしないとき (描くたびに, 違う配列にしない). */
+const NO_HIGHLIGHTS: readonly Highlight[] = []
 
-/** 下線 (Lisp の `highlight-regexp`). */
-const highlightMark = Decoration.mark({ class: 'cm-lisp-highlight' })
-
-/**
- * 正規表現に合う所に, 下線を引く拡張を作ります.
- *
- * @param regexps - 正規表現 (JavaScript の書き方).
- * @returns 拡張. 正規表現が無ければ, 空.
- */
-function regexpHighlighting(regexps: readonly string[]) {
-  if (regexps.length === 0) return []
-  const decorator = new MatchDecorator({
-    regexp: new RegExp(regexps.map((r) => `(?:${r})`).join('|'), 'g'),
-    decoration: highlightMark,
-  })
-  return ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet
-      constructor(view: EditorView) {
-        this.decorations = decorator.createDeco(view)
-      }
-      update(update: ViewUpdate) {
-        this.decorations = decorator.updateDeco(update, this.decorations)
-      }
-    },
-    { decorations: (plugin) => plugin.decorations },
-  )
-}
+/** 隠した所 (Lisp の `outline-flag-region`. Emacs と同じく `...` を出す). */
+const folding = codeFolding({ placeholderText: '...' })
 
 /** カーソルの位置. */
 export interface CursorInfo {
@@ -204,6 +172,16 @@ export interface EditorHandle {
    * @returns マークが無ければ `false`.
    */
   stringRectangle: (string: string) => boolean
+  /**
+   * 範囲を隠すか, 出します (Emacs の `outline-flag-region`). 範囲に掛かる, 隠した所は, 除いてから隠す.
+   *
+   * @param from - 始め.
+   * @param to - 終わり.
+   * @param hide - 隠すなら `true`, 出すなら `false`.
+   */
+  foldRegion: (from: number, to: number, hide: boolean) => void
+  /** 位置の文字を, 隠していれば `true` (Emacs の `outline-invisible-p`). */
+  invisible: (pos: number) => boolean
 }
 
 /** {@link CodeEditor} のプロパティ. */
@@ -228,8 +206,8 @@ interface CodeEditorProps {
   active?: boolean
   /** シンタックスハイライトと字下げの言語 (省くと, 色を付けず, Fundamental モードの字下げ). */
   language?: MajorMode['language']
-  /** 下線を引く所の正規表現 (Lisp の `highlight-regexp`). 省くと, 引かない. */
-  highlights?: readonly string[]
+  /** 色付けする所 (Lisp の `highlight-regexp`). 省くと, 付けない. */
+  highlights?: readonly Highlight[]
   /** 字下げにタブを使うなら `true`. 省くと `true` (Emacs の既定). */
   indentTabs?: boolean
   /** タブの幅. 省くと 8 (Emacs の既定). */
@@ -355,6 +333,7 @@ export default function CodeEditor({
         drawSelection(),
         showParen(),
         controlChars(),
+        folding,
         readOnly.current.of(EditorState.readOnly.of(isReadOnly)),
         keys.current.of(keyExtension()),
         highlight.current.of(highlightExtension()),
@@ -448,6 +427,22 @@ export default function CodeEditor({
       killNew: (text) => killRing.current.push(text),
       currentKill: () => killRing.current.current(),
       rotateKill: () => killRing.current.rotate(),
+      foldRegion: (from, to, hide) => {
+        const state = current().state
+        const effects: StateEffect<unknown>[] = []
+        foldedRanges(state).between(from, to, (a, b) => {
+          if (a < to && b > from) effects.push(unfoldEffect.of({ from: a, to: b }))
+        })
+        if (hide && to > from) effects.push(foldEffect.of({ from, to }))
+        current().dispatch({ effects })
+      },
+      invisible: (pos) => {
+        let hidden = false
+        foldedRanges(current().state).between(pos, pos, (a, b) => {
+          if (a <= pos && pos < b) hidden = true
+        })
+        return hidden
+      },
     }
   })
 

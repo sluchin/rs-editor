@@ -2,7 +2,7 @@
  * ミニバッファの状態と, 入力を待っているコマンドと, 入力の履歴. コマンドの組 (`CommandSet`) の型も置きます.
  */
 
-import { useState } from 'react'
+import { type SetStateAction, useCallback, useRef, useState } from 'react'
 import type { MinibufferState } from '../components/Minibuffer'
 import { completeFileName } from '../lib/complete'
 import { listDirectory } from '../lib/fileOps'
@@ -89,10 +89,30 @@ export const completeFile = (input: string) => completeFileName(input, listDirec
 export function useMinibuffer() {
   // ミニバッファの入力を待っているコマンドと, ミニバッファの状態
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-  const [minibufferState, setMinibufferState] = useState<MinibufferState>({
+  const [minibufferState, setState] = useState<MinibufferState>({
     mode: 'message',
     text: '',
   })
+  // ミニバッファを使っているか (状態を変えたら, 描き直す前でも, すぐに変わる.
+  // M-x から呼んだコマンドが, M-x の入力を閉じたことを知れるように)
+  const active = useRef(false)
+
+  /**
+   * ミニバッファの状態を変えます. 関数で変えるときは, 使っているかを変えないこと.
+   *
+   * @param state - 新しい状態 (か, 前の状態から作る関数).
+   */
+  const setMinibufferState = useCallback((state: SetStateAction<MinibufferState>) => {
+    if (typeof state !== 'function') active.current = state.mode !== 'message'
+    setState(state)
+  }, [])
+
+  /**
+   * ミニバッファを使っているか (メッセージでなく, 入力や問いを出しているか) を返します.
+   *
+   * @returns 使っていれば `true`.
+   */
+  const isMinibufferActive = () => active.current
   // ミニバッファの入力の履歴 (履歴の名前ごと. 新しい順)
   const [histories, setHistories] = useState<Record<string, string[]>>({})
 
@@ -130,6 +150,7 @@ export function useMinibuffer() {
     setPendingAction,
     minibufferState,
     setMinibufferState,
+    isMinibufferActive,
     showMessage,
     addHistory,
     history,

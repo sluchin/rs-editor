@@ -13,6 +13,7 @@
   - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
 - 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` (または `~/.rseditor.d/init.scm`) を読む (「Lisp でのカスタマイズ」)
 - 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み, `M-x howm` でメニューを出す (「howm」)
+- 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み, `.org` のファイルを開くと Org mode になる (「Org mode」)
 - 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
 - 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
@@ -51,6 +52,7 @@
 │   │       └── mod.rs       # モジュール定義
 │   └── Cargo.toml           # Rust 依存関係
 ├── lisp/howm.scm             # howm の Scheme 版
+├── lisp/org.scm              # Org mode の Scheme 版
 ├── tools/emacs-commands/     # Emacs の組み込みと基本のコマンドと, 既定のキーの一覧 (FUNCTIONS.md) を作る
 ├── package.json             # Node 依存関係
 ├── vite.config.ts           # Vite ビルド設定
@@ -298,6 +300,20 @@ Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-a
 - 予定と todo: 書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。項目の上の `RET` で、済み (`.`)、取り消し、種類、怠け具合を変えます。日付の上の `RET` で、日付を変える (`+1` など)、繰り返して写す (`every` など)、その日付で探すことができます。日付と日時を入れる (`C-c , d`、`C-c , T`)、キーワードを入れる (`C-c , i`)。
 - そのほか: howm のバッファを全て消す (`C-c , Q`)、バッファの一覧 (`C-c , b`)、出し直す (`C-c , r`)。
 - フック: `C-x C-f` で開いたメモも、メモのバッファにします (`howm-set-mode-on-find-file`)。メモを保存すると、キーワードを集め直して下線を引き直し、メニューを出していれば出し直します (`howm-refresh-after-save`、`howm-menu-refresh-after-save`、`howm-after-save-hook`)。
+
+### Org mode
+
+`lisp/org.scm` は、Emacs の Org mode (org 9.7.11) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/org.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'org)` と書くと、`.org` のファイルを開いたとき Org mode になります (`M-x org-mode` でも)。変数の名前と既定の値は Emacs と同じです (`(set! org-directory "~/org")`、`(set! org-agenda-files '("~/org"))`、`(set! org-todo-keywords '((sequence "TODO" "WAIT" "|" "DONE")))` など)。キーは「KEYBINDINGS.md」の「Org mode」にあります。
+
+- 見出し: `TAB` (見出しごとに FOLDED → CHILDREN → SUBTREE)、`S-TAB` (全体)、`#+STARTUP: overview` など。作る (`M-RET`、`C-RET`)、深さ (`M-左右`、`M-S-左右`)、動かす (`M-上下`)。
+- TODO と優先度とタグ: `C-c C-t` (`(t)` などのキーがあれば、キーで選ぶ)、`S-左右`、`S-上下`、`C-c ,`、`C-c C-q`。`org-log-done` で CLOSED を書き、繰り返し (`+1w`、`++1m`、`.+1d`) の予定は日付を進めます。
+- 日付と予定: `C-c .`、`C-c !`、`C-c C-s`、`C-c C-d`。日付は Emacs と同じく `+3`、`-1w`、`fri`、`10/30`、`3pm` などで入れられ、`S-上下左右` でカーソルの所 (年、月、日、時、分) を変えます。
+- リストとチェックボックス: `M-RET`、`C-c C-c`、`C-c -`、`[2/3]` と `[66%]` を数え直す。
+- 表: `|` で始まる行。`TAB`、`RET`、`C-c C-c` で揃え (数の多い列は右に。全角は 2 桁)、`M-左右上下`、`M-S-左右上下` で列と行を動かす、消す、足す。`C-c |` で作る。
+- リンク: `[[file:a.org::*見出し][説明]]`、`C-c C-l` (入れる)、`C-c C-o` (開く)、`C-c l` (覚える)。
+- アジェンダ (`C-c a`): 週の予定 (`a`)、TODO の一覧 (`t`)、タグ (`m`)、言葉 (`s`)。書き方は Emacs と同じです (`  work:        9:00...... 会議`、`Sched. 2x:`、`In   3 d.:` など)。
+- キャプチャ (`C-c c`): `org-capture-templates` (Emacs と同じ書き方。`entry`、`item`、`checkitem`、`plain` と、`file`、`file+headline`) で書き、`C-c C-c` でファイルに足して保存する。
+- 色: 見出し、TODO、タグ、日付、リンク、強調 (`*太字*`、`/斜体/` など) に、Emacs と同じ色を付けます。
 
 #### テスト (ERT)
 

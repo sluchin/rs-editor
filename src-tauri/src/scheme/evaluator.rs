@@ -82,6 +82,11 @@ impl Evaluator {
                     .collect(),
             ),
         );
+        // browse-url で URL を開くプログラム
+        global.define(
+            "browse-url-generic-program",
+            Value::String(system::DEFAULT_BROWSER.to_string()),
+        );
         // 読んだ初期設定ファイル (読む前と, 無いときは #f)
         global.define("user-init-file", Value::Boolean(false));
         // エディタが実行するフック (find-file-hook, after-save-hook)

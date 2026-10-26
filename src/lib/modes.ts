@@ -15,9 +15,9 @@ export interface MajorMode {
 }
 
 /**
- * ファイルの名前とメジャーモード (Emacs 30 の `auto-mode-alist` の, Lisp の分). 先に合ったものを使います.
+ * ファイルの名前とメジャーモード (Emacs 30 の `auto-mode-alist` の, Lisp と Org の分). 先に合ったものを使います.
  */
-const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme'][] = [
+const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme' | 'org'][] = [
   [/\.dir-locals(?:-2)?\.el$/, 'lisp-data'],
   [/\.eld$/, 'lisp-data'],
   [/eww-bookmarks$/, 'lisp-data'],
@@ -32,6 +32,7 @@ const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme'][] = [
   [/\.oak$/, 'scheme'],
   [/[:/\\]\..*(?:emacs|gnus|viper)$/, 'elisp'],
   [/[:/]_emacs$/, 'elisp'],
+  [/\.org$/, 'org'],
 ]
 
 /** ファイルの変数 (Emacs の, 1 行目の `-*- ... -*-`). */
@@ -75,6 +76,7 @@ const MODE_NAMES: Record<string, (typeof AUTO_MODES)[number][1] | 'fundamental'>
   'emacs-lisp': 'elisp',
   'lisp-data': 'lisp-data',
   scheme: 'scheme',
+  org: 'org',
   fundamental: 'fundamental',
 }
 
@@ -113,6 +115,8 @@ export function majorMode(name: string, filePath: string | null, content: string
     MODE_NAMES[vars.mode ?? ''] ??
     (filePath ? AUTO_MODES.find(([re]) => re.test(filePath))?.[1] : undefined)
   if (mode === 'scheme') return { name: 'Scheme', language: 'scheme', ...indent }
+  // 色とキーは, Lisp の org-mode (lisp/org.scm) が付ける
+  if (mode === 'org') return { name: 'Org', language: null, ...indent }
   if (mode === 'lisp-data') return { name: 'Lisp-Data', language: 'elisp', ...indent }
   // Emacs と同じく, 字句の束縛なら /l, 動的な束縛なら /d を付ける
   if (mode === 'elisp') {

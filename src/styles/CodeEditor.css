@@ -59,3 +59,126 @@
 .code-editor-container .cm-lisp-highlight {
   text-decoration: underline;
 }
+
+/* Org mode の face (Lisp の highlight-regexp の face. Emacs の既定と同じ色) */
+.code-editor-container .cm-face-org-level-1 {
+  color: var(--font-lock-function-name);
+}
+
+.code-editor-container .cm-face-org-level-2 {
+  color: var(--font-lock-variable-name);
+}
+
+.code-editor-container .cm-face-org-level-3,
+.code-editor-container .cm-face-org-priority,
+.code-editor-container .cm-face-org-special-keyword {
+  color: var(--font-lock-keyword);
+}
+
+.code-editor-container .cm-face-org-level-4,
+.code-editor-container .cm-face-org-meta-line,
+.code-editor-container .cm-face-org-comment {
+  color: var(--font-lock-comment);
+}
+
+.code-editor-container .cm-face-org-level-5 {
+  color: var(--font-lock-type);
+}
+
+.code-editor-container .cm-face-org-level-6 {
+  color: var(--font-lock-constant);
+}
+
+.code-editor-container .cm-face-org-level-7 {
+  color: var(--font-lock-builtin);
+}
+
+.code-editor-container .cm-face-org-level-8 {
+  color: var(--font-lock-string);
+}
+
+.code-editor-container .cm-face-org-todo,
+.code-editor-container .cm-face-org-checkbox-statistics {
+  color: var(--org-todo);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-org-done {
+  color: var(--org-done);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-org-headline-done {
+  color: var(--org-headline-done);
+}
+
+.code-editor-container .cm-face-org-document-title {
+  color: var(--org-document-title);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-org-tag,
+.code-editor-container .cm-face-org-checkbox,
+.code-editor-container .cm-face-bold {
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-italic {
+  font-style: italic;
+}
+
+.code-editor-container .cm-face-underline,
+.code-editor-container .cm-face-org-target {
+  text-decoration: underline;
+}
+
+.code-editor-container .cm-face-org-strike {
+  text-decoration: line-through;
+}
+
+.code-editor-container .cm-face-org-verbatim,
+.code-editor-container .cm-face-org-code {
+  color: var(--org-shadow);
+}
+
+.code-editor-container .cm-face-org-drawer,
+.code-editor-container .cm-face-org-table,
+.code-editor-container .cm-face-org-agenda-structure,
+.code-editor-container .cm-face-org-agenda-date {
+  color: var(--org-table);
+}
+
+.code-editor-container .cm-face-org-agenda-date-today {
+  color: var(--org-table);
+  font-weight: bold;
+  font-style: italic;
+}
+
+.code-editor-container .cm-face-org-date {
+  color: var(--org-date);
+  text-decoration: underline;
+}
+
+.code-editor-container .cm-face-org-link {
+  color: var(--org-link);
+  text-decoration: underline;
+}
+
+/* 見出しの前の星を隠す (地の色にする) */
+.code-editor-container .cm-face-org-hide {
+  color: var(--background);
+}
+
+.code-editor-container .cm-face-org-scheduled {
+  color: var(--org-scheduled);
+}
+
+.code-editor-container .cm-face-org-scheduled-previously,
+.code-editor-container .cm-face-org-upcoming-deadline {
+  color: var(--org-scheduled-previously);
+}
+
+.code-editor-container .cm-face-org-warning {
+  color: var(--font-lock-warning);
+  font-weight: bold;
+}

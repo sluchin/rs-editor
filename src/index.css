@@ -18,6 +18,17 @@
   --show-paren-match: turquoise;
   --mode-line-inactive-background: #eeeeee;
   --mode-line-inactive-foreground: #666666;
+  /* Org mode の face (Emacs の既定の色) */
+  --org-todo: #ff0000;
+  --org-done: #228b22;
+  --org-headline-done: #bc8f8f;
+  --org-document-title: #191970;
+  --org-table: #0000ff;
+  --org-date: #a020f0;
+  --org-link: #3a5fcd;
+  --org-shadow: #7f7f7f;
+  --org-scheduled: #006400;
+  --org-scheduled-previously: #b22222;
 }
 
 /* 背景が暗いとき (Emacs の暗い背景の face の色) */
@@ -35,6 +46,16 @@
   --show-paren-match: #4f94cd;
   --mode-line-inactive-background: #4d4d4d;
   --mode-line-inactive-foreground: #cccccc;
+  --org-todo: #ffc0cb;
+  --org-done: #98fb98;
+  --org-headline-done: #ffa07a;
+  --org-document-title: #afeeee;
+  --org-table: #87cefa;
+  --org-date: #00ffff;
+  --org-link: #00ffff;
+  --org-shadow: #b3b3b3;
+  --org-scheduled: #98fb98;
+  --org-scheduled-previously: #ff7f24;
 }
 
 * {
