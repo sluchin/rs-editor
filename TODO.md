@@ -244,6 +244,56 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
       速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。
 - [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は, 組み込みのまま残す (Emacs と同じ)。
 
+## Phase 17: ヘルプ (docstring と C-h f) と, ヘルプの多言語化
+
+Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring (引数の後の文字列) を出す。rs-editor も同じにする。
+今は, `define` と `define-command` の docstring を覚えておらず, `lisp/*.scm` の説明は, 全て `;;` のコメントで書いている。
+
+- [ ] `define`, `define-command`, `define-syntax` の docstring (引数の後の文字列. 本体が文字列だけなら, docstring でなく値) を覚える。
+      `(documentation 'name)` と, 変数の docstring (Emacs の `defvar` の 3 つ目) も。
+- [ ] 組み込みの関数 (Rust) と, 画面のコマンド (TypeScript) の docstring を, 1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
+- [ ] `C-h f` / `C-h v` / `C-h o` / `C-h x` (Phase 13 の項目): `*Help*` に, 定義したファイル (リンク), 引数の形 (`(name ARG)`), 割り当てたキー, docstring を出す。
+      docstring の無いものは `Not documented.`。docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は, Emacs と同じく置き換える。
+- [ ] `lisp/howm.scm` と `lisp/org.scm` の `;;` の説明を, docstring に書き直す。
+- [ ] 多言語化の仕組み (Emacs には無い. rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし, 読むのは Rust で行う
+      (gettext の実行時の仕組み (libintl, `setlocale`) は使わない. エディタの中で言語を変えるため, C のライブラリに頼らないため):
+  - docstring は, Emacs と同じく英語で書く (元の文. 翻訳が無ければ, これを出す)。
+  - 翻訳は `po/ja.po` のように, 言語ごとの PO のファイルに置く。`msgctxt` は名前 (`org-cycle` など. 関数と変数は `function:` と `variable:` を前に付ける),
+    `msgid` は英語の docstring, `msgstr` は翻訳。
+  - 全ての docstring (Lisp, Rust, TypeScript) を集めて `po/rseditor.pot` を作る道具を作る。`msgmerge` で各言語の PO に混ぜ,
+    元の docstring が変わった翻訳は, `fuzzy` (古い翻訳) の印で分かるようにする。fuzzy の翻訳は出さず, 英語を出す。
+  - Rust で PO のファイルを読み (C のライブラリを使わない. 形が単純なので, 自分で読むか, 純粋な Rust のクレート), 名前と元の文から翻訳を引く表を作る。
+    Lisp の `documentation` も, 画面 (TypeScript) の `*Help*` も, Rust の同じ関数から翻訳を取る。
+  - 出す言語は, 変数 `help-language` (既定は `LANG` から. `"en"` なら元の文) で選ぶ。`*Help*` に, 元の文 (英語) を見るボタンも付ける。
+  - 翻訳の無いものと, fuzzy の翻訳を, 一覧にする (Phase 19 の lint の 1 つ)。Poedit などの翻訳の道具で直せることを, README に書く。
+  - Rust のエラーの文 (`Cannot move column further` など) は, Emacs と同じく訳さない。
+    画面の文 (メニュー, `message`) を訳すことになったら, 複数形や語順を扱える Fluent (`fluent-rs`) と比べて決める。
+
+## Phase 18: Scheme の整形 (format)
+
+`lisp/*.scm` と `tests/*.scm` を, 決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
+
+- [ ] 字下げの決まりを, エディタ (`src/lib/lispIndent.ts`, `lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
+      Rust で書くなら, 決まりの表をファイル (JSON か Scheme) にして, 両方から読む。
+- [ ] 整形の道具 (例: `cargo run --bin scmfmt -- FILE...`): 字下げを直し, 行の終わりの空白, 閉じ括弧だけの行, 空行の重なりを消す。
+      コメント (`;`, `;;`, `;;;` の位置. Emacs の決まり) と, 文字列の中は変えない。長い行を分けるかは, はじめは変えない。
+- [ ] `--check` (直す所があれば, 失敗にする) を付け, `npm run format` と `npm run check` に入れる。
+- [ ] エディタの `M-x indent-region` と結果が同じことを, テストで確かめる。
+
+## Phase 19: Scheme の lint
+
+`lisp/*.scm` と `tests/*.scm` の誤りを, 動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
+
+- [ ] 定義していない名前 (変数と関数), 引数の数の違い (定義した関数と, 組み込みの関数)。
+- [ ] 使っていない変数 (`let` と引数), 同じ名前の定義の重なり。
+- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので, 同じ名前の変数と関数は, 後のものが前のものを消す. org.scm の `org-agenda-files` で起きた)。
+- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`, `cons` の 2 つ目がリストでない), `cond` の `=>`,
+      `format` の `%s`, `%S`, `%d`, `%%` 以外 (`%5d` など), ベクタ, 文字 (`#\a`)。
+- [ ] `'()` を偽として使った所 (`(if '() ...)` は真)。
+- [ ] docstring (Phase 17): コマンド (`define-command`) と, 外から使う関数の docstring が無い所。Emacs の `checkdoc` の決まり (1 行目は文で終える, 引数は大文字で書くなど)。
+- [ ] 翻訳 (Phase 17): `.pot` が docstring と合っているか, PO の翻訳の無いものと fuzzy (元の docstring が変わった) の翻訳。
+- [ ] 警告ごとに, 止める書き方 (コメントか, ファイルの変数) を決める。
+
 ## Phase 14: M-x grep と, サイドバーのプロジェクトのツリー
 
 - [x] `M-x grep`: 外のコマンドを使わず, エディタ (Rust の `src-tauri/src/search.rs`) が, ディレクトリの下のファイルから探す。
@@ -362,7 +412,7 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 
 ### ヘルプ
 
-- [ ] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command)。
+- [ ] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 17)。
 - [ ] `C-h c` (describe-key-briefly), `C-h w` (where-is), `C-h m` (describe-mode), `C-h s` (describe-syntax)。
 - [ ] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。
 - [ ] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
@@ -520,4 +570,4 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 
 ## 実装順序の目安
 
-Phase 1 から Phase 12 は, 済んだ。これからは, Phase 12, 12.5, 14, 15, 16 の残りと, Phase 13 から, よく使うものを選んで進める。
+Phase 1 から Phase 12 は, 済んだ。これからは, Phase 12, 12.5, 14, 15, 16, 17, 18, 19 の残りと, Phase 13 から, よく使うものを選んで進める。
