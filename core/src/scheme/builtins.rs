@@ -2,6 +2,7 @@
 //!
 //! エディタの位置は, Emacs と同じく 1 から数えます (`point-min` は 1).
 
+use crate::scheme::editor_ops;
 use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::help;
@@ -759,6 +760,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
         }
+        _ if editor_ops::NAMES.contains(&name) => editor_ops::call(machine, name, args),
         _ if hooks::NAMES.contains(&name) => hooks::call(machine, name, args),
         _ if help::NAMES.contains(&name) => help::call(machine, name, args),
         _ => system::call(machine, name, args)

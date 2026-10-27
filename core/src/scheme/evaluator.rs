@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use serde::{Deserialize, Serialize};
 
 use crate::scheme::builtins;
+use crate::scheme::editor_ops;
 use crate::scheme::env::Env;
 use crate::scheme::ert::{self, ErtTest};
 use crate::scheme::help;
@@ -77,6 +78,7 @@ impl Evaluator {
             .chain(ert::NAMES)
             .chain(hooks::NAMES)
             .chain(help::NAMES)
+            .chain(editor_ops::NAMES)
         {
             global.define(name, Value::Function(name.to_string()));
         }
@@ -95,6 +97,8 @@ impl Evaluator {
             "browse-url-generic-program",
             Value::String(system::DEFAULT_BROWSER.to_string()),
         );
+        // 探すとき, 大文字と小文字を区別しないか (Emacs の case-fold-search)
+        global.define("case-fold-search", Value::Boolean(true));
         // 読んだ初期設定ファイル (読む前と, 無いときは #f)
         global.define("user-init-file", Value::Boolean(false));
         // エディタが実行するフック (find-file-hook, after-save-hook)
@@ -581,6 +585,47 @@ impl<'a> Machine<'a> {
         }
     }
 
+    /// 今のバッファ (と, カーソル) を覚えて本体を評価し, 終わったら戻します
+    /// (`save-current-buffer`, `save-excursion`, `with-current-buffer`). 本体が失敗しても戻す.
+    fn save_buffer_state(&mut self, op: &str, args: &[Value], env: &Env) -> Result<Value, String> {
+        let (target, body) = match (op, args) {
+            ("with-current-buffer", [buffer, body @ ..]) => (Some(buffer), body),
+            ("with-current-buffer", _) => {
+                return Err("with-current-buffer expects a buffer".to_string())
+            }
+            _ => (None, args),
+        };
+        let saved = self.host.call("current-buffer", vec![])?;
+        let point = if op == "save-excursion" {
+            Some(self.host.call("point", vec![])?)
+        } else {
+            None
+        };
+        let outcome = match target {
+            Some(expr) => self
+                .eval(expr, env)
+                .and_then(|name| self.host.call("set-buffer", vec![name]))
+                .and_then(|_| self.eval_body(body, env)),
+            None => self.eval_body(body, env),
+        };
+        // 本体の間に, 戻すバッファを消したときは, 戻さない
+        if self.host.call("set-buffer", vec![saved]).is_ok() {
+            if let Some(point) = point {
+                self.host.call("goto-char", vec![point])?;
+            }
+        }
+        outcome
+    }
+
+    /// 式を順に評価して, 最後の値を返します.
+    fn eval_body(&mut self, body: &[Value], env: &Env) -> Result<Value, String> {
+        let mut value = Value::Nil;
+        for expr in body {
+            value = self.eval(expr, env)?;
+        }
+        Ok(value)
+    }
+
     /// 特別な形を評価します.
     ///
     /// # Arguments
@@ -728,6 +773,9 @@ impl<'a> Machine<'a> {
                 }
                 _ => return Err("unwind-protect expects a body form".to_string()),
             },
+            "save-current-buffer" | "save-excursion" | "with-current-buffer" => {
+                Step::Done(self.save_buffer_state(op, args, env)?)
+            }
             _ => return Ok(ert::special_form(self, op, args, env)?.map(Step::Done)),
         };
         Ok(Some(step))

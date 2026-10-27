@@ -7,6 +7,7 @@
 use ropey::Rope;
 
 use crate::scheme::builtins::char_width;
+use crate::syntax::Dialect;
 
 /// タブの幅 (Emacs の `tab-width` の始めの値).
 pub const TAB_WIDTH: usize = 8;
@@ -60,6 +61,8 @@ pub struct Buffer {
     undo: Vec<UndoEntry>,
     /// 最後に合った所 (全体と, 括弧ごと. Emacs の `match-data`). 位置は文字の位置.
     pub(crate) match_data: Vec<Option<(usize, usize)>>,
+    /// 構文の方言 (メジャーモードに当たる).
+    dialect: Dialect,
 }
 
 impl Buffer {
@@ -80,6 +83,7 @@ impl Buffer {
             file: None,
             undo: Vec::new(),
             match_data: Vec::new(),
+            dialect: Dialect::Fundamental,
         }
     }
 
@@ -95,6 +99,17 @@ impl Buffer {
         buffer
     }
 
+    /// 本文を読み込みます (ファイルを開いたとき). カーソルは始め, 書き換えていない状態で, 履歴は空にする.
+    pub fn load(&mut self, text: &str) {
+        self.text = Rope::from_str(text);
+        self.point = 0;
+        self.mark = None;
+        self.mark_active = false;
+        self.mark_ring.clear();
+        self.modified = false;
+        self.undo.clear();
+    }
+
     /// バッファの名前.
     pub fn name(&self) -> &str {
         &self.name
@@ -108,6 +123,16 @@ impl Buffer {
     /// ファイルのパスを決めます.
     pub fn set_file(&mut self, file: Option<String>) {
         self.file = file;
+    }
+
+    /// 構文の方言 (Fundamental, emacs-lisp-mode, scheme-mode に当たる).
+    pub fn dialect(&self) -> Dialect {
+        self.dialect
+    }
+
+    /// 構文の方言を決めます.
+    pub fn set_dialect(&mut self, dialect: Dialect) {
+        self.dialect = dialect;
     }
 
     /// 書き換えたか.
