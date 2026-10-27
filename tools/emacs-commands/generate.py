@@ -109,7 +109,7 @@ def rs_editor(root, out):
         for name in sorted(set(re.findall(r"^\(define-command \(([^\s()]+)", path.read_text(), re.M))):
             places[name].append(str(path.relative_to(root)))
     # 起動のときに読む Lisp (loadup.rs) で割り当てたキー (global-set-key)
-    loadup = (root / 'src-tauri' / 'src' / 'scheme' / 'loadup.rs').read_text()
+    loadup = (root / 'core' / 'src' / 'scheme' / 'loadup.rs').read_text()
     for file in re.findall(r'"(lisp/[^"]+\.scm)"', loadup):
         text = (root / file).read_text()
         for key, name in re.findall(r"^\(global-set-key \"([^\"]+)\" '([^\s()]+)\)", text, re.M):
