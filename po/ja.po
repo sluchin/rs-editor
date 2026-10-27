@@ -12,9 +12,9 @@ msgid ""
 "Switch to a buffer visiting file FILENAME, creating one if none already exists.\n"
 "Interactively, read FILENAME in the minibuffer with file name completion."
 msgstr ""
-"ファイル FILENAME を編集する。\n"
-"FILENAME のファイルのバッファに切り替える (無ければ, 作る)。\n"
-"対話的に呼ぶと, FILENAME をミニバッファで (ファイルの名前を補完しながら) 聞く。"
+"ファイル FILENAME を編集する.\n"
+"FILENAME のファイルのバッファに切り替える (無ければ, 作る).\n"
+"対話的に呼ぶと, FILENAME をミニバッファで (ファイルの名前を補完しながら) 聞く."
 
 #: lisp/files.scm
 msgctxt "function:find-alternate-file"
@@ -80,14 +80,43 @@ msgstr ""
 "y か SPC で保存, n か DEL で飛ばし, ! で保存して残りも全て保存,\n"
 ". で保存して終え, q か RET で終える."
 
+#: lisp/files.scm
+msgctxt "function:make-auto-save-file-name"
+msgid ""
+"Return the auto save file name of the file the current buffer visits (#NAME# in the same directory).\n"
+"Return #f if the buffer visits no file."
+msgstr ""
+"今のバッファが訪れているファイルの自動保存のファイルの名前 (同じディレクトリの #名前#) を返す.\n"
+"バッファがファイルを訪れていなければ #f を返す."
+
+#: lisp/files.scm
+msgctxt "function:revert-buffer"
+msgid ""
+"Replace the buffer text with the text of the visited file on disk.\n"
+"Ask before reverting. A Dired buffer is listed again without asking.\n"
+"Point stays at the same character, and the change can be undone."
+msgstr ""
+"バッファの本文を, ディスク上の訪れているファイルの本文に置き換える.\n"
+"読み直す前に聞く.dired のバッファは, 聞かずに一覧を作り直す.\n"
+"カーソルは同じ文字の所に残り, 元に戻せる."
+
+#: lisp/files.scm
+msgctxt "function:recover-this-file"
+msgid ""
+"Recover the visited file from its auto save file.\n"
+"Ask before replacing the buffer text. The buffer is marked as modified."
+msgstr ""
+"訪れているファイルを, 自動保存のファイルから復元する.\n"
+"バッファの本文を置き換える前に聞く.バッファは変更ありにする."
+
 #: lisp/help-fns.scm
 msgctxt "function:help-language-from-locale"
 msgid ""
 "Return the language of LOCALE, such as \"ja\" for \"ja_JP.UTF-8\".\n"
 "Return \"en\" if LOCALE is #f, empty, \"C\" or \"POSIX\"."
 msgstr ""
-"LOCALE の言語を返す (\"ja_JP.UTF-8\" なら \"ja\")。\n"
-"LOCALE が #f, 空, \"C\", \"POSIX\" なら \"en\" を返す。"
+"LOCALE の言語を返す (\"ja_JP.UTF-8\" なら \"ja\").\n"
+"LOCALE が #f, 空, \"C\", \"POSIX\" なら \"en\" を返す."
 
 #: lisp/help-fns.scm
 msgctxt "variable:help-language"
@@ -96,9 +125,9 @@ msgid ""
 "If there is no translation in this language, or it is \"en\", show the original docstring.\n"
 "The default is taken from the environment variable LANG."
 msgstr ""
-"*Help* に出す docstring の言語 (\"ja\" など)。\n"
-"この言語の翻訳が無いか, \"en\" なら, 元の docstring を出す。\n"
-"既定は, 環境変数 LANG から取る。"
+"*Help* に出す docstring の言語 (\"ja\" など).\n"
+"この言語の翻訳が無いか, \"en\" なら, 元の docstring を出す.\n"
+"既定は, 環境変数 LANG から取る."
 
 #: lisp/help-fns.scm
 msgctxt "function:help-file-name-nondirectory"
@@ -111,8 +140,8 @@ msgid ""
 "Return the names of all functions and commands, sorted.\n"
 "They are the functions defined in Lisp or Rust, and the commands written in TypeScript."
 msgstr ""
-"全ての関数とコマンドの名前を, 名前の順で返す。\n"
-"Lisp か Rust で定義した関数と, TypeScript で書いたコマンド。"
+"全ての関数とコマンドの名前を, 名前の順で返す.\n"
+"Lisp か Rust で定義した関数と, TypeScript で書いたコマンド."
 
 #: lisp/help-fns.scm
 msgctxt "function:help-unique"
@@ -130,8 +159,8 @@ msgid ""
 "Return the argument list of the Lisp function FUNCTION as a string.\n"
 "For example, \"(find-file &rest ARGS)\"."
 msgstr ""
-"Lisp の関数 FUNCTION の引数の形を, 文字列で返す。\n"
-"例えば \"(find-file &rest ARGS)\"。"
+"Lisp の関数 FUNCTION の引数の形を, 文字列で返す.\n"
+"例えば \"(find-file &rest ARGS)\"."
 
 #: lisp/help-fns.scm
 msgctxt "function:help-function-kind"
@@ -139,7 +168,7 @@ msgid ""
 "Return the first line of the help of FUNCTION, such as\n"
 "\"find-file is an interactive Lisp function in `files.scm'.\""
 msgstr ""
-"FUNCTION のヘルプの 1 行目を返す。例えば\n"
+"FUNCTION のヘルプの 1 行目を返す.例えば\n"
 "\"find-file is an interactive Lisp function in `files.scm'.\""
 
 #: lisp/help-fns.scm
@@ -158,8 +187,8 @@ msgid ""
 "Display the full documentation of FUNCTION (a symbol).\n"
 "Interactively, read FUNCTION in the minibuffer with completion."
 msgstr ""
-"FUNCTION (記号) の説明を全て出す。\n"
-"対話的に呼ぶと, FUNCTION をミニバッファで (補完しながら) 聞く。"
+"FUNCTION (記号) の説明を全て出す.\n"
+"対話的に呼ぶと, FUNCTION をミニバッファで (補完しながら) 聞く."
 
 #: lisp/howm.scm
 msgctxt "variable:howm-directory"
@@ -560,8 +589,8 @@ msgid ""
 "Return the keywords, the words of \"<<< word\" in the memos.\n"
 "The collected keywords are reused."
 msgstr ""
-"キーワード (メモの \"<<< 語\" の語) を返す。\n"
-"集めたキーワードは, 使い回す。"
+"キーワード (メモの \"<<< 語\" の語) を返す.\n"
+"集めたキーワードは, 使い回す."
 
 #: lisp/howm.scm
 msgctxt "function:howm-keyword-regexp"
@@ -1376,12 +1405,12 @@ msgstr "メニューの, 今の日時を返す (%here% 用)"
 #: lisp/org.scm
 msgctxt "variable:org-directory"
 msgid "Directory where Org files are kept."
-msgstr "Org のファイルを置くディレクトリ。"
+msgstr "Org のファイルを置くディレクトリ."
 
 #: lisp/org.scm
 msgctxt "variable:org-default-notes-file"
 msgid "Default file for capture."
-msgstr "キャプチャの既定のファイル。"
+msgstr "キャプチャの既定のファイル."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-files"
@@ -1389,8 +1418,8 @@ msgid ""
 "Files shown in the agenda.\n"
 "A directory means the .org files in it."
 msgstr ""
-"アジェンダに出すファイル。\n"
-"ディレクトリなら, その中の .org のファイル。"
+"アジェンダに出すファイル.\n"
+"ディレクトリなら, その中の .org のファイル."
 
 #: lisp/org.scm
 msgctxt "variable:org-todo-keywords"
@@ -1399,9 +1428,9 @@ msgid ""
 "The words after | are done states; without |, the last word is the done state.\n"
 "A key to select the state can be written in parentheses, like \"TODO(t)\"."
 msgstr ""
-"TODO の状態。((sequence \"TODO\" \"|\" \"DONE\")) のように書く。\n"
-"| の後が済みの状態。| が無ければ, 最後が済みの状態。\n"
-"\"TODO(t)\" のように, 括弧の中に, 選ぶキーを書ける。"
+"TODO の状態.((sequence \"TODO\" \"|\" \"DONE\")) のように書く.\n"
+"| の後が済みの状態.| が無ければ, 最後が済みの状態.\n"
+"\"TODO(t)\" のように, 括弧の中に, 選ぶキーを書ける."
 
 #: lisp/org.scm
 msgctxt "variable:org-log-done"
@@ -1409,8 +1438,8 @@ msgid ""
 "Whether to record the time when an entry is marked done.\n"
 "If it is 'time or 'note, write CLOSED: [DATE]; if #f, write nothing."
 msgstr ""
-"済みにした時刻を書くか。\n"
-"'time か 'note なら, CLOSED: [日時] を書く。#f なら書かない。"
+"済みにした時刻を書くか.\n"
+"'time か 'note なら, CLOSED: [日時] を書く.#f なら書かない."
 
 #: lisp/org.scm
 msgctxt "variable:org-log-repeat"
@@ -1418,8 +1447,8 @@ msgid ""
 "Whether to record the time when a repeating entry is marked done.\n"
 "If #f, write nothing."
 msgstr ""
-"繰り返しの予定を済みにしたとき, 時刻を書くか。\n"
-"#f なら書かない。"
+"繰り返しの予定を済みにしたとき, 時刻を書くか.\n"
+"#f なら書かない."
 
 #: lisp/org.scm
 msgctxt "variable:org-tags-column"
@@ -1427,23 +1456,23 @@ msgid ""
 "Column to align tags to.\n"
 "If negative, align the end of the tags to its absolute value."
 msgstr ""
-"タグを揃える桁。\n"
-"負なら, タグの終わりを, その桁 (の絶対値) に揃える。"
+"タグを揃える桁.\n"
+"負なら, タグの終わりを, その桁 (の絶対値) に揃える."
 
 #: lisp/org.scm
 msgctxt "variable:org-priority-highest"
 msgid "Highest priority."
-msgstr "一番高い優先度。"
+msgstr "一番高い優先度."
 
 #: lisp/org.scm
 msgctxt "variable:org-priority-lowest"
 msgid "Lowest priority."
-msgstr "一番低い優先度。"
+msgstr "一番低い優先度."
 
 #: lisp/org.scm
 msgctxt "variable:org-priority-default"
 msgid "Priority of an entry without one."
-msgstr "優先度が無いときの, 既定の優先度。"
+msgstr "優先度が無いときの, 既定の優先度."
 
 #: lisp/org.scm
 msgctxt "variable:org-capture-templates"
@@ -1453,30 +1482,30 @@ msgid ""
 "TYPE is entry (heading), item (list item), checkitem (checkbox) or plain (text).\n"
 "TARGET is (file \"FILE\") or (file+headline \"FILE\" \"HEADING\"); \"\" means `org-default-notes-file'."
 msgstr ""
-"キャプチャのテンプレート。((キー 説明 種類 (行き先) テンプレート) のリスト。\n"
-"空なら, 既定のもの。\n"
-"種類は entry (見出し), item (リストの項目), checkitem (チェックボックス), plain (文)。\n"
-"行き先は (file \"ファイル\") か (file+headline \"ファイル\" \"見出し\")。\"\" は org-default-notes-file。"
+"キャプチャのテンプレート.((キー 説明 種類 (行き先) テンプレート) のリスト.\n"
+"空なら, 既定のもの.\n"
+"種類は entry (見出し), item (リストの項目), checkitem (チェックボックス), plain (文).\n"
+"行き先は (file \"ファイル\") か (file+headline \"ファイル\" \"見出し\").\"\" は org-default-notes-file."
 
 #: lisp/org.scm
 msgctxt "variable:org-hide-leading-stars"
 msgid "If true, show only the last star of a heading."
-msgstr "#t なら, 見出しの * を, 最後の 1 つだけ見せる (前の星を重ねて見せない)。"
+msgstr "#t なら, 見出しの * を, 最後の 1 つだけ見せる (前の星を重ねて見せない)."
 
 #: lisp/org.scm
 msgctxt "variable:org-return-follows-link"
 msgid "If true, RET opens the link at point."
-msgstr "#t なら, RET でリンクを開く。"
+msgstr "#t なら, RET でリンクを開く."
 
 #: lisp/org.scm
 msgctxt "variable:org-deadline-warning-days"
 msgid "Number of days before a deadline to show it in today's agenda."
-msgstr "締め切りの何日前から, 今日のアジェンダに出すか。"
+msgstr "締め切りの何日前から, 今日のアジェンダに出すか."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-span"
 msgid "Number of days in the agenda."
-msgstr "アジェンダの日数。"
+msgstr "アジェンダの日数."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-start-on-weekday"
@@ -1484,58 +1513,58 @@ msgid ""
 "Weekday the agenda starts on (1 is Monday).\n"
 "If #f, start from today."
 msgstr ""
-"アジェンダの始めの曜日 (1 が月曜)。\n"
-"#f なら, 今日から。"
+"アジェンダの始めの曜日 (1 が月曜).\n"
+"#f なら, 今日から."
 
 #: lisp/org.scm
 msgctxt "variable:org-mode-hook"
 msgid "Procedures called when Org mode is turned on."
-msgstr "Org mode にしたとき, 呼ぶ手続き。"
+msgstr "Org mode にしたとき, 呼ぶ手続き."
 
 #: lisp/org.scm
 msgctxt "variable:org-capture-after-finalize-hook"
 msgid "Procedures called when a capture is finished."
-msgstr "キャプチャを終えたとき, 呼ぶ手続き。"
+msgstr "キャプチャを終えたとき, 呼ぶ手続き."
 
 #: lisp/org.scm
 msgctxt "function:org-take"
 msgid "Return the first N elements of ITEMS."
-msgstr "リスト ITEMS の始めの N 個を返す。"
+msgstr "リスト ITEMS の始めの N 個を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-drop"
 msgid "Return ITEMS without the first N elements."
-msgstr "リスト ITEMS の始めの N 個を除いたものを返す。"
+msgstr "リスト ITEMS の始めの N 個を除いたものを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-last"
 msgid "Return the last element of ITEMS."
-msgstr "リスト ITEMS の最後の要素を返す。"
+msgstr "リスト ITEMS の最後の要素を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-index-of"
 msgid "Return the index of X in ITEMS, counted from 0, or #f if it is not found."
-msgstr "リスト ITEMS の中の X の位置 (0 から) を返す。無ければ #f。"
+msgstr "リスト ITEMS の中の X の位置 (0 から) を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-unique"
 msgid "Return ITEMS without duplicates, keeping the first ones."
-msgstr "ITEMS から重なりを除いたものを返す (始めのものを残す)。"
+msgstr "ITEMS から重なりを除いたものを返す (始めのものを残す)."
 
 #: lisp/org.scm
 msgctxt "function:org-range"
 msgid "Return the list of numbers from 0 to N - 1."
-msgstr "0 から N - 1 までの数のリストを返す。"
+msgstr "0 から N - 1 までの数のリストを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-repeat"
 msgid "Return the string S repeated N times."
-msgstr "文字列 S を N 回つなげたものを返す。"
+msgstr "文字列 S を N 回つなげたものを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-spaces"
 msgid "Return a string of N spaces."
-msgstr "空白 N 個の文字列を返す。"
+msgstr "空白 N 個の文字列を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-pad-right"
@@ -1543,28 +1572,28 @@ msgid ""
 "Pad S with spaces on the right to WIDTH.\n"
 "If S is longer, return it as it is."
 msgstr ""
-"S の右を空白で埋めて, 幅を WIDTH にする。\n"
-"長ければ, そのまま返す。"
+"S の右を空白で埋めて, 幅を WIDTH にする.\n"
+"長ければ, そのまま返す."
 
 #: lisp/org.scm
 msgctxt "function:org-pad-left"
 msgid "Pad S with spaces on the left to WIDTH."
-msgstr "S の左を空白で埋めて, 幅を WIDTH にする。"
+msgstr "S の左を空白で埋めて, 幅を WIDTH にする."
 
 #: lisp/org.scm
 msgctxt "function:org-2d"
 msgid "Return N as two digits, padded with 0."
-msgstr "N を, 前を 0 で埋めた 2 桁の文字列にする。"
+msgstr "N を, 前を 0 で埋めた 2 桁の文字列にする."
 
 #: lisp/org.scm
 msgctxt "function:org-blank?"
 msgid "Return #t if S consists only of whitespace."
-msgstr "S が空白だけの文字列なら #t を返す。"
+msgstr "S が空白だけの文字列なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-indentation"
 msgid "Return the width of the indentation of LINE."
-msgstr "行 LINE の始めの空白の幅を返す。"
+msgstr "行 LINE の始めの空白の幅を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-all-matches"
@@ -1572,23 +1601,23 @@ msgid ""
 "Return all matches of REGEXP in S.\n"
 "Each match is a list with (START END) or #f for each group."
 msgstr ""
-"文字列 S の中の, 正規表現 REGEXP に合う所を全て返す。\n"
-"それぞれ, 括弧ごとの (始め 終わり) か #f のリスト。"
+"文字列 S の中の, 正規表現 REGEXP に合う所を全て返す.\n"
+"それぞれ, 括弧ごとの (始め 終わり) か #f のリスト."
 
 #: lisp/org.scm
 msgctxt "function:org-match-string"
 msgid "Return the string of group N of the match M in S, or #f if the group did not match."
-msgstr "S の中の合った所 M の, N 番目の括弧の文字列を返す。無ければ #f。"
+msgstr "S の中の合った所 M の, N 番目の括弧の文字列を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-replace-all"
 msgid "Replace all occurrences of FROM in S with TO."
-msgstr "文字列 S の中の FROM を, 全て TO にする。"
+msgstr "文字列 S の中の FROM を, 全て TO にする."
 
 #: lisp/org.scm
 msgctxt "function:org-char"
 msgid "Return the Nth character of S as a string, counted from 0."
-msgstr "文字列 S の N 文字目 (0 から) を返す。"
+msgstr "文字列 S の N 文字目 (0 から) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-lines"
@@ -1596,28 +1625,28 @@ msgid ""
 "Return the lines of the buffer.\n"
 "If the buffer ends with a newline, the last line is empty."
 msgstr ""
-"バッファの行 (改行で分けたもの) を返す。\n"
-"最後が改行なら, 最後は空の文字列。"
+"バッファの行 (改行で分けたもの) を返す.\n"
+"最後が改行なら, 最後は空の文字列."
 
 #: lisp/org.scm
 msgctxt "function:org-line-count"
 msgid "Return the number of LINES, not counting the empty line after the last newline."
-msgstr "行の数を返す。最後の改行の後の, 空の行は数えない。"
+msgstr "行の数を返す.最後の改行の後の, 空の行は数えない."
 
 #: lisp/org.scm
 msgctxt "function:org-line"
 msgid "Return line N of LINES, counted from 1."
-msgstr "LINES の N 行目 (1 から) を返す。"
+msgstr "LINES の N 行目 (1 から) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-line-start"
 msgid "Return the position of the start of line N."
-msgstr "N 行目の始めの位置を返す。"
+msgstr "N 行目の始めの位置を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-line-end"
 msgid "Return the position of the end of line N, before the newline."
-msgstr "N 行目の終わりの位置 (改行の前) を返す。"
+msgstr "N 行目の終わりの位置 (改行の前) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-pos-line"
@@ -1625,23 +1654,23 @@ msgid ""
 "Return the line and column of POS as (LINE COLUMN).\n"
 "The column is counted from 0."
 msgstr ""
-"位置 POS の行と桁を (行 桁) で返す。\n"
-"桁は 0 から。"
+"位置 POS の行と桁を (行 桁) で返す.\n"
+"桁は 0 から."
 
 #: lisp/org.scm
 msgctxt "function:org-current-line"
 msgid "Return the line of point."
-msgstr "カーソルの行を返す。"
+msgstr "カーソルの行を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-current-column"
 msgid "Return the column of point, counted from 0."
-msgstr "カーソルの桁 (0 から) を返す。"
+msgstr "カーソルの桁 (0 から) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-goto-line-column"
 msgid "Move to column COL of line N."
-msgstr "N 行目の桁 COL へ動く。"
+msgstr "N 行目の桁 COL へ動く."
 
 #: lisp/org.scm
 msgctxt "function:org-replace-region"
@@ -1649,18 +1678,18 @@ msgid ""
 "Replace the text between START and END with NEW.\n"
 "If point is after the replaced text, it moves with the text."
 msgstr ""
-"START と END の間を, 文字列 NEW に置き換える。\n"
-"カーソルは, 置き換えた所の後なら, 一緒に動く。"
+"START と END の間を, 文字列 NEW に置き換える.\n"
+"カーソルは, 置き換えた所の後なら, 一緒に動く."
 
 #: lisp/org.scm
 msgctxt "function:org-replace-lines"
 msgid "Replace lines FROM to TO with the list of lines NEW."
-msgstr "FROM 行から TO 行までを, 新しい行のリスト NEW に置き換える。"
+msgstr "FROM 行から TO 行までを, 新しい行のリスト NEW に置き換える."
 
 #: lisp/org.scm
 msgctxt "function:org-set-line"
 msgid "Replace line N with NEW."
-msgstr "N 行目を NEW に置き換える。"
+msgstr "N 行目を NEW に置き換える."
 
 #: lisp/org.scm
 msgctxt "function:org-set-line-changed"
@@ -1668,43 +1697,43 @@ msgid ""
 "Replace line N with NEW, changing only the part that differs.\n"
 "Point moves with the unchanged text."
 msgstr ""
-"N 行目を NEW に置き換える。変わった所だけを置き換える。\n"
-"カーソルは, 変わらない所と一緒に動く。"
+"N 行目を NEW に置き換える.変わった所だけを置き換える.\n"
+"カーソルは, 変わらない所と一緒に動く."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-lines-after"
 msgid "Insert the lines NEW after line N."
-msgstr "N 行目の後に, 行 NEW を入れる。"
+msgstr "N 行目の後に, 行 NEW を入れる."
 
 #: lisp/org.scm
 msgctxt "function:org-delete-lines"
 msgid "Delete lines FROM to TO, including the newlines."
-msgstr "FROM 行から TO 行までを消す (改行も)。"
+msgstr "FROM 行から TO 行までを消す (改行も)."
 
 #: lisp/org.scm
 msgctxt "function:org-level"
 msgid "Return the level of the heading LINE, or #f if it is not a heading."
-msgstr "見出し LINE の深さを返す。見出しでなければ #f。"
+msgstr "見出し LINE の深さを返す.見出しでなければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-headings"
 msgid "Return the headings of LINES as a list of (LINE LEVEL)."
-msgstr "見出しの行と深さを, (行 深さ) のリストで返す。"
+msgstr "見出しの行と深さを, (行 深さ) のリストで返す."
 
 #: lisp/org.scm
 msgctxt "function:org-heading-line"
 msgid "Return the nearest heading line at or before line N, or #f if there is none."
-msgstr "N 行目か, その前の, 一番近い見出しの行を返す。無ければ #f。"
+msgstr "N 行目か, その前の, 一番近い見出しの行を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-subtree-end"
 msgid "Return the last line of the subtree of the heading at line N."
-msgstr "N 行目の見出しの木の, 最後の行を返す。"
+msgstr "N 行目の見出しの木の, 最後の行を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-end"
 msgid "Return the last line of the body of the heading at line N, before the next heading."
-msgstr "N 行目の見出しの, 本文の最後の行 (次の見出しの前) を返す。"
+msgstr "N 行目の見出しの, 本文の最後の行 (次の見出しの前) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-back-to-heading"
@@ -1712,18 +1741,18 @@ msgid ""
 "Return the heading line of point.\n"
 "Signal an error if there is none."
 msgstr ""
-"カーソルの見出しの行を返す。\n"
-"無ければ, 失敗にする。"
+"カーソルの見出しの行を返す.\n"
+"無ければ, 失敗にする."
 
 #: lisp/org.scm
 msgctxt "function:org-at-heading-p"
 msgid "Return #t if point is on a heading."
-msgstr "カーソルが見出しにあれば #t を返す。"
+msgstr "カーソルが見出しにあれば #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-regexp"
 msgid "Return the regexp of the TODO keywords, in a group."
-msgstr "TODO のキーワードの正規表現 (括弧の中) を返す。"
+msgstr "TODO のキーワードの正規表現 (括弧の中) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-parse-heading"
@@ -1731,33 +1760,33 @@ msgid ""
 "Split the heading LINE into (STARS TODO PRIORITY TITLE TAGS).\n"
 "Missing parts are #f. Return #f if LINE is not a heading."
 msgstr ""
-"見出し LINE を (星 TODO 優先度 題 タグ) に分ける。\n"
-"無いものは #f。見出しでなければ #f を返す。"
+"見出し LINE を (星 TODO 優先度 題 タグ) に分ける.\n"
+"無いものは #f.見出しでなければ #f を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-make-heading"
 msgid "Return a heading line made of STARS, TODO, PRIORITY, TITLE and TAGS, with the tags aligned."
-msgstr "STARS, TODO, PRIORITY, TITLE, TAGS から見出しの行を作る (タグは揃える)。"
+msgstr "STARS, TODO, PRIORITY, TITLE, TAGS から見出しの行を作る (タグは揃える)."
 
 #: lisp/org.scm
 msgctxt "function:org-tags-line"
 msgid "Return HEAD followed by TAGS aligned to `org-tags-column'."
-msgstr "HEAD の後に, タグ TAGS を揃えた行を返す (org-tags-column)。"
+msgstr "HEAD の後に, タグ TAGS を揃えた行を返す (org-tags-column)."
 
 #: lisp/org.scm
 msgctxt "function:org-heading-tags"
 msgid "Return the tags of the parsed heading PARSED as a list."
-msgstr "分けた見出し PARSED のタグを, リストで返す。"
+msgstr "分けた見出し PARSED のタグを, リストで返す."
 
 #: lisp/org.scm
 msgctxt "function:org-tags-string"
 msgid "Return TAGS as a string like :a:b:, or #f if TAGS is empty."
-msgstr "タグのリスト TAGS を :a:b: にする。空なら #f。"
+msgstr "タグのリスト TAGS を :a:b: にする.空なら #f."
 
 #: lisp/org.scm
 msgctxt "function:org-keyword-name"
 msgid "Return the name of the keyword WORD: \"TODO\" for \"TODO(t)\"."
-msgstr "キーワード WORD の名前を返す (\"TODO(t)\" なら \"TODO\")。"
+msgstr "キーワード WORD の名前を返す (\"TODO(t)\" なら \"TODO\")."
 
 #: lisp/org.scm
 msgctxt "function:org-keyword-key"
@@ -1765,38 +1794,38 @@ msgid ""
 "Return the key to select the keyword WORD: \"t\" for \"TODO(t)\".\n"
 "Return #f if there is none."
 msgstr ""
-"キーワード WORD を選ぶキーを返す (\"TODO(t)\" なら \"t\")。\n"
-"無ければ #f。"
+"キーワード WORD を選ぶキーを返す (\"TODO(t)\" なら \"t\").\n"
+"無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-sets"
 msgid "Return the sets of TODO keywords as a list of ((NOT-DONE...) (DONE...))."
-msgstr "TODO の組を, ((未完の言葉) (済みの言葉)) のリストで返す。"
+msgstr "TODO の組を, ((未完の言葉) (済みの言葉)) のリストで返す."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-keywords-1"
 msgid "Return all the TODO keywords."
-msgstr "全ての TODO のキーワードを返す。"
+msgstr "全ての TODO のキーワードを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-done-keywords"
 msgid "Return the done keywords."
-msgstr "済みのキーワードを返す。"
+msgstr "済みのキーワードを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-done-keyword?"
 msgid "Return #t if WORD is a done keyword."
-msgstr "キーワード WORD が済みなら #t を返す。"
+msgstr "キーワード WORD が済みなら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-set"
 msgid "Return the set of keywords containing WORD, or the first set if there is none."
-msgstr "WORD を含むキーワードの組を返す。無ければ, 始めの組。"
+msgstr "WORD を含むキーワードの組を返す.無ければ, 始めの組."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-keys"
 msgid "Return the keys and keywords as a list of (KEY KEYWORD)."
-msgstr "キーとキーワードを, (キー キーワード) のリストで返す。"
+msgstr "キーとキーワードを, (キー キーワード) のリストで返す."
 
 #: lisp/org.scm
 msgctxt "function:org-font-lock-keywords"
@@ -1805,24 +1834,24 @@ msgid ""
 "The regexps are JavaScript regexps of the editor, matched line by line.\n"
 "Later ones are drawn over earlier ones."
 msgstr ""
-"色付けの正規表現と face を, (正規表現 face 括弧の番号) のリストで返す。\n"
-"正規表現は, 画面のエディタの, JavaScript の正規表現。行ごとに合わせる。\n"
-"後のものを上に重ねる。"
+"色付けの正規表現と face を, (正規表現 face 括弧の番号) のリストで返す.\n"
+"正規表現は, 画面のエディタの, JavaScript の正規表現.行ごとに合わせる.\n"
+"後のものを上に重ねる."
 
 #: lisp/org.scm
 msgctxt "function:org-fontify"
 msgid "Highlight the buffer."
-msgstr "バッファに色を付ける。"
+msgstr "バッファに色を付ける."
 
 #: lisp/org.scm
 msgctxt "variable:org-mode-keys"
 msgid "Key bindings of Org mode."
-msgstr "Org mode のキー。"
+msgstr "Org mode のキー."
 
 #: lisp/org.scm
 msgctxt "function:org-mode"
 msgid "Turn on Org mode: set the keys and highlighting, and read #+STARTUP."
-msgstr "Org mode にする (キー, 色, #+STARTUP)。"
+msgstr "Org mode にする (キー, 色, #+STARTUP)."
 
 #: lisp/org.scm
 msgctxt "function:org-find-file-hook"
@@ -1830,13 +1859,13 @@ msgid ""
 "Turn on Org mode if the visited file is an .org file.\n"
 "This is called from `find-file-hook'."
 msgstr ""
-"開いたファイルが .org なら, Org mode にする。\n"
-"find-file-hook から呼ぶ。"
+"開いたファイルが .org なら, Org mode にする.\n"
+"find-file-hook から呼ぶ."
 
 #: lisp/org.scm
 msgctxt "function:org-set-startup-visibility"
 msgid "Set the visibility by #+STARTUP: (overview, content or showall)."
-msgstr "#+STARTUP: の見せ方 (overview, content, showall) にする。"
+msgstr "#+STARTUP: の見せ方 (overview, content, showall) にする."
 
 #: lisp/org.scm
 msgctxt "variable:org-cycle-last"
@@ -1844,18 +1873,18 @@ msgid ""
 "Last cycling state, as (BUFFER POINT STATUS).\n"
 "Whether the key was pressed again is decided by whether point has moved."
 msgstr ""
-"直前の開け閉め。(バッファ カーソル 状態)。\n"
-"続けて押したかを, カーソルが動いていないかで決める。"
+"直前の開け閉め.(バッファ カーソル 状態).\n"
+"続けて押したかを, カーソルが動いていないかで決める."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-repeated?"
 msgid "Return #t if the key is pressed again and the previous state was STATUS."
-msgstr "続けて押していて, 前の状態が STATUS なら #t を返す。"
+msgstr "続けて押していて, 前の状態が STATUS なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-remember"
 msgid "Remember STATUS as the last cycling state."
-msgstr "開け閉めの状態 STATUS を覚える。"
+msgstr "開け閉めの状態 STATUS を覚える."
 
 #: lisp/org.scm
 msgctxt "function:org-fold-end"
@@ -1863,8 +1892,8 @@ msgid ""
 "Return the end of the region to hide: the end of line TO.\n"
 "On the last line, it is before the last newline."
 msgstr ""
-"隠す範囲の終わり (TO 行の終わり) を返す。\n"
-"最後の行なら, 最後の改行の前。"
+"隠す範囲の終わり (TO 行の終わり) を返す.\n"
+"最後の行なら, 最後の改行の前."
 
 #: lisp/org.scm
 msgctxt "function:org-fold-showing"
@@ -1873,7 +1902,7 @@ msgid ""
 "up to the next shown heading (up to line LAST)."
 msgstr ""
 "見せる見出し SHOWN (行のリスト) の, それぞれの本文を,\n"
-"次の見せる見出しの前まで隠す (LAST 行まで)。"
+"次の見せる見出しの前まで隠す (LAST 行まで)."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-local"
@@ -1881,45 +1910,45 @@ msgid ""
 "Cycle the subtree of the heading at line N.\n"
 "The order is EMPTY ENTRY, CHILDREN, SUBTREE and FOLDED."
 msgstr ""
-"N 行目の見出しの木を開け閉めする。\n"
-"EMPTY ENTRY, CHILDREN, SUBTREE, FOLDED の順。"
+"N 行目の見出しの木を開け閉めする.\n"
+"EMPTY ENTRY, CHILDREN, SUBTREE, FOLDED の順."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-overview"
 msgid "Show only the top-level headings."
-msgstr "一番上の見出しだけを見せる。"
+msgstr "一番上の見出しだけを見せる."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-content"
 msgid "Show all the headings, hiding the bodies."
-msgstr "全ての見出しを見せる (本文は隠す)。"
+msgstr "全ての見出しを見せる (本文は隠す)."
 
 #: lisp/org.scm
 msgctxt "function:org-global-cycle"
 msgid "Cycle the whole buffer: OVERVIEW, CONTENTS and SHOW ALL."
-msgstr "全体を開け閉めする (OVERVIEW, CONTENTS, SHOW ALL の順)。"
+msgstr "全体を開け閉めする (OVERVIEW, CONTENTS, SHOW ALL の順)."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle"
 msgid ""
 "Move to the next table field, cycle the heading, or indent.\n"
 "In a table, move to the next field; on a heading, cycle its subtree; otherwise indent."
-msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (TAB)。"
+msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (TAB)."
 
 #: lisp/org.scm
 msgctxt "function:org-shifttab"
 msgid "Move to the previous table field, or cycle the whole buffer."
-msgstr "表なら前の欄へ, ほかは全体の開け閉め (S-TAB)。"
+msgstr "表なら前の欄へ, ほかは全体の開け閉め (S-TAB)."
 
 #: lisp/org.scm
 msgctxt "function:org-reveal"
 msgid "Show POS if it is hidden."
-msgstr "位置 POS が隠れていれば, 見せる。"
+msgstr "位置 POS が隠れていれば, 見せる."
 
 #: lisp/org.scm
 msgctxt "function:org-heading-title-range"
 msgid "Return the range of the title in the heading LINE as (START END), or #f if there is no title."
-msgstr "見出し LINE の題の, 行の中の範囲を (始め 終わり) で返す。題が無ければ #f。"
+msgstr "見出し LINE の題の, 行の中の範囲を (始め 終わり) で返す.題が無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-new-heading-todo"
@@ -1927,8 +1956,8 @@ msgid ""
 "Return the TODO state of a new heading after line N.\n"
 "If TODO is true, it is the not-done state of the previous heading, or the first state."
 msgstr ""
-"N 行目の後の, 新しい見出しの TODO を返す。\n"
-"TODO が #t なら, 前の見出しの, 済みでない状態。無ければ, 始めの状態。"
+"N 行目の後の, 新しい見出しの TODO を返す.\n"
+"TODO が #t なら, 前の見出しの, 済みでない状態.無ければ, 始めの状態."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-heading-1"
@@ -1936,8 +1965,8 @@ msgid ""
 "Insert a heading (M-RET).\n"
 "If TODO is true, insert a TODO heading."
 msgstr ""
-"見出しを入れる (M-RET)。\n"
-"TODO が #t なら, TODO の見出し。"
+"見出しを入れる (M-RET).\n"
+"TODO が #t なら, TODO の見出し."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-heading-after-subtree"
@@ -1945,40 +1974,40 @@ msgid ""
 "Insert a heading after the current subtree (C-RET).\n"
 "If TODO is true, insert a TODO heading."
 msgstr ""
-"木の後に見出しを入れる (C-RET)。\n"
-"TODO が #t なら, TODO の見出し。"
+"木の後に見出しを入れる (C-RET).\n"
+"TODO が #t なら, TODO の見出し."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-heading"
 msgid "Insert a heading, even in a list item."
-msgstr "見出しを入れる (リストの項目でも)。"
+msgstr "見出しを入れる (リストの項目でも)."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-heading-respect-content"
 msgid "Insert a heading after the current subtree."
-msgstr "今の木の後に, 見出しを入れる (C-RET)。"
+msgstr "今の木の後に, 見出しを入れる (C-RET)."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-todo-heading-respect-content"
 msgid "Insert a TODO heading after the current subtree."
-msgstr "今の木の後に, TODO の見出しを入れる (C-S-RET)。"
+msgstr "今の木の後に, TODO の見出しを入れる (C-S-RET)."
 
 #: lisp/org.scm
 msgctxt "function:org-meta-return"
 msgid ""
 "Insert a list item or a heading.\n"
 "In a table, do nothing; in a list, insert an item; otherwise insert a heading."
-msgstr "M-RET: 表なら何もしない, リストなら項目を, ほかは見出しを入れる。"
+msgstr "M-RET: 表なら何もしない, リストなら項目を, ほかは見出しを入れる."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-todo-heading"
 msgid "Insert a TODO heading, or a checkbox item in a list."
-msgstr "M-S-RET: TODO の見出しを入れる (リストなら, チェックボックスの項目)。"
+msgstr "M-S-RET: TODO の見出しを入れる (リストなら, チェックボックスの項目)."
 
 #: lisp/org.scm
 msgctxt "function:org-shift-headings"
 msgid "Change the level of the headings from line FROM to line TO by DELTA."
-msgstr "FROM 行から TO 行までの見出しの深さを, DELTA だけ変える。"
+msgstr "FROM 行から TO 行までの見出しの深さを, DELTA だけ変える."
 
 #: lisp/org.scm
 msgctxt "function:org-shift-heading"
@@ -1986,8 +2015,8 @@ msgid ""
 "Change the level of the heading at line N by DELTA.\n"
 "Add or remove stars and realign the tags; point moves with the text."
 msgstr ""
-"N 行目の見出しの深さを, DELTA だけ変える。\n"
-"星を足すか消して, タグを揃え直す (カーソルは, 文と一緒に動く)。"
+"N 行目の見出しの深さを, DELTA だけ変える.\n"
+"星を足すか消して, タグを揃え直す (カーソルは, 文と一緒に動く)."
 
 #: lisp/org.scm
 msgctxt "function:org-promote-1"
@@ -1995,28 +2024,28 @@ msgid ""
 "Promote or demote the heading by DELTA.\n"
 "If SUBTREE is true, change the whole subtree."
 msgstr ""
-"見出しを DELTA だけ浅く, 深くする。\n"
-"SUBTREE が #t なら, 木ごと。"
+"見出しを DELTA だけ浅く, 深くする.\n"
+"SUBTREE が #t なら, 木ごと."
 
 #: lisp/org.scm
 msgctxt "function:org-do-promote"
 msgid "Promote the current heading."
-msgstr "今の見出しを浅くする (M-左)。"
+msgstr "今の見出しを浅くする (M-左)."
 
 #: lisp/org.scm
 msgctxt "function:org-do-demote"
 msgid "Demote the current heading."
-msgstr "今の見出しを深くする (M-右)。"
+msgstr "今の見出しを深くする (M-右)."
 
 #: lisp/org.scm
 msgctxt "function:org-promote-subtree"
 msgid "Promote the current subtree."
-msgstr "今の木を浅くする (M-S-左)。"
+msgstr "今の木を浅くする (M-S-左)."
 
 #: lisp/org.scm
 msgctxt "function:org-demote-subtree"
 msgid "Demote the current subtree."
-msgstr "今の木を深くする (M-S-右)。"
+msgstr "今の木を深くする (M-S-右)."
 
 #: lisp/org.scm
 msgctxt "function:org-sibling"
@@ -2024,8 +2053,8 @@ msgid ""
 "Return the line of the previous or next heading at the same level as line N.\n"
 "FORWARD selects the next one. Return #f if it would cross the parent."
 msgstr ""
-"N 行目と同じ深さの, 前か後の見出しの行を返す。\n"
-"FORWARD が #t なら後。親を越えるなら #f。"
+"N 行目と同じ深さの, 前か後の見出しの行を返す.\n"
+"FORWARD が #t なら後.親を越えるなら #f."
 
 #: lisp/org.scm
 msgctxt "function:org-move-subtree"
@@ -2033,18 +2062,18 @@ msgid ""
 "Swap the current subtree with the previous or next one at the same level.\n"
 "FORWARD selects the next one."
 msgstr ""
-"木を, 前か後の, 同じ深さの木と入れ換える。\n"
-"FORWARD が #t なら後。"
+"木を, 前か後の, 同じ深さの木と入れ換える.\n"
+"FORWARD が #t なら後."
 
 #: lisp/org.scm
 msgctxt "function:org-move-subtree-up"
 msgid "Move the current subtree up past the previous one."
-msgstr "今の木を, 前の木の前へ動かす (M-上)。"
+msgstr "今の木を, 前の木の前へ動かす (M-上)."
 
 #: lisp/org.scm
 msgctxt "function:org-move-subtree-down"
 msgid "Move the current subtree down past the next one."
-msgstr "今の木を, 次の木の後へ動かす (M-下)。"
+msgstr "今の木を, 次の木の後へ動かす (M-下)."
 
 #: lisp/org.scm
 msgctxt "function:org-drag-line"
@@ -2052,20 +2081,20 @@ msgid ""
 "Swap the current line with the previous or next line.\n"
 "FORWARD selects the next one."
 msgstr ""
-"今の行と, その前か後の行を入れ換える。\n"
-"FORWARD が #t なら後。"
+"今の行と, その前か後の行を入れ換える.\n"
+"FORWARD が #t なら後."
 
 #: lisp/org.scm
 msgctxt "function:org-ctrl-c-star"
 msgid ""
 "Turn a heading into text, or an item or text into a heading.\n"
 "Point moves with the text."
-msgstr "C-c *: 見出しを文に, 項目と文を見出しにする (カーソルは, 文と一緒に動く)。"
+msgstr "C-c *: 見出しを文に, 項目と文を見出しにする (カーソルは, 文と一緒に動く)."
 
 #: lisp/org.scm
 msgctxt "function:org-goto-heading"
 msgid "Move to the heading at line N, showing it."
-msgstr "N 行目の見出しへ動く (見せる)。"
+msgstr "N 行目の見出しへ動く (見せる)."
 
 #: lisp/org.scm
 msgctxt "function:org-visible-heading"
@@ -2073,18 +2102,18 @@ msgid ""
 "Move to the next or previous visible heading.\n"
 "FORWARD selects the next one. Without one, move to the end or start of the buffer."
 msgstr ""
-"次か前の, 見えている見出しへ動く。\n"
-"FORWARD が #t なら次。無ければ, バッファの終わりか始めへ。"
+"次か前の, 見えている見出しへ動く.\n"
+"FORWARD が #t なら次.無ければ, バッファの終わりか始めへ."
 
 #: lisp/org.scm
 msgctxt "function:org-next-visible-heading"
 msgid "Move to the next visible heading."
-msgstr "次の, 見えている見出しへ動く (C-c C-n)。"
+msgstr "次の, 見えている見出しへ動く (C-c C-n)."
 
 #: lisp/org.scm
 msgctxt "function:org-previous-visible-heading"
 msgid "Move to the previous visible heading."
-msgstr "前の, 見えている見出しへ動く (C-c C-p)。"
+msgstr "前の, 見えている見出しへ動く (C-c C-p)."
 
 #: lisp/org.scm
 msgctxt "function:org-heading-same-level"
@@ -2092,28 +2121,28 @@ msgid ""
 "Move to the next or previous heading at the same level, within the parent.\n"
 "FORWARD selects the next one. Without one, do not move."
 msgstr ""
-"同じ深さの, 次か前の見出しへ動く (親の中だけ)。\n"
-"FORWARD が #t なら次。無ければ動かない。"
+"同じ深さの, 次か前の見出しへ動く (親の中だけ).\n"
+"FORWARD が #t なら次.無ければ動かない."
 
 #: lisp/org.scm
 msgctxt "function:org-forward-heading-same-level"
 msgid "Move to the next heading at the same level."
-msgstr "同じ深さの, 次の見出しへ動く (C-c C-f)。"
+msgstr "同じ深さの, 次の見出しへ動く (C-c C-f)."
 
 #: lisp/org.scm
 msgctxt "function:org-backward-heading-same-level"
 msgid "Move to the previous heading at the same level."
-msgstr "同じ深さの, 前の見出しへ動く (C-c C-b)。"
+msgstr "同じ深さの, 前の見出しへ動く (C-c C-b)."
 
 #: lisp/org.scm
 msgctxt "function:org-parent"
 msgid "Return the line of the parent heading of line N, or #f if there is none."
-msgstr "N 行目の上の見出しの行を返す。無ければ #f。"
+msgstr "N 行目の上の見出しの行を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:outline-up-heading"
 msgid "Move to the parent heading."
-msgstr "C-c C-u: 上の見出しへ動く。"
+msgstr "C-c C-u: 上の見出しへ動く."
 
 #: lisp/org.scm
 msgctxt "function:org-parse-item"
@@ -2121,18 +2150,18 @@ msgid ""
 "Split the list item LINE into (INDENT BULLET CHECKBOX TEXT).\n"
 "CHECKBOX is #f if there is none. Return #f if LINE is not an item."
 msgstr ""
-"リストの項目 LINE を (字下げ 印 チェックボックス 文) に分ける。\n"
-"チェックボックスが無ければ #f。項目でなければ #f を返す。"
+"リストの項目 LINE を (字下げ 印 チェックボックス 文) に分ける.\n"
+"チェックボックスが無ければ #f.項目でなければ #f を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-make-item"
 msgid "Return an item line made of INDENT, BULLET, BOX and TEXT."
-msgstr "INDENT, BULLET, BOX, TEXT から, 項目の行を作る。"
+msgstr "INDENT, BULLET, BOX, TEXT から, 項目の行を作る."
 
 #: lisp/org.scm
 msgctxt "function:org-ordered-bullet?"
 msgid "Return #t if BULLET is a number."
-msgstr "印 BULLET が数なら #t を返す。"
+msgstr "印 BULLET が数なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-item-end"
@@ -2140,18 +2169,18 @@ msgid ""
 "Return the last line of the item at line N.\n"
 "It includes the child items and continuation lines, but not trailing empty lines."
 msgstr ""
-"N 行目の項目の, 最後の行を返す。\n"
-"子の項目と, 続きの行を含む。後ろの空の行は含まない。"
+"N 行目の項目の, 最後の行を返す.\n"
+"子の項目と, 続きの行を含む.後ろの空の行は含まない."
 
 #: lisp/org.scm
 msgctxt "function:org-item-at"
 msgid "Return the line of the item containing line N, or #f if there is none."
-msgstr "N 行目を含む項目の行を返す。無ければ #f。"
+msgstr "N 行目を含む項目の行を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-in-item"
 msgid "Return the line of the item at point, or #f if there is none."
-msgstr "カーソルの項目の行を返す。無ければ #f。"
+msgstr "カーソルの項目の行を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-item-sibling"
@@ -2159,23 +2188,23 @@ msgid ""
 "Return the previous or next item at the same level as line N, or #f if there is none.\n"
 "FORWARD selects the next one."
 msgstr ""
-"N 行目と同じ深さの, 前か後の項目を返す。無ければ #f。\n"
-"FORWARD が #t なら後。"
+"N 行目と同じ深さの, 前か後の項目を返す.無ければ #f.\n"
+"FORWARD が #t なら後."
 
 #: lisp/org.scm
 msgctxt "function:org-item-siblings"
 msgid "Return the lines of the items at the same level as line N in the list, from the first."
-msgstr "リストの, N 行目と同じ深さの項目の行を, 始めから返す。"
+msgstr "リストの, N 行目と同じ深さの項目の行を, 始めから返す."
 
 #: lisp/org.scm
 msgctxt "function:org-item-parent"
 msgid "Return the parent item of line N, or #f if there is none."
-msgstr "N 行目の項目の上の項目を返す。無ければ #f。"
+msgstr "N 行目の項目の上の項目を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-item-children"
 msgid "Return the child items of line N, one level deeper."
-msgstr "N 行目の項目の子の項目 (すぐ下の深さのもの) を返す。"
+msgstr "N 行目の項目の子の項目 (すぐ下の深さのもの) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-fix-bullets"
@@ -2183,8 +2212,8 @@ msgid ""
 "Make the bullets of the list at line N the same, and renumber them.\n"
 "They follow the bullet of the first item."
 msgstr ""
-"N 行目のリストの印を揃え, 数を振り直す。\n"
-"始めの項目の印に合わせる。"
+"N 行目のリストの印を揃え, 数を振り直す.\n"
+"始めの項目の印に合わせる."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-item"
@@ -2192,8 +2221,8 @@ msgid ""
 "Insert a list item.\n"
 "If CHECKBOX is true, add a checkbox."
 msgstr ""
-"項目を入れる。\n"
-"CHECKBOX が #t なら, チェックボックスを付ける。"
+"項目を入れる.\n"
+"CHECKBOX が #t なら, チェックボックスを付ける."
 
 #: lisp/org.scm
 msgctxt "function:org-move-item"
@@ -2201,8 +2230,8 @@ msgid ""
 "Swap the current item with the previous or next one.\n"
 "FORWARD selects the next one."
 msgstr ""
-"項目を, 前か後の項目と入れ換える。\n"
-"FORWARD が #t なら後。"
+"項目を, 前か後の項目と入れ換える.\n"
+"FORWARD が #t なら後."
 
 #: lisp/org.scm
 msgctxt "function:org-indent-item"
@@ -2210,13 +2239,13 @@ msgid ""
 "Change the indentation of the current item by DELTA (1 deeper, -1 shallower).\n"
 "If SUBTREE is true, change the children too."
 msgstr ""
-"項目の字下げを DELTA だけ変える (1 なら深く, -1 なら浅く)。\n"
-"SUBTREE が #t なら, 子も。"
+"項目の字下げを DELTA だけ変える (1 なら深く, -1 なら浅く).\n"
+"SUBTREE が #t なら, 子も."
 
 #: lisp/org.scm
 msgctxt "variable:org-list-bullets"
 msgid "Order of the bullets used by S-left, S-right and C-c -."
-msgstr "印の順 (S-左右, C-c -)。"
+msgstr "印の順 (S-左右, C-c -)."
 
 #: lisp/org.scm
 msgctxt "function:org-cycle-list-bullet"
@@ -2224,8 +2253,8 @@ msgid ""
 "Change the bullet of the list.\n"
 "If FORWARD is #f, use the previous bullet."
 msgstr ""
-"リストの印を変える。\n"
-"FORWARD が #f なら, 前の印。"
+"リストの印を変える.\n"
+"FORWARD が #f なら, 前の印."
 
 #: lisp/org.scm
 msgctxt "function:org-item-move-point"
@@ -2233,18 +2262,18 @@ msgid ""
 "Move to the next or previous item (S-up, S-down).\n"
 "FORWARD selects the next one."
 msgstr ""
-"次か前の項目へ動く (S-上下)。\n"
-"FORWARD が #t なら次。"
+"次か前の項目へ動く (S-上下).\n"
+"FORWARD が #t なら次."
 
 #: lisp/org.scm
 msgctxt "function:org-ctrl-c-minus"
 msgid "Insert a table rule, change the list bullet, or turn a heading or text into an item."
-msgstr "C-c -: 表なら横線, 項目なら印を変える, 見出しと文は項目にする。"
+msgstr "C-c -: 表なら横線, 項目なら印を変える, 見出しと文は項目にする."
 
 #: lisp/org.scm
 msgctxt "function:org-toggle-checkbox"
 msgid "Toggle the checkbox of the current item."
-msgstr "チェックボックスを切り換える。"
+msgstr "チェックボックスを切り換える."
 
 #: lisp/org.scm
 msgctxt "function:org-fix-parent-checkboxes"
@@ -2252,33 +2281,33 @@ msgid ""
 "Update the checkboxes of the parents of item I from their children.\n"
 "A parent is [X] if all children are done, and [-] if some are."
 msgstr ""
-"項目 I の上の項目のチェックボックスを, 子に合わせる。\n"
-"全て済みなら [X], 一部なら [-]。"
+"項目 I の上の項目のチェックボックスを, 子に合わせる.\n"
+"全て済みなら [X], 一部なら [-]."
 
 #: lisp/org.scm
 msgctxt "function:org-statistics"
 msgid "Return the done and total counts for the statistics cookie at line N, as (DONE TOTAL)."
-msgstr "N 行目の数える印の, 済みと全ての数を (済み 全て) で返す。"
+msgstr "N 行目の数える印の, 済みと全ての数を (済み 全て) で返す."
 
 #: lisp/org.scm
 msgctxt "function:org-update-cookies-in-line"
 msgid "Rewrite the statistics cookies in line N."
-msgstr "N 行目の, 数える印を書き直す。"
+msgstr "N 行目の, 数える印を書き直す."
 
 #: lisp/org.scm
 msgctxt "function:org-update-statistics-cookies"
 msgid "Rewrite all the statistics cookies in the buffer."
-msgstr "バッファの, 全ての数える印を書き直す (C-c #)。"
+msgstr "バッファの, 全ての数える印を書き直す (C-c #)."
 
 #: lisp/org.scm
 msgctxt "function:org-update-statistics"
 msgid "Rewrite all the statistics cookies in the headings and items of the buffer."
-msgstr "バッファの見出しと項目の, 全ての数える印を書き直す。"
+msgstr "バッファの見出しと項目の, 全ての数える印を書き直す."
 
 #: lisp/org.scm
 msgctxt "function:org-today"
 msgid "Return today's date, like 2026-10-26."
-msgstr "今日の日付を返す (2026-10-26 の形)。"
+msgstr "今日の日付を返す (2026-10-26 の形)."
 
 #: lisp/org.scm
 msgctxt "function:org-date-time"
@@ -2286,13 +2315,13 @@ msgid ""
 "Return the time of noon on DATE, in seconds.\n"
 "Noon keeps the date right when adding days across daylight saving time."
 msgstr ""
-"日付 DATE の昼の時刻 (秒) を返す。\n"
-"夏時間でも, 日を足して日付がずれないように, 昼にする。"
+"日付 DATE の昼の時刻 (秒) を返す.\n"
+"夏時間でも, 日を足して日付がずれないように, 昼にする."
 
 #: lisp/org.scm
 msgctxt "function:org-date-add"
 msgid "Add DAYS days to DATE."
-msgstr "日付 DATE に, DAYS 日を足す。"
+msgstr "日付 DATE に, DAYS 日を足す."
 
 #: lisp/org.scm
 msgctxt "function:org-make-date"
@@ -2300,33 +2329,33 @@ msgid ""
 "Return the date of YEAR, MONTH and DAY.\n"
 "A month or day out of range carries over."
 msgstr ""
-"YEAR, MONTH, DAY から日付を作る。\n"
-"月と日が範囲を越えれば, 繰り上げる。"
+"YEAR, MONTH, DAY から日付を作る.\n"
+"月と日が範囲を越えれば, 繰り上げる."
 
 #: lisp/org.scm
 msgctxt "function:org-date-parts"
 msgid "Return DATE as (YEAR MONTH DAY)."
-msgstr "日付 DATE を (年 月 日) で返す。"
+msgstr "日付 DATE を (年 月 日) で返す."
 
 #: lisp/org.scm
 msgctxt "function:org-date-add-months"
 msgid "Add MONTHS months to DATE."
-msgstr "日付 DATE に, MONTHS か月を足す。"
+msgstr "日付 DATE に, MONTHS か月を足す."
 
 #: lisp/org.scm
 msgctxt "function:org-days-between"
 msgid "Return the number of days from A to B."
-msgstr "A から B までの日数を返す。"
+msgstr "A から B までの日数を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-weekday"
 msgid "Return the weekday of DATE, like Mon."
-msgstr "日付 DATE の曜日 (Mon など) を返す。"
+msgstr "日付 DATE の曜日 (Mon など) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-date-shift"
 msgid "Add N units to DATE. UNIT is d, w, m or y."
-msgstr "日付 DATE に, 数 N と単位 UNIT (d w m y) で足す。"
+msgstr "日付 DATE に, 数 N と単位 UNIT (d w m y) で足す."
 
 #: lisp/org.scm
 msgctxt "function:org-make-timestamp"
@@ -2334,13 +2363,13 @@ msgid ""
 "Return a timestamp of DATE and TIME, like <2026-10-26 Mon 10:00 +1w>.\n"
 "If ACTIVE is #f, use [ ] instead of < >."
 msgstr ""
-"DATE と TIME から日付の文字を作る (<2026-10-26 Mon 10:00 +1w> の形)。\n"
-"ACTIVE が #f なら [ ]。"
+"DATE と TIME から日付の文字を作る (<2026-10-26 Mon 10:00 +1w> の形).\n"
+"ACTIVE が #f なら [ ]."
 
 #: lisp/org.scm
 msgctxt "function:org-now-inactive"
 msgid "Return the current date and time, like [2026-10-26 Mon 10:00]."
-msgstr "今の日時を返す ([2026-10-26 Mon 10:00] の形)。"
+msgstr "今の日時を返す ([2026-10-26 Mon 10:00] の形)."
 
 #: lisp/org.scm
 msgctxt "variable:org-ts-regexp"
@@ -2348,8 +2377,8 @@ msgid ""
 "Regexp of a timestamp.\n"
 "Groups: 1 bracket, 2 date, 3 time, 4 end time, 5 repeater and warning."
 msgstr ""
-"日付の正規表現。\n"
-"括弧: 1 括弧, 2 日付, 3 時刻, 4 終わりの時刻, 5 繰り返しと警告。"
+"日付の正規表現.\n"
+"括弧: 1 括弧, 2 日付, 3 時刻, 4 終わりの時刻, 5 繰り返しと警告."
 
 #: lisp/org.scm
 msgctxt "function:org-parse-timestamp"
@@ -2357,28 +2386,28 @@ msgid ""
 "Split the timestamp S into (BRACKET DATE TIME END-TIME REPEATER).\n"
 "Return #f if S is not a timestamp."
 msgstr ""
-"日付 S を (括弧 日付 時刻 終わりの時刻 繰り返しと警告) に分ける。\n"
-"日付でなければ #f を返す。"
+"日付 S を (括弧 日付 時刻 終わりの時刻 繰り返しと警告) に分ける.\n"
+"日付でなければ #f を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-string"
 msgid "Return the timestamp of the parsed timestamp PARSED."
-msgstr "分けた日付 PARSED から, 文字を作る。"
+msgstr "分けた日付 PARSED から, 文字を作る."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-repeater"
 msgid "Return the repeater of PARSED as (MARK NUMBER UNIT), or #f if there is none."
-msgstr "PARSED の繰り返しを (印 数 単位) で返す。無ければ #f。"
+msgstr "PARSED の繰り返しを (印 数 単位) で返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-warning"
 msgid "Return the warning period of PARSED, like -3d, or #f if there is none."
-msgstr "PARSED の警告の日数 (-3d など) を返す。無ければ #f。"
+msgstr "PARSED の警告の日数 (-3d など) を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "variable:org-weekdays"
 msgid "Names of the weekdays."
-msgstr "曜日の名前。"
+msgstr "曜日の名前."
 
 #: lisp/org.scm
 msgctxt "function:org-read-date-analyze"
@@ -2388,15 +2417,15 @@ msgid ""
 "empty (DEFAULT), +3 (3 days from today), +2w, -1d, ++1w (from DEFAULT),\n"
 "2026-10-30, 10-30, 10/30, 30, fri (next Friday), 10:00, 10:00-11:00 and 3pm."
 msgstr ""
-"入れた日付 INPUT を, DEFAULT をもとに読み, (日付 時刻) を返す。\n"
-"時刻が無ければ #f。org-read-date と同じ書き方の一部:\n"
+"入れた日付 INPUT を, DEFAULT をもとに読み, (日付 時刻) を返す.\n"
+"時刻が無ければ #f.org-read-date と同じ書き方の一部:\n"
 "空 (既定), +3 (今日から 3 日後), +2w, -1d, ++1w (既定から),\n"
-"2026-10-30, 10-30, 10/30, 30, fri (次の金曜), 10:00, 10:00-11:00, 3pm。"
+"2026-10-30, 10-30, 10/30, 30, fri (次の金曜), 10:00, 10:00-11:00, 3pm."
 
 #: lisp/org.scm
 msgctxt "function:org-normalize-time"
 msgid "Make the hour of TIME two digits (9:00 to 09:00)."
-msgstr "時刻 TIME の時を 2 桁にする (9:00 → 09:00)。"
+msgstr "時刻 TIME の時を 2 桁にする (9:00 → 09:00)."
 
 #: lisp/org.scm
 msgctxt "function:org-read-date"
@@ -2404,8 +2433,8 @@ msgid ""
 "Read a date in the minibuffer with PROMPT, and return (DATE TIME).\n"
 "DEFAULT is the default date."
 msgstr ""
-"ミニバッファで PROMPT を出して日付を聞き, (日付 時刻) を返す。\n"
-"DEFAULT は既定の日付。"
+"ミニバッファで PROMPT を出して日付を聞き, (日付 時刻) を返す.\n"
+"DEFAULT は既定の日付."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-at"
@@ -2413,8 +2442,8 @@ msgid ""
 "Return the timestamp at column COL of line N as (START END PARSED), or #f if there is none.\n"
 "START and END are columns."
 msgstr ""
-"N 行目の, 桁 COL にある日付を (始め 終わり 分けたもの) で返す。無ければ #f。\n"
-"始めと終わりは桁。"
+"N 行目の, 桁 COL にある日付を (始め 終わり 分けたもの) で返す.無ければ #f.\n"
+"始めと終わりは桁."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-timestamp-command"
@@ -2422,18 +2451,18 @@ msgid ""
 "Insert a timestamp, or change the one at point (C-c . and C-c !).\n"
 "If ACTIVE is #f, insert an inactive timestamp."
 msgstr ""
-"日付を入れる (日付の上なら, 変える。C-c . と C-c !)。\n"
-"ACTIVE が #f なら, [ ] の日付。"
+"日付を入れる (日付の上なら, 変える.C-c . と C-c !).\n"
+"ACTIVE が #f なら, [ ] の日付."
 
 #: lisp/org.scm
 msgctxt "function:org-time-stamp"
 msgid "Insert a timestamp, or change the one at point."
-msgstr "C-c .: 日付を入れる (日付の上なら, 変える)。"
+msgstr "C-c .: 日付を入れる (日付の上なら, 変える)."
 
 #: lisp/org.scm
 msgctxt "function:org-time-stamp-inactive"
 msgid "Insert an inactive timestamp, or change the one at point."
-msgstr "C-c !: [ ] の日付を入れる (日付の上なら, 変える)。"
+msgstr "C-c !: [ ] の日付を入れる (日付の上なら, 変える)."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-change"
@@ -2441,13 +2470,13 @@ msgid ""
 "Change the part WHAT of PARSED by N (S-arrows).\n"
 "WHAT is year, month, day, hour or minute."
 msgstr ""
-"PARSED の WHAT を N だけ変える (S-上下左右)。\n"
-"WHAT は year, month, day, hour, minute。"
+"PARSED の WHAT を N だけ変える (S-上下左右).\n"
+"WHAT は year, month, day, hour, minute."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-part"
 msgid "Return the part of the timestamp AT at column COL: year, month, day, hour or minute."
-msgstr "日付 AT の, 桁 COL の部分を返す (year month day hour minute)。"
+msgstr "日付 AT の, 桁 COL の部分を返す (year month day hour minute)."
 
 #: lisp/org.scm
 msgctxt "function:org-shift-timestamp"
@@ -2456,24 +2485,24 @@ msgid ""
 "If BY-DAY is true, change the day; otherwise the part at point.\n"
 "Return #f if there is no timestamp at point."
 msgstr ""
-"カーソルの日付を N だけ変える。\n"
-"BY-DAY が #t なら日を, ほかはカーソルの所を変える。\n"
-"日付が無ければ #f を返す。"
+"カーソルの日付を N だけ変える.\n"
+"BY-DAY が #t なら日を, ほかはカーソルの所を変える.\n"
+"日付が無ければ #f を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-planning-line?"
 msgid "Return #t if LINE is a planning line (SCHEDULED: and so on)."
-msgstr "行 LINE が予定の行 (SCHEDULED: など) なら #t を返す。"
+msgstr "行 LINE が予定の行 (SCHEDULED: など) なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-planning-items"
 msgid "Return the planning items of LINE as ((KEYWORD TIMESTAMP) ...)."
-msgstr "予定の行 LINE の, ((言葉 日付) ...) を返す。"
+msgstr "予定の行 LINE の, ((言葉 日付) ...) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-get-planning"
 msgid "Return the timestamp of KEYWORD in the planning of the heading at line N, or #f."
-msgstr "N 行目の見出しの予定の, 言葉 KEYWORD の日付を返す。無ければ #f。"
+msgstr "N 行目の見出しの予定の, 言葉 KEYWORD の日付を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-set-planning"
@@ -2481,23 +2510,23 @@ msgid ""
 "Set the timestamp of KEYWORD in the planning of the heading at line N to STAMP.\n"
 "If STAMP is #f, remove it. A new one is written at the start of the line."
 msgstr ""
-"N 行目の見出しの予定の, 言葉 KEYWORD の日付を STAMP にする。\n"
-"STAMP が #f なら消す。新しいものは, 行の始めに書く。"
+"N 行目の見出しの予定の, 言葉 KEYWORD の日付を STAMP にする.\n"
+"STAMP が #f なら消す.新しいものは, 行の始めに書く."
 
 #: lisp/org.scm
 msgctxt "function:org-planning-command"
 msgid "Read a date and write it as KEYWORD (C-c C-s and C-c C-d)."
-msgstr "日付を聞いて, KEYWORD の予定として書く (C-c C-s と C-c C-d)。"
+msgstr "日付を聞いて, KEYWORD の予定として書く (C-c C-s と C-c C-d)."
 
 #: lisp/org.scm
 msgctxt "function:org-schedule"
 msgid "Write the SCHEDULED date of the current heading."
-msgstr "C-c C-s: 見出しの予定 (SCHEDULED) を書く。"
+msgstr "C-c C-s: 見出しの予定 (SCHEDULED) を書く."
 
 #: lisp/org.scm
 msgctxt "function:org-deadline"
 msgid "Write the DEADLINE date of the current heading."
-msgstr "C-c C-d: 見出しの締め切り (DEADLINE) を書く。"
+msgstr "C-c C-d: 見出しの締め切り (DEADLINE) を書く."
 
 #: lisp/org.scm
 msgctxt "function:org-next-todo"
@@ -2506,14 +2535,14 @@ msgid ""
 "FORWARD selects the next one. If ALL is true, cycle through all the states;\n"
 "otherwise cycle within the set of OLD (C-c C-t)."
 msgstr ""
-"OLD の次か前の状態を返す。\n"
-"FORWARD が #t なら次。ALL が #t なら, 全ての状態を回す (S-左右)。\n"
-"ほかは, 同じ組の中で回す (C-c C-t)。"
+"OLD の次か前の状態を返す.\n"
+"FORWARD が #t なら次.ALL が #t なら, 全ての状態を回す (S-左右).\n"
+"ほかは, 同じ組の中で回す (C-c C-t)."
 
 #: lisp/org.scm
 msgctxt "function:org-fast-todo-selection"
 msgid "Select a state by its key (SPC removes the state)."
-msgstr "状態をキーで選ぶ (SPC で消す)。"
+msgstr "状態をキーで選ぶ (SPC で消す)."
 
 #: lisp/org.scm
 msgctxt "function:org-set-todo"
@@ -2521,13 +2550,13 @@ msgid ""
 "Set the state of the heading at line H to NEW, or remove it if NEW is #f.\n"
 "Marking it done writes CLOSED, and moves a repeating date forward."
 msgstr ""
-"H 行目の見出しの状態を NEW にする。NEW が #f なら消す。\n"
-"済みにすれば CLOSED を書き, 繰り返しなら日付を進める。"
+"H 行目の見出しの状態を NEW にする.NEW が #f なら消す.\n"
+"済みにすれば CLOSED を書き, 繰り返しなら日付を進める."
 
 #: lisp/org.scm
 msgctxt "function:org-repeating-stamps"
 msgid "Return the repeating timestamps of the heading at line H as ((KEYWORD TIMESTAMP) ...)."
-msgstr "H 行目の見出しの, 繰り返す予定を ((言葉 日付) ...) で返す。"
+msgstr "H 行目の見出しの, 繰り返す予定を ((言葉 日付) ...) で返す."
 
 #: lisp/org.scm
 msgctxt "function:org-auto-repeat"
@@ -2535,8 +2564,8 @@ msgid ""
 "Move the repeating timestamps REPEATS forward, and reset the state of line H.\n"
 "DONE-WORD is the done state. LAST_REPEAT and a log of the state change are written."
 msgstr ""
-"繰り返しの予定 REPEATS を進め, H 行目を始めの状態に戻す。\n"
-"DONE-WORD は済みの状態。LAST_REPEAT と, 状態の変わった記録を書く。"
+"繰り返しの予定 REPEATS を進め, H 行目を始めの状態に戻す.\n"
+"DONE-WORD は済みの状態.LAST_REPEAT と, 状態の変わった記録を書く."
 
 #: lisp/org.scm
 msgctxt "function:org-log-beginning"
@@ -2544,18 +2573,18 @@ msgid ""
 "Return the line to write a log of the heading at line H.\n"
 "It is after the heading, the planning line and PROPERTIES."
 msgstr ""
-"H 行目の見出しの, 記録を書く行を返す。\n"
-"見出しと, 予定の行と, PROPERTIES の後。"
+"H 行目の見出しの, 記録を書く行を返す.\n"
+"見出しと, 予定の行と, PROPERTIES の後."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-put"
 msgid "Set the property NAME of the heading at line H to VALUE, creating PROPERTIES if needed."
-msgstr "H 行目の見出しの PROPERTIES に, NAME の値 VALUE を書く (無ければ, 作る)。"
+msgstr "H 行目の見出しの PROPERTIES に, NAME の値 VALUE を書く (無ければ, 作る)."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-get"
 msgid "Return the property NAME of the heading at line H, or #f if there is none."
-msgstr "H 行目の見出しの PROPERTIES の, NAME の値を返す。無ければ #f。"
+msgstr "H 行目の見出しの PROPERTIES の, NAME の値を返す.無ければ #f."
 
 #: lisp/org.scm
 msgctxt "function:org-todo"
@@ -2563,18 +2592,18 @@ msgid ""
 "Change the TODO state of the current heading.\n"
 "If some states have keys, select one by its key."
 msgstr ""
-"C-c C-t: 状態を変える。\n"
-"キーの付いた状態があれば, キーで選ぶ。"
+"C-c C-t: 状態を変える.\n"
+"キーの付いた状態があれば, キーで選ぶ."
 
 #: lisp/org.scm
 msgctxt "function:org-priority-chars"
 msgid "Return the priority characters, highest first."
-msgstr "優先度の文字を, 高い順に返す。"
+msgstr "優先度の文字を, 高い順に返す."
 
 #: lisp/org.scm
 msgctxt "function:org-set-priority"
 msgid "Set the priority of the current heading to NEW, or remove it if NEW is #f."
-msgstr "見出しの優先度を NEW にする。NEW が #f なら消す。"
+msgstr "見出しの優先度を NEW にする.NEW が #f なら消す."
 
 #: lisp/org.scm
 msgctxt "function:org-priority-shift"
@@ -2582,63 +2611,63 @@ msgid ""
 "Raise the priority if UP is true, or lower it (S-up, S-down).\n"
 "Going out of range removes it."
 msgstr ""
-"UP が #t なら優先度を上げ, ほかは下げる (S-上下)。\n"
-"範囲を越えれば消す。"
+"UP が #t なら優先度を上げ, ほかは下げる (S-上下).\n"
+"範囲を越えれば消す."
 
 #: lisp/org.scm
 msgctxt "function:org-priority-up"
 msgid "Raise the priority of the current heading."
-msgstr "見出しの優先度を上げる (S-上)。"
+msgstr "見出しの優先度を上げる (S-上)."
 
 #: lisp/org.scm
 msgctxt "function:org-priority-down"
 msgid "Lower the priority of the current heading."
-msgstr "見出しの優先度を下げる (S-下)。"
+msgstr "見出しの優先度を下げる (S-下)."
 
 #: lisp/org.scm
 msgctxt "function:org-priority"
 msgid "Select the priority of the current heading (SPC removes it)."
-msgstr "C-c ,: 優先度を選ぶ (SPC で消す)。"
+msgstr "C-c ,: 優先度を選ぶ (SPC で消す)."
 
 #: lisp/org.scm
 msgctxt "function:org-buffer-tags"
 msgid "Return all the tags in LINES."
-msgstr "バッファ (LINES) の全てのタグを返す。"
+msgstr "バッファ (LINES) の全てのタグを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-set-tags"
 msgid "Set the tags of the heading at line H to TAGS."
-msgstr "H 行目の見出しのタグを TAGS にする。"
+msgstr "H 行目の見出しのタグを TAGS にする."
 
 #: lisp/org.scm
 msgctxt "function:org-set-tags-command"
 msgid "Read the tags of the current heading, separated by : or spaces."
-msgstr "C-c C-q: タグを入れる (: か空白で分ける)。"
+msgstr "C-c C-q: タグを入れる (: か空白で分ける)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-line?"
 msgid "Return #t if LINE is a table line."
-msgstr "行 LINE が表の行なら #t を返す。"
+msgstr "行 LINE が表の行なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-hline?"
 msgid "Return #t if LINE is a table rule."
-msgstr "行 LINE が横線の行なら #t を返す。"
+msgstr "行 LINE が横線の行なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-bounds"
 msgid "Return the first and last lines of the table containing line N, as (START END)."
-msgstr "N 行目を含む表の, 始めと終わりの行を (始め 終わり) で返す。"
+msgstr "N 行目を含む表の, 始めと終わりの行を (始め 終わり) で返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-cells"
 msgid "Return the fields of the table LINE, or 'hline for a rule."
-msgstr "表の行 LINE の欄を返す。横線なら 'hline。"
+msgstr "表の行 LINE の欄を返す.横線なら 'hline."
 
 #: lisp/org.scm
 msgctxt "function:org-table-number?"
 msgid "Return #t if the field S is a number."
-msgstr "欄 S が数なら #t を返す。"
+msgstr "欄 S が数なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-render"
@@ -2646,15 +2675,15 @@ msgid ""
 "Return the aligned lines of the table ROWS, indented by INDENT.\n"
 "ROWS is a list of field lists or 'hline."
 msgstr ""
-"表の行 ROWS を揃えた行のリストを返す (字下げは INDENT)。\n"
-"ROWS は, 欄のリストか 'hline のリスト。"
+"表の行 ROWS を揃えた行のリストを返す (字下げは INDENT).\n"
+"ROWS は, 欄のリストか 'hline のリスト."
 
 #: lisp/org.scm
 msgctxt "function:org-table-context"
 msgid ""
 "Return the table at point as (START END INDENT ROW COLUMN OFFSET).\n"
 "OFFSET is the column within the field."
-msgstr "カーソルの表を (始め 終わり 字下げ 行 欄の番号 欄の中の桁) で返す。"
+msgstr "カーソルの表を (始め 終わり 字下げ 行 欄の番号 欄の中の桁) で返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-align-and-go"
@@ -2662,8 +2691,8 @@ msgid ""
 "Align the table and move to row ROW, field COLUMN, OFFSET from the start of its text.\n"
 "ROWS-CHANGE changes the rows before aligning."
 msgstr ""
-"表を揃え, 行 ROW, 欄 COLUMN (の, 文字の始めから OFFSET) へ動く。\n"
-"ROWS-CHANGE で, 行を変えてから揃える。"
+"表を揃え, 行 ROW, 欄 COLUMN (の, 文字の始めから OFFSET) へ動く.\n"
+"ROWS-CHANGE で, 行を変えてから揃える."
 
 #: lisp/org.scm
 msgctxt "function:org-table-cell-column"
@@ -2671,33 +2700,33 @@ msgid ""
 "Return the column OFFSET from the start of the text of field COLUMN in the aligned LINE.\n"
 "For an empty field, it is after the space after |."
 msgstr ""
-"揃えた行 LINE の, 欄 COLUMN の文字の始めから OFFSET の桁を返す。\n"
-"空の欄なら, | の後の空白の後。"
+"揃えた行 LINE の, 欄 COLUMN の文字の始めから OFFSET の桁を返す.\n"
+"空の欄なら, | の後の空白の後."
 
 #: lisp/org.scm
 msgctxt "function:org-table-columns"
 msgid "Return the number of fields of ROWS."
-msgstr "ROWS の欄の数を返す。"
+msgstr "ROWS の欄の数を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-align"
 msgid "Align the table at point."
-msgstr "表を揃える (C-c C-c)。"
+msgstr "表を揃える (C-c C-c)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-empty-row"
 msgid "Return an empty row for ROWS."
-msgstr "ROWS の空の行を返す。"
+msgstr "ROWS の空の行を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-next-field"
 msgid "Move to the next field; in the last field, add a row."
-msgstr "次の欄へ動く (TAB)。最後の欄なら, 行を足す。"
+msgstr "次の欄へ動く (TAB).最後の欄なら, 行を足す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-previous-field"
 msgid "Move to the previous field."
-msgstr "前の欄へ動く (S-TAB)。"
+msgstr "前の欄へ動く (S-TAB)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-next-row"
@@ -2705,28 +2734,28 @@ msgid ""
 "Move to the same field in the next row.\n"
 "If there is no next row or it is a rule, add a row."
 msgstr ""
-"次の行の, 同じ欄へ動く (RET)。\n"
-"次が無いか横線なら, 行を足す。"
+"次の行の, 同じ欄へ動く (RET).\n"
+"次が無いか横線なら, 行を足す."
 
 #: lisp/org.scm
 msgctxt "function:org-table-insert-hline"
 msgid "Insert a rule below the current row."
-msgstr "今の行の下に横線を入れる (C-c -)。"
+msgstr "今の行の下に横線を入れる (C-c -)."
 
 #: lisp/org.scm
 msgctxt "function:org-swap"
 msgid "Swap elements I and J of ITEMS."
-msgstr "リスト ITEMS の I 番目と J 番目を入れ換える。"
+msgstr "リスト ITEMS の I 番目と J 番目を入れ換える."
 
 #: lisp/org.scm
 msgctxt "function:org-table-map-cells"
 msgid "Apply F to the fields of each row of ROWS, keeping rules."
-msgstr "ROWS の各行の欄を F で変える (横線はそのまま)。"
+msgstr "ROWS の各行の欄を F で変える (横線はそのまま)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-pad"
 msgid "Pad each row of ROWS to the number of fields."
-msgstr "ROWS の各行を, 欄の数に揃える。"
+msgstr "ROWS の各行を, 欄の数に揃える."
 
 #: lisp/org.scm
 msgctxt "function:org-table-move-column"
@@ -2734,8 +2763,8 @@ msgid ""
 "Move the current column left or right (M-left, M-right).\n"
 "FORWARD moves it right."
 msgstr ""
-"列を動かす (M-左右)。\n"
-"FORWARD が #t なら右へ。"
+"列を動かす (M-左右).\n"
+"FORWARD が #t なら右へ."
 
 #: lisp/org.scm
 msgctxt "function:org-table-move-row"
@@ -2743,33 +2772,33 @@ msgid ""
 "Move the current row up or down (M-up, M-down).\n"
 "FORWARD moves it down."
 msgstr ""
-"行を動かす (M-上下)。\n"
-"FORWARD が #t なら下へ。"
+"行を動かす (M-上下).\n"
+"FORWARD が #t なら下へ."
 
 #: lisp/org.scm
 msgctxt "function:org-table-delete-column"
 msgid "Delete the current column (M-S-left)."
-msgstr "列を消す (M-S-左)。"
+msgstr "列を消す (M-S-左)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-insert-column"
 msgid "Insert a column on the left (M-S-right)."
-msgstr "列を左に足す (M-S-右)。"
+msgstr "列を左に足す (M-S-右)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-kill-row"
 msgid "Delete the current row (M-S-up)."
-msgstr "行を消す (M-S-上)。"
+msgstr "行を消す (M-S-上)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-insert-row"
 msgid "Insert a row above (M-S-down)."
-msgstr "行を上に足す (M-S-下)。"
+msgstr "行を上に足す (M-S-下)."
 
 #: lisp/org.scm
 msgctxt "function:org-table-create-or-convert-from-region"
 msgid "Create a table."
-msgstr "C-c |: 表を作る。"
+msgstr "C-c |: 表を作る."
 
 #: lisp/org.scm
 msgctxt "function:org-sort"
@@ -2778,120 +2807,120 @@ msgid ""
 "Sort by a (title), n (number), o (TODO order), p (priority) or t (date);\n"
 "uppercase letters sort in reverse."
 msgstr ""
-"C-c ^: 見出しの子を並べ替える。\n"
-"a: 題, n: 数, o: TODO の順, p: 優先度, t: 日付。大文字は逆。"
+"C-c ^: 見出しの子を並べ替える.\n"
+"a: 題, n: 数, o: TODO の順, p: 優先度, t: 日付.大文字は逆."
 
 #: lisp/org.scm
 msgctxt "function:org-modifier-cursor-error"
 msgid "Signal an error for a key pressed outside tables, headings and items."
-msgstr "表, 見出し, 項目のほかの所で押したときの, 失敗にする。"
+msgstr "表, 見出し, 項目のほかの所で押したときの, 失敗にする."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftselect-error"
 msgid "Signal an error for a shift key pressed where Org mode does not use it."
-msgstr "Org mode の使わない所で, S- のキーを押したときの, 失敗にする。"
+msgstr "Org mode の使わない所で, S- のキーを押したときの, 失敗にする."
 
 #: lisp/org.scm
 msgctxt "function:org-context"
 msgid "Return the kind of the line of point: table, heading, item or text."
-msgstr "カーソルの行の種類 (table heading item text) を返す。"
+msgstr "カーソルの行の種類 (table heading item text) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-metaleft"
 msgid "Move the column left, promote the heading, outdent the item, or move back a word."
-msgstr "M-左: 表なら列を左へ, 見出しなら浅く, 項目なら字下げを浅く, ほかは前の単語へ。"
+msgstr "M-左: 表なら列を左へ, 見出しなら浅く, 項目なら字下げを浅く, ほかは前の単語へ."
 
 #: lisp/org.scm
 msgctxt "function:org-metaright"
 msgid "Move the column right, demote the heading, indent the item, or move forward a word."
-msgstr "M-右: 表なら列を右へ, 見出しなら深く, 項目なら字下げを深く, ほかは次の単語へ。"
+msgstr "M-右: 表なら列を右へ, 見出しなら深く, 項目なら字下げを深く, ほかは次の単語へ."
 
 #: lisp/org.scm
 msgctxt "function:org-metaup"
 msgid "Move the table row, subtree, item or line up."
-msgstr "M-上: 表の行, 木, 項目, 行を上へ動かす。"
+msgstr "M-上: 表の行, 木, 項目, 行を上へ動かす."
 
 #: lisp/org.scm
 msgctxt "function:org-metadown"
 msgid "Move the table row, subtree, item or line down."
-msgstr "M-下: 表の行, 木, 項目, 行を下へ動かす。"
+msgstr "M-下: 表の行, 木, 項目, 行を下へ動かす."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftmetaleft"
 msgid "Delete the table column, promote the subtree, or outdent the item with its children."
-msgstr "M-S-左: 表なら列を消す, 見出しなら木を浅く, 項目なら子と一緒に字下げを浅く。"
+msgstr "M-S-左: 表なら列を消す, 見出しなら木を浅く, 項目なら子と一緒に字下げを浅く."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftmetaright"
 msgid "Insert a table column, demote the subtree, or indent the item with its children."
-msgstr "M-S-右: 表なら列を足す, 見出しなら木を深く, 項目なら子と一緒に字下げを深く。"
+msgstr "M-S-右: 表なら列を足す, 見出しなら木を深く, 項目なら子と一緒に字下げを深く."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftmetaup"
 msgid "Delete the table row, or move the subtree, item or line up."
-msgstr "M-S-上: 表なら行を消す, ほかは木, 項目, 行を上へ動かす。"
+msgstr "M-S-上: 表なら行を消す, ほかは木, 項目, 行を上へ動かす."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftmetadown"
 msgid "Insert a table row, or move the subtree, item or line down."
-msgstr "M-S-下: 表なら行を足す, ほかは木, 項目, 行を下へ動かす。"
+msgstr "M-S-下: 表なら行を足す, ほかは木, 項目, 行を下へ動かす."
 
 #: lisp/org.scm
 msgctxt "function:org-at-item-bullet-p"
 msgid "Return #t if point is on the bullet of a list item."
-msgstr "カーソルがリストの印の上なら #t を返す。"
+msgstr "カーソルがリストの印の上なら #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftup"
 msgid "Change the timestamp, raise the priority, or move to the previous item."
-msgstr "S-上: 日付を変える, 見出しなら優先度を上げる, 項目なら前の項目へ。"
+msgstr "S-上: 日付を変える, 見出しなら優先度を上げる, 項目なら前の項目へ."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftdown"
 msgid "Change the timestamp, lower the priority, or move to the next item."
-msgstr "S-下: 日付を変える, 見出しなら優先度を下げる, 項目なら次の項目へ。"
+msgstr "S-下: 日付を変える, 見出しなら優先度を下げる, 項目なら次の項目へ."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftright"
 msgid "Change the timestamp by a day, the TODO state, or the list bullet."
-msgstr "S-右: 日付の日を進める, 見出しなら次の状態, リストの印の上なら次の印。"
+msgstr "S-右: 日付の日を進める, 見出しなら次の状態, リストの印の上なら次の印."
 
 #: lisp/org.scm
 msgctxt "function:org-shiftleft"
 msgid "Change the timestamp back by a day, the TODO state, or the list bullet."
-msgstr "S-左: 日付の日を戻す, 見出しなら前の状態, リストの印の上なら前の印。"
+msgstr "S-左: 日付の日を戻す, 見出しなら前の状態, リストの印の上なら前の印."
 
 #: lisp/org.scm
 msgctxt "function:org-ctrl-c-ctrl-c"
 msgid "Align the table, toggle the checkbox, set the heading tags, or reread the #+ lines."
-msgstr "C-c C-c: 表を揃える, チェックボックス, 見出しのタグ, #+ の行を読み直す。"
+msgstr "C-c C-c: 表を揃える, チェックボックス, 見出しのタグ, #+ の行を読み直す."
 
 #: lisp/org.scm
 msgctxt "function:org-return"
 msgid ""
 "Move to the next table row, open the link at point, or insert a newline.\n"
 "Links are opened if `org-return-follows-link' is true."
-msgstr "RET: 表なら次の行, リンクの上なら開く (org-return-follows-link), ほかは改行。"
+msgstr "RET: 表なら次の行, リンクの上なら開く (org-return-follows-link), ほかは改行."
 
 #: lisp/org.scm
 msgctxt "variable:org-stored-links"
 msgid "Stored links, a list of (LINK DESCRIPTION), newest first."
-msgstr "覚えたリンク。(リンク 説明) のリスト。新しい順。"
+msgstr "覚えたリンク.(リンク 説明) のリスト.新しい順."
 
 #: lisp/org.scm
 msgctxt "function:org-abbreviate-file-name"
 msgid "Replace the home directory in FILE with ~."
-msgstr "FILE のホームを ~ にする。"
+msgstr "FILE のホームを ~ にする."
 
 #: lisp/org.scm
 msgctxt "function:org-file-directory"
 msgid "Return the directory of FILE, up to the last /."
-msgstr "FILE のディレクトリ (最後の / まで) を返す。"
+msgstr "FILE のディレクトリ (最後の / まで) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-file-base"
 msgid "Return the name of FILE without the directory and extension."
-msgstr "FILE の名前 (ディレクトリと拡張子を除く) を返す。"
+msgstr "FILE の名前 (ディレクトリと拡張子を除く) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-link-at-point"
@@ -2899,33 +2928,33 @@ msgid ""
 "Return the link at point as (LINK DESCRIPTION START END), or #f if there is none.\n"
 "START and END are columns."
 msgstr ""
-"カーソルの所のリンクを (リンク 説明 始め 終わり) で返す。無ければ #f。\n"
-"始めと終わりは桁。"
+"カーソルの所のリンクを (リンク 説明 始め 終わり) で返す.無ければ #f.\n"
+"始めと終わりは桁."
 
 #: lisp/org.scm
 msgctxt "function:org-make-link-string"
 msgid "Return the link LINK with DESCRIPTION, like [[LINK][DESCRIPTION]]."
-msgstr "リンクの文字 ([[LINK][DESCRIPTION]]) を返す。"
+msgstr "リンクの文字 ([[LINK][DESCRIPTION]]) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-store-link"
 msgid "Store a link to the current location."
-msgstr "C-c l: 今の所へのリンクを覚える。"
+msgstr "C-c l: 今の所へのリンクを覚える."
 
 #: lisp/org.scm
 msgctxt "function:org-strip-cookies"
 msgid "Remove the statistics cookies ([2/3] [66%]) from TITLE."
-msgstr "題 TITLE から, 数える印 ([2/3] [66%]) を除く。"
+msgstr "題 TITLE から, 数える印 ([2/3] [66%]) を除く."
 
 #: lisp/org.scm
 msgctxt "function:org-insert-link"
 msgid "Insert a link, or change the link at point."
-msgstr "C-c C-l: リンクを入れる (リンクの上なら, 変える)。"
+msgstr "C-c C-l: リンクを入れる (リンクの上なら, 変える)."
 
 #: lisp/org.scm
 msgctxt "function:org-open-at-point"
 msgid "Open the link at point."
-msgstr "C-c C-o: カーソルの所のリンクを開く。"
+msgstr "C-c C-o: カーソルの所のリンクを開く."
 
 #: lisp/org.scm
 msgctxt "function:org-link-open"
@@ -2934,9 +2963,9 @@ msgid ""
 "http and so on use `browse-url', file: opens in the editor,\n"
 "and others are searched in the buffer."
 msgstr ""
-"リンク LINK を開く。\n"
+"リンク LINK を開く.\n"
 "http などは browse-url, file: はエディタで開き,\n"
-"ほかはバッファの中を探す。"
+"ほかはバッファの中を探す."
 
 #: lisp/org.scm
 msgctxt "function:org-link-search"
@@ -2944,33 +2973,33 @@ msgid ""
 "Search the buffer for TARGET.\n"
 "TARGET is *HEADING, #ID, a line number, /REGEXP/, <<TARGET>>, a title or words."
 msgstr ""
-"バッファの中で TARGET を探す。\n"
-"TARGET は *見出し, #id, 行の数, /正規表現/, <<目当て>>, 題, 言葉。"
+"バッファの中で TARGET を探す.\n"
+"TARGET は *見出し, #id, 行の数, /正規表現/, <<目当て>>, 題, 言葉."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-buffer-name"
 msgid "Name of the agenda buffer."
-msgstr "アジェンダのバッファの名前。"
+msgstr "アジェンダのバッファの名前."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-markers"
 msgid "Entries of the agenda lines, a list of (LINE FILE HEADING-LINE)."
-msgstr "アジェンダの行の項目。(行 ファイル 見出しの行) のリスト。"
+msgstr "アジェンダの行の項目.(行 ファイル 見出しの行) のリスト."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-redo-command"
 msgid "Procedure to rebuild the agenda (called by r and g)."
-msgstr "アジェンダを作り直す手続き (r と g で呼ぶ)。"
+msgstr "アジェンダを作り直す手続き (r と g で呼ぶ)."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-start-day"
 msgid "First day of the weekly agenda."
-msgstr "週のアジェンダの始めの日。"
+msgstr "週のアジェンダの始めの日."
 
 #: lisp/org.scm
 msgctxt "variable:org-agenda-previous-buffer"
 msgid "Buffer shown before the agenda."
-msgstr "アジェンダを出す前のバッファ。"
+msgstr "アジェンダを出す前のバッファ."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-file-list"
@@ -2978,13 +3007,13 @@ msgid ""
 "Return the agenda files.\n"
 "A directory in `org-agenda-files' means the .org files in it."
 msgstr ""
-"アジェンダのファイルを返す。\n"
-"ディレクトリは, その中の .org のファイル。"
+"アジェンダのファイルを返す.\n"
+"ディレクトリは, その中の .org のファイル."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-file-text"
 msgid "Return the contents of FILE, or of its buffer if the buffer is modified."
-msgstr "FILE の中身を返す。書き換えたバッファがあれば, そのバッファの中身。"
+msgstr "FILE の中身を返す.書き換えたバッファがあれば, そのバッファの中身."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-entries"
@@ -2993,52 +3022,52 @@ msgid ""
 "(FILE LINE TODO PRIORITY TITLE TAGS CATEGORY SCHEDULED DEADLINE (DATES...) BODY)."
 msgstr ""
 "FILE の見出しを,\n"
-"(ファイル 行 状態 優先度 題 タグ 分類 予定 締め切り (日付...) 本文) のリストで返す。"
+"(ファイル 行 状態 優先度 題 タグ 分類 予定 締め切り (日付...) 本文) のリストで返す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-all-entries"
 msgid "Return the headings of all the agenda files."
-msgstr "全てのアジェンダのファイルの見出しを返す。"
+msgstr "全てのアジェンダのファイルの見出しを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-file"
 msgid "Return the file of the agenda entry E."
-msgstr "アジェンダの項目 E のファイルを返す。"
+msgstr "アジェンダの項目 E のファイルを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-line"
 msgid "Return the line of the agenda entry E."
-msgstr "アジェンダの項目 E の行を返す。"
+msgstr "アジェンダの項目 E の行を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-todo"
 msgid "Return the TODO state of the agenda entry E."
-msgstr "アジェンダの項目 E の状態を返す。"
+msgstr "アジェンダの項目 E の状態を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-priority"
 msgid "Return the priority of the agenda entry E."
-msgstr "アジェンダの項目 E の優先度を返す。"
+msgstr "アジェンダの項目 E の優先度を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-title"
 msgid "Return the title of the agenda entry E."
-msgstr "アジェンダの項目 E の題を返す。"
+msgstr "アジェンダの項目 E の題を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-tags"
 msgid "Return the tags of the agenda entry E."
-msgstr "アジェンダの項目 E のタグを返す。"
+msgstr "アジェンダの項目 E のタグを返す."
 
 #: lisp/org.scm
 msgctxt "function:org-entry-category"
 msgid "Return the category of the agenda entry E."
-msgstr "アジェンダの項目 E の分類を返す。"
+msgstr "アジェンダの項目 E の分類を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-timestamp-on?"
 msgid "Return #t if the timestamp PARSED falls on DAY, including repeats."
-msgstr "日付 PARSED が, 繰り返しも含めて, 日 DAY に当たれば #t を返す。"
+msgstr "日付 PARSED が, 繰り返しも含めて, 日 DAY に当たれば #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-line"
@@ -3046,8 +3075,8 @@ msgid ""
 "Return an agenda line of the entry E with TIME and EXTRA.\n"
 "It shows the category, time, planning mark, state, title and tags."
 msgstr ""
-"項目 E の, TIME と EXTRA を付けたアジェンダの 1 行を返す。\n"
-"分類, 時刻, 予定の印, 状態, 題, タグを出す。"
+"項目 E の, TIME と EXTRA を付けたアジェンダの 1 行を返す.\n"
+"分類, 時刻, 予定の印, 状態, 題, タグを出す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-time"
@@ -3055,8 +3084,8 @@ msgid ""
 "Return the time of PARSED as shown in the agenda, like 10:00...... or 10:00-11:00.\n"
 "A one-digit hour is padded with a space."
 msgstr ""
-"PARSED の時刻の見せ方を返す (10:00...... か 10:00-11:00)。\n"
-"時が 1 桁なら, 前に空白。"
+"PARSED の時刻の見せ方を返す (10:00...... か 10:00-11:00).\n"
+"時が 1 桁なら, 前に空白."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-day-items"
@@ -3064,8 +3093,8 @@ msgid ""
 "Return the agenda lines of DAY from ENTRIES, as a list of (TIME LINE ENTRY PRIORITY).\n"
 "TODAY is today's date."
 msgstr ""
-"ENTRIES から, 日 DAY の行を (時刻 行 項目 優先度) のリストで返す。\n"
-"TODAY は今日の日付。"
+"ENTRIES から, 日 DAY の行を (時刻 行 項目 優先度) のリストで返す.\n"
+"TODAY は今日の日付."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-priority"
@@ -3073,8 +3102,8 @@ msgid ""
 "Return the priority of the entry E as a number, like `org-get-priority' in Emacs.\n"
 "The lowest priority is 0, and each step up adds 1000."
 msgstr ""
-"項目 E の優先度の数を返す (Emacs の org-get-priority)。\n"
-"一番低いものが 0 で, 1 つ上がるごとに 1000。"
+"項目 E の優先度の数を返す (Emacs の org-get-priority).\n"
+"一番低いものが 0 で, 1 つ上がるごとに 1000."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-sort"
@@ -3084,8 +3113,8 @@ msgid ""
 "This is the default of `org-agenda-sorting-strategy' in Emacs\n"
 "(time-up priority-down category-keep)."
 msgstr ""
-"時刻のある行を先に, 時刻の順に並べる。同じ時刻と, 時刻の無い行は, 優先度の高い順。\n"
-"Emacs の org-agenda-sorting-strategy の既定 (time-up priority-down category-keep)。"
+"時刻のある行を先に, 時刻の順に並べる.同じ時刻と, 時刻の無い行は, 優先度の高い順.\n"
+"Emacs の org-agenda-sorting-strategy の既定 (time-up priority-down category-keep)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-show"
@@ -3093,38 +3122,38 @@ msgid ""
 "Show ROWS in the agenda buffer, and remember REDO to rebuild it.\n"
 "ROWS is a list of (LINE ENTRY); ENTRY is #f for a heading line."
 msgstr ""
-"ROWS をアジェンダのバッファに出し, 作り直す手続き REDO を覚える。\n"
-"ROWS は (行 項目) のリスト。項目が #f なら, 見出しの行。"
+"ROWS をアジェンダのバッファに出し, 作り直す手続き REDO を覚える.\n"
+"ROWS は (行 項目) のリスト.項目が #f なら, 見出しの行."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-mode"
 msgid "Set the keys and highlighting of the agenda buffer."
-msgstr "アジェンダのキーと色を付ける。"
+msgstr "アジェンダのキーと色を付ける."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-date-line"
 msgid "Return the line of DAY, like \"Monday     26 October 2026 W44\"."
-msgstr "日 DAY の行を返す (Monday     26 October 2026 W44)。"
+msgstr "日 DAY の行を返す (Monday     26 October 2026 W44)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-list-from"
 msgid "Show the weekly agenda for `org-agenda-span' days from START."
-msgstr "START の日から, org-agenda-span 日の, 週のアジェンダを出す。"
+msgstr "START の日から, org-agenda-span 日の, 週のアジェンダを出す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-week-start"
 msgid "Return the first day of the week of DAY, on `org-agenda-start-on-weekday'."
-msgstr "DAY の週の始めの日 (org-agenda-start-on-weekday の曜日) を返す。"
+msgstr "DAY の週の始めの日 (org-agenda-start-on-weekday の曜日) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-list"
 msgid "Show the weekly agenda."
-msgstr "週のアジェンダを出す (a)。"
+msgstr "週のアジェンダを出す (a)."
 
 #: lisp/org.scm
 msgctxt "function:org-todo-list"
 msgid "Show the list of TODO entries."
-msgstr "TODO の一覧を出す (t)。"
+msgstr "TODO の一覧を出す (t)."
 
 #: lisp/org.scm
 msgctxt "function:org-tags-view"
@@ -3132,23 +3161,23 @@ msgid ""
 "Show the entries matching tags.\n"
 "a+b means both, a|b either, and -a without a."
 msgstr ""
-"タグの一覧を出す (m)。\n"
-"a+b は両方, a|b はどちらか, -a は無いもの。"
+"タグの一覧を出す (m).\n"
+"a+b は両方, a|b はどちらか, -a は無いもの."
 
 #: lisp/org.scm
 msgctxt "function:org-tags-match?"
 msgid "Return #t if TAGS match MATCH."
-msgstr "タグ TAGS が MATCH に合えば #t を返す。"
+msgstr "タグ TAGS が MATCH に合えば #t を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-search-view"
 msgid "Show the headings containing all the words, ignoring case."
-msgstr "言葉の一覧を出す (s)。全ての言葉を含む見出し。大文字と小文字は区別しない。"
+msgstr "言葉の一覧を出す (s).全ての言葉を含む見出し.大文字と小文字は区別しない."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda"
 msgid "Select an agenda view."
-msgstr "C-c a: アジェンダを選ぶ。"
+msgstr "C-c a: アジェンダを選ぶ."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-marker"
@@ -3156,85 +3185,85 @@ msgid ""
 "Return the entry of the agenda line at point as (FILE LINE).\n"
 "Signal an error if there is none."
 msgstr ""
-"カーソルの行の項目を (ファイル 行) で返す。\n"
-"無ければ失敗にする。"
+"カーソルの行の項目を (ファイル 行) で返す.\n"
+"無ければ失敗にする."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-switch-to"
 msgid "Open the file of the entry at point."
-msgstr "RET: 項目のファイルを開く。"
+msgstr "RET: 項目のファイルを開く."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-show-and-scroll-up"
 msgid "Show the entry at point in another window."
-msgstr "SPC と TAB: 項目を, ほかの窓に出す。"
+msgstr "SPC と TAB: 項目を, ほかの窓に出す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-goto"
 msgid "Show the entry at point in another window."
-msgstr "項目を, ほかの窓に出す。"
+msgstr "項目を, ほかの窓に出す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-next-line"
 msgid "Move to the next line of the agenda."
-msgstr "アジェンダの次の行へ動く (n)。"
+msgstr "アジェンダの次の行へ動く (n)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-previous-line"
 msgid "Move to the previous line of the agenda."
-msgstr "アジェンダの前の行へ動く (p)。"
+msgstr "アジェンダの前の行へ動く (p)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-move"
 msgid "Move the weekly agenda by DAYS days (f and b)."
-msgstr "週のアジェンダを DAYS 日動かす (f と b)。"
+msgstr "週のアジェンダを DAYS 日動かす (f と b)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-later"
 msgid "Show the next week."
-msgstr "次の週を出す (f)。"
+msgstr "次の週を出す (f)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-earlier"
 msgid "Show the previous week."
-msgstr "前の週を出す (b)。"
+msgstr "前の週を出す (b)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-goto-today"
 msgid "Show the week of today."
-msgstr "今日の週を出す (.)。"
+msgstr "今日の週を出す (.)."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-redo"
 msgid "Rebuild the agenda."
-msgstr "r と g: アジェンダを作り直す。"
+msgstr "r と g: アジェンダを作り直す."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-todo"
 msgid "Change the TODO state of the entry at point."
-msgstr "t: 項目の状態を変える。"
+msgstr "t: 項目の状態を変える."
 
 #: lisp/org.scm
 msgctxt "function:org-agenda-quit"
 msgid "Kill the agenda buffer."
-msgstr "q: アジェンダを消す。"
+msgstr "q: アジェンダを消す."
 
 #: lisp/org.scm
 msgctxt "variable:org-capture-buffer-name"
 msgid "Name of the capture buffer."
-msgstr "キャプチャのバッファの名前。"
+msgstr "キャプチャのバッファの名前."
 
 #: lisp/org.scm
 msgctxt "variable:org-capture-current"
 msgid ""
 "Current capture, as (TEMPLATE BUFFER POSITION).\n"
 "BUFFER and POSITION are where the capture started."
-msgstr "書いているキャプチャ。(テンプレート 元のバッファ 元の位置)。"
+msgstr "書いているキャプチャ.(テンプレート 元のバッファ 元の位置)."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-templates-list"
 msgid "Return the capture templates, or the default ones if there are none."
-msgstr "キャプチャのテンプレートを返す。無ければ, 既定のもの。"
+msgstr "キャプチャのテンプレートを返す.無ければ, 既定のもの."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-expand-file"
@@ -3242,8 +3271,8 @@ msgid ""
 "Return the target file of FILE.\n"
 "\"\" means `org-default-notes-file'; a relative name is in `org-directory'."
 msgstr ""
-"行き先のファイル FILE を返す。\n"
-"\"\" は org-default-notes-file。相対なら org-directory から。"
+"行き先のファイル FILE を返す.\n"
+"\"\" は org-default-notes-file.相対なら org-directory から."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-fill-template"
@@ -3251,13 +3280,13 @@ msgid ""
 "Fill TEMPLATE, and return (TEXT POSITION).\n"
 "ANNOTATION is the link to the original location, and FILE is its file."
 msgstr ""
-"テンプレート TEMPLATE を埋め, (文 カーソルの位置) を返す。\n"
-"ANNOTATION は元の所へのリンク, FILE は元のファイル。"
+"テンプレート TEMPLATE を埋め, (文 カーソルの位置) を返す.\n"
+"ANNOTATION は元の所へのリンク, FILE は元のファイル."
 
 #: lisp/org.scm
 msgctxt "function:org-capture"
 msgid "Select a template and write in *Capture*."
-msgstr "C-c c: テンプレートを選び, *Capture* で書く。"
+msgstr "C-c c: テンプレートを選び, *Capture* で書く."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-place"
@@ -3265,33 +3294,33 @@ msgid ""
 "Insert the captured TEXT of TYPE into TARGET.\n"
 "This is called in the target buffer."
 msgstr ""
-"TYPE のキャプチャの文 TEXT を, 行き先 TARGET に入れる。\n"
-"行き先のバッファで呼ぶ。"
+"TYPE のキャプチャの文 TEXT を, 行き先 TARGET に入れる.\n"
+"行き先のバッファで呼ぶ."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-adjust-level"
 msgid "Change the levels of the headings in TEXT to LEVEL."
-msgstr "TEXT の見出しの深さを, LEVEL に合わせる。"
+msgstr "TEXT の見出しの深さを, LEVEL に合わせる."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-finalize"
 msgid "Finish the capture, add it to the target and save it."
-msgstr "C-c C-c: キャプチャを終え, 行き先に足して保存する。"
+msgstr "C-c C-c: キャプチャを終え, 行き先に足して保存する."
 
 #: lisp/org.scm
 msgctxt "function:org-capture-kill"
 msgid "Abort the capture."
-msgstr "C-c C-k: キャプチャを止める。"
+msgstr "C-c C-k: キャプチャを止める."
 
 #: lisp/org.scm
 msgctxt "function:org-buffer-list"
 msgid "Return the Org buffers (.org files)."
-msgstr "Org のバッファ (.org のファイル) を返す。"
+msgstr "Org のバッファ (.org のファイル) を返す."
 
 #: lisp/org.scm
 msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
-msgstr "Org のバッファに移る。"
+msgstr "Org のバッファに移る."
 
 #: lisp/subr.scm
 msgctxt "function:y-or-n-p"
@@ -3323,6 +3352,11 @@ msgid ""
 msgstr ""
 "FILENAME のディレクトリの部分 (最後の / まで) を返す.\n"
 "FILENAME に / が無ければ, #f を返す."
+
+#: lisp/subr.scm
+msgctxt "function:file-name-nondirectory"
+msgid "Return the file name of FILENAME without its directory part."
+msgstr "FILENAME から, ディレクトリの部分を除いたファイルの名前を返す."
 
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"

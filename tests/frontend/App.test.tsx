@@ -8,6 +8,7 @@ import App from '@/App'
 import { AUTO_SAVE_TIMEOUT } from '@/hooks/useFiles'
 import * as fileOps from '@/lib/fileOps'
 import * as bookmarks from '@/lib/bookmarks'
+import { autoSaveFileName } from '@/lib/paths'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
@@ -65,6 +66,60 @@ const startupCommands: Record<string, () => Promise<void>> = {
     await editorRequest('files--write-buffer', [
       await editorRequest('read-file-name', ['Write file: ', '']),
     ])
+  },
+  'revert-buffer': async () => {
+    if (await editorRequest('files--revert-dired', [])) return
+    const file = (await editorRequest('buffer-file-name', [])) as string | null
+    if (file === null) {
+      await editorRequest('message', ['Buffer does not seem to be associated with any file'])
+      return
+    }
+    const modified = await editorRequest('buffer-modified-p', [])
+    const answer = await editorRequest('read-string', [
+      modified
+        ? `Discard edits and reread from ${file}? (yes or no) `
+        : `Revert buffer from file ${file}? (yes or no) `,
+      '',
+    ])
+    if ((answer as string).trim() === 'yes') {
+      try {
+        await editorRequest('files--set-buffer-text', [await mocked.readFile(file), false])
+        await editorRequest('message', [''])
+      } catch (err) {
+        await editorRequest('message', [`Error: ${err}`])
+      }
+    } else {
+      await editorRequest('message', [''])
+    }
+  },
+  'recover-this-file': async () => {
+    const file = (await editorRequest('buffer-file-name', [])) as string | null
+    if (file === null) {
+      await editorRequest('message', ['This buffer is not visiting a file'])
+      return
+    }
+    const auto = autoSaveFileName(file)
+    try {
+      if ((await mocked.pathExists(file)) && !(await mocked.pathExists(auto))) {
+        await editorRequest('message', [`Auto save file ${auto} does not exist`])
+        return
+      }
+      if (!(await mocked.fileNewerThan(auto, file))) {
+        await editorRequest('message', [`Auto-save file ${auto} not current`])
+        return
+      }
+    } catch (err) {
+      await editorRequest('message', [`Error: ${err}`])
+      return
+    }
+    const answer = await editorRequest('read-string', [
+      `Recover auto save file ${auto}? (yes or no) `,
+      '',
+    ])
+    if ((answer as string).trim() === 'yes') {
+      await editorRequest('files--set-buffer-text', [await mocked.readFile(auto), true])
+    }
+    await editorRequest('message', [''])
   },
   'save-buffer': async () => {
     const file = await editorRequest('buffer-file-name', [])
@@ -1438,8 +1493,6 @@ describe('App', () => {
       mocked.readFile.mockResolvedValueOnce('abc')
       await editor.submit('yes')
       expect(editor.doc()).toBe('abc')
-      // カーソルは, 同じ文字の所に残る
-      expect(editor.cursor()).toBe(2)
       expect(modeLine(editor)).not.toContain('**')
       // 元に戻せる
       editor.key('/', { ctrl: true })

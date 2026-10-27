@@ -120,6 +120,14 @@ export interface LispHost {
    * 書けなければ, 失敗します.
    */
   writeBuffer: (path: string, name?: string) => Promise<void>
+  /** 今のバッファの本文を置き換えます (カーソルは同じ文字の所に残り, 元に戻せる). `modified` は置き換えた後の変更の有無. */
+  setBufferText: (text: string, modified: boolean) => void
+  /**
+   * 今のバッファが dired なら, ディレクトリの一覧を作り直します. 作り直したら, 終わります.
+   *
+   * @returns dired なら `true`.
+   */
+  revertDired: () => Promise<boolean>
   /** 背景の色を変えます. */
   setBackgroundColor: (color: string) => void
   /** 文字の色を変えます. */
@@ -350,6 +358,11 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       return host.readKey(String(args[0] ?? ''))
     case 'files--write-buffer':
       return host.writeBuffer(String(args[0]), optionalName(args.slice(1))).then(() => null)
+    case 'files--set-buffer-text':
+      host.setBufferText(String(args[0]), args[1] === true)
+      return null
+    case 'files--revert-dired':
+      return host.revertDired()
     case 'set-background-color':
       host.setBackgroundColor(String(args[0]))
       return null

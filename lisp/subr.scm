@@ -30,6 +30,11 @@ Return #f if FILENAME has no /."
           ((equal? (substring filename i (+ i 1)) "/") (substring filename 0 (+ i 1)))
           (else (loop (- i 1))))))
 
+(define (file-name-nondirectory filename)
+  "Return the file name of FILENAME without its directory part."
+  (let ((dir (file-name-directory filename)))
+    (if dir (substring filename (string-length dir)) filename)))
+
 (provide 'subr)
 
 ;;; subr.scm ends here

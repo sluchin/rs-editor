@@ -34,6 +34,7 @@ pub const NAMES: &[&str] = &[
     "delete-directory",
     "directory-files-recursively",
     "file-modification-time",
+    "file-newer-than-file-p",
     "current-time",
     "format-time-string",
     "date-to-time",
@@ -178,6 +179,17 @@ pub(crate) fn call(
                 Ok(time) => Value::Number(seconds(time)),
                 Err(_) => Value::Boolean(false),
             })
+        }),
+        "file-newer-than-file-p" => fixed::<2>(name, args).and_then(|[a, b]| {
+            // FILE1 が FILE2 より新しければ真 (FILE1 だけがあるときも真. FILE1 が無ければ偽)
+            let a = expand_args(machine, name, &[a])?;
+            let b = expand_args(machine, name, &[b])?;
+            let time =
+                |path: &std::path::Path| std::fs::metadata(path).and_then(|m| m.modified()).ok();
+            Ok(Value::Boolean(match (time(&a), time(&b)) {
+                (Some(a), Some(b)) => a > b,
+                (a, _) => a.is_some(),
+            }))
         }),
         "current-time" => fixed::<0>(name, args).map(|_| Value::Number(seconds(SystemTime::now()))),
         "format-time-string" => format_time_string(name, &args),

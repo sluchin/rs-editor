@@ -342,3 +342,170 @@ fn test_save_some_buffers() {
     ev.run_command("save-some-buffers", &editor).unwrap();
     assert_eq!(editor.message(), "");
 }
+
+#[test]
+fn test_file_name_nondirectory_and_auto_save_file_name() {
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    assert_eq!(
+        ev.eval("(list (file-name-nondirectory \"/a/b.txt\") (file-name-nondirectory \"/a/\") (file-name-nondirectory \"b.txt\"))")
+            .unwrap(),
+        "(\"b.txt\" \"\" \"b.txt\")"
+    );
+    // ファイルのバッファは, 同じディレクトリの #名前#. ファイルのないバッファは #f
+    assert_eq!(
+        ev.eval_with("(make-auto-save-file-name)", &editor).unwrap(),
+        "#f"
+    );
+    visit(&editor, "/tmp/a.txt", "abc", false);
+    assert_eq!(
+        ev.eval_with("(make-auto-save-file-name)", &editor).unwrap(),
+        "\"/tmp/#a.txt#\""
+    );
+    visit(&editor, "a.txt", "abc", false);
+    assert_eq!(
+        ev.eval_with("(make-auto-save-file-name)", &editor).unwrap(),
+        "\"#a.txt#\""
+    );
+}
+
+#[test]
+fn test_file_newer_than_file_p() {
+    let ev = Evaluator::new();
+    let dir = tempdir().unwrap();
+    let old = dir.path().join("old").to_str().unwrap().to_string();
+    let new = dir.path().join("new").to_str().unwrap().to_string();
+    let none = dir.path().join("none").to_str().unwrap().to_string();
+    fs::write(&old, "").unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    fs::write(&new, "").unwrap();
+    for (a, b, result) in [
+        (&new, &old, "#t"),
+        (&old, &new, "#f"),
+        (&old, &none, "#t"),
+        (&none, &old, "#f"),
+        (&none, &none, "#f"),
+    ] {
+        assert_eq!(
+            ev.eval(&format!("(file-newer-than-file-p \"{}\" \"{}\")", a, b))
+                .unwrap(),
+            result
+        );
+    }
+}
+
+#[test]
+fn test_set_buffer_text_and_revert_dired_arguments() {
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    assert_eq!(
+        ev.eval_with("(files--set-buffer-text \"a\")", &editor)
+            .unwrap_err(),
+        "files--set-buffer-text expects 2 arguments, given 1"
+    );
+    assert!(ev
+        .eval_with("(files--set-buffer-text 1 #f)", &editor)
+        .is_err());
+    assert!(ev.eval_with("(files--revert-dired 1)", &editor).is_err());
+}
+
+#[test]
+fn test_revert_buffer() {
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("a.txt").to_str().unwrap().to_string();
+    fs::write(&path, "new").unwrap();
+    // ファイルのないバッファ
+    ev.run_command("revert-buffer", &editor).unwrap();
+    assert_eq!(
+        editor.message(),
+        "Buffer does not seem to be associated with any file"
+    );
+    // 変更なし: 聞いてから読み直す. no なら, そのまま
+    visit(&editor, &path, "old", false);
+    answer(&editor, &["no"]);
+    ev.run_command("revert-buffer", &editor).unwrap();
+    assert_eq!(
+        prompts(&editor),
+        vec![format!("Revert buffer from file {}? (yes or no) ", path)]
+    );
+    assert_eq!(editor.buffer().text.iter().collect::<String>(), "old");
+    assert_eq!(editor.message(), "");
+    answer(&editor, &["yes"]);
+    ev.run_command("revert-buffer", &editor).unwrap();
+    assert_eq!(editor.buffer().text.iter().collect::<String>(), "new");
+    assert!(!editor.buffer().modified);
+    // 変更あり: 捨てるかを聞く
+    visit(&editor, &path, "old", true);
+    answer(&editor, &["yes"]);
+    ev.run_command("revert-buffer", &editor).unwrap();
+    assert_eq!(
+        prompts(&editor),
+        vec![format!(
+            "Discard edits and reread from {}? (yes or no) ",
+            path
+        )]
+    );
+    assert!(!editor.buffer().modified);
+    // dired は, 聞かずに作り直す
+    editor
+        .buffers
+        .lock()
+        .unwrap()
+        .insert("*dired*".to_string(), FakeBuffer::default());
+    *editor.current.lock().unwrap() = "*dired*".to_string();
+    answer(&editor, &[]);
+    ev.run_command("revert-buffer", &editor).unwrap();
+    assert_eq!(editor.message(), "Listed again");
+    assert!(prompts(&editor).is_empty());
+}
+
+#[test]
+fn test_recover_this_file() {
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("a.txt").to_str().unwrap().to_string();
+    let auto = dir.path().join("#a.txt#").to_str().unwrap().to_string();
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(editor.message(), "This buffer is not visiting a file");
+    // ファイルがあって, 自動保存のファイルが無い
+    fs::write(&path, "saved").unwrap();
+    visit(&editor, &path, "saved", false);
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(
+        editor.message(),
+        format!("Auto save file {} does not exist", auto)
+    );
+    // 自動保存のファイルの方が古い
+    fs::write(&auto, "auto").unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    fs::write(&path, "saved").unwrap();
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(
+        editor.message(),
+        format!("Auto-save file {} not current", auto)
+    );
+    // 自動保存のファイルの方が新しい: no ならそのまま, yes なら読み直して変更ありにする
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    fs::write(&auto, "auto").unwrap();
+    answer(&editor, &["no"]);
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(
+        prompts(&editor),
+        vec![format!("Recover auto save file {}? (yes or no) ", auto)]
+    );
+    assert_eq!(editor.buffer().text.iter().collect::<String>(), "saved");
+    assert_eq!(editor.message(), "");
+    answer(&editor, &["yes"]);
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(editor.buffer().text.iter().collect::<String>(), "auto");
+    assert!(editor.buffer().modified);
+    // ファイルが無くても, 自動保存のファイルがあれば読み直せる
+    fs::remove_file(&path).unwrap();
+    visit(&editor, &path, "", false);
+    answer(&editor, &["yes"]);
+    ev.run_command("recover-this-file", &editor).unwrap();
+    assert_eq!(editor.buffer().text.iter().collect::<String>(), "auto");
+}

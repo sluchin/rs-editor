@@ -247,7 +247,9 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
       問いの `y-or-n-p`, `yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と,
       `files--write-buffer` (バッファをファイルに書く. バックアップと自動保存のファイルは画面が受け持つ) を足した。
       バッファを出す組み込みは, Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
-- [ ] 続けて移すもの: `revert-buffer` (dired のときは一覧を作り直すので, 分ける), `recover-this-file`, `save-buffers-kill-terminal` など。
+- [x] `revert-buffer` (dired のときは `files--revert-dired` で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`, `file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
+      組み込みに `files--set-buffer-text` (本文を置き換える. カーソルは同じ文字の所に残り, 元に戻せる) と `files--revert-dired` を足した。
+- [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
       `kill-buffer` は, Emacs で C の関数なので, 組み込みのまま残す。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル, 文字, 行, マーク, 窓, バッファなど. Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を, Lisp に移す。移したら, TypeScript の方は消す。

@@ -31,6 +31,8 @@ fn test_eval_code_returns_the_result_or_the_error() {
                 "write-file".to_string(),
                 "save-buffer".to_string(),
                 "save-some-buffers".to_string(),
+                "revert-buffer".to_string(),
+                "recover-this-file".to_string(),
                 "describe-function".to_string()
             ],
             keys: vec![KeyBinding {
@@ -105,6 +107,8 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
             "write-file",
             "save-buffer",
             "save-some-buffers",
+            "revert-buffer",
+            "recover-this-file",
             "describe-function",
             "hi"
         ]
@@ -172,6 +176,8 @@ fn test_load_init_file() {
             "write-file",
             "save-buffer",
             "save-some-buffers",
+            "revert-buffer",
+            "recover-this-file",
             "describe-function",
             "hello"
         ]

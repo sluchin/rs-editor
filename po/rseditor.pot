@@ -59,6 +59,28 @@ msgid ""
 ". to save it and stop, and q or RET to stop."
 msgstr ""
 
+#: lisp/files.scm
+msgctxt "function:make-auto-save-file-name"
+msgid ""
+"Return the auto save file name of the file the current buffer visits (#NAME# in the same directory).\n"
+"Return #f if the buffer visits no file."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:revert-buffer"
+msgid ""
+"Replace the buffer text with the text of the visited file on disk.\n"
+"Ask before reverting. A Dired buffer is listed again without asking.\n"
+"Point stays at the same character, and the change can be undone."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:recover-this-file"
+msgid ""
+"Recover the visited file from its auto save file.\n"
+"Ask before replacing the buffer text. The buffer is marked as modified."
+msgstr ""
+
 #: lisp/help-fns.scm
 msgctxt "function:help-language-from-locale"
 msgid ""
@@ -3103,6 +3125,11 @@ msgctxt "function:file-name-directory"
 msgid ""
 "Return the directory part of FILENAME, up to and including the last /.\n"
 "Return #f if FILENAME has no /."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:file-name-nondirectory"
+msgid "Return the file name of FILENAME without its directory part."
 msgstr ""
 
 #: lisp/window.scm

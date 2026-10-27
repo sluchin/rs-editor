@@ -487,6 +487,24 @@ impl Host for FakeEditor {
                 *self.message.lock().unwrap() = format!("Wrote {}", path);
                 Value::Nil
             }
+            "files--set-buffer-text" => {
+                // 今のバッファの本文を置き換える (カーソルは, 本文の長さに収める)
+                let (new, modified) = (text(&args[0]), args[1].is_true());
+                self.with_buffer(|b| {
+                    b.text = new.chars().collect();
+                    b.point = b.point.min(b.text.len() + 1);
+                    b.modified = modified;
+                });
+                Value::Nil
+            }
+            "files--revert-dired" => {
+                // 名前が *dired* で始まるバッファは dired (一覧を作り直したことを, メッセージに残す)
+                let dired = self.current.lock().unwrap().starts_with("*dired*");
+                if dired {
+                    *self.message.lock().unwrap() = "Listed again".to_string();
+                }
+                Value::Boolean(dired)
+            }
             "read-string" | "read-file-name" | "read-key" => {
                 self.prompts.lock().unwrap().push(text(&args[0]));
                 Value::String(self.answers.lock().unwrap().remove(0))

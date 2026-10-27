@@ -120,9 +120,9 @@ fn test_describe_function_in_the_help_language() {
     let help = describe(&ev, &editor, "find-file");
     assert!(help.ends_with(
         "(find-file &rest ARGS)\n\n\
-         ファイル FILENAME を編集する。\n\
-         FILENAME のファイルのバッファに切り替える (無ければ, 作る)。\n\
-         対話的に呼ぶと, FILENAME をミニバッファで (ファイルの名前を補完しながら) 聞く。\n"
+         ファイル FILENAME を編集する.\n\
+         FILENAME のファイルのバッファに切り替える (無ければ, 作る).\n\
+         対話的に呼ぶと, FILENAME をミニバッファで (ファイルの名前を補完しながら) 聞く.\n"
     ));
     // 翻訳の無い言語は, 元の英語
     ev.eval("(set! help-language \"fr\")").unwrap();

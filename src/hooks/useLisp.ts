@@ -30,11 +30,13 @@ import { type CommandSet, completeFile } from './useMinibuffer'
  *
  * @param ctx - ミニバッファと, バッファとウィンドウ.
  * @param saveBuffer - バッファを, ファイルに書く関数 (書けなければ, 失敗).
+ * @param listDirectoryInto - dired のバッファの一覧を作り直す関数.
  * @returns コマンドと, Lisp で割り当てたキーと, 1 つのキーで答える問いと, やめるときの関数.
  */
 export function useLisp(
   ctx: AppContext,
   saveBuffer: (buffer: Buffer, path: string) => Promise<void>,
+  listDirectoryInto: (path: string, revert: boolean) => Promise<void>,
 ) {
   const {
     buffers,
@@ -48,6 +50,7 @@ export function useLisp(
     activeWindow,
     setCurrentBufferId,
     updateCurrentBuffer,
+    setCurrentText,
     killBuffer,
     displayInOtherWindow,
     setPendingAction,
@@ -317,6 +320,12 @@ export function useLisp(
       writeBuffer: async (path, name) => {
         await saveBuffer(bufferNamed(name), path)
         await waitRender()
+      },
+      setBufferText: (text, modified) => setCurrentText(text, modified),
+      revertDired: async () => {
+        if (currentBuffer.directory === undefined) return false
+        await listDirectoryInto(currentBuffer.directory, true)
+        return true
       },
       setBackgroundColor: (color) => setBackgroundColor(root, color),
       setForegroundColor: (color) => setForegroundColor(root, color),

@@ -63,10 +63,10 @@ function App() {
   } = bufs
   const ctx: AppContext = { ...minibuffer, ...bufs }
   const directories = useDirectories(ctx)
-  const files = useFiles(ctx, directories.listDirectoryInto)
+  const files = useFiles(ctx)
   const search = useSearch(ctx)
   const bookmarks = useBookmarks(ctx)
-  const lisp = useLisp(ctx, files.saveBuffer)
+  const lisp = useLisp(ctx, files.saveBuffer, directories.listDirectoryInto)
   const { lispKeys } = lisp
   // バッファの一覧 (C-x C-b) を出しているか
   const [showBufferList, setShowBufferList] = useState(false)
@@ -225,7 +225,6 @@ function App() {
   const actions: Record<string, () => void> = {
     ...appCommands.actions,
     ...bufs.windowCommands.actions,
-    ...files.commands.actions,
     ...directories.commands.actions,
     ...search.commands.actions,
     ...bookmarks.actions,
@@ -238,7 +237,6 @@ function App() {
   const submitters: Submitters = {
     ...appCommands.submit,
     ...bufs.windowCommands.submit,
-    ...files.commands.submit,
     ...directories.commands.submit,
     ...search.commands.submit,
     ...bookmarks.submit,

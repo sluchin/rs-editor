@@ -113,6 +113,8 @@ pub const NAMES: &[&str] = &[
     "read-file-name",
     "read-key",
     "files--write-buffer",
+    "files--set-buffer-text",
+    "files--revert-dired",
     "buffer-list",
     "buffer-modified-p",
     "kill-buffer",
@@ -707,6 +709,20 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }
             let prompt = optional_string(name, args.first())?;
             Ok(Value::String(read_input(machine, name, vec![prompt])?))
+        }
+        "files--set-buffer-text" => {
+            // (files--set-buffer-text TEXT MODIFIED): 今のバッファの本文を置き換える (カーソルは同じ文字の所に残り, 元に戻せる)
+            let [text, modified] = fixed::<2>(name, args)?;
+            string(name, &text)?;
+            machine
+                .host
+                .call(name, vec![text, Value::Boolean(modified.is_true())])?;
+            Ok(Value::Nil)
+        }
+        "files--revert-dired" => {
+            // (files--revert-dired): 今のバッファが dired なら, 一覧を作り直して #t. dired でなければ #f
+            fixed::<0>(name, args)?;
+            machine.host.call(name, vec![])
         }
         "files--write-buffer" => {
             // (files--write-buffer FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く

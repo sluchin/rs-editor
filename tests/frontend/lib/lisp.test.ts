@@ -90,6 +90,10 @@ function fakeHost(text: string) {
     writeBuffer: async (path, name) => {
       state.calls.push(`write ${path} ${name}`)
     },
+    setBufferText: (text, modified) => {
+      state.calls.push(`set-text ${text} ${modified}`)
+    },
+    revertDired: async () => true,
     whereIs: (command) => (command === 'find-file' ? ['C-x C-f'] : []),
     editorCommandNames: () => ['save-buffer'],
     setBackgroundColor: (color) => {
@@ -189,6 +193,9 @@ describe('lisp', () => {
     expect(await run('read-key')).toBe('y')
     expect(await run('files--write-buffer', '/a', 'a')).toBeNull()
     expect(await run('files--write-buffer', '/b')).toBeNull()
+    expect(await run('files--set-buffer-text', 'abc', true)).toBeNull()
+    expect(await run('files--set-buffer-text', 'abc', false)).toBeNull()
+    expect(await run('files--revert-dired')).toBe(true)
     expect(run('where-is-internal', 'find-file')).toEqual(['C-x C-f'])
     expect(run('editor-command-names')).toEqual(['save-buffer'])
     expect(run('set-background-color', 'black')).toBeNull()
@@ -200,6 +207,8 @@ describe('lisp', () => {
       'local-set-key c howm-create',
       'write /a a',
       'write /b undefined',
+      'set-text abc true',
+      'set-text abc false',
       'background black',
       'foreground white',
       'font Mono 14',

@@ -414,6 +414,8 @@ fn test_define_command_and_global_set_key() {
             "write-file",
             "save-buffer",
             "save-some-buffers",
+            "revert-buffer",
+            "recover-this-file",
             "describe-function",
             "say-hi",
             "shout"

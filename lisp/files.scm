@@ -84,6 +84,43 @@ Answer y or SPC to save it, n or DEL to skip it, ! to save it and all the rest,
                       ((member key '("q" "Enter")) (loop '() saved))
                       (else (loop names saved)))))))))
 
+(define (make-auto-save-file-name)
+  "Return the auto save file name of the file the current buffer visits (#NAME# in the same directory).
+Return #f if the buffer visits no file."
+  (let ((file (buffer-file-name)))
+    (and file
+         (string-append (or (file-name-directory file) "") "#" (file-name-nondirectory file) "#"))))
+
+(define-command (revert-buffer)
+  "Replace the buffer text with the text of the visited file on disk.
+Ask before reverting. A Dired buffer is listed again without asking.
+Point stays at the same character, and the change can be undone."
+  (cond ((files--revert-dired) #t)
+        ((not (buffer-file-name))
+         (message "Buffer does not seem to be associated with any file"))
+        (else
+         (let ((file (buffer-file-name)))
+           (when (yes-or-no-p (if (buffer-modified-p)
+                                  (format "Discard edits and reread from %s? " file)
+                                  (format "Revert buffer from file %s? " file)))
+             (files--set-buffer-text (read-file-string file) #f))
+           (message "")))))
+
+(define-command (recover-this-file)
+  "Recover the visited file from its auto save file.
+Ask before replacing the buffer text. The buffer is marked as modified."
+  (let ((file (buffer-file-name))
+        (auto (make-auto-save-file-name)))
+    (cond ((not file) (message "This buffer is not visiting a file"))
+          ((and (file-exists? file) (not (file-exists? auto)))
+           (message (format "Auto save file %s does not exist" auto)))
+          ((not (file-newer-than-file-p auto file))
+           (message (format "Auto-save file %s not current" auto)))
+          (else
+           (when (yes-or-no-p (format "Recover auto save file %s? " auto))
+             (files--set-buffer-text (read-file-string auto) #t))
+           (message "")))))
+
 (provide 'files)
 
 ;;; files.scm ends here
