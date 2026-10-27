@@ -44,7 +44,9 @@ STEPS = [
       '`undo` が保存した状態に戻っても「変更なし」にならないこと。'
       'kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。']),
     (4, 'マーク, 前置引数, 実行',
-     ['マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-:`, `C-g`, エラーの移動, 表示の切り替え。']),
+     ['【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/edit_test.rs`). '
+      '`next-error` と `previous-error` は, `*grep*` の画面 (TypeScript) のままで, 段階 9 で移す. 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】'
+      'マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。']),
     (5, 'S 式, 段落, ページ',
      ['括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。'
       '`src/lib/sexp.ts` と `src/lib/paragraph.ts` の計算は, ターミナルでも使うため, Rust に移す。']),

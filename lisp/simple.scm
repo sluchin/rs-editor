@@ -1093,12 +1093,48 @@ Ask once more if modified buffers remain."
   "Return the names of all commands, sorted."
   (filter (lambda (name) (commandp (string->symbol name))) (help-function-names)))
 
-(define-command (execute-extended-command . args)
-  "Read a command name in the minibuffer, with completion, and run it."
-  (let ((name (completing-read "M-x " (simple--command-names) #f #t)))
+(define command-history '()
+  "The commands run with M-x, newest first, each written as an expression such as \"(forward-char)\".")
+
+(define (simple--remember-command name)
+  "Put the command NAME on the front of command-history, unless it is already there."
+  (let ((entry (format "(%s)" name)))
+    (when (or (null? command-history) (not (equal? (car command-history) entry)))
+      (set! command-history (cons entry command-history)))))
+
+(define (simple--run-named-command prompt)
+  "Read a command name with PROMPT, remember it, and run it."
+  (let ((name (completing-read prompt (simple--command-names) #f #t)))
     (when (not (equal? name ""))
+      (simple--remember-command name)
       (set! this-command (string->symbol name))
       (call-interactively (string->symbol name)))))
+
+(define-command (execute-extended-command . args)
+  "Read a command name in the minibuffer, with completion, and run it."
+  (simple--run-named-command "M-x "))
+
+(define-command (execute-extended-command-for-buffer . args)
+  "Read a command name in the minibuffer, with completion, and run it.
+Unlike Emacs, every command is offered, not only those that fit the major mode."
+  (simple--run-named-command "M-X "))
+
+(define-command (repeat-complex-command . args)
+  "Edit and re-evaluate the last command run with M-x.
+With the argument N, use the Nth previous command (1 is the last)."
+  (when (null? command-history)
+    (error "There are no previous complex commands to repeat"))
+  (let* ((n (simple--arg args))
+         (initial (list-ref command-history (min (max (- n 1) 0) (- (length command-history) 1))))
+         (expression (read-string "Redo: " initial)))
+    (simple--remember-command-expression expression)
+    (set! this-command 'repeat-complex-command)
+    (eval (read expression))))
+
+(define (simple--remember-command-expression expression)
+  "Put EXPRESSION on the front of command-history, unless it is already there."
+  (when (or (null? command-history) (not (equal? (car command-history) expression)))
+    (set! command-history (cons expression command-history))))
 
 (define-command (eval-expression . args)
   "Read an expression in the minibuffer, evaluate it, and show the value."

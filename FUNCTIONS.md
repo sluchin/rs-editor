@@ -259,7 +259,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 1 | 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため) | - | - | - |
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
-| 4 | マーク, 前置引数, 実行 | 12 | 2 | 10 |
+| 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
 | 5 | S 式, 段落, ページ | 28 | 14 | 14 |
 | 6 | 字下げ, 整形, コメント | 9 | 5 | 4 |
 | 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
@@ -295,7 +295,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **4. マーク, 前置引数, 実行**
 
-- マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-:`, `C-g`, エラーの移動, 表示の切り替え。
+- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/edit_test.rs`). `next-error` と `previous-error` は, `*grep*` の画面 (TypeScript) のままで, 段階 9 で移す. 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
 
 **5. S 式, 段落, ページ**
 
@@ -330,7 +330,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 115 個: Lisp 32 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 117 個: Lisp 34 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -359,7 +359,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `eval-expression` | ◯ | simple | `M-:`, `ESC M-:` | 実装済み | `M-:` | TypeScript (`src/hooks/useLisp.ts`, `lisp/simple.scm`) | 4 |
 | `exchange-point-and-mark` | ◯ | simple | `C-x C-x` | 実装済み | `C-x C-x` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `execute-extended-command` | ◯ | simple | `M-x`, `<menu>`, `<execute>` | 実装済み | `M-x` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 4 |
-| `execute-extended-command-for-buffer` |  | simple | `M-X` |  |  |  | 4 |
+| `execute-extended-command-for-buffer` |  | simple | `M-X` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `goto-line` | ◯ | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 2 |
 | `goto-line-relative` |  | simple | `C-x n g` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `insert-buffer` | ◯ | simple | `C-x x i` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -383,7 +383,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | TypeScript (`src/hooks/useDirectories.ts`) | 4 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` |  |  |  | 4 |
+| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `set-fill-column` | ◯ | simple | `C-x f` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |

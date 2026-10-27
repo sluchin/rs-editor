@@ -9,7 +9,7 @@ use rseditor_core::editor::Editor;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 use rseditor_core::window::Direction;
-use rseditor_tui::render::{render, Minibuffer};
+use rseditor_tui::render::{render, render_with, Display, Minibuffer};
 
 /// 本文のあるエディタを描く.
 fn draw(text: &str, rows: usize, cols: usize) -> (Vec<String>, (usize, usize)) {
@@ -242,4 +242,38 @@ fn test_missing_arguments_and_odd_candidates() {
         )
         .unwrap();
     assert_eq!(answer.to_string(), "\"\"");
+}
+
+/// 出し方の設定を使って, 本文のあるエディタを描く.
+fn draw_with(
+    text: &str,
+    rows: usize,
+    cols: usize,
+    display: Display,
+) -> (Vec<String>, (usize, usize)) {
+    let mut editor = Editor::new();
+    editor.current_buffer_mut().insert(text);
+    let frame = render_with(&editor, &mut BTreeMap::new(), rows, cols, "", None, display);
+    (frame.lines(), frame.cursor)
+}
+
+#[test]
+fn test_truncate_lines_and_selective_display() {
+    // 切る: 1 行を 1 行で出し, カーソルは窓の端
+    let truncate = Display {
+        truncate_lines: true,
+        ..Display::default()
+    };
+    let (lines, cursor) = draw_with("abcdefghij\nxy", 6, 4, truncate);
+    assert_eq!(&lines[..2], ["abcd", "xy"]);
+    assert_eq!(cursor, (1, 2));
+    let (_, cursor) = draw_with("abcdefghij", 6, 4, truncate);
+    assert_eq!(cursor, (0, 3));
+    // 字下げした行を出さない (空の行は出す)
+    let selective = Display {
+        selective_display: Some(2),
+        ..Display::default()
+    };
+    let (lines, _) = draw_with("a\n  b\n\tc\n\nd", 8, 10, selective);
+    assert_eq!(&lines[..3], ["a", "", "d"]);
 }

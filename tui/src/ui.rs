@@ -11,7 +11,7 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
 use crate::keymap::Keymap;
-use crate::render::{render, Minibuffer};
+use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
 
 /// 画面とその状態.
@@ -24,6 +24,8 @@ pub struct UiState {
     pub tops: BTreeMap<usize, usize>,
     /// 終わるか (`kill-emacs`).
     pub quit: bool,
+    /// 画面の出し方の設定.
+    pub display: Display,
 }
 
 /// 入力の補完.
@@ -71,7 +73,16 @@ impl UiHost {
         let mut state = self.state();
         let (rows, cols) = state.screen.size();
         let message = state.message.clone();
-        let frame = render(&editor, &mut state.tops, rows, cols, &message, minibuffer);
+        let display = state.display;
+        let frame = render_with(
+            &editor,
+            &mut state.tops,
+            rows,
+            cols,
+            &message,
+            minibuffer,
+            display,
+        );
         state.screen.draw(&frame);
     }
 

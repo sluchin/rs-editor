@@ -20,6 +20,15 @@ pub struct Minibuffer<'a> {
     pub cursor: usize,
 }
 
+/// 画面の出し方の設定 (Lisp の `truncate-lines` と `selective-display`).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Display {
+    /// 真なら, 長い行を折り返さず, 窓の端で切る.
+    pub truncate_lines: bool,
+    /// 数 N なら, N 桁以上字下げした行を出さない.
+    pub selective_display: Option<usize>,
+}
+
 /// 文字を画面のマスにします (タブは桁に合わせて空白に, 制御文字は `^X` に, 幅の広い文字は 2 マスにする).
 ///
 /// # Arguments
@@ -60,9 +69,36 @@ fn wrap(line: &str, width: usize) -> Vec<Vec<char>> {
     rows
 }
 
-/// 行の表示で使う行の数.
-fn rows_of(line: &str, width: usize) -> usize {
-    wrap(line, width).len()
+/// 行の先頭の空白の桁の数.
+fn indentation(line: &str) -> usize {
+    let mut column = 0;
+    for c in line.chars() {
+        match c {
+            ' ' => column += 1,
+            '\t' => column = (column / TAB_WIDTH + 1) * TAB_WIDTH,
+            _ => break,
+        }
+    }
+    column
+}
+
+/// 行を出さないか (`selective-display`. 空の行は出す).
+fn hidden(line: &str, display: Display) -> bool {
+    display
+        .selective_display
+        .is_some_and(|n| !line.trim().is_empty() && indentation(line) >= n)
+}
+
+/// 行を, 画面のマスの行にします (出さない行は無く, 切る設定なら 1 行).
+fn rows_for(line: &str, width: usize, display: Display) -> Vec<Vec<char>> {
+    if hidden(line, display) {
+        return Vec::new();
+    }
+    let mut rows = wrap(line, width);
+    if display.truncate_lines {
+        rows.truncate(1);
+    }
+    rows
 }
 
 /// カーソルの、行の中の画面の位置 (折り返した行の番号と、桁). 幅の広い文字を割らずに折り返すので、桁の数からは決まらない.
@@ -120,6 +156,27 @@ pub fn render(
     echo: &str,
     minibuffer: Option<&Minibuffer>,
 ) -> Frame {
+    render_with(
+        editor,
+        tops,
+        rows,
+        cols,
+        echo,
+        minibuffer,
+        Display::default(),
+    )
+}
+
+/// 出し方の設定を使って, 画面を作ります (引数は [`render`] と同じ. `display` は出し方の設定).
+pub fn render_with(
+    editor: &Editor,
+    tops: &mut BTreeMap<usize, usize>,
+    rows: usize,
+    cols: usize,
+    echo: &str,
+    minibuffer: Option<&Minibuffer>,
+    display: Display,
+) -> Frame {
     let mut frame = Frame::blank(rows, cols);
     let body_rows = rows.saturating_sub(1);
     let selected = editor.selected_window();
@@ -148,10 +205,14 @@ pub fn render(
         if is_selected {
             // カーソルの行が見えるように、一番上の行を直す
             *top = (*top).min(point_line);
-            let in_line = cursor_cell(buffer, width).0;
+            let in_line = if display.truncate_lines {
+                0
+            } else {
+                cursor_cell(buffer, width).0
+            };
             let fits = |top: usize| -> bool {
                 let above: usize = (top..point_line)
-                    .map(|l| rows_of(&buffer.line_text(l), width))
+                    .map(|l| rows_for(&buffer.line_text(l), width, display).len())
                     .sum();
                 above + in_line < text_rows
             };
@@ -159,19 +220,25 @@ pub fn render(
                 *top += 1;
             }
         }
+        let (in_cursor_row, cursor_col) = if display.truncate_lines {
+            (0, buffer.current_column())
+        } else {
+            cursor_cell(buffer, width)
+        };
         let mut row = 0;
         let mut line = *top;
         while row < text_rows && line < buffer.line_count() {
             let text = buffer.line_text(line);
-            for (i, cells) in wrap(&text, width).into_iter().enumerate() {
+            for (i, cells) in rows_for(&text, width, display).into_iter().enumerate() {
                 if row >= text_rows {
                     break;
                 }
                 for (x, ch) in cells.into_iter().enumerate().take(width) {
                     frame.cells[y0 + row][x0 + x] = Cell { ch, reverse: false };
                 }
-                if is_selected && line == point_line && i == cursor_cell(buffer, width).0 {
-                    cursor = (y0 + row, x0 + cursor_cell(buffer, width).1);
+                if is_selected && line == point_line && i == in_cursor_row {
+                    // 切った行では, 窓の端より先のカーソルは, 端に置く
+                    cursor = (y0 + row, x0 + cursor_col.min(width - 1));
                 }
                 row += 1;
             }

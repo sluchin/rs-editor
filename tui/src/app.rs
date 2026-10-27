@@ -10,7 +10,7 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
 use crate::keymap::{from_codemirror, Keymap, Lookup};
-use crate::render::render;
+use crate::render::{render_with, Display};
 use crate::screen::Screen;
 use crate::ui::{printable, UiHost, UiState};
 
@@ -55,6 +55,7 @@ impl App {
             message: String::new(),
             tops: BTreeMap::new(),
             quit: false,
+            display: Display::default(),
         }));
         let ui = UiHost::new(state.clone(), editor.clone(), keymap.clone());
         let host = EditorHost::shared(editor, ui);
@@ -107,7 +108,16 @@ impl App {
         let mut state = self.state.lock().unwrap();
         let (rows, cols) = state.screen.size();
         let message = state.message.clone();
-        let frame = render(&editor, &mut state.tops, rows, cols, &message, None);
+        let display = state.display;
+        let frame = render_with(
+            &editor,
+            &mut state.tops,
+            rows,
+            cols,
+            &message,
+            None,
+            display,
+        );
         state.screen.draw(&frame);
     }
 
@@ -158,6 +168,19 @@ impl App {
             }
             _ => None,
         }
+    }
+
+    /// Lisp の `truncate-lines` と `selective-display` を, 画面の出し方の設定に写します.
+    fn sync_display(&self) {
+        let truncate_lines = !matches!(self.variable("truncate-lines"), Value::Boolean(false));
+        let selective_display = match self.variable("selective-display") {
+            Value::Number(n) if n >= 0.0 => Some(n as usize),
+            _ => None,
+        };
+        self.state.lock().unwrap().display = Display {
+            truncate_lines,
+            selective_display,
+        };
     }
 
     /// 前置引数をエコー領域に出します.
@@ -275,6 +298,7 @@ impl App {
         );
         globals.define("this-command", symbol(command));
         self.host.editor().prefix_arg = None;
+        self.sync_display();
         // 前置引数のコマンドの後は, 次のコマンドに前置引数を渡す
         self.say_prefix();
         // 変更したコマンドの終わりには, マークを使わない状態にする (Emacs の deactivate-mark)

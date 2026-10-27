@@ -255,6 +255,25 @@ fn test_lisp_key_bindings_and_eval() {
     fx.feed("( + SPC 1 SPC 2 ) RET");
     fx.press("M-:");
     assert_eq!(fx.app.message(), "3");
+    // M-x の履歴を, 直して動かす
+    fx.press("a");
+    fx.feed("b a c k w a r d - c h a r RET");
+    fx.press("M-x");
+    fx.feed("RET");
+    fx.press("C-x M-:");
+    assert_eq!(
+        fx.app.eval("command-history").unwrap(),
+        "(\"(backward-char)\" \"(weird)\")"
+    );
+    fx.feed("b a c k w a r d - c h a r RET");
+    fx.press("M-X");
+    // 履歴が空なら, 失敗
+    fx.app.eval("(set! command-history '())").unwrap();
+    fx.press("C-x M-:");
+    assert_eq!(
+        fx.app.message(),
+        "There are no previous complex commands to repeat"
+    );
 }
 
 #[test]
@@ -389,4 +408,22 @@ fn test_mark_is_deactivated_at_the_end_of_the_command() {
     // 数の後の M-- は, 符号を反対にする
     fx.press("C-u 2 M-- C-b");
     assert_eq!(fx.app.eval("prefix-arg").unwrap(), "#f");
+}
+
+#[test]
+fn test_display_options_follow_the_lisp_variables() {
+    let mut fx = Fixture::new();
+    fx.press("a b c d e f g h i j k l m n o p q r s t u v w x y z");
+    fx.app
+        .eval("(set! truncate-lines #t) (set! selective-display 3)")
+        .unwrap();
+    // 次のコマンドの終わりに写す
+    fx.press("C-a");
+    fx.app.draw();
+    let lines = fx.frames.lock().unwrap().last().unwrap().lines();
+    assert!(lines[0].starts_with("abcdefghij"));
+    fx.app
+        .eval("(set! truncate-lines #f) (set! selective-display #f)")
+        .unwrap();
+    fx.press("C-e");
 }

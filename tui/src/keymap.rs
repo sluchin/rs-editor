@@ -103,6 +103,8 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x o", "other-window"),
     ("M-x", "execute-extended-command"),
     ("M-:", "eval-expression"),
+    ("M-X", "execute-extended-command-for-buffer"),
+    ("C-x M-:", "repeat-complex-command"),
     ("C-h f", "describe-function"),
 ];
 

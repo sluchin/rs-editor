@@ -4183,9 +4183,47 @@ msgid "Return the names of all commands, sorted."
 msgstr "全てのコマンドの名前を, 並べて返す."
 
 #: lisp/simple.scm
+msgctxt "variable:command-history"
+msgid "The commands run with M-x, newest first, each written as an expression such as \"(forward-char)\"."
+msgstr "M-x で動かしたコマンド (新しいものが先). それぞれ \"(forward-char)\" のような式の文字列."
+
+#: lisp/simple.scm
+msgctxt "function:simple--remember-command"
+msgid "Put the command NAME on the front of command-history, unless it is already there."
+msgstr "コマンド NAME を command-history の先頭に入れる (すでに先頭にあれば入れない)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--run-named-command"
+msgid "Read a command name with PROMPT, remember it, and run it."
+msgstr "PROMPT でコマンドの名前を読み, 覚えて, 動かす."
+
+#: lisp/simple.scm
 msgctxt "function:execute-extended-command"
 msgid "Read a command name in the minibuffer, with completion, and run it."
 msgstr "コマンドの名前をミニバッファで, 補完しながら読んで, 動かす."
+
+#: lisp/simple.scm
+msgctxt "function:execute-extended-command-for-buffer"
+msgid ""
+"Read a command name in the minibuffer, with completion, and run it.\n"
+"Unlike Emacs, every command is offered, not only those that fit the major mode."
+msgstr ""
+"ミニバッファでコマンドの名前を, 補完して読み, 動かす.\n"
+"Emacs と違い, メジャーモードに合うものだけでなく, 全てのコマンドを出す."
+
+#: lisp/simple.scm
+msgctxt "function:repeat-complex-command"
+msgid ""
+"Edit and re-evaluate the last command run with M-x.\n"
+"With the argument N, use the Nth previous command (1 is the last)."
+msgstr ""
+"M-x で動かした最後のコマンドを直して, もう一度評価する.\n"
+"引数 N があれば, N 個前のコマンドを使う (1 が最後)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--remember-command-expression"
+msgid "Put EXPRESSION on the front of command-history, unless it is already there."
+msgstr "式 EXPRESSION を command-history の先頭に入れる (すでに先頭にあれば入れない)."
 
 #: lisp/simple.scm
 msgctxt "function:eval-expression"

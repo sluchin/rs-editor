@@ -3840,8 +3840,42 @@ msgid "Return the names of all commands, sorted."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:command-history"
+msgid "The commands run with M-x, newest first, each written as an expression such as \"(forward-char)\"."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--remember-command"
+msgid "Put the command NAME on the front of command-history, unless it is already there."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--run-named-command"
+msgid "Read a command name with PROMPT, remember it, and run it."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:execute-extended-command"
 msgid "Read a command name in the minibuffer, with completion, and run it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:execute-extended-command-for-buffer"
+msgid ""
+"Read a command name in the minibuffer, with completion, and run it.\n"
+"Unlike Emacs, every command is offered, not only those that fit the major mode."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:repeat-complex-command"
+msgid ""
+"Edit and re-evaluate the last command run with M-x.\n"
+"With the argument N, use the Nth previous command (1 is the last)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--remember-command-expression"
+msgid "Put EXPRESSION on the front of command-history, unless it is already there."
 msgstr ""
 
 #: lisp/simple.scm
