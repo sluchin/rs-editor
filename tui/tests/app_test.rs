@@ -427,3 +427,30 @@ fn test_display_options_follow_the_lisp_variables() {
         .unwrap();
     fx.press("C-e");
 }
+
+#[test]
+fn test_sexp_and_sentence_keys() {
+    let mut fx = Fixture::new();
+    fx.press("( a SPC b ) SPC c . SPC SPC d . C-a");
+    fx.press("C-M-f");
+    assert_eq!(fx.point(), 5);
+    fx.press("C-M-b");
+    assert_eq!(fx.point(), 0);
+    fx.press("C-M-d");
+    assert_eq!(fx.point(), 1);
+    fx.press("C-M-u");
+    assert_eq!(fx.point(), 0);
+    // 文の終わりと始め
+    fx.press("M-e");
+    assert_eq!(fx.point(), 8);
+    fx.press("M-a");
+    assert_eq!(fx.point(), 0);
+    // 失敗は, エコー領域に出る
+    fx.press("C-M-u");
+    assert_eq!(fx.app.message(), "At top level");
+    // C-M-SPC は, 式の終わりにマークを置く
+    fx.press("C-M-SPC");
+    assert_eq!(fx.app.host().editor().current_buffer().mark(), Some(5));
+    fx.press("C-a C-M-d C-M-b");
+    assert_eq!(fx.app.message(), "No previous sexp");
+}

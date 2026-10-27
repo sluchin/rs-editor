@@ -85,6 +85,8 @@ pub const NAMES: &[&str] = &[
     "format",
     "error",
     "user-error",
+    "error-message-string",
+    "scan-error-reason",
     "string-search",
     "string-prefix?",
     "string-suffix?",
@@ -484,6 +486,23 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "format" => Ok(Value::String(format(&args)?)),
         // (error "書式" 引数...): Emacs と同じく, 書式で作った文字を, 失敗の内容にする
         "error" | "user-error" => Err(format(&args)?),
+        "scan-error-reason" | "error-message-string" => {
+            // (condition-case の変数の) (error "メッセージ") か, メッセージの文字列から, メッセージを取り出す
+            let [value] = fixed::<1>(name, args)?;
+            let message = match &value {
+                Value::List(items) => items[1].to_display(),
+                other => other.to_display(),
+            };
+            if name == "error-message-string" {
+                return Ok(Value::String(message));
+            }
+            // 'Scan error: "理由", 3, 4' から理由を取り出す (Emacs の scan-error の最初のデータ). 他の失敗は, そのメッセージ
+            let reason = message
+                .strip_prefix("Scan error: \"")
+                .and_then(|rest| rest.split_once('"'))
+                .map_or(message.clone(), |(reason, _)| reason.to_string());
+            Ok(Value::String(reason))
+        }
         "string-search" => {
             if !(2..=3).contains(&args.len()) {
                 return Err("string-search expects 2 or 3 arguments".to_string());

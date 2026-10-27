@@ -3351,6 +3351,16 @@ msgid "The undo records that are not undone yet, while undo is repeated."
 msgstr "undo を続けているときの, まだ元に戻していない記録."
 
 #: lisp/simple.scm
+msgctxt "variable:simple--interactive"
+msgid "True while a command is run from the keyboard (the terminal app sets it), like called-interactively-p."
+msgstr "コマンドをキーから動かしている間は真 (ターミナルのアプリが決める. called-interactively-p に当たる)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--allow-extend"
+msgid "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, or true when called from the keyboard."
+msgstr "マークのコマンドの ALLOW-EXTEND 引数を返す: ARGS の 2 番目. 無ければ, キーから動かしたとき真."
+
+#: lisp/simple.scm
 msgctxt "function:simple--arg"
 msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
 msgstr "ARGS の最初の値を返す. ARGS が空なら, 前置引数の数としての値を返す."
@@ -4176,6 +4186,208 @@ msgid ""
 msgstr ""
 "書き換えたバッファを保存するか聞いて, エディタを終わる.\n"
 "書き換えたバッファが残っていれば, もう一度聞く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--forward-sexp"
+msgid "Move forward across N sexps, signalling the scan error as is."
+msgstr "N 個の式を越える. 式の走査の失敗は, そのまま知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:forward-sexp"
+msgid ""
+"Move forward across one balanced expression (sexp).\n"
+"With argument N, do it N times; a negative N moves backward.\n"
+"From the keyboard, report a failure as \"No next sexp\" or \"No previous sexp\"."
+msgstr ""
+"釣り合った式 (sexp) を 1 つ越えて進む.\n"
+"引数 N があれば N 回. 負なら後ろへ.\n"
+"キーから動かしたとき, 失敗は \"No next sexp\" か \"No previous sexp\" と知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:backward-sexp"
+msgid ""
+"Move backward across one balanced expression (sexp).\n"
+"With argument N, do it N times; a negative N moves forward."
+msgstr ""
+"釣り合った式 (sexp) を 1 つ越えて戻る.\n"
+"引数 N があれば N 回. 負なら前へ."
+
+#: lisp/simple.scm
+msgctxt "function:forward-list"
+msgid ""
+"Move forward across one balanced group of parentheses.\n"
+"With argument N, do it N times; a negative N moves backward.\n"
+"From the keyboard, report a failure as \"No next group\" or \"No previous group\"."
+msgstr ""
+"釣り合った括弧の組を 1 つ越えて進む.\n"
+"引数 N があれば N 回. 負なら後ろへ.\n"
+"キーから動かしたとき, 失敗は \"No next group\" か \"No previous group\" と知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:backward-list"
+msgid ""
+"Move backward across one balanced group of parentheses.\n"
+"With argument N, do it N times; a negative N moves forward."
+msgstr ""
+"釣り合った括弧の組を 1 つ越えて戻る.\n"
+"引数 N があれば N 回. 負なら前へ."
+
+#: lisp/simple.scm
+msgctxt "function:down-list"
+msgid ""
+"Move forward down one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves backward but still goes down a level.\n"
+"From the keyboard, report a failure as \"At bottom level\"."
+msgstr ""
+"括弧の 1 段内側へ進む.\n"
+"引数 N があれば N 回. 負なら後ろへ動いて, 内側へ入る.\n"
+"キーから動かしたとき, 失敗は \"At bottom level\" と知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:up-list"
+msgid ""
+"Move forward out of one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves backward.\n"
+"Inside a string, move out of the string first."
+msgstr ""
+"括弧の 1 段外側へ出て進む.\n"
+"引数 N があれば N 回. 負なら後ろへ.\n"
+"文字列の中なら, 先に文字列の外へ出る."
+
+#: lisp/simple.scm
+msgctxt "function:backward-up-list"
+msgid ""
+"Move backward out of one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves forward."
+msgstr ""
+"括弧の 1 段外側へ出て戻る.\n"
+"引数 N があれば N 回. 負なら前へ."
+
+#: lisp/simple.scm
+msgctxt "function:kill-sexp"
+msgid ""
+"Kill the sexp (balanced expression) following point.\n"
+"With argument N, kill N sexps; a negative N kills backward."
+msgstr ""
+"点の後ろの式 (釣り合った式) を切る.\n"
+"引数 N があれば N 個. 負なら前の式を切る."
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-sexp"
+msgid ""
+"Kill the sexp (balanced expression) preceding point.\n"
+"With argument N, kill N sexps; a negative N kills forward."
+msgstr ""
+"点の前の式 (釣り合った式) を切る.\n"
+"引数 N があれば N 個. 負なら後ろの式を切る."
+
+#: lisp/simple.scm
+msgctxt "function:simple--forward-sexp-to-select"
+msgid "Return the end of N sexps from point; signal NONE if there is no sexp to select."
+msgstr "点から N 個の式の終わりを返す. 選ぶ式が無ければ, NONE で知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:mark-sexp"
+msgid ""
+"Set the mark at the end of the next sexp, or extend the region by one sexp.\n"
+"With argument N, do it for N sexps (backward if N is negative)."
+msgstr ""
+"次の式の終わりにマークを置く. または, リージョンを式 1 つ広げる.\n"
+"引数 N があれば N 個分 (負なら後ろへ)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--push-mark-for-defun"
+msgid "Push the mark before a defun motion NAME, unless it repeats NAME or the region is active."
+msgstr "defun の移動 NAME の前にマークを置く. NAME の繰り返しか, リージョンがあるときは置かない."
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-defun"
+msgid ""
+"Move backward to the beginning of a defun (an open paren in column 0).\n"
+"With argument N, do it N times.  Push the mark first, unless repeated."
+msgstr ""
+"defun の始め (0 桁の開く括弧) まで戻る.\n"
+"引数 N があれば N 回. 繰り返しでなければ, 先にマークを置く."
+
+#: lisp/simple.scm
+msgctxt "function:end-of-defun"
+msgid ""
+"Move forward to the end of a defun.  With argument N, do it N times.\n"
+"Push the mark first, unless repeated."
+msgstr ""
+"defun の終わりまで進む. 引数 N があれば N 回.\n"
+"繰り返しでなければ, 先にマークを置く."
+
+#: lisp/simple.scm
+msgctxt "function:mark-defun"
+msgid ""
+"Put the region around the current defun, including the comments before it.\n"
+"If the region is active, extend it to the end of the next defun."
+msgstr ""
+"今の defun とその前のコメントをリージョンにする.\n"
+"リージョンがあれば, 次の defun の終わりまで広げる."
+
+#: lisp/simple.scm
+msgctxt "function:forward-paragraph"
+msgid ""
+"Move forward to the end of the paragraph.  With argument N, do it N times;\n"
+"a negative N moves backward to the start of the paragraph."
+msgstr ""
+"段落の終わりまで進む. 引数 N があれば N 回.\n"
+"負なら後ろへ, 段落の始めまで戻る."
+
+#: lisp/simple.scm
+msgctxt "function:backward-paragraph"
+msgid "Move backward to the start of the paragraph.  With argument N, do it N times."
+msgstr "段落の始めまで戻る. 引数 N があれば N 回."
+
+#: lisp/simple.scm
+msgctxt "function:mark-paragraph"
+msgid ""
+"Put the mark at the end of this paragraph, point at the beginning.\n"
+"If the region is active, extend it by one more paragraph."
+msgstr ""
+"この段落の終わりにマークを置き, 始めに点を置く.\n"
+"リージョンがあれば, 段落 1 つ分広げる."
+
+#: lisp/simple.scm
+msgctxt "function:kill-paragraph"
+msgid "Kill forward to the end of the paragraph.  With argument N, kill N paragraphs."
+msgstr "段落の終わりまでを切る. 引数 N があれば N 段落."
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-paragraph"
+msgid "Kill back to the start of the paragraph.  With argument N, kill N paragraphs."
+msgstr "段落の始めまでを切る. 引数 N があれば N 段落."
+
+#: lisp/simple.scm
+msgctxt "function:forward-sentence"
+msgid ""
+"Move forward to next end of sentence.  With argument N, do it N times;\n"
+"a negative N moves backward to the start of the sentence."
+msgstr ""
+"次の文の終わりまで進む. 引数 N があれば N 回.\n"
+"負なら後ろへ, 文の始めまで戻る."
+
+#: lisp/simple.scm
+msgctxt "function:backward-sentence"
+msgid "Move backward to the start of the sentence.  With argument N, do it N times."
+msgstr "文の始めまで戻る. 引数 N があれば N 回."
+
+#: lisp/simple.scm
+msgctxt "function:kill-sentence"
+msgid "Kill from point to the end of the current sentence.  With argument N, kill N sentences."
+msgstr "点から今の文の終わりまでを切る. 引数 N があれば N 文."
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-sentence"
+msgid "Kill back from point to the start of the sentence.  With argument N, kill N sentences."
+msgstr "点から文の始めまでを切る. 引数 N があれば N 文."
+
+#: lisp/simple.scm
+msgctxt "function:mark-end-of-sentence"
+msgid "Put the mark at the end of this sentence.  With argument N, N sentences forward."
+msgstr "この文の終わりにマークを置く. 引数 N があれば N 文先."
 
 #: lisp/simple.scm
 msgctxt "function:simple--command-names"

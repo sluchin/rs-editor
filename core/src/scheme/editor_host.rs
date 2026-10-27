@@ -13,9 +13,11 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
+use crate::paragraph::{forward_paragraph, forward_sentence};
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
+use crate::sexp::{beginning_of_defun, end_of_defun, mark_defun, up_list, MotionError};
 use crate::syntax::{syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
 
@@ -123,6 +125,17 @@ fn nil() -> Value {
 /// 位置の値 (1 から数える) を返します.
 fn at(pos: usize) -> Value {
     Value::Number(pos as f64 + 1.0)
+}
+
+/// 動いた先の位置の値. 失敗したら, Emacs と同じに, 動いた所にカーソルを置いて, 失敗にする.
+fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, String> {
+    match result {
+        Ok(found) => Ok(at(found)),
+        Err(e) => {
+            b.set_point(e.point);
+            Err(e.message)
+        }
+    }
 }
 
 /// 位置があれば, 位置の値. 無ければ nil.
@@ -730,6 +743,47 @@ impl<U: Host> EditorHost<U> {
                     .scan_lists(from, count, depth, sexp)
                     .map_err(|e| e.to_string())?;
                 at_opt(found)
+            }
+            "up-list-position" => {
+                let source = Source::from_buffer(b, b.dialect());
+                moved(b, up_list(&source, pos(op, args, 0)?, int(op, args, 1)?))?
+            }
+            "beginning-of-defun-position" => {
+                let source = Source::from_buffer(b, b.dialect());
+                at(beginning_of_defun(&source, pos(op, args, 0)?))
+            }
+            "end-of-defun-position" => {
+                let source = Source::from_buffer(b, b.dialect());
+                moved(
+                    b,
+                    end_of_defun(&source, pos(op, args, 0)?, int_or(op, args, 1, 1)?),
+                )?
+            }
+            "mark-defun-range" => {
+                let source = Source::from_buffer(b, b.dialect());
+                let range = mark_defun(&source, pos(op, args, 0)?, pos_opt(op, args, 1)?);
+                match range {
+                    Ok((head, mark)) => Value::List(vec![at(head), at(mark)].into_iter().collect()),
+                    Err(e) => {
+                        b.set_point(e.point);
+                        return Err(e.message);
+                    }
+                }
+            }
+            "forward-paragraph-position" => {
+                let chars: Vec<char> = b.text().chars().collect();
+                at(forward_paragraph(
+                    &chars,
+                    pos(op, args, 0)?,
+                    int(op, args, 1)?,
+                    b.dialect(),
+                ))
+            }
+            "forward-sentence-position" => {
+                let chars: Vec<char> = b.text().chars().collect();
+                let found =
+                    forward_sentence(&chars, pos(op, args, 0)?, int(op, args, 1)?, b.dialect());
+                moved(b, found)?
             }
             "syntax-ppss" => {
                 let p = pos_opt(op, args, 0)?.unwrap_or(b.point());

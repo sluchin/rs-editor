@@ -707,3 +707,44 @@ fn test_character_and_integer_builtins() {
     );
     assert_eq!(eval("(format \"%X %x %o\" 255 255 8)"), "\"FF ff 10\"");
 }
+
+#[test]
+fn test_condition_case() {
+    // 失敗しなければ, 本体の値
+    assert_eq!(eval("(condition-case e 1 (error 2))"), "1");
+    // 失敗の内容は, (error "メッセージ")
+    assert_eq!(
+        eval("(condition-case e (error \"boom %d\" 3) (error (error-message-string e)))"),
+        "\"boom 3\""
+    );
+    assert_eq!(
+        eval("(condition-case e (car '()) ((quit error) e))"),
+        "(error \"car expects a non-empty list\")"
+    );
+    // 条件: 当てはまる処理だけ. scan-error は Scan error:, quit は Quit
+    let scan = "(error \"Scan error: \\\"Unbalanced parentheses\\\", 1, 2\")";
+    assert_eq!(
+        eval(&format!(
+            "(condition-case e {scan} (quit 1) (user-error 2) (scan-error (scan-error-reason e)))"
+        )),
+        "\"Unbalanced parentheses\""
+    );
+    assert_eq!(
+        eval("(condition-case e (error \"Quit\") (error 1) (quit 2))"),
+        "2"
+    );
+    assert_eq!(eval("(condition-case e (error \"x\") (user-error 1))"), "1");
+    assert_eq!(eval("(condition-case e (error \"x\") (t 1))"), "1");
+    assert_eq!(eval("(condition-case e (error \"x\") ((1 error) 5))"), "5");
+    // 当てはまる処理が無ければ, 失敗のまま. 条件が記号でない処理と, 処理でないものは当てはまらない
+    assert_eq!(
+        eval_err("(condition-case e (error \"x\") (1 2) 3 (scan-error 4) (other 5))"),
+        "x"
+    );
+    assert_eq!(
+        eval_err("(condition-case 1 2)"),
+        "condition-case expects a variable and a body form"
+    );
+    // メッセージの文字列からも取り出せる
+    assert_eq!(eval("(scan-error-reason \"plain\")"), "\"plain\"");
+}

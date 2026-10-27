@@ -300,8 +300,18 @@ impl Source {
     }
 
     /// 位置の文字.
-    fn char_at(&self, pos: usize) -> Option<char> {
+    pub fn char_at(&self, pos: usize) -> Option<char> {
         self.chars.get(pos).copied()
+    }
+
+    /// 読む範囲 (始めと終わり).
+    pub fn range(&self) -> (usize, usize) {
+        (self.min, self.max)
+    }
+
+    /// 本文の長さ (文字の数).
+    pub fn size(&self) -> usize {
+        self.chars.len()
     }
 
     /// 位置の 2 文字が, 構文の印 `first` と `second` を持てば `true` (`#|` など).
@@ -432,11 +442,26 @@ impl Source {
     /// その種類のコメントの終わりでなければ (`#| |#` の中の改行など) `None`.
     fn back_comment(&self, from: usize, nested: bool) -> Option<usize> {
         let state = self.parse_state(from);
-        if state.in_comment && state.nested == nested {
-            state.start
-        } else {
-            None
+        if !(state.in_comment && state.nested == nested) {
+            return None;
         }
+        let outer = state.start?;
+        if !nested {
+            return Some(outer);
+        }
+        // 入れ子のコメントは, 終わりの印に合う, 一番内側の始めの印 (`#|`) を探す
+        let mut depth = 1;
+        let inner = (outer..from).rev().find(|&at| {
+            if self.pair(at, FLAG_START1, FLAG_START2, self.max) {
+                depth -= 1;
+                return depth == 0;
+            }
+            if self.pair(at, FLAG_END1, FLAG_END2, self.max) {
+                depth += 1;
+            }
+            false
+        });
+        Some(inner.unwrap_or(outer))
     }
 
     /// 括弧の深さを数えながら, 式を読みます (Emacs の `scan-lists` と `scan-sexps`).

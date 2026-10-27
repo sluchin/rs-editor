@@ -260,7 +260,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
-| 5 | S 式, 段落, ページ | 28 | 14 | 14 |
+| 5 | S 式, 段落, ページ | 23 | 9 | 14 |
 | 6 | 字下げ, 整形, コメント | 9 | 5 | 4 |
 | 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
@@ -299,7 +299,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **5. S 式, 段落, ページ**
 
-- 括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。`src/lib/sexp.ts` と `src/lib/paragraph.ts` の計算は, ターミナルでも使うため, Rust に移す。
+- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/lisp_test.rs`: 3 つのモードで, 40 通りのコマンドを全ての位置から, 対話的に). ページと入れ替え (`transpose-sexps` など) は残り. 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
 
 **6. 字下げ, 整形, コメント**
 
@@ -330,7 +330,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 117 個: Lisp 34 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 122 個: Lisp 39 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -462,32 +462,32 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `left-word` |  | bindings | `C-<left>`, `M-<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `right-char` |  | bindings | `<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `right-word` |  | bindings | `C-<right>`, `M-<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-kill-sexp` | ◯ | lisp | `C-M-<delete>`, `ESC C-<delete>`, `C-M-<backspace>`, `ESC C-<backspace>` |  |  |  | 5 |
-| `backward-list` | ◯ | lisp | `C-M-p` |  |  |  | 5 |
-| `backward-sexp` | ◯ | lisp | `C-M-b`, `C-M-<left>`, `ESC C-<left>` | 実装済み | `C-M-b` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `backward-up-list` | ◯ | lisp | `C-M-u`, `C-M-<up>`, `ESC C-<up>` | 実装済み | `C-M-u` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `beginning-of-defun` | ◯ | lisp | `C-M-a`, `C-M-<home>`, `ESC C-<home>` | 実装済み | `C-M-a` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `down-list` | ◯ | lisp | `C-M-d`, `C-M-<down>`, `ESC C-<down>` | 実装済み | `C-M-d` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `end-of-defun` | ◯ | lisp | `C-M-e`, `C-M-<end>`, `ESC C-<end>` | 実装済み | `C-M-e` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `forward-list` | ◯ | lisp | `C-M-n` |  |  |  | 5 |
-| `forward-sexp` | ◯ | lisp | `C-M-f`, `C-M-<right>`, `ESC C-<right>` | 実装済み | `C-M-f` | TypeScript (`src/lib/emacs.ts`) | 5 |
+| `backward-kill-sexp` | ◯ | lisp | `C-M-<delete>`, `ESC C-<delete>`, `C-M-<backspace>`, `ESC C-<backspace>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-list` | ◯ | lisp | `C-M-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-sexp` | ◯ | lisp | `C-M-b`, `C-M-<left>`, `ESC C-<left>` | 実装済み | `C-M-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `backward-up-list` | ◯ | lisp | `C-M-u`, `C-M-<up>`, `ESC C-<up>` | 実装済み | `C-M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `beginning-of-defun` | ◯ | lisp | `C-M-a`, `C-M-<home>`, `ESC C-<home>` | 実装済み | `C-M-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `down-list` | ◯ | lisp | `C-M-d`, `C-M-<down>`, `ESC C-<down>` | 実装済み | `C-M-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `end-of-defun` | ◯ | lisp | `C-M-e`, `C-M-<end>`, `ESC C-<end>` | 実装済み | `C-M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `forward-list` | ◯ | lisp | `C-M-n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-sexp` | ◯ | lisp | `C-M-f`, `C-M-<right>`, `ESC C-<right>` | 実装済み | `C-M-f` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `insert-parentheses` | ◯ | lisp | `M-(` |  |  |  | 5 |
-| `kill-sexp` | ◯ | lisp | `C-M-k` | 実装済み | `C-M-k` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC` | TypeScript (`src/lib/emacs.ts`) | 5 |
+| `kill-sexp` | ◯ | lisp | `C-M-k` | 実装済み | `C-M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `move-past-close-and-reindent` | ◯ | lisp | `M-)` |  |  |  | 5 |
 | `narrow-to-defun` |  | lisp | `C-x n d` |  |  |  | 5 |
 | `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`) | 6 |
 | `indent-rigidly` | ◯ | indent | `C-x TAB` |  |  |  | 6 |
 | `tab-to-tab-stop` |  | indent | `M-i` |  |  |  | 6 |
-| `backward-kill-sentence` | ◯ | paragraphs | `C-x DEL` |  |  |  | 5 |
-| `backward-paragraph` | ◯ | paragraphs | `M-{`, `C-<up>` | 実装済み | `M-{` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `backward-sentence` | ◯ | paragraphs | `M-a` | 実装済み | `M-a` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `forward-paragraph` | ◯ | paragraphs | `M-}`, `C-<down>` | 実装済み | `M-}` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `forward-sentence` | ◯ | paragraphs | `M-e` | 実装済み | `M-e` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | TypeScript (`src/lib/emacs.ts`) | 5 |
-| `mark-paragraph` | ◯ | paragraphs | `M-h` |  |  |  | 5 |
+| `backward-kill-sentence` | ◯ | paragraphs | `C-x DEL` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-paragraph` | ◯ | paragraphs | `M-{`, `C-<up>` | 実装済み | `M-{` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `backward-sentence` | ◯ | paragraphs | `M-a` | 実装済み | `M-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `forward-paragraph` | ◯ | paragraphs | `M-}`, `C-<down>` | 実装済み | `M-}` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `forward-sentence` | ◯ | paragraphs | `M-e` | 実装済み | `M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
+| `mark-paragraph` | ◯ | paragraphs | `M-h` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `backward-page` | ◯ | page | `C-x [` |  |  |  | 5 |
 | `count-lines-page` | ◯ | page | `C-x l` |  |  |  | 5 |
 | `forward-page` | ◯ | page | `C-x ]` |  |  |  | 5 |

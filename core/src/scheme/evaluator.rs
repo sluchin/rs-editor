@@ -773,6 +773,28 @@ impl<'a> Machine<'a> {
                 }
                 _ => return Err(format!("{} expects a test", op)),
             },
+            "condition-case" => match args {
+                [Value::Symbol(var), body, handlers @ ..] => match self.eval(body, env) {
+                    Ok(value) => Step::Done(value),
+                    Err(message) => {
+                        let handler = handlers.iter().find_map(|handler| match handler {
+                            Value::List(items) => {
+                                handles(&items[0], &message).then(|| items[1..].to_vec())
+                            }
+                            _ => None,
+                        });
+                        let Some(body) = handler else {
+                            return Err(message);
+                        };
+                        // 変数には, (error "メッセージ") を束ねる
+                        let inner = env.child();
+                        let data = vec![Value::Symbol("error".to_string()), Value::String(message)];
+                        inner.define(var, Value::List(data.into()));
+                        self.sequence(&body, &inner)?
+                    }
+                },
+                _ => return Err("condition-case expects a variable and a body form".to_string()),
+            },
             "unwind-protect" => match args {
                 [body, cleanup @ ..] => {
                     // 本体が失敗しても, 後始末を評価する
@@ -1112,6 +1134,33 @@ fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, 
             _ => Err(invalid()),
         })
         .collect()
+}
+
+/// `condition-case` の条件 (記号か記号のリスト) が, 失敗のメッセージを受けるか.
+///
+/// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.
+/// `error` と `t` は, `quit` 以外の全て. `user-error` は, `scan-error` と `quit` 以外の全て.
+fn handles(conditions: &Value, message: &str) -> bool {
+    let names: Vec<&str> = match conditions {
+        Value::Symbol(name) => vec![name.as_str()],
+        Value::List(items) => items
+            .iter()
+            .filter_map(|v| match v {
+                Value::Symbol(name) => Some(name.as_str()),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let scan = message.starts_with("Scan error:");
+    let quit = message == "Quit";
+    names.iter().any(|name| match *name {
+        "scan-error" => scan,
+        "quit" => quit,
+        "user-error" => !scan && !quit,
+        "error" | "t" => !quit,
+        _ => false,
+    })
 }
 
 #[cfg(test)]

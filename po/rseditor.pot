@@ -3129,6 +3129,16 @@ msgid "The undo records that are not undone yet, while undo is repeated."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:simple--interactive"
+msgid "True while a command is run from the keyboard (the terminal app sets it), like called-interactively-p."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--allow-extend"
+msgid "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, or true when called from the keyboard."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--arg"
 msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
 msgstr ""
@@ -3832,6 +3842,172 @@ msgctxt "function:save-buffers-kill-terminal"
 msgid ""
 "Offer to save the modified buffers, and exit the editor.\n"
 "Ask once more if modified buffers remain."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--forward-sexp"
+msgid "Move forward across N sexps, signalling the scan error as is."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-sexp"
+msgid ""
+"Move forward across one balanced expression (sexp).\n"
+"With argument N, do it N times; a negative N moves backward.\n"
+"From the keyboard, report a failure as \"No next sexp\" or \"No previous sexp\"."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-sexp"
+msgid ""
+"Move backward across one balanced expression (sexp).\n"
+"With argument N, do it N times; a negative N moves forward."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-list"
+msgid ""
+"Move forward across one balanced group of parentheses.\n"
+"With argument N, do it N times; a negative N moves backward.\n"
+"From the keyboard, report a failure as \"No next group\" or \"No previous group\"."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-list"
+msgid ""
+"Move backward across one balanced group of parentheses.\n"
+"With argument N, do it N times; a negative N moves forward."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:down-list"
+msgid ""
+"Move forward down one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves backward but still goes down a level.\n"
+"From the keyboard, report a failure as \"At bottom level\"."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:up-list"
+msgid ""
+"Move forward out of one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves backward.\n"
+"Inside a string, move out of the string first."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-up-list"
+msgid ""
+"Move backward out of one level of parentheses.\n"
+"With argument N, do this N times; a negative N moves forward."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-sexp"
+msgid ""
+"Kill the sexp (balanced expression) following point.\n"
+"With argument N, kill N sexps; a negative N kills backward."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-sexp"
+msgid ""
+"Kill the sexp (balanced expression) preceding point.\n"
+"With argument N, kill N sexps; a negative N kills forward."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--forward-sexp-to-select"
+msgid "Return the end of N sexps from point; signal NONE if there is no sexp to select."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-sexp"
+msgid ""
+"Set the mark at the end of the next sexp, or extend the region by one sexp.\n"
+"With argument N, do it for N sexps (backward if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--push-mark-for-defun"
+msgid "Push the mark before a defun motion NAME, unless it repeats NAME or the region is active."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-defun"
+msgid ""
+"Move backward to the beginning of a defun (an open paren in column 0).\n"
+"With argument N, do it N times.  Push the mark first, unless repeated."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:end-of-defun"
+msgid ""
+"Move forward to the end of a defun.  With argument N, do it N times.\n"
+"Push the mark first, unless repeated."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-defun"
+msgid ""
+"Put the region around the current defun, including the comments before it.\n"
+"If the region is active, extend it to the end of the next defun."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-paragraph"
+msgid ""
+"Move forward to the end of the paragraph.  With argument N, do it N times;\n"
+"a negative N moves backward to the start of the paragraph."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-paragraph"
+msgid "Move backward to the start of the paragraph.  With argument N, do it N times."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-paragraph"
+msgid ""
+"Put the mark at the end of this paragraph, point at the beginning.\n"
+"If the region is active, extend it by one more paragraph."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-paragraph"
+msgid "Kill forward to the end of the paragraph.  With argument N, kill N paragraphs."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-paragraph"
+msgid "Kill back to the start of the paragraph.  With argument N, kill N paragraphs."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-sentence"
+msgid ""
+"Move forward to next end of sentence.  With argument N, do it N times;\n"
+"a negative N moves backward to the start of the sentence."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-sentence"
+msgid "Move backward to the start of the sentence.  With argument N, do it N times."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-sentence"
+msgid "Kill from point to the end of the current sentence.  With argument N, kill N sentences."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-sentence"
+msgid "Kill back from point to the start of the sentence.  With argument N, kill N sentences."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-end-of-sentence"
+msgid "Put the mark at the end of this sentence.  With argument N, N sentences forward."
 msgstr ""
 
 #: lisp/simple.scm

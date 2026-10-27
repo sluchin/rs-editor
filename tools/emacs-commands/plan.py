@@ -48,8 +48,10 @@ STEPS = [
       '`next-error` と `previous-error` は, `*grep*` の画面 (TypeScript) のままで, 段階 9 で移す. 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】'
       'マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。']),
     (5, 'S 式, 段落, ページ',
-     ['括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。'
-      '`src/lib/sexp.ts` と `src/lib/paragraph.ts` の計算は, ターミナルでも使うため, Rust に移す。']),
+     ['【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 '
+      '(`core/tests/lisp_test.rs`: 3 つのモードで, 40 通りのコマンドを全ての位置から, 対話的に). ページと入れ替え (`transpose-sexps` など) は残り. '
+      '画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】'
+      '括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。']),
     (6, '字下げ, 整形, コメント',
      ['`TAB`, `C-M-\\`, `M-q`, `M-;`。字下げの決まり (`src/lib/lispIndent.ts`) と整形 (`src/lib/fill.ts`) は, ターミナルでも使うため, Rust に移す。'
       'エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。']),

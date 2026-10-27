@@ -273,7 +273,12 @@ impl App {
             .set_deactivate_requested(false);
         let globals = self.evaluator.global();
         globals.define("this-command", symbol(command));
+        // キーから動かすコマンドは, 対話的 (called-interactively-p)
+        globals.define("simple--interactive", Value::Boolean(true));
         let outcome = self.evaluator.run_command(command, &self.host).map(|_| ());
+        self.evaluator
+            .global()
+            .define("simple--interactive", Value::Boolean(false));
         self.finish(command, outcome);
     }
 

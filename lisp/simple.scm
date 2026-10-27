@@ -18,6 +18,13 @@ A command can set it, so that the next command sees it as last-command.")
 (define pending-undo-list #f
   "The undo records that are not undone yet, while undo is repeated.")
 
+(define simple--interactive #f
+  "True while a command is run from the keyboard (the terminal app sets it), like called-interactively-p.")
+
+(define (simple--allow-extend args)
+  "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, or true when called from the keyboard."
+  (if (and (pair? args) (pair? (cdr args))) (cadr args) simple--interactive))
+
 (define (simple--arg args)
   "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
   (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
@@ -732,7 +739,7 @@ The mark is activated, unless there is an argument (which deactivates it)."
   "Set the mark at the end of the next word, or extend the region by a word.
 With argument N, do it for N words (backward if N is negative)."
   (let ((arg (simple--raw-arg args))
-        (allow-extend (and (pair? args) (pair? (cdr args)) (cadr args))))
+        (allow-extend (simple--allow-extend args)))
     (cond ((and allow-extend
                 (or (and (equal? last-command this-command) (mark))
                     (region-active-p)))
@@ -1086,6 +1093,207 @@ Ask once more if modified buffers remain."
   (when (or (null? (simple--modified-file-buffers))
             (yes-or-no-p "Modified buffers exist; exit anyway? "))
     (kill-emacs)))
+
+;;; S-expressions, defuns, paragraphs and sentences
+
+(define (simple--forward-sexp n)
+  "Move forward across N sexps, signalling the scan error as is."
+  (goto-char (or (scan-sexps (point) n) (if (> n 0) (point-max) (point-min))))
+  (if (< n 0) (backward-prefix-chars)))
+
+(define-command (forward-sexp . args)
+  "Move forward across one balanced expression (sexp).
+With argument N, do it N times; a negative N moves backward.
+From the keyboard, report a failure as \"No next sexp\" or \"No previous sexp\"."
+  (let ((n (simple--arg args)))
+    (if simple--interactive
+        (condition-case e
+            (simple--forward-sexp n)
+          (scan-error (user-error (if (> n 0) "No next sexp" "No previous sexp"))))
+        (simple--forward-sexp n))))
+
+(define-command (backward-sexp . args)
+  "Move backward across one balanced expression (sexp).
+With argument N, do it N times; a negative N moves forward."
+  (forward-sexp (- (simple--arg args))))
+
+(define-command (forward-list . args)
+  "Move forward across one balanced group of parentheses.
+With argument N, do it N times; a negative N moves backward.
+From the keyboard, report a failure as \"No next group\" or \"No previous group\"."
+  (let ((n (simple--arg args)))
+    (define (move)
+      (goto-char (or (scan-lists (point) n 0) (if (> n 0) (point-max) (point-min)))))
+    (if simple--interactive
+        (condition-case e
+            (move)
+          (scan-error (user-error (if (> n 0) "No next group" "No previous group"))))
+        (move))))
+
+(define-command (backward-list . args)
+  "Move backward across one balanced group of parentheses.
+With argument N, do it N times; a negative N moves forward."
+  (forward-list (- (simple--arg args))))
+
+(define-command (down-list . args)
+  "Move forward down one level of parentheses.
+With argument N, do this N times; a negative N moves backward but still goes down a level.
+From the keyboard, report a failure as \"At bottom level\"."
+  (let ((n (simple--arg args)))
+    (when (list-ref (syntax-ppss) 8)
+      (user-error "This command doesn’t work in strings or comments"))
+    (define (move)
+      (let loop ((arg n))
+        (let ((inc (if (> arg 0) 1 -1)))
+          (when (not (= arg 0))
+            (goto-char (or (scan-lists (point) inc -1) (if (> arg 0) (point-max) (point-min))))
+            (loop (- arg inc))))))
+    (if simple--interactive
+        (condition-case e
+            (move)
+          (scan-error (user-error "At bottom level")))
+        (move))))
+
+(define-command (up-list . args)
+  "Move forward out of one level of parentheses.
+With argument N, do this N times; a negative N moves backward.
+Inside a string, move out of the string first."
+  (let loop ((n (simple--arg args)))
+    (cond ((> n 0) (goto-char (up-list-position (point) 1)) (loop (- n 1)))
+          ((< n 0) (goto-char (up-list-position (point) -1)) (loop (+ n 1))))))
+
+(define-command (backward-up-list . args)
+  "Move backward out of one level of parentheses.
+With argument N, do this N times; a negative N moves forward."
+  (up-list (- (simple--arg args))))
+
+(define-command (kill-sexp . args)
+  "Kill the sexp (balanced expression) following point.
+With argument N, kill N sexps; a negative N kills backward."
+  (let ((start (point)))
+    (forward-sexp (simple--arg args))
+    (simple--kill start (point))))
+
+(define-command (backward-kill-sexp . args)
+  "Kill the sexp (balanced expression) preceding point.
+With argument N, kill N sexps; a negative N kills forward."
+  (kill-sexp (- (simple--arg args))))
+
+(define (simple--forward-sexp-to-select n none)
+  "Return the end of N sexps from point; signal NONE if there is no sexp to select."
+  (condition-case e
+      (save-excursion (simple--forward-sexp n) (point))
+    (scan-error
+     (let ((reason (scan-error-reason e)))
+       (user-error (if (equal? reason "Containing expression ends prematurely") none reason))))))
+
+(define-command (mark-sexp . args)
+  "Set the mark at the end of the next sexp, or extend the region by one sexp.
+With argument N, do it for N sexps (backward if N is negative)."
+  (let ((arg (simple--raw-arg args))
+        (allow-extend (simple--allow-extend args)))
+    (cond ((and allow-extend
+                (or (and (equal? last-command this-command) (mark))
+                    (region-active-p)))
+           (let ((n (if arg
+                        (prefix-numeric-value arg)
+                        (if (< (mark) (point)) -1 1))))
+             (set-mark (save-excursion
+                         (goto-char (mark))
+                         (simple--forward-sexp-to-select n "No more sexp to select")))))
+          (else
+           (push-mark (simple--forward-sexp-to-select (prefix-numeric-value arg) "No sexp to select")
+                      #f #t)))))
+
+(define (simple--push-mark-for-defun name)
+  "Push the mark before a defun motion NAME, unless it repeats NAME or the region is active."
+  (if (and (eq? this-command name) (not (eq? last-command name)) (not (region-active-p)))
+      (push-mark)))
+
+(define-command (beginning-of-defun . args)
+  "Move backward to the beginning of a defun (an open paren in column 0).
+With argument N, do it N times.  Push the mark first, unless repeated."
+  (simple--push-mark-for-defun 'beginning-of-defun)
+  (let loop ((n (simple--arg args)))
+    (when (> n 0)
+      (goto-char (beginning-of-defun-position (point)))
+      (loop (- n 1)))))
+
+(define-command (end-of-defun . args)
+  "Move forward to the end of a defun.  With argument N, do it N times.
+Push the mark first, unless repeated."
+  (simple--push-mark-for-defun 'end-of-defun)
+  (goto-char (end-of-defun-position (point) (simple--arg args))))
+
+(define-command (mark-defun . args)
+  "Put the region around the current defun, including the comments before it.
+If the region is active, extend it to the end of the next defun."
+  (let ((extend (and (use-region-p) (mark)))
+        (opoint (point)))
+    (if (not extend) (push-mark opoint))
+    (let ((range (mark-defun-range opoint extend)))
+      (push-mark (cadr range) #t #t)
+      (goto-char (car range)))))
+
+(define-command (forward-paragraph . args)
+  "Move forward to the end of the paragraph.  With argument N, do it N times;
+a negative N moves backward to the start of the paragraph."
+  (goto-char (forward-paragraph-position (point) (simple--arg args))))
+
+(define-command (backward-paragraph . args)
+  "Move backward to the start of the paragraph.  With argument N, do it N times."
+  (forward-paragraph (- (simple--arg args))))
+
+(define-command (mark-paragraph . args)
+  "Put the mark at the end of this paragraph, point at the beginning.
+If the region is active, extend it by one more paragraph."
+  (let ((arg (if (null? args) (prefix-numeric-value (current-prefix-arg)) (or (car args) 1)))
+        (allow-extend (simple--allow-extend args)))
+    (when (= arg 0) (error "Cannot mark zero paragraphs"))
+    (cond ((and allow-extend
+                (or (and (equal? last-command this-command) (mark))
+                    (region-active-p)))
+           (set-mark (save-excursion
+                       (goto-char (mark))
+                       (forward-paragraph arg)
+                       (point))))
+          (else
+           (forward-paragraph arg)
+           (push-mark (point) #t #t)
+           (backward-paragraph arg)))))
+
+(define-command (kill-paragraph . args)
+  "Kill forward to the end of the paragraph.  With argument N, kill N paragraphs."
+  (let ((start (point)))
+    (forward-paragraph (simple--arg args))
+    (simple--kill start (point))))
+
+(define-command (backward-kill-paragraph . args)
+  "Kill back to the start of the paragraph.  With argument N, kill N paragraphs."
+  (kill-paragraph (- (simple--arg args))))
+
+(define-command (forward-sentence . args)
+  "Move forward to next end of sentence.  With argument N, do it N times;
+a negative N moves backward to the start of the sentence."
+  (goto-char (forward-sentence-position (point) (simple--arg args))))
+
+(define-command (backward-sentence . args)
+  "Move backward to the start of the sentence.  With argument N, do it N times."
+  (forward-sentence (- (simple--arg args))))
+
+(define-command (kill-sentence . args)
+  "Kill from point to the end of the current sentence.  With argument N, kill N sentences."
+  (let ((start (point)))
+    (forward-sentence (simple--arg args))
+    (simple--kill start (point))))
+
+(define-command (backward-kill-sentence . args)
+  "Kill back from point to the start of the sentence.  With argument N, kill N sentences."
+  (kill-sentence (- (simple--arg args))))
+
+(define-command (mark-end-of-sentence . args)
+  "Put the mark at the end of this sentence.  With argument N, N sentences forward."
+  (push-mark (save-excursion (forward-sentence (simple--arg args)) (point)) #f #t))
 
 ;;; Running commands
 
