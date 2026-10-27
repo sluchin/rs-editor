@@ -543,6 +543,11 @@ impl Buffer {
         Ok((self.point.min(mark), self.point.max(mark)))
     }
 
+    /// マークを使う状態か (Emacs の `region-active-p`. リージョンが空でもよい).
+    pub fn region_active(&self) -> bool {
+        self.mark_active && self.mark.is_some()
+    }
+
     /// リージョンを使うか (Emacs の `use-region-p`). マークを使う状態で, リージョンが空でないとき.
     pub fn use_region_p(&self) -> bool {
         self.mark_active && self.mark.is_some_and(|mark| mark != self.point)

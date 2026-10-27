@@ -264,6 +264,7 @@ fn test_mark_and_region() {
         (Ok(1), Ok(4))
     );
     assert!(buffer.use_region_p());
+    assert!(buffer.region_active());
     // カーソルがマークの後ろでもよい. 空のリージョンは使わない
     buffer.set_point(5);
     assert_eq!(
@@ -274,7 +275,7 @@ fn test_mark_and_region() {
     assert!(!buffer.use_region_p());
     buffer.set_point(1);
     buffer.deactivate_mark();
-    assert!(!buffer.use_region_p());
+    assert!(!buffer.use_region_p() && !buffer.region_active());
     assert_eq!(buffer.mark(), Some(4));
     // バッファの外は端にする
     buffer.set_mark(99);

@@ -256,7 +256,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 段階 | 内容 | コマンド | 新しく書く | TypeScript から移す |
 |---|---|---|---|---|
 | 1 | 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため) | - | - | - |
-| 2 | 動き | 15 | 5 | 10 |
+| 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 26 | 8 | 18 |
 | 4 | マーク, 前置引数, 実行 | 21 | 9 | 12 |
 | 5 | S 式, 段落, ページ | 28 | 14 | 14 |
@@ -286,7 +286,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **2. 動き**
 
-- 行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/motion_test.rs`. 392 通り). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後 (段階 1.11 の前の案)】行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
 
 **3. 消す, 切る, 貼る, 元に戻す**
 
@@ -329,14 +329,14 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 95 個: Lisp 10 個, TypeScript 85 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 100 個: Lisp 15 個, TypeScript 85 個)
 
 | コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|
 | `analyze-text-conversion` | simple | `<text-conversion>` |  |  |  | 12 |
 | `append-next-kill` | simple | `C-M-w` |  |  |  | 3 |
 | `async-shell-command` | simple | `M-&` |  |  |  | 9 |
-| `back-to-indentation` | simple | `M-m` | 実装済み | `M-m` | TypeScript (`src/lib/emacs.ts`) | 2 |
+| `back-to-indentation` | simple | `M-m` | 実装済み | `M-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `backward-kill-word` | simple | `M-DEL`, `C-<backspace>` | 実装済み | `M-DEL` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `backward-word` | simple | `M-b`, `ESC <left>` | 実装済み | `M-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `beginning-of-buffer` | simple | `M-<`, `<begin>`, `C-<home>` | 実装済み | `M-<` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
@@ -360,7 +360,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `execute-extended-command` | simple | `M-x`, `<menu>`, `<execute>` | 実装済み | `M-x` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 4 |
 | `execute-extended-command-for-buffer` | simple | `M-X` |  |  |  | 4 |
 | `goto-line` | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 2 |
-| `goto-line-relative` | simple | `C-x n g` |  |  |  | 2 |
+| `goto-line-relative` | simple | `C-x n g` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `insert-buffer` | simple | `C-x x i` |  |  |  | 3 |
 | `keyboard-escape-quit` | simple | `ESC ESC ESC` |  |  |  | 4 |
 | `keyboard-quit` | simple | `C-g` | 実装済み | `C-g` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
@@ -384,7 +384,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `quoted-insert` | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`) | 3 |
 | `repeat-complex-command` | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` |  |  |  | 4 |
 | `set-fill-column` | simple | `C-x f` |  |  |  | 4 |
-| `set-goal-column` | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`) | 2 |
+| `set-goal-column` | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `set-mark-command` | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `set-selective-display` | simple | `C-x $` |  |  |  | 4 |
 | `shell-command` | simple | `M-!` |  |  |  | 9 |
@@ -457,10 +457,10 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `window-toggle-side-windows` | window | `C-x w s` |  |  |  | 10 |
 | `complete-symbol` | bindings | `C-M-i` |  |  |  | 8 |
 | `ignore-preserving-kill-region` | bindings | `<mouse-movement>` |  |  |  | 3 |
-| `left-char` | bindings | `<left>` |  |  |  | 2 |
-| `left-word` | bindings | `C-<left>`, `M-<left>` |  |  |  | 2 |
-| `right-char` | bindings | `<right>` |  |  |  | 2 |
-| `right-word` | bindings | `C-<right>`, `M-<right>` |  |  |  | 2 |
+| `left-char` | bindings | `<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `left-word` | bindings | `C-<left>`, `M-<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `right-char` | bindings | `<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `right-word` | bindings | `C-<right>`, `M-<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `backward-kill-sexp` | lisp | `C-M-<delete>`, `ESC C-<delete>`, `C-M-<backspace>`, `ESC C-<backspace>` |  |  |  | 5 |
 | `backward-list` | lisp | `C-M-p` |  |  |  | 5 |
 | `backward-sexp` | lisp | `C-M-b`, `C-M-<left>`, `ESC C-<left>` | 実装済み | `C-M-b` | TypeScript (`src/lib/emacs.ts`) | 5 |

@@ -623,6 +623,7 @@ impl<U: Host> EditorHost<U> {
             "region-beginning" => at(b.region_beginning()?),
             "region-end" => at(b.region_end()?),
             "use-region-p" => Value::Boolean(b.use_region_p()),
+            "region-active-p" => Value::Boolean(b.region_active()),
             "undo-boundary" => {
                 b.undo_boundary();
                 Value::Nil

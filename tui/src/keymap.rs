@@ -29,6 +29,8 @@ const DEFAULT: &[(&str, &str)] = &[
     ("M->", "end-of-buffer"),
     ("M-f", "forward-word"),
     ("M-b", "backward-word"),
+    ("M-m", "back-to-indentation"),
+    ("C-x C-n", "set-goal-column"),
     ("M-g g", "goto-line"),
     ("M-g M-g", "goto-line"),
     ("C-v", "scroll-up-command"),
