@@ -7,3 +7,5 @@ pub mod atomic;
 pub mod buffer;
 pub mod kill_ring;
 pub mod scheme;
+pub mod search;
+pub mod syntax;

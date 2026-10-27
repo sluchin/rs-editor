@@ -43,9 +43,9 @@ pub struct Buffer {
     /// バッファの名前.
     name: String,
     /// 本文.
-    text: Rope,
+    pub(crate) text: Rope,
     /// カーソルの位置.
-    point: usize,
+    pub(crate) point: usize,
     /// マークの位置 (無ければ `None`).
     mark: Option<usize>,
     /// マークを使うか (Emacs の `mark-active`).
@@ -58,6 +58,8 @@ pub struct Buffer {
     file: Option<String>,
     /// 元に戻す履歴 (古いものが先).
     undo: Vec<UndoEntry>,
+    /// 最後に合った所 (全体と, 括弧ごと. Emacs の `match-data`). 位置は文字の位置.
+    pub(crate) match_data: Vec<Option<(usize, usize)>>,
 }
 
 impl Buffer {
@@ -77,6 +79,7 @@ impl Buffer {
             modified: false,
             file: None,
             undo: Vec::new(),
+            match_data: Vec::new(),
         }
     }
 

@@ -16,6 +16,7 @@ dirs = "7.0"
 regex = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 ropey = { version = "1", default-features = false }
+fancy-regex = "0.14"
 
 # cargo tarpaulin の除外 (`#[cfg(not(tarpaulin_include))]`) を, 未知の cfg として警告しない
 [lints.rust]
