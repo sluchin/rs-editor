@@ -27,6 +27,7 @@ import {
   gotoLine,
   markField,
   replaceRectangle,
+  setMark,
 } from '../lib/emacs'
 import { KillRing } from '../lib/killRing'
 import { KeyboardMacro } from '../lib/macro'
@@ -155,6 +156,10 @@ export interface EditorHandle {
   forget: (bufferId: string) => void
   /** マークを置いていれば `true`. */
   hasMark: () => boolean
+  /** マークの位置 (置いていなければ `null`). */
+  mark: () => number | null
+  /** マークを置く (外すときは `null`). */
+  setMark: (pos: number | null) => void
   /**
    * 本文を置き換えます (変わった所だけを書き換えるので, カーソルは, 同じ文字の所に残る. 元に戻せる).
    * ファイルから読み直すとき (revert-buffer).
@@ -419,6 +424,8 @@ export default function CodeEditor({
         states.current.delete(id)
       },
       hasMark: () => current().state.field(markField) !== null,
+      mark: () => current().state.field(markField),
+      setMark: (pos) => setMark(current(), pos),
       stringRectangle: (string) => replaceRectangle(current(), string),
       setText: (content) => {
         const change = syncChange(current().state, content)

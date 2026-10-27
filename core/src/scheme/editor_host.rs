@@ -80,6 +80,10 @@ impl<U: Host> EditorHost<U> {
 
 impl<U: Host> Host for EditorHost<U> {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+        if !self.ui.is_native(op) {
+            return self.ui.call(op, args);
+        }
+        self.ui.before_native(op)?;
         let outcome = {
             let mut editor = self.editor.lock().unwrap();
             self.dispatch(&mut editor, op, &args)?
@@ -224,7 +228,7 @@ fn class_char(class: Class) -> &'static str {
 }
 
 /// ファイルの拡張子から, 構文の方言を決めます.
-fn dialect_of(path: &str) -> Dialect {
+pub(crate) fn dialect_of(path: &str) -> Dialect {
     match Path::new(path).extension().and_then(|e| e.to_str()) {
         Some("el") => Dialect::Elisp,
         Some("scm" | "ss" | "sld" | "sls" | "rkt") => Dialect::Scheme,

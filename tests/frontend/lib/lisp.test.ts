@@ -31,6 +31,8 @@ function fakeHost(text: string) {
     message: '',
     calls: [] as string[],
     modified: true,
+    mark: null as number | null,
+    file: null as string | null,
   }
   const host: LispHost = {
     text: () => state.text,
@@ -94,6 +96,19 @@ function fakeHost(text: string) {
       state.calls.push(`set-text ${text} ${modified}`)
     },
     revertDired: async () => true,
+    snapshot: () => ({
+      name: 'buf',
+      text: state.text,
+      point: state.point,
+      mark: state.mark,
+      file: state.file,
+    }),
+    applyBuffer: (text, point, mark) => {
+      state.calls.push(`apply ${text} ${point} ${mark}`)
+      state.text = text
+      state.point = point
+      state.mark = mark
+    },
     whereIs: (command) => (command === 'find-file' ? ['C-x C-f'] : []),
     editorCommandNames: () => ['save-buffer'],
     setBackgroundColor: (color) => {
@@ -246,6 +261,30 @@ describe('lisp', () => {
       'unhighlight a+',
       'unhighlight true',
     ])
+  })
+
+  it('今のバッファを Lisp の核に写し, 核での変更を返す (位置は文字で数え, 1 から)', () => {
+    const { host, state } = fakeHost('a😀b')
+    state.point = 3
+    state.mark = 1
+    state.file = '/tmp/a.txt'
+    const run = (op: string, ...args: unknown[]) => performEditorRequest(host, op, args)
+    // 絵文字は 1 文字: UTF-16 の 3 は, 文字の 2 (1 から数えて 3)
+    expect(run('editor-snapshot')).toEqual(['buf', 'a😀b', 3, 2, '/tmp/a.txt'])
+    state.mark = null
+    state.file = null
+    expect(run('editor-snapshot')).toEqual(['buf', 'a😀b', 3, false, false])
+    // 核での変更: 位置は文字の位置 (1 から) を, UTF-16 の位置 (0 から) にする
+    expect(run('editor-apply', 'x😀y', 4, 2)).toBeNull()
+    expect(state.calls).toContain('apply x😀y 4 1')
+    expect(run('editor-apply', 'x😀y', 2, false)).toBeNull()
+    expect(state.calls).toContain('apply x😀y 1 null')
+    // バッファの名前と, 同じバッファへの切り替え
+    expect(run('current-buffer')).toBe('*scratch*')
+    expect(run('set-buffer', '*scratch*')).toBe('*scratch*')
+    expect(() => run('set-buffer', 'other')).toThrow(
+      'set-buffer to another buffer is not supported',
+    )
   })
 
   it('範囲を隠し, 隠したかを返す (位置は文字で数える)', () => {

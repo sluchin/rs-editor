@@ -13,6 +13,7 @@ use crate::scheme::evaluator::{Evaluator, KeyBinding};
 #[cfg(not(tarpaulin_include))]
 use crate::scheme::host::{Bridge, BridgeHost, EditorRequest};
 use crate::scheme::host::{Host, NoHost};
+use crate::scheme::mirror;
 use crate::scheme::value::Value;
 
 /// Scheme の評価の結果.
@@ -215,6 +216,25 @@ fn app_host<'a>(
     })
 }
 
+/// 評価の間、画面のバッファを核に写して、探す, マーク, 構文などの新しい組み込みを核で動かします. 終わったら、変更を画面に返します.
+/// 環境変数 `RSEDITOR_NO_CORE` があれば、写さずに、これまでどおり全てを画面に頼みます.
+///
+/// # Arguments
+///
+/// * `frontend` - 画面.
+/// * `f` - ホストを使う処理.
+#[cfg(not(tarpaulin_include))]
+fn with_core<R>(frontend: &dyn Host, f: impl FnOnce(&dyn Host) -> R) -> R {
+    if std::env::var_os("RSEDITOR_NO_CORE").is_some() {
+        return f(frontend);
+    }
+    let (result, failure) = mirror::with_mirror(frontend, f);
+    if let Some(error) = failure {
+        log::warn!("Could not return the changes of the core to the editor: {error}");
+    }
+    result
+}
+
 /// Scheme のコードを評価します (アプリの評価器を使う). 評価は, 画面の返事を待つので, 別のスレッドで行います.
 ///
 /// # Arguments
@@ -237,7 +257,9 @@ pub async fn eval_scheme(
 ) -> Result<EvalResponse, String> {
     let (evaluator, bridge) = (Arc::clone(&evaluator), Arc::clone(&bridge));
     tauri::async_runtime::spawn_blocking(move || {
-        eval_code_with(&evaluator, &code, &app_host(&app, &bridge))
+        with_core(&app_host(&app, &bridge), |host| {
+            eval_code_with(&evaluator, &code, host)
+        })
     })
     .await
     .map_err(|e| e.to_string())
@@ -265,7 +287,9 @@ pub async fn run_lisp_command(
 ) -> Result<EvalResponse, String> {
     let (evaluator, bridge) = (Arc::clone(&evaluator), Arc::clone(&bridge));
     tauri::async_runtime::spawn_blocking(move || {
-        run_command(&evaluator, &name, &app_host(&app, &bridge))
+        with_core(&app_host(&app, &bridge), |host| {
+            run_command(&evaluator, &name, host)
+        })
     })
     .await
     .map_err(|e| e.to_string())
@@ -292,7 +316,9 @@ pub async fn load_init(
     let (evaluator, bridge) = (Arc::clone(&evaluator), Arc::clone(&bridge));
     tauri::async_runtime::spawn_blocking(move || {
         let path = init_file_path();
-        load_init_file(&evaluator, path.as_deref(), &app_host(&app, &bridge))
+        with_core(&app_host(&app, &bridge), |host| {
+            load_init_file(&evaluator, path.as_deref(), host)
+        })
     })
     .await
     .map_err(|e| e.to_string())

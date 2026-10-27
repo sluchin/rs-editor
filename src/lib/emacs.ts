@@ -84,6 +84,16 @@ export const markField = StateField.define<number | null>({
   },
 })
 
+/**
+ * マークを置きます (外すときは `null`). Lisp の核が変更を返すときに使います.
+ *
+ * @param view - エディタ.
+ * @param pos - マークの位置. `null` なら外す.
+ */
+export function setMark(view: EditorView, pos: number | null): void {
+  view.dispatch({ effects: setMarkEffect.of(pos) })
+}
+
 /** 行を移るときの桁を決める (止めるときは `null`). */
 const goalColumnEffect = StateEffect.define<number | null>()
 

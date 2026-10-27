@@ -128,6 +128,22 @@ export interface LispHost {
    * @returns dired なら `true`.
    */
   revertDired: () => Promise<boolean>
+  /**
+   * 今のバッファの状態 (Lisp の核に写す). 位置は UTF-16 の単位 (0 から).
+   *
+   * @returns バッファの名前, 本文, カーソル, マーク (無ければ `null`), ファイルのパス (無ければ `null`).
+   */
+  snapshot: () => {
+    name: string
+    text: string
+    point: number
+    mark: number | null
+    file: string | null
+  }
+  /**
+   * Lisp の核での変更を, 今のバッファに返します (本文が違えば置き換え, カーソルとマークを置く). 位置は UTF-16 の単位 (0 から).
+   */
+  applyBuffer: (text: string, point: number, mark: number | null) => void
   /** 背景の色を変えます. */
   setBackgroundColor: (color: string) => void
   /** 文字の色を変えます. */
@@ -363,6 +379,35 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       return null
     case 'files--revert-dired':
       return host.revertDired()
+    case 'editor-snapshot': {
+      // Lisp の核に写す: 名前, 本文, カーソル, マーク (位置は文字で数え, 1 から), ファイル
+      const snapshot = host.snapshot()
+      const place = (pos: number | null) =>
+        pos === null ? false : charCount(snapshot.text, pos) + 1
+      return [
+        snapshot.name,
+        snapshot.text,
+        place(snapshot.point),
+        place(snapshot.mark),
+        snapshot.file ?? false,
+      ]
+    }
+    case 'editor-apply': {
+      // 核での変更を返す: 本文, カーソル, マーク (位置は文字で数え, 1 から)
+      const next = String(args[0])
+      const nextLength = charCount(next)
+      const place = (value: unknown) => utf16Offset(next, offset(value, nextLength))
+      host.applyBuffer(next, place(args[1]), typeof args[2] === 'number' ? place(args[2]) : null)
+      return null
+    }
+    case 'current-buffer':
+      return host.bufferName()
+    case 'set-buffer':
+      // バッファの切り替えは、画面のウィンドウが受け持つ. 今のバッファへの切り替えだけ、受ける
+      if (String(args[0]) !== host.bufferName()) {
+        throw new Error('set-buffer to another buffer is not supported')
+      }
+      return host.bufferName()
     case 'set-background-color':
       host.setBackgroundColor(String(args[0]))
       return null

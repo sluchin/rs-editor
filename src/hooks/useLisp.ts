@@ -322,6 +322,19 @@ export function useLisp(
         await waitRender()
       },
       setBufferText: (text, modified) => setCurrentText(text, modified),
+      snapshot: () => ({
+        name: currentBuffer.name,
+        text: handle().text(),
+        point: handle().point(),
+        mark: handle().mark(),
+        file: currentBuffer.filePath,
+      }),
+      applyBuffer: (text, point, mark) => {
+        // 本文が違えば置き換え (変わった所だけ. 変更ありにする), カーソルとマークを置く
+        if (handle().text() !== text) setCurrentText(text, true)
+        handle().setCursor(point)
+        handle().setMark(mark)
+      },
       revertDired: async () => {
         if (currentBuffer.directory === undefined) return false
         await listDirectoryInto(currentBuffer.directory, true)

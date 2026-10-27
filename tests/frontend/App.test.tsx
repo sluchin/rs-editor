@@ -741,6 +741,35 @@ describe('App', () => {
     expect(editor.cursor()).toBe(2)
   })
 
+  it('評価器が、今のバッファを核に写し (editor-snapshot)、核での変更を返す (editor-apply)', async () => {
+    const editor = await setup()
+    await editor.type('abc', 1)
+    const handler = mockedListen.mock.calls[0][1]
+    let id = 500
+    const send = async (op: string, ...args: unknown[]) => {
+      const sent = ++id
+      await act(async () => {
+        handler({ event: 'editor-request', id: 0, payload: { id: sent, op, args } })
+      })
+      const reply = [...mockedInvoke.mock.calls]
+        .reverse()
+        .find(([name, r]) => name === 'editor_reply' && (r as { id: number }).id === sent)
+      return (reply?.[1] as { value: unknown }).value
+    }
+    // 名前, 本文, カーソル, マーク, ファイル
+    expect(await send('editor-snapshot')).toEqual(['*scratch*', 'abc', 2, false, false])
+    // 本文を置き換え, カーソルとマークを置く (変更ありになる)
+    await send('editor-apply', 'xabcd', 3, 1)
+    expect(editor.doc()).toBe('xabcd')
+    expect(editor.cursor()).toBe(2)
+    expect(editor.editor.state.selection.main.head).toBe(2)
+    expect(await send('editor-snapshot')).toEqual(['*scratch*', 'xabcd', 3, 1, false])
+    // 本文が同じなら、書き換えない. マークは外せる
+    await send('editor-apply', 'xabcd', 1, false)
+    expect(editor.cursor()).toBe(0)
+    expect(await send('editor-snapshot')).toEqual(['*scratch*', 'xabcd', 1, false, false])
+  })
+
   it('C-M-s と C-M-r で, 正規表現で探す', async () => {
     const editor = await setup()
     await editor.type('ab12 cd345', 0)

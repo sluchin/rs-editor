@@ -28,6 +28,21 @@ pub trait Host: Sync {
     ///
     /// 結果, または失敗の内容.
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String>;
+
+    /// [`EditorHost`](crate::scheme::editor_host::EditorHost) の下にあるとき: この操作を、`EditorHost` が受け持つか.
+    /// 偽なら、そのまま [`Host::call`] に頼む.
+    fn is_native(&self, _op: &str) -> bool {
+        true
+    }
+
+    /// [`EditorHost`](crate::scheme::editor_host::EditorHost) の下にあるとき: 受け持つ操作を動かす前に呼ぶ.
+    ///
+    /// # Errors
+    ///
+    /// 準備に失敗したとき (操作は動かさない).
+    fn before_native(&self, _op: &str) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 /// エディタのないところ (テストや, 画面のない評価). 操作は, 全て失敗します.

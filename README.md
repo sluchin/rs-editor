@@ -118,6 +118,10 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `target/release/` に出力されます。
 
+### 画面 (Tauri) の Lisp が使う核の組み込み
+
+評価のあいだだけ、画面の今のバッファを Rust の核に写して、探す (`re-search-forward`, `looking-at`), マーク, 構文 (`scan-lists`, `syntax-ppss`), 行と桁 (`forward-line`, `current-column`) などの新しい組み込みを、核で動かします。画面に頼む前と評価の終わりに、核での変更を画面に返します。`point`, `insert` など、これまでの操作と、バッファの出し入れは、これまでどおり画面が受け持ちます。不具合があれば、環境変数 `RSEDITOR_NO_CORE=1` で、これまでの動きに戻せます。
+
 ### ターミナルで動かす (ncurses)
 
 同じエディタの核 (`core/`) を、ターミナルの ncurses の画面でも動かせます (`tui/`)。ncurses の開発ファイル (`libncurses-dev`) が必要です。
