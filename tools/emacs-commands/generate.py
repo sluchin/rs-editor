@@ -15,6 +15,9 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import plan  # noqa: E402
+
 BEGIN = '<!-- emacs-commands:begin -->'
 END = '<!-- emacs-commands:end -->'
 
@@ -136,6 +139,45 @@ def place_cell(places):
 
 
 
+def plan_cell(command, library, places):
+    """計画の段階 (番号). 既に Lisp で書いてあれば「済」."""
+    if places and all(p.endswith('.scm') for p in places):
+        return '済'
+    step = plan.step_of(command, library)
+    if step is None:
+        sys.exit(f'{command} ({library}): tools/emacs-commands/plan.py に段階を書いてください')
+    return str(step)
+
+
+def plan_lines(essential, all_commands, rs):
+    """実装の計画 (段階の一覧と, 段階ごとの内容)."""
+    counts = {number: [0, 0, 0] for number, _, _ in plan.STEPS}  # 全部, 新しく書く, TypeScript から移す
+    for c in essential:
+        cell = plan_cell(c, all_commands[c], rs[c][1] if c in rs else [])
+        if cell == '済':
+            continue
+        counts[int(cell)][0] += 1
+        counts[int(cell)][1 if c not in rs else 2] += 1
+    lines = ['### 実装の計画 (エディタの基本のコマンドを Lisp で書く)', '']
+    lines.append('エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。'
+                 '下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。'
+                 '段階は番号の順に進める (1 は土台で, 2 以降の前提)。'
+                 'TypeScript で書いてあるコマンドは, Lisp に移したら TypeScript の方を消す。')
+    lines.append('')
+    lines.append('| 段階 | 内容 | コマンド | 新しく書く | TypeScript から移す |')
+    lines.append('|---|---|---|---|---|')
+    for number, title, _ in plan.STEPS:
+        total, new, move = counts[number]
+        lines.append(f'| {number} | {title} | {total or "-"} | {new or "-"} | {move or "-"} |')
+    lines.append('')
+    for number, title, body in plan.STEPS:
+        lines.append(f'**{number}. {title}**')
+        lines.append('')
+        lines.extend(f'- {text}' for text in body)
+        lines.append('')
+    return lines
+
+
 def main():
     out, target = Path(sys.argv[1]), Path(sys.argv[2])
     root = target.parent
@@ -166,6 +208,8 @@ def main():
     w('- **実装**: rs-editor で書いた言語とファイル。今は, ほとんどを TypeScript (画面) で書いている。'
       'いずれ Lisp (`lisp/`) に移す (移したら「Lisp」になる)。Emacs の「C で書いたもの」「Lisp で書いたもの」は, '
       'Emacs の中での区別で, rs-editor での書き方とは別。')
+    w('- **計画**: 「エディタの基本のコマンド」の表だけにある。Lisp で書く段階の番号 (下の「実装の計画」の段階)。「済」は, 既に Lisp で書いたもの。'
+      '計画は `tools/emacs-commands/plan.py` に書く。')
     w('- キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。')
     w('- 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, '
       'エディタの基本のライブラリ (' + ', '.join(f'`{l}`' for l in ESSENTIAL_LIBRARIES) + ') にあるもの。'
@@ -180,15 +224,18 @@ def main():
         w(f'| {code(c)} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
           f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} |')
     w('')
+    for line in plan_lines(essential, all_commands, rs):
+        w(line)
     w(f'### エディタの基本のコマンド (Lisp で書いたもの. {len(essential)} 個. '
       f'実装済み {essential_implemented} 個: {languages(essential)})')
     w('')
-    w('| コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
-    w('|---|---|---|---|---|---|')
+    w('| コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |')
+    w('|---|---|---|---|---|---|---|')
     for c in essential:
         done = c in rs
         w(f'| {code(c)} | {all_commands[c]} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
-          f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} |')
+          f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} | '
+          f'{plan_cell(c, all_commands[c], rs[c][1] if c in rs else [])} |')
     w('')
     w(END)
 
