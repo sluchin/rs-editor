@@ -687,3 +687,12 @@ fn test_documentation() {
         "define expects a docstring after the value"
     );
 }
+
+#[test]
+fn test_string_escapes() {
+    let ev = Evaluator::new();
+    assert_eq!(
+        ev.eval("(string-length \"a\\r\\n\\t\\\"\\\\\")").unwrap(),
+        "6"
+    );
+}

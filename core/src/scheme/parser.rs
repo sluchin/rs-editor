@@ -143,6 +143,7 @@ impl Parser {
                     match self.current() {
                         Some('n') => result.push('\n'),
                         Some('t') => result.push('\t'),
+                        Some('r') => result.push('\r'),
                         Some('"') => result.push('"'),
                         Some('\\') => result.push('\\'),
                         _ => return Err("Invalid escape sequence".to_string()),

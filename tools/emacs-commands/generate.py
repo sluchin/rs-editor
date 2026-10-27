@@ -51,6 +51,15 @@ def essential_commands(commands, keys):
     return sorted(names, key=lambda c: (ESSENTIAL_LIBRARIES.index(commands[c]), c))
 
 
+def load_edwin(path):
+    """Edwin (MIT/GNU Scheme のエディタ) にあるコマンドの名前の集まり."""
+    return {
+        line.strip()
+        for line in path.read_text().splitlines()
+        if line.strip() and not line.startswith('#')
+    }
+
+
 def load_keys(path):
     """コマンド -> [(キーマップ, キー)] (短いキーの順)."""
     keys = defaultdict(list)
@@ -185,6 +194,7 @@ def main():
     all_commands = load_commands(out / 'q-commands.tsv')
     commands = sorted(c for c, library in all_commands.items() if library == '(C)')
     keys = load_keys(out / 'q-keys.tsv')
+    edwin = load_edwin(Path(__file__).resolve().parent / 'edwin-commands.txt')
     essential = essential_commands(all_commands, keys)
     rs = rs_editor(root, out)
     implemented = sum(1 for c in commands if c in rs)
@@ -209,6 +219,8 @@ def main():
     w('- **実装**: rs-editor で書いた言語とファイル。今は, ほとんどを TypeScript (画面) で書いている。'
       'いずれ Lisp (`lisp/`) に移す (移したら「Lisp」になる)。Emacs の「C で書いたもの」「Lisp で書いたもの」は, '
       'Emacs の中での区別で, rs-editor での書き方とは別。')
+    w('- **Edwin**: MIT/GNU Scheme 12.1 の Edwin (Emacs に似たエディタ. `src/edwin` の `define-command`) にも, 同じ名前のコマンドがあれば ◯。'
+      '名前の一覧は `tools/emacs-commands/edwin-commands.txt` (`tools/emacs-commands/edwin.sh` で作る)。')
     w('- **計画**: 「エディタの基本のコマンド」の表だけにある。Lisp で書く段階の番号 (下の「実装の計画」の段階)。「済」は, 既に Lisp で書いたもの。'
       '計画は `tools/emacs-commands/plan.py` に書く。')
     w('- キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。')
@@ -216,25 +228,27 @@ def main():
       'エディタの基本のライブラリ (' + ', '.join(f'`{l}`' for l in ESSENTIAL_LIBRARIES) + ') にあるもの。'
       'マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。')
     w('')
-    w(f'### 組み込みのコマンド ({len(commands)} 個. 実装済み {implemented} 個: {languages(commands)})')
+    edwin_builtin = sum(1 for c in commands if c in edwin)
+    w(f'### 組み込みのコマンド ({len(commands)} 個. 実装済み {implemented} 個: {languages(commands)}. Edwin にもある: {edwin_builtin} 個)')
     w('')
-    w('| コマンド | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
-    w('|---|---|---|---|---|')
+    w('| コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
+    w('|---|---|---|---|---|---|')
     for c in commands:
         done = c in rs
-        w(f'| {code(c)} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
+        w(f'| {code(c)} | {"◯" if c in edwin else ""} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
           f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} |')
     w('')
     for line in plan_lines(essential, all_commands, rs):
         w(line)
+    edwin_essential = sum(1 for c in essential if c in edwin)
     w(f'### エディタの基本のコマンド (Lisp で書いたもの. {len(essential)} 個. '
-      f'実装済み {essential_implemented} 個: {languages(essential)})')
+      f'実装済み {essential_implemented} 個: {languages(essential)}. Edwin にもある: {edwin_essential} 個)')
     w('')
-    w('| コマンド | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |')
-    w('|---|---|---|---|---|---|---|')
+    w('| コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |')
+    w('|---|---|---|---|---|---|---|---|')
     for c in essential:
         done = c in rs
-        w(f'| {code(c)} | {all_commands[c]} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
+        w(f'| {code(c)} | {"◯" if c in edwin else ""} | {all_commands[c]} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
           f'{keys_cell(rs[c][0], 3) if done else ""} | {place_cell(rs[c][1]) if done else ""} | '
           f'{plan_cell(c, all_commands[c], rs[c][1] if c in rs else [])} |')
     w('')

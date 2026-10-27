@@ -103,7 +103,11 @@ impl Screen for NcursesScreen {
                 let next = get_wch();
                 timeout(-1);
                 return match next.and_then(Self::describe) {
-                    Some(next) if !next.is_empty() => Some(format!("M-{next}")),
+                    // Meta と Control を重ねたキーは, Emacs の書き方 (`C-M-x`) にする
+                    Some(next) if !next.is_empty() => Some(match next.strip_prefix("C-") {
+                        Some(rest) => format!("C-M-{rest}"),
+                        None => format!("M-{next}"),
+                    }),
                     _ => Some("ESC".to_string()),
                 };
             }

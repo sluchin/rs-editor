@@ -3,6 +3,7 @@
 
 use rseditor_core::buffer::Buffer;
 use rseditor_core::search::{translate, Pattern};
+use rseditor_core::syntax::Dialect;
 use serde_json::{json, Value};
 
 /// 結果を, JSON の表にある形 (動いた先の位置と, 合った所) にする.
@@ -28,7 +29,7 @@ fn test_against_emacs() {
     for (pattern, text, kind_name, results) in &table {
         let fold = kind_name.ends_with(" fold");
         let kind = kind_name.trim_end_matches(" fold").to_string();
-        let compiled = match Pattern::new(pattern, fold) {
+        let compiled = match Pattern::new(pattern, fold, Dialect::Fundamental) {
             Ok(p) => p,
             Err(e) => {
                 failures.push(format!("{pattern:?}: {e}"));
@@ -85,7 +86,7 @@ fn test_against_emacs() {
 
 /// 正規表現を作る (大文字と小文字を区別する).
 fn pattern(text: &str) -> Pattern {
-    Pattern::new(text, false).unwrap()
+    Pattern::new(text, false, Dialect::Fundamental).unwrap()
 }
 
 #[test]
@@ -178,7 +179,11 @@ fn test_translate() {
         (r"[[:digit:]]", "[0-9]"),
     ];
     for (emacs, rust) in cases {
-        assert_eq!(translate(emacs).unwrap(), rust, "{emacs}");
+        assert_eq!(
+            translate(emacs, Dialect::Fundamental).unwrap(),
+            rust,
+            "{emacs}"
+        );
     }
     let errors = [
         (r"a\", "Trailing backslash"),
@@ -196,9 +201,13 @@ fn test_translate() {
         (r"[[:foo:]]", "Invalid character class name: foo"),
     ];
     for (emacs, message) in errors {
-        assert_eq!(translate(emacs).unwrap_err(), message, "{emacs}");
+        assert_eq!(
+            translate(emacs, Dialect::Fundamental).unwrap_err(),
+            message,
+            "{emacs}"
+        );
     }
-    assert!(Pattern::new(r"\(a", false)
+    assert!(Pattern::new(r"\(a", false, Dialect::Fundamental)
         .unwrap_err()
         .starts_with("Invalid regexp"));
 }

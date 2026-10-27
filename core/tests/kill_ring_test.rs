@@ -23,6 +23,9 @@ fn test_kill_new_and_current_kill() {
     // do_not_move なら, 次に貼るものを動かさない
     assert_eq!(ring.current_kill(1, true).unwrap(), "c");
     assert_eq!(ring.current_kill(0, true).unwrap(), "a");
+    // 先頭は, 次に貼るものを動かしても変わらない
+    assert_eq!(ring.head(), Some("c"));
+    assert_eq!(KillRing::new().head(), None);
     // 新しく入れたら, 次に貼るものは先頭に戻る
     ring.kill_new("d", false);
     assert_eq!(ring.current_kill(0, false).unwrap(), "d");

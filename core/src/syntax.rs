@@ -12,7 +12,7 @@ use regex::Regex;
 use crate::buffer::Buffer;
 
 /// Lisp の方言.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dialect {
     /// Lisp でない Fundamental モード.
     Fundamental,
@@ -732,4 +732,48 @@ impl Source {
     pub fn is_comment_start(&self, pos: usize) -> bool {
         pos < self.chars.len() && self.class_at(pos) == Class::CommentStart
     }
+}
+
+/// 構文の指定の文字 (`\s-` の `-` など) から, 構文の種類.
+pub fn class_of_designator(designator: char) -> Option<Class> {
+    Some(match designator {
+        ' ' | '-' => Class::Space,
+        '.' => Class::Punct,
+        'w' => Class::Word,
+        '_' => Class::Symbol,
+        '(' => Class::Open,
+        ')' => Class::Close,
+        '"' => Class::Str,
+        '\\' => Class::Escape,
+        '\'' => Class::Prefix,
+        '<' => Class::CommentStart,
+        '>' => Class::CommentEnd,
+        _ => return None,
+    })
+}
+
+/// 構文の種類の文字を, 正規表現の文字クラスの中身にします (`[` と `]` の間に置く). ASCII の文字は構文表から,
+/// ASCII でない文字は, 単語, 空白, 括弧だけ (句読点と記号は, 含めない).
+pub fn class_chars(dialect: Dialect, class: Class) -> String {
+    let mut set = String::new();
+    for code in 0u8..128 {
+        let c = code as char;
+        if syntax_of(c, dialect).class == class {
+            set.push_str(&regex::escape(&c.to_string()));
+        }
+    }
+    match class {
+        Class::Word => set.push_str(r"\p{L}\p{N}"),
+        Class::Space => set.push_str("\u{00a0}\u{3000}"),
+        Class::Open | Class::Close => {
+            let want = usize::from(class == Class::Close);
+            for (i, c) in WIDE_PARENS.chars().enumerate() {
+                if i % 2 == want {
+                    set.push(c);
+                }
+            }
+        }
+        _ => {}
+    }
+    set
 }

@@ -29,6 +29,8 @@ const NATIVE: &[&str] = &[
     "delete-char",
     "current-column",
     "move-to-column",
+    "skip-chars-forward",
+    "skip-chars-backward",
     "erase-buffer",
     "search-forward",
     "search-backward",

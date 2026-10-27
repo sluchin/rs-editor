@@ -28,6 +28,11 @@ impl KillRing {
         self.items.is_empty()
     }
 
+    /// kill-ring の先頭 (一番新しい kill. Emacs の `(car kill-ring)`). 次に貼るものとは、限らない.
+    pub fn head(&self) -> Option<&str> {
+        self.items.first().map(String::as_str)
+    }
+
     /// 文字を kill-ring に入れます (Emacs の `kill-new`). 入れたものが次に貼るものになる.
     ///
     /// # Arguments

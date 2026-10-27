@@ -324,14 +324,15 @@ fn test_undo_records_and_boundaries() {
     buffer.undo_boundary();
     buffer.undo_boundary();
     assert_eq!(buffer.undo_list().len(), 2);
-    // 離れた所に入れたら別にする
+    // 離れた所に入れたら別にする. 区切りの直後で, 区切りでのカーソルが変更の所と違えば, その位置を先に覚える
     buffer.insert_at(0, "x").unwrap();
-    assert_eq!(buffer.undo_list()[2], UndoEntry::Insert { pos: 0, len: 1 });
+    assert_eq!(buffer.undo_list()[2], UndoEntry::Point(3));
+    assert_eq!(buffer.undo_list()[3], UndoEntry::Insert { pos: 0, len: 1 });
     // 消した文字は, 文字と, カーソルが終わりにあったかを覚える
     buffer.set_point(4);
     buffer.delete_region(2, 4).unwrap();
     assert_eq!(
-        buffer.undo_list()[3],
+        buffer.undo_list()[4],
         UndoEntry::Delete {
             pos: 2,
             text: "bc".to_string(),
@@ -341,7 +342,7 @@ fn test_undo_records_and_boundaries() {
     buffer.set_point(0);
     buffer.delete_region(0, 1).unwrap();
     assert_eq!(
-        buffer.undo_list()[4],
+        buffer.undo_list()[5],
         UndoEntry::Delete {
             pos: 0,
             text: "x".to_string(),
@@ -374,7 +375,8 @@ fn test_undo_groups_and_primitive_undo() {
     let (entries, end) = buffer.undo_groups(end, 1);
     buffer.primitive_undo(&entries).unwrap();
     assert_eq!(buffer.text(), "hello");
-    assert_eq!(buffer.point(), 0);
+    // 区切りでのカーソル (変更の前の位置) に戻る
+    assert_eq!(buffer.point(), 5);
     let (entries, _) = buffer.undo_groups(end, 5);
     buffer.primitive_undo(&entries).unwrap();
     assert_eq!(buffer.text(), "");

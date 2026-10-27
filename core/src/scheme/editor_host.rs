@@ -15,7 +15,7 @@ use crate::buffer::{Buffer, UndoEntry};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg};
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
-use crate::search::Pattern;
+use crate::search::{CharSet, Pattern};
 use crate::syntax::{syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
 
@@ -29,7 +29,7 @@ pub struct EditorHost<U: Host> {
     /// 画面の要る操作を受けるもの.
     ui: U,
     /// 作った正規表現 (正規表現, 大文字と小文字を区別しないか).
-    patterns: Mutex<HashMap<(String, bool, bool), Pattern>>,
+    patterns: Mutex<HashMap<(String, bool, bool, Dialect), Pattern>>,
 }
 
 impl<U: Host> EditorHost<U> {
@@ -59,14 +59,20 @@ impl<U: Host> EditorHost<U> {
     }
 
     /// 正規表現を作ります (作ったものは覚える).
-    fn pattern(&self, text: &str, regexp: bool, fold: bool) -> Result<Pattern, String> {
+    fn pattern(
+        &self,
+        text: &str,
+        regexp: bool,
+        fold: bool,
+        dialect: Dialect,
+    ) -> Result<Pattern, String> {
         let mut cache = self.patterns.lock().unwrap();
-        let key = (text.to_string(), regexp, fold);
+        let key = (text.to_string(), regexp, fold, dialect);
         if let Some(p) = cache.get(&key) {
             return Ok(p.clone());
         }
         let pattern = if regexp {
-            Pattern::new(text, fold)?
+            Pattern::new(text, fold, dialect)?
         } else {
             Pattern::literal(text, fold)
         };
@@ -255,6 +261,7 @@ fn entry_value(entry: &UndoEntry) -> Value {
                     .collect(),
             )
         }
+        UndoEntry::Point(pos) => at(*pos),
         UndoEntry::Boundary => nil(),
     }
 }
@@ -264,6 +271,7 @@ fn value_entry(value: &Value) -> Result<UndoEntry, String> {
     let invalid = || "primitive-undo: invalid undo entry".to_string();
     match value {
         Value::Boolean(false) | Value::Nil => Ok(UndoEntry::Boundary),
+        Value::Number(n) if *n >= 1.0 => Ok(UndoEntry::Point(*n as usize - 1)),
         Value::List(items) => match &items[..] {
             [Value::Number(a), Value::Number(b)] if *a >= 1.0 && b >= a => Ok(UndoEntry::Insert {
                 pos: *a as usize - 1,
@@ -572,6 +580,11 @@ impl<U: Host> EditorHost<U> {
                 Value::Nil
             }
             "current-column" => Value::Number(b.current_column() as f64),
+            "skip-chars-forward" | "skip-chars-backward" => {
+                let set = CharSet::parse(text(op, args, 0)?)?;
+                let limit = pos_opt(op, args, 1)?;
+                Value::Number(b.skip_chars(&set, op.ends_with("forward"), limit) as f64)
+            }
             "move-to-column" => {
                 Value::Number(b.move_to_column(int(op, args, 0)?.max(0) as usize) as f64)
             }
@@ -579,7 +592,7 @@ impl<U: Host> EditorHost<U> {
                 self.search(b, op, args, fold)?
             }
             "looking-at" => {
-                let pattern = self.pattern(text(op, args, 0)?, true, fold)?;
+                let pattern = self.pattern(text(op, args, 0)?, true, fold, b.dialect())?;
                 Value::Boolean(b.looking_at(&pattern))
             }
             "match-beginning" | "match-end" => {
@@ -628,6 +641,12 @@ impl<U: Host> EditorHost<U> {
             "region-end" => at(b.region_end()?),
             "use-region-p" => Value::Boolean(b.use_region_p()),
             "region-active-p" => Value::Boolean(b.region_active()),
+            "point-marker" => Value::Number(b.marker_new(b.point()) as f64),
+            "marker-position" => at_opt(b.marker_position(int(op, args, 0)?.max(0) as usize)),
+            "marker-release" => {
+                b.marker_release(int(op, args, 0)?.max(0) as usize);
+                Value::Nil
+            }
             "undo-boundary" => {
                 b.undo_boundary();
                 Value::Nil
@@ -636,6 +655,19 @@ impl<U: Host> EditorHost<U> {
                 Value::List(b.undo_list().iter().rev().map(entry_value).collect())
             }
             "primitive-undo" => primitive_undo(b, op, args)?,
+            "set-buffer-undo-list" => {
+                let Some(Value::List(items)) = args.first() else {
+                    return Err(format!("{op} expects a list"));
+                };
+                let mut entries = items
+                    .iter()
+                    .map(value_entry)
+                    .collect::<Result<Vec<_>, _>>()?;
+                // 評価器の値は新しいものが先, 履歴は古いものが先
+                entries.reverse();
+                b.set_undo_list(entries);
+                Value::Nil
+            }
             "scan-lists" | "scan-sexps" => {
                 let sexp = op == "scan-sexps";
                 let from = pos(op, args, 0)?;
@@ -739,7 +771,7 @@ impl<U: Host> EditorHost<U> {
         }) {
             return Err("Invalid search bound (wrong side of point)".to_string());
         }
-        let pattern = self.pattern(needle, regexp, fold)?;
+        let pattern = self.pattern(needle, regexp, fold, b.dialect())?;
         let found = if forward {
             b.re_search_forward(&pattern, bound, count as usize)
         } else {

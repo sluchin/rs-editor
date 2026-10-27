@@ -1,7 +1,7 @@
 //! 構文の走査 (`syntax`) のテスト. 期待値は, `emacs -Q --batch` で全ての位置から動かした結果
 //! (`core/tests/syntax.json`. `tools/syntax/run.sh` で作る).
 
-use rseditor_core::syntax::{Dialect, ParseState, ScanError, Source};
+use rseditor_core::syntax::{Class, Dialect, ParseState, ScanError, Source};
 use serde_json::{json, Value};
 
 /// 結果を, JSON の表にある形にする.
@@ -136,4 +136,34 @@ fn test_symbol_next_to_a_comment_end_and_dollar_words() {
     let source = Source::new("$a %b", Dialect::Fundamental);
     assert_eq!(source.scan_lists(0, 1, 0, true), Ok(Some(2)));
     assert_eq!(source.scan_lists(5, -1, 0, true), Ok(Some(3)));
+}
+
+#[test]
+fn test_designators_and_class_chars() {
+    use rseditor_core::syntax::{class_chars, class_of_designator};
+    let expected = [
+        (' ', Class::Space),
+        ('-', Class::Space),
+        ('.', Class::Punct),
+        ('w', Class::Word),
+        ('_', Class::Symbol),
+        ('(', Class::Open),
+        (')', Class::Close),
+        ('"', Class::Str),
+        ('\\', Class::Escape),
+        ('\'', Class::Prefix),
+        ('<', Class::CommentStart),
+        ('>', Class::CommentEnd),
+    ];
+    for (designator, class) in expected {
+        assert_eq!(class_of_designator(designator), Some(class), "{designator}");
+    }
+    assert_eq!(class_of_designator('q'), None);
+    // 構文表の ASCII の文字と, ASCII でない括弧と空白
+    assert!(class_chars(Dialect::Fundamental, Class::Space).contains('\t'));
+    assert!(class_chars(Dialect::Elisp, Class::Prefix).contains(','));
+    assert!(class_chars(Dialect::Fundamental, Class::Prefix).is_empty());
+    assert!(class_chars(Dialect::Fundamental, Class::Open).contains('「'));
+    assert!(class_chars(Dialect::Fundamental, Class::Close).contains('」'));
+    assert!(class_chars(Dialect::Fundamental, Class::Word).contains("\\p{L}"));
 }

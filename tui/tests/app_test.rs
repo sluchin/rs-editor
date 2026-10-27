@@ -226,8 +226,8 @@ fn test_unbound_keys_and_prefix_keys() {
     assert_eq!(fx.app.message(), "Quit");
     fx.press("C-x C-z");
     assert_eq!(fx.app.message(), "C-x C-z is undefined");
-    fx.press("C-q");
-    assert_eq!(fx.app.message(), "C-q is undefined");
+    fx.press("C-]");
+    assert_eq!(fx.app.message(), "C-] is undefined");
     fx.press("<f5>");
     assert_eq!(fx.app.message(), "<f5> is undefined");
     // 日本語も入れられる
@@ -299,4 +299,82 @@ fn test_opening_files_from_the_arguments() {
     // 開けないものは、始められない
     let dir_arg = [dir.path().to_str().unwrap().to_string()];
     assert!(Fixture::sized(12, 30, &dir_arg).is_err());
+}
+
+#[test]
+fn test_editing_keys_of_step_3() {
+    let mut fx = Fixture::new();
+    fx.press("a b c d");
+    // C-t: 文字を入れ替える. M-t: 単語を入れ替える
+    fx.press("C-t");
+    assert_eq!(fx.text(), "abdc");
+    fx.press("SPC e f SPC g h M-b M-t");
+    assert_eq!(fx.text(), "abdc gh ef");
+    // C-o: 改行を入れて、カーソルは前. C-M-o: 行を分ける
+    let mut fx = Fixture::new();
+    fx.press("a b c d");
+    fx.press("C-b C-b C-o");
+    assert_eq!((fx.text().as_str(), fx.point()), ("ab\ncd", 2));
+    fx.press("C-n C-e C-b C-M-o");
+    // 新しい行は, カーソルの桁まで字下げする
+    assert_eq!(fx.text(), "ab\nc\n d");
+}
+
+#[test]
+fn test_whitespace_and_zap_keys() {
+    let mut fx = Fixture::new();
+    fx.press("a SPC SPC SPC b");
+    fx.press("C-b M-\\");
+    assert_eq!(fx.text(), "ab");
+    fx.press("M-SPC");
+    // 空白が無ければ, 空白を 1 つ入れる
+    assert_eq!(fx.text(), "a b");
+    // M-z: 文字まで殺す (問いは, キーで答える)
+    let mut fx = Fixture::new();
+    fx.press("a b c d e f");
+    fx.press("C-a");
+    fx.feed("d");
+    fx.press("M-z");
+    assert_eq!(fx.text(), "ef");
+    // C-x C-o: 空行を 1 つにする. M-^: 前の行とつなぐ
+    let mut fx = Fixture::new();
+    fx.press("a RET RET RET b");
+    fx.press("C-p C-x C-o");
+    assert_eq!(fx.text(), "a\n\nb");
+    fx.press("C-n M-^");
+    assert_eq!(fx.text(), "a\nb");
+}
+
+#[test]
+fn test_kill_append_buffer_insert_and_redo_keys() {
+    let mut fx = Fixture::new();
+    fx.press("a b c SPC d e f");
+    fx.press("C-a M-d C-M-w M-d");
+    fx.press("C-y");
+    // 続けて 2 つ殺して、1 つにまとめる (C-M-w)
+    assert_eq!(fx.text(), "abc def");
+    // undo-redo (C-M-_): 元に戻したことをやり直す
+    fx.press("C-/");
+    let undone = fx.text();
+    fx.press("C-M-_");
+    assert_ne!(fx.text(), undone);
+    // C-q: 次のキーをそのまま入れる
+    let mut fx = Fixture::new();
+    fx.feed("TAB");
+    fx.press("C-q");
+    assert_eq!(fx.text(), "\t");
+    // C-x x i: 別のバッファを入れる (名前は問い)
+    let mut fx = Fixture::new();
+    fx.app
+        .host()
+        .editor()
+        .get_buffer_create("other")
+        .insert("OTHER");
+    fx.feed("o t h e r RET");
+    fx.press("C-x x i");
+    assert_eq!(fx.text(), "OTHER");
+    // M-j: 改行して、空白を整える
+    let mut fx = Fixture::new();
+    fx.press("a SPC SPC b C-b C-b M-j");
+    assert_eq!(fx.text(), "a\nb");
 }

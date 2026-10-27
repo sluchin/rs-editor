@@ -208,16 +208,75 @@ Signal an error at the beginning of the buffer."
 
 ;;; Inserting and deleting
 
+(define indent-tabs-mode #t
+  "Non-nil means indentation can use tab characters.")
+
+(define fill-prefix #f
+  "The string that is inserted after a line break in filled text, or #f.")
+
+(define (simple--spaces n)
+  "Return a string of N spaces (the empty string if N is not positive)."
+  (let loop ((n n) (result ""))
+    (if (> n 0) (loop (- n 1) (string-append result " ")) result)))
+
+(define (simple--indent-to column)
+  "Insert tabs (if indent-tabs-mode) and spaces so that point gets to COLUMN."
+  (let loop ()
+    (let* ((current (current-column))
+           (next-tab (* (+ (quotient current 8) 1) 8)))
+      (cond ((and indent-tabs-mode (<= next-tab column))
+             (insert "\t")
+             (loop))
+            ((< current column)
+             (insert (simple--spaces (- column current))))))))
+
 (define-command (newline . args)
-  "Insert N newlines.  N is the prefix argument, or 1."
-  (let loop ((n (simple--arg args)))
-    (when (> n 0)
-      (insert "\n")
-      (loop (- n 1)))))
+  "Insert N newlines.  N is the prefix argument, or 1.
+Signal an error if N is negative."
+  (let ((n (simple--arg args)))
+    (if (< n 0) (error "Repetition argument has to be non-negative"))
+    (let loop ((n n))
+      (when (> n 0)
+        (insert "\n")
+        (loop (- n 1))))))
+
+(define-command (open-line . args)
+  "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
+  (let ((n (simple--arg args))
+        (location (point)))
+    (newline n)
+    (goto-char location)))
+
+(define-command (split-line . args)
+  "Split the current line, moving the part beyond point to a new line below.
+The new line gets the same indentation as the column of point."
+  (skip-chars-forward " \t")
+  (let ((column (current-column))
+        (here (point))
+        (prefix (cond ((string? (simple--raw-arg args)) (simple--raw-arg args))
+                      ((simple--raw-arg args) #f)
+                      (else fill-prefix))))
+    (let ((has-prefix (and prefix
+                           (save-excursion
+                             (goto-char (line-beginning-position))
+                             (looking-at (regexp-quote prefix))))))
+      (newline 1)
+      (if has-prefix (insert prefix))
+      (simple--indent-to column)
+      (goto-char here))))
 
 (define-command (indent-for-tab-command . args)
   "Insert a tab character at point."
   (insert "\t"))
+
+(define-command (default-indent-new-line . args)
+  "Break the line at point and delete the spaces around the break.
+The new line is not indented yet: indentation comes with the indentation commands."
+  (newline 1)
+  (save-excursion
+    (backward-char 1)
+    (simple--delete-space " \t" #f))
+  (simple--delete-space " \t" #f))
 
 (define-command (delete-forward-char . args)
   "Delete the N characters after point (the N characters before point if N is negative)."
@@ -226,6 +285,127 @@ Signal an error at the beginning of the buffer."
 (define-command (delete-backward-char . args)
   "Delete the N characters before point (the N characters after point if N is negative)."
   (delete-char (- (simple--arg args))))
+
+(define (simple--delete-space chars backward-only)
+  "Delete the characters of CHARS around point (only before point if BACKWARD-ONLY is true)."
+  (let* ((original (point))
+         (end (if backward-only
+                  original
+                  (begin (skip-chars-forward chars) (point))))
+         (start (begin (skip-chars-backward chars) (point))))
+    (delete-region start end)))
+
+(define-command (delete-horizontal-space . args)
+  "Delete all spaces and tabs around point.
+With an argument, delete them only before point."
+  (simple--delete-space " \t" (simple--raw-arg args)))
+
+(define (simple--fixup-whitespace)
+  "Fix up white space between objects around point: leave no space or one space."
+  (save-excursion
+    (simple--delete-space " \t" #f)
+    (if (or (looking-at "^\\|$\\|\\s)")
+            (save-excursion
+              (backward-char 1)
+              (looking-at "$\\|\\s(\\|\\s'")))
+        #f
+        (insert " "))))
+
+(define-command (just-one-space . args)
+  "Delete all spaces and tabs around point, leaving one space (or N spaces).
+If N is negative, delete newlines as well, leaving -N spaces."
+  (let* ((n (simple--arg args))
+         (chars (if (< n 0) " \t\n\r" " \t")))
+    (skip-chars-backward chars)
+    (let* ((count (- (abs n) (skip-chars-forward " " (+ (abs n) (point)))))
+           (middle (point))
+           (end (begin (skip-chars-forward chars) (point))))
+      (delete-region middle end)
+      (insert (simple--spaces count)))))
+
+(define simple--cycle-context #f
+  "The state of cycle-spacing: (original-point whitespace-string n last-action).")
+
+(define (simple--cycle-restore)
+  "Put back the white space cycle-spacing found."
+  (simple--delete-space " \t\n\r" #f)
+  (insert (list-ref simple--cycle-context 1))
+  (goto-char (list-ref simple--cycle-context 0)))
+
+(define-command (cycle-spacing . args)
+  "Manipulate the white space around point in a cycle.
+The first call leaves one space (just-one-space), the second deletes all the
+white space, and the third restores it.  Repeat the command to cycle."
+  (let ((n (simple--arg args)))
+    (when (or (not (equal? last-command 'cycle-spacing)) (not simple--cycle-context))
+      (let ((original (point)))
+        (save-excursion
+          (skip-chars-backward " \t\n\r")
+          (let ((start (point)))
+            (skip-chars-forward " \t\n\r")
+            (set! simple--cycle-context
+                  (list original (buffer-substring start (point)) n #f))))))
+    (let* ((actions '(just-one-space delete-all-space restore))
+           (last (list-ref simple--cycle-context 3))
+           (action (cond ((not last) (car actions))
+                         ((eq? last 'just-one-space) 'delete-all-space)
+                         ((eq? last 'delete-all-space) 'restore)
+                         (else 'just-one-space))))
+      (simple--cycle-restore)
+      (cond ((eq? action 'just-one-space) (just-one-space n))
+            ((eq? action 'delete-all-space) (simple--delete-space " \t\n\r" #f)))
+      (set! simple--cycle-context (list (list-ref simple--cycle-context 0)
+                                        (list-ref simple--cycle-context 1)
+                                        (list-ref simple--cycle-context 2)
+                                        action)))))
+
+(define-command (delete-indentation . args)
+  "Join this line to the previous one and fix up the white space at the join.
+With an argument, join the current line to the following line."
+  (let* ((arg (simple--raw-arg args))
+         (beg (- (line-beginning-position (if arg 2 1)) 1)))
+    (if arg (forward-line 1))
+    (let loop ()
+      (when (and (> (line-beginning-position) beg)
+                 (forward-line 0)
+                 (equal? (char-before) "\n"))
+        (delete-char -1)
+        (simple--fixup-whitespace)
+        (loop)))))
+
+(define-command (delete-blank-lines . args)
+  "On a blank line, delete all the surrounding blank lines, leaving just one.
+On an isolated blank line, delete that one.
+On a nonblank line, delete any blank lines that follow it."
+  (let ((this-blank #f) (single-blank #f))
+    (save-excursion
+      (goto-char (line-beginning-position))
+      (set! this-blank (looking-at "[ \t]*$"))
+      (set! single-blank
+            (and this-blank
+                 (not (looking-at "[ \t]*\n[ \t]*$"))
+                 (or (bobp)
+                     (begin (forward-line -1)
+                            (not (looking-at "[ \t]*$")))))))
+    (when this-blank
+      (goto-char (line-beginning-position))
+      (if single-blank (forward-line 1))
+      (let ((from (point)))
+        (delete-region from
+                       (if (re-search-backward "[^ \t\n]" #f #t)
+                           (begin (forward-line 1) (point))
+                           (point-min)))))
+    (when (not (and this-blank single-blank))
+      (save-excursion
+        (goto-char (line-end-position))
+        (forward-line 1)
+        (let ((from (point)))
+          (delete-region from
+                         (if (re-search-forward "[^ \t\n]" #f #t)
+                             (begin (goto-char (line-beginning-position)) (point))
+                             (point-max))))))
+    (when (looking-at "^[ \t]*\n\\'")
+      (delete-region (point) (point-max)))))
 
 ;;; Killing and yanking
 
@@ -254,12 +434,57 @@ The killed text is saved in the kill ring."
   (deactivate-mark))
 
 (define-command (kill-line . args)
-  "Kill the rest of the line, or the newline if point is at the end of the line.
-Signal an error at the end of the buffer."
-  (let ((start (point)))
-    (cond ((eobp) (error "End of buffer"))
-          ((eolp) (simple--kill start (+ start 1)))
-          (else (simple--kill start (line-end-position))))))
+  "Kill the rest of the line; if there are no nonblanks there, kill through the newline.
+With an argument N, kill that many lines from point; a negative N kills backward,
+and 0 kills the text before point on the line.  Signal an error at the end of the buffer."
+  (let ((arg (simple--raw-arg args))
+        (start (point)))
+    (if arg
+        (forward-line (prefix-numeric-value arg))
+        (begin
+          (if (eobp) (error "End of buffer"))
+          (let ((end (line-end-position)))
+            (if (save-excursion (skip-chars-forward " \t" end) (= (point) end))
+                (forward-line 1)
+                (goto-char end)))))
+    (simple--kill start (point))))
+
+(define (simple--marker position from to)
+  "Return where POSITION is after the text from FROM to TO was deleted."
+  (let ((low (min from to)) (high (max from to)))
+    (cond ((<= position low) position)
+          ((>= position high) (- position (- high low)))
+          (else low))))
+
+(define-command (kill-whole-line . args)
+  "Kill the current line, with its newline.
+With an argument N, kill that many lines from the current line; a negative N kills
+backward, also killing the preceding newline.  With 0, kill the line without its newline."
+  (let ((arg (if (null? args) (prefix-numeric-value (current-prefix-arg)) (or (car args) 1))))
+    (if (and (> arg 0) (eobp) (save-excursion (forward-line 0) (eobp)))
+        (error "End of buffer"))
+    (if (and (< arg 0) (bobp) (save-excursion (goto-char (line-end-position)) (bobp)))
+        (error "Beginning of buffer"))
+    (when (not (equal? last-command 'kill-region))
+      (kill-new "")
+      (set! last-command 'kill-region))
+    (let* ((begin-position (point))
+           (end-position
+            (cond ((= arg 0)
+                   (let ((p (save-excursion (forward-line 0) (point))))
+                     (goto-char (line-end-position))
+                     p))
+                  ((< arg 0)
+                   (let ((p (save-excursion (goto-char (line-end-position)) (point))))
+                     (forward-line (+ 1 arg))
+                     (if (not (bobp)) (backward-char 1))
+                     p))
+                  (else
+                   (let ((p (save-excursion (forward-line 0) (point))))
+                     (forward-line arg)
+                     p)))))
+      (kill-region begin-position end-position)
+      (kill-region (simple--marker begin-position begin-position end-position) (point)))))
 
 (define-command (kill-word . args)
   "Kill the characters forward until the end of a word.
@@ -275,21 +500,155 @@ With argument N, kill that many words."
     (backward-word (simple--arg args))
     (simple--kill start (point))))
 
+(define-command (zap-to-char . args)
+  "Kill up to and including the Nth occurrence of CHAR.
+Interactively, N is the prefix argument and CHAR is read as a key."
+  (let ((n (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
+        (char (if (or (null? args) (null? (cdr args)))
+                  (let ((key (read-key "Zap to char: ")))
+                    (if (equal? key "Enter") "\n" key))
+                  (cadr args)))
+        (start (point)))
+    (simple--kill start (search-forward char #f #f n))))
+
+(define-command (append-next-kill . args)
+  "Cause the following command, if it is a kill, to append to the previous kill.
+Interactively, it takes effect after this command."
+  (if (or (null? args) (car args))
+      (begin
+        (set! this-command 'kill-region)
+        (message "If the next command is a kill, it will append"))
+      (set! last-command 'kill-region)))
+
+(define-command (ignore-preserving-kill-region . args)
+  "Do nothing, but keep the kill that the previous command made for the next kill."
+  (if (equal? last-command 'kill-region) (set! this-command 'kill-region)))
+
 (define-command (yank . args)
-  "Insert the most recent kill at point, and leave the mark at the start of the text."
-  (push-mark (point))
-  (insert-for-yank (current-kill 0))
-  (set! this-command 'yank))
+  "Insert the most recent kill at point, and leave the mark at the start of the text.
+With a plain prefix argument (C-u), leave point at the start and the mark at the end.
+With a number N, insert the Nth most recent kill; with -, the second most recent."
+  (let ((arg (simple--raw-arg args)))
+    (set! this-command #t)
+    (push-mark (point))
+    (insert-for-yank (current-kill (cond ((or (not arg) (pair? arg)) 0)
+                                         ((eq? arg '-) -2)
+                                         (else (- arg 1)))))
+    (when (pair? arg)
+      (let ((old (mark)))
+        (set-mark (point))
+        (goto-char old)))
+    (if (eq? this-command #t) (set! this-command 'yank))))
 
 (define-command (yank-pop . args)
   "Replace the text just yanked with the previous kill in the kill ring.
-Signal an error if the previous command was not a yank."
+With an argument N, use the Nth previous kill.  Signal an error if the previous
+command was not a yank."
   (if (not (equal? last-command 'yank))
       (error "Previous command was not a yank")
-      (begin
-        (delete-region (mark) (point))
-        (insert-for-yank (current-kill 1))
-        (set! this-command 'yank))))
+      (let ((n (simple--arg args)))
+        (set! this-command 'yank)
+        (let ((before (< (point) (mark))))
+          (if before
+              (delete-region (point) (mark))
+              (delete-region (mark) (point)))
+          (set-mark (point))
+          (insert-for-yank (current-kill n))
+          (when before
+            (let ((old (mark)))
+              (set-mark (point))
+              (goto-char old)))))))
+
+(define-command (insert-buffer . args)
+  "Insert after point the contents of BUFFER, and leave point before it and the mark after it.
+Interactively, read the name of BUFFER in the minibuffer."
+  (let* ((name (if (null? args)
+                   (completing-read "Insert buffer: " (buffer-list) #f #t)
+                   (car args)))
+         (text (with-current-buffer name (buffer-string))))
+    (push-mark (save-excursion (insert text) (point)))))
+
+(define (simple--transpose mover arg)
+  "Transpose the objects that MOVER moves over, as transpose-chars, transpose-words and transpose-lines do."
+  (let ((aux (lambda (x)
+               (let* ((first (begin (mover x) (point)))
+                      (second (begin (mover (- x)) (point))))
+                 (list first second)))))
+    (cond ((= arg 0)
+           (let ((pos1 #f) (pos2 #f))
+             (save-excursion
+               (set! pos1 (aux 1))
+               (goto-char (or (mark) (error "No mark set in this buffer")))
+               (set! pos2 (aux 1))
+               (simple--transpose-1 pos1 pos2))
+             (exchange-point-and-mark)))
+          ((> arg 0)
+           (let* ((pos1 (aux -1)) (pos2 (aux arg)))
+             (simple--transpose-1 pos1 pos2)
+             (goto-char (car pos2))))
+          (else
+           (let ((pos1 (aux -1)))
+             (goto-char (car pos1))
+             (let ((pos2 (aux arg)))
+               (simple--transpose-1 pos1 pos2)
+               (goto-char (+ (car pos2) (- (cadr pos1) (car pos1))))))))))
+
+(define (simple--transpose-1 pos1 pos2)
+  "Swap the text of the two regions POS1 and POS2, each a list (start end)."
+  (let* ((a (if (> (car pos1) (cadr pos1)) (list (cadr pos1) (car pos1)) pos1))
+         (b (if (> (car pos2) (cadr pos2)) (list (cadr pos2) (car pos2)) pos2))
+         (first (if (> (car a) (car b)) b a))
+         (second (if (> (car a) (car b)) a b)))
+    (if (> (cadr first) (car second)) (error "Don’t have two things to transpose"))
+    (let ((text1 (buffer-substring (car first) (cadr first)))
+          (text2 (buffer-substring (car second) (cadr second))))
+      (delete-region (car second) (cadr second))
+      (goto-char (car second))
+      (insert text1)
+      (delete-region (car first) (cadr first))
+      (goto-char (car first))
+      (insert text2))))
+
+(define-command (transpose-chars . args)
+  "Interchange the characters around point, and move point forward over them.
+At the end of a line, the previous two characters are interchanged.
+With argument N, drag the character before point forward over N other characters."
+  (when (and (eolp) (not (bobp)))
+    (backward-char 1))
+  (simple--transpose forward-char (simple--arg args)))
+
+(define-command (transpose-words . args)
+  "Interchange the words around point, and move point over the second.
+With argument N, drag the word before or around point forward over N other words."
+  (simple--transpose forward-word (simple--arg args)))
+
+(define-command (transpose-lines . args)
+  "Exchange the current line and the previous line, and leave point after both.
+With argument N, move the previous line past N lines."
+  (simple--transpose
+   (lambda (n)
+     (if (> n 0)
+         (let ((short (forward-line n)))
+           (if (not (equal? (char-before) "\n")) (set! short (+ short 1)))
+           (if (> short 0) (newline short)))
+         (forward-line n)))
+   (simple--arg args)))
+
+(define-command (quoted-insert . args)
+  "Read a character and insert it as it is, N times.
+Only the keys that stand for one character can be inserted."
+  (let* ((key (read-key "C-q-"))
+         (char (cond ((= (string-length key) 1) key)
+                     ((equal? key "Enter") "\r")
+                     ((equal? key "TAB") "\t")
+                     ((equal? key "C-j") "\n")
+                     ((equal? key "C-m") "\r")
+                     ((equal? key "C-i") "\t")
+                     (else (error (format "Cannot insert %s" key))))))
+    (let loop ((n (simple--arg args)))
+      (when (> n 0)
+        (insert char)
+        (loop (- n 1))))))
 
 ;;; The mark
 
@@ -312,18 +671,87 @@ Signal an error if the previous command was not a yank."
 
 ;;; Undoing
 
+(define simple--undo-equiv '()
+  "Which undo lists were made by undo: a list of (length value).
+The value is what is left to undo (a list, #t or empty).  It is keyed by the length of the undo list.")
+
+(define (simple--skip-boundaries ul)
+  "Return the undo list UL without the boundaries (#f) at its front."
+  (if (and (pair? ul) (not (car ul)))
+      (simple--skip-boundaries (cdr ul))
+      ul))
+
+(define (simple--equiv-ref ul)
+  "Return what undo recorded for the undo list UL, or #f."
+  (let ((entry (assoc (length ul) simple--undo-equiv)))
+    (and entry (cadr entry))))
+
+(define (simple--equiv-set ul value)
+  "Record VALUE for the undo list UL."
+  (set! simple--undo-equiv
+        (cons (list (length ul) value)
+              (filter (lambda (entry) (not (equal? (car entry) (length ul))))
+                      simple--undo-equiv))))
+
+(define (simple--last-change-was-undo-p undo-list)
+  "Return what undo recorded if the last change in UNDO-LIST was made by undo, else #f."
+  (simple--equiv-ref (simple--skip-boundaries undo-list)))
+
+(define (simple--undo-more n)
+  "Undo N more groups of changes from the pending undo list."
+  (if (not (list? pending-undo-list))
+      (error "No further undo information"))
+  (set! pending-undo-list (primitive-undo n pending-undo-list))
+  (if (null? pending-undo-list) (set! pending-undo-list #t)))
+
+(define (simple--drop-point-records ul)
+  "Return the undo list UL without the position records that undo made in its newest group."
+  (let scan ((rest ul) (kept '()))
+    (cond ((or (null? rest) (not (car rest))) ul)
+          ((number? (car rest))
+           (let ((position (car rest)))
+             (let drop ((tail (cdr rest)) (kept kept))
+               (cond ((or (null? tail) (not (car tail))) (append (reverse kept) tail))
+                     ((equal? (car tail) position) (drop (cdr tail) kept))
+                     (else (drop (cdr tail) (cons (car tail) kept)))))))
+          (else (scan (cdr rest) (cons (car rest) kept))))))
+
 (define-command (undo . args)
   "Undo some previous changes.  Repeat the command to undo more.
-With argument N, undo N groups of changes."
-  (let ((n (simple--arg args)))
-    (when (not (equal? last-command 'undo))
-      ;; get rid of the boundary that the command loop put at the front
-      (set! pending-undo-list (primitive-undo 1 (buffer-undo-list))))
-    (if (null? pending-undo-list)
-        (error "No further undo information")
-        (set! pending-undo-list (primitive-undo n pending-undo-list)))
+With a number N, undo N groups of changes.  After the other commands, the
+undo starts again from the newest change, so undoing an undo redoes the change."
+  (let ((arg (simple--raw-arg args)))
+    (set! this-command 'undo-start)
+    (when (not (and (equal? last-command 'undo)
+                    (or (eq? pending-undo-list #t)
+                        (simple--last-change-was-undo-p (buffer-undo-list)))))
+      (set! pending-undo-list (buffer-undo-list))
+      (simple--undo-more 1))
     (set! this-command 'undo)
-    (message "Undo")))
+    (let ((redo (and (list? pending-undo-list) (simple--equiv-ref pending-undo-list))))
+      (simple--undo-more (if (number? arg) (prefix-numeric-value arg) 1))
+      (let* ((ul (simple--skip-boundaries (buffer-undo-list)))
+             (value (cond ((and (list? pending-undo-list)
+                                (= (length ul) (length pending-undo-list)))
+                           (or (simple--equiv-ref ul) 'empty))
+                          (else pending-undo-list))))
+        ;; the position records made by the undo are dropped, so the key is the list without them
+        (set-buffer-undo-list (simple--drop-point-records (buffer-undo-list)))
+        (simple--equiv-set (simple--skip-boundaries (buffer-undo-list)) value))
+      (message (if redo "Redo" "Undo")))))
+
+(define-command (undo-redo . args)
+  "Undo the last N undos, that is redo the last N changes that were undone."
+  (let ((n (simple--arg args)))
+    (if (not (simple--last-change-was-undo-p (buffer-undo-list)))
+        (error "No undone changes to redo")
+        (let* ((undo-list (simple--skip-boundaries (buffer-undo-list)))
+               (new-list (primitive-undo n undo-list))
+               (new-pending (simple--last-change-was-undo-p new-list)))
+          (message "Redo")
+          (set! this-command 'undo)
+          (set! pending-undo-list (or new-pending '()))
+          (set-buffer-undo-list new-list)))))
 
 (define-command (keyboard-quit . args)
   "Cancel the running command by signaling a quit."

@@ -3563,14 +3563,61 @@ msgid "Put the line of point in the middle of the window."
 msgstr "点のある行を, 窓の真ん中に置く."
 
 #: lisp/simple.scm
+msgctxt "variable:indent-tabs-mode"
+msgid "Non-nil means indentation can use tab characters."
+msgstr "字下げにタブ文字を使えるか."
+
+#: lisp/simple.scm
+msgctxt "variable:fill-prefix"
+msgid "The string that is inserted after a line break in filled text, or #f."
+msgstr "詰めた本文の, 改行の後に入れる文字列. 無ければ #f."
+
+#: lisp/simple.scm
+msgctxt "function:simple--spaces"
+msgid "Return a string of N spaces (the empty string if N is not positive)."
+msgstr "空白を N 個並べた文字列を返す (N が正でなければ, 空の文字列)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--indent-to"
+msgid "Insert tabs (if indent-tabs-mode) and spaces so that point gets to COLUMN."
+msgstr "点が COLUMN の桁になるように, タブ (indent-tabs-mode のとき) と空白を入れる."
+
+#: lisp/simple.scm
 msgctxt "function:newline"
-msgid "Insert N newlines.  N is the prefix argument, or 1."
-msgstr "改行を N 個入れる. N は前置引数, または 1."
+msgid ""
+"Insert N newlines.  N is the prefix argument, or 1.\n"
+"Signal an error if N is negative."
+msgstr ""
+"改行を N 個入れる. N は前置引数, または 1.\n"
+"N が負なら, エラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:open-line"
+msgid "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
+msgstr "改行を N 個入れて, 点は改行の前に置く. N は前置引数, または 1."
+
+#: lisp/simple.scm
+msgctxt "function:split-line"
+msgid ""
+"Split the current line, moving the part beyond point to a new line below.\n"
+"The new line gets the same indentation as the column of point."
+msgstr ""
+"今の行を分けて, 点より後ろを下の行にする.\n"
+"新しい行は, 点の桁まで字下げする."
 
 #: lisp/simple.scm
 msgctxt "function:indent-for-tab-command"
 msgid "Insert a tab character at point."
 msgstr "点の所にタブ文字を入れる."
+
+#: lisp/simple.scm
+msgctxt "function:default-indent-new-line"
+msgid ""
+"Break the line at point and delete the spaces around the break.\n"
+"The new line is not indented yet: indentation comes with the indentation commands."
+msgstr ""
+"点で行を分けて, 分けた所の空白を消す.\n"
+"新しい行はまだ字下げしない. 字下げは, 字下げのコマンドで行う."
 
 #: lisp/simple.scm
 msgctxt "function:delete-forward-char"
@@ -3581,6 +3628,74 @@ msgstr "点の後ろの N 文字を消す (N が負なら点の前の N 文字�
 msgctxt "function:delete-backward-char"
 msgid "Delete the N characters before point (the N characters after point if N is negative)."
 msgstr "点の前の N 文字を消す (N が負なら点の後ろの N 文字を消す)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--delete-space"
+msgid "Delete the characters of CHARS around point (only before point if BACKWARD-ONLY is true)."
+msgstr "点の前後の CHARS の文字を消す (BACKWARD-ONLY が真なら, 点の前だけ)."
+
+#: lisp/simple.scm
+msgctxt "function:delete-horizontal-space"
+msgid ""
+"Delete all spaces and tabs around point.\n"
+"With an argument, delete them only before point."
+msgstr ""
+"点の前後の空白とタブを全て消す.\n"
+"引数があれば, 点の前だけ消す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--fixup-whitespace"
+msgid "Fix up white space between objects around point: leave no space or one space."
+msgstr "点の前後の空白を整える: 空白を無くすか, 1 つにする."
+
+#: lisp/simple.scm
+msgctxt "function:just-one-space"
+msgid ""
+"Delete all spaces and tabs around point, leaving one space (or N spaces).\n"
+"If N is negative, delete newlines as well, leaving -N spaces."
+msgstr ""
+"点の前後の空白とタブを全て消して, 空白を 1 つ (か N 個) 残す.\n"
+"N が負なら, 改行も消して, 空白を -N 個残す."
+
+#: lisp/simple.scm
+msgctxt "variable:simple--cycle-context"
+msgid "The state of cycle-spacing: (original-point whitespace-string n last-action)."
+msgstr "cycle-spacing の状態: (元の点 空白の文字列 N 前の動作)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--cycle-restore"
+msgid "Put back the white space cycle-spacing found."
+msgstr "cycle-spacing が見つけた空白を, 元に戻す."
+
+#: lisp/simple.scm
+msgctxt "function:cycle-spacing"
+msgid ""
+"Manipulate the white space around point in a cycle.\n"
+"The first call leaves one space (just-one-space), the second deletes all the\n"
+"white space, and the third restores it.  Repeat the command to cycle."
+msgstr ""
+"点の前後の空白を, 順に変える.\n"
+"1 回目は空白を 1 つ残し (just-one-space), 2 回目は全て消し, 3 回目は元に戻す. 続けて呼ぶと, 巡る."
+
+#: lisp/simple.scm
+msgctxt "function:delete-indentation"
+msgid ""
+"Join this line to the previous one and fix up the white space at the join.\n"
+"With an argument, join the current line to the following line."
+msgstr ""
+"この行を前の行につなぎ, つなぎ目の空白を整える.\n"
+"引数があれば, この行を次の行につなぐ."
+
+#: lisp/simple.scm
+msgctxt "function:delete-blank-lines"
+msgid ""
+"On a blank line, delete all the surrounding blank lines, leaving just one.\n"
+"On an isolated blank line, delete that one.\n"
+"On a nonblank line, delete any blank lines that follow it."
+msgstr ""
+"空行の上では, 周りの空行を消して 1 つ残す.\n"
+"1 つだけの空行なら, それを消す.\n"
+"空行でない行の上では, 続く空行を消す."
 
 #: lisp/simple.scm
 msgctxt "function:simple--kill"
@@ -3608,11 +3723,28 @@ msgstr "点とマークの間の本文を, kill せずに kill-ring に入れる
 #: lisp/simple.scm
 msgctxt "function:kill-line"
 msgid ""
-"Kill the rest of the line, or the newline if point is at the end of the line.\n"
-"Signal an error at the end of the buffer."
+"Kill the rest of the line; if there are no nonblanks there, kill through the newline.\n"
+"With an argument N, kill that many lines from point; a negative N kills backward,\n"
+"and 0 kills the text before point on the line.  Signal an error at the end of the buffer."
 msgstr ""
-"行の残りを kill する. 点が行の終わりなら, 改行を kill する.\n"
+"行の残りを kill する. 空白だけしか無ければ, 改行まで kill する.\n"
+"引数 N があれば, N 行を kill する (負なら前向き. 0 なら, 行の点より前).\n"
 "バッファの終わりではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:simple--marker"
+msgid "Return where POSITION is after the text from FROM to TO was deleted."
+msgstr "FROM から TO の本文を消した後の, POSITION の位置を返す."
+
+#: lisp/simple.scm
+msgctxt "function:kill-whole-line"
+msgid ""
+"Kill the current line, with its newline.\n"
+"With an argument N, kill that many lines from the current line; a negative N kills\n"
+"backward, also killing the preceding newline.  With 0, kill the line without its newline."
+msgstr ""
+"今の行を, 改行ごと kill する.\n"
+"引数 N があれば, 今の行から N 行を kill する. 負なら前向きで, 前の改行も kill する. 0 なら, 改行を除いて kill する."
 
 #: lisp/simple.scm
 msgctxt "function:kill-word"
@@ -3633,18 +3765,105 @@ msgstr ""
 "引数 N があれば, N 個の単語を kill する."
 
 #: lisp/simple.scm
+msgctxt "function:zap-to-char"
+msgid ""
+"Kill up to and including the Nth occurrence of CHAR.\n"
+"Interactively, N is the prefix argument and CHAR is read as a key."
+msgstr ""
+"N 個目の CHAR まで (CHAR も含めて) kill する.\n"
+"対話的に呼ぶと, N は前置引数で, CHAR はキーで読む."
+
+#: lisp/simple.scm
+msgctxt "function:append-next-kill"
+msgid ""
+"Cause the following command, if it is a kill, to append to the previous kill.\n"
+"Interactively, it takes effect after this command."
+msgstr ""
+"次のコマンドが kill なら, 前の kill に足すようにする.\n"
+"対話的に呼ぶと, このコマンドの後から効く."
+
+#: lisp/simple.scm
+msgctxt "function:ignore-preserving-kill-region"
+msgid "Do nothing, but keep the kill that the previous command made for the next kill."
+msgstr "何もしないが, 前のコマンドの kill を, 次の kill のために残す."
+
+#: lisp/simple.scm
 msgctxt "function:yank"
-msgid "Insert the most recent kill at point, and leave the mark at the start of the text."
-msgstr "一番新しい kill を点の所に入れ, マークを入れた本文の始めに置く."
+msgid ""
+"Insert the most recent kill at point, and leave the mark at the start of the text.\n"
+"With a plain prefix argument (C-u), leave point at the start and the mark at the end.\n"
+"With a number N, insert the Nth most recent kill; with -, the second most recent."
+msgstr ""
+"一番新しい kill を点の所に入れ, マークを入れた本文の始めに置く.\n"
+"C-u なら, 点を始めに, マークを終わりに置く.\n"
+"数 N なら N 番目に新しい kill を, - なら 2 番目に新しい kill を入れる."
 
 #: lisp/simple.scm
 msgctxt "function:yank-pop"
 msgid ""
 "Replace the text just yanked with the previous kill in the kill ring.\n"
-"Signal an error if the previous command was not a yank."
+"With an argument N, use the Nth previous kill.  Signal an error if the previous\n"
+"command was not a yank."
 msgstr ""
 "今貼った本文を, kill-ring の一つ前の kill に替える.\n"
-"前のコマンドが yank でなければ, エラーにする."
+"引数 N があれば, N 個前の kill を使う. 前のコマンドが yank でなければ, エラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:insert-buffer"
+msgid ""
+"Insert after point the contents of BUFFER, and leave point before it and the mark after it.\n"
+"Interactively, read the name of BUFFER in the minibuffer."
+msgstr ""
+"BUFFER の内容を点の後ろに入れ, 点は入れた本文の前に, マークは後ろに置く.\n"
+"対話的に呼ぶと, ミニバッファで BUFFER の名前を読む."
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose"
+msgid "Transpose the objects that MOVER moves over, as transpose-chars, transpose-words and transpose-lines do."
+msgstr "MOVER が動く単位を入れ替える (transpose-chars, transpose-words, transpose-lines が使う)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose-1"
+msgid "Swap the text of the two regions POS1 and POS2, each a list (start end)."
+msgstr "2 つの範囲 POS1 と POS2 (どちらも (始め 終わり)) の本文を入れ替える."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-chars"
+msgid ""
+"Interchange the characters around point, and move point forward over them.\n"
+"At the end of a line, the previous two characters are interchanged.\n"
+"With argument N, drag the character before point forward over N other characters."
+msgstr ""
+"点の前後の文字を入れ替えて, 点をその先に動かす.\n"
+"行の終わりでは, 前の 2 文字を入れ替える.\n"
+"引数 N があれば, 点の前の文字を N 文字先へ動かす."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-words"
+msgid ""
+"Interchange the words around point, and move point over the second.\n"
+"With argument N, drag the word before or around point forward over N other words."
+msgstr ""
+"点の前後の単語を入れ替えて, 点を 2 番目の単語の先に動かす.\n"
+"引数 N があれば, 点の前か点の所の単語を N 個先へ動かす."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-lines"
+msgid ""
+"Exchange the current line and the previous line, and leave point after both.\n"
+"With argument N, move the previous line past N lines."
+msgstr ""
+"今の行と前の行を入れ替えて, 点を両方の後ろに置く.\n"
+"引数 N があれば, 前の行を N 行先へ動かす."
+
+#: lisp/simple.scm
+msgctxt "function:quoted-insert"
+msgid ""
+"Read a character and insert it as it is, N times.\n"
+"Only the keys that stand for one character can be inserted."
+msgstr ""
+"文字を 1 つ読んで, そのまま N 個入れる.\n"
+"1 文字を表すキーだけ入れられる."
 
 #: lisp/simple.scm
 msgctxt "function:set-mark-command"
@@ -3662,13 +3881,58 @@ msgid "Put point at the beginning and the mark at the end of the buffer."
 msgstr "点をバッファの始めに, マークを終わりに置く."
 
 #: lisp/simple.scm
+msgctxt "variable:simple--undo-equiv"
+msgid ""
+"Which undo lists were made by undo: a list of (length value).\n"
+"The value is what is left to undo (a list, #t or empty).  It is keyed by the length of the undo list."
+msgstr ""
+"どの履歴が undo で作られたか: (長さ 値) のリスト.\n"
+"値は, 残りの戻す記録 (リスト, #t, empty). 履歴の長さで引く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--skip-boundaries"
+msgid "Return the undo list UL without the boundaries (#f) at its front."
+msgstr "履歴 UL の, 前にある区切り (#f) を除いたものを返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--equiv-ref"
+msgid "Return what undo recorded for the undo list UL, or #f."
+msgstr "履歴 UL について undo が覚えたことを返す. 無ければ #f."
+
+#: lisp/simple.scm
+msgctxt "function:simple--equiv-set"
+msgid "Record VALUE for the undo list UL."
+msgstr "履歴 UL について, VALUE を覚える."
+
+#: lisp/simple.scm
+msgctxt "function:simple--last-change-was-undo-p"
+msgid "Return what undo recorded if the last change in UNDO-LIST was made by undo, else #f."
+msgstr "UNDO-LIST の最後の変更が undo で作られたなら, undo が覚えたことを返す. そうでなければ #f."
+
+#: lisp/simple.scm
+msgctxt "function:simple--undo-more"
+msgid "Undo N more groups of changes from the pending undo list."
+msgstr "まだ戻していない履歴から, N 個のまとまりを元に戻す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--drop-point-records"
+msgid "Return the undo list UL without the position records that undo made in its newest group."
+msgstr "履歴 UL の最新のまとまりから, undo が作った位置の記録を除いたものを返す."
+
+#: lisp/simple.scm
 msgctxt "function:undo"
 msgid ""
 "Undo some previous changes.  Repeat the command to undo more.\n"
-"With argument N, undo N groups of changes."
+"With a number N, undo N groups of changes.  After the other commands, the\n"
+"undo starts again from the newest change, so undoing an undo redoes the change."
 msgstr ""
 "前の変更を元に戻す. 続けて呼ぶと, さらに戻す.\n"
-"引数 N があれば, N 個のまとまりを元に戻す."
+"数 N があれば, N 個のまとまりを元に戻す. 別のコマンドの後では, 最新の変更からやり直すので, undo を元に戻すと, やり直しになる."
+
+#: lisp/simple.scm
+msgctxt "function:undo-redo"
+msgid "Undo the last N undos, that is redo the last N changes that were undone."
+msgstr "最後の N 個の undo を元に戻す. つまり, 戻した最後の N 個の変更をやり直す."
 
 #: lisp/simple.scm
 msgctxt "function:keyboard-quit"

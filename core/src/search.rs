@@ -9,6 +9,7 @@
 use fancy_regex::Regex;
 
 use crate::buffer::Buffer;
+use crate::syntax::{class_chars, class_of_designator, Dialect};
 
 /// 単語の文字 (Emacs の標準の構文表の, 単語の構文).
 const WORD: &str = r"\p{L}\p{N}$%";
@@ -33,11 +34,12 @@ fn boundary(set: &str, kind: &str) -> String {
 /// # Arguments
 ///
 /// * `pattern` - Emacs の正規表現.
+/// * `dialect` - 構文の方言 (`\\s(` などの構文の指定に使う).
 ///
 /// # Errors
 ///
 /// 書き方が誤っているか, 合わせられない書き方のとき.
-pub fn translate(pattern: &str) -> Result<String, String> {
+pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
     let chars: Vec<char> = pattern.chars().collect();
     let mut out = String::new();
     // 選択肢の始めか (`^` が行の始めを表し, `*` が文字になる所)
@@ -92,13 +94,14 @@ pub fn translate(pattern: &str) -> Result<String, String> {
                             return Err("Invalid syntax designator".to_string());
                         };
                         i += 1;
-                        let set = match class {
-                            '-' | ' ' => r" \t\n\r\x0c".to_string(),
-                            'w' => WORD.to_string(),
-                            '_' => r"_\-+*/&|<>=".to_string(),
-                            _ => return Err("Unsupported syntax class".to_string()),
-                        };
-                        out.push_str(&format!("[{}{set}]", if n == 'S' { "^" } else { "" }));
+                        let class = class_of_designator(class).ok_or("Unsupported syntax class")?;
+                        let set = class_chars(dialect, class);
+                        // 文字が 1 つも無い構文は、どれにも合わない (`\S` なら, どれにも合う)
+                        if set.is_empty() {
+                            out.push_str(if n == 'S' { "(?s:.)" } else { "(?!)" });
+                        } else {
+                            out.push_str(&format!("[{}{set}]", if n == 'S' { "^" } else { "" }));
+                        }
                     }
                     '_' => match chars.get(i) {
                         Some('<') => {
@@ -248,8 +251,8 @@ impl Pattern {
     /// # Errors
     ///
     /// 正規表現が誤っているとき.
-    pub fn new(pattern: &str, case_fold: bool) -> Result<Self, String> {
-        Self::compile(&translate(pattern)?, case_fold)
+    pub fn new(pattern: &str, case_fold: bool, dialect: Dialect) -> Result<Self, String> {
+        Self::compile(&translate(pattern, dialect)?, case_fold)
     }
 
     /// 文字そのものを探す正規表現を作ります (Emacs の `search-forward` の文字).
@@ -425,5 +428,153 @@ impl Buffer {
             }
             None => false,
         }
+    }
+}
+
+/// `skip-chars-forward` の文字の集まり: 範囲 (`a-z`), 文字, `[:alpha:]` などの文字クラス. 先頭の `^` は、補集合.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CharSet {
+    /// 補集合か.
+    negate: bool,
+    /// 範囲 (一文字は、始めと終わりが同じ).
+    ranges: Vec<(char, char)>,
+    /// 文字クラスの名前.
+    classes: Vec<String>,
+}
+
+impl CharSet {
+    /// `skip-chars-forward` の書き方から作ります.
+    ///
+    /// # Errors
+    ///
+    /// 文字クラスの名前が誤っているとき.
+    pub fn parse(spec: &str) -> Result<Self, String> {
+        let chars: Vec<char> = spec.chars().collect();
+        let (negate, mut i) = match chars.first() {
+            Some('^') => (true, 1),
+            _ => (false, 0),
+        };
+        let mut set = CharSet {
+            negate,
+            ranges: Vec::new(),
+            classes: Vec::new(),
+        };
+        // 一文字を読む (`\` は、次の文字をそのまま. 最後の `\` は、文字そのもの)
+        let read = |i: &mut usize| -> Option<char> {
+            let c = *chars.get(*i)?;
+            *i += 1;
+            if c == '\\' {
+                if let Some(quoted) = chars.get(*i) {
+                    *i += 1;
+                    return Some(*quoted);
+                }
+            }
+            Some(c)
+        };
+        while i < chars.len() {
+            if chars[i] == '[' && chars.get(i + 1) == Some(&':') {
+                if let Some(end) = (i + 2..chars.len().saturating_sub(1))
+                    .find(|&j| chars[j] == ':' && chars[j + 1] == ']')
+                {
+                    let name: String = chars[i + 2..end].iter().collect();
+                    if !CLASS_NAMES.contains(&name.as_str()) {
+                        return Err(format!("Invalid ISO C character class: {name}"));
+                    }
+                    set.classes.push(name);
+                    i = end + 2;
+                    continue;
+                }
+            }
+            let first = read(&mut i).unwrap_or('\\');
+            if chars.get(i) == Some(&'-') && i + 1 < chars.len() {
+                i += 1;
+                let last = read(&mut i).unwrap_or('\\');
+                set.ranges.push((first, last));
+            } else {
+                set.ranges.push((first, first));
+            }
+        }
+        Ok(set)
+    }
+
+    /// 文字が入るか.
+    pub fn contains(&self, c: char) -> bool {
+        let found = self.ranges.iter().any(|(a, b)| *a <= c && c <= *b)
+            || self.classes.iter().any(|name| class_matches(name, c));
+        found != self.negate
+    }
+}
+
+/// 文字クラスの名前.
+const CLASS_NAMES: &[&str] = &[
+    "alpha",
+    "alnum",
+    "digit",
+    "xdigit",
+    "upper",
+    "lower",
+    "space",
+    "blank",
+    "punct",
+    "word",
+    "cntrl",
+    "graph",
+    "print",
+    "ascii",
+    "nonascii",
+    "multibyte",
+    "unibyte",
+];
+
+/// 文字が文字クラスに入るか.
+fn class_matches(name: &str, c: char) -> bool {
+    match name {
+        "alpha" => c.is_alphabetic(),
+        "alnum" => c.is_alphabetic() || c.is_numeric(),
+        "digit" => c.is_ascii_digit(),
+        "xdigit" => c.is_ascii_hexdigit(),
+        "upper" => c.is_uppercase(),
+        "lower" => c.is_lowercase(),
+        "space" => matches!(c, ' ' | '\t' | '\n' | '\r' | '\x0c'),
+        "blank" => c == '\t' || c.is_whitespace() && !matches!(c, '\n' | '\r' | '\x0b' | '\x0c'),
+        "punct" => {
+            (c.is_ascii() && c.is_ascii_graphic() && !c.is_ascii_alphanumeric())
+                || (!c.is_ascii() && !c.is_alphanumeric() && !c.is_whitespace() && !c.is_control())
+        }
+        "word" => c.is_alphanumeric() || c == '$' || c == '%',
+        "cntrl" => c.is_control(),
+        "graph" => !c.is_control() && !c.is_whitespace(),
+        "print" => !c.is_control(),
+        "ascii" | "unibyte" => c.is_ascii(),
+        _ => !c.is_ascii(),
+    }
+}
+
+impl Buffer {
+    /// 集まりに入る文字を飛ばします (Emacs の `skip-chars-forward` と `skip-chars-backward`).
+    ///
+    /// # Arguments
+    ///
+    /// * `set` - 文字の集まり.
+    /// * `forward` - 前向きか.
+    /// * `limit` - 動く限り (省くと, バッファの端).
+    ///
+    /// # Returns
+    ///
+    /// 動いた文字の数 (後ろ向きなら負).
+    pub fn skip_chars(&mut self, set: &CharSet, forward: bool, limit: Option<usize>) -> i64 {
+        let start = self.point;
+        if forward {
+            let end = limit.unwrap_or(self.len()).min(self.len()).max(start);
+            while self.point < end && set.contains(self.text.char(self.point)) {
+                self.point += 1;
+            }
+        } else {
+            let end = limit.unwrap_or(0).min(start);
+            while self.point > end && set.contains(self.text.char(self.point - 1)) {
+                self.point -= 1;
+            }
+        }
+        self.point as i64 - start as i64
     }
 }

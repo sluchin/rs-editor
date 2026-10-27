@@ -596,8 +596,12 @@ impl<'a> Machine<'a> {
             _ => (None, args),
         };
         let saved = self.host.call("current-buffer", vec![])?;
+        // save-excursion は, 位置を追うマーカーで覚える (画面に頼むときは、マーカーが無いので、位置の数で覚える)
         let point = if op == "save-excursion" {
-            Some(self.host.call("point", vec![])?)
+            Some(match self.host.call("point-marker", vec![]) {
+                Ok(id) => (true, id),
+                Err(_) => (false, self.host.call("point", vec![])?),
+            })
         } else {
             None
         };
@@ -610,8 +614,15 @@ impl<'a> Machine<'a> {
         };
         // 本体の間に, 戻すバッファを消したときは, 戻さない
         if self.host.call("set-buffer", vec![saved]).is_ok() {
-            if let Some(point) = point {
-                self.host.call("goto-char", vec![point])?;
+            if let Some((is_marker, saved)) = point {
+                let target = if is_marker {
+                    let position = self.host.call("marker-position", vec![saved.clone()])?;
+                    self.host.call("marker-release", vec![saved])?;
+                    position
+                } else {
+                    saved
+                };
+                self.host.call("goto-char", vec![target])?;
             }
         }
         outcome

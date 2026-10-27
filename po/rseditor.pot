@@ -3299,13 +3299,54 @@ msgid "Put the line of point in the middle of the window."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:indent-tabs-mode"
+msgid "Non-nil means indentation can use tab characters."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:fill-prefix"
+msgid "The string that is inserted after a line break in filled text, or #f."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--spaces"
+msgid "Return a string of N spaces (the empty string if N is not positive)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--indent-to"
+msgid "Insert tabs (if indent-tabs-mode) and spaces so that point gets to COLUMN."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:newline"
-msgid "Insert N newlines.  N is the prefix argument, or 1."
+msgid ""
+"Insert N newlines.  N is the prefix argument, or 1.\n"
+"Signal an error if N is negative."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:open-line"
+msgid "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:split-line"
+msgid ""
+"Split the current line, moving the part beyond point to a new line below.\n"
+"The new line gets the same indentation as the column of point."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:indent-for-tab-command"
 msgid "Insert a tab character at point."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:default-indent-new-line"
+msgid ""
+"Break the line at point and delete the spaces around the break.\n"
+"The new line is not indented yet: indentation comes with the indentation commands."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3316,6 +3357,63 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:delete-backward-char"
 msgid "Delete the N characters before point (the N characters after point if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--delete-space"
+msgid "Delete the characters of CHARS around point (only before point if BACKWARD-ONLY is true)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-horizontal-space"
+msgid ""
+"Delete all spaces and tabs around point.\n"
+"With an argument, delete them only before point."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--fixup-whitespace"
+msgid "Fix up white space between objects around point: leave no space or one space."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:just-one-space"
+msgid ""
+"Delete all spaces and tabs around point, leaving one space (or N spaces).\n"
+"If N is negative, delete newlines as well, leaving -N spaces."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:simple--cycle-context"
+msgid "The state of cycle-spacing: (original-point whitespace-string n last-action)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--cycle-restore"
+msgid "Put back the white space cycle-spacing found."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:cycle-spacing"
+msgid ""
+"Manipulate the white space around point in a cycle.\n"
+"The first call leaves one space (just-one-space), the second deletes all the\n"
+"white space, and the third restores it.  Repeat the command to cycle."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-indentation"
+msgid ""
+"Join this line to the previous one and fix up the white space at the join.\n"
+"With an argument, join the current line to the following line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-blank-lines"
+msgid ""
+"On a blank line, delete all the surrounding blank lines, leaving just one.\n"
+"On an isolated blank line, delete that one.\n"
+"On a nonblank line, delete any blank lines that follow it."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3340,8 +3438,22 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:kill-line"
 msgid ""
-"Kill the rest of the line, or the newline if point is at the end of the line.\n"
-"Signal an error at the end of the buffer."
+"Kill the rest of the line; if there are no nonblanks there, kill through the newline.\n"
+"With an argument N, kill that many lines from point; a negative N kills backward,\n"
+"and 0 kills the text before point on the line.  Signal an error at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--marker"
+msgid "Return where POSITION is after the text from FROM to TO was deleted."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-whole-line"
+msgid ""
+"Kill the current line, with its newline.\n"
+"With an argument N, kill that many lines from the current line; a negative N kills\n"
+"backward, also killing the preceding newline.  With 0, kill the line without its newline."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3359,15 +3471,84 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:zap-to-char"
+msgid ""
+"Kill up to and including the Nth occurrence of CHAR.\n"
+"Interactively, N is the prefix argument and CHAR is read as a key."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:append-next-kill"
+msgid ""
+"Cause the following command, if it is a kill, to append to the previous kill.\n"
+"Interactively, it takes effect after this command."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:ignore-preserving-kill-region"
+msgid "Do nothing, but keep the kill that the previous command made for the next kill."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:yank"
-msgid "Insert the most recent kill at point, and leave the mark at the start of the text."
+msgid ""
+"Insert the most recent kill at point, and leave the mark at the start of the text.\n"
+"With a plain prefix argument (C-u), leave point at the start and the mark at the end.\n"
+"With a number N, insert the Nth most recent kill; with -, the second most recent."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:yank-pop"
 msgid ""
 "Replace the text just yanked with the previous kill in the kill ring.\n"
-"Signal an error if the previous command was not a yank."
+"With an argument N, use the Nth previous kill.  Signal an error if the previous\n"
+"command was not a yank."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:insert-buffer"
+msgid ""
+"Insert after point the contents of BUFFER, and leave point before it and the mark after it.\n"
+"Interactively, read the name of BUFFER in the minibuffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose"
+msgid "Transpose the objects that MOVER moves over, as transpose-chars, transpose-words and transpose-lines do."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose-1"
+msgid "Swap the text of the two regions POS1 and POS2, each a list (start end)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-chars"
+msgid ""
+"Interchange the characters around point, and move point forward over them.\n"
+"At the end of a line, the previous two characters are interchanged.\n"
+"With argument N, drag the character before point forward over N other characters."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-words"
+msgid ""
+"Interchange the words around point, and move point over the second.\n"
+"With argument N, drag the word before or around point forward over N other words."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-lines"
+msgid ""
+"Exchange the current line and the previous line, and leave point after both.\n"
+"With argument N, move the previous line past N lines."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:quoted-insert"
+msgid ""
+"Read a character and insert it as it is, N times.\n"
+"Only the keys that stand for one character can be inserted."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3386,10 +3567,53 @@ msgid "Put point at the beginning and the mark at the end of the buffer."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:simple--undo-equiv"
+msgid ""
+"Which undo lists were made by undo: a list of (length value).\n"
+"The value is what is left to undo (a list, #t or empty).  It is keyed by the length of the undo list."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--skip-boundaries"
+msgid "Return the undo list UL without the boundaries (#f) at its front."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--equiv-ref"
+msgid "Return what undo recorded for the undo list UL, or #f."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--equiv-set"
+msgid "Record VALUE for the undo list UL."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--last-change-was-undo-p"
+msgid "Return what undo recorded if the last change in UNDO-LIST was made by undo, else #f."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--undo-more"
+msgid "Undo N more groups of changes from the pending undo list."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--drop-point-records"
+msgid "Return the undo list UL without the position records that undo made in its newest group."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:undo"
 msgid ""
 "Undo some previous changes.  Repeat the command to undo more.\n"
-"With argument N, undo N groups of changes."
+"With a number N, undo N groups of changes.  After the other commands, the\n"
+"undo starts again from the newest change, so undoing an undo redoes the change."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:undo-redo"
+msgid "Undo the last N undos, that is redo the last N changes that were undone."
 msgstr ""
 
 #: lisp/simple.scm

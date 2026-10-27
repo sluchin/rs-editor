@@ -166,7 +166,7 @@ const CASES: &[(&str, &str)] = &[
     ),
     (
         r##"(insert "xy") (undo-boundary) (delete-region 1 3) (buffer-undo-list)"##,
-        r##"(("xy" -1) #f (1 3) (1 10))"##,
+        r##"(("xy" -1) 3 #f (1 3) (1 10))"##,
     ),
     (
         r##"(insert "XY") (undo-boundary) (primitive-undo 1 (buffer-undo-list)) (buffer-string)"##,
@@ -174,7 +174,7 @@ const CASES: &[(&str, &str)] = &[
     ),
     (r##"(primitive-undo 1 '((1 2) #f))"##, r##"()"##),
     (
-        r##"(primitive-undo 1 '(5))"##,
+        r##"(primitive-undo 1 '(a))"##,
         r##"ERR primitive-undo: invalid undo entry"##,
     ),
     (
@@ -650,5 +650,32 @@ fn test_moving_and_argument_checks() {
     assert_eq!(
         run_last("(insert \"(a (b \\\"c\") (syntax-ppss)"),
         "(2 4 #f #t #f #f 0 #f 7 (1 4) #f)"
+    );
+}
+
+#[test]
+fn test_undo_list_can_be_replaced_and_markers_follow_the_text() {
+    assert_eq!(
+        run_last("(set-buffer-undo-list 5)"),
+        "ERR set-buffer-undo-list expects a list"
+    );
+    assert_eq!(
+        run_last("(set-buffer-undo-list '(a))"),
+        "ERR primitive-undo: invalid undo entry"
+    );
+    // 履歴を置き換える: 古い方の 1 つだけにする
+    assert_eq!(
+        run_last("(insert \"ab\") (undo-boundary) (insert \"cd\") (set-buffer-undo-list (list (list 1 3))) (buffer-undo-list)"),
+        "((1 3))"
+    );
+    // 位置の記録 (数) は、履歴に入り, 元に戻すと, カーソルを置く
+    assert_eq!(
+        run_last("(insert \"abc\") (primitive-undo 1 '(2))  (point)"),
+        "2"
+    );
+    // マーカーは、本文を書き換えると、位置を追う
+    assert_eq!(
+        run_last("(insert \"abcdef\") (goto-char 4) (let ((m (point-marker))) (goto-char 1) (insert \"XX\") (list (marker-position m) (begin (marker-release m) (marker-position m))))"),
+        "(6 #f)"
     );
 }

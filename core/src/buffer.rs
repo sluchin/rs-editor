@@ -34,6 +34,9 @@ pub enum UndoEntry {
         /// 消す前のカーソルが, 消した所の終わりにあったか (元に戻すと, カーソルをそこへ置く).
         point_at_end: bool,
     },
+    /// 元に戻したときに, カーソルを置く位置 (Emacs の履歴の, 位置だけの要素).
+    /// 区切りの直後の変更の前に, カーソルが変更の所になかったとき, 前の区切りでのカーソルを覚える.
+    Point(usize),
     /// まとまりの区切り (Emacs の `nil`. 元に戻すのは, 区切りまでを 1 回とする).
     Boundary,
 }
@@ -63,6 +66,10 @@ pub struct Buffer {
     pub(crate) match_data: Vec<Option<(usize, usize)>>,
     /// 構文の方言 (メジャーモードに当たる).
     dialect: Dialect,
+    /// マーカー (位置を覚えておいて, 本文を書き換えると, 位置を追う. 解いたものは `None`).
+    markers: Vec<Option<usize>>,
+    /// 最後の区切りを入れたときのカーソル (Emacs の `point_before_last_command_or_undo`).
+    point_at_boundary: Option<usize>,
 }
 
 impl Buffer {
@@ -84,6 +91,8 @@ impl Buffer {
             undo: Vec::new(),
             match_data: Vec::new(),
             dialect: Dialect::Fundamental,
+            markers: Vec::new(),
+            point_at_boundary: None,
         }
     }
 
@@ -394,6 +403,7 @@ impl Buffer {
         shift(&mut self.point);
         self.mark.iter_mut().for_each(shift);
         self.mark_ring.iter_mut().for_each(shift);
+        self.markers.iter_mut().flatten().for_each(shift);
     }
 
     /// 位置の記録を, 消した範囲の分だけずらします.
@@ -408,6 +418,17 @@ impl Buffer {
         shift(&mut self.point);
         self.mark.iter_mut().for_each(shift);
         self.mark_ring.iter_mut().for_each(shift);
+        self.markers.iter_mut().flatten().for_each(shift);
+    }
+
+    /// 区切りの直後の変更の前に、区切りでのカーソルを履歴に覚えます (変更の所と同じなら, 要らない).
+    fn record_point(&mut self, beginning: usize) {
+        let at_boundary = matches!(self.undo.last(), None | Some(UndoEntry::Boundary));
+        if let (true, Some(point)) = (at_boundary, self.point_at_boundary) {
+            if point != beginning {
+                self.undo.push(UndoEntry::Point(point));
+            }
+        }
     }
 
     /// 履歴に, 入れた文字を記録します (続けて入れたら, 1 つにまとめる).
@@ -418,6 +439,7 @@ impl Buffer {
                 return;
             }
         }
+        self.record_point(pos);
         self.undo.push(UndoEntry::Insert { pos, len });
     }
 
@@ -462,6 +484,7 @@ impl Buffer {
         }
         let text = self.text.slice(from..to).to_string();
         self.text.remove(from..to);
+        self.record_point(from);
         self.undo.push(UndoEntry::Delete {
             pos: from,
             text: text.clone(),
@@ -470,6 +493,34 @@ impl Buffer {
         self.shift_for_delete(from, to);
         self.modified = true;
         Ok(text)
+    }
+
+    /// 位置を覚えるマーカーを作ります (Emacs の `point-marker`). 本文を書き換えると, 位置を追う
+    /// (入れた所と同じ位置なら, 動かない. 消した範囲の中なら, 消した所の始め).
+    ///
+    /// # Returns
+    ///
+    /// マーカーの番号.
+    pub fn marker_new(&mut self, pos: usize) -> usize {
+        let pos = pos.min(self.len());
+        if let Some(free) = self.markers.iter().position(Option::is_none) {
+            self.markers[free] = Some(pos);
+            return free;
+        }
+        self.markers.push(Some(pos));
+        self.markers.len() - 1
+    }
+
+    /// マーカーの位置. 解いたマーカーか, 無いマーカーなら `None`.
+    pub fn marker_position(&self, id: usize) -> Option<usize> {
+        self.markers.get(id).copied().flatten()
+    }
+
+    /// マーカーを解きます.
+    pub fn marker_release(&mut self, id: usize) {
+        if let Some(slot) = self.markers.get_mut(id) {
+            *slot = None;
+        }
     }
 
     /// マークの位置 (Emacs の `mark`).
@@ -558,8 +609,15 @@ impl Buffer {
         &self.undo
     }
 
+    /// 元に戻す履歴を置き換えます (Emacs の `(setq buffer-undo-list ...)`. `undo-redo` が履歴を巻き戻すときに使う).
+    pub fn set_undo_list(&mut self, list: Vec<UndoEntry>) {
+        self.undo = list;
+    }
+
     /// 元に戻すまとまりの区切りを入れます (Emacs の `undo-boundary`). 履歴が空か, 既に区切りなら入れない.
     pub fn undo_boundary(&mut self) {
+        // 区切りでのカーソルは、履歴が空でも覚える
+        self.point_at_boundary = Some(self.point);
         if !matches!(self.undo.last(), None | Some(UndoEntry::Boundary)) {
             self.undo.push(UndoEntry::Boundary);
         }
@@ -600,7 +658,10 @@ impl Buffer {
         for entry in entries {
             match entry {
                 UndoEntry::Boundary => {}
+                UndoEntry::Point(pos) => self.point = (*pos).min(self.len()),
                 UndoEntry::Insert { pos, len } => {
+                    // Emacs は, 先にカーソルを置く (消した記録の, カーソルの印が, 始めになる)
+                    self.point = (*pos).min(self.len());
                     self.delete_region(*pos, pos + len)?;
                     self.point = *pos;
                 }

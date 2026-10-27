@@ -108,7 +108,10 @@ impl Host for Frontend {
                 Ok(Value::Nil)
             }
             "message" => Ok(Value::Nil),
-            "buffer-name" => Ok(Value::String(self.with_current(|b| b.name.clone()))),
+            "buffer-name" | "current-buffer" => {
+                Ok(Value::String(self.with_current(|b| b.name.clone())))
+            }
+            "set-buffer" => Ok(args[0].clone()),
             other => Err(format!("frontend: {other}")),
         }
     }
@@ -249,4 +252,13 @@ fn test_failures() {
     assert_eq!(flush.unwrap(), "cannot apply");
     let (result, _) = run(&frontend, "(forward-char 1) (message \"x\")");
     assert_eq!(result.unwrap_err(), "cannot apply");
+}
+
+#[test]
+fn test_save_excursion_falls_back_to_the_point_number() {
+    // 画面にはマーカーが無いので, save-excursion は, 位置の数で覚えて戻す
+    let frontend = Frontend::new("abcdef");
+    let (result, _) = run(&frontend, "(save-excursion (forward-char 3) (char-after))");
+    assert_eq!(result.unwrap().lines().last(), Some("\"d\""));
+    assert_eq!(frontend.with_current(|b| b.point), 1);
 }
