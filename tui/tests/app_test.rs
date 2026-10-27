@@ -3,8 +3,6 @@
 mod common;
 use common::Fixture;
 
-use rseditor_core::editor::PrefixArg;
-
 #[test]
 fn test_typing_and_basic_movement() {
     let mut fx = Fixture::new();
@@ -197,10 +195,7 @@ fn test_prefix_arguments() {
     // 前置引数のあいだに出すもの
     fx.press("C-u");
     assert_eq!(fx.app.message(), "C-u 4-");
-    assert_eq!(
-        fx.app.host().editor().prefix_arg,
-        Some(PrefixArg::Universal(4))
-    );
+    assert_eq!(fx.app.eval("prefix-arg").unwrap(), "(4)");
     fx.press("-");
     assert_eq!(fx.app.message(), "C-u -");
     fx.press("7");
@@ -211,6 +206,7 @@ fn test_prefix_arguments() {
     assert_eq!(fx.text(), "zzzabcdefghij");
     // 前置引数の後に C-u を続けて押しなおす
     fx.press("C-u 2 C-u C-f");
+    assert_eq!(fx.app.eval("prefix-arg").unwrap(), "#f");
     assert_eq!(fx.app.host().editor().prefix_arg, None);
     // 数字は前置引数が無ければ、文字
     fx.press("5");
@@ -377,4 +373,20 @@ fn test_kill_append_buffer_insert_and_redo_keys() {
     let mut fx = Fixture::new();
     fx.press("a SPC SPC b C-b C-b M-j");
     assert_eq!(fx.text(), "a\nb");
+}
+
+#[test]
+fn test_mark_is_deactivated_at_the_end_of_the_command() {
+    let mut fx = Fixture::new();
+    fx.press("a b c d e C-SPC C-a");
+    assert!(fx.app.host().editor().current_buffer().mark_active());
+    // 消すコマンドは, マークを使わない状態にする
+    fx.press("C-w");
+    assert!(!fx.app.host().editor().current_buffer().mark_active());
+    // C-u 4 の後の - は, 数の後なら文字
+    fx.press("C-u 3 -");
+    assert_eq!(fx.text().matches('-').count(), 3);
+    // 数の後の M-- は, 符号を反対にする
+    fx.press("C-u 2 M-- C-b");
+    assert_eq!(fx.app.eval("prefix-arg").unwrap(), "#f");
 }

@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
-use rseditor_core::editor::{Editor, PrefixArg};
+use rseditor_core::editor::Editor;
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
@@ -17,15 +17,6 @@ use crate::ui::{printable, UiHost, UiState};
 /// 基本の編集のコマンド (Lisp).
 const SIMPLE: &str = include_str!("../../lisp/simple.scm");
 
-/// 前置引数を読んでいる途中の状態.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Prefix {
-    /// `C-u` を押した回数 (`C-u` は 4, `C-u C-u` は 16).
-    Universal(i64),
-    /// 数を読んでいる (符号と, 今までの数. 数が無ければ `None`).
-    Digits(bool, Option<i64>),
-}
-
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -38,8 +29,6 @@ pub struct App {
     state: Arc<Mutex<UiState>>,
     /// 読んでいる途中のキー (`C-x` など).
     pending: Vec<String>,
-    /// 前置引数を読んでいる途中の状態.
-    prefix: Option<Prefix>,
 }
 
 /// コマンドの名前の記号.
@@ -77,7 +66,6 @@ impl App {
             keymap,
             state,
             pending: Vec::new(),
-            prefix: None,
         };
         // 最後のファイルを出す (Emacs と同じ)
         for file in files {
@@ -143,52 +131,44 @@ impl App {
         self.state.lock().unwrap().message = text.to_string();
     }
 
-    /// 前置引数を決めます.
-    fn set_prefix(&self, prefix: Option<PrefixArg>) {
-        self.host.editor().prefix_arg = prefix;
+    /// Lisp の変数を返します (無ければ偽).
+    fn variable(&self, name: &str) -> Value {
+        self.evaluator
+            .global()
+            .get(name)
+            .unwrap_or(Value::Boolean(false))
     }
 
-    /// 前置引数のキーなら、受けて `true`.
-    fn handle_prefix_key(&mut self, key: &str) -> bool {
-        if !self.pending.is_empty() {
-            return false;
+    /// 前置引数を読んでいる間 (`universal-argument-map`) のキーなら, 受けるコマンドの名前を返します.
+    fn prefix_command(&self, key: &str) -> Option<&'static str> {
+        if !self.pending.is_empty()
+            || self.variable("universal-argument-mode") == Value::Boolean(false)
+        {
+            return None;
         }
-        let digit = key
-            .strip_prefix("M-")
-            .or(Some(key))
-            .and_then(|k| k.parse::<i64>().ok())
-            .filter(|_| {
-                key.starts_with("M-")
-                    || matches!(self.prefix, Some(Prefix::Universal(_) | Prefix::Digits(..)))
-            });
-        let next = match (key, self.prefix, digit) {
-            ("C-u", Some(Prefix::Universal(n)), _) => Prefix::Universal(n * 4),
-            ("C-u", _, _) => Prefix::Universal(4),
-            ("M--" | "C--", None, _) => Prefix::Digits(true, None),
-            ("-", Some(Prefix::Universal(_)), _) => Prefix::Digits(true, None),
-            (_, Some(Prefix::Digits(negative, so_far)), Some(d)) => {
-                Prefix::Digits(negative, Some(so_far.unwrap_or(0) * 10 + d))
+        let last = key.chars().last().unwrap_or(' ');
+        match key {
+            "C-u" => Some("universal-argument-more"),
+            "-" | "M--" | "C--" if !matches!(self.variable("prefix-arg"), Value::Number(_)) => {
+                Some("negative-argument")
             }
-            (_, Some(Prefix::Universal(_)), Some(d)) => Prefix::Digits(false, Some(d)),
-            (_, None, Some(d)) => Prefix::Digits(false, Some(d)),
-            _ => return false,
-        };
-        self.prefix = Some(next);
-        let arg = match next {
-            Prefix::Universal(n) => PrefixArg::Universal(n),
-            Prefix::Digits(true, None) => PrefixArg::Minus,
-            Prefix::Digits(negative, so_far) => {
-                let n = so_far.unwrap_or(0);
-                PrefixArg::Number(if negative { -n } else { n })
+            "M--" | "C--" => Some("negative-argument"),
+            _ if last.is_ascii_digit() && (key.len() == 1 || key.starts_with(['M', 'C'])) => {
+                Some("digit-argument")
             }
+            _ => None,
+        }
+    }
+
+    /// 前置引数をエコー領域に出します.
+    fn say_prefix(&self) {
+        let text = match self.variable("prefix-arg") {
+            Value::Symbol(_) => "C-u -".to_string(),
+            Value::Number(n) => format!("C-u {n}-"),
+            Value::List(items) => format!("C-u {}-", items[0]),
+            _ => return,
         };
-        self.set_prefix(Some(arg));
-        self.say(&match arg {
-            PrefixArg::Universal(n) => format!("C-u {n}-"),
-            PrefixArg::Minus => "C-u -".to_string(),
-            PrefixArg::Number(n) => format!("C-u {n}-"),
-        });
-        true
+        self.say(&text);
     }
 
     /// キーを 1 つ処理します.
@@ -198,7 +178,11 @@ impl App {
             self.say("Quit");
             return;
         }
-        if self.handle_prefix_key(key) {
+        self.evaluator
+            .global()
+            .define("last-command-event", Value::String(key.to_string()));
+        if let Some(command) = self.prefix_command(key) {
+            self.execute(command);
             return;
         }
         self.pending.push(key.to_string());
@@ -231,6 +215,7 @@ impl App {
 
     /// 文字を入れます (前置引数の数だけ).
     fn self_insert(&mut self, c: char) {
+        self.take_prefix();
         let count =
             rseditor_core::editor::prefix_numeric_value(self.host.editor().prefix_arg).max(1);
         let text: String = std::iter::repeat_n(c, count as usize).collect();
@@ -245,16 +230,31 @@ impl App {
         );
     }
 
+    /// Lisp の `prefix-arg` を, 次のコマンドの前置引数にします (`prefix-arg` は空にする).
+    fn take_prefix(&self) {
+        let arg = self.variable("prefix-arg");
+        let globals = self.evaluator.global();
+        globals.define("prefix-arg", Value::Boolean(false));
+        globals.define("universal-argument-mode", Value::Boolean(false));
+        // 前置引数は, 前置引数のコマンドが作ったものだけなので, 失敗しない
+        let _ = self.host.call("set-current-prefix-arg", vec![arg]);
+    }
+
     /// コマンドを動かします.
     fn execute(&mut self, command: &str) {
         self.say("");
+        self.take_prefix();
+        self.host
+            .editor()
+            .current_buffer_mut()
+            .set_deactivate_requested(false);
         let globals = self.evaluator.global();
         globals.define("this-command", symbol(command));
         let outcome = self.evaluator.run_command(command, &self.host).map(|_| ());
         self.finish(command, outcome);
     }
 
-    /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、前置引数を消す.
+    /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.
     fn finish(&mut self, command: &str, outcome: Result<(), String>) {
         if let Err(error) = outcome {
             self.say(&error);
@@ -274,7 +274,15 @@ impl App {
             },
         );
         globals.define("this-command", symbol(command));
-        self.prefix = None;
-        self.set_prefix(None);
+        self.host.editor().prefix_arg = None;
+        // 前置引数のコマンドの後は, 次のコマンドに前置引数を渡す
+        self.say_prefix();
+        // 変更したコマンドの終わりには, マークを使わない状態にする (Emacs の deactivate-mark)
+        let mut editor = self.host.editor();
+        let buffer = editor.current_buffer_mut();
+        if buffer.deactivate_requested() {
+            buffer.deactivate_mark();
+            buffer.set_deactivate_requested(false);
+        }
     }
 }
