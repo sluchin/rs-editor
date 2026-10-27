@@ -52,7 +52,7 @@ jobs:
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: .
 
       - name: Install npm dependencies
         run: npm install --legacy-peer-deps
@@ -65,7 +65,7 @@ jobs:
         with:
           name: rseditor-${{ matrix.name }}
           path: |
-            src-tauri/target/release/bundle/**
-            src-tauri/target/release/rseditor
-            src-tauri/target/release/rseditor.exe
+            target/release/bundle/**
+            target/release/rseditor
+            target/release/rseditor.exe
           if-no-files-found: ignore

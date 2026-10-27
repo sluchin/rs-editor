@@ -1,6 +1,6 @@
 ;;; window.scm --- buffer and window commands -*- scheme -*-
 
-;; Emacs の window.el に当たるもの. 起動のときに読む (src-tauri/src/scheme/loadup.rs).
+;; Emacs の window.el に当たるもの. 起動のときに読む (core/src/scheme/loadup.rs).
 
 (define (window--other-buffer)
   "Return the name of a buffer other than the current one, or #f if there is none."

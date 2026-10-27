@@ -10,43 +10,43 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 - **開発**: フロントエンドと Rust バックエンド両方のホットリロード対応
 
 ## アーキテクチャ
-フロントエンド（`src/` 内の React コンポーネント）はミニバッファ、ファイル操作、コード表示を備えたエディタ UI を管理します。バックエンド（`src-tauri/` 内の Rust）は Scheme インタプリタ、パーサ、評価器、ファイル I/O を処理します。
+フロントエンド（`src/` 内の React コンポーネント）はミニバッファ、ファイル操作、コード表示を備えたエディタ UI を管理します。バックエンドは Cargo のワークスペース（ルートの `Cargo.toml`）で、画面に頼まない核のクレート `core/`（Scheme インタプリタ、パーサ、評価器、原子的な書き込み。ターミナルの ncurses でも使う）と、Tauri のアプリ `src-tauri/`（ファイル I/O、検索、ログ。`core/` を再公開する）に分けています。計画は FUNCTIONS.md の「実装の計画」。
 
 - エディタは CodeMirror 6 (`src/components/CodeEditor.tsx`)。バッファごとに `EditorState` を持ち, 切り替えるときに差し替える。
 - ウィンドウ (`C-x 2` など) は, 分け方を木 (`src/lib/windows.ts`) で持ち, 描くときは位置を % で計算して平らに並べる (分け方が変わっても, エディタを作り直さない)。ウィンドウごとに `CodeEditor` を置き, バッファの本文は, CodeMirror の `Text` (`Buffer.doc`) で持つ (エディタの本文を写さずに共有する。文字列が要る所だけ `toString()` する)。同じバッファの書き換えは, `sync` で, 変更 (`ChangeSet`) だけを別のウィンドウに写す (本文の版が同じなら, 本文を比べない)。
 - Emacs のコマンドとキーの割り当ては `src/lib/emacs.ts`。コマンドは Emacs の名前で引き, キーと `M-x` の両方から使う。画面のコマンド (ファイル, バッファ, 検索, 評価) は, 機能ごとのフック (`src/hooks/`) が `CommandSet` (コマンドの `actions` と, ミニバッファの入力を確定したときの `submit`) で返し, `App.tsx` が合わせて, キーと `M-x` とミニバッファにつなぐ。ミニバッファの状態と入力の履歴は `useMinibuffer.ts`, バッファとウィンドウは `useBuffers.ts` (`Buffer` の型と, 同じ名前のファイルのバッファの名前をディレクトリで区別する `uniquifyBufferNames` は `src/lib/buffer.ts`), 検索と置換は `useSearch.ts`, ブックマークは `useBookmarks.ts`, 評価と Lisp のコマンドは `useLisp.ts`。バッファのコマンド (`C-x b`, `C-x k`) と, 終わること (`C-x C-c`) は `App.tsx`。
 - シンタックスハイライトは, CodeMirror の `StreamLanguage` で, Emacs 30 の scheme-mode と emacs-lisp-mode と同じ色分けにする (`src/lib/lispMode.ts`)。決まりは, Emacs の font-lock の変数 (`scheme-font-lock-keywords-2`, `lisp-el-font-lock-keywords-2`) から取り, `emacs -Q --batch` で付けた色と比べて確かめる。Emacs Lisp のマクロの名前は `src/lib/elispKeywords.ts` (`emacs -Q` から作る)。バッファのメジャーモード (色を付けるか, 字下げ, モードラインの名前) は `src/lib/modes.ts` で決める (ファイルの 1 行目の `-*- ... -*-` も読む)。
 - 字下げは, Emacs 30 の `calculate-lisp-indent` と同じ計算 (`src/lib/lispIndent.ts`)。フォームごとの指定は `src/lib/lispIndentSpecs.ts` (`emacs -Q` から作る)。`emacs -Q --batch` の `indent-region` の結果と比べて確かめる。括弧の強調 (show-paren-mode) は `src/lib/showParen.ts`。矩形 (`C-x r k` など) は `src/lib/rectangle.ts`, ブックマーク (`C-x r m`, `C-x r b`) は `src/lib/bookmarks.ts` (保存は `~/.config/rseditor/bookmarks`)。段落を詰める (`M-q`) のは `src/lib/fill.ts` で, `emacs -Q --batch` の `fill-paragraph` の結果と比べて確かめる。
-- ファイルのコマンド (`C-x C-v`, `C-x i`, `C-x s`, `revert-buffer`, `recover-this-file`) は Lisp (`lisp/files.scm`)。自動保存 (`#名前#`) とバックアップ (`名前~`) と, バッファをファイルに書くことは `src/hooks/useFiles.ts`, dired (`C-x d`) は `src/hooks/useDirectories.ts` に置く。ファイルの書き込み (`write_file_content`, Lisp の `write-file-string`) は, 原子的に書く (`src-tauri/src/atomic.rs` の `write_atomic`。同じディレクトリの一時ファイルに書いてから置き換える)。パスの計算は `src/lib/paths.ts`, dired の一覧 (`ls -al` の出力から作る) は `src/lib/dired.ts`。ミニバッファの入力の履歴と, isearch の検索の履歴は `src/lib/history.ts`。
+- ファイルのコマンド (`C-x C-v`, `C-x i`, `C-x s`, `revert-buffer`, `recover-this-file`) は Lisp (`lisp/files.scm`)。自動保存 (`#名前#`) とバックアップ (`名前~`) と, バッファをファイルに書くことは `src/hooks/useFiles.ts`, dired (`C-x d`) は `src/hooks/useDirectories.ts` に置く。ファイルの書き込み (`write_file_content`, Lisp の `write-file-string`) は, 原子的に書く (`core/src/atomic.rs` の `write_atomic`。同じディレクトリの一時ファイルに書いてから置き換える)。パスの計算は `src/lib/paths.ts`, dired の一覧 (`ls -al` の出力から作る) は `src/lib/dired.ts`。ミニバッファの入力の履歴と, isearch の検索の履歴は `src/lib/history.ts`。
 - 位置の計算 (単語, 行) は `src/lib/text.ts`, kill-ring は `src/lib/killRing.ts`, `C-x C-e` の S 式の範囲は `src/lib/bracketMatch.ts`。
 - 構文表と式の走査 (Emacs の `scan-lists`, `syntax-ppss`) は `src/lib/syntax.ts`, S 式, リスト, defun の移動 (`C-M-f`, `C-M-u`, `C-M-a`, `C-M-h` など) は `src/lib/sexp.ts`, 段落と文の移動 (`M-{`, `M-e` など) は `src/lib/paragraph.ts`。`emacs -Q --batch` で, 本文の全ての位置からコマンドを動かした結果 (`tests/frontend/lib/motion.json`) と比べて確かめる。
-- Lisp からのエディタの操作: 評価器は, 操作を `Host` (`src-tauri/src/scheme/host.rs`) に頼む。アプリでは `Bridge` が `editor-request` のイベントで画面に頼み, 画面 (`src/lib/lisp.ts`) が操作をして `editor_reply` で返事をする。テストでは, 偽の `Host` を使う。位置は Emacs と同じく 1 から数え, 文字 (Unicode のコードポイント) で数える (エディタの UTF-16 の位置とは, `performEditorRequest` で変える)。
-- 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。バッファだけのキー (`local-set-key`) は, 画面がバッファ (`Buffer.keys`) に持つ。バッファを出す操作 (`find-file`, `switch-to-buffer`) は, 描き直してから返事をする (`bufferWaiters`)。`read-string` は, 返事を長く待つ (`READ_TIMEOUT`)。フック (`add-hook`, `run-hooks`) は `src-tauri/src/scheme/hooks.rs`。評価の結果 (`EvalResponse.hooks`) に, 手続きのある `find-file-hook` と `after-save-hook` を添え, 画面 (`useLisp.ts`) は, ファイルを開いたバッファを初めて出したときと, 今のバッファを保存したとき (`Buffer.saveCount`) に, `(run-hooks ...)` を評価する。
-- 初期設定ファイルは `~/.rseditor` (無ければ `~/.rseditor.d/init.scm`, それも無ければ `~/.config/rseditor/init.scm`。読んだファイルは `user-init-file`)。ファイル, 時刻, 正規表現の組み込みの手続き (`load`, `require`, `read-file-string`, `regexp-match-positions`, `make-temp-file`, `grep` など) は `src-tauri/src/scheme/system.rs`。`load` と `require` は `load-path` (始めは `~/.rseditor.d/lisp`, `~/.rseditor.d`) から探す。色とフォント (`set-background-color`, `set-frame-font`) は `src/lib/theme.ts` で, CSS の変数 (`src/index.css`) に置く (背景が暗いと, Emacs の暗い背景の face の色にする)。
+- Lisp からのエディタの操作: 評価器は, 操作を `Host` (`core/src/scheme/host.rs`) に頼む。アプリでは `Bridge` が `editor-request` のイベントで画面に頼み, 画面 (`src/lib/lisp.ts`) が操作をして `editor_reply` で返事をする。テストでは, 偽の `Host` を使う。位置は Emacs と同じく 1 から数え, 文字 (Unicode のコードポイント) で数える (エディタの UTF-16 の位置とは, `performEditorRequest` で変える)。
+- 評価は, 大きなスタックのスレッドで行う (`Evaluator::run`)。Lisp で作ったコマンド (`define-command`) とキー (`global-set-key`) は評価器が覚え, 評価の結果 (`EvalResponse`) で画面に渡す。バッファだけのキー (`local-set-key`) は, 画面がバッファ (`Buffer.keys`) に持つ。バッファを出す操作 (`find-file`, `switch-to-buffer`) は, 描き直してから返事をする (`bufferWaiters`)。`read-string` は, 返事を長く待つ (`READ_TIMEOUT`)。フック (`add-hook`, `run-hooks`) は `core/src/scheme/hooks.rs`。評価の結果 (`EvalResponse.hooks`) に, 手続きのある `find-file-hook` と `after-save-hook` を添え, 画面 (`useLisp.ts`) は, ファイルを開いたバッファを初めて出したときと, 今のバッファを保存したとき (`Buffer.saveCount`) に, `(run-hooks ...)` を評価する。
+- 初期設定ファイルは `~/.rseditor` (無ければ `~/.rseditor.d/init.scm`, それも無ければ `~/.config/rseditor/init.scm`。読んだファイルは `user-init-file`)。ファイル, 時刻, 正規表現の組み込みの手続き (`load`, `require`, `read-file-string`, `regexp-match-positions`, `make-temp-file`, `grep` など) は `core/src/scheme/system.rs`。`load` と `require` は `load-path` (始めは `~/.rseditor.d/lisp`, `~/.rseditor.d`) から探す。色とフォント (`set-background-color`, `set-frame-font`) は `src/lib/theme.ts` で, CSS の変数 (`src/index.css`) に置く (背景が暗いと, Emacs の暗い背景の face の色にする)。
 - `M-x grep` は外のコマンドを使わず, Rust (`src-tauri/src/search.rs` の `grep_directory`) が探す。結果のバッファ (`*grep*`) の本文は `src/lib/grep.ts` で作り, 行は行の番号で合った行と結ぶ (`GREP_HEADER_LINES`)。`RET`, `M-g n`, `M-g p` は `src/hooks/useDirectories.ts`。
 - サイドバーのプロジェクトのツリー (`F8`) は `src/components/ProjectTree.tsx`。根は `search.rs` の `project_root` (`.git` のある所)。押してもフォーカスを取らない。
-- howm の Scheme 版は `lisp/howm.scm` (`(require 'howm)` で読む)。テストは `src-tauri/tests/howm_test.rs` と `tests/lisp/test_howm.scm` (どちらも偽のエディタ (`src-tauri/tests/common/mod.rs`) の上で動かす)。
-- Org mode の Scheme 版は `lisp/org.scm` (`(require 'org)` で読む。Emacs の org 9.7.11 の動きに合わせる)。テストは `src-tauri/tests/org_test.rs` と `tests/lisp/test_org.scm`。色は `highlight-regexp` の face (`src/styles/CodeEditor.css` の `cm-face-*`)、開け閉めは `outline-flag-region`。
-- ERT (`ert-deftest`, `should` など) は `src-tauri/src/scheme/ert.rs`。特別な形は `ert::special_form`, `M-x ert` のコマンドは Scheme の `PRELUDE` で定義する。`tests/*.scm` は `src-tauri/tests/lisp_ert_test.rs` が走らせる (`npm run test:scheme`)。
-- 起動のときに読む Lisp (Emacs の loadup.el に当たる) は `src-tauri/src/scheme/loadup.rs` に並べる (`lisp/subr.scm` (`y-or-n-p` など), `lisp/window.scm` (`switch-to-buffer`), `lisp/files.scm` (`find-file`, `save-buffer` など), `lisp/help-fns.scm` (`C-h f`))。ビルドのときに埋め込み, `Evaluator::new` で評価する。コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (`read-file-name` など)。TypeScript のコマンドを Lisp に移したら, TypeScript の方は消す (Lisp のコマンドが, 同じ名前の画面のコマンドより先に使われる)。
-- docstring は英語で書く (関数は引数の後の文字列, 変数は `(define name value "doc")` の 3 つ目)。翻訳は `po/ja.po` (gettext の PO 形式. `msgctxt` は `function:名前` か `variable:名前`)。docstring を変えたら `npm run po:update` (`tools/po/update.py`) で `po/rseditor.pot` と各言語の PO を作り直し, 訳す (変わった翻訳は `fuzzy` になる)。`npm run check` の `po:check` が, 作り直し忘れを見つける。手順は `PO.md`。Rust は `src-tauri/src/scheme/po.rs` で PO を読み, `documentation` が変数 `help-language` の言語の翻訳を返す。ヘルプの組み込みの手続き (`documentation`, `help-function-arglist`, `mapatoms`, `symbol-file` など) は `src-tauri/src/scheme/help.rs`。
+- howm の Scheme 版は `lisp/howm.scm` (`(require 'howm)` で読む)。テストは `core/tests/howm_test.rs` と `tests/lisp/test_howm.scm` (どちらも偽のエディタ (`core/tests/common/mod.rs`) の上で動かす)。
+- Org mode の Scheme 版は `lisp/org.scm` (`(require 'org)` で読む。Emacs の org 9.7.11 の動きに合わせる)。テストは `core/tests/org_test.rs` と `tests/lisp/test_org.scm`。色は `highlight-regexp` の face (`src/styles/CodeEditor.css` の `cm-face-*`)、開け閉めは `outline-flag-region`。
+- ERT (`ert-deftest`, `should` など) は `core/src/scheme/ert.rs`。特別な形は `ert::special_form`, `M-x ert` のコマンドは Scheme の `PRELUDE` で定義する。`tests/*.scm` は `core/tests/lisp_ert_test.rs` が走らせる (`npm run test:scheme`)。
+- 起動のときに読む Lisp (Emacs の loadup.el に当たる) は `core/src/scheme/loadup.rs` に並べる (`lisp/subr.scm` (`y-or-n-p` など), `lisp/window.scm` (`switch-to-buffer`), `lisp/files.scm` (`find-file`, `save-buffer` など), `lisp/help-fns.scm` (`C-h f`))。ビルドのときに埋め込み, `Evaluator::new` で評価する。コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (`read-file-name` など)。TypeScript のコマンドを Lisp に移したら, TypeScript の方は消す (Lisp のコマンドが, 同じ名前の画面のコマンドより先に使われる)。
+- docstring は英語で書く (関数は引数の後の文字列, 変数は `(define name value "doc")` の 3 つ目)。翻訳は `po/ja.po` (gettext の PO 形式. `msgctxt` は `function:名前` か `variable:名前`)。docstring を変えたら `npm run po:update` (`tools/po/update.py`) で `po/rseditor.pot` と各言語の PO を作り直し, 訳す (変わった翻訳は `fuzzy` になる)。`npm run check` の `po:check` が, 作り直し忘れを見つける。手順は `PO.md`。Rust は `core/src/scheme/po.rs` で PO を読み, `documentation` が変数 `help-language` の言語の翻訳を返す。ヘルプの組み込みの手続き (`documentation`, `help-function-arglist`, `mapatoms`, `symbol-file` など) は `core/src/scheme/help.rs`。
 - `FUNCTIONS.md` の「Emacs の組み込みのコマンドと, エディタの基本のコマンド」は, `tools/emacs-commands/run.sh` で作る (`emacs -Q --batch` で, C で書いたコマンドと, エディタの基本の Lisp のコマンドと, 既定のキーを書き出し, rs-editor で実装済みかを書く)。印 (`<!-- emacs-commands:begin -->`) の間は, 手で直さない。
-- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。`src-tauri/` も 100% に保つ (`npm run coverage` の `cargo tarpaulin --fail-under 100`。CI の `coverage` のジョブも同じ)。フロントエンドのテストは `tests/frontend/` に, `src/` と同じ構成で置く (Lisp の ERT のテストは `tests/lisp/`) (`src/lib/text.ts` のテストは `tests/frontend/lib/text.test.ts`。`src/` は `@/` で参照する)。Rust のテストは `src-tauri/tests/` に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
+- `src/` 全体のカバレッジを 100% に保つ (`vite.config.ts` の `thresholds`)。Rust (`core/` と `src-tauri/`) も 100% に保つ (`npm run coverage` の `cargo tarpaulin --workspace --fail-under 100`。CI の `coverage` のジョブも同じ)。フロントエンドのテストは `tests/frontend/` に, `src/` と同じ構成で置く (Lisp の ERT のテストは `tests/lisp/`) (`src/lib/text.ts` のテストは `tests/frontend/lib/text.test.ts`。`src/` は `@/` で参照する)。Rust のテストは各クレートの `tests/` (`core/tests/`, `src-tauri/tests/`) に置き, `lib.rs` から公開した関数を呼ぶ。CodeMirror のテストは, jsdom の上で, 実際の `EditorView` を作って行う。
 
 ## 開発ワークフロー
 - **開発サーバーを起動**: `npm run tauri:dev` — フロントエンドと Rust は両方とも変更時に自動リロード
-- **テスト**: `npm run test`（`tests/frontend/` の Vitest）と `npm run test:scheme`（`tests/lisp/*.scm` の ERT）と `cargo test`（`src-tauri/` に対する）
+- **テスト**: `npm run test`（`tests/frontend/` の Vitest）と `npm run test:scheme`（`tests/lisp/*.scm` の ERT）と `cargo test --workspace`
 - **フォーマット + リント**: `npm run check`（format:check、lint、test を実行 — CI ゲート）
 - CI は `main` へのすべてのプッシュ/PR で同じ内容を実行
 
 ## 機能の追加
 
 ### Scheme 組み込み関数の追加
-`src-tauri/src/scheme/builtins.rs` を編集:
+`core/src/scheme/builtins.rs` を編集:
 1. `NAMES` に名前を追加 (評価器は, 起動のときに, この名前を一番外側の環境に定義する)
 2. `call()` 関数内に新しい match 分岐を追加 (引数は `fixed`, `number`, `string` などで取り出す)
 3. `Value` 結果またはエラー文字列を返す
-4. 特別な形 (引数を評価しないもの) は, `src-tauri/src/scheme/evaluator.rs` の `special_form()` に追加
+4. 特別な形 (引数を評価しないもの) は, `core/src/scheme/evaluator.rs` の `special_form()` に追加
 
 ### UI の更新
 `src/` 内のコンポーネントを編集:
@@ -97,7 +97,7 @@ npm run tauri:dev
 npm run tauri:build
 
 # ビルドされたアプリの場所
-src-tauri/target/release/rseditor  # または Windows では .exe、macOS では .app
+target/release/rseditor  # または Windows では .exe、macOS では .app
 ```
 
 ## ヒント
@@ -121,7 +121,7 @@ src-tauri/target/release/rseditor  # または Windows では .exe、macOS で�
     - `build`: ビルドと、開発環境 (`package.json`、`vite.config.ts`、`tsconfig*.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`) の変更
     - `ci`: CI (`.github/`) の変更
     - `chore`: そのほかの雑務 (最初のコミット、`.gitignore`、依存パッケージの更新 (`package-lock.json`) など)
-  - scope は、変更の場所: `editor` (`src/` のエディタの画面)、`scheme` (`src-tauri/src/scheme/` の Scheme の処理系)、`backend` (`src-tauri/` のそれ以外)、`deps` (依存パッケージの更新)。複数にまたがるときは、省略する。
+  - scope は、変更の場所: `editor` (`src/` のエディタの画面)、`scheme` (`core/src/scheme/` の Scheme の処理系)、`backend` (`src-tauri/` のそれ以外)、`deps` (依存パッケージの更新)。複数にまたがるときは、省略する。
   - 互換性を壊す変更は、type (または scope) の直後に、感嘆符を付ける (Conventional Commits の仕様のとおり)。
   - 複数の type にまたがるときは、変更の中心になる type にする。
 - 件名のあとに空行を 1 行入れて、本文を書く。本文はダッシュ/ハイフンで始まる箇条書き (例: `- Fix bug in parser`)。箇条書きの各行の間には、空行を入れない

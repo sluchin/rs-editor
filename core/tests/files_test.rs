@@ -3,7 +3,7 @@
 
 use std::fs;
 
-use rseditor::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::evaluator::Evaluator;
 use tempfile::tempdir;
 
 mod common;

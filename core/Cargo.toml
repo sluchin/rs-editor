@@ -1,0 +1,21 @@
+[package]
+name = "rseditor-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rseditor_core"
+path = "src/lib.rs"
+
+[dependencies]
+tempfile = "3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+dirs = "7.0"
+regex = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+# cargo tarpaulin の除外 (`#[cfg(not(tarpaulin_include))]`) を, 未知の cfg として警告しない
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }

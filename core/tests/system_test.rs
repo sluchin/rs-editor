@@ -4,11 +4,11 @@ use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
 
-use rseditor::scheme::builtins::parse_font;
-use rseditor::scheme::evaluator::Evaluator;
-use rseditor::scheme::host::Host;
-use rseditor::scheme::system::expand_file_name;
-use rseditor::scheme::value::Value;
+use rseditor_core::scheme::builtins::parse_font;
+use rseditor_core::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::system::expand_file_name;
+use rseditor_core::scheme::value::Value;
 use tempfile::tempdir;
 
 mod common;
@@ -833,8 +833,6 @@ fn test_hooks() {
         "(first second 3 second single)"
     );
     assert_eq!(ev.active_hooks(), vec!["find-file-hook", "after-save-hook"]);
-    let response = rseditor::commands::eval_code(&ev, "1");
-    assert_eq!(response.hooks, vec!["find-file-hook", "after-save-hook"]);
     for (code, error) in [
         ("(add-hook 'h)", "add-hook expects 2 to 4 arguments"),
         ("(add-hook 1 'f)", "add-hook expects a hook symbol, given 1"),
@@ -913,7 +911,12 @@ fn test_org_editor_operations() {
         ('😀', 2),
         ('Ａ', 2),
     ] {
-        assert_eq!(rseditor::scheme::builtins::char_width(c), width, "{}", c);
+        assert_eq!(
+            rseditor_core::scheme::builtins::char_width(c),
+            width,
+            "{}",
+            c
+        );
     }
 }
 
@@ -942,10 +945,12 @@ fn test_browse_url() {
             .unwrap_err(),
         "browse-url-generic-program must be a program"
     );
-    assert!(["open", "explorer", "xdg-open"].contains(&rseditor::scheme::system::DEFAULT_BROWSER));
+    assert!(
+        ["open", "explorer", "xdg-open"].contains(&rseditor_core::scheme::system::DEFAULT_BROWSER)
+    );
     assert_eq!(
         Evaluator::new().eval("browse-url-generic-program").unwrap(),
-        format!("{:?}", rseditor::scheme::system::DEFAULT_BROWSER)
+        format!("{:?}", rseditor_core::scheme::system::DEFAULT_BROWSER)
     );
 }
 

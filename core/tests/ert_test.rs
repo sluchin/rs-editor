@@ -3,9 +3,9 @@
 use std::fs;
 use std::sync::Mutex;
 
-use rseditor::scheme::evaluator::Evaluator;
-use rseditor::scheme::host::Host;
-use rseditor::scheme::value::Value;
+use rseditor_core::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::value::Value;
 
 /// 報告から, 時間 (`(0.000012 sec)`) を除く (毎回変わるため).
 ///

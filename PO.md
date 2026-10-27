@@ -11,7 +11,7 @@ rs-editor の Lisp の関数と変数の docstring は英語で書き、翻訳�
 | `po/rseditor.pot` | 全ての docstring の一覧 (テンプレート)。`tools/po/update.py` が作る生成物なので、手で直さない |
 | `po/ja.po` | 日本語の翻訳。`msgstr` を手で書く |
 | `tools/po/update.py` | `lisp/*.scm` から docstring を集めて、POT を作り、各言語の PO に混ぜる (gettext の `xgettext` と `msgmerge` に当たる) |
-| `src-tauri/src/scheme/po.rs` | エディタが PO を読む所。PO はビルドのときに埋め込む (`include_str!`) |
+| `core/src/scheme/po.rs` | エディタが PO を読む所。PO はビルドのときに埋め込む (`include_str!`) |
 
 PO の 1 つの項目は、次の形です。
 
@@ -97,7 +97,7 @@ npm run check       # po:check (作り直し忘れ) を含む
 
 1. `po/rseditor.pot` を `po/fr.po` に写す。始めの `#` の行 (説明) をフランス語の訳のものに書き換え、ヘッダの `msgstr` に `"Language: fr\n"` の行を足す (`po/ja.po` のヘッダと同じ形)。
 2. `npm run po:update` を実行する (`po/*.po` は、全て作り直す)。
-3. `src-tauri/src/scheme/po.rs` の `LANGUAGES` に、`("fr", include_str!("../../../po/fr.po"))` を足す。
+3. `core/src/scheme/po.rs` の `LANGUAGES` に、`("fr", include_str!("../../../po/fr.po"))` を足す。
 4. `msgstr` を訳し、上の「4. 確かめる」をする。
 
 ## どの言語を出すか

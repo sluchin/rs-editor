@@ -1,6 +1,6 @@
 ;;; subr.scm --- basic Lisp subroutines -*- scheme -*-
 
-;; Emacs の subr.el に当たるもの. 起動のときに, 始めに読む (src-tauri/src/scheme/loadup.rs).
+;; Emacs の subr.el に当たるもの. 起動のときに, 始めに読む (core/src/scheme/loadup.rs).
 
 (define (y-or-n-p prompt)
   "Ask the user a y or n question, and return #t if the answer is y.

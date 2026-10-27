@@ -230,7 +230,7 @@ impl Evaluator {
     /// # Returns
     ///
     /// 環境.
-    pub(crate) fn global(&self) -> &Env {
+    pub fn global(&self) -> &Env {
         &self.global
     }
 

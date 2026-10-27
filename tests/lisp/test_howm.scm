@@ -9,7 +9,7 @@
 ;; - コマンドラインで: cd src-tauri && cargo test --test lisp_ert_test -- --nocapture
 ;;   (偽のエディタの上で, tests/lisp/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
 ;;
-;; 入力を聞くもの (read-string) は, ここでは試さない (src-tauri/tests/howm_test.rs で試す).
+;; 入力を聞くもの (read-string) は, ここでは試さない (core/tests/howm_test.rs で試す).
 
 (require 'howm)
 

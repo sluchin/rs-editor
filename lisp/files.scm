@@ -1,6 +1,6 @@
 ;;; files.scm --- file input and output commands -*- scheme -*-
 
-;; Emacs の files.el に当たるもの. 起動のときに読む (src-tauri/src/scheme/loadup.rs).
+;; Emacs の files.el に当たるもの. 起動のときに読む (core/src/scheme/loadup.rs).
 ;; コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の interactive に当たる).
 
 (define-command (find-file . args)

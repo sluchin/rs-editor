@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
 
-use rseditor::scheme::host::Host;
-use rseditor::scheme::value::Value;
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::value::Value;
 
 /// 偽のエディタのバッファ.
 #[derive(Default, Clone)]

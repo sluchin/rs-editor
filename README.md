@@ -116,7 +116,7 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-ビルドされたアプリケーションは `src-tauri/target/release/` に出力されます。
+ビルドされたアプリケーションは `target/release/` に出力されます。
 
 ### 開発ワークフロー（Lint / Format / Test）
 
@@ -129,7 +129,7 @@ npm run lint
 # Vitest でテスト実行
 npm run test
 
-# カバレッジ (フロントエンドは @vitest/coverage-v8、バックエンドは cargo tarpaulin。どちらも 100% でなければ失敗する。結果は coverage/index.html と src-tauri/tarpaulin-report.html)
+# カバレッジ (フロントエンドは @vitest/coverage-v8、バックエンドは cargo tarpaulin。どちらも 100% でなければ失敗する。結果は coverage/index.html と tarpaulin-report.html)
 # Rust 側は、初回のみ `cargo install cargo-tarpaulin` が必要
 npm run coverage
 
@@ -336,7 +336,7 @@ Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-e
 
 `C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [PO.md](./PO.md) にあります。
 
-howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (`cargo test --test lisp_ert_test`) で、`tests/lisp/*.scm` を全て走らせます。
+howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (`cargo test -p rseditor-core --test lisp_ert_test`) で、`tests/lisp/*.scm` を全て走らせます。
 
 ## キーバインド
 

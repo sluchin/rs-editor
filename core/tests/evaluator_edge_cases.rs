@@ -1,8 +1,8 @@
 //! Scheme の評価器, パーサ, 値の表示の, 境界の場合のテスト.
 
-use rseditor::scheme::evaluator::Evaluator;
-use rseditor::scheme::parser::Parser;
-use rseditor::scheme::value::Value;
+use rseditor_core::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::parser::Parser;
+use rseditor_core::scheme::value::Value;
 
 /// 評価して, 結果を返す.
 ///

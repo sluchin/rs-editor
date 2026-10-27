@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use rseditor::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::evaluator::Evaluator;
 use tempfile::{tempdir, TempDir};
 
 mod common;

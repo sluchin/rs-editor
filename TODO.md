@@ -105,7 +105,7 @@
 - [x] Scheme の処理系に, 言語の核を足す: `define`, `lambda`, `let` (名前付きも), `let*`, `letrec`, `if` / `cond` / `case`, `and` / `or` / `when` / `unless`, 比較, 文字列とリストの操作。
       定義は, アプリが持ち続ける処理系 (`Evaluator`) の環境に覚える。末尾の呼び出しは, 深さを使わない。
 - [x] Lisp からエディタを操作する関数を用意する: `point`, `point-min`, `point-max`, `goto-char`, `insert`, `delete-region`, `buffer-string`, `buffer-substring`, `buffer-name`, `message`。
-      評価は Rust で行い, エディタの操作は, 画面に頼んで返事を待つ (`src-tauri/src/scheme/host.rs` と `src/lib/lisp.ts`)。
+      評価は Rust で行い, エディタの操作は, 画面に頼んで返事を待つ (`core/src/scheme/host.rs` と `src/lib/lisp.ts`)。
 - [x] Lisp から, 既にあるコマンドを名前で呼べるようにする (`call-interactively`, `command-execute`)。
 - [x] Lisp で定義した関数を, コマンドとして登録する (`define-command`。`M-x` から呼べる)。
 - [x] キーの割り当てを Lisp から変える (`global-set-key`)。
@@ -239,7 +239,7 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 どのコマンドを, どこで書いているかは, FUNCTIONS.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
 
 - [x] 起動のときに読む, 既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`, `files.el` などに当たる) を決める (`lisp/` に置き, アプリに入れる)。
-      `src-tauri/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`, `lisp/window.scm`, `lisp/files.scm`, `lisp/help-fns.scm`) を, ビルドのときに埋め込み, 評価器を作るときに評価する。
+      `core/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`, `lisp/window.scm`, `lisp/files.scm`, `lisp/help-fns.scm`) を, ビルドのときに埋め込み, 評価器を作るときに評価する。
       コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
 - [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`. `read-file-name`, `find-file-noselect`, `pop-to-buffer-same-window` を使う)。
 - [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
@@ -285,7 +285,7 @@ Emacs の `C-h f` は, 関数の前の `;;` のコメントでなく, docstring 
     元の docstring が変わった翻訳は, `fuzzy` の印と, 前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず, 英語を出す。
     `npm run po:check` (`npm run check` で動く) で, 作り直していない PO を見つける。
   - [ ] Rust と TypeScript の docstring も集める (上の「1 か所に書く」の後)。
-  - [x] Rust で PO のファイルを読み (`src-tauri/src/scheme/po.rs`. ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
+  - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`. ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
     Lisp の `documentation` と `documentation-property` が, 翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら, 元の英語)。
   - [x] 出す言語は, 変数 `help-language` (既定は `LANG` から. `"en"` なら元の文) で選ぶ。
   - [ ] `*Help*` に, 元の文 (英語) を見るボタンを付ける。

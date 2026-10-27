@@ -4,7 +4,7 @@ use std::fs;
 use std::os::unix::fs::{symlink, PermissionsExt};
 use std::path::Path;
 
-use rseditor::atomic::write_atomic;
+use rseditor_core::atomic::write_atomic;
 use tempfile::tempdir;
 
 /// ディレクトリの中の名前を, 名前の順に返す (一時ファイルが残っていないかを見る).

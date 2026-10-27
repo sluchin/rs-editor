@@ -1,6 +1,6 @@
 //! ヘルプ (`lisp/help-fns.scm` の `describe-function` と, `src/scheme/help.rs` の組み込みの手続き) のテスト.
 
-use rseditor::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::evaluator::Evaluator;
 use tempfile::tempdir;
 
 mod common;

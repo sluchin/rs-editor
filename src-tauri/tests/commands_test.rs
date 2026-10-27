@@ -291,3 +291,15 @@ fn test_list_directory_long_runs_ls() {
     assert!(list_directory_long_with("/nonexistent-ls", &path).is_err());
     assert_eq!(list_directory_long_with("false", &path), Err(String::new()));
 }
+
+#[test]
+fn test_eval_code_carries_the_active_hooks() {
+    let evaluator = Evaluator::new();
+    evaluator
+        .eval(
+            "(add-hook 'find-file-hook (lambda () #t)) (add-hook 'after-save-hook (lambda () #t))",
+        )
+        .unwrap();
+    let response = eval_code(&evaluator, "1");
+    assert_eq!(response.hooks, vec!["find-file-hook", "after-save-hook"]);
+}

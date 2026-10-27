@@ -2,10 +2,10 @@
 
 use std::sync::Mutex;
 
-use rseditor::scheme::evaluator::{Evaluator, KeyBinding, MAX_DEPTH};
-use rseditor::scheme::host::Host;
-use rseditor::scheme::parser::Parser;
-use rseditor::scheme::value::Value;
+use rseditor_core::scheme::evaluator::{Evaluator, KeyBinding, MAX_DEPTH};
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::parser::Parser;
+use rseditor_core::scheme::value::Value;
 
 /// 評価して, 結果を返す.
 ///

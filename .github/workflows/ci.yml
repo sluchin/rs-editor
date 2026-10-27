@@ -43,7 +43,7 @@ jobs:
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: .
 
       - name: Install npm dependencies
         run: npm install --legacy-peer-deps
@@ -80,7 +80,7 @@ jobs:
       - name: Rust Cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: .
           prefix-key: "v2-rust-coverage"
 
       # ビルド済みの cargo-tarpaulin を入れる (ソースからのビルドは時間がかかるため).
@@ -113,7 +113,7 @@ jobs:
           name: coverage
           path: |
             coverage/
-            src-tauri/tarpaulin-report.html
+            tarpaulin-report.html
           if-no-files-found: warn
           retention-days: 7
 

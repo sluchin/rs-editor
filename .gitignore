@@ -28,6 +28,7 @@ coverage/
 tarpaulin-report.html
 
 # doc
+/target/
 /src-tauri/target/
 #/docs/
 

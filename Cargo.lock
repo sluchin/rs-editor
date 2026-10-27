@@ -2601,10 +2601,24 @@ dependencies = [
  "env_logger",
  "log",
  "regex",
+ "rseditor-core",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
+ "tempfile",
+]
+
+[[package]]
+name = "rseditor-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dirs",
+ "log",
+ "regex",
+ "serde",
+ "serde_json",
  "tempfile",
 ]
 

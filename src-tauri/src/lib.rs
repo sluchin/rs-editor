@@ -2,11 +2,11 @@
 //!
 //! ファイルの読み書き ([`commands`]. 書くのは原子的に ([`atomic`])), Scheme の評価 ([`scheme`]), ディレクトリの中の検索 ([`search`]), ログ ([`logging`]) を受け持ちます.
 
-pub mod atomic;
 pub mod commands;
 pub mod logging;
-pub mod scheme;
 pub mod search;
+
+pub use rseditor_core::{atomic, scheme};
 
 use std::sync::Arc;
 use std::time::Duration;

@@ -1,6 +1,6 @@
 ;;; help-fns.scm --- describe functions and variables -*- scheme -*-
 
-;; Emacs の help-fns.el に当たるもの. 起動のときに読む (src-tauri/src/scheme/loadup.rs).
+;; Emacs の help-fns.el に当たるもの. 起動のときに読む (core/src/scheme/loadup.rs).
 ;; docstring は, help-language の言語の翻訳 (po/*.po) があれば, 翻訳を出す.
 
 (define (help-language-from-locale locale)
