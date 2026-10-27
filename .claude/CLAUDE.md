@@ -10,7 +10,7 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 - **開発**: フロントエンドと Rust バックエンド両方のホットリロード対応
 
 ## アーキテクチャ
-フロントエンド（`src/` 内の React コンポーネント）はミニバッファ、ファイル操作、コード表示を備えたエディタ UI を管理します。バックエンドは Cargo のワークスペース（ルートの `Cargo.toml`）で、画面に頼まない核のクレート `core/`（Scheme インタプリタ、パーサ、評価器、原子的な書き込み。ターミナルの ncurses でも使う）と、Tauri のアプリ `src-tauri/`（ファイル I/O、検索、ログ。`core/` を再公開する）に分けています。計画は FUNCTIONS.md の「実装の計画」。
+フロントエンド（`src/` 内の React コンポーネント）はミニバッファ、ファイル操作、コード表示を備えたエディタ UI を管理します。バックエンドは Cargo のワークスペース（ルートの `Cargo.toml`）で、画面に頼まない核のクレート `core/`（Scheme インタプリタ、パーサ、評価器、原子的な書き込み。ターミナルの ncurses でも使う）と、Tauri のアプリ `src-tauri/`（ファイル I/O、検索、ログ。`core/` を再公開する）に分けています。計画は FUNCTIONS.md の「実装の計画」。ターミナルのアプリは `tui/`（ncurses。`cargo run -p rseditor-tui -- ファイル` で動く。キーと画面と問い（ミニバッファ）は `tui/src/`、基本のコマンドは `lisp/simple.scm`）。エディタの核（`Buffer`, `Editor`, 探す, 構文, 窓）は `core/src/`、評価器が核を直接動かす窓口は `core/src/scheme/editor_host.rs`。
 
 - エディタは CodeMirror 6 (`src/components/CodeEditor.tsx`)。バッファごとに `EditorState` を持ち, 切り替えるときに差し替える。
 - ウィンドウ (`C-x 2` など) は, 分け方を木 (`src/lib/windows.ts`) で持ち, 描くときは位置を % で計算して平らに並べる (分け方が変わっても, エディタを作り直さない)。ウィンドウごとに `CodeEditor` を置き, バッファの本文は, CodeMirror の `Text` (`Buffer.doc`) で持つ (エディタの本文を写さずに共有する。文字列が要る所だけ `toString()` する)。同じバッファの書き換えは, `sync` で, 変更 (`ChangeSet`) だけを別のウィンドウに写す (本文の版が同じなら, 本文を比べない)。

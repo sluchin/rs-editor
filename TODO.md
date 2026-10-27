@@ -256,7 +256,7 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
       進め方は, FUNCTIONS.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
       目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと。そのため, 段階 1 で, エディタの核 (バッファ, マーク, undo, kill-ring, 窓) を Rust に作る
       (1.1 から 1.11. 進み方は, FUNCTIONS.md の「実装の計画」)。
-      1.1 (クレートの分割: `core/`) と, 1.2 から 1.8 の Rust の部品 (`Buffer`, `KillRing`, `search`, `syntax`, `window`, `Editor`) は済。次は 1.9 (評価器を核につなぐ。`Host` を小さくする)。
+      1.1 (クレートの分割: `core/`) と, 1.2 から 1.8 の Rust の部品 (`Buffer`, `KillRing`, `search`, `syntax`, `window`, `Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。次は 1.11 (今の画面 (Tauri) を核につなぐ)。
       速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。
 - [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は, 組み込みのまま残す (Emacs と同じ)。
 

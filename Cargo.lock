@@ -1923,6 +1923,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ncurses"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbd71afa95710e841d173521e8483e764004eb332bdf47bd01d00f568688027f"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "ndk"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2642,6 +2653,15 @@ dependencies = [
  "ropey",
  "serde",
  "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "rseditor-tui"
+version = "0.1.0"
+dependencies = [
+ "ncurses",
+ "rseditor-core",
  "tempfile",
 ]
 

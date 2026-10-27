@@ -414,3 +414,21 @@ fn test_primitive_undo_errors_and_boundaries() {
         "Args out of range"
     );
 }
+
+#[test]
+fn test_line_accessors() {
+    let buffer = lines();
+    assert_eq!(buffer.line_count(), 4);
+    assert_eq!(buffer.line_text(0), "ab");
+    assert_eq!(buffer.line_text(1), "cde");
+    assert_eq!(buffer.line_text(2), "");
+    assert_eq!(buffer.line_text(3), "f");
+    assert_eq!(buffer.line_text(99), "");
+    assert_eq!(buffer.line_of_position(0), 0);
+    assert_eq!(buffer.line_of_position(4), 1);
+    assert_eq!(buffer.line_of_position(99), 3);
+    // 終わりの改行の後ろは、空の行
+    let buffer = Buffer::with_text("n", "a\n");
+    assert_eq!(buffer.line_count(), 2);
+    assert_eq!(buffer.line_text(1), "");
+}

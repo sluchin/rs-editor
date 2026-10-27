@@ -118,6 +118,17 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `target/release/` に出力されます。
 
+### ターミナルで動かす (ncurses)
+
+同じエディタの核 (`core/`) を、ターミナルの ncurses の画面でも動かせます (`tui/`)。ncurses の開発ファイル (`libncurses-dev`) が必要です。
+
+```bash
+cargo run -p rseditor-tui -- ファイル...
+```
+
+- 移動, 編集, kill / yank, undo (`C-/`), マーク, 前置引数 (`C-u`, `M-数字`), 窓の分割 (`C-x 2`, `C-x 3`, `C-x o`, `C-x 0`, `C-x 1`), ファイルを開く (`C-x C-f`) と保存 (`C-x C-s`), `M-x`, `M-:`, `C-h f`, 終了 (`C-x C-c`) が使えます。
+- コマンドは Lisp (`lisp/simple.scm`, `lisp/files.scm` など) で書いてあります。`global-set-key` で割り当てたキーも使えます。
+
 ### 開発ワークフロー（Lint / Format / Test）
 
 **ローカル開発（TypeScript のみ）:**

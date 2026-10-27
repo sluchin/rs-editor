@@ -3104,6 +3104,280 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr ""
 
+#: lisp/simple.scm
+msgctxt "variable:last-command"
+msgid ""
+"The name (a symbol) of the previous command.\n"
+"A command can look at it, for example to append a kill to the previous one."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:this-command"
+msgid ""
+"The name (a symbol) of the running command.\n"
+"A command can set it, so that the next command sees it as last-command."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:temporary-goal-column"
+msgid "The column that next-line and previous-line try to stay in."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:pending-undo-list"
+msgid "The undo records that are not undone yet, while undo is repeated."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--arg"
+msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-char"
+msgid ""
+"Move point N characters forward (backward if N is negative).\n"
+"N is the prefix argument, or 1.  Signal an error at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-char"
+msgid ""
+"Move point N characters backward (forward if N is negative).\n"
+"N is the prefix argument, or 1.  Signal an error at the beginning of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--move-line"
+msgid "Move point N lines, and to the goal column.  Signal an error if point cannot move."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:next-line"
+msgid ""
+"Move point to the next line, staying in the same column if possible.\n"
+"Signal an error at the last line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:previous-line"
+msgid ""
+"Move point to the previous line, staying in the same column if possible.\n"
+"Signal an error at the first line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:move-beginning-of-line"
+msgid "Move point to the beginning of the line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:move-end-of-line"
+msgid "Move point to the end of the line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-buffer"
+msgid "Move point to the beginning of the buffer, and leave the mark where point was."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:end-of-buffer"
+msgid "Move point to the end of the buffer, and leave the mark where point was."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-word"
+msgid "Move point forward over N words (backward if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-word"
+msgid "Move point backward over N words (forward if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:goto-line"
+msgid "Go to line N.  Interactively, read N in the minibuffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:scroll-up-command"
+msgid ""
+"Scroll the text of the window up by almost one window height.\n"
+"Signal an error at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:scroll-down-command"
+msgid ""
+"Scroll the text of the window down by almost one window height.\n"
+"Signal an error at the beginning of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:recenter-top-bottom"
+msgid "Put the line of point in the middle of the window."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:newline"
+msgid "Insert N newlines.  N is the prefix argument, or 1."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-for-tab-command"
+msgid "Insert a tab character at point."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-forward-char"
+msgid "Delete the N characters after point (the N characters before point if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-backward-char"
+msgid "Delete the N characters before point (the N characters after point if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--kill"
+msgid ""
+"Delete the text between FROM and TO and save it in the kill ring.\n"
+"If the previous command was a kill, append the text to its kill."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-region"
+msgid ""
+"Kill the text between point and the mark, or between the two positions FROM and TO.\n"
+"The killed text is saved in the kill ring."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-ring-save"
+msgid "Save the text between point and the mark in the kill ring, without killing it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-line"
+msgid ""
+"Kill the rest of the line, or the newline if point is at the end of the line.\n"
+"Signal an error at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-word"
+msgid ""
+"Kill the characters forward until the end of a word.\n"
+"With argument N, kill that many words."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-word"
+msgid ""
+"Kill the characters backward until the beginning of a word.\n"
+"With argument N, kill that many words."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:yank"
+msgid "Insert the most recent kill at point, and leave the mark at the start of the text."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:yank-pop"
+msgid ""
+"Replace the text just yanked with the previous kill in the kill ring.\n"
+"Signal an error if the previous command was not a yank."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-mark-command"
+msgid "Set the mark at point, and activate it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:exchange-point-and-mark"
+msgid "Put the mark where point is now, and point where the mark is now."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-whole-buffer"
+msgid "Put point at the beginning and the mark at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:undo"
+msgid ""
+"Undo some previous changes.  Repeat the command to undo more.\n"
+"With argument N, undo N groups of changes."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-quit"
+msgid "Cancel the running command by signaling a quit."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:split-window-below"
+msgid "Split the selected window into two windows, one above the other."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:split-window-right"
+msgid "Split the selected window into two windows side by side."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-window"
+msgid "Delete the selected window, or the window given as the argument."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-other-windows"
+msgid "Make the selected window fill the screen."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:other-window"
+msgid "Select another window.  With argument N, select the Nth window after this one."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kill-buffer"
+msgid ""
+"Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.\n"
+"The default is the current buffer.  Ask before killing a modified file buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--modified-file-buffers"
+msgid "Return the names of the buffers that visit a file and are modified."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:save-buffers-kill-terminal"
+msgid ""
+"Offer to save the modified buffers, and exit the editor.\n"
+"Ask once more if modified buffers remain."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--command-names"
+msgid "Return the names of all commands, sorted."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:execute-extended-command"
+msgid "Read a command name in the minibuffer, with completion, and run it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:eval-expression"
+msgid "Read an expression in the minibuffer, evaluate it, and show the value."
+msgstr ""
+
 #: lisp/subr.scm
 msgctxt "function:y-or-n-p"
 msgid ""

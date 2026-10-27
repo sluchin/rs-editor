@@ -3322,6 +3322,314 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr "Org のバッファに移る."
 
+#: lisp/simple.scm
+msgctxt "variable:last-command"
+msgid ""
+"The name (a symbol) of the previous command.\n"
+"A command can look at it, for example to append a kill to the previous one."
+msgstr ""
+"前のコマンドの名前 (記号).\n"
+"コマンドが見て, 例えば前の kill に続けて足すかを決められる."
+
+#: lisp/simple.scm
+msgctxt "variable:this-command"
+msgid ""
+"The name (a symbol) of the running command.\n"
+"A command can set it, so that the next command sees it as last-command."
+msgstr ""
+"動いているコマンドの名前 (記号).\n"
+"コマンドが決められる. 次のコマンドからは last-command として見える."
+
+#: lisp/simple.scm
+msgctxt "variable:temporary-goal-column"
+msgid "The column that next-line and previous-line try to stay in."
+msgstr "next-line と previous-line が, 留まろうとする桁."
+
+#: lisp/simple.scm
+msgctxt "variable:pending-undo-list"
+msgid "The undo records that are not undone yet, while undo is repeated."
+msgstr "undo を続けているときの, まだ元に戻していない記録."
+
+#: lisp/simple.scm
+msgctxt "function:simple--arg"
+msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
+msgstr "ARGS の最初の値を返す. ARGS が空なら, 前置引数の数としての値を返す."
+
+#: lisp/simple.scm
+msgctxt "function:forward-char"
+msgid ""
+"Move point N characters forward (backward if N is negative).\n"
+"N is the prefix argument, or 1.  Signal an error at the end of the buffer."
+msgstr ""
+"点を N 文字進める (N が負なら戻す).\n"
+"N は前置引数, または 1. バッファの終わりではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:backward-char"
+msgid ""
+"Move point N characters backward (forward if N is negative).\n"
+"N is the prefix argument, or 1.  Signal an error at the beginning of the buffer."
+msgstr ""
+"点を N 文字戻す (N が負なら進める).\n"
+"N は前置引数, または 1. バッファの始めではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:simple--move-line"
+msgid "Move point N lines, and to the goal column.  Signal an error if point cannot move."
+msgstr "N 行動いて, 目標の桁に置く. 点が動けなければ, エラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:next-line"
+msgid ""
+"Move point to the next line, staying in the same column if possible.\n"
+"Signal an error at the last line."
+msgstr ""
+"点を次の行に動かす. できれば同じ桁に留まる.\n"
+"最後の行ではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:previous-line"
+msgid ""
+"Move point to the previous line, staying in the same column if possible.\n"
+"Signal an error at the first line."
+msgstr ""
+"点を前の行に動かす. できれば同じ桁に留まる.\n"
+"最初の行ではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:move-beginning-of-line"
+msgid "Move point to the beginning of the line."
+msgstr "点を行の始めに動かす."
+
+#: lisp/simple.scm
+msgctxt "function:move-end-of-line"
+msgid "Move point to the end of the line."
+msgstr "点を行の終わりに動かす."
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-buffer"
+msgid "Move point to the beginning of the buffer, and leave the mark where point was."
+msgstr "点をバッファの始めに動かし, マークを点があった所に置く."
+
+#: lisp/simple.scm
+msgctxt "function:end-of-buffer"
+msgid "Move point to the end of the buffer, and leave the mark where point was."
+msgstr "点をバッファの終わりに動かし, マークを点があった所に置く."
+
+#: lisp/simple.scm
+msgctxt "function:forward-word"
+msgid "Move point forward over N words (backward if N is negative)."
+msgstr "点を N 個の単語の先に動かす (N が負なら後ろへ)."
+
+#: lisp/simple.scm
+msgctxt "function:backward-word"
+msgid "Move point backward over N words (forward if N is negative)."
+msgstr "点を N 個の単語の前に動かす (N が負なら前へ)."
+
+#: lisp/simple.scm
+msgctxt "function:goto-line"
+msgid "Go to line N.  Interactively, read N in the minibuffer."
+msgstr "N 行目へ行く. 対話的に呼ぶと, ミニバッファで N を読む."
+
+#: lisp/simple.scm
+msgctxt "function:scroll-up-command"
+msgid ""
+"Scroll the text of the window up by almost one window height.\n"
+"Signal an error at the end of the buffer."
+msgstr ""
+"窓の本文を, ほぼ 1 画面分, 上へ送る.\n"
+"バッファの終わりではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:scroll-down-command"
+msgid ""
+"Scroll the text of the window down by almost one window height.\n"
+"Signal an error at the beginning of the buffer."
+msgstr ""
+"窓の本文を, ほぼ 1 画面分, 下へ送る.\n"
+"バッファの始めではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:recenter-top-bottom"
+msgid "Put the line of point in the middle of the window."
+msgstr "点のある行を, 窓の真ん中に置く."
+
+#: lisp/simple.scm
+msgctxt "function:newline"
+msgid "Insert N newlines.  N is the prefix argument, or 1."
+msgstr "改行を N 個入れる. N は前置引数, または 1."
+
+#: lisp/simple.scm
+msgctxt "function:indent-for-tab-command"
+msgid "Insert a tab character at point."
+msgstr "点の所にタブ文字を入れる."
+
+#: lisp/simple.scm
+msgctxt "function:delete-forward-char"
+msgid "Delete the N characters after point (the N characters before point if N is negative)."
+msgstr "点の後ろの N 文字を消す (N が負なら点の前の N 文字を消す)."
+
+#: lisp/simple.scm
+msgctxt "function:delete-backward-char"
+msgid "Delete the N characters before point (the N characters after point if N is negative)."
+msgstr "点の前の N 文字を消す (N が負なら点の後ろの N 文字を消す)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--kill"
+msgid ""
+"Delete the text between FROM and TO and save it in the kill ring.\n"
+"If the previous command was a kill, append the text to its kill."
+msgstr ""
+"FROM と TO の間の本文を消して, kill-ring に入れる.\n"
+"前のコマンドも kill だったなら, その kill に足す."
+
+#: lisp/simple.scm
+msgctxt "function:kill-region"
+msgid ""
+"Kill the text between point and the mark, or between the two positions FROM and TO.\n"
+"The killed text is saved in the kill ring."
+msgstr ""
+"点とマークの間か, 2 つの位置 FROM と TO の間の本文を kill する.\n"
+"kill した本文は kill-ring に入る."
+
+#: lisp/simple.scm
+msgctxt "function:kill-ring-save"
+msgid "Save the text between point and the mark in the kill ring, without killing it."
+msgstr "点とマークの間の本文を, kill せずに kill-ring に入れる."
+
+#: lisp/simple.scm
+msgctxt "function:kill-line"
+msgid ""
+"Kill the rest of the line, or the newline if point is at the end of the line.\n"
+"Signal an error at the end of the buffer."
+msgstr ""
+"行の残りを kill する. 点が行の終わりなら, 改行を kill する.\n"
+"バッファの終わりではエラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:kill-word"
+msgid ""
+"Kill the characters forward until the end of a word.\n"
+"With argument N, kill that many words."
+msgstr ""
+"単語の終わりまでの文字を, 前向きに kill する.\n"
+"引数 N があれば, N 個の単語を kill する."
+
+#: lisp/simple.scm
+msgctxt "function:backward-kill-word"
+msgid ""
+"Kill the characters backward until the beginning of a word.\n"
+"With argument N, kill that many words."
+msgstr ""
+"単語の始めまでの文字を, 後ろ向きに kill する.\n"
+"引数 N があれば, N 個の単語を kill する."
+
+#: lisp/simple.scm
+msgctxt "function:yank"
+msgid "Insert the most recent kill at point, and leave the mark at the start of the text."
+msgstr "一番新しい kill を点の所に入れ, マークを入れた本文の始めに置く."
+
+#: lisp/simple.scm
+msgctxt "function:yank-pop"
+msgid ""
+"Replace the text just yanked with the previous kill in the kill ring.\n"
+"Signal an error if the previous command was not a yank."
+msgstr ""
+"今貼った本文を, kill-ring の一つ前の kill に替える.\n"
+"前のコマンドが yank でなければ, エラーにする."
+
+#: lisp/simple.scm
+msgctxt "function:set-mark-command"
+msgid "Set the mark at point, and activate it."
+msgstr "点にマークを置いて, 使う状態にする."
+
+#: lisp/simple.scm
+msgctxt "function:exchange-point-and-mark"
+msgid "Put the mark where point is now, and point where the mark is now."
+msgstr "マークを今の点に置き, 点を今のマークの所に置く."
+
+#: lisp/simple.scm
+msgctxt "function:mark-whole-buffer"
+msgid "Put point at the beginning and the mark at the end of the buffer."
+msgstr "点をバッファの始めに, マークを終わりに置く."
+
+#: lisp/simple.scm
+msgctxt "function:undo"
+msgid ""
+"Undo some previous changes.  Repeat the command to undo more.\n"
+"With argument N, undo N groups of changes."
+msgstr ""
+"前の変更を元に戻す. 続けて呼ぶと, さらに戻す.\n"
+"引数 N があれば, N 個のまとまりを元に戻す."
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-quit"
+msgid "Cancel the running command by signaling a quit."
+msgstr "quit を知らせて, 動いているコマンドをやめる."
+
+#: lisp/simple.scm
+msgctxt "function:split-window-below"
+msgid "Split the selected window into two windows, one above the other."
+msgstr "選んでいる窓を, 上下に 2 つに分ける."
+
+#: lisp/simple.scm
+msgctxt "function:split-window-right"
+msgid "Split the selected window into two windows side by side."
+msgstr "選んでいる窓を, 左右に 2 つに分ける."
+
+#: lisp/simple.scm
+msgctxt "function:delete-window"
+msgid "Delete the selected window, or the window given as the argument."
+msgstr "選んでいる窓, または引数の窓を消す."
+
+#: lisp/simple.scm
+msgctxt "function:delete-other-windows"
+msgid "Make the selected window fill the screen."
+msgstr "選んでいる窓を, 画面全体にする."
+
+#: lisp/simple.scm
+msgctxt "function:other-window"
+msgid "Select another window.  With argument N, select the Nth window after this one."
+msgstr "別の窓を選ぶ. 引数 N があれば, この窓から N 番目の窓を選ぶ."
+
+#: lisp/simple.scm
+msgctxt "function:kill-buffer"
+msgid ""
+"Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.\n"
+"The default is the current buffer.  Ask before killing a modified file buffer."
+msgstr ""
+"引数の名前のバッファを消す. 対話的に呼ぶと, ミニバッファで名前を読む.\n"
+"既定は今のバッファ. 書き換えたファイルのバッファは, 聞いてから消す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--modified-file-buffers"
+msgid "Return the names of the buffers that visit a file and are modified."
+msgstr "ファイルを訪れていて, 書き換えたバッファの名前を返す."
+
+#: lisp/simple.scm
+msgctxt "function:save-buffers-kill-terminal"
+msgid ""
+"Offer to save the modified buffers, and exit the editor.\n"
+"Ask once more if modified buffers remain."
+msgstr ""
+"書き換えたバッファを保存するか聞いて, エディタを終わる.\n"
+"書き換えたバッファが残っていれば, もう一度聞く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--command-names"
+msgid "Return the names of all commands, sorted."
+msgstr "全てのコマンドの名前を, 並べて返す."
+
+#: lisp/simple.scm
+msgctxt "function:execute-extended-command"
+msgid "Read a command name in the minibuffer, with completion, and run it."
+msgstr "コマンドの名前をミニバッファで, 補完しながら読んで, 動かす."
+
+#: lisp/simple.scm
+msgctxt "function:eval-expression"
+msgid "Read an expression in the minibuffer, evaluate it, and show the value."
+msgstr "式をミニバッファで読んで, 評価して, 値を出す."
+
 #: lisp/subr.scm
 msgctxt "function:y-or-n-p"
 msgid ""

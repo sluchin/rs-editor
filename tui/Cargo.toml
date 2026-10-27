@@ -1,0 +1,22 @@
+[package]
+name = "rseditor-tui"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rseditor_tui"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rseditor-tui"
+path = "src/main.rs"
+
+[dependencies]
+ncurses = { version = "6.0.1", features = ["wide"] }
+rseditor-core = { path = "../core" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }
+
+[dev-dependencies]
+tempfile = "3"

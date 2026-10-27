@@ -102,6 +102,9 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
         1,
     ),
     ("looking-at", &[Kind::Text], 1),
+    ("window-body-height", &[], 0),
+    ("recenter", &[], 0),
+    ("kill-emacs", &[], 0),
 ];
 
 /// 手続きの名前.
@@ -171,6 +174,9 @@ pub const NAMES: &[&str] = &[
     "re-search-forward",
     "re-search-backward",
     "looking-at",
+    "window-body-height",
+    "recenter",
+    "kill-emacs",
 ];
 
 /// 引数が決まりに合うか確かめます.

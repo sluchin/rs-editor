@@ -189,6 +189,25 @@ impl Buffer {
         Ok((from, to))
     }
 
+    /// 行の数 (最後の改行の後ろの, 空の行も 1 行とする).
+    pub fn line_count(&self) -> usize {
+        self.text.len_lines()
+    }
+
+    /// 行 (0 から数える) の文字. 終わりの改行は含めない. 行が無ければ空.
+    pub fn line_text(&self, line: usize) -> String {
+        if line >= self.line_count() {
+            return String::new();
+        }
+        let text = self.text.line(line).to_string();
+        text.strip_suffix('\n').unwrap_or(&text).to_string()
+    }
+
+    /// 位置のある行の番号 (0 から数える).
+    pub fn line_of_position(&self, pos: usize) -> usize {
+        self.line_of(pos.min(self.len()))
+    }
+
     /// 位置の文字 (Emacs の `char-after`). バッファの外なら `None`.
     pub fn char_after(&self, pos: usize) -> Option<char> {
         (pos < self.len()).then(|| self.text.char(pos))

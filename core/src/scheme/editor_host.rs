@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
@@ -25,7 +25,7 @@ const PATTERN_CACHE_SIZE: usize = 64;
 /// エディタを直接動かす [`Host`].
 pub struct EditorHost<U: Host> {
     /// エディタの状態.
-    editor: Mutex<Editor>,
+    editor: Arc<Mutex<Editor>>,
     /// 画面の要る操作を受けるもの.
     ui: U,
     /// 作った正規表現 (正規表現, 大文字と小文字を区別しないか).
@@ -35,8 +35,14 @@ pub struct EditorHost<U: Host> {
 impl<U: Host> EditorHost<U> {
     /// エディタと, 画面の要る操作を受けるものから作ります.
     pub fn new(editor: Editor, ui: U) -> Self {
+        Self::shared(Arc::new(Mutex::new(editor)), ui)
+    }
+
+    /// 共有するエディタから作ります (画面の要る操作を受けるものが, 描くためにエディタを読めるように).
+    /// 画面の要る操作を頼むときは, エディタを閉じているので, 受けるものはエディタを読んでよい.
+    pub fn shared(editor: Arc<Mutex<Editor>>, ui: U) -> Self {
         EditorHost {
-            editor: Mutex::new(editor),
+            editor,
             ui,
             patterns: Mutex::new(HashMap::new()),
         }
