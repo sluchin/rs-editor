@@ -1,0 +1,4 @@
+# ncurses クレートのビルドスクリプトは, 端末の定数を調べるために initscr() を動かす.
+# TERM が無いと失敗して定数が空になる (CI など) ので, 無いときだけ既定の端末の種類にする.
+[env]
+TERM = { value = "xterm-256color", force = false }
