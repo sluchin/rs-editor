@@ -397,9 +397,10 @@ impl Buffer {
     }
 
     /// 位置の記録 (カーソル, マーク, マークの履歴) を, 入れた文字の分だけずらします.
-    fn shift_for_insert(&mut self, pos: usize, len: usize) {
+    /// `before_markers` が真なら, 入れた所にある記録も後ろへずらす (Emacs の `insert-before-markers`).
+    fn shift_for_insert(&mut self, pos: usize, len: usize, before_markers: bool) {
         let shift = |p: &mut usize| {
-            if *p > pos {
+            if *p > pos || (before_markers && *p == pos) {
                 *p += len;
             }
         };
@@ -453,6 +454,16 @@ impl Buffer {
     ///
     /// 位置がバッファの外のとき.
     pub fn insert_at(&mut self, pos: usize, text: &str) -> Result<(), String> {
+        self.insert_at_with(pos, text, false)
+    }
+
+    /// `insert_at` で, `before_markers` が真なら, 入れた所のマークとマーカーを後ろへずらす.
+    fn insert_at_with(
+        &mut self,
+        pos: usize,
+        text: &str,
+        before_markers: bool,
+    ) -> Result<(), String> {
         if pos > self.len() {
             return Err("Args out of range".to_string());
         }
@@ -462,7 +473,7 @@ impl Buffer {
         }
         self.text.insert(pos, text);
         self.deactivate_requested = true;
-        self.shift_for_insert(pos, len);
+        self.shift_for_insert(pos, len, before_markers);
         self.record_insert(pos, len);
         self.modified = true;
         Ok(())
@@ -473,6 +484,14 @@ impl Buffer {
         let pos = self.point;
         // カーソルの位置は, バッファの中にある
         let _ = self.insert_at(pos, text);
+        self.point = pos + text.chars().count();
+    }
+
+    /// カーソルの位置に文字を入れて, その所にあるマークとマーカーも後ろへずらします (Emacs の `insert-before-markers`).
+    pub fn insert_before_markers(&mut self, text: &str) {
+        let pos = self.point;
+        // カーソルの位置は, バッファの中にある
+        let _ = self.insert_at_with(pos, text, true);
         self.point = pos + text.chars().count();
     }
 

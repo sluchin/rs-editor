@@ -18,7 +18,7 @@ use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
 use crate::sexp::{beginning_of_defun, end_of_defun, mark_defun, up_list, MotionError};
-use crate::syntax::{syntax_of, Class, Dialect, Source};
+use crate::syntax::{class_of_designator, syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
 
 /// 覚えておく正規表現の数の上限.
@@ -577,6 +577,10 @@ impl<U: Host> EditorHost<U> {
                 }
                 Value::Nil
             }
+            "insert-before-markers" => {
+                b.insert_before_markers(text(op, args, 0)?);
+                Value::Nil
+            }
             "delete-region" => {
                 b.delete_region(pos(op, args, 0)?, pos(op, args, 1)?)?;
                 Value::Nil
@@ -641,6 +645,28 @@ impl<U: Host> EditorHost<U> {
                 let set = CharSet::parse(text(op, args, 0)?)?;
                 let limit = pos_opt(op, args, 1)?;
                 Value::Number(b.skip_chars(&set, op.ends_with("forward"), limit) as f64)
+            }
+            "skip-syntax-forward" | "skip-syntax-backward" => {
+                let spec = text(op, args, 0)?;
+                let (negate, designators) = match spec.strip_prefix('^') {
+                    Some(rest) => (true, rest),
+                    None => (false, spec),
+                };
+                let classes = designators
+                    .chars()
+                    .map(|c| {
+                        class_of_designator(c)
+                            .ok_or_else(|| format!("Invalid syntax description letter: {c}"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let forward = op.ends_with("forward");
+                let source = Source::from_buffer(b, b.dialect());
+                let limit =
+                    pos_opt(op, args, 1)?.unwrap_or(if forward { source.size() } else { 0 });
+                let from = b.point();
+                let to = source.skip_syntax(from, &classes, negate, forward, limit);
+                b.set_point(to);
+                Value::Number(to as f64 - from as f64)
             }
             "move-to-column" => {
                 Value::Number(b.move_to_column(int(op, args, 0)?.max(0) as usize) as f64)
@@ -808,16 +834,15 @@ impl<U: Host> EditorHost<U> {
                 let c = character(op, args, 0)?;
                 Value::String(class_char(syntax_of(c, b.dialect()).class).to_string())
             }
-            "forward-comment" => {
-                let count = int(op, args, 0)?;
-                if count < 0 {
-                    return Err("forward-comment: a negative count is not supported".to_string());
-                }
+            "syntax-class-at" => {
                 let source = Source::from_buffer(b, b.dialect());
-                let from = b.point();
-                let to = source.forward_comment(from, count as usize);
+                Value::String(class_char(source.class_of(pos(op, args, 0)?)).to_string())
+            }
+            "forward-comment" => {
+                let source = Source::from_buffer(b, b.dialect());
+                let (to, done) = source.skip_comments(b.point(), int(op, args, 0)?);
                 b.set_point(to);
-                Value::Boolean(to != from)
+                Value::Boolean(done)
             }
             "backward-prefix-chars" => {
                 let source = Source::from_buffer(b, b.dialect());

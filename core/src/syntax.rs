@@ -304,9 +304,41 @@ impl Source {
         self.chars.get(pos).copied()
     }
 
+    /// 位置の文字の構文の種類 (前後の文字で決まる特別な場合も含む. 本文の外は単語).
+    pub fn class_of(&self, pos: usize) -> Class {
+        self.class_at(pos)
+    }
+
     /// 読む範囲 (始めと終わり).
     pub fn range(&self) -> (usize, usize) {
         (self.min, self.max)
+    }
+
+    /// 位置から, 構文の種類が `classes` の文字 (`negate` なら, 以外の文字) を飛ばします (Emacs の `skip-syntax-forward` と `skip-syntax-backward`).
+    ///
+    /// # Returns
+    ///
+    /// 飛ばした後の位置 (`limit` を越えない).
+    pub fn skip_syntax(
+        &self,
+        from: usize,
+        classes: &[Class],
+        negate: bool,
+        forward: bool,
+        limit: usize,
+    ) -> usize {
+        let matches = |p: usize| classes.contains(&self.class_at(p)) != negate;
+        let mut p = from;
+        if forward {
+            while p < limit.min(self.chars.len()) && matches(p) {
+                p += 1;
+            }
+        } else {
+            while p > limit && matches(p - 1) {
+                p -= 1;
+            }
+        }
+        p
     }
 
     /// 本文の長さ (文字の数).
@@ -730,6 +762,56 @@ impl Source {
                 .unwrap_or(max);
         }
         pos
+    }
+
+    /// コメントと空白を `count` 個飛ばします (Emacs の `forward-comment`. `count` が負なら, 前へ).
+    ///
+    /// # Returns
+    ///
+    /// 飛ばした後の位置と, `count` 個のコメントを飛ばせたか (空白だけを飛ばして止まったら `false`).
+    pub fn skip_comments(&self, from: usize, count: i64) -> (usize, bool) {
+        let (min, max) = (self.min, self.max);
+        let mut p = from;
+        for _ in 0..count.unsigned_abs() {
+            if count > 0 {
+                let mut q = p;
+                while q < max && matches!(self.class_at(q), Class::Space | Class::CommentEnd) {
+                    q += 1;
+                }
+                if !(self.is_comment_start(q) || self.pair(q, FLAG_START1, FLAG_START2, max)) {
+                    return (q, false);
+                }
+                p = self.forward_comment(q, 1);
+                continue;
+            }
+            loop {
+                if p <= min {
+                    return (p, false);
+                }
+                if p >= min + 2 && self.pair(p - 2, FLAG_END1, FLAG_END2, max) {
+                    match self.back_comment(p - 2, true) {
+                        Some(start) => {
+                            p = start;
+                            break;
+                        }
+                        None => return (p, false),
+                    }
+                }
+                match self.class_at(p - 1) {
+                    Class::CommentEnd => match self.back_comment(p - 1, false) {
+                        Some(start) => {
+                            p = start;
+                            break;
+                        }
+                        // コメントの終わりでない改行は, 空白
+                        None => p -= 1,
+                    },
+                    Class::Space => p -= 1,
+                    _ => return (p, false),
+                }
+            }
+        }
+        (p, true)
     }
 
     /// 前の, 式の前の印 (`'` など) を飛ばします (Emacs の `backward-prefix-chars`).

@@ -49,7 +49,7 @@ STEPS = [
       'マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。']),
     (5, 'S 式, 段落, ページ',
      ['【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 '
-      '(`core/tests/lisp_test.rs`: 3 つのモードで, 40 通りのコマンドを全ての位置から, 対話的に). ページと入れ替え (`transpose-sexps` など) は残り. '
+      '(`core/tests/lisp_test.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). '
       '画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】'
       '括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。']),
     (6, '字下げ, 整形, コメント',

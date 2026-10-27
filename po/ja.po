@@ -3833,9 +3833,14 @@ msgid "Transpose the objects that MOVER moves over, as transpose-chars, transpos
 msgstr "MOVER が動く単位を入れ替える (transpose-chars, transpose-words, transpose-lines が使う)."
 
 #: lisp/simple.scm
+msgctxt "function:simple--transpose-pairs"
+msgid "Transpose the objects whose start and end AUX returns (a list of two positions) for a direction."
+msgstr "AUX が向きごとに返す (2 つの位置のリストの) 始めと終わりの対象を入れ替える."
+
+#: lisp/simple.scm
 msgctxt "function:simple--transpose-1"
-msgid "Swap the text of the two regions POS1 and POS2, each a list (start end)."
-msgstr "2 つの範囲 POS1 と POS2 (どちらも (始め 終わり)) の本文を入れ替える."
+msgid "Swap the text of the two regions POS1 and POS2, each a list (start end), keeping the markers at their ends."
+msgstr "2 つの範囲 POS1 と POS2 (どちらも (始め 終わり)) の本文を入れ替える. 範囲の両端のマーカーは, そのままにする."
 
 #: lisp/simple.scm
 msgctxt "function:transpose-chars"
@@ -4186,6 +4191,83 @@ msgid ""
 msgstr ""
 "書き換えたバッファを保存するか聞いて, エディタを終わる.\n"
 "書き換えたバッファが残っていれば, もう一度聞く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--symbol-constituent-at"
+msgid "True if the character at POS has word or symbol syntax (Emacs \\sw\\|\\s_)."
+msgstr "POS の文字が単語か記号の構文なら真 (Emacs の \\sw\\|\\s_)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose-sexps-pair"
+msgid "Return the start and end of the sexp to transpose in the direction ARG (Emacs transpose-sexps-default-function)."
+msgstr "向き ARG の, 入れ替える式の始めと終わりを返す (Emacs の transpose-sexps-default-function)."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-sexps"
+msgid ""
+"Like transpose-chars, but applies to sexps.  Point must be between the two sexps.\n"
+"With argument N, drag the sexp before point forward past N other sexps (backward if negative).\n"
+"With zero, interchange the sexps ending at or after point and at or after mark."
+msgstr ""
+"transpose-chars と同じで, 式を入れ替える. 点は 2 つの式の間に置く.\n"
+"引数 N があれば, 点の前の式を N 個の式の先へ動かす (負なら後ろへ).\n"
+"0 なら, 点の後ろの式とマークの後ろの式を入れ替える."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-sentences"
+msgid ""
+"Interchange the current sentence with the next one.\n"
+"With argument N, move the current sentence past N sentences."
+msgstr ""
+"今の文と次の文を入れ替える.\n"
+"引数 N があれば, 今の文を N 文の先へ動かす."
+
+#: lisp/simple.scm
+msgctxt "function:transpose-paragraphs"
+msgid ""
+"Interchange the current paragraph with the next one.\n"
+"With argument N, move the current paragraph past N paragraphs."
+msgstr ""
+"今の段落と次の段落を入れ替える.\n"
+"引数 N があれば, 今の段落を N 段落の先へ動かす."
+
+#: lisp/simple.scm
+msgctxt "variable:simple--page-mark"
+msgid "The form feed character that starts a page boundary line."
+msgstr "ページの区切りの行を始める改ページの文字."
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-forward-search"
+msgid "Move point past the next page delimiter (a form feed at the start of a line); return false if none."
+msgstr "次のページの区切り (行の始めの改ページ) の後ろへ動く. 無ければ偽を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-backward-search"
+msgid "Move point to the start of the previous page delimiter; return false if none."
+msgstr "前のページの区切りの始めへ動く. 無ければ偽を返す."
+
+#: lisp/simple.scm
+msgctxt "function:forward-page"
+msgid ""
+"Move forward to page boundary.  With argument N, repeat, or go back if negative.\n"
+"A page boundary is a line that starts with a form feed."
+msgstr ""
+"ページの区切りまで進む. 引数 N があれば N 回. 負なら戻る.\n"
+"ページの区切りは, 改ページで始まる行."
+
+#: lisp/simple.scm
+msgctxt "function:backward-page"
+msgid "Move backward to page boundary.  With argument N, repeat, or go forward if negative."
+msgstr "ページの区切りまで戻る. 引数 N があれば N 回. 負なら進む."
+
+#: lisp/simple.scm
+msgctxt "function:mark-page"
+msgid ""
+"Put the mark at the end of the page and point at the beginning.\n"
+"With argument N, mark the page N pages forward (backward if negative)."
+msgstr ""
+"ページの終わりにマークを置き, 始めに点を置く.\n"
+"引数 N があれば, N ページ先 (負なら前) のページにする."
 
 #: lisp/simple.scm
 msgctxt "function:simple--forward-sexp"

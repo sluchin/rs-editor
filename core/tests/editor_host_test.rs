@@ -218,8 +218,28 @@ const CASES: &[(&str, &str)] = &[
         r##"ERR set-syntax-dialect: unknown dialect bad"##,
     ),
     (
-        r##"(forward-comment -1)"##,
-        r##"ERR forward-comment: a negative count is not supported"##,
+        r##"(erase-buffer) (insert "a ; c\n  ") (set-syntax-dialect 'elisp) (list (forward-comment -1) (point) (forward-comment -1) (point))"##,
+        r##"(#t 3 #f 2)"##,
+    ),
+    (
+        r##"(erase-buffer) (insert "a #| c |# ") (set-syntax-dialect 'scheme) (list (forward-comment -1) (point))"##,
+        r##"(#t 3)"##,
+    ),
+    (
+        r##"(erase-buffer) (insert "a\n b") (set-syntax-dialect 'scheme) (goto-char 3) (list (forward-comment -1) (point) (forward-comment 0) (forward-comment 1) (point))"##,
+        r##"(#f 2 #t #f 4)"##,
+    ),
+    (
+        r##"(erase-buffer) (insert "ab  cd") (goto-char 1) (list (skip-syntax-forward "w") (point) (skip-syntax-forward "^w") (point) (skip-syntax-backward "^w") (point) (skip-syntax-backward "w" 1) (point))"##,
+        r##"(2 3 2 5 -2 3 -2 1)"##,
+    ),
+    (
+        r##"(skip-syntax-forward "q")"##,
+        r##"ERR Invalid syntax description letter: q"##,
+    ),
+    (
+        r##"(erase-buffer) (insert "a |# ") (set-syntax-dialect 'scheme) (list (forward-comment -1) (point))"##,
+        r##"(#f 5)"##,
     ),
     (
         r##"(char-syntax "ab")"##,

@@ -24,7 +24,11 @@
 (defconst modes '(fundamental-mode emacs-lisp-mode scheme-mode))
 
 (defun step (cmd args &optional last) (vector cmd args last))
-(defun one (cmd args &optional mark modes kind) (list cmd (vector (step cmd args)) [] mark modes kind))
+(defun one (cmd args &optional mark modes kind exclude)
+  (list cmd (vector (step cmd args)) [] mark modes kind exclude))
+
+;; transpose-sexps は, バックスラッシュで quote した文字と, `##` `,@` の前後で, まだ Emacs と同じではない
+(defconst transpose-excluded "\\\\\\|##")
 
 ;; 段落と文は, emacs-lisp-mode と fundamental-mode で同じなので, fundamental-mode と scheme-mode だけ
 (defconst text-modes '(fundamental-mode scheme-mode))
@@ -57,7 +61,15 @@
          (one "forward-sentence" [] nil text-modes 'prose) (one "forward-sentence" [2] nil text-modes 'prose)
          (one "forward-sentence" [-1] nil text-modes 'prose) (one "backward-sentence" [] nil text-modes 'prose)
          (one "kill-sentence" [] nil text-modes 'prose) (one "backward-kill-sentence" [] nil text-modes 'prose)
-         (one "mark-end-of-sentence" [] nil text-modes 'prose))))
+         (one "mark-end-of-sentence" [] nil text-modes 'prose)
+         (one "transpose-sexps" [] nil lisp-modes 'code transpose-excluded) (one "transpose-sexps" [-1] nil lisp-modes 'code transpose-excluded)
+         (one "transpose-sexps" [2] nil lisp-modes 'code transpose-excluded) (one "transpose-sexps" [0] 2 lisp-modes 'code transpose-excluded)
+         (one "transpose-sentences" [] nil text-modes 'prose) (one "transpose-sentences" [-1] nil text-modes 'prose)
+         (one "transpose-paragraphs" [] nil text-modes 'prose) (one "transpose-paragraphs" [-1] nil text-modes 'prose)
+         (one "forward-page" [] nil '(fundamental-mode) 'prose) (one "forward-page" [2] nil '(fundamental-mode) 'prose)
+         (one "forward-page" [-1] nil '(fundamental-mode) 'prose) (one "backward-page" [] nil '(fundamental-mode) 'prose)
+         (one "mark-page" [] nil '(fundamental-mode) 'prose) (one "mark-page" [1] nil '(fundamental-mode) 'prose)
+         (one "mark-page" [-1] nil '(fundamental-mode) 'prose))))
 
 (defun decode-arg (a)
   (cond ((null a) nil)
@@ -101,7 +113,8 @@
 (dolist (mode all-modes)
   (cl-loop for text in texts for index from 0
            do (dolist (case cases)
-                (when (and (memq mode (nth 4 case)) (eq (nth 5 case) (text-kind index)))
+                (when (and (memq mode (nth 4 case)) (eq (nth 5 case) (text-kind index))
+                           (not (and (nth 6 case) (string-match-p (nth 6 case) text))))
                   (let* ((steps (nth 1 case)) (mark (nth 3 case)) (per-pos nil))
                     (dotimes (i (1+ (length text)))
                       (with-temp-buffer

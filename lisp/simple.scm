@@ -577,10 +577,16 @@ Interactively, read the name of BUFFER in the minibuffer."
 
 (define (simple--transpose mover arg)
   "Transpose the objects that MOVER moves over, as transpose-chars, transpose-words and transpose-lines do."
-  (let ((aux (lambda (x)
-               (let* ((first (begin (mover x) (point)))
-                      (second (begin (mover (- x)) (point))))
-                 (list first second)))))
+  (simple--transpose-pairs
+   (lambda (x)
+     (let* ((first (begin (mover x) (point)))
+            (second (begin (mover (- x)) (point))))
+       (list first second)))
+   arg))
+
+(define (simple--transpose-pairs aux arg)
+  "Transpose the objects whose start and end AUX returns (a list of two positions) for a direction."
+  (let ()
     (cond ((= arg 0)
            (let ((pos1 #f) (pos2 #f))
              (save-excursion
@@ -588,7 +594,7 @@ Interactively, read the name of BUFFER in the minibuffer."
                (goto-char (or (mark) (error "No mark set in this buffer")))
                (set! pos2 (aux 1))
                (simple--transpose-1 pos1 pos2))
-             (exchange-point-and-mark)))
+             (exchange-point-and-mark #f)))
           ((> arg 0)
            (let* ((pos1 (aux -1)) (pos2 (aux arg)))
              (simple--transpose-1 pos1 pos2)
@@ -601,20 +607,25 @@ Interactively, read the name of BUFFER in the minibuffer."
                (goto-char (+ (car pos2) (- (cadr pos1) (car pos1))))))))))
 
 (define (simple--transpose-1 pos1 pos2)
-  "Swap the text of the two regions POS1 and POS2, each a list (start end)."
+  "Swap the text of the two regions POS1 and POS2, each a list (start end), keeping the markers at their ends."
   (let* ((a (if (> (car pos1) (cadr pos1)) (list (cadr pos1) (car pos1)) pos1))
          (b (if (> (car pos2) (cadr pos2)) (list (cadr pos2) (car pos2)) pos2))
          (first (if (> (car a) (car b)) b a))
          (second (if (> (car a) (car b)) a b)))
     (if (> (cadr first) (car second)) (error "Don’t have two things to transpose"))
-    (let ((text1 (buffer-substring (car first) (cadr first)))
-          (text2 (buffer-substring (car second) (cadr second))))
-      (delete-region (car second) (cadr second))
-      (goto-char (car second))
-      (insert text1)
-      (delete-region (car first) (cadr first))
-      (goto-char (car first))
-      (insert text2))))
+    (let* ((word (buffer-substring (car second) (cadr second)))
+           (len1 (- (cadr first) (car first)))
+           (len2 (string-length word))
+           (boundary (save-excursion (goto-char (car second)) (point-marker))))
+      (goto-char (cadr first))
+      (insert-before-markers word)
+      (let ((moved (buffer-substring (car first) (+ (car first) len1))))
+        (delete-region (car first) (+ (car first) len1))
+        (goto-char (marker-position boundary))
+        (insert moved))
+      (goto-char (+ (marker-position boundary) len1))
+      (delete-region (point) (+ (point) len2))
+      (marker-release boundary))))
 
 (define-command (transpose-chars . args)
   "Interchange the characters around point, and move point forward over them.
@@ -1093,6 +1104,107 @@ Ask once more if modified buffers remain."
   (when (or (null? (simple--modified-file-buffers))
             (yes-or-no-p "Modified buffers exist; exit anyway? "))
     (kill-emacs)))
+
+;;; Transposing sexps, sentences and paragraphs
+
+(define (simple--symbol-constituent-at pos)
+  "True if the character at POS has word or symbol syntax (Emacs \\sw\\|\\s_)."
+  (and (< pos (point-max)) (member (syntax-class-at pos) (list "w" "_")) #t))
+
+(define (simple--transpose-sexps-pair arg)
+  "Return the start and end of the sexp to transpose in the direction ARG (Emacs transpose-sexps-default-function)."
+  (if (if (> arg 0)
+          (simple--symbol-constituent-at (point))
+          (and (not (bobp)) (simple--symbol-constituent-at (- (point) 1))))
+      (begin
+        (if (> arg 0) (skip-syntax-backward "w_") (skip-syntax-forward "w_"))
+        (list (save-excursion (simple--forward-sexp arg) (point)) (point)))
+      (begin
+        (if (> arg 0) (skip-syntax-backward " .") (skip-syntax-forward " ."))
+        (list (save-excursion (simple--forward-sexp arg) (point))
+              (begin
+                (let loop ()
+                  (when (or (forward-comment (if (> arg 0) 1 -1))
+                            (not (= 0 (if (> arg 0) (skip-syntax-forward ".") (skip-syntax-backward ".")))))
+                    (loop)))
+                (point))))))
+
+(define-command (transpose-sexps . args)
+  "Like transpose-chars, but applies to sexps.  Point must be between the two sexps.
+With argument N, drag the sexp before point forward past N other sexps (backward if negative).
+With zero, interchange the sexps ending at or after point and at or after mark."
+  (let ((n (simple--arg args)))
+    (if simple--interactive
+        (condition-case e
+            (simple--transpose-pairs simple--transpose-sexps-pair n)
+          (scan-error (user-error "Not between two complete sexps")))
+        (simple--transpose-pairs simple--transpose-sexps-pair n))))
+
+(define-command (transpose-sentences . args)
+  "Interchange the current sentence with the next one.
+With argument N, move the current sentence past N sentences."
+  (simple--transpose forward-sentence (simple--arg args)))
+
+(define-command (transpose-paragraphs . args)
+  "Interchange the current paragraph with the next one.
+With argument N, move the current paragraph past N paragraphs."
+  (simple--transpose forward-paragraph (simple--arg args)))
+
+;;; Pages
+
+(define simple--page-mark (char-to-string 12)
+  "The form feed character that starts a page boundary line.")
+
+(define (simple--page-forward-search)
+  "Move point past the next page delimiter (a form feed at the start of a line); return false if none."
+  (let loop ()
+    (if (search-forward simple--page-mark #f #t)
+        (if (= (line-beginning-position) (- (point) 1)) #t (loop))
+        #f)))
+
+(define (simple--page-backward-search)
+  "Move point to the start of the previous page delimiter; return false if none."
+  (let loop ()
+    (if (search-backward simple--page-mark #f #t)
+        (if (= (line-beginning-position) (point)) #t (loop))
+        #f)))
+
+(define-command (forward-page . args)
+  "Move forward to page boundary.  With argument N, repeat, or go back if negative.
+A page boundary is a line that starts with a form feed."
+  (let loop ((count (simple--arg args)))
+    (cond ((and (> count 0) (not (eobp)))
+           (if (and (bolp) (equal? (char-after) simple--page-mark))
+               (forward-char 1)
+               (begin
+                 (if (bolp) (forward-char 1))
+                 (if (not (simple--page-forward-search)) (goto-char (point-max)))))
+           (loop (- count 1)))
+          ((and (< count 0) (not (bobp)))
+           (let ((here (point)))
+             (if (and (simple--page-backward-search) (= (+ (point) 1) here))
+                 #t
+                 (goto-char here)))
+           (when (not (bobp))
+             (forward-char -1)
+             (if (simple--page-backward-search)
+                 (goto-char (+ (point) 1))
+                 (goto-char (point-min))))
+           (loop (+ count 1))))))
+
+(define-command (backward-page . args)
+  "Move backward to page boundary.  With argument N, repeat, or go forward if negative."
+  (forward-page (- (simple--arg args))))
+
+(define-command (mark-page . args)
+  "Put the mark at the end of the page and point at the beginning.
+With argument N, mark the page N pages forward (backward if negative)."
+  (let ((arg (let ((raw (simple--raw-arg args))) (if raw (prefix-numeric-value raw) 0))))
+    (cond ((> arg 0) (forward-page arg))
+          ((< arg 0) (forward-page (- arg 1))))
+    (forward-page 1)
+    (push-mark (point) #t #t)
+    (forward-page -1)))
 
 ;;; S-expressions, defuns, paragraphs and sentences
 

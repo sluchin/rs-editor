@@ -260,7 +260,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
-| 5 | S 式, 段落, ページ | 23 | 9 | 14 |
+| 5 | S 式, 段落, ページ | 19 | 5 | 14 |
 | 6 | 字下げ, 整形, コメント | 9 | 5 | 4 |
 | 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
@@ -299,7 +299,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **5. S 式, 段落, ページ**
 
-- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/lisp_test.rs`: 3 つのモードで, 40 通りのコマンドを全ての位置から, 対話的に). ページと入れ替え (`transpose-sexps` など) は残り. 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
+- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/lisp_test.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
 
 **6. 字下げ, 整形, コメント**
 
@@ -330,7 +330,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 122 個: Lisp 39 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 126 個: Lisp 43 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -394,7 +394,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `transpose-lines` | ◯ | simple | `C-x C-t` | 実装済み | `C-x C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `transpose-sexps` | ◯ | simple | `C-M-t` |  |  |  | 5 |
+| `transpose-sexps` | ◯ | simple | `C-M-t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-words` | ◯ | simple | `M-t` | 実装済み | `M-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `undo` | ◯ | simple | `C-/`, `C-_`, `C-x u`, `<undo>` | 実装済み | `C-/`, `C-_`, `C-x u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -488,10 +488,10 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `forward-sentence` | ◯ | paragraphs | `M-e` | 実装済み | `M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `mark-paragraph` | ◯ | paragraphs | `M-h` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-page` | ◯ | page | `C-x [` |  |  |  | 5 |
+| `backward-page` | ◯ | page | `C-x [` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `count-lines-page` | ◯ | page | `C-x l` |  |  |  | 5 |
-| `forward-page` | ◯ | page | `C-x ]` |  |  |  | 5 |
-| `mark-page` | ◯ | page | `C-x C-p` |  |  |  | 5 |
+| `forward-page` | ◯ | page | `C-x ]` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-page` | ◯ | page | `C-x C-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `narrow-to-page` | ◯ | page | `C-x n p` |  |  |  | 5 |
 | `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | TypeScript (`src/lib/emacs.ts`) | 6 |
 | `set-fill-prefix` | ◯ | fill | `C-x .` |  |  |  | 6 |

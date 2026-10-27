@@ -3528,8 +3528,13 @@ msgid "Transpose the objects that MOVER moves over, as transpose-chars, transpos
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:simple--transpose-pairs"
+msgid "Transpose the objects whose start and end AUX returns (a list of two positions) for a direction."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--transpose-1"
-msgid "Swap the text of the two regions POS1 and POS2, each a list (start end)."
+msgid "Swap the text of the two regions POS1 and POS2, each a list (start end), keeping the markers at their ends."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3842,6 +3847,72 @@ msgctxt "function:save-buffers-kill-terminal"
 msgid ""
 "Offer to save the modified buffers, and exit the editor.\n"
 "Ask once more if modified buffers remain."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--symbol-constituent-at"
+msgid "True if the character at POS has word or symbol syntax (Emacs \\sw\\|\\s_)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--transpose-sexps-pair"
+msgid "Return the start and end of the sexp to transpose in the direction ARG (Emacs transpose-sexps-default-function)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-sexps"
+msgid ""
+"Like transpose-chars, but applies to sexps.  Point must be between the two sexps.\n"
+"With argument N, drag the sexp before point forward past N other sexps (backward if negative).\n"
+"With zero, interchange the sexps ending at or after point and at or after mark."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-sentences"
+msgid ""
+"Interchange the current sentence with the next one.\n"
+"With argument N, move the current sentence past N sentences."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:transpose-paragraphs"
+msgid ""
+"Interchange the current paragraph with the next one.\n"
+"With argument N, move the current paragraph past N paragraphs."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:simple--page-mark"
+msgid "The form feed character that starts a page boundary line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-forward-search"
+msgid "Move point past the next page delimiter (a form feed at the start of a line); return false if none."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-backward-search"
+msgid "Move point to the start of the previous page delimiter; return false if none."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:forward-page"
+msgid ""
+"Move forward to page boundary.  With argument N, repeat, or go back if negative.\n"
+"A page boundary is a line that starts with a form feed."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:backward-page"
+msgid "Move backward to page boundary.  With argument N, repeat, or go forward if negative."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-page"
+msgid ""
+"Put the mark at the end of the page and point at the beginning.\n"
+"With argument N, mark the page N pages forward (backward if negative)."
 msgstr ""
 
 #: lisp/simple.scm
