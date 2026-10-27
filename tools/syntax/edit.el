@@ -4,11 +4,18 @@
 ;;   手順: [[コマンド, 引数, 前のコマンド], ...]. 引数: 数, null (nil), true (t), "sym:名前" (記号), {"c":"a"} (文字), {"l":[4]} (リスト).
 ;;     引数 "region" は, 点とマークの間 (kill-region の BEG END). 前のコマンドが "keep" なら, last-command を変えない.
 ;;   種: 動かす前に kill-new で入れる文字列 (後のものが先頭).
-;;   結果: [本文, カーソル, kill-ring の先頭 または null, マーク または null, this-command または null]
+;;   結果: [本文, カーソル, kill-ring の先頭 または null, マーク または null, this-command または null, mark-active, deactivate-mark, 出したメッセージ または null]
 ;;         または ["error", メッセージ, 本文, カーソル]. 位置は 0 から数える.
 
 (require 'json)
 (require 'cl-lib)
+
+;; 対話的に使うときと同じに, マークは, transient-mark-mode で使う. message は, 出した文字を覚える
+(transient-mark-mode 1)
+(defvar last-message nil)
+(advice-add 'message :override
+            (lambda (fmt &rest args)
+              (setq last-message (and fmt (apply #'format-message fmt args)))))
 
 (defconst texts
   '("abc def\nghi jkl\n\n  mno pqr  \nstu"
@@ -68,7 +75,19 @@
          (list "kill-line-twice"
                (vector (step "kill-line" []) (step "kill-line" [] "kill-region"))
                (vector) nil)
-         (one "insert-buffer" "insert-buffer" ["other"]))))
+         (one "insert-buffer" "insert-buffer" ["other"]))
+   ;; マーク
+   (list (one "exchange-point-and-mark" "exchange-point-and-mark" [] nil 1)
+         (one "exchange-point-and-mark" "exchange-point-and-mark" [t] nil 1)
+         (one "mark-whole-buffer" "mark-whole-buffer" [])
+         (one "mark-word" "mark-word" [1])
+         (one "mark-word" "mark-word" [2])
+         (one "mark-word" "mark-word" [-1])
+         (one "set-mark-command" "set-mark-command" [nil])
+         (one "set-mark-command" "set-mark-command" [t])
+         (one "push-mark-command" "push-mark-command" [nil])
+         (one "what-cursor-position" "what-cursor-position" [])
+         )))
 
 (defun decode-arg (a)
   (cond ((null a) nil)
@@ -86,6 +105,7 @@
   (goto-char pos)
   (set-mark nil)
   (when mark (set-mark (1+ mark)))
+  (setq deactivate-mark nil last-message nil)
   (condition-case err
       (progn
         (cl-loop for step across steps
@@ -98,7 +118,10 @@
                       (unless (equal last "keep") nil)))
         (vector (buffer-string) (1- (point)) (car kill-ring)
                 (and (mark t) (1- (mark t)))
-                (and (symbolp this-command) this-command (symbol-name this-command))))
+                (and (symbolp this-command) this-command (symbol-name this-command))
+                (if mark-active t :json-false)
+                (if deactivate-mark t :json-false)
+                last-message))
     (error (vector "error" (error-message-string err) (buffer-string) (1- (point))))))
 
 (defvar results nil)

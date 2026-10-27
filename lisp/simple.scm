@@ -362,6 +362,7 @@ white space, and the third restores it.  Repeat the command to cycle."
 (define-command (delete-indentation . args)
   "Join this line to the previous one and fix up the white space at the join.
 With an argument, join the current line to the following line."
+  (set-deactivate-mark #t)
   (let* ((arg (simple--raw-arg args))
          (beg (- (line-beginning-position (if arg 2 1)) 1)))
     (if arg (forward-line 1))
@@ -417,21 +418,20 @@ If the previous command was a kill, append the text to its kill."
     (if (equal? last-command 'kill-region)
         (kill-append text (< to from))
         (kill-new text))
-    (set! this-command 'kill-region)))
+    (set! this-command 'kill-region)
+    (set-deactivate-mark #t)))
 
 (define-command (kill-region . args)
   "Kill the text between point and the mark, or between the two positions FROM and TO.
 The killed text is saved in the kill ring."
   (if (null? args)
-      (begin
-        (simple--kill (region-beginning) (region-end))
-        (deactivate-mark))
+      (simple--kill (region-beginning) (region-end))
       (simple--kill (car args) (cadr args))))
 
 (define-command (kill-ring-save . args)
   "Save the text between point and the mark in the kill ring, without killing it."
   (kill-new (buffer-substring (region-beginning) (region-end)))
-  (deactivate-mark))
+  (set-deactivate-mark #t))
 
 (define-command (kill-line . args)
   "Kill the rest of the line; if there are no nonblanks there, kill through the newline.
@@ -536,7 +536,7 @@ With a number N, insert the Nth most recent kill; with -, the second most recent
                                          (else (- arg 1)))))
     (when (pair? arg)
       (let ((old (mark)))
-        (set-mark (point))
+        (set-mark-position (point))
         (goto-char old)))
     (if (eq? this-command #t) (set! this-command 'yank))))
 
@@ -552,11 +552,11 @@ command was not a yank."
           (if before
               (delete-region (point) (mark))
               (delete-region (mark) (point)))
-          (set-mark (point))
+          (set-mark-position (point))
           (insert-for-yank (current-kill n))
           (when before
             (let ((old (mark)))
-              (set-mark (point))
+              (set-mark-position (point))
               (goto-char old)))))))
 
 (define-command (insert-buffer . args)
@@ -652,22 +652,301 @@ Only the keys that stand for one character can be inserted."
 
 ;;; The mark
 
+(define set-mark-command-repeat-pop #f
+  "Non-nil means that repeating set-mark-command after popping a mark pops another one.")
+
+(define-command (push-mark-command . args)
+  "Set the mark at point; with an argument, set it even if it is already there.
+If the mark is already at point, activate it instead.  The second argument
+NOMSG, if true, suppresses the message."
+  (let ((arg (simple--raw-arg args))
+        (nomsg (and (pair? args) (pair? (cdr args)) (cadr args)))
+        (old (mark)))
+    (if (or arg (not old) (not (= old (point))))
+        (push-mark (point) nomsg #t)
+        (begin
+          (activate-mark)
+          (if (not nomsg) (message "Mark activated"))))))
+
+(define-command (pop-to-mark-command . args)
+  "Jump to the mark, and pop a new position for the mark off the mark ring."
+  (if (not (mark))
+      (error "No mark set in this buffer")
+      (begin
+        (if (= (point) (mark)) (message "Mark popped"))
+        (goto-char (mark))
+        (pop-mark))))
+
+(define-command (pop-global-mark . args)
+  "Pop off the global mark ring and jump to the top location."
+  (let* ((entry (global-mark-pop))
+         (name (car entry))
+         (position (cadr entry)))
+    (switch-to-buffer name)
+    (goto-char position)))
+
 (define-command (set-mark-command . args)
-  "Set the mark at point, and activate it."
-  (push-mark (point) #t #t)
-  (message "Mark set"))
+  "Set the mark where point is, and activate it; or jump to the mark.
+With a plain prefix argument (C-u), jump to the mark and pop the mark ring.
+With C-u C-u, set the mark and activate it without the special cases.
+Repeated, it activates or deactivates the mark."
+  (let ((arg (simple--raw-arg args)))
+    (cond
+     ((and (pair? arg) (> (prefix-numeric-value arg) 4))
+      (push-mark-command #f))
+     ((not (eq? this-command 'set-mark-command))
+      (if arg
+          (pop-to-mark-command)
+          (push-mark-command #t)))
+     ((and set-mark-command-repeat-pop (eq? last-command 'pop-global-mark) (not arg))
+      (set! this-command 'pop-global-mark)
+      (pop-global-mark))
+     ((or (and set-mark-command-repeat-pop (eq? last-command 'pop-to-mark-command)) arg)
+      (set! this-command 'pop-to-mark-command)
+      (pop-to-mark-command))
+     ((eq? last-command 'set-mark-command)
+      (if (region-active-p)
+          (begin (deactivate-mark) (message "Mark deactivated"))
+          (begin (activate-mark) (message "Mark activated"))))
+     (else (push-mark-command #f)))))
 
 (define-command (exchange-point-and-mark . args)
-  "Put the mark where point is now, and point where the mark is now."
-  (let ((old (mark)))
+  "Put the mark where point is now, and point where the mark is now.
+The mark is activated, unless there is an argument (which deactivates it)."
+  (let ((arg (simple--raw-arg args))
+        (old (mark)))
     (if (not old) (error "No mark set in this buffer"))
     (set-mark (point))
-    (goto-char old)))
+    (goto-char old)
+    (if (not (eq? (and arg #t) (not (region-active-p))))
+        (deactivate-mark)
+        (activate-mark))))
 
 (define-command (mark-whole-buffer . args)
   "Put point at the beginning and the mark at the end of the buffer."
-  (push-mark (point-max) #t #t)
+  (push-mark (point))
+  (push-mark (point-max) #f #t)
   (goto-char (point-min)))
+
+(define-command (mark-word . args)
+  "Set the mark at the end of the next word, or extend the region by a word.
+With argument N, do it for N words (backward if N is negative)."
+  (let ((arg (simple--raw-arg args))
+        (allow-extend (and (pair? args) (pair? (cdr args)) (cadr args))))
+    (cond ((and allow-extend
+                (or (and (equal? last-command this-command) (mark))
+                    (region-active-p)))
+           (let ((n (if arg
+                        (prefix-numeric-value arg)
+                        (if (< (mark) (point)) -1 1))))
+             (set-mark (save-excursion
+                         (goto-char (mark))
+                         (forward-word n)
+                         (point)))))
+          (else
+           (push-mark (save-excursion
+                        (forward-word (prefix-numeric-value arg))
+                        (point))
+                      #f #t)))))
+
+(define-command (keyboard-quit . args)
+  "Deactivate the mark and cancel the running command by signaling a quit."
+  (deactivate-mark)
+  (error "Quit"))
+
+(define-command (keyboard-escape-quit . args)
+  "Exit the current mode in a general sense: deactivate the region, clear a prefix
+argument, or go back to just one window."
+  (cond ((equal? last-command 'mode-exited) #f)
+        ((region-active-p) (deactivate-mark))
+        ((current-prefix-arg) #f)
+        ((> (length (window-list)) 1) (delete-other-windows))
+        (else #f)))
+
+;;; Prefix arguments
+
+(define prefix-arg #f
+  "The prefix argument for the next command: #f, a number, the symbol -, or a list like (4).")
+
+(define last-command-event #f
+  "The key (a string such as \"5\" or \"M-5\") that ran the command.")
+
+(define universal-argument-mode #f
+  "True while the keys 0-9, - and C-u make up a prefix argument (the universal-argument-map).")
+
+(define (simple--prefix-state)
+  "Pass the prefix command state to the next command: it will see the previous last-command."
+  (set! this-command last-command))
+
+(define (simple--event-digit)
+  "Return the digit of the key that ran the command (the last character of last-command-event)."
+  (let ((key (format "%s" last-command-event)))
+    (string->number (substring key (- (string-length key) 1)))))
+
+(define-command (universal-argument . args)
+  "Begin a numeric argument for the following command.
+Digits or minus sign following it make up the numeric argument.
+C-u without digits or minus sign provides 4 as argument."
+  (simple--prefix-state)
+  (set! prefix-arg (list 4))
+  (set! universal-argument-mode #t))
+
+(define-command (universal-argument-more . args)
+  "Multiply the prefix argument by 4 (C-u after C-u), or end the argument after digits."
+  (let ((arg (simple--raw-arg args)))
+    (simple--prefix-state)
+    (set! prefix-arg (cond ((pair? arg) (list (* 4 (car arg))))
+                           ((eq? arg '-) (list -4))
+                           (else arg)))
+    (if (pair? prefix-arg) (set! universal-argument-mode #t))))
+
+(define-command (digit-argument . args)
+  "Part of the numeric argument for the next command: add the digit of the key."
+  (let ((arg (simple--raw-arg args))
+        (digit (simple--event-digit)))
+    (simple--prefix-state)
+    (set! prefix-arg (cond ((number? arg)
+                            (+ (* arg 10) (if (< arg 0) (- digit) digit)))
+                           ((eq? arg '-) (if (= digit 0) '- (- digit)))
+                           (else digit)))
+    (set! universal-argument-mode #t)))
+
+(define-command (negative-argument . args)
+  "Begin a negative numeric argument for the next command, or negate it."
+  (let ((arg (simple--raw-arg args)))
+    (simple--prefix-state)
+    (set! prefix-arg (cond ((number? arg) (- arg))
+                           ((eq? arg '-) #f)
+                           (else '-)))
+    (set! universal-argument-mode #t)))
+
+;;; Information
+
+(define (simple--single-key-description char)
+  "Return how Emacs writes the ASCII character CHAR as a key, such as C-a or SPC."
+  (let ((code (string-to-char char)))
+    (cond ((= code 32) "SPC")
+          ((= code 9) "TAB")
+          ((= code 13) "RET")
+          ((= code 27) "ESC")
+          ((= code 127) "DEL")
+          ((< code 32) (string-append "C-" (char-to-string (+ code 96))))
+          (else char))))
+
+(define-command (what-cursor-position . args)
+  "Print information about the cursor position in the echo area:
+the character after point with its codes, the position, and the column."
+  (let* ((total (buffer-size))
+         (pos (point))
+         (percent (simple--round-percent (- pos 1) (max 1 total)))
+         (column (current-column))
+         (narrowed #f))
+    (if (eobp)
+        (message "%s" (format "point=%d of %d (EOB) column=%d" pos total column))
+        (let* ((char (char-after))
+               (code (string-to-char char))
+               (shown (if (< code 128) (simple--single-key-description char) char))
+               (encoding (if (>= code 128)
+                             (format "(%d, #o%o, #x%x, file ...)" code code code)
+                             (format "(%d, #o%o, #x%x)" code code code))))
+          (message "%s" (format "Char: %s %s point=%d of %d (%d%%) column=%d"
+                                shown encoding pos total percent column))))))
+
+(define (simple--round-percent n total)
+  "Return 100 * N / TOTAL rounded to the nearest integer, ties to even (like Emacs round)."
+  (let* ((numerator (* 100 n))
+         (q (quotient numerator total))
+         (r (remainder numerator total)))
+    (cond ((> (* 2 r) total) (+ q 1))
+          ((= (* 2 r) total) (if (even? q) q (+ q 1)))
+          (else q))))
+
+(define (simple--count-lines start end)
+  "Return the number of lines between START and END."
+  (let ((text (buffer-substring start end)))
+    (if (equal? text "")
+        0
+        (let loop ((i 0) (n 0))
+          (cond ((>= i (string-length text))
+                 (if (equal? (substring text (- (string-length text) 1) (string-length text)) "\n") n (+ n 1)))
+                ((equal? (substring text i (+ i 1)) "\n") (loop (+ i 1) (+ n 1)))
+                (else (loop (+ i 1) n)))))))
+
+(define (simple--count-words start end)
+  "Return the number of words between START and END."
+  (save-excursion
+    (goto-char (min start end))
+    (let ((limit (max start end)))
+      (let loop ((words 0))
+        (if (and (re-search-forward "\\W*\\w+" limit #t))
+            (loop (+ words 1))
+            words)))))
+
+(define (simple--count-sentences start end)
+  "Return the number of sentences between START and END."
+  (save-excursion
+    (goto-char (min start end))
+    (let ((limit (max start end)))
+      (let loop ((sentences 0))
+        (if (re-search-forward "[.?!…‽][]\"'”’)}»›]*\\($\\|[ \t]\\| \\)[ \t\n]*" limit #t)
+            (loop (+ sentences 1))
+            (let ((rest (buffer-substring (point) limit)))
+              (if (string-search "\\w" rest) (+ sentences 1) sentences)))))))
+
+(define (simple--count-words-format label start end)
+  "Return the message about the lines, sentences, words and characters between START and END."
+  (let ((lines (simple--count-lines start end))
+        (sentences (simple--count-sentences start end))
+        (words (simple--count-words start end))
+        (chars (- end start)))
+    (format "%s has %d line%s, %d sentence%s, %d word%s, and %d character%s"
+            label
+            lines (if (= lines 1) "" "s")
+            sentences (if (= sentences 1) "" "s")
+            words (if (= words 1) "" "s")
+            chars (if (= chars 1) "" "s"))))
+
+(define-command (count-words-region . args)
+  "Print the number of lines, sentences, words and characters in the region.
+With a prefix argument, report on the whole buffer."
+  (if (and (pair? args) (pair? (cdr args)))
+      (simple--count-words (car args) (cadr args))
+      (if (current-prefix-arg)
+          (message (simple--count-words-format "Buffer" (point-min) (point-max)))
+          (message (simple--count-words-format "Region" (region-beginning) (region-end))))))
+
+(define fill-column 70
+  "The column beyond which automatic line breaking should happen.")
+
+(define truncate-lines #f
+  "Non-nil means do not display continuation lines: give each line one row, cut at the window edge.")
+
+(define selective-display #f
+  "A number N means that lines indented by N columns or more are not displayed.")
+
+(define-command (set-fill-column . args)
+  "Set fill-column to the argument.  With C-u, use the current column."
+  (let ((arg (if (null? args) (current-prefix-arg) (car args))))
+    (if (pair? arg) (set! arg (current-column)))
+    (if (not (number? arg))
+        (error "set-fill-column requires an explicit argument")
+        (begin
+          (message (format "Fill column set to %d (was %d)" arg fill-column))
+          (set! fill-column arg)))))
+
+(define-command (toggle-truncate-lines . args)
+  "Toggle truncating of long lines for the current buffer.
+With a positive argument, truncate; with zero or a negative one, wrap."
+  (let ((arg (simple--raw-arg args)))
+    (set! truncate-lines (if (not arg) (not truncate-lines) (> (prefix-numeric-value arg) 0)))
+    (message (format "Truncate long lines %s" (if truncate-lines "enabled" "disabled")))))
+
+(define-command (set-selective-display . args)
+  "Set selective-display to the argument; clear it if there is none.
+When it is a number, lines indented by that many columns or more are not displayed."
+  (let ((arg (simple--raw-arg args)))
+    (set! selective-display (and arg (prefix-numeric-value arg)))
+    (message (format "selective-display set to %s." (if selective-display selective-display "nil")))))
 
 ;;; Undoing
 
@@ -752,10 +1031,6 @@ undo starts again from the newest change, so undoing an undo redoes the change."
           (set! this-command 'undo)
           (set! pending-undo-list (or new-pending '()))
           (set-buffer-undo-list new-list)))))
-
-(define-command (keyboard-quit . args)
-  "Cancel the running command by signaling a quit."
-  (error "Quit"))
 
 ;;; Windows and buffers
 

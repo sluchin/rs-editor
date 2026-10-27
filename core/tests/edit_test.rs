@@ -9,13 +9,21 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 use serde_json::{json, Value as Json};
 
-/// 画面の要る操作を受ける偽物: メッセージは捨てる.
-struct FakeUi;
+/// 画面の要る操作を受ける偽物: 最後のメッセージを覚える.
+#[derive(Default)]
+struct FakeUi {
+    message: std::sync::Mutex<Option<String>>,
+}
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
         match op {
-            "message" => Ok(Value::Nil),
+            "message" => {
+                if let Some(Value::String(text)) = args.first() {
+                    *self.message.lock().unwrap() = Some(text.clone());
+                }
+                Ok(Value::Nil)
+            }
             other => Err(format!("ui: {other}")),
         }
     }
@@ -61,6 +69,7 @@ fn run(
             buffer.set_mark(mark);
         }
     }
+    *host.ui().message.lock().unwrap() = None;
     let mut code = String::from("(set! simple--cycle-context #f) (set! last-command #f)\n");
     for seed in seeds {
         code.push_str(&format!("(kill-new {})\n", scheme_arg(seed)));
@@ -84,6 +93,10 @@ fn run(
         code.push_str(&run);
         code.push('\n');
     }
+    // 手順を動かす前に, コマンドの終わりにマークを外す頼みを消す (Emacs の command loop と同じ)
+    host.editor()
+        .current_buffer_mut()
+        .set_deactivate_requested(false);
     // 手順は 1 つの式の並びとして, 失敗したところで止める
     result = result.and_then(|_| ev.eval_with(&code, host));
     let editor = host.editor();
@@ -100,7 +113,17 @@ fn run(
                 .map(|s| s.lines().last().unwrap_or("").to_string())
                 .filter(|s| s != "#f" && s != "nil");
             let editor = host.editor();
-            json!([body, point, top, editor.current_buffer().mark(), this])
+            let buffer = editor.current_buffer();
+            json!([
+                body,
+                point,
+                top,
+                buffer.mark(),
+                this,
+                buffer.mark_active(),
+                buffer.deactivate_requested(),
+                host.ui().message.lock().unwrap().clone()
+            ])
         }
     }
 }
@@ -113,7 +136,7 @@ fn test_against_emacs() {
     let table: Vec<Row> = serde_json::from_str(include_str!("edit.json")).unwrap();
     assert!(table.len() > 300);
     let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), FakeUi);
+    let host = EditorHost::new(Editor::new(), FakeUi::default());
     ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
         .unwrap();
     {

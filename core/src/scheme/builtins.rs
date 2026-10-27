@@ -92,6 +92,11 @@ pub const NAMES: &[&str] = &[
     "string-join",
     "split-string",
     "string-width",
+    "string-to-char",
+    "char-to-string",
+    "string->utf8",
+    "even?",
+    "odd?",
     // エディタ
     "point",
     "point-min",
@@ -380,6 +385,38 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "string-width" => {
             let [s] = fixed::<1>(name, args)?;
             Ok(Value::Number(string_width(string(name, &s)?) as f64))
+        }
+        "string-to-char" => {
+            // 最初の文字の番号 (空の文字列は 0. Emacs と同じ)
+            let [s] = fixed::<1>(name, args)?;
+            Ok(Value::Number(
+                string(name, &s)?.chars().next().map_or(0, |c| c as u32) as f64,
+            ))
+        }
+        "char-to-string" => {
+            let [code] = fixed::<1>(name, args)?;
+            let code = number(name, &code)?;
+            char::from_u32(code as u32)
+                .map(|c| Value::String(c.to_string()))
+                .ok_or_else(|| format!("{name}: invalid character {code}"))
+        }
+        "string->utf8" => {
+            // UTF-8 のバイト (数のリスト)
+            let [s] = fixed::<1>(name, args)?;
+            Ok(Value::List(
+                string(name, &s)?
+                    .bytes()
+                    .map(|b| Value::Number(f64::from(b)))
+                    .collect(),
+            ))
+        }
+        "even?" | "odd?" => {
+            let [n] = fixed::<1>(name, args)?;
+            let n = number(name, &n)?;
+            if n.fract() != 0.0 {
+                return Err(format!("{name} expects an integer"));
+            }
+            Ok(Value::Boolean((n as i64 % 2 == 0) == (name == "even?")))
         }
         "string-length" => {
             let [s] = fixed::<1>(name, args)?;
@@ -1267,6 +1304,9 @@ fn format(args: &[Value]) -> Result<String, String> {
             Some('s') => result.push_str(&value.to_display()),
             Some('S') => result.push_str(&value.to_string()),
             Some('d') => result.push_str(&format!("{}", number("format", value)?.trunc() as i64)),
+            Some('o') => result.push_str(&format!("{:o}", number("format", value)?.trunc() as i64)),
+            Some('x') => result.push_str(&format!("{:x}", number("format", value)?.trunc() as i64)),
+            Some('X') => result.push_str(&format!("{:X}", number("format", value)?.trunc() as i64)),
             _ => return Err("format: invalid directive".to_string()),
         }
     }

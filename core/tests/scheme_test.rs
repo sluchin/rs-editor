@@ -542,7 +542,7 @@ fn test_evaluator_reports_the_errors() {
         ("(symbol->string \"a\")", "symbol->string expects a symbol"),
         ("(format)", "format expects a format string"),
         ("(format \"%s\")", "format: not enough arguments"),
-        ("(format \"%x\" 1)", "format: invalid directive"),
+        ("(format \"%q\" 1)", "format: invalid directive"),
         ("(format \"%\")", "format: not enough arguments"),
         ("(format \"%d\" \"a\")", "format expects numbers"),
         ("(goto-char \"a\")", "goto-char expects numbers"),
@@ -557,6 +557,7 @@ fn test_evaluator_reports_the_errors() {
             "(global-set-key 1 2)",
             "global-set-key expects a key and a command name",
         ),
+        ("(even? 1.5)", "even? expects an integer"),
         ("(filter car 1)", "filter expects lists"),
         (
             "(filter (lambda (x) (car x)) '(1))",
@@ -695,4 +696,14 @@ fn test_string_escapes() {
         ev.eval("(string-length \"a\\r\\n\\t\\\"\\\\\")").unwrap(),
         "6"
     );
+}
+
+#[test]
+fn test_character_and_integer_builtins() {
+    assert_eq!(eval("(string->utf8 \"aあ\")"), "(97 227 129 130)");
+    assert_eq!(
+        eval("(list (even? 4) (even? 3) (odd? 3) (odd? 4))"),
+        "(#t #f #t #f)"
+    );
+    assert_eq!(eval("(format \"%X %x %o\" 255 255 8)"), "\"FF ff 10\"");
 }

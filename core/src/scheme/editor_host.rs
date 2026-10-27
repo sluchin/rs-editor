@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
-use crate::editor::{prefix_numeric_value, Editor, PrefixArg};
+use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
@@ -96,10 +96,9 @@ impl<U: Host> Host for EditorHost<U> {
         };
         match outcome {
             Some(Outcome::Value(value)) => Ok(value),
-            // ファイルに書いたことは, 画面にも知らせる
-            Some(Outcome::Wrote(path, value)) => {
-                self.ui
-                    .call("message", vec![Value::String(format!("Wrote {path}"))])?;
+            // 操作が出すメッセージ (ファイルに書いたこと, マークを置いたこと) は, 画面に知らせる
+            Some(Outcome::Message(text, value)) => {
+                self.ui.call("message", vec![Value::String(text)])?;
                 Ok(value)
             }
             // 受け持たない操作は, 画面に頼む
@@ -112,8 +111,8 @@ impl<U: Host> Host for EditorHost<U> {
 enum Outcome {
     /// 評価器に返す値.
     Value(Value),
-    /// ファイルに書いた (パスと, 評価器に返す値).
-    Wrote(String, Value),
+    /// 画面に出すメッセージと, 評価器に返す値.
+    Message(String, Value),
 }
 
 /// 偽の値 (Emacs の nil).
@@ -460,7 +459,52 @@ impl<U: Host> EditorHost<U> {
                     .map_err(|e| format!("{path}: {e}"))?;
                 buffer.set_file(Some(path.clone()));
                 buffer.set_modified(false);
-                return Ok(Some(Outcome::Wrote(path, Value::Nil)));
+                return Ok(Some(Outcome::Message(format!("Wrote {path}"), Value::Nil)));
+            }
+            "push-mark" => {
+                let name = ed.current_buffer_name().to_string();
+                let b = ed.current_buffer_mut();
+                let p = pos_opt(op, args, 0)?.unwrap_or(b.point());
+                b.push_mark(p, args.get(2).is_some_and(Value::is_non_nil));
+                // 前に履歴に入れたマークが同じバッファでなければ, バッファをまたぐ履歴にも入れる
+                if ed
+                    .global_mark_ring
+                    .first()
+                    .is_none_or(|(top, _)| *top != name)
+                {
+                    let b = ed.current_buffer_mut();
+                    let id = b.marker_new(p);
+                    ed.global_mark_ring.insert(0, (name, id));
+                    ed.global_mark_ring.truncate(GLOBAL_MARK_RING_MAX);
+                }
+                // 第 2 引数 (NOMSG) が無ければ, Emacs は "Mark set" と出す
+                if !args.get(1).is_some_and(Value::is_non_nil) {
+                    return Ok(Some(Outcome::Message("Mark set".to_string(), Value::Nil)));
+                }
+                Value::Nil
+            }
+            "global-mark-pop" => {
+                // 先頭のマークの場所を返し, 履歴の最後に回す (消えたバッファのマークは, 捨てる)
+                let ring = std::mem::take(&mut ed.global_mark_ring);
+                let mut ring: Vec<(String, usize)> = ring
+                    .into_iter()
+                    .filter(|(name, id)| {
+                        ed.get_buffer(name)
+                            .is_some_and(|b| b.marker_position(*id).is_some())
+                    })
+                    .collect();
+                if ring.is_empty() {
+                    return Err("No global mark set".to_string());
+                }
+                let (name, id) = ring.remove(0);
+                let position = ed.get_buffer(&name).unwrap().marker_position(id).unwrap();
+                ring.push((name.clone(), id));
+                ed.global_mark_ring = ring;
+                Value::List(
+                    vec![Value::String(name), at(position)]
+                        .into_iter()
+                        .collect(),
+                )
             }
             "files--revert-dired" => nil(),
             _ => return Ok(None),
@@ -624,9 +668,8 @@ impl<U: Host> EditorHost<U> {
                 }
                 Value::Nil
             }
-            "push-mark" => {
-                let p = pos_opt(op, args, 0)?.unwrap_or(b.point());
-                b.push_mark(p, args.get(2).is_some_and(Value::is_non_nil));
+            "set-mark-position" => {
+                b.set_mark_position(pos(op, args, 0)?);
                 Value::Nil
             }
             "pop-mark" => {
@@ -641,6 +684,15 @@ impl<U: Host> EditorHost<U> {
             "region-end" => at(b.region_end()?),
             "use-region-p" => Value::Boolean(b.use_region_p()),
             "region-active-p" => Value::Boolean(b.region_active()),
+            "activate-mark" => {
+                b.activate_mark();
+                Value::Nil
+            }
+            "deactivate-mark-requested" => Value::Boolean(b.deactivate_requested()),
+            "set-deactivate-mark" => {
+                b.set_deactivate_requested(args.first().is_some_and(Value::is_non_nil));
+                Value::Nil
+            }
             "point-marker" => Value::Number(b.marker_new(b.point()) as f64),
             "marker-position" => at_opt(b.marker_position(int(op, args, 0)?.max(0) as usize)),
             "marker-release" => {

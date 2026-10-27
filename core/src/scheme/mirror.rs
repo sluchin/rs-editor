@@ -43,6 +43,7 @@ const NATIVE: &[&str] = &[
     "match-string",
     "mark",
     "set-mark",
+    "set-mark-position",
     "push-mark",
     "pop-mark",
     "deactivate-mark",

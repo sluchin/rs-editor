@@ -259,7 +259,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 1 | 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため) | - | - | - |
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
-| 4 | マーク, 前置引数, 実行 | 21 | 9 | 12 |
+| 4 | マーク, 前置引数, 実行 | 12 | 2 | 10 |
 | 5 | S 式, 段落, ページ | 28 | 14 | 14 |
 | 6 | 字下げ, 整形, コメント | 9 | 5 | 4 |
 | 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
@@ -330,7 +330,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 108 個: Lisp 23 個, TypeScript 85 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 115 個: Lisp 32 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -346,7 +346,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `compose-mail` |  | simple | `C-x m` |  |  |  | 12 |
 | `compose-mail-other-frame` |  | simple | `C-x 5 m` |  |  |  | 12 |
 | `compose-mail-other-window` |  | simple | `C-x 4 m` |  |  |  | 12 |
-| `count-words-region` |  | simple | `M-=` | 実装済み | `M-=` | TypeScript (`src/lib/emacs.ts`) | 4 |
+| `count-words-region` |  | simple | `M-=` | 実装済み | `M-=` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `cycle-spacing` |  | simple | `M-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `default-indent-new-line` |  | simple | `M-j`, `C-M-j` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `delete-backward-char` | ◯ | simple | `DEL` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -354,7 +354,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `delete-forward-char` |  | simple | `<deletechar>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `delete-horizontal-space` | ◯ | simple | `M-\` | 実装済み | `M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `delete-indentation` | ◯ | simple | `M-^` | 実装済み | `M-^` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `digit-argument` | ◯ | simple | `C-0`, `C-1`, `C-2`, `C-3` ほか 16 | 実装済み | `M-0`, `M-1`, `M-2` ほか 7 | TypeScript (`src/lib/emacs.ts`) | 4 |
+| `digit-argument` | ◯ | simple | `C-0`, `C-1`, `C-2`, `C-3` ほか 16 | 実装済み | `M-0`, `M-1`, `M-2` ほか 7 | Lisp (`lisp/simple.scm`) | 済 |
 | `end-of-buffer` | ◯ | simple | `M->`, `C-<end>` | 実装済み | `M->` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `eval-expression` | ◯ | simple | `M-:`, `ESC M-:` | 実装済み | `M-:` | TypeScript (`src/hooks/useLisp.ts`, `lisp/simple.scm`) | 4 |
 | `exchange-point-and-mark` | ◯ | simple | `C-x C-x` | 実装済み | `C-x C-x` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
@@ -363,7 +363,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `goto-line` | ◯ | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 2 |
 | `goto-line-relative` |  | simple | `C-x n g` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `insert-buffer` | ◯ | simple | `C-x x i` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `keyboard-escape-quit` |  | simple | `ESC ESC ESC` |  |  |  | 4 |
+| `keyboard-escape-quit` |  | simple | `ESC ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `keyboard-quit` | ◯ | simple | `C-g` | 実装済み | `C-g` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `kill-line` | ◯ | simple | `C-k`, `<deleteline>` | 実装済み | `C-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
@@ -371,35 +371,35 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `kill-whole-line` |  | simple | `C-S-<backspace>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-word` | ◯ | simple | `M-d`, `C-<delete>` | 実装済み | `M-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `mark-whole-buffer` | ◯ | simple | `C-x h` | 実装済み | `C-x h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `mark-word` | ◯ | simple | `M-@` | 実装済み | `M-@` | TypeScript (`src/lib/emacs.ts`) | 4 |
+| `mark-word` | ◯ | simple | `M-@` | 実装済み | `M-@` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `move-beginning-of-line` |  | simple | `C-a`, `<home>` | 実装済み | `C-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `move-end-of-line` |  | simple | `C-e`, `<end>` | 実装済み | `C-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` |  |  |  | 4 |
+| `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `newline` | ◯ | simple | `RET` | 実装済み | `RET`, `C-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | TypeScript (`src/hooks/useDirectories.ts`) | 4 |
 | `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` |  |  |  | 4 |
+| `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | TypeScript (`src/hooks/useDirectories.ts`) | 4 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` |  |  |  | 4 |
-| `set-fill-column` | ◯ | simple | `C-x f` |  |  |  | 4 |
+| `set-fill-column` | ◯ | simple | `C-x f` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `set-selective-display` |  | simple | `C-x $` |  |  |  | 4 |
+| `set-selective-display` |  | simple | `C-x $` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `shell-command` | ◯ | simple | `M-!` |  |  |  | 9 |
 | `shell-command-on-region` | ◯ | simple | `M-\|` |  |  |  | 9 |
 | `split-line` | ◯ | simple | `C-M-o` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `toggle-truncate-lines` |  | simple | `C-x x t` |  |  |  | 4 |
+| `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `transpose-lines` | ◯ | simple | `C-x C-t` | 実装済み | `C-x C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `transpose-sexps` | ◯ | simple | `C-M-t` |  |  |  | 5 |
 | `transpose-words` | ◯ | simple | `M-t` | 実装済み | `M-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `undo` | ◯ | simple | `C-/`, `C-_`, `C-x u`, `<undo>` | 実装済み | `C-/`, `C-_`, `C-x u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `universal-argument` | ◯ | simple | `C-u` | 実装済み | `C-u` | TypeScript (`src/lib/emacs.ts`) | 4 |
-| `what-cursor-position` | ◯ | simple | `C-x =` |  |  |  | 4 |
+| `universal-argument` | ◯ | simple | `C-u` | 実装済み | `C-u` | Lisp (`lisp/simple.scm`) | 済 |
+| `what-cursor-position` | ◯ | simple | `C-x =` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `yank-pop` | ◯ | simple | `M-y` | 実装済み | `M-y` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `zap-to-char` |  | simple | `M-z` | 実装済み | `M-z` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |

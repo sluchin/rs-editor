@@ -3866,19 +3866,214 @@ msgstr ""
 "1 文字を表すキーだけ入れられる."
 
 #: lisp/simple.scm
+msgctxt "variable:set-mark-command-repeat-pop"
+msgid "Non-nil means that repeating set-mark-command after popping a mark pops another one."
+msgstr "真なら, マークを取り出した後に set-mark-command を繰り返すと, 次のマークを取り出す."
+
+#: lisp/simple.scm
+msgctxt "function:push-mark-command"
+msgid ""
+"Set the mark at point; with an argument, set it even if it is already there.\n"
+"If the mark is already at point, activate it instead.  The second argument\n"
+"NOMSG, if true, suppresses the message."
+msgstr ""
+"点にマークを置く. 引数があれば, すでにそこにあっても置く.\n"
+"マークがすでに点にあれば, 代わりに使う状態にする. 第 2 引数 NOMSG が真なら, メッセージを出さない."
+
+#: lisp/simple.scm
+msgctxt "function:pop-to-mark-command"
+msgid "Jump to the mark, and pop a new position for the mark off the mark ring."
+msgstr "マークに移り, マークの履歴から新しいマークの位置を取り出す."
+
+#: lisp/simple.scm
+msgctxt "function:pop-global-mark"
+msgid "Pop off the global mark ring and jump to the top location."
+msgstr "バッファをまたぐマークの履歴から取り出し, 先頭の場所に移る."
+
+#: lisp/simple.scm
 msgctxt "function:set-mark-command"
-msgid "Set the mark at point, and activate it."
-msgstr "点にマークを置いて, 使う状態にする."
+msgid ""
+"Set the mark where point is, and activate it; or jump to the mark.\n"
+"With a plain prefix argument (C-u), jump to the mark and pop the mark ring.\n"
+"With C-u C-u, set the mark and activate it without the special cases.\n"
+"Repeated, it activates or deactivates the mark."
+msgstr ""
+"点にマークを置いて使う状態にする. または, マークに移る.\n"
+"前置引数だけ (C-u) なら, マークに移ってマークの履歴を取り出す.\n"
+"C-u C-u なら, 特別な場合を除いて, マークを置いて使う状態にする.\n"
+"繰り返すと, マークを使う状態と使わない状態にする."
 
 #: lisp/simple.scm
 msgctxt "function:exchange-point-and-mark"
-msgid "Put the mark where point is now, and point where the mark is now."
-msgstr "マークを今の点に置き, 点を今のマークの所に置く."
+msgid ""
+"Put the mark where point is now, and point where the mark is now.\n"
+"The mark is activated, unless there is an argument (which deactivates it)."
+msgstr ""
+"マークを今の点に置き, 点を今のマークの所に置く.\n"
+"引数が無ければマークを使う状態にし, あれば使わない状態にする."
 
 #: lisp/simple.scm
 msgctxt "function:mark-whole-buffer"
 msgid "Put point at the beginning and the mark at the end of the buffer."
 msgstr "点をバッファの始めに, マークを終わりに置く."
+
+#: lisp/simple.scm
+msgctxt "function:mark-word"
+msgid ""
+"Set the mark at the end of the next word, or extend the region by a word.\n"
+"With argument N, do it for N words (backward if N is negative)."
+msgstr ""
+"次の単語の終わりにマークを置く. または, リージョンを 1 単語広げる.\n"
+"引数 N があれば N 単語分 (負なら後ろへ)."
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-quit"
+msgid "Deactivate the mark and cancel the running command by signaling a quit."
+msgstr "マークを使わない状態にして, quit を知らせて, 動いているコマンドをやめる."
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-escape-quit"
+msgid ""
+"Exit the current mode in a general sense: deactivate the region, clear a prefix\n"
+"argument, or go back to just one window."
+msgstr "広い意味で今の状態を抜ける: リージョンを使わない状態にする, 前置引数を消す, または, ウィンドウを 1 つにする."
+
+#: lisp/simple.scm
+msgctxt "variable:prefix-arg"
+msgid "The prefix argument for the next command: #f, a number, the symbol -, or a list like (4)."
+msgstr "次のコマンドの前置引数: #f, 数, 記号 -, または (4) のようなリスト."
+
+#: lisp/simple.scm
+msgctxt "variable:last-command-event"
+msgid "The key (a string such as \"5\" or \"M-5\") that ran the command."
+msgstr "コマンドを動かしたキー (\"5\" や \"M-5\" のような文字列)."
+
+#: lisp/simple.scm
+msgctxt "variable:universal-argument-mode"
+msgid "True while the keys 0-9, - and C-u make up a prefix argument (the universal-argument-map)."
+msgstr "キー 0-9, -, C-u が前置引数を作っている間は真 (universal-argument-map)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--prefix-state"
+msgid "Pass the prefix command state to the next command: it will see the previous last-command."
+msgstr "前置引数のコマンドの状態を次のコマンドに渡す: 次のコマンドは, 前の last-command を見る."
+
+#: lisp/simple.scm
+msgctxt "function:simple--event-digit"
+msgid "Return the digit of the key that ran the command (the last character of last-command-event)."
+msgstr "コマンドを動かしたキーの数字を返す (last-command-event の最後の文字)."
+
+#: lisp/simple.scm
+msgctxt "function:universal-argument"
+msgid ""
+"Begin a numeric argument for the following command.\n"
+"Digits or minus sign following it make up the numeric argument.\n"
+"C-u without digits or minus sign provides 4 as argument."
+msgstr ""
+"次のコマンドの数の引数を始める.\n"
+"続く数字とマイナス記号が数の引数になる.\n"
+"数字もマイナス記号も無い C-u は, 引数 4 を渡す."
+
+#: lisp/simple.scm
+msgctxt "function:universal-argument-more"
+msgid "Multiply the prefix argument by 4 (C-u after C-u), or end the argument after digits."
+msgstr "前置引数を 4 倍にする (C-u の後の C-u). 数字の後なら, 引数を終える."
+
+#: lisp/simple.scm
+msgctxt "function:digit-argument"
+msgid "Part of the numeric argument for the next command: add the digit of the key."
+msgstr "次のコマンドの数の引数の一部: キーの数字を加える."
+
+#: lisp/simple.scm
+msgctxt "function:negative-argument"
+msgid "Begin a negative numeric argument for the next command, or negate it."
+msgstr "次のコマンドの負の数の引数を始める. または, 符号を反対にする."
+
+#: lisp/simple.scm
+msgctxt "function:simple--single-key-description"
+msgid "Return how Emacs writes the ASCII character CHAR as a key, such as C-a or SPC."
+msgstr "ASCII の文字 CHAR を, Emacs がキーとして書く形 (C-a, SPC など) で返す."
+
+#: lisp/simple.scm
+msgctxt "function:what-cursor-position"
+msgid ""
+"Print information about the cursor position in the echo area:\n"
+"the character after point with its codes, the position, and the column."
+msgstr ""
+"カーソルの位置の情報をエコーエリアに出す:\n"
+"点の後の文字とその符号, 位置, 桁."
+
+#: lisp/simple.scm
+msgctxt "function:simple--round-percent"
+msgid "Return 100 * N / TOTAL rounded to the nearest integer, ties to even (like Emacs round)."
+msgstr "100 * N / TOTAL を最も近い整数に丸めて返す (半端は偶数へ. Emacs の round と同じ)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-lines"
+msgid "Return the number of lines between START and END."
+msgstr "START と END の間の行の数を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-words"
+msgid "Return the number of words between START and END."
+msgstr "START と END の間の単語の数を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-sentences"
+msgid "Return the number of sentences between START and END."
+msgstr "START と END の間の文の数を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-words-format"
+msgid "Return the message about the lines, sentences, words and characters between START and END."
+msgstr "START と END の間の行, 文, 単語, 文字の数のメッセージを返す."
+
+#: lisp/simple.scm
+msgctxt "function:count-words-region"
+msgid ""
+"Print the number of lines, sentences, words and characters in the region.\n"
+"With a prefix argument, report on the whole buffer."
+msgstr ""
+"リージョンの行, 文, 単語, 文字の数を出す.\n"
+"前置引数があれば, バッファ全体の数を出す."
+
+#: lisp/simple.scm
+msgctxt "variable:fill-column"
+msgid "The column beyond which automatic line breaking should happen."
+msgstr "自動で行を折り返す桁."
+
+#: lisp/simple.scm
+msgctxt "variable:truncate-lines"
+msgid "Non-nil means do not display continuation lines: give each line one row, cut at the window edge."
+msgstr "真なら, 折り返しの行を出さない: 1 行を 1 行で出し, ウィンドウの端で切る."
+
+#: lisp/simple.scm
+msgctxt "variable:selective-display"
+msgid "A number N means that lines indented by N columns or more are not displayed."
+msgstr "数 N は, N 桁以上字下げした行を出さないことを表す."
+
+#: lisp/simple.scm
+msgctxt "function:set-fill-column"
+msgid "Set fill-column to the argument.  With C-u, use the current column."
+msgstr "fill-column を引数にする. C-u なら, 今の桁にする."
+
+#: lisp/simple.scm
+msgctxt "function:toggle-truncate-lines"
+msgid ""
+"Toggle truncating of long lines for the current buffer.\n"
+"With a positive argument, truncate; with zero or a negative one, wrap."
+msgstr ""
+"今のバッファで, 長い行を切るかを切り替える.\n"
+"引数が正なら切り, 0 か負なら折り返す."
+
+#: lisp/simple.scm
+msgctxt "function:set-selective-display"
+msgid ""
+"Set selective-display to the argument; clear it if there is none.\n"
+"When it is a number, lines indented by that many columns or more are not displayed."
+msgstr ""
+"selective-display を引数にする. 引数が無ければ消す.\n"
+"数なら, その桁以上字下げした行を出さない."
 
 #: lisp/simple.scm
 msgctxt "variable:simple--undo-equiv"
@@ -3933,11 +4128,6 @@ msgstr ""
 msgctxt "function:undo-redo"
 msgid "Undo the last N undos, that is redo the last N changes that were undone."
 msgstr "最後の N 個の undo を元に戻す. つまり, 戻した最後の N 個の変更をやり直す."
-
-#: lisp/simple.scm
-msgctxt "function:keyboard-quit"
-msgid "Cancel the running command by signaling a quit."
-msgstr "quit を知らせて, 動いているコマンドをやめる."
 
 #: lisp/simple.scm
 msgctxt "function:split-window-below"

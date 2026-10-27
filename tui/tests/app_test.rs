@@ -85,7 +85,7 @@ fn test_lines_and_the_goal_column() {
     assert_eq!(fx.point(), 3);
     // 行の先頭と終わり
     fx.press("M-> M-<");
-    assert_eq!((fx.point(), fx.app.message().as_str()), (0, ""));
+    assert_eq!((fx.point(), fx.app.message().as_str()), (0, "Mark set"));
     fx.press("M->");
     assert_eq!(fx.point(), 11);
 }

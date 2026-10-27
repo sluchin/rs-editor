@@ -679,3 +679,25 @@ fn test_undo_list_can_be_replaced_and_markers_follow_the_text() {
         "(6 #f)"
     );
 }
+
+#[test]
+fn test_global_mark_ring() {
+    assert_eq!(run_last("(global-mark-pop)"), "ERR No global mark set");
+    // 別のバッファのマークも履歴に入り, 取り出すごとに回る
+    assert_eq!(
+        run_last(
+            "(insert \"abcdef\") (push-mark 3 #t)
+             (get-buffer-create \"other\") (set-buffer \"other\") (insert \"xyz\") (push-mark 2 #t)
+             (list (global-mark-pop) (global-mark-pop) (global-mark-pop))"
+        ),
+        "((\"other\" 2) (\"*scratch*\" 3) (\"other\" 2))"
+    );
+    // 消えたバッファのマークは捨てる
+    assert_eq!(
+        run_last(
+            "(get-buffer-create \"gone\") (set-buffer \"gone\") (insert \"abc\") (push-mark 2 #t)
+             (set-buffer \"*scratch*\") (kill-buffer \"gone\") (global-mark-pop)"
+        ),
+        "ERR No global mark set"
+    );
+}

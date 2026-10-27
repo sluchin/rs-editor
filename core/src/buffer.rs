@@ -70,6 +70,8 @@ pub struct Buffer {
     markers: Vec<Option<usize>>,
     /// 最後の区切りを入れたときのカーソル (Emacs の `point_before_last_command_or_undo`).
     point_at_boundary: Option<usize>,
+    /// コマンドの終わりにマークを外すよう頼まれているか (Emacs の変数 `deactivate-mark`. 本文を書き換えると, 真になる).
+    deactivate_requested: bool,
 }
 
 impl Buffer {
@@ -93,6 +95,7 @@ impl Buffer {
             dialect: Dialect::Fundamental,
             markers: Vec::new(),
             point_at_boundary: None,
+            deactivate_requested: false,
         }
     }
 
@@ -458,6 +461,7 @@ impl Buffer {
             return Ok(());
         }
         self.text.insert(pos, text);
+        self.deactivate_requested = true;
         self.shift_for_insert(pos, len);
         self.record_insert(pos, len);
         self.modified = true;
@@ -484,6 +488,7 @@ impl Buffer {
         }
         let text = self.text.slice(from..to).to_string();
         self.text.remove(from..to);
+        self.deactivate_requested = true;
         self.record_point(from);
         self.undo.push(UndoEntry::Delete {
             pos: from,
@@ -532,6 +537,31 @@ impl Buffer {
     pub fn set_mark(&mut self, pos: usize) {
         self.mark = Some(pos.min(self.len()));
         self.mark_active = true;
+    }
+
+    /// マークの位置だけを決めます (Emacs の `(set-marker (mark-marker) POS)`. 使う状態は変えない).
+    pub fn set_mark_position(&mut self, pos: usize) {
+        self.mark = Some(pos.min(self.len()));
+    }
+
+    /// マークを使う状態にします (Emacs の `activate-mark`). マークが無ければ, 何もしない.
+    pub fn activate_mark(&mut self) {
+        self.mark_active = self.mark.is_some();
+    }
+
+    /// マークを使う状態か (Emacs の変数 `mark-active`).
+    pub fn mark_active(&self) -> bool {
+        self.mark_active
+    }
+
+    /// コマンドの終わりにマークを外すよう頼まれているか (Emacs の変数 `deactivate-mark`).
+    pub fn deactivate_requested(&self) -> bool {
+        self.deactivate_requested
+    }
+
+    /// コマンドの終わりにマークを外すよう頼みます (Emacs の `(setq deactivate-mark t)`. 外す印は, nil で消す).
+    pub fn set_deactivate_requested(&mut self, requested: bool) {
+        self.deactivate_requested = requested;
     }
 
     /// マークを使わない状態にします (Emacs の `deactivate-mark`). マークの位置は残す.

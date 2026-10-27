@@ -49,7 +49,12 @@ pub struct Editor {
     pub kill_ring: KillRing,
     /// 前置引数.
     pub prefix_arg: Option<PrefixArg>,
+    /// バッファをまたぐマークの履歴 (Emacs の `global-mark-ring`. 新しいものが先. バッファの名前と, そのバッファのマーカー).
+    pub global_mark_ring: Vec<(String, usize)>,
 }
+
+/// `global-mark-ring` の長さの上限 (Emacs の `global-mark-ring-max`).
+pub const GLOBAL_MARK_RING_MAX: usize = 16;
 
 /// 始めのバッファの名前.
 pub const SCRATCH: &str = "*scratch*";
@@ -72,6 +77,7 @@ impl Editor {
             next_window: 2,
             kill_ring: KillRing::new(),
             prefix_arg: None,
+            global_mark_ring: Vec::new(),
         }
     }
 

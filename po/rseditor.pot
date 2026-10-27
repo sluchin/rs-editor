@@ -3552,18 +3552,192 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:set-mark-command-repeat-pop"
+msgid "Non-nil means that repeating set-mark-command after popping a mark pops another one."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:push-mark-command"
+msgid ""
+"Set the mark at point; with an argument, set it even if it is already there.\n"
+"If the mark is already at point, activate it instead.  The second argument\n"
+"NOMSG, if true, suppresses the message."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:pop-to-mark-command"
+msgid "Jump to the mark, and pop a new position for the mark off the mark ring."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:pop-global-mark"
+msgid "Pop off the global mark ring and jump to the top location."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:set-mark-command"
-msgid "Set the mark at point, and activate it."
+msgid ""
+"Set the mark where point is, and activate it; or jump to the mark.\n"
+"With a plain prefix argument (C-u), jump to the mark and pop the mark ring.\n"
+"With C-u C-u, set the mark and activate it without the special cases.\n"
+"Repeated, it activates or deactivates the mark."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:exchange-point-and-mark"
-msgid "Put the mark where point is now, and point where the mark is now."
+msgid ""
+"Put the mark where point is now, and point where the mark is now.\n"
+"The mark is activated, unless there is an argument (which deactivates it)."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:mark-whole-buffer"
 msgid "Put point at the beginning and the mark at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:mark-word"
+msgid ""
+"Set the mark at the end of the next word, or extend the region by a word.\n"
+"With argument N, do it for N words (backward if N is negative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-quit"
+msgid "Deactivate the mark and cancel the running command by signaling a quit."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:keyboard-escape-quit"
+msgid ""
+"Exit the current mode in a general sense: deactivate the region, clear a prefix\n"
+"argument, or go back to just one window."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:prefix-arg"
+msgid "The prefix argument for the next command: #f, a number, the symbol -, or a list like (4)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:last-command-event"
+msgid "The key (a string such as \"5\" or \"M-5\") that ran the command."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:universal-argument-mode"
+msgid "True while the keys 0-9, - and C-u make up a prefix argument (the universal-argument-map)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--prefix-state"
+msgid "Pass the prefix command state to the next command: it will see the previous last-command."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--event-digit"
+msgid "Return the digit of the key that ran the command (the last character of last-command-event)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:universal-argument"
+msgid ""
+"Begin a numeric argument for the following command.\n"
+"Digits or minus sign following it make up the numeric argument.\n"
+"C-u without digits or minus sign provides 4 as argument."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:universal-argument-more"
+msgid "Multiply the prefix argument by 4 (C-u after C-u), or end the argument after digits."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:digit-argument"
+msgid "Part of the numeric argument for the next command: add the digit of the key."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:negative-argument"
+msgid "Begin a negative numeric argument for the next command, or negate it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--single-key-description"
+msgid "Return how Emacs writes the ASCII character CHAR as a key, such as C-a or SPC."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:what-cursor-position"
+msgid ""
+"Print information about the cursor position in the echo area:\n"
+"the character after point with its codes, the position, and the column."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--round-percent"
+msgid "Return 100 * N / TOTAL rounded to the nearest integer, ties to even (like Emacs round)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-lines"
+msgid "Return the number of lines between START and END."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-words"
+msgid "Return the number of words between START and END."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-sentences"
+msgid "Return the number of sentences between START and END."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--count-words-format"
+msgid "Return the message about the lines, sentences, words and characters between START and END."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:count-words-region"
+msgid ""
+"Print the number of lines, sentences, words and characters in the region.\n"
+"With a prefix argument, report on the whole buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:fill-column"
+msgid "The column beyond which automatic line breaking should happen."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:truncate-lines"
+msgid "Non-nil means do not display continuation lines: give each line one row, cut at the window edge."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:selective-display"
+msgid "A number N means that lines indented by N columns or more are not displayed."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-fill-column"
+msgid "Set fill-column to the argument.  With C-u, use the current column."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:toggle-truncate-lines"
+msgid ""
+"Toggle truncating of long lines for the current buffer.\n"
+"With a positive argument, truncate; with zero or a negative one, wrap."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-selective-display"
+msgid ""
+"Set selective-display to the argument; clear it if there is none.\n"
+"When it is a number, lines indented by that many columns or more are not displayed."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3614,11 +3788,6 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:undo-redo"
 msgid "Undo the last N undos, that is redo the last N changes that were undone."
-msgstr ""
-
-#: lisp/simple.scm
-msgctxt "function:keyboard-quit"
-msgid "Cancel the running command by signaling a quit."
 msgstr ""
 
 #: lisp/simple.scm
