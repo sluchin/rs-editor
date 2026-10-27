@@ -254,7 +254,8 @@ Emacs と同じく, 組み込み (C に当たる Rust と, 画面の TypeScript)
 - [ ] Lisp から使う組み込みの関数を足す (カーソル, 文字, 行, マーク, 窓, バッファなど. Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を, Lisp に移す。移したら, TypeScript の方は消す。
       進め方は, FUNCTIONS.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
-      まず段階 1 (Lisp から使う組み込みの関数) を足す。
+      目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと。そのため, 段階 1 で, エディタの核 (バッファ, マーク, undo, kill-ring, 窓) を Rust に作る
+      (1.1 から 1.11. 進み方は, FUNCTIONS.md の「実装の計画」)。
       速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, 動かして比べてから決める。
 - [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は, 組み込みのまま残す (Emacs と同じ)。
 

@@ -7,38 +7,49 @@
 
 # 段階 (番号, 題, 内容). 内容は, 箇条書きの文.
 STEPS = [
-    (1, '土台: Lisp から使う組み込みの関数',
-     ['コマンドを Lisp で書くために, 組み込み (Rust と画面の TypeScript) に足す。コマンドは入れない。'
-      'Emacs の C の関数に当たるもの。',
-      'カーソルと文字: `char-after`, `char-before`, `forward-char`, `backward-char`, `forward-line`, `line-beginning-position`, '
-      '`line-end-position`, `bobp`, `eobp`, `bolp`, `eolp`, `buffer-size`, `delete-char`, `current-column`, `move-to-column`。',
-      '探す: `search-forward`, `search-backward`, `re-search-forward`, `re-search-backward`, `looking-at`, `match-beginning`, `match-end`。',
-      'マークとリージョン: `mark`, `set-mark`, `push-mark`, `pop-mark`, `region-beginning`, `region-end`, `use-region-p`。',
-      '切り取りと貼り付け: `kill-region`, `current-kill`, `kill-append`, `insert-for-yank`。元に戻す: `undo-boundary`, `primitive-undo`。',
-      '前置引数: `current-prefix-arg`, `prefix-numeric-value`。`define-command` に, 引数の読み方 (Emacs の `interactive`) を足す。',
-      '窓とバッファ: `selected-window`, `split-window`, `delete-window`, `window-list`, `set-window-buffer`, `set-buffer`, '
-      '`get-buffer`, `generate-new-buffer`, `with-current-buffer`, バッファごとの変数 (`make-local-variable`)。',
-      '構文: `scan-lists`, `scan-sexps`, `syntax-ppss`, `char-syntax` (`src/lib/syntax.ts` の計算を Rust に移すか, 画面に頼む)。',
-      '速さが要るもの (`self-insert-command`, カーソルを動かすもの) は, Lisp で書いて動かして比べてから, 画面に残すか決める。']),
+    (1, '土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため)',
+     ['目標は, 同じエディタを, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと。そのため, バッファ, カーソル, マーク, undo, '
+      'kill-ring, 窓を, 画面 (TypeScript) でなく Rust の核に持つ。画面は, 核の状態を描いて, キーを核に渡すだけにする。'
+      'コマンドは入れない (Emacs の C の関数に当たるものを作る)。',
+      '1.1 クレートを分ける: 画面に頼らない核のクレート (`core/`. 評価器 `scheme` も移す) と, それを使うアプリ (`src-tauri/`), ターミナルのアプリ (`tui/`)。'
+      'Cargo のワークスペースにする。テストのカバレッジ 100% は, 核にも保つ。',
+      '1.2 バッファ: 本文 (rope), カーソル, 変更の有無, ファイルの名前。`point`, `goto-char`, `insert`, `delete-region`, `char-after`, `char-before`, '
+      '`forward-char`, `backward-char`, `forward-line`, `line-beginning-position`, `line-end-position`, `bobp`, `eobp`, `bolp`, `eolp`, `buffer-size`, '
+      '`current-column`, `move-to-column`。位置は文字で数える (今の Lisp と同じ)。',
+      '1.3 マークとリージョン: `mark`, `set-mark`, `push-mark`, `pop-mark`, `region-beginning`, `region-end`, `use-region-p`。',
+      '1.4 元に戻す: 変更の履歴 (`undo-boundary`, `primitive-undo`)。今の CodeMirror の履歴と同じ動き (まとめ方, 重ねた undo) にする。',
+      '1.5 kill-ring: `kill-region`, `current-kill`, `kill-append`, `insert-for-yank`。',
+      '1.6 探す: `search-forward`, `search-backward`, `re-search-forward`, `re-search-backward`, `looking-at`, `match-beginning`, `match-end` '
+      '(Emacs の正規表現の書き方に合わせる)。構文: `scan-lists`, `scan-sexps`, `syntax-ppss`, `char-syntax` (`src/lib/syntax.ts` を Rust に移す)。',
+      '1.7 窓とバッファの一覧: `selected-window`, `split-window`, `delete-window`, `window-list`, `set-window-buffer`, `set-buffer`, `get-buffer`, '
+      '`generate-new-buffer`, `with-current-buffer`, バッファごとの変数 (`make-local-variable`)。',
+      '1.8 前置引数: `current-prefix-arg`, `prefix-numeric-value`。`define-command` に, 引数の読み方 (Emacs の `interactive`) を足す。',
+      '1.9 評価器を核につなぐ: 今の `Host` (画面に頼んで返事を待つ) をやめ, 評価器が核を直接動かす。画面に頼むのは, 描くこと, ミニバッファの入力, '
+      'ファイルの選択だけにする (`Host` を小さくする)。',
+      '1.10 ターミナルのアプリの骨組み (`tui/`. ncurses): 核の状態を描き, キーを核に渡す。カーソルを動かし, 文字を入れ, 保存できるところまで。',
+      '1.11 今の画面 (Tauri) を核につなぎ替える: 本文の持ち主を CodeMirror から核に移す。CodeMirror は表示と入力にする。'
+      '核を作る前の画面の動きを, テスト (`tests/frontend/`) で保つ。']),
     (2, '動き',
-     ['行, 単語, バッファの端, 左右の移動。カーソルを動かすので, 速さを比べてから Lisp に移す。']),
+     ['行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。']),
     (3, '消す, 切る, 貼る, 元に戻す',
      ['kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。']),
     (4, 'マーク, 前置引数, 実行',
      ['マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-:`, `C-g`, エラーの移動, 表示の切り替え。']),
     (5, 'S 式, 段落, ページ',
-     ['括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1) を使う。']),
+     ['括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。'
+      '`src/lib/sexp.ts` と `src/lib/paragraph.ts` の計算は, ターミナルでも使うため, Rust に移す。']),
     (6, '字下げ, 整形, コメント',
-     ['`TAB`, `C-M-\\`, `M-q`, `M-;`。字下げの決まりを, Lisp と画面で 1 つにする (TODO の Phase 18 と同じ)。']),
+     ['`TAB`, `C-M-\\`, `M-q`, `M-;`。字下げの決まり (`src/lib/lispIndent.ts`) と整形 (`src/lib/fill.ts`) は, ターミナルでも使うため, Rust に移す。'
+      'エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。']),
     (7, '検索, 置換, 強調',
-     ['isearch, `query-replace`, `occur`, `highlight-regexp`。画面の検索の状態 (ミニバッファの 1 つのキーの問い) を Lisp から使えるようにする。']),
+     ['isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。']),
     (8, '矩形, レジスタ, キーボードマクロ, 略語',
      ['矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。']),
     (9, 'ファイル, バッファ, dired, ブックマーク, シェル',
      ['ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。',
-      '`save-buffers-kill-terminal` は, 窓を閉じる組み込みを足してから移す。']),
+      '`save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。']),
     (10, 'ウィンドウ',
-     ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) を操作する組み込みを使う。']),
+     ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。']),
     (11, 'ヘルプ, xref, info',
      ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。']),
     (12, '入れない',

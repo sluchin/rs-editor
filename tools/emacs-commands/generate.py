@@ -159,7 +159,8 @@ def plan_lines(essential, all_commands, rs):
         counts[int(cell)][0] += 1
         counts[int(cell)][1 if c not in rs else 2] += 1
     lines = ['### 実装の計画 (エディタの基本のコマンドを Lisp で書く)', '']
-    lines.append('エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。'
+    lines.append('エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと'
+                 '(そのため, 段階 1 で, エディタの核を Rust に作る)。'
                  '下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。'
                  '段階は番号の順に進める (1 は土台で, 2 以降の前提)。'
                  'TypeScript で書いてあるコマンドは, Lisp に移したら TypeScript の方を消す。')
