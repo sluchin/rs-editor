@@ -102,8 +102,7 @@ fn run(ev: &Evaluator, host: &EditorHost<FakeUi>, row: &Row, pos: usize) -> Json
 
 #[test]
 fn test_against_emacs() {
-    let table: Vec<(String, String, String, Vec<String>, Vec<Json>)> =
-        serde_json::from_str(include_str!("replace.json")).unwrap();
+    let table: Vec<Row> = serde_json::from_str(include_str!("replace.json")).unwrap();
     assert!(table.len() > 100);
     let ev = Evaluator::new();
     let host = EditorHost::new(Editor::new(), FakeUi::default());

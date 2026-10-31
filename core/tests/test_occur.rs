@@ -31,10 +31,12 @@ impl Host for FakeUi {
     }
 }
 
+/// (本文, 正規表現, 行数, 期待する *Occur* の本文, 期待するメッセージ)
+type Case = (String, String, Option<i64>, Option<String>, Option<String>);
+
 #[test]
 fn test_against_emacs() {
-    let table: Vec<(String, String, Option<i64>, Option<String>, Option<String>)> =
-        serde_json::from_str(include_str!("occur.json")).unwrap();
+    let table: Vec<Case> = serde_json::from_str(include_str!("occur.json")).unwrap();
     assert!(table.len() > 100);
     let ev = Evaluator::new();
     let host = EditorHost::new(Editor::new(), FakeUi::default());
