@@ -636,6 +636,40 @@ backward, also killing the preceding newline.  With 0, kill the line without its
       (kill-region begin-position end-position)
       (kill-region (simple--marker begin-position begin-position end-position) (point)))))
 
+;;; Keyboard macros
+
+(define simple--start-kbd-macro start-kbd-macro)
+(define simple--end-kbd-macro end-kbd-macro)
+
+(define-command (start-kbd-macro . args)
+  "Record subsequent keyboard input, defining a keyboard macro.
+The commands are recorded even as they are executed.
+With a prefix argument (or APPEND), append to the last macro instead of starting a new one."
+  (simple--start-kbd-macro (if (null? args) (current-prefix-arg) (car args)))
+  #f)
+
+(define-command (end-kbd-macro . args)
+  "Finish defining a keyboard macro.
+The definition was started by start-kbd-macro.  The macro is now available for use with
+call-last-kbd-macro.  With numeric arg, repeat the macro now that many times, counting the
+definition just completed as the first repetition.  An argument of zero means repeat until error."
+  (simple--end-kbd-macro)
+  (let ((n (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args))))
+    (cond ((= n 0) (execute-kbd-macro (last-kbd-macro) 0))
+          ((> n 1) (execute-kbd-macro (last-kbd-macro) (- n 1)))))
+  #f)
+
+(define-command (call-last-kbd-macro . args)
+  "Call the last keyboard macro that you defined.
+A prefix argument serves as a repeat count.  Zero means repeat until error."
+  (if (kbd-macro-defining-p)
+      (begin (simple--end-kbd-macro) (execute-kbd-macro (last-kbd-macro) 1))
+      (if (null? (last-kbd-macro))
+          (error "No kbd macro has been defined")
+          (execute-kbd-macro (last-kbd-macro)
+                             (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))))
+  #f)
+
 ;;; Case
 
 (define (simple--casify-region mode args)

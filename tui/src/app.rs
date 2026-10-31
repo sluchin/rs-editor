@@ -12,7 +12,7 @@ use rseditor_core::scheme::value::Value;
 use crate::keymap::{from_codemirror, Keymap, Lookup};
 use crate::render::{render_with, Display};
 use crate::screen::Screen;
-use crate::ui::{printable, UiHost, UiState};
+use crate::ui::{next_key, printable, UiHost, UiState};
 
 /// 基本の編集のコマンド (Lisp).
 const SIMPLE: &str = include_str!("../../lisp/simple.scm");
@@ -64,6 +64,8 @@ impl App {
             tops: BTreeMap::new(),
             quit: false,
             display: Display::default(),
+            macro_keys: Default::default(),
+            macro_loop: Vec::new(),
         }));
         let ui = UiHost::new(state.clone(), editor.clone(), keymap.clone());
         let host = EditorHost::shared(editor, ui);
@@ -137,13 +139,32 @@ impl App {
     pub fn run(&mut self) {
         loop {
             self.draw();
-            let key = self.state.lock().unwrap().screen.read_key();
-            match key {
-                Some(key) => self.handle_key(&key),
+            match next_key(&self.state) {
+                Some((key, from_screen)) => {
+                    // 新しいコマンドの始めのキーは, マクロを終えるコマンドのキーを除くために, 覚える前に知らせる
+                    if self.pending.is_empty() {
+                        self.host.editor().kbd_macro.begin_command();
+                    }
+                    if from_screen {
+                        self.host.editor().kbd_macro.record(&key);
+                    }
+                    self.handle_key(&key);
+                }
                 None => break,
             }
             if self.quit() {
                 break;
+            }
+        }
+    }
+
+    /// キーボードマクロのキーが残っていれば, 全て処理します (`run` は, キーを読むときに同じ順で処理する).
+    pub fn flush_macro(&mut self) {
+        loop {
+            let key = self.state.lock().unwrap().pop_macro_key();
+            match key {
+                Some(key) => self.handle_key(&key),
+                None => break,
             }
         }
     }
@@ -297,6 +318,8 @@ impl App {
     /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.
     fn finish(&mut self, command: &str, outcome: Result<(), String>) {
         if let Err(error) = outcome {
+            // マクロは, 失敗したところで止める
+            self.state.lock().unwrap().stop_macro();
             self.say(&error);
         }
         // 区切りのための呼び出しは、失敗しない

@@ -4280,6 +4280,38 @@ msgstr ""
 "引数 N があれば, 今の行から N 行を kill する. 負なら前向きで, 前の改行も kill する. 0 なら, 改行を除いて kill する."
 
 #: lisp/simple.scm
+msgctxt "function:start-kbd-macro"
+msgid ""
+"Record subsequent keyboard input, defining a keyboard macro.\n"
+"The commands are recorded even as they are executed.\n"
+"With a prefix argument (or APPEND), append to the last macro instead of starting a new one."
+msgstr ""
+"以後のキー入力を覚えて, キーボードマクロを作る.\n"
+"実行したコマンドも覚える.\n"
+"前置引数 (か APPEND) があれば, 新しく作らず, 最後のマクロの続きに覚える."
+
+#: lisp/simple.scm
+msgctxt "function:end-kbd-macro"
+msgid ""
+"Finish defining a keyboard macro.\n"
+"The definition was started by start-kbd-macro.  The macro is now available for use with\n"
+"call-last-kbd-macro.  With numeric arg, repeat the macro now that many times, counting the\n"
+"definition just completed as the first repetition.  An argument of zero means repeat until error."
+msgstr ""
+"キーボードマクロを覚え終える.\n"
+"覚え始めたのは start-kbd-macro. マクロは call-last-kbd-macro で使える.\n"
+"数の引数があれば, 覚えたものを 1 回目と数えて, その回数だけマクロを動かす. 0 なら, 失敗するまで繰り返す."
+
+#: lisp/simple.scm
+msgctxt "function:call-last-kbd-macro"
+msgid ""
+"Call the last keyboard macro that you defined.\n"
+"A prefix argument serves as a repeat count.  Zero means repeat until error."
+msgstr ""
+"最後に覚えたキーボードマクロを動かす.\n"
+"前置引数は, 繰り返す回数. 0 なら, 失敗するまで繰り返す."
+
+#: lisp/simple.scm
 msgctxt "function:simple--casify-region"
 msgid "Convert the text between point and the mark, or between the two positions in ARGS, with MODE."
 msgstr "点とマークの間か, ARGS の 2 つの位置の間の文字を, MODE で変換する."

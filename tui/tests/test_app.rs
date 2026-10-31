@@ -505,3 +505,103 @@ fn test_highlighted_text_is_underlined() {
     let marked: String = row.iter().filter(|c| c.underline).map(|c| c.ch).collect();
     assert_eq!(marked, "bar");
 }
+
+#[test]
+fn test_keyboard_macros() {
+    let mut fx = Fixture::new();
+    // 覚えながら打った文字も入る. 終えるコマンドのキー (`C-x )`) は, マクロに入れない
+    fx.feed("C-x ( a b C-x ) C-x e C-x e");
+    fx.app.run();
+    assert_eq!(fx.text(), "ababab");
+    // 前置引数は, 繰り返す数
+    fx.feed("C-u 2 C-x e");
+    fx.app.run();
+    assert_eq!(fx.text(), "ababababab");
+}
+
+#[test]
+fn test_keyboard_macro_stops_at_the_first_error() {
+    let mut fx = Fixture::new();
+    fx.press("a b c");
+    fx.feed("C-x ( C-b C-b C-x ) C-x e C-x e C-x e C-x e");
+    fx.app.run();
+    // 3 回目の `C-b` が先頭で失敗して, マクロは止まる
+    assert_eq!(fx.point(), 0);
+    assert_eq!(fx.app.message(), "Beginning of buffer");
+    // 0 は, 失敗するまで繰り返す
+    fx.press("C-e");
+    fx.feed("C-u 0 C-x e");
+    fx.app.run();
+    assert_eq!(fx.point(), 0);
+}
+
+#[test]
+fn test_keyboard_macro_errors_and_append() {
+    let mut fx = Fixture::new();
+    fx.press("C-x e");
+    assert_eq!(fx.app.message(), "No kbd macro has been defined");
+    fx.press("C-x )");
+    assert_eq!(fx.app.message(), "Not defining kbd macro");
+    fx.press("C-x ( C-x (");
+    assert_eq!(fx.app.message(), "Already defining kbd macro");
+    // `C-x e` は, 覚えている途中なら, そこで終えて動かす
+    fx.feed("x C-x e");
+    fx.app.run();
+    assert_eq!(fx.text(), "xx");
+    // 前置引数があれば, 最後のマクロの続きに覚える
+    fx.feed("C-u C-x ( y C-x ) C-x e");
+    fx.app.run();
+    assert_eq!(fx.text(), "xxyxy");
+    // 終えるときの前置引数は, 覚えたものを 1 回目と数えた繰り返しの回数
+    fx.feed("C-x ( z C-u 2 C-x ) ");
+    fx.app.run();
+    assert_eq!(fx.text(), "xxyxyzz");
+}
+
+#[test]
+fn test_keyboard_macro_records_the_keys_read_by_commands() {
+    let mut fx = Fixture::new();
+    fx.press("a b c SPC a b c");
+    fx.press("C-a");
+    // 探す入力 (`C-s c RET`) も覚える
+    fx.feed("C-x ( C-s c RET C-x ) C-a C-x e");
+    fx.app.run();
+    assert_eq!(fx.point(), 3);
+    fx.press("C-e C-a");
+    fx.feed("C-x e");
+    fx.app.run();
+    assert_eq!(fx.point(), 3);
+}
+
+#[test]
+fn test_flush_macro_runs_the_queued_keys() {
+    let mut fx = Fixture::new();
+    fx.feed("C-x ( q C-x )");
+    fx.app.run();
+    fx.press("C-x e");
+    fx.app.flush_macro();
+    assert_eq!(fx.text(), "qq");
+    // 繰り返すマクロは, 失敗するまで続く
+    fx.press("C-u 0 C-x e C-f");
+    fx.app.flush_macro();
+    assert!(fx.text().starts_with("qq"));
+}
+
+#[test]
+fn test_execute_kbd_macro_ignores_bad_arguments() {
+    use rseditor_core::scheme::host::Host;
+    use rseditor_core::scheme::value::Value;
+    let mut fx = Fixture::new();
+    // キーの並びでなければ空, 回数が数でなければ 1 回
+    fx.app
+        .host()
+        .call("execute-kbd-macro", vec![Value::Nil, Value::Nil])
+        .unwrap();
+    fx.app.flush_macro();
+    assert_eq!(fx.text(), "");
+    // 文字列でない要素は捨てる
+    let keys = Value::List(vec![Value::Number(1.0), Value::String("a".to_string())].into());
+    fx.app.host().call("execute-kbd-macro", vec![keys]).unwrap();
+    fx.app.flush_macro();
+    assert_eq!(fx.text(), "a");
+}

@@ -7,6 +7,7 @@
 use std::collections::BTreeMap;
 
 use crate::buffer::Buffer;
+use crate::kbd_macro::KbdMacro;
 use crate::kill_ring::KillRing;
 use crate::window::{Direction, Layout};
 
@@ -47,6 +48,8 @@ pub struct Editor {
     next_window: usize,
     /// kill-ring.
     pub kill_ring: KillRing,
+    /// キーボードマクロ.
+    pub kbd_macro: KbdMacro,
     /// 前置引数.
     pub prefix_arg: Option<PrefixArg>,
     /// バッファをまたぐマークの履歴 (Emacs の `global-mark-ring`. 新しいものが先. バッファの名前と, そのバッファのマーカー).
@@ -76,6 +79,7 @@ impl Editor {
             selected: 1,
             next_window: 2,
             kill_ring: KillRing::new(),
+            kbd_macro: KbdMacro::default(),
             prefix_arg: None,
             global_mark_ring: Vec::new(),
         }

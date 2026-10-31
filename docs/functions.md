@@ -177,7 +177,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `base64url-encode-region` |  |  |  |  |  |
 | `beginning-of-line` | ◯ |  |  |  |  |
 | `buffer-enable-undo` |  |  |  |  |  |
-| `call-last-kbd-macro` | ◯ |  | 実装済み | `C-x e` | TypeScript (`src/lib/emacs.ts`) |
+| `call-last-kbd-macro` | ◯ |  | 実装済み | `C-x e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `capitalize-region` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `chmod` |  |  |  |  |  |
@@ -193,7 +193,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `encode-coding-region` |  |  |  |  |  |
-| `end-kbd-macro` | ◯ |  | 実装済み | `C-x )` | TypeScript (`src/lib/emacs.ts`) |
+| `end-kbd-macro` | ◯ |  | 実装済み | `C-x )` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `end-of-line` | ◯ |  |  |  |  |
 | `erase-buffer` |  |  |  |  |  |
 | `eval-buffer` |  |  |  |  |  |
@@ -256,7 +256,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `set-frame-height` |  |  |  |  |  |
 | `set-frame-width` |  |  |  |  |  |
 | `signal-process` |  |  |  |  |  |
-| `start-kbd-macro` | ◯ |  | 実装済み | `C-x (` | TypeScript (`src/lib/emacs.ts`) |
+| `start-kbd-macro` | ◯ |  | 実装済み | `C-x (` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `suspend-emacs` |  |  |  |  |  |
 | `top-level` |  |  |  |  |  |
 | `transpose-regions` |  |  |  |  |  |

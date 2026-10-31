@@ -3924,6 +3924,30 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:start-kbd-macro"
+msgid ""
+"Record subsequent keyboard input, defining a keyboard macro.\n"
+"The commands are recorded even as they are executed.\n"
+"With a prefix argument (or APPEND), append to the last macro instead of starting a new one."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:end-kbd-macro"
+msgid ""
+"Finish defining a keyboard macro.\n"
+"The definition was started by start-kbd-macro.  The macro is now available for use with\n"
+"call-last-kbd-macro.  With numeric arg, repeat the macro now that many times, counting the\n"
+"definition just completed as the first repetition.  An argument of zero means repeat until error."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:call-last-kbd-macro"
+msgid ""
+"Call the last keyboard macro that you defined.\n"
+"A prefix argument serves as a repeat count.  Zero means repeat until error."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--casify-region"
 msgid "Convert the text between point and the mark, or between the two positions in ARGS, with MODE."
 msgstr ""

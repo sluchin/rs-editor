@@ -12,6 +12,7 @@ pub mod editor;
 pub mod fill;
 pub mod indent;
 pub mod indent_specs;
+pub mod kbd_macro;
 pub mod kill_ring;
 pub mod paragraph;
 pub mod replace;

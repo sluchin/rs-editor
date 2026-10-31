@@ -3,7 +3,7 @@
 //! 評価器は、別のスレッドでコマンドを動かし、画面の要る操作で止まって、キーが来るのを待ちます。
 //! ここでは、その場で画面を描き、キーを読んで,答えを返します。
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use rseditor_core::editor::Editor;
@@ -26,6 +26,39 @@ pub struct UiState {
     pub quit: bool,
     /// 画面の出し方の設定.
     pub display: Display,
+    /// 打ったことにするキー (キーボードマクロを動かしているとき. 画面から読む前に, これを読む).
+    pub macro_keys: VecDeque<String>,
+    /// 失敗するまで繰り返すマクロのキー (`call-last-kbd-macro` の引数が 0 のとき).
+    pub macro_loop: Vec<String>,
+}
+
+impl UiState {
+    /// 打ったことにするキーを 1 つ取ります (繰り返すマクロは, 尽きたら始めから).
+    pub fn pop_macro_key(&mut self) -> Option<String> {
+        if self.macro_keys.is_empty() && !self.macro_loop.is_empty() {
+            self.macro_keys = self.macro_loop.iter().cloned().collect();
+        }
+        self.macro_keys.pop_front()
+    }
+
+    /// 動かしているキーボードマクロを止めます.
+    pub fn stop_macro(&mut self) {
+        self.macro_keys.clear();
+        self.macro_loop.clear();
+    }
+}
+
+/// キーを 1 つ読みます. キーボードマクロを動かしているなら, そのキー. なければ, 画面から読みます.
+///
+/// # Returns
+///
+/// キーと, 画面から読んだなら `true`. 入力が終わっていれば `None`.
+pub fn next_key(state: &Mutex<UiState>) -> Option<(String, bool)> {
+    let mut state = state.lock().unwrap();
+    if let Some(key) = state.pop_macro_key() {
+        return Some((key, false));
+    }
+    state.screen.read_key().map(|key| (key, true))
 }
 
 /// 入力の補完.
@@ -88,10 +121,12 @@ impl UiHost {
 
     /// キーを読みます. 入力が終わっていたら、失敗にする.
     fn read_key(&self) -> Result<String, String> {
-        self.state()
-            .screen
-            .read_key()
-            .ok_or_else(|| "Quit".to_string())
+        let (key, from_screen) = next_key(&self.state).ok_or_else(|| "Quit".to_string())?;
+        if from_screen {
+            // 画面から読んだキーは, マクロを覚えているなら覚える
+            self.editor.lock().unwrap().kbd_macro.record(&key);
+        }
+        Ok(key)
     }
 
     /// ミニバッファで 1 行を読みます.
@@ -286,6 +321,38 @@ impl Host for UiHost {
                     return Err("Quit".to_string());
                 }
                 Ok(Value::String(read_key_name(&key)))
+            }
+            "execute-kbd-macro" => {
+                let keys: Vec<String> = match args.first() {
+                    Some(Value::List(items)) => items
+                        .iter()
+                        .filter_map(|v| match v {
+                            Value::String(s) => Some(s.clone()),
+                            _ => None,
+                        })
+                        .collect(),
+                    _ => Vec::new(),
+                };
+                let count = match args.get(1) {
+                    Some(Value::Number(n)) => *n as usize,
+                    _ => 1,
+                };
+                let mut state = self.state();
+                if count == 0 {
+                    state.macro_loop = keys;
+                } else {
+                    // 今のマクロのキーより先に打つ
+                    let repeated: Vec<String> = keys
+                        .iter()
+                        .cloned()
+                        .cycle()
+                        .take(keys.len() * count)
+                        .collect();
+                    for key in repeated.into_iter().rev() {
+                        state.macro_keys.push_front(key);
+                    }
+                }
+                Ok(Value::Nil)
             }
             "window-body-height" => {
                 let editor = self.editor.lock().unwrap();

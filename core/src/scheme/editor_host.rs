@@ -422,6 +422,26 @@ impl<U: Host> EditorHost<U> {
                 );
                 Value::Nil
             }
+            "start-kbd-macro" => {
+                ed.kbd_macro
+                    .start(args.first().is_some_and(Value::is_non_nil))?;
+                let text = "Defining kbd macro...".to_string();
+                return Ok(Some(Outcome::Message(text, Value::Nil)));
+            }
+            "end-kbd-macro" => {
+                ed.kbd_macro.end()?;
+                let text = "Keyboard macro defined".to_string();
+                return Ok(Some(Outcome::Message(text, Value::Nil)));
+            }
+            "last-kbd-macro" => Value::List(
+                ed.kbd_macro
+                    .last()
+                    .iter()
+                    .cloned()
+                    .map(Value::String)
+                    .collect(),
+            ),
+            "kbd-macro-defining-p" => Value::Boolean(ed.kbd_macro.defining()),
             "current-kill" => {
                 let n = int(op, args, 0)?;
                 let keep = args.get(1).is_some_and(Value::is_non_nil);

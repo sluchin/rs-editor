@@ -120,6 +120,7 @@ pub const NAMES: &[&str] = &[
     "read-string",
     "read-file-name",
     "read-key",
+    "execute-kbd-macro",
     "files--write-buffer",
     "files--set-buffer-text",
     "files--revert-dired",
@@ -771,6 +772,19 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 host_args.push("allow-quit".to_string());
             }
             Ok(Value::String(read_input(machine, name, host_args)?))
+        }
+        "execute-kbd-macro" => {
+            // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら, 失敗するまで) 打ったことにする. 打つのは, 画面
+            let [keys, rest @ ..] = args.as_slice() else {
+                return Err("execute-kbd-macro expects 1 or 2 arguments".to_string());
+            };
+            let count = match rest {
+                [] => Value::Number(1.0),
+                [count] => count.clone(),
+                _ => return Err("execute-kbd-macro expects 1 or 2 arguments".to_string()),
+            };
+            machine.host.call(name, vec![keys.clone(), count])?;
+            Ok(Value::Nil)
         }
         "files--set-buffer-text" => {
             // (files--set-buffer-text TEXT MODIFIED): 今のバッファの本文を置き換える (カーソルは同じ文字の所に残り, 元に戻せる)
