@@ -56,7 +56,7 @@ fn run(
     host: &EditorHost<FakeUi>,
     steps: &[Json],
     mark: Option<usize>,
-    dialect: Dialect,
+    (dialect, tabs): (Dialect, bool),
     text: &str,
     pos: usize,
 ) -> Json {
@@ -75,6 +75,10 @@ fn run(
     let mut code = String::from(
         "(set! simple--cycle-context #f) (set! simple--interactive #t) (set! last-command #f)\n",
     );
+    code.push_str(&format!(
+        "(set! indent-tabs-mode {})\n",
+        if tabs { "#t" } else { "#f" }
+    ));
     let mut result = Ok(String::new());
     for step in steps {
         let command = step[0].as_str().unwrap();
@@ -160,12 +164,15 @@ fn test_against_emacs() {
             _ => Dialect::Fundamental,
         };
         for (pos, expected) in results.iter().enumerate() {
+            if std::env::var("TRACE").is_ok() {
+                eprintln!("TRACE {name} {text:?} {pos} {steps:?} {mark}");
+            }
             let actual = run(
                 &ev,
                 &host,
                 steps,
                 mark.as_u64().map(|m| m as usize),
-                dialect,
+                (dialect, !name.ends_with("/notabs")),
                 text,
                 pos,
             );
@@ -191,7 +198,7 @@ fn test_against_emacs() {
         failures
             .iter()
             .filter(|f| std::env::var("SHOW").is_ok_and(|s| f.contains(&s)))
-            .take(6)
+            .take(40)
             .cloned()
             .collect::<Vec<_>>()
             .join("\n")

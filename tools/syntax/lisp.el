@@ -20,12 +20,14 @@
 ;; 本文が動かす前と同じなら, 結果の本文は null.
 ;; コマンドは, 対話的に呼ぶ (引数は, 前置引数).
 ;; 名前は "モード:コマンド". 本文は lisp-texts.json (tests/frontend/lib/motion.json にあった本文).
-(defconst texts (append (json-read-file (expand-file-name "lisp-texts.json" (file-name-directory load-file-name))) nil))
+(defconst base-texts (append (json-read-file (expand-file-name "lisp-texts.json" (file-name-directory load-file-name))) nil))
+(defconst indent-texts (append (json-read-file (expand-file-name "lisp-indent-texts.json" (file-name-directory load-file-name))) nil))
+(defconst texts (append base-texts indent-texts))
 (defconst modes '(fundamental-mode emacs-lisp-mode scheme-mode))
 
 (defun step (cmd args &optional last) (vector cmd args last))
-(defun one (cmd args &optional mark modes kind exclude)
-  (list cmd (vector (step cmd args)) [] mark modes kind exclude))
+(defun one (cmd args &optional mark modes kind exclude tabs)
+  (list cmd (vector (step cmd args)) [] mark modes kind exclude tabs))
 
 ;; transpose-sexps は, バックスラッシュで quote した文字と, `##` `,@` の前後で, まだ Emacs と同じではない
 (defconst transpose-excluded "\\\\\\|##")
@@ -36,7 +38,10 @@
 (defconst all-modes '(fundamental-mode emacs-lisp-mode scheme-mode))
 
 ;; 本文の種類: 文章 (段落と文の命令用. 先頭の 12 個と, 空白の多い最後の 1 つ) と, 式 (それ以外)
-(defun text-kind (index) (if (or (< index 12) (= index (1- (length texts)))) 'prose 'code))
+(defun text-kind (index)
+  (cond ((>= index (length base-texts)) 'indent)
+        ((or (< index 12) (= index (1- (length base-texts)))) 'prose)
+        (t 'code)))
 
 (defconst cases
   (append
@@ -66,6 +71,16 @@
          (one "transpose-sexps" [2] nil lisp-modes 'code transpose-excluded) (one "transpose-sexps" [0] 2 lisp-modes 'code transpose-excluded)
          (one "transpose-sentences" [] nil text-modes 'prose) (one "transpose-sentences" [-1] nil text-modes 'prose)
          (one "transpose-paragraphs" [] nil text-modes 'prose) (one "transpose-paragraphs" [-1] nil text-modes 'prose)
+         (one "indent-for-tab-command" [] nil all-modes 'indent) (one "indent-for-tab-command" [] nil all-modes 'indent nil 'notabs)
+         (one "indent-region" [] 0 all-modes 'indent) (one "indent-region" [] 0 all-modes 'indent nil 'notabs)
+         (one "indent-sexp" [] nil lisp-modes 'indent) (one "newline" [] nil all-modes 'indent)
+         (one "newline" [] nil all-modes 'indent nil 'notabs)
+         (one "comment-dwim" [] nil lisp-modes 'indent "#|\\|—") (one "comment-dwim" [] nil lisp-modes 'code "#|\\|—")
+         (one "comment-line" [] nil lisp-modes 'indent "#|\\|\t")
+         (one "indent-rigidly" [2] 0 all-modes 'indent) (one "indent-rigidly" [-3] 0 all-modes 'indent nil 'notabs)
+         (one "tab-to-tab-stop" [] nil all-modes 'indent) (one "tab-to-tab-stop" [] nil all-modes 'indent nil 'notabs)
+         (one "set-fill-prefix" [] nil all-modes 'indent)
+         (one "fill-paragraph" [] nil text-modes 'prose "\f") (one "fill-paragraph" [] nil lisp-modes 'indent "\f\\|#|\\|line doc\\|more\"")
          (one "forward-page" [] nil '(fundamental-mode) 'prose) (one "forward-page" [2] nil '(fundamental-mode) 'prose)
          (one "forward-page" [-1] nil '(fundamental-mode) 'prose) (one "backward-page" [] nil '(fundamental-mode) 'prose)
          (one "mark-page" [] nil '(fundamental-mode) 'prose) (one "mark-page" [1] nil '(fundamental-mode) 'prose)
@@ -119,9 +134,10 @@
                     (dotimes (i (1+ (length text)))
                       (with-temp-buffer
                         (funcall mode)
+                        (setq indent-tabs-mode (not (nth 7 case)))
                         (insert text)
                         (push (run-steps steps [] mark (1+ i) text) per-pos)))
-                    (push (list (format "%s:%s" mode (nth 0 case)) steps [] (or mark :json-false) text (vconcat (nreverse per-pos))) results))))))
+                    (push (list (format "%s:%s%s" mode (nth 0 case) (if (nth 7 case) "/notabs" "")) steps [] (or mark :json-false) text (vconcat (nreverse per-pos))) results))))))
 
 (with-temp-file (expand-file-name (or (getenv "OUT") "lisp.json"))
   (insert (json-encode (vconcat (nreverse results)))))

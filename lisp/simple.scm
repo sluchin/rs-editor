@@ -242,10 +242,13 @@ Signal an error at the beginning of the buffer."
 Signal an error if N is negative."
   (let ((n (simple--arg args)))
     (if (< n 0) (error "Repetition argument has to be non-negative"))
-    (let loop ((n n))
-      (when (> n 0)
-        (insert "\n")
-        (loop (- n 1))))))
+    (if (and simple--interactive (null? args) (= n 1))
+        ;; キーから 1 つ入れるときは, electric-indent-mode のように字下げする
+        (newline-and-indent-op indent-tabs-mode)
+        (let loop ((n n))
+          (when (> n 0)
+            (insert "\n")
+            (loop (- n 1)))))))
 
 (define-command (open-line . args)
   "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
@@ -273,8 +276,104 @@ The new line gets the same indentation as the column of point."
       (goto-char here))))
 
 (define-command (indent-for-tab-command . args)
-  "Insert a tab character at point."
-  (insert "\t"))
+  "Indent the current line or the region, or insert whitespace at point.
+In a Lisp buffer, fix the indentation of the line; with an active region, indent the region.
+Elsewhere, move to the next indent point of the previous line (indent-relative)."
+  (if (use-region-p)
+      (indent-region (region-beginning) (region-end))
+      (indent-for-tab-op indent-tabs-mode)))
+
+(define-command (indent-region . args)
+  "Indent each nonblank line in the region (the lines from START to END).
+Without arguments, the region is used."
+  (if (null? args)
+      (indent-region (region-beginning) (region-end))
+      (begin
+        (indent-region-op (car args) (cadr args) indent-tabs-mode)
+        (set-deactivate-mark #t)
+        (message "Indenting region...done"))))
+
+(define-command (indent-sexp . args)
+  "Indent each line of the list starting just after point (Lisp buffers only)."
+  (indent-sexp-op indent-tabs-mode))
+
+(define-command (indent-rigidly . args)
+  "Indent all lines starting in the region by ARG columns (the prefix argument, default 1).
+Without START and END, the region is used."
+  (let* ((raw (simple--raw-arg (if (> (length args) 2) (cddr args) '())))
+         (n (prefix-numeric-value raw))
+         (start (if (null? args) (region-beginning) (car args)))
+         (end (if (null? args) (region-end) (cadr args))))
+    ;; 点は, 字下げの中なら, 新しい字下げの終わりへ. そうでなければ, 本文と一緒に動かす
+    (let ((target (point)))
+      (goto-char start)
+      (if (not (bolp)) (forward-line 1))
+      (let loop ((end end))
+        (when (< (point) end)
+          (let ((size (buffer-size))
+                (bol (point)))
+            (looking-at "[ \t]*")
+            (let* ((space-end (match-end 0))
+                   (blank (begin (goto-char space-end) (eolp)))
+                   (indent (current-column)))
+              (delete-region bol space-end)
+              (goto-char bol)
+              (if (not blank)
+                  (simple--indent-to (max 0 (+ indent n))))
+              (let ((delta (- (- (point) bol) (- space-end bol))))
+                (cond ((> target space-end) (set! target (+ target delta)))
+                      ((>= target bol) (set! target (point))))))
+            (forward-line 1)
+            (loop (+ end (- (buffer-size) size))))))
+      (goto-char target))))
+
+(define-command (tab-to-tab-stop . args)
+  "Insert whitespace at point, then move to the next tab stop (a multiple of 8 columns)."
+  (let ((next (* (+ (quotient (current-column) 8) 1) 8)))
+    (simple--delete-space " \t" #t)
+    (simple--indent-to next)))
+
+(define-command (set-fill-prefix . args)
+  "Set the fill prefix to the current line up to point.
+At the beginning of a line, cancel the fill prefix."
+  (let ((prefix (buffer-substring (line-beginning-position) (point))))
+    (set! fill-prefix (if (equal? prefix "") #f prefix))
+    (if fill-prefix
+        (message (format "fill-prefix: \"%s\"" fill-prefix))
+        (message "fill-prefix canceled"))))
+
+(define-command (fill-paragraph . args)
+  "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
+  (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
+
+(define comment-column 40
+  "Column to indent a comment to.")
+
+(define-command (comment-dwim . args)
+  "Comment or uncomment the region, or insert a comment or move to the one on this line."
+  (let ((region (use-region-p)))
+    (comment-dwim-op (and region (mark)) comment-column indent-tabs-mode)
+    (if region (set-deactivate-mark #t))))
+
+(define-command (comment-line . args)
+  "Comment or uncomment the current line, then move to the next line.
+With an active region, comment or uncomment the lines it covers instead."
+  (if (use-region-p)
+      (let ((from (save-excursion (goto-char (region-beginning)) (line-beginning-position)))
+            (to (region-end)))
+        (comment-region-op from to indent-tabs-mode)
+        (set-deactivate-mark #t))
+      (let ((from (line-beginning-position))
+            (to (min (+ (line-end-position) 1) (+ (buffer-size) 1))))
+        (comment-region-op from to indent-tabs-mode)
+        (forward-line 1)
+        (back-to-indentation))))
+
+(define-command (comment-set-column . args)
+  "Set the comment column to the argument, or to the current column."
+  (let ((arg (simple--raw-arg args)))
+    (set! comment-column (if (number? arg) arg (current-column)))
+    (message (format "Comment column set to %d" comment-column))))
 
 (define-command (default-indent-new-line . args)
   "Break the line at point and delete the spaces around the break.

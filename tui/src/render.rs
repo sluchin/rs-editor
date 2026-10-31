@@ -69,6 +69,22 @@ fn wrap(line: &str, width: usize) -> Vec<Vec<char>> {
     rows
 }
 
+/// `wrap` と同じに折り返して, マスごとに, 強調する範囲 (文字の位置) の中かを返します.
+fn wrap_marks(line: &str, width: usize, spans: &[(usize, usize)]) -> Vec<Vec<bool>> {
+    let mut rows: Vec<Vec<bool>> = vec![Vec::new()];
+    let mut column = 0;
+    for (i, c) in line.chars().enumerate() {
+        let cells = cells_of(c, column);
+        column += cells.len();
+        if rows.last().unwrap().len() + cells.len() > width {
+            rows.push(Vec::new());
+        }
+        let marked = spans.iter().any(|&(from, to)| from <= i && i < to);
+        rows.last_mut().unwrap().extend(vec![marked; cells.len()]);
+    }
+    rows
+}
+
 /// 行の先頭の空白の桁の数.
 fn indentation(line: &str) -> usize {
     let mut column = 0;
@@ -229,12 +245,22 @@ pub fn render_with(
         let mut line = *top;
         while row < text_rows && line < buffer.line_count() {
             let text = buffer.line_text(line);
+            let marks = wrap_marks(&text, width, &buffer.highlighted_spans(line));
             for (i, cells) in rows_for(&text, width, display).into_iter().enumerate() {
                 if row >= text_rows {
                     break;
                 }
                 for (x, ch) in cells.into_iter().enumerate().take(width) {
-                    frame.cells[y0 + row][x0 + x] = Cell { ch, reverse: false };
+                    let underline = marks
+                        .get(i)
+                        .and_then(|m| m.get(x))
+                        .copied()
+                        .unwrap_or(false);
+                    frame.cells[y0 + row][x0 + x] = Cell {
+                        ch,
+                        reverse: false,
+                        underline,
+                    };
                 }
                 if is_selected && line == point_line && i == in_cursor_row {
                     // 切った行では, 窓の端より先のカーソルは, 端に置く
@@ -245,7 +271,11 @@ pub fn render_with(
             line += 1;
         }
         for (x, ch) in mode_line(buffer, width).chars().take(width).enumerate() {
-            frame.cells[y1 - 1][x0 + x] = Cell { ch, reverse: true };
+            frame.cells[y1 - 1][x0 + x] = Cell {
+                ch,
+                reverse: true,
+                underline: false,
+            };
         }
     }
     // 最後の行: ミニバッファかエコー領域

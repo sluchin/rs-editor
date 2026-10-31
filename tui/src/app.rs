@@ -17,6 +17,10 @@ use crate::ui::{printable, UiHost, UiState};
 /// 基本の編集のコマンド (Lisp).
 const SIMPLE: &str = include_str!("../../lisp/simple.scm");
 
+/// 置換と探すコマンド (Lisp. `simple.scm` の後に読む).
+const REPLACE: &str = include_str!("../../lisp/replace.scm");
+const ISEARCH: &str = include_str!("../../lisp/isearch.scm");
+
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -61,6 +65,8 @@ impl App {
         let host = EditorHost::shared(editor, ui);
         let evaluator = Evaluator::new();
         evaluator.eval_with(SIMPLE, &host)?;
+        evaluator.eval_with(REPLACE, &host)?;
+        evaluator.eval_with(ISEARCH, &host)?;
         let app = App {
             host,
             evaluator,

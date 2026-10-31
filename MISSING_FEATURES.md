@@ -7,12 +7,12 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **カーソル移動**
 - C-f, C-b - 前後に移動
-- C-n, C-p - 上下に移動 (続けて押すあいだ, 桁を保つ)
+- C-n, C-p - 上下に移動 (続けて押すあいだ、桁を保つ)
 - C-a, C-e - 行の開始・末尾
 - M-f, M-b - 単語単位の移動
 - M-<, M-> - バッファの先頭・末尾
 - C-v, M-v - ページ単位のスクロール
-- C-l - 画面を中央にスクロール (続けて押すと, 上, 下)
+- C-l - 画面を中央にスクロール (続けて押すと、上、下)
 - M-g g - 指定行へジャンプ
 - M-m - 行の字下げの後ろへ（back-to-indentation）
 - M-{, M-} - 段落の移動（backward-paragraph, forward-paragraph）
@@ -56,13 +56,13 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-SPC - マーク設定（移動で範囲が広がる。transient-mark-mode）
 - C-x C-x - カーソルとマークの入れ替え
 - C-x h - バッファ全体選択
-- M-@, C-M-SPC, C-M-h - 単語, S 式, defun を選ぶ（mark-word, mark-sexp, mark-defun）
+- M-@, C-M-SPC, C-M-h - 単語、S 式、defun を選ぶ（mark-word, mark-sexp, mark-defun）
 
 **検索と置換**
 - C-s, C-r - 前方・後方検索（isearch）
 - C-M-s, C-M-r - 正規表現の検索
-- isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み, 検索の履歴（isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance）
-- M-%, C-M-% - 置換（query-replace, query-replace-regexp）. M-x replace-string, replace-regexp
+- isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み、検索の履歴（isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance）
+- M-%, C-M-% - 置換（query-replace, query-replace-regexp）。 M-x replace-string, replace-regexp
 
 **ファイル操作**
 - C-x C-f - ファイルを開く（find-file。Tab でファイルの名前を補完）
@@ -71,8 +71,8 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-x C-v - 別のファイルを開き直す（find-alternate-file）
 - C-x i - ファイルの中身を入れる（insert-file）
 - C-x s - 変更したバッファを保存（save-some-buffers）
-- M-x revert-buffer, M-x recover-this-file - ファイル, 自動保存のファイルから読み直す
-- 自動保存（`#名前#`）と, バックアップ（`名前~`）
+- M-x revert-buffer, M-x recover-this-file - ファイル、自動保存のファイルから読み直す
+- 自動保存（`#名前#`）と、バックアップ（`名前~`）
 - C-x d - ディレクトリの一覧（dired。一覧を出すだけ）
 
 **バッファ管理**
@@ -83,14 +83,14 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **ウィンドウ**
 - C-x 2, C-x 3 - ウィンドウを分ける
-- C-x o, C-x 0, C-x 1 - ウィンドウを移る, 消す, ほかを消す
+- C-x o, C-x 0, C-x 1 - ウィンドウを移る、消す、ほかを消す
 
 **Lisp**
 - C-x C-e, M-: - 式の評価（eval-last-sexp, eval-expression）
-- 初期設定ファイル（`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`, `~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load, require, load-path
+- 初期設定ファイル（`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`、`~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load, require, load-path
 - 色とフォント（set-background-color, set-foreground-color, set-frame-font, set-face-attribute）
 - howm（`lisp/howm.scm`。`(require 'howm)` で読む。M-x howm, C-c , ,）
-- ERT（`ert-deftest`, `should`, `M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`）
+- ERT（`ert-deftest`、`should`、`M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`）
 
 **検索とプロジェクト**
 - M-x grep（外のコマンドを使わず、エディタが探す）、`*grep*` の RET（compile-goto-error）、M-g n, M-g p, C-x `（next-error, previous-error）
@@ -119,7 +119,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 |------|---------|------|
 | `C-x r c` / `C-x r o` / `C-x r M-w` など | clear-rectangle など | そのほかの矩形の操作 |
 | `C-x SPC` | rectangle-mark-mode | 矩形を選ぶ |
-| `C-x r SPC` / `C-x r j` / `C-x r r` / `C-x r n` / `C-x r +` | point-to-register など | 位置, 矩形, 数のレジスタ |
+| `C-x r SPC` / `C-x r j` / `C-x r r` / `C-x r n` / `C-x r +` | point-to-register など | 位置、矩形、数のレジスタ |
 | `C-x r l` | bookmark-bmenu-list | ブックマークの一覧 |
 | `C-x n n` / `C-x n w` | narrow-to-region / widen | ナローイング |
 
@@ -136,8 +136,8 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 |------|---------|------|
 | `C-x ^` / `C-x {` / `C-x }` / `C-x +` | enlarge-window など | ウィンドウの大きさ |
 | `C-M-v` | scroll-other-window | ほかのウィンドウをスクロール |
-| `C-x 4 ...` / `C-x 5 ...` | find-file-other-window など | ほかのウィンドウ, フレームで開く |
-| dired の中のキー | dired-find-file など | dired での, ファイルを開く, マーク, 削除, コピーなど（`C-x d` は, 一覧を出すだけ） |
+| `C-x 4 ...` / `C-x 5 ...` | find-file-other-window など | ほかのウィンドウ、フレームで開く |
+| dired の中のキー | dired-find-file など | dired での、ファイルを開く、マーク、削除、コピーなど（`C-x d` は、一覧を出すだけ） |
 
 ### 検索
 
@@ -150,8 +150,8 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-h f` / `C-h v` | describe-function / describe-variable | 関数, 変数の説明 |
-| `C-h m` / `C-h a` / `C-h i` | describe-mode / apropos-command / info | モードの説明, コマンドの検索, マニュアル |
+| `C-h f` / `C-h v` | describe-function / describe-variable | 関数、変数の説明 |
+| `C-h m` / `C-h a` / `C-h i` | describe-mode / apropos-command / info | モードの説明、コマンドの検索、マニュアル |
 
 ### モードとそのほか
 
@@ -159,9 +159,9 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 |------|---------|------|
 | `<insert>` | overwrite-mode | 上書き |
 | `C-x C-q` | read-only-mode | 読み込み専用 |
-| - | auto-fill-mode / display-line-numbers-mode / visual-line-mode | 自動の折り返し, 行番号, 見た目の行 |
+| - | auto-fill-mode / display-line-numbers-mode / visual-line-mode | 自動の折り返し、行番号、見た目の行 |
 | `C-x C-+` / `C-x C--` | text-scale-adjust | 文字の大きさ |
-| - | shell / eshell / compile / rgrep | 外部のプログラム (`grep` は, 実装済み) |
+| - | shell / eshell / compile / rgrep | 外部のプログラム (`grep` は、実装済み) |
 | `C-x v ...` | vc-* | バージョン管理 |
 | `M-$` | ispell-word | 綴りの確かめ |
 
@@ -169,16 +169,16 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 ## 削除された機能
 
-括弧の自動補完は IDE 固有の機能で, Emacs の既定には無い。括弧の強調は, Emacs の既定 (show-paren-mode) なので, 作り直した。
+括弧の自動補完は IDE 固有の機能で、Emacs の既定には無い。括弧の強調は、Emacs の既定 (show-paren-mode) なので、作り直した。
 
 **削除したもの:**
-- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Lisp のモード (`lispMode.ts`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく, 色を付ける)
-- ❌ **括弧マッチハイライト** (`findMatchingBracket`, `findUnmatchedClose` from `bracketMatch.ts`) - Emacs の show-paren-mode と同じく, `showParen.ts` で作り直した
+- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Lisp のモード (`lispMode.ts`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく、色を付ける)
+- ❌ **括弧マッチハイライト** (`findMatchingBracket`、`findUnmatchedClose` from `bracketMatch.ts`) - Emacs の show-paren-mode と同じく、`showParen.ts` で作り直した
 - ❌ **括弧自動補完** (`bracketAutoClose.ts`) - IDE 固有機能
 - ❌ **REPL コンポーネント** (`REPL.tsx`) - 評価は Emacs と同じく `C-x C-e` と `M-:` で行い、結果をミニバッファに出す
 
 **保持したもの:**
-- ✅ **S-expression ナビゲーション** (`forwardSexp`, `backwardSexp`, `killSexp`) - Emacs Lisp に対応する機能
+- ✅ **S-expression ナビゲーション** (`forwardSexp`、`backwardSexp`、`killSexp`) - Emacs Lisp に対応する機能
 
 ---
 
@@ -187,6 +187,6 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
 
 次の候補は、よく使い、手間の小さいものから:
-1. Lisp の移動: `C-M-n`, `C-M-p`
-2. ヘルプ: `C-h f`, `C-h v`
-3. Dired の中のキー（`RET` で開く, `^` で親へ, `g` で作り直す）
+1. Lisp の移動: `C-M-n`、`C-M-p`
+2. ヘルプ: `C-h f`、`C-h v`
+3. Dired の中のキー（`RET` で開く、`^` で親へ、`g` で作り直す）

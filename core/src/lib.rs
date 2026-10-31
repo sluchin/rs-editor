@@ -6,9 +6,14 @@
 
 pub mod atomic;
 pub mod buffer;
+pub mod comment;
 pub mod editor;
+pub mod fill;
+pub mod indent;
+pub mod indent_specs;
 pub mod kill_ring;
 pub mod paragraph;
+pub mod replace;
 pub mod scheme;
 pub mod search;
 pub mod sexp;

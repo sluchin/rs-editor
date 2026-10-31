@@ -1,0 +1,16 @@
+[
+"(defun foo (a b)\n\"doc\"\n(let ((x 1)\n(y 2))\n(if x\n(bar x)\n(baz y))))\n",
+"(define (f x)\n  (cond ((> x 0)\n  'pos)\n((< x 0) 'neg)\n(else\n'zero)))\n(f 1)\n",
+"(let loop ((i 0))\n(when (< i 3)\n(display i)\n(loop (+ i 1))))\n",
+";;; Title\n;; comment\n; one\n(foo   ; trailing\n bar\n  ;; inner\n baz)\n",
+"(with-current-buffer b\n(save-excursion\n(goto-char (point-min))\n(while (re-search-forward \"x\" nil t)\n(replace-match \"y\"))))\n",
+"(foo (bar\n1 2)\n(baz 3\n4)\n    5)\n\n(qux\n)\n",
+"(a\n\t(b\n\t\tc)\n    d)\n  (e)\n",
+"(setq x '(1\n2\n3)\ny `(,a\n,@b))\n",
+"(define-syntax swap!\n(syntax-rules ()\n((_ a b)\n(let ((tmp a))\n(set! a b)\n(set! b tmp)))))\n",
+"(defun g ()\n  \"multi\nline doc\n   keeps\"\n(foo\n\"str\nmore\" bar\nbaz))\n",
+"(dolist (x list)\n(print x)\n(print\nx))\n(condition-case err\n(foo)\n(error (bar err)))\n",
+"(lambda (x)\nx)\n(do ((i 0 (+ i 1)))\n((= i 3))\n(display i))\n#| block\n  comment |#\n(f\n#(1 2)\n#;(skip me)\nx)\n",
+"plain text\n  indented line\n\n    more\n\tTabbed\nlast line",
+"  (foo\n bar)\n(a b\n   c\n)\n"
+]

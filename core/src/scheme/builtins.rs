@@ -760,12 +760,17 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             }))
         }
         "read-key" => {
-            // (read-key [PROMPT]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの)
-            if args.len() > 1 {
-                return Err("read-key expects 0 or 1 arguments".to_string());
+            // (read-key [PROMPT [ALLOW-QUIT]]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの).
+            // ALLOW-QUIT が真なら, C-g も, 失敗にせず, キー ("C-g") として返す (isearch が使う)
+            if args.len() > 2 {
+                return Err("read-key expects 0 to 2 arguments".to_string());
             }
             let prompt = optional_string(name, args.first())?;
-            Ok(Value::String(read_input(machine, name, vec![prompt])?))
+            let mut host_args = vec![prompt];
+            if args.get(1).is_some_and(Value::is_non_nil) {
+                host_args.push("allow-quit".to_string());
+            }
+            Ok(Value::String(read_input(machine, name, host_args)?))
         }
         "files--set-buffer-text" => {
             // (files--set-buffer-text TEXT MODIFIED): 今のバッファの本文を置き換える (カーソルは同じ文字の所に残り, 元に戻せる)

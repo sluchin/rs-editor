@@ -25,14 +25,14 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 | `M->` | end-of-buffer | バッファの末尾へ |
 | `C-v` | scroll-up-command | 1 画面先へ (カーソルの行を画面の上に) |
 | `M-v` | scroll-down-command | 1 画面前へ (カーソルの行を画面の下に) |
-| `C-l` | recenter-top-bottom | カーソルの行を画面の中央へ (続けて押すと, 上, 下の順) |
+| `C-l` | recenter-top-bottom | カーソルの行を画面の中央へ (続けて押すと、上、下の順) |
 | `M-g g` / `M-g M-g` | goto-line | 入れた行へ移動 |
 | `M-m` | back-to-indentation | 行の字下げの後ろへ |
-| `M-}` / `M-{` | forward-paragraph / backward-paragraph | 次の段落の後ろ・前の段落の前へ（段落は, 空白だけの行で分ける。scheme-mode では空の行だけ） |
-| `M-e` / `M-a` | forward-sentence / backward-sentence | 文の終わり・始めへ（文の終わりは, `.` などの後に空白 2 つか行の終わり。`。` などは, そのまま。段落の終わりも文の終わり） |
-| `C-x C-n` | set-goal-column | 今の桁を, 上下に移るときの桁にする（`C-u C-x C-n` で止める） |
+| `M-}` / `M-{` | forward-paragraph / backward-paragraph | 次の段落の後ろ・前の段落の前へ（段落は、空白だけの行で分ける。scheme-mode では空の行だけ） |
+| `M-e` / `M-a` | forward-sentence / backward-sentence | 文の終わり・始めへ（文の終わりは、`.` などの後に空白 2 つか行の終わり。`。` などは、そのまま。段落の終わりも文の終わり） |
+| `C-x C-n` | set-goal-column | 今の桁を、上下に移るときの桁にする（`C-u C-x C-n` で止める） |
 
-`C-n` / `C-p` は, 続けて押すあいだ, 始めの桁を保ちます.
+`C-n` / `C-p` は、続けて押すあいだ、始めの桁を保ちます。
 
 ## S式移動（Scheme 特化）
 
@@ -40,11 +40,11 @@ rs-editor のキーバインド（ショートカット）一覧です。Emacs �
 |------|---------|------|
 | `C-M-f` | forward-sexp | 次の S 式へ移動 |
 | `C-M-b` | backward-sexp | 前の S 式へ移動 |
-| `C-M-u` | backward-up-list | 外のリストの始めへ（文字列の中では, 文字列の中のリストを見て, 無ければ文字列の始めへ）。`M-x up-list` は外のリストの終わりへ |
+| `C-M-u` | backward-up-list | 外のリストの始めへ（文字列の中では、文字列の中のリストを見て、無ければ文字列の始めへ）。`M-x up-list` は外のリストの終わりへ |
 | `C-M-d` | down-list | 次のリストの中へ |
 | `C-M-a` / `C-M-e` | beginning-of-defun / end-of-defun | defun（行の始めの開く括弧から始まる式）の始め・終わりへ |
 
-S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme-mode）で読みます。文字列とコメント（`;`, Scheme の `#| |#`）の中の括弧は数えません。括弧が合わなければ, 動かずに知らせます（`No next sexp` など）。
+S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, scheme-mode）で読みます。文字列とコメント（`;`, Scheme の `#| |#`）の中の括弧は数えません。括弧が合わなければ、動かずに知らせます（`No next sexp` など）。
 
 ## 削除・編集
 
@@ -85,45 +85,45 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `RET` / `C-m` | newline | 改行して, 新しい行を字下げする（前の行の字下げも直し, 前の行の終わりの空白を消す. Emacs の electric-indent-mode） |
+| `RET` / `C-m` | newline | 改行して、新しい行を字下げする（前の行の字下げも直し、前の行の終わりの空白を消す。 Emacs の electric-indent-mode） |
 | `C-j` | electric-newline-and-maybe-indent | 改行だけを入れる（字下げしない） |
-| `TAB` / `C-i` | indent-for-tab-command | 行を字下げする（リージョンがあれば, リージョンの行を）. Fundamental モードでは, 前の行の次の字下げの位置まで空白を入れる |
-| `C-M-q` | indent-sexp | カーソルの後ろの S 式の, 2 行目からを字下げする（Lisp だけ） |
+| `TAB` / `C-i` | indent-for-tab-command | 行を字下げする（リージョンがあれば、リージョンの行を）。 Fundamental モードでは、前の行の次の字下げの位置まで空白を入れる |
+| `C-M-q` | indent-sexp | カーソルの後ろの S 式の、2 行目からを字下げする（Lisp だけ） |
 | `C-M-\` | indent-region | リージョンの行を字下げする |
 
-字下げは, Emacs 30 の scheme-mode と emacs-lisp-mode と同じです（`lisp-indent-function` の指定, コメントの `;` と `;;` と `;;;`）。Emacs の既定のとおり, タブを使い, タブの幅は 8 です。ファイルの 1 行目の `-*- indent-tabs-mode: nil; tab-width: 4 -*-` で変えられます。
+字下げは、Emacs 30 の scheme-mode と emacs-lisp-mode と同じです（`lisp-indent-function` の指定、コメントの `;` と `;;` と `;;;`）。Emacs の既定のとおり、タブを使い、タブの幅は 8 です。ファイルの 1 行目の `-*- indent-tabs-mode: nil; tab-width: 4 -*-` で変えられます。
 
-カーソルの前の閉じる括弧か, 後ろの開く括弧と, 対になる括弧に色を付けます（Emacs の show-paren-mode）。対が無いか, 括弧の種類が違えば, 紫にします。
+カーソルの前の閉じる括弧か、後ろの開く括弧と、対になる括弧に色を付けます（Emacs の show-paren-mode）。対が無いか、括弧の種類が違えば、紫にします。
 
-続けてキルすると（`C-k C-k` など）, kill-ring の 1 つの項目につなげます。kill-ring は, 全てのバッファで共通です。
+続けてキルすると（`C-k C-k` など）、kill-ring の 1 つの項目につなげます。kill-ring は、全てのバッファで共通です。
 
 ## リージョン選択
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-SPC` | set-mark-command | マークを置く（移動すると, マークからカーソルまでが選ばれる） |
+| `C-SPC` | set-mark-command | マークを置く（移動すると、マークからカーソルまでが選ばれる） |
 | `C-x C-x` | exchange-point-and-mark | カーソルとマークを入れ替え |
 | `C-x h` | mark-whole-buffer | バッファ全体を選択 |
-| `M-@` | mark-word | 次の単語の終わりにマークを置く（続けると, リージョンを延ばす） |
-| `C-M-SPC` | mark-sexp | 次の S 式の終わりにマークを置く（続けると, リージョンを延ばす） |
-| `C-M-h` | mark-defun | defun を選ぶ（前のコメントと空の行も。続けると, 次の defun まで延ばす） |
+| `M-@` | mark-word | 次の単語の終わりにマークを置く（続けると、リージョンを延ばす） |
+| `C-M-SPC` | mark-sexp | 次の S 式の終わりにマークを置く（続けると、リージョンを延ばす） |
+| `C-M-h` | mark-defun | defun を選ぶ（前のコメントと空の行も。続けると、次の defun まで延ばす） |
 | `C-g` | keyboard-quit | マークを外す |
 
-本文を書き換えると, マークは外れます（Emacs の transient-mark-mode）。
+本文を書き換えると、マークは外れます（Emacs の transient-mark-mode）。
 
 ## 矩形・レジスタ・ブックマーク
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-x r k` | kill-rectangle | マークとカーソルを角とする矩形を消して, 覚える（kill-ring には入れない） |
-| `C-x r y` | yank-rectangle | 最後に消した矩形を, カーソルを左上の角として入れる |
-| `C-x r t` | string-rectangle | 矩形の各行を, ミニバッファで入力した文字で置き換える |
-| `C-x r s` / `C-x r x` | copy-to-register | リージョンを, 次に押す文字のレジスタに入れる |
-| `C-x r i` / `C-x r g` | insert-register | 次に押す文字のレジスタの中身を入れる（カーソルは, 入れた文字の前） |
-| `C-x r m` | bookmark-set | ファイルの今の位置に, 名前を付けて覚える（既定の名前は, ファイルの名前） |
-| `C-x r b` | bookmark-jump | ブックマークのファイルを開いて, 位置へ動く（Tab で名前を補完） |
+| `C-x r k` | kill-rectangle | マークとカーソルを角とする矩形を消して、覚える（kill-ring には入れない） |
+| `C-x r y` | yank-rectangle | 最後に消した矩形を、カーソルを左上の角として入れる |
+| `C-x r t` | string-rectangle | 矩形の各行を、ミニバッファで入力した文字で置き換える |
+| `C-x r s` / `C-x r x` | copy-to-register | リージョンを、次に押す文字のレジスタに入れる |
+| `C-x r i` / `C-x r g` | insert-register | 次に押す文字のレジスタの中身を入れる（カーソルは、入れた文字の前） |
+| `C-x r m` | bookmark-set | ファイルの今の位置に、名前を付けて覚える（既定の名前は、ファイルの名前） |
+| `C-x r b` | bookmark-jump | ブックマークのファイルを開いて、位置へ動く（Tab で名前を補完） |
 
-矩形の桁は, タブを `tab-width` の倍数まで, 全角の文字を 2 桁と数えます。ブックマークは `~/.config/rseditor/bookmarks` に保存し, 次に起動したときも使えます。
+矩形の桁は、タブを `tab-width` の倍数まで、全角の文字を 2 桁と数えます。ブックマークは `~/.config/rseditor/bookmarks` に保存し、次に起動したときも使えます。
 
 ## 検索
 
@@ -133,50 +133,50 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-r` | isearch-backward | 後方に検索 |
 | `C-M-s` | isearch-forward-regexp | 正規表現で前方に検索 |
 | `C-M-r` | isearch-backward-regexp | 正規表現で後方に検索 |
-| `C-s` （検索中） | 次のマッチへ | 検索結果の次へ（探す文字が空なら, 最後に探した文字で探す） |
-| `C-w` （検索中） | isearch-yank-word-or-char | カーソルの後ろの単語（単語でなければ 1 文字）を, 探す文字に足す |
-| `M-y` （検索中） | isearch-yank-pop-only | 最後にキルした文字を, 探す文字に足す（続けると, 1 つ古いキルした文字に替える） |
-| `M-p` / `M-n` （検索中） | isearch-ring-retreat / isearch-ring-advance | 検索の履歴の, 古い方・新しい方の文字で探す |
+| `C-s` （検索中） | 次のマッチへ | 検索結果の次へ（探す文字が空なら、最後に探した文字で探す） |
+| `C-w` （検索中） | isearch-yank-word-or-char | カーソルの後ろの単語（単語でなければ 1 文字）を、探す文字に足す |
+| `M-y` （検索中） | isearch-yank-pop-only | 最後にキルした文字を、探す文字に足す（続けると、1 つ古いキルした文字に替える） |
+| `M-p` / `M-n` （検索中） | isearch-ring-retreat / isearch-ring-advance | 検索の履歴の、古い方・新しい方の文字で探す |
 | `C-g` （検索中） | quit | 検索をキャンセル |
 
-正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。`C-w` と `M-y` で足した文字は, 正規表現の検索でも, そのまま合います。
-検索の履歴は, 文字と正規表現で別です（16 個まで. `RET` で確定した文字を覚え, `C-g` でやめた文字は覚えない）。
+正規表現は JavaScript の書き方です（`^` と `$` は行の始めと終わり）。`C-w` と `M-y` で足した文字は、正規表現の検索でも、そのまま合います。
+検索の履歴は、文字と正規表現で別です（16 個まで。 `RET` で確定した文字を覚え、`C-g` でやめた文字は覚えない）。
 
 ### grep（ファイルから探す）
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-x grep` | grep | 正規表現とディレクトリを聞き, ディレクトリの下（深くまで）のファイルから探して, 結果を `*grep*` バッファに出す（外のコマンドは使わない） |
-| `RET` （`*grep*`） | compile-goto-error | その行のファイルを, ほかのウィンドウに開く |
+| `M-x grep` | grep | 正規表現とディレクトリを聞き、ディレクトリの下（深くまで）のファイルから探して、結果を `*grep*` バッファに出す（外のコマンドは使わない） |
+| `RET` （`*grep*`） | compile-goto-error | その行のファイルを、ほかのウィンドウに開く |
 | `M-g n` / `M-g M-n` / `` C-x ` `` | next-error | 次の合った行へ |
 | `M-g p` / `M-g M-p` | previous-error | 前の合った行へ |
 
-正規表現は Rust の regex の書き方です。大文字が無ければ, 大文字と小文字を区別しません。`.` で始まるディレクトリ, `node_modules`, `target` と, 文字のファイルでないものは探しません。
+正規表現は Rust の regex の書き方です。大文字が無ければ、大文字と小文字を区別しません。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは探しません。
 
 ## 置換
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-%` | query-replace | カーソルから後ろを, 1 つずつ聞いて置き換える |
-| `C-M-%` | query-replace-regexp | 正規表現で, 1 つずつ聞いて置き換える |
-| （`M-x`） | replace-string | カーソルから後ろを, 全て置き換える |
-| （`M-x`） | replace-regexp | 正規表現で, 全て置き換える |
+| `M-%` | query-replace | カーソルから後ろを、1 つずつ聞いて置き換える |
+| `C-M-%` | query-replace-regexp | 正規表現で、1 つずつ聞いて置き換える |
+| （`M-x`） | replace-string | カーソルから後ろを、全て置き換える |
+| （`M-x`） | replace-regexp | 正規表現で、全て置き換える |
 
-1 つずつ聞くときは, `y` / `SPC` で置き換え, `n` / `DEL` で飛ばし, `!` で残りを全て置き換え, `.` で置き換えて終え, `q` / `RET` で終えます（`C-g` で取り消し）。
-置き換える文字では, `\&`（合った全体）と `\1` から `\9`（グループ）を使えます。
+1 つずつ聞くときは、`y` / `SPC` で置き換え、`n` / `DEL` で飛ばし、`!` で残りを全て置き換え、`.` で置き換えて終え、`q` / `RET` で終えます（`C-g` で取り消し）。
+置き換える文字では、`\&`（合った全体）と `\1` から `\9`（グループ）を使えます。
 
 ## 前置引数とキーボードマクロ
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-u` | universal-argument | 次のコマンドを 4 回（続けて押すと 16 回, 後に数字を押すとその回数）繰り返す |
-| `M-0` から `M-9` | digit-argument | 次のコマンドを, その数だけ繰り返す |
+| `C-u` | universal-argument | 次のコマンドを 4 回（続けて押すと 16 回、後に数字を押すとその回数）繰り返す |
+| `M-0` から `M-9` | digit-argument | 次のコマンドを、その数だけ繰り返す |
 | `C-x (` | start-kbd-macro | キーボードマクロの記録を始める |
 | `C-x )` | end-kbd-macro | 記録を終える |
 | `C-x e` | call-last-kbd-macro | 記録したマクロを実行する（`C-u 3 C-x e` で 3 回） |
 
-前置引数の後の, 割り当てのない文字は, その数だけ入れます（`C-u 3 a` で `aaa`）。ファイルやバッファなど, 画面のコマンドは, 繰り返しません。
-キーボードマクロは, エディタで押したキーを記録します。ミニバッファに入力した文字は, 記録しません。
+前置引数の後の、割り当てのない文字は、その数だけ入れます（`C-u 3 a` で `aaa`）。ファイルやバッファなど、画面のコマンドは、繰り返しません。
+キーボードマクロは、エディタで押したキーを記録します。ミニバッファに入力した文字は、記録しません。
 
 ## ファイル操作
 
@@ -185,15 +185,15 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-x C-f` | find-file | ファイルを開く |
 | `C-x C-s` | save-buffer | ファイルを保存 |
 | `C-x C-w` | write-file | 別のファイルに保存（ほかのファイルを置き換えるときは、聞く） |
-| `C-x C-v` | find-alternate-file | 選んでいるバッファを, 別のファイルを開いたバッファに置き換える（書き換えていれば, 聞く） |
-| `C-x i` | insert-file | ファイルの中身を, カーソルの位置に入れる |
-| `C-x s` | save-some-buffers | 変更したファイルのバッファを, 1 つずつ保存するか聞く（`y` / `SPC`, `n` / `DEL`, `!` で残りを全て, `.` で保存して終える, `q` / `RET` で終える） |
-| （`M-x`） | revert-buffer | ファイルから読み直す（聞いてから。dired のバッファは, 聞かずに一覧を作り直す） |
+| `C-x C-v` | find-alternate-file | 選んでいるバッファを、別のファイルを開いたバッファに置き換える（書き換えていれば、聞く） |
+| `C-x i` | insert-file | ファイルの中身を、カーソルの位置に入れる |
+| `C-x s` | save-some-buffers | 変更したファイルのバッファを、1 つずつ保存するか聞く（`y` / `SPC`、`n` / `DEL`、`!` で残りを全て、`.` で保存して終える、`q` / `RET` で終える） |
+| （`M-x`） | revert-buffer | ファイルから読み直す（聞いてから。dired のバッファは、聞かずに一覧を作り直す） |
 | （`M-x`） | recover-this-file | 自動保存のファイルから読み直す |
 
-ファイルのバッファは, 書き換えが 30 秒止まると, 同じディレクトリの `#名前#` に自動保存します（保存すると消す）。
-開いたファイルの自動保存のファイルの方が新しければ, 開いたときに知らせます。
-開いてから始めて保存するときは, 前の版を `名前~` に写します（バックアップ）。
+ファイルのバッファは、書き換えが 30 秒止まると、同じディレクトリの `#名前#` に自動保存します（保存すると消す）。
+開いたファイルの自動保存のファイルの方が新しければ、開いたときに知らせます。
+開いてから始めて保存するときは、前の版を `名前~` に写します（バックアップ）。
 ## バッファ管理
 
 | キー | コマンド | 説明 |
@@ -201,9 +201,9 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-x b` | switch-to-buffer | バッファを切り替え |
 | `C-x k` | kill-buffer | 現在のバッファを閉じる |
 | `C-x C-b` | list-buffers | バッファ一覧を表示 |
-| `C-x C-c` | save-buffers-kill-terminal | 終了（保存していないバッファがあれば, 終わってよいか聞く） |
+| `C-x C-c` | save-buffers-kill-terminal | 終了（保存していないバッファがあれば、終わってよいか聞く） |
 
-バッファごとに, カーソルの位置と, 元に戻す履歴を覚えています。
+バッファごとに、カーソルの位置と、元に戻す履歴を覚えています。
 
 ## ウィンドウ
 
@@ -215,7 +215,7 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | `C-x 0` | delete-window | 選んでいるウィンドウを消す |
 | `C-x 1` | delete-other-windows | ほかのウィンドウを消す |
 
-同じバッファを 2 つのウィンドウに出すと, 一方での書き換えは, もう一方にも写ります（カーソルと, 元に戻す履歴は, ウィンドウごと）。
+同じバッファを 2 つのウィンドウに出すと、一方での書き換えは、もう一方にも写ります（カーソルと、元に戻す履歴は、ウィンドウごと）。
 
 ## Scheme 評価
 
@@ -228,16 +228,16 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `M-x` | execute-extended-command | コマンドを名前で実行（この一覧のコマンドの名前は, 全て使える） |
-| `TAB` （ミニバッファ） | 補完 | `M-x` のコマンドの名前, `C-x b` のバッファの名前, `C-x C-f` と保存先のファイルの名前を補完する（候補が複数なら一覧を出す） |
-| `M-p` / `M-n` （ミニバッファ） | previous-history-element / next-history-element | 入力の履歴の, 古い方・新しい方を出す（履歴は, コマンドの種類ごと。ファイルの名前は, `C-x C-f`, `C-x C-w`, `C-x d` などで共通） |
+| `M-x` | execute-extended-command | コマンドを名前で実行（この一覧のコマンドの名前は、全て使える） |
+| `TAB` （ミニバッファ） | 補完 | `M-x` のコマンドの名前、`C-x b` のバッファの名前、`C-x C-f` と保存先のファイルの名前を補完する（候補が複数なら一覧を出す） |
+| `M-p` / `M-n` （ミニバッファ） | previous-history-element / next-history-element | 入力の履歴の、古い方・新しい方を出す（履歴は、コマンドの種類ごと。ファイルの名前は、`C-x C-f`、`C-x C-w`、`C-x d` などで共通） |
 
 ## ヘルプ
 
 | キー | コマンド | 説明 |
 |------|---------|------|
-| `C-h f` | describe-function | 関数とコマンドの説明 (定義したファイル, キー, 引数, docstring) を `*Help*` に出す（`lisp/help-fns.scm`。docstring は `help-language` の言語に訳す） |
-| `C-h k` | describe-key | 次に押すキーのコマンドを, 実行せずにミニバッファに出す |
+| `C-h f` | describe-function | 関数とコマンドの説明 (定義したファイル、キー、引数、docstring) を `*Help*` に出す（`lisp/help-fns.scm`。docstring は `help-language` の言語に訳す） |
+| `C-h k` | describe-key | 次に押すキーのコマンドを、実行せずにミニバッファに出す |
 | `C-h b` | describe-bindings | キーの割り当ての一覧を `*Help*` バッファに出す（Lisp の割り当てを含む） |
 
 ## その他
@@ -245,13 +245,13 @@ S 式は, Emacs 30 の構文表（Fundamental モード, emacs-lisp-mode, scheme
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-g` | keyboard-quit | 操作をキャンセル（Quit メッセージ表示） |
-| `C-g` （ミニバッファで） | abort-minibuffers | ミニバッファの入力（`M-x`, `C-x C-f`, Lisp の `read-string` など）をやめる（Quit メッセージ表示） |
-| `C-]` | abort-recursive-edit | ミニバッファの入力をやめる（エディタに移っていても. 使っていなければ `No recursive edit is in progress`） |
-| `F8` | project-tree | 左のサイドバーに, プロジェクト（`.git` のある所）のファイルのツリーを出すか消す（ディレクトリを押すと開き, ファイルを押すと開く） |
+| `C-g` （ミニバッファで） | abort-minibuffers | ミニバッファの入力（`M-x`、`C-x C-f`, Lisp の `read-string` など）をやめる（Quit メッセージ表示） |
+| `C-]` | abort-recursive-edit | ミニバッファの入力をやめる（エディタに移っていても。使っていなければ `No recursive edit is in progress`） |
+| `F8` | project-tree | 左のサイドバーに、プロジェクト（`.git` のある所）のファイルのツリーを出すか消す（ディレクトリを押すと開き、ファイルを押すと開く） |
 
 ## Dired（ディレクトリの編集）
 
-Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor の dired は, `C-x d` でディレクトリの一覧（`ls -al`）を出すだけで, dired の中のキーは, 全て未実装です。**
+Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor の dired は、`C-x d` でディレクトリの一覧（`ls -al`）を出すだけで、dired の中のキーは、全て未実装です。**
 一覧は `M-x revert-buffer` で作り直せます。
 rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) にまとめています。
 
@@ -262,7 +262,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `C-x d` | dired | ディレクトリを開く | 実装済み（一覧を出すだけ） |
 | `C-x 4 d` | dired-other-window | 別のウィンドウでディレクトリを開く | 未実装 |
 | `C-x 5 d` | dired-other-frame | 別のフレームでディレクトリを開く | 未実装 |
-| `C-x C-j` | dired-jump | 今のファイルのディレクトリを開き, そのファイルにカーソルを合わせる | 未実装 |
+| `C-x C-j` | dired-jump | 今のファイルのディレクトリを開き、そのファイルにカーソルを合わせる | 未実装 |
 | `C-x 4 C-j` | dired-jump-other-window | `C-x C-j` を別のウィンドウで | 未実装 |
 
 ### 移動
@@ -273,7 +273,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `p` / `S-SPC` / `C-p` | dired-previous-line | 前の行へ | 未実装 |
 | `>` | dired-next-dirline | 次のディレクトリの行へ | 未実装 |
 | `<` | dired-prev-dirline | 前のディレクトリの行へ | 未実装 |
-| `j` | dired-goto-file | 名前を入れて, そのファイルの行へ | 未実装 |
+| `j` | dired-goto-file | 名前を入れて、そのファイルの行へ | 未実装 |
 | `^` | dired-up-directory | 親ディレクトリへ | 未実装 |
 | `M-}` / `* C-n` | dired-next-marked-file | 次のマークしたファイルへ | 未実装 |
 | `M-{` / `* C-p` | dired-prev-marked-file | 前のマークしたファイルへ | 未実装 |
@@ -281,28 +281,28 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `C-M-p` | dired-prev-subdir | 前のサブディレクトリの見出しへ | 未実装 |
 | `C-M-u` | dired-tree-up | 上のサブディレクトリの見出しへ | 未実装 |
 | `C-M-d` | dired-tree-down | 下のサブディレクトリの見出しへ | 未実装 |
-| `M-G` | dired-goto-subdir | 名前を入れて, そのサブディレクトリの見出しへ | 未実装 |
+| `M-G` | dired-goto-subdir | 名前を入れて、そのサブディレクトリの見出しへ | 未実装 |
 
 ### 開く・見る
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `RET` / `e` / `f` | dired-find-file | ファイルを開く（ディレクトリなら, その dired） | 未実装 |
+| `RET` / `e` / `f` | dired-find-file | ファイルを開く（ディレクトリなら、その dired） | 未実装 |
 | `o` | dired-find-file-other-window | 別のウィンドウで開く | 未実装 |
 | `C-o` | dired-display-file | 別のウィンドウに出す（カーソルは dired に残る） | 未実装 |
 | `v` | dired-view-file | 読むだけのモードで開く | 未実装 |
-| `a` | dired-find-alternate-file | dired のバッファを, 開いたファイルに置き換える（既定では無効） | 未実装 |
+| `a` | dired-find-alternate-file | dired のバッファを、開いたファイルに置き換える（既定では無効） | 未実装 |
 | `E` | dired-do-open | 外部のアプリで開く | 未実装 |
 | `W` | browse-url-of-dired-file | ブラウザで開く | 未実装 |
 | `y` | dired-show-file-type | ファイルの種類を表示（`file` コマンド） | 未実装 |
-| `i` | dired-maybe-insert-subdir | サブディレクトリの中身を, 同じバッファの下に足す | 未実装 |
+| `i` | dired-maybe-insert-subdir | サブディレクトリの中身を、同じバッファの下に足す | 未実装 |
 | `$` | dired-hide-subdir | サブディレクトリを畳む / 開く | 未実装 |
 | `M-$` | dired-hide-all | 全てのサブディレクトリを畳む / 開く | 未実装 |
 | `k` | dired-do-kill-lines | マークした行を表示から消す（ファイルは消さない） | 未実装 |
 | `l` | dired-do-redisplay | マークした行を読み直す | 未実装 |
 | `g` | revert-buffer | 一覧を読み直す | 未実装（`M-x revert-buffer` で作り直せる） |
 | `s` | dired-sort-toggle-or-edit | 名前順と日付順を切り替える | 未実装 |
-| `(` | dired-hide-details-mode | 詳細（権限, サイズ, 日付）を隠す / 出す | 未実装 |
+| `(` | dired-hide-details-mode | 詳細（権限、サイズ、日付）を隠す / 出す | 未実装 |
 | `w` | dired-copy-filename-as-kill | ファイル名を kill-ring にコピー（`C-u 0 w` でフルパス） | 未実装 |
 
 ### マーク
@@ -336,7 +336,7 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `% d` | dired-flag-files-regexp | 名前が正規表現に合うファイルにフラグ | 未実装 |
 | `% &` | dired-flag-garbage-files | 要らないファイル（`.o` など）にフラグ | 未実装 |
 
-### ファイルの操作（マークしたファイル, 無ければカーソルの行）
+### ファイルの操作（マークしたファイル、無ければカーソルの行）
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
@@ -390,31 +390,31 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 - 削除・編集（C-d, C-k, M-d, M-DEL, C-w, M-w, C-y, M-y, C-t, M-t, C-x C-t, M-u, M-l, M-c, C-o, C-/, C-x C-/, C-M-k, M-k, M-;, M-/, M-z, M-q, M-SPC, M-\, M-^, C-x C-o, C-x C-u, C-x C-l, C-q, M-=）
 - リージョン選択（C-SPC, C-x C-x, C-x h, M-@, C-M-SPC, C-M-h）
 - 矩形・レジスタ・ブックマーク（C-x r k, C-x r y, C-x r t, C-x r s, C-x r i, C-x r m, C-x r b）
-- 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）, 括弧の強調
+- 改行と字下げ（RET, C-j, TAB, C-M-q, C-M-\）、括弧の強調
 - 検索（C-s, C-r, C-M-s, C-M-r. 検索中の C-w, M-y, M-p, M-n）
 - 置換（M-%, C-M-%, replace-string, replace-regexp）
-- 前置引数（C-u, M-0 から M-9）, キーボードマクロ（C-x (, C-x ), C-x e）
-- ファイル操作（C-x C-f, C-x C-s, C-x C-w, C-x C-v, C-x i, C-x s, revert-buffer, recover-this-file）, 自動保存とバックアップ
+- 前置引数（C-u, M-0 から M-9）、キーボードマクロ（C-x (, C-x ), C-x e）
+- ファイル操作（C-x C-f, C-x C-s, C-x C-w, C-x C-v, C-x i, C-x s, revert-buffer, recover-this-file）、自動保存とバックアップ
 - バッファ管理（C-x b, C-x k, C-x C-b, C-x C-c）
 - ウィンドウ（C-x 2, C-x 3, C-x o, C-x 0, C-x 1）
 - Scheme 評価（C-x C-e, M-:）
-- コマンド実行（M-x）, ミニバッファの入力の履歴（M-p, M-n）
+- コマンド実行（M-x）、ミニバッファの入力の履歴（M-p, M-n）
 - ヘルプ（C-h f, C-h k, C-h b）
 - その他（C-g）
 
 ### 未実装
 - そのほかのヘルプ（C-h f, C-h v など）
-- Dired の中の全てのキー（C-x d は, 一覧を出すだけ）
+- Dired の中の全てのキー（C-x d は、一覧を出すだけ）
 
 ## howm (`lisp/howm.scm` を読み込んだとき)
 
-`(require 'howm)` で読みます。キーは howm と同じく, `C-c ,` に続けて押します。
+`(require 'howm)` で読みます。キーは howm と同じく、`C-c ,` に続けて押します。
 
 | キー | コマンド | 説明 |
 |------|----------|------|
-| `M-x howm`, `C-c , ,` | `howm-menu` | メニューを出す |
+| `M-x howm`、`C-c , ,` | `howm-menu` | メニューを出す |
 | `C-c , c` | `howm-create` | メモを作る |
-| `C-c , e` | `howm-remember` | 速記 (`*howm-remember*` で `C-c C-c` でメモにする. `C-c C-k` で取り消す) |
+| `C-c , e` | `howm-remember` | 速記 (`*howm-remember*` で `C-c C-c` でメモにする。 `C-c C-k` で取り消す) |
 | `C-c , D` | `howm-dup` | カーソルのメモを複製する |
 | `C-c , s` / `C-c , g` | `howm-search-fixed` / `howm-search-regexp` | 言葉 (キーワードを補完) / 正規表現で探す |
 | `C-c , m` | `howm-search-migemo` | ローマ字で探す (ひらがなとカタカナにも合う) |
@@ -429,25 +429,25 @@ rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) �
 | `C-c , K` | `howm-title-to-kill-ring` | メモの題を kill ring に入れる |
 | `C-c , b` / `C-c , Q` | `howm-list-buffers` / `howm-kill-all` | howm のバッファの一覧 / 全て消す |
 | `C-c , r` | `howm-refresh` | 下線を引き直す (メニューなら出し直す) |
-| `C-c , RET` | `howm-action` | ボタン, 項目, リンク, 日付を動かす |
+| `C-c , RET` | `howm-action` | ボタン、項目、リンク、日付を動かす |
 
-メニューでは, ボタンの前の `"` の前の文字 (`c`, `s`, `g`, `m`, `a`, `l`, `y`, `t` など) と, ボタンや項目の上の `RET` が使えます。
-一覧 (`*howmS*`) では, `n` と `p` で行を動くと, 別のウィンドウにメモを出し, `RET` でその行のメモを開きます。
-howm から開いたメモと, `C-x C-f` で開いたメモ (`howm-directory` の下) では, リンク (`>>>`, `<<<`, `[[ ]]`, キーワード, `file://`) と, 予定と todo の項目と, 日付の上の `RET` で動きます (ほかの所では, 改行)。
+メニューでは、ボタンの前の `"` の前の文字 (`c`、`s`、`g`、`m`、`a`、`l`、`y`、`t` など) と、ボタンや項目の上の `RET` が使えます。
+一覧 (`*howmS*`) では、`n` と `p` で行を動くと、別のウィンドウにメモを出し、`RET` でその行のメモを開きます。
+howm から開いたメモと、`C-x C-f` で開いたメモ (`howm-directory` の下) では、リンク (`>>>`、`<<<`、`[[ ]]`、キーワード、`file://`) と、予定と todo の項目と、日付の上の `RET` で動きます (ほかの所では、改行)。
 
 ## Org mode (`lisp/org.scm` を読み込んだとき)
 
-`(require 'org)` で読みます。`.org` のファイルを開くと, Org mode のキーになります。キーは Emacs の Org mode と同じです。
+`(require 'org)` で読みます。`.org` のファイルを開くと、Org mode のキーになります。キーは Emacs の Org mode と同じです。
 
 | キー | コマンド | 説明 |
 |------|----------|------|
-| `TAB` / `S-TAB` | `org-cycle` / `org-shifttab` | 見出しを開け閉めする / 全体を開け閉めする (表では, 次と前の欄) |
-| `RET` | `org-return` | 改行 (表では, 下の欄) |
-| `M-RET` / `M-S-RET` | `org-meta-return` / `org-insert-todo-heading` | 見出しか項目を足す / TODO の見出しか, チェックボックスの項目を足す |
+| `TAB` / `S-TAB` | `org-cycle` / `org-shifttab` | 見出しを開け閉めする / 全体を開け閉めする (表では、次と前の欄) |
+| `RET` | `org-return` | 改行 (表では、下の欄) |
+| `M-RET` / `M-S-RET` | `org-meta-return` / `org-insert-todo-heading` | 見出しか項目を足す / TODO の見出しか、チェックボックスの項目を足す |
 | `C-RET` / `C-S-RET` | `org-insert-heading-respect-content` / `org-insert-todo-heading-respect-content` | 木の後に見出しを足す |
-| `M-左右` / `M-S-左右` | `org-metaleft` など / `org-shiftmetaleft` など | 見出しと項目の深さ (木ごと) / 表の列を動かす, 消す, 足す |
-| `M-上下` / `M-S-上下` | `org-metaup` など / `org-shiftmetaup` など | 木と項目と表の行を動かす / 表の行を消す, 足す |
-| `S-左右` / `S-上下` | `org-shiftleft` など / `org-shiftup` など | TODO の状態, 項目の印, 日付 / 優先度, 日付 |
+| `M-左右` / `M-S-左右` | `org-metaleft` など / `org-shiftmetaleft` など | 見出しと項目の深さ (木ごと) / 表の列を動かす、消す、足す |
+| `M-上下` / `M-S-上下` | `org-metaup` など / `org-shiftmetaup` など | 木と項目と表の行を動かす / 表の行を消す、足す |
+| `S-左右` / `S-上下` | `org-shiftleft` など / `org-shiftup` など | TODO の状態、項目の印、日付 / 優先度、日付 |
 | `C-c C-n` / `C-c C-p` | `org-next-visible-heading` / `org-previous-visible-heading` | 次 / 前の見出し |
 | `C-c C-f` / `C-c C-b` / `C-c C-u` | `org-forward-heading-same-level` など / `outline-up-heading` | 同じ深さの次 / 前の見出し / 上の見出し |
 | `C-c C-t` | `org-todo` | TODO の状態を変える |
@@ -455,16 +455,16 @@ howm から開いたメモと, `C-x C-f` で開いたメモ (`howm-directory` �
 | `C-c C-q` | `org-set-tags-command` | タグを付ける |
 | `C-c .` / `C-c !` | `org-time-stamp` / `org-time-stamp-inactive` | 日付を入れる |
 | `C-c C-s` / `C-c C-d` | `org-schedule` / `org-deadline` | SCHEDULED / DEADLINE を書く |
-| `C-c C-c` | `org-ctrl-c-ctrl-c` | チェックボックス, 表を揃える, タグ, `[/]` を数え直す |
+| `C-c C-c` | `org-ctrl-c-ctrl-c` | チェックボックス、表を揃える、タグ、`[/]` を数え直す |
 | `C-c -` / `C-c *` | `org-ctrl-c-minus` / `org-ctrl-c-star` | リストにする (表では横線) / 見出しにする |
 | `C-c \|` | `org-table-create-or-convert-from-region` | 表を作る |
-| `C-c ^` | `org-sort` | 子の見出しか, 項目を並べる |
+| `C-c ^` | `org-sort` | 子の見出しか、項目を並べる |
 | `C-c #` / `C-c C-x C-b` | `org-update-statistics-cookies` / `org-toggle-checkbox` | `[/]` を数え直す / チェックボックス |
 | `C-c C-l` / `C-c C-o` | `org-insert-link` / `org-open-at-point` | リンクを入れる / 開く |
 | `C-c l` / `C-c a` / `C-c c` | `org-store-link` / `org-agenda` / `org-capture` | リンクを覚える / アジェンダ / キャプチャ (Org の手引きの勧めるキー) |
 
-アジェンダ (`*Org Agenda*`) では, `RET` (開く), `SPC` と `TAB` (ほかのウィンドウに出す), `n` と `p` (行), `f` と `b` (次と前の週), `.` (今日), `r` と `g` (作り直す), `t` (TODO の状態), `q` (閉じる) が使えます。
-キャプチャ (`*Capture*`) では, `C-c C-c` でファイルに足して保存し, `C-c C-k` で止めます。
+アジェンダ (`*Org Agenda*`) では、`RET` (開く), `SPC` と `TAB` (ほかのウィンドウに出す), `n` と `p` (行), `f` と `b` (次と前の週), `.` (今日), `r` と `g` (作り直す), `t` (TODO の状態), `q` (閉じる) が使えます。
+キャプチャ (`*Capture*`) では、`C-c C-c` でファイルに足して保存し、`C-c C-k` で止めます。
 
 ## よくある操作パターン
 

@@ -165,8 +165,6 @@ fn test_host_operations_of_the_terminal() {
     );
     // 端末では何もしないもの
     for op in [
-        "highlight-regexp",
-        "unhighlight-regexp",
         "outline-flag-region",
         "local-set-key",
         "set-background-color",

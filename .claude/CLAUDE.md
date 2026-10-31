@@ -25,9 +25,9 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 - 初期設定ファイルは `~/.rseditor` (無ければ `~/.rseditor.d/init.scm`, それも無ければ `~/.config/rseditor/init.scm`。読んだファイルは `user-init-file`)。ファイル, 時刻, 正規表現の組み込みの手続き (`load`, `require`, `read-file-string`, `regexp-match-positions`, `make-temp-file`, `grep` など) は `core/src/scheme/system.rs`。`load` と `require` は `load-path` (始めは `~/.rseditor.d/lisp`, `~/.rseditor.d`) から探す。色とフォント (`set-background-color`, `set-frame-font`) は `src/lib/theme.ts` で, CSS の変数 (`src/index.css`) に置く (背景が暗いと, Emacs の暗い背景の face の色にする)。
 - `M-x grep` は外のコマンドを使わず, Rust (`src-tauri/src/search.rs` の `grep_directory`) が探す。結果のバッファ (`*grep*`) の本文は `src/lib/grep.ts` で作り, 行は行の番号で合った行と結ぶ (`GREP_HEADER_LINES`)。`RET`, `M-g n`, `M-g p` は `src/hooks/useDirectories.ts`。
 - サイドバーのプロジェクトのツリー (`F8`) は `src/components/ProjectTree.tsx`。根は `search.rs` の `project_root` (`.git` のある所)。押してもフォーカスを取らない。
-- howm の Scheme 版は `lisp/howm.scm` (`(require 'howm)` で読む)。テストは `core/tests/howm_test.rs` と `tests/lisp/test_howm.scm` (どちらも偽のエディタ (`core/tests/common/mod.rs`) の上で動かす)。
-- Org mode の Scheme 版は `lisp/org.scm` (`(require 'org)` で読む。Emacs の org 9.7.11 の動きに合わせる)。テストは `core/tests/org_test.rs` と `tests/lisp/test_org.scm`。色は `highlight-regexp` の face (`src/styles/CodeEditor.css` の `cm-face-*`)、開け閉めは `outline-flag-region`。
-- ERT (`ert-deftest`, `should` など) は `core/src/scheme/ert.rs`。特別な形は `ert::special_form`, `M-x ert` のコマンドは Scheme の `PRELUDE` で定義する。`tests/*.scm` は `core/tests/lisp_ert_test.rs` が走らせる (`npm run test:scheme`)。
+- howm の Scheme 版は `lisp/howm.scm` (`(require 'howm)` で読む)。テストは `core/tests/test_howm.rs` と `tests/lisp/test_howm.scm` (どちらも偽のエディタ (`core/tests/common/mod.rs`) の上で動かす)。
+- Org mode の Scheme 版は `lisp/org.scm` (`(require 'org)` で読む。Emacs の org 9.7.11 の動きに合わせる)。テストは `core/tests/test_org.rs` と `tests/lisp/test_org.scm`。色は `highlight-regexp` の face (`src/styles/CodeEditor.css` の `cm-face-*`)、開け閉めは `outline-flag-region`。
+- ERT (`ert-deftest`, `should` など) は `core/src/scheme/ert.rs`。特別な形は `ert::special_form`, `M-x ert` のコマンドは Scheme の `PRELUDE` で定義する。`tests/*.scm` は `core/tests/test_lisp_ert.rs` が走らせる (`npm run test:scheme`)。
 - 起動のときに読む Lisp (Emacs の loadup.el に当たる) は `core/src/scheme/loadup.rs` に並べる (`lisp/subr.scm` (`y-or-n-p` など), `lisp/window.scm` (`switch-to-buffer`), `lisp/files.scm` (`find-file`, `save-buffer` など), `lisp/help-fns.scm` (`C-h f`))。ビルドのときに埋め込み, `Evaluator::new` で評価する。コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (`read-file-name` など)。TypeScript のコマンドを Lisp に移したら, TypeScript の方は消す (Lisp のコマンドが, 同じ名前の画面のコマンドより先に使われる)。
 - docstring は英語で書く (関数は引数の後の文字列, 変数は `(define name value "doc")` の 3 つ目)。翻訳は `po/ja.po` (gettext の PO 形式. `msgctxt` は `function:名前` か `variable:名前`)。docstring を変えたら `npm run po:update` (`tools/po/update.py`) で `po/rseditor.pot` と各言語の PO を作り直し, 訳す (変わった翻訳は `fuzzy` になる)。`npm run check` の `po:check` が, 作り直し忘れを見つける。手順は `PO.md`。Rust は `core/src/scheme/po.rs` で PO を読み, `documentation` が変数 `help-language` の言語の翻訳を返す。ヘルプの組み込みの手続き (`documentation`, `help-function-arglist`, `mapatoms`, `symbol-file` など) は `core/src/scheme/help.rs`。
 - `FUNCTIONS.md` の「Emacs の組み込みのコマンドと, エディタの基本のコマンド」は, `tools/emacs-commands/run.sh` で作る (`emacs -Q --batch` で, C で書いたコマンドと, エディタの基本の Lisp のコマンドと, 既定のキーを書き出し, rs-editor で実装済みかを書く)。印 (`<!-- emacs-commands:begin -->`) の間は, 手で直さない。
@@ -134,3 +134,7 @@ target/release/rseditor  # または Windows では .exe、macOS では .app
 git config user.name "Tetsuya Higashi"
 git config user.email "996846+sluchin@users.noreply.github.com"
 ```
+
+## 開発ルール
+
+- Markdown (`*.md`) の日本語の文章は、句読点に「、」「。」を使う (「,」「.」は使わない)。インラインコード・コードブロック・URL・ファイル名・数値 (`1.2.0`、`1,000`) は対象外。見出しや番号付きリストの「1.」の形は変えない。`docs/` の生成物と、この `CLAUDE.md` は対象外。

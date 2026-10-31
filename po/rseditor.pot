@@ -3349,7 +3349,68 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:indent-for-tab-command"
-msgid "Insert a tab character at point."
+msgid ""
+"Indent the current line or the region, or insert whitespace at point.\n"
+"In a Lisp buffer, fix the indentation of the line; with an active region, indent the region.\n"
+"Elsewhere, move to the next indent point of the previous line (indent-relative)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-region"
+msgid ""
+"Indent each nonblank line in the region (the lines from START to END).\n"
+"Without arguments, the region is used."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-sexp"
+msgid "Indent each line of the list starting just after point (Lisp buffers only)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-rigidly"
+msgid ""
+"Indent all lines starting in the region by ARG columns (the prefix argument, default 1).\n"
+"Without START and END, the region is used."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:tab-to-tab-stop"
+msgid "Insert whitespace at point, then move to the next tab stop (a multiple of 8 columns)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-fill-prefix"
+msgid ""
+"Set the fill prefix to the current line up to point.\n"
+"At the beginning of a line, cancel the fill prefix."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:fill-paragraph"
+msgid "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:comment-column"
+msgid "Column to indent a comment to."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:comment-dwim"
+msgid "Comment or uncomment the region, or insert a comment or move to the one on this line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:comment-line"
+msgid ""
+"Comment or uncomment the current line, then move to the next line.\n"
+"With an active region, comment or uncomment the lines it covers instead."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:comment-set-column"
+msgid "Set the comment column to the argument, or to the current column."
 msgstr ""
 
 #: lisp/simple.scm

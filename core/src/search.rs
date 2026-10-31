@@ -274,7 +274,33 @@ impl Pattern {
     }
 }
 
+impl Pattern {
+    /// 文字列の中の, 合った所の範囲 (文字の位置). `group` が 0 でなければ, その括弧の範囲.
+    pub fn spans(&self, text: &str, group: usize) -> Vec<(usize, usize)> {
+        let char_at = |byte: usize| text[..byte].chars().count();
+        self.regex
+            .captures_iter(text)
+            .filter_map(Result::ok)
+            .filter_map(|c| c.get(group))
+            .filter(|m| m.start() != m.end())
+            .map(|m| (char_at(m.start()), char_at(m.end())))
+            .collect()
+    }
+}
+
 impl Buffer {
+    /// 強調する範囲 (行の中の文字の位置. 行をまたぐ正規表現は, 行ごとに合う所だけ).
+    pub fn highlighted_spans(&self, line: usize) -> Vec<(usize, usize)> {
+        let text = self.line_text(line);
+        let mut spans = Vec::new();
+        for h in self.highlights() {
+            if let Ok(pattern) = Pattern::new(&h.regexp, h.fold, self.dialect()) {
+                spans.extend(pattern.spans(&text, h.group));
+            }
+        }
+        spans
+    }
+
     /// 最後に合った所 (全体と, 括弧ごと. 合わなかった括弧は `None`. Emacs の `match-data`).
     pub fn match_data(&self) -> &[Option<(usize, usize)>] {
         &self.match_data

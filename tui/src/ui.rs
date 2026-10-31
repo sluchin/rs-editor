@@ -281,7 +281,8 @@ impl Host for UiHost {
                     cursor: 0,
                 }));
                 let key = self.read_key()?;
-                if key == "C-g" {
+                let allow_quit = text(&args, 1) == "allow-quit";
+                if key == "C-g" && !allow_quit {
                     return Err("Quit".to_string());
                 }
                 Ok(Value::String(read_key_name(&key)))

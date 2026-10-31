@@ -29,7 +29,7 @@ msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (
 
 ### 1. docstring を英語で書く
 
-- 関数とコマンド (`define`, `define-command`) は、引数の後に文字列を書きます。
+- 関数とコマンド (`define`、`define-command`) は、引数の後に文字列を書きます。
   ```scheme
   (define (org-take items n)
     "Return the first N elements of ITEMS."
@@ -41,8 +41,8 @@ msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (
   (define org-directory "~/org" "Directory where Org files are kept.")
   ```
 - Emacs の書き方に合わせます。
-  - 1 行目は、それだけで分かる 1 つの文にします (命令形: `Return ...`, `Move ...`)。
-  - 引数は大文字で書きます (`ITEMS`, `N`)。
+  - 1 行目は、それだけで分かる 1 つの文にします (命令形: `Return ...`、`Move ...`)。
+  - 引数は大文字で書きます (`ITEMS`、`N`)。
   - ほかの関数や変数は、`` `org-directory' `` のように書きます。
   - 文字列の中の `"` と `\` は、`\"` と `\\` にします。
 

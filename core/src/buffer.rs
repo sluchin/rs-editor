@@ -72,6 +72,21 @@ pub struct Buffer {
     point_at_boundary: Option<usize>,
     /// コマンドの終わりにマークを外すよう頼まれているか (Emacs の変数 `deactivate-mark`. 本文を書き換えると, 真になる).
     deactivate_requested: bool,
+    /// 強調する正規表現 (Emacs の `highlight-regexp`).
+    highlights: Vec<Highlight>,
+}
+
+/// 強調する正規表現 (Emacs の hi-lock).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Highlight {
+    /// 正規表現.
+    pub regexp: String,
+    /// 色の名前 (face).
+    pub face: String,
+    /// 強調する括弧の番号 (0 は, 合った所の全て).
+    pub group: usize,
+    /// 大文字と小文字を区別しないか.
+    pub fold: bool,
 }
 
 impl Buffer {
@@ -96,7 +111,27 @@ impl Buffer {
             markers: Vec::new(),
             point_at_boundary: None,
             deactivate_requested: false,
+            highlights: Vec::new(),
         }
+    }
+
+    /// 強調する正規表現の並び.
+    pub fn highlights(&self) -> &[Highlight] {
+        &self.highlights
+    }
+
+    /// 強調する正規表現を足します (同じ正規表現があれば, 置き換える).
+    pub fn add_highlight(&mut self, highlight: Highlight) {
+        self.highlights.retain(|h| h.regexp != highlight.regexp);
+        self.highlights.push(highlight);
+    }
+
+    /// 強調をやめます. `regexp` が `None` なら全て. やめたものがあれば `true`.
+    pub fn remove_highlight(&mut self, regexp: Option<&str>) -> bool {
+        let before = self.highlights.len();
+        self.highlights
+            .retain(|h| regexp.is_some_and(|r| h.regexp != r));
+        self.highlights.len() != before
     }
 
     /// 本文のあるバッファを作ります (書き換えていない, 履歴は空, カーソルは始め).
@@ -458,7 +493,7 @@ impl Buffer {
     }
 
     /// `insert_at` で, `before_markers` が真なら, 入れた所のマークとマーカーを後ろへずらす.
-    fn insert_at_with(
+    pub(crate) fn insert_at_with(
         &mut self,
         pos: usize,
         text: &str,

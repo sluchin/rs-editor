@@ -7,6 +7,8 @@ pub struct Cell {
     pub ch: char,
     /// 反転して描くか (モードライン).
     pub reverse: bool,
+    /// 下線を引いて描くか (`highlight-regexp` で強調した所).
+    pub underline: bool,
 }
 
 impl Cell {
@@ -14,6 +16,7 @@ impl Cell {
     pub const BLANK: Cell = Cell {
         ch: ' ',
         reverse: false,
+        underline: false,
     };
 }
 

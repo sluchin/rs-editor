@@ -25,7 +25,7 @@ fn test_typing_and_basic_movement() {
     fx.press("<end> RET x");
     assert_eq!(fx.text(), "ello wor\nx");
     fx.press("TAB");
-    assert_eq!(fx.text(), "ello wor\nx\t");
+    assert_eq!(fx.text(), "ello wor\nx    ");
     // 画面: 本文とモードライン
     fx.app.draw();
     let screen = fx.screen();
@@ -453,4 +453,55 @@ fn test_sexp_and_sentence_keys() {
     assert_eq!(fx.app.host().editor().current_buffer().mark(), Some(5));
     fx.press("C-a C-M-d C-M-b");
     assert_eq!(fx.app.message(), "No previous sexp");
+}
+
+#[test]
+fn test_incremental_search() {
+    let mut fx = Fixture::new();
+    fx.press("f o o SPC b a r SPC f o o");
+    fx.press("C-a");
+    fx.feed("f o o C-s RET");
+    fx.press("C-s");
+    // 2 つ目の foo の後ろ
+    assert_eq!(fx.point(), 11);
+    fx.press("C-a");
+    // 見つからなければ, 最後に合った所のまま. C-g で戻って, C-g でやめる
+    fx.feed("f o x C-g C-g");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 0);
+    assert_eq!(fx.app.message(), "Quit");
+    // 後ろ向き
+    fx.press("C-e");
+    fx.feed("b a r RET");
+    fx.press("C-r");
+    assert_eq!(fx.point(), 4);
+}
+
+#[test]
+fn test_query_replace_and_occur() {
+    let mut fx = Fixture::new();
+    fx.press("a SPC b SPC a SPC b SPC a");
+    fx.press("C-a");
+    fx.app.eval("(replace-string \"a\" \"X\")").unwrap();
+    assert_eq!(fx.text(), "X b X b X");
+    fx.press("C-a");
+    fx.feed("b RET Y RET y n");
+    fx.press("M-%");
+    assert_eq!(fx.text(), "X Y X b X");
+    fx.app.eval("(occur \"X\")").unwrap();
+    fx.app.draw();
+    let screen = fx.screen();
+    assert!(screen.iter().any(|l| l.contains("1:X Y X b X")));
+}
+
+#[test]
+fn test_highlighted_text_is_underlined() {
+    let mut fx = Fixture::new();
+    fx.press("f o o SPC b a r");
+    fx.app.eval("(highlight-regexp \"bar\")").unwrap();
+    fx.app.draw();
+    let frames = fx.frames.lock().unwrap();
+    let row = &frames.last().unwrap().cells[0];
+    let marked: String = row.iter().filter(|c| c.underline).map(|c| c.ch).collect();
+    assert_eq!(marked, "bar");
 }

@@ -13,13 +13,17 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
+use crate::indent::{self, Config as IndentConfig, Plan};
 use crate::paragraph::{forward_paragraph, forward_sentence};
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
-use crate::sexp::{beginning_of_defun, end_of_defun, mark_defun, up_list, MotionError};
+use crate::sexp::{
+    beginning_of_defun, end_of_defun, forward_sexp, mark_defun, up_list, MotionError,
+};
 use crate::syntax::{class_of_designator, syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
+use crate::{comment, fill, replace};
 
 /// 覚えておく正規表現の数の上限.
 const PATTERN_CACHE_SIZE: usize = 64;
@@ -125,6 +129,38 @@ fn nil() -> Value {
 /// 位置の値 (1 から数える) を返します.
 fn at(pos: usize) -> Value {
     Value::Number(pos as f64 + 1.0)
+}
+
+/// `indent-sexp` で字下げする式の終わり: 点の後ろの式の終わり. 終わりが行の途中で, 行の終わりが式の中なら, 行の終わりを越える式まで.
+fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, String> {
+    let mut end = forward_sexp(source, point).map_err(|e| e.to_string())?;
+    let mut eol = end;
+    while eol < source.size() && source.char_at(eol) != Some('\n') {
+        eol += 1;
+    }
+    // 行の終わりが式の中にあれば, 行の終わりを越えるまで, 式を読み続ける (読めなければ, そこまで)
+    if end < eol && source.parse_state(eol).depth > source.parse_state(end).depth {
+        while end < eol {
+            match forward_sexp(source, end) {
+                Ok(next) if next > end => end = next,
+                _ => break,
+            }
+        }
+    }
+    Ok(end)
+}
+
+/// 字下げの計画を, バッファに行います (後ろの変更から). カーソルは, 計画にあればそこへ, 無ければ変更から写す.
+fn apply_plan(b: &mut Buffer, point: usize, plan: Plan) -> Result<(), String> {
+    let cursor = plan
+        .cursor
+        .unwrap_or_else(|| indent::map_pos(&plan.edits, point, true));
+    for e in plan.edits.iter().rev() {
+        b.delete_region(e.from, e.to)?;
+        b.insert_at(e.from, &e.insert)?;
+    }
+    b.set_point(cursor);
+    Ok(())
 }
 
 /// 動いた先の位置の値. 失敗したら, Emacs と同じに, 動いた所にカーソルを置いて, 失敗にする.
@@ -699,6 +735,92 @@ impl<U: Host> EditorHost<U> {
                     None => nil(),
                 }
             }
+            "replace-match" | "match-substitute-replacement" => {
+                let fixed = args.get(1).is_some_and(Value::is_non_nil);
+                let literal = args.get(2).is_some_and(Value::is_non_nil);
+                let sub = int_or(op, args, 3, 0)?.max(0) as usize;
+                let data = b.match_data().to_vec();
+                let Some((from, to)) = data.get(sub).copied().flatten() else {
+                    return Err(if data.is_empty() {
+                        "replace-match called before any match found".to_string()
+                    } else {
+                        "replace-match subexpression does not exist".to_string()
+                    });
+                };
+                let newtext = text(op, args, 0)?;
+                let matched = b.substring(from, to)?;
+                let mut new = if literal {
+                    newtext.to_string()
+                } else {
+                    let groups: Vec<Option<String>> = data
+                        .iter()
+                        .map(|g| g.and_then(|(s, e)| b.substring(s, e).ok()))
+                        .collect();
+                    replace::expand(newtext, &groups)?
+                };
+                if !fixed {
+                    new = replace::apply_case(&new, replace::case_action(&matched));
+                }
+                if op == "match-substitute-replacement" {
+                    return Ok(Some(Value::String(new)));
+                }
+                b.delete_region(from, to)?;
+                // 空の範囲を置き換えるときは, そこにある記録 (マークなど) も後ろへずらす (Emacs の `replace_range`)
+                b.insert_at_with(from, &new, from == to)?;
+                let end = from + new.chars().count();
+                b.set_point(end);
+                // 合った範囲は, 置き換えた分だけ変わる (括弧の範囲は, 捨てる)
+                let delta = end as i64 - to as i64;
+                let (start0, end0) = data[0].unwrap_or((from, to));
+                b.match_data = vec![Some((start0, (end0 as i64 + delta) as usize))];
+                Value::Nil
+            }
+            "set-match-data" => {
+                let items = match args.first() {
+                    Some(Value::List(items)) => items.to_vec(),
+                    _ => return Err("set-match-data expects a list".to_string()),
+                };
+                let number = |v: &Value| match v {
+                    Value::Number(n) => Some((*n as i64 - 1).max(0) as usize),
+                    _ => None,
+                };
+                b.match_data = items
+                    .chunks(2)
+                    .map(|pair| match pair {
+                        [s, e] => number(s).zip(number(e)),
+                        _ => None,
+                    })
+                    .collect();
+                Value::Nil
+            }
+            "highlight-regexp" => {
+                let regexp = text(op, args, 0)?.to_string();
+                let face = text_opt(op, args, 1)?.unwrap_or("hi-yellow").to_string();
+                let group = int_or(op, args, 2, 0)?.max(0) as usize;
+                // 正規表現に大文字が無ければ, 大文字と小文字を区別しない (hi-lock と同じ)
+                let fold = regexp == regexp.to_lowercase();
+                Pattern::new(&regexp, fold, b.dialect())?;
+                b.add_highlight(crate::buffer::Highlight {
+                    regexp,
+                    face,
+                    group,
+                    fold,
+                });
+                Value::Nil
+            }
+            "unhighlight-regexp" => {
+                match args.first() {
+                    Some(Value::String(regexp)) => b.remove_highlight(Some(regexp)),
+                    _ => b.remove_highlight(None),
+                };
+                Value::Nil
+            }
+            "highlighted-regexps" => Value::List(
+                b.highlights()
+                    .iter()
+                    .map(|h| Value::String(h.regexp.clone()))
+                    .collect(),
+            ),
             "mark" => at_opt(b.mark()),
             "set-mark" => {
                 match pos_opt(op, args, 0)? {
@@ -810,6 +932,68 @@ impl<U: Host> EditorHost<U> {
                 let found =
                     forward_sentence(&chars, pos(op, args, 0)?, int(op, args, 1)?, b.dialect());
                 moved(b, found)?
+            }
+            "indent-for-tab-op"
+            | "indent-region-op"
+            | "indent-sexp-op"
+            | "newline-and-indent-op"
+            | "fill-paragraph-op"
+            | "comment-dwim-op"
+            | "comment-region-op" => {
+                let tabs = args.last().is_some_and(Value::is_non_nil);
+                let config = IndentConfig {
+                    dialect: b.dialect(),
+                    indent_tabs: tabs,
+                    tab_width: crate::buffer::TAB_WIDTH,
+                };
+                let text = b.text();
+                let lines: Vec<Vec<char>> = text.split('\n').map(|l| l.chars().collect()).collect();
+                let point = b.point();
+                let plan = match op {
+                    "fill-paragraph-op" => {
+                        let column = usize::try_from(int(op, args, 0)?).unwrap_or(0);
+                        match fill::fill_paragraph(
+                            &lines,
+                            point,
+                            &config,
+                            column,
+                            text_opt(op, args, 1)?,
+                        ) {
+                            Some(plan) => plan,
+                            None => return Ok(Some(Value::Nil)),
+                        }
+                    }
+                    "comment-dwim-op" => comment::comment_dwim(
+                        &lines,
+                        point,
+                        pos_opt(op, args, 0)?,
+                        usize::try_from(int(op, args, 1)?).unwrap_or(0),
+                        &config,
+                    )?,
+                    "comment-region-op" => comment::comment_region(
+                        &lines,
+                        pos(op, args, 0)?,
+                        pos(op, args, 1)?,
+                        point,
+                        &config,
+                    ),
+                    "indent-for-tab-op" => indent::indent_for_tab(&lines, point, &config),
+                    "indent-region-op" => indent::indent_region(
+                        &lines,
+                        pos(op, args, 0)?,
+                        pos(op, args, 1)?,
+                        point,
+                        &config,
+                    ),
+                    "indent-sexp-op" => {
+                        let source = Source::from_buffer(b, b.dialect());
+                        let end = sexp_end_for_indent(&source, point)?;
+                        indent::indent_sexp(&lines, point, end, &config)
+                    }
+                    _ => indent::newline_and_indent(&lines, point, &config),
+                };
+                apply_plan(b, point, plan)?;
+                Value::Nil
             }
             "syntax-ppss" => {
                 let p = pos_opt(op, args, 0)?.unwrap_or(b.point());

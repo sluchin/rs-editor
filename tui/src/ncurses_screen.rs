@@ -80,7 +80,13 @@ impl Screen for NcursesScreen {
                 if cell.reverse {
                     attron(A_REVERSE);
                 }
+                if cell.underline {
+                    attron(A_UNDERLINE);
+                }
                 let _ = mvaddstr(y as i32, x as i32, &cell.ch.to_string());
+                if cell.underline {
+                    attroff(A_UNDERLINE);
+                }
                 if cell.reverse {
                     attroff(A_REVERSE);
                 }

@@ -12,8 +12,8 @@
   - 文字列: `string-append`、`substring`、`string-length`、`format` など
   - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
 - 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` (または `~/.rseditor.d/init.scm`) を読む (「Lisp でのカスタマイズ」)
-- 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み, `M-x howm` でメニューを出す (「howm」)
-- 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み, `.org` のファイルを開くと Org mode になる (「Org mode」)
+- 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み、`M-x howm` でメニューを出す (「howm」)
+- 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み、`.org` のファイルを開くと Org mode になる (「Org mode」)
 - 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
 - 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
@@ -120,7 +120,7 @@ npm run tauri:build
 
 ### 画面 (Tauri) の Lisp が使う核の組み込み
 
-評価のあいだだけ、画面の今のバッファを Rust の核に写して、探す (`re-search-forward`, `looking-at`), マーク, 構文 (`scan-lists`, `syntax-ppss`), 行と桁 (`forward-line`, `current-column`) などの新しい組み込みを、核で動かします。画面に頼む前と評価の終わりに、核での変更を画面に返します。`point`, `insert` など、これまでの操作と、バッファの出し入れは、これまでどおり画面が受け持ちます。不具合があれば、環境変数 `RSEDITOR_NO_CORE=1` で、これまでの動きに戻せます。
+評価のあいだだけ、画面の今のバッファを Rust の核に写して、探す (`re-search-forward`、`looking-at`), マーク、構文 (`scan-lists`、`syntax-ppss`), 行と桁 (`forward-line`、`current-column`) などの新しい組み込みを、核で動かします。画面に頼む前と評価の終わりに、核での変更を画面に返します。`point`、`insert` など、これまでの操作と、バッファの出し入れは、これまでどおり画面が受け持ちます。不具合があれば、環境変数 `RSEDITOR_NO_CORE=1` で、これまでの動きに戻せます。
 
 ### ターミナルで動かす (ncurses)
 
@@ -130,8 +130,8 @@ npm run tauri:build
 cargo run -p rseditor-tui -- ファイル...
 ```
 
-- 移動, 編集, kill / yank, undo (`C-/`), マーク, 前置引数 (`C-u`, `M-数字`), 窓の分割 (`C-x 2`, `C-x 3`, `C-x o`, `C-x 0`, `C-x 1`), ファイルを開く (`C-x C-f`) と保存 (`C-x C-s`), `M-x`, `M-:`, `C-h f`, 終了 (`C-x C-c`) が使えます。
-- コマンドは Lisp (`lisp/simple.scm`, `lisp/files.scm` など) で書いてあります。`global-set-key` で割り当てたキーも使えます。
+- 移動、編集、kill / yank, undo (`C-/`), マーク、前置引数 (`C-u`、`M-数字`), 窓の分割 (`C-x 2`、`C-x 3`、`C-x o`、`C-x 0`、`C-x 1`), ファイルを開く (`C-x C-f`) と保存 (`C-x C-s`), `M-x`、`M-:`、`C-h f`、終了 (`C-x C-c`) が使えます。
+- コマンドは Lisp (`lisp/simple.scm`、`lisp/files.scm` など) で書いてあります。`global-set-key` で割り当てたキーも使えます。
 
 ### 開発ワークフロー（Lint / Format / Test）
 
@@ -270,8 +270,8 @@ M-:            ; ミニバッファが開く
 | `(regexp-match "a(b)" "xab")` / `(regexp-quote "a.b")` | 正規表現 (Rust の regex の書き方) |
 | `(regexp-match-positions "b" "abcb")` | 合った所の全て (`((始め 終わり) ...)`。位置は文字で、0 から) |
 | `(grep "regexp" files)` | 合う行 (`(パス 行の番号 行)` のリスト) |
-| `(string-search "b" "abc")`, `string-prefix?`, `string-suffix?`, `string-trim`, `string-join`, `split-string` | 文字列 |
-| `(sort list less?)`, `cadr` など, `(random n)` | リスト、乱数 |
+| `(string-search "b" "abc")`、`string-prefix?`、`string-suffix?`、`string-trim`、`string-join`、`split-string` | 文字列 |
+| `(sort list less?)`、`cadr` など、`(random n)` | リスト、乱数 |
 
 ### コマンドとキー
 
@@ -347,7 +347,7 @@ Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-e
   (should-error (car 1)))
 ```
 
-### ヘルプ (C-h f) と, 翻訳
+### ヘルプ (C-h f) と、翻訳
 
 `C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [PO.md](./PO.md) にあります。
 
@@ -411,7 +411,7 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - [x] リスト操作 (car, cdr, cons)
 - [x] Lisp でのカスタマイズ (コマンド、キー、初期設定ファイル)
 - [x] シンタックスハイライト (Emacs の scheme-mode と emacs-lisp-mode と同じ色分け)
-- [x] 字下げ (Emacs の scheme-mode と emacs-lisp-mode と同じ) と, 括弧の強調 (show-paren-mode)
+- [x] 字下げ (Emacs の scheme-mode と emacs-lisp-mode と同じ) と、括弧の強調 (show-paren-mode)
 - [ ] コード補完と自動フォーマット
 - [ ] デバッグサポート
 

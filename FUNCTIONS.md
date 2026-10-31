@@ -125,8 +125,8 @@ rs-editor の Scheme インタプリタがサポートしている型：
 詳細は `.claude/CLAUDE.md` の TODO と `TODO.md` のフェーズ分けを参照してください。
 
 次のステップ：
-1. 比較演算子と制御フロー（`if`, `cond`）の実装
-2. 変数バインディングと定義（`define`, `let`）
+1. 比較演算子と制御フロー（`if`、`cond`）の実装
+2. 変数バインディングと定義（`define`、`let`）
 3. より高度なリスト操作
 4. ラムダ式とクロージャのサポート
 
@@ -261,7 +261,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
 | 5 | S 式, 段落, ページ | 19 | 5 | 14 |
-| 6 | 字下げ, 整形, コメント | 9 | 5 | 4 |
+| 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 22 | 17 | 5 |
@@ -287,23 +287,23 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **2. 動き**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/motion_test.rs`. 392 通り). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後 (段階 1.11 の前の案)】行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/test_motion.rs`. 392 通り). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後 (段階 1.11 の前の案)】行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
 
 **3. 消す, 切る, 貼る, 元に戻す**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/edit_test.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/undo_test.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
 
 **4. マーク, 前置引数, 実行**
 
-- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/edit_test.rs`). `next-error` と `previous-error` は, `*grep*` の画面 (TypeScript) のままで, 段階 9 で移す. 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
+- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error` と `previous-error` は, `*grep*` の画面 (TypeScript) のままで, 段階 9 で移す. 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
 
 **5. S 式, 段落, ページ**
 
-- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/lisp_test.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
+- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
 
 **6. 字下げ, 整形, コメント**
 
-- `TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まり (`src/lib/lispIndent.ts`) と整形 (`src/lib/fill.ts`) は, ターミナルでも使うため, Rust に移す。エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。
+- 【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: `indent-for-tab-command`, `indent-region`, `indent-sexp`, `newline`, `indent-rigidly`, `tab-to-tab-stop`, `set-fill-prefix`, `fill-paragraph`, `comment-dwim`, `comment-line` を, 本文の全ての位置から. 日本語の折り (禁則) は Emacs と別の決まりで, `core/tests/test_fill.rs` で試す). 違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, `comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, `comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。画面 (Tauri) の TypeScript 版 (`src/lib/lispIndent.ts`, `src/lib/fill.ts`, `src/lib/comment.ts`) を消すのは, 画面をつないだ後】`TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。
 
 **7. 検索, 置換, 強調**
 
@@ -330,7 +330,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 126 個: Lisp 43 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 131 個: Lisp 48 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -478,9 +478,9 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `move-past-close-and-reindent` | ◯ | lisp | `M-)` |  |  |  | 5 |
 | `narrow-to-defun` |  | lisp | `C-x n d` |  |  |  | 5 |
 | `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
-| `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`) | 6 |
-| `indent-rigidly` | ◯ | indent | `C-x TAB` |  |  |  | 6 |
-| `tab-to-tab-stop` |  | indent | `M-i` |  |  |  | 6 |
+| `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
+| `indent-rigidly` | ◯ | indent | `C-x TAB` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `tab-to-tab-stop` |  | indent | `M-i` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `backward-kill-sentence` | ◯ | paragraphs | `C-x DEL` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `backward-paragraph` | ◯ | paragraphs | `M-{`, `C-<up>` | 実装済み | `M-{` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `backward-sentence` | ◯ | paragraphs | `M-a` | 実装済み | `M-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
@@ -493,11 +493,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `forward-page` | ◯ | page | `C-x ]` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-page` | ◯ | page | `C-x C-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `narrow-to-page` | ◯ | page | `C-x n p` |  |  |  | 5 |
-| `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | TypeScript (`src/lib/emacs.ts`) | 6 |
-| `set-fill-prefix` | ◯ | fill | `C-x .` |  |  |  | 6 |
-| `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | TypeScript (`src/lib/emacs.ts`) | 6 |
-| `comment-line` |  | newcomment | `C-x C-;` |  |  |  | 6 |
-| `comment-set-column` |  | newcomment | `C-x ;` |  |  |  | 6 |
+| `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
+| `set-fill-prefix` | ◯ | fill | `C-x .` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
+| `comment-line` |  | newcomment | `C-x C-;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `comment-set-column` |  | newcomment | `C-x ;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `occur` | ◯ | replace | `M-s o` |  |  |  | 7 |
 | `query-replace` | ◯ | replace | `M-%` | 実装済み | `M-%` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
 | `query-replace-regexp` | ◯ | replace | `C-M-%` | 実装済み | `C-M-%` | TypeScript (`src/hooks/useSearch.ts`) | 7 |

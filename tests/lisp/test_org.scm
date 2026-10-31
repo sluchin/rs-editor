@@ -9,7 +9,7 @@
 ;;   (偽のエディタの上で, tests/lisp/*.scm を全て実行する. Emacs の ert-run-tests-batch-and-exit に当たる)
 ;;
 ;; バッファを変えるコマンドと, 入力を聞くもの (read-string) は, ここでは試さない
-;; (core/tests/org_test.rs で試す).
+;; (core/tests/test_org.rs で試す).
 
 (require 'org)
 
