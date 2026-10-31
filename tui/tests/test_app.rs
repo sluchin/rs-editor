@@ -622,3 +622,19 @@ fn test_dabbrev_expand_cycles_through_the_candidates() {
         "No further dynamic expansion for ‘foo’ found"
     );
 }
+
+#[test]
+fn test_list_buffers_shows_the_list_in_another_window() {
+    let mut fx = Fixture::new();
+    fx.press("a b");
+    fx.press("C-x C-b");
+    // 一覧は別の窓に出て, 選んでいる窓は元のまま
+    assert_eq!(fx.text(), "ab");
+    let editor = fx.app.host().editor();
+    assert_eq!(editor.window_list().len(), 2);
+    assert!(editor
+        .get_buffer("*Buffer List*")
+        .unwrap()
+        .text()
+        .contains("*scratch*"));
+}

@@ -5,6 +5,76 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: ja\n"
 
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-use-header-line"
+msgid ""
+"If non-nil, use the header line to display Buffer Menu column titles.\n"
+"This editor has no header line, so the titles are the first line of the buffer."
+msgstr ""
+"真なら, バッファメニューの列の題を, 見出し行に出す.\n"
+"このエディタには見出し行が無いので, 題はバッファの 1 行目に出す."
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-name-width"
+msgid "Width of buffer name column in the Buffer Menu."
+msgstr "バッファメニューの, バッファ名の列の幅."
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-size-width"
+msgid "Width of buffer size column in the Buffer Menu."
+msgstr "バッファメニューの, バッファの大きさの列の幅."
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-mode-width"
+msgid "Width of mode name column in the Buffer Menu."
+msgstr "バッファメニューの, モード名の列の幅."
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-files-only"
+msgid "Non-nil if the current Buffer Menu lists only file buffers."
+msgstr "今のバッファメニューが, ファイルのバッファだけを並べているなら真."
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--column"
+msgid "Pad TEXT to WIDTH columns (on the left if RIGHT), then add the one space between columns."
+msgstr "TEXT を WIDTH 桁になるまで埋め (RIGHT なら左に埋め), 列の間の空白を 1 つ足す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--file-name"
+msgid "Replace the home directory in FILE with ~."
+msgstr "FILE のホームディレクトリを ~ に置き換える."
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--row"
+msgid "Return the line of the Buffer Menu for the buffer NAME (OLD is the buffer the command was run in)."
+msgstr "バッファ NAME の, バッファメニューの行を返す (OLD は, コマンドを動かしたバッファ)."
+
+#: lisp/buff-menu.scm
+msgctxt "function:list-buffers-noselect"
+msgid ""
+"Create and return a buffer with a list of names of existing buffers.\n"
+"The buffer is named *Buffer List*.\n"
+"If FILES-ONLY is non-nil, show only the buffers that visit files."
+msgstr ""
+"今あるバッファの名前を並べたバッファを作って返す.\n"
+"バッファの名前は *Buffer List*.\n"
+"FILES-ONLY が偽でなければ, ファイルを訪れているバッファだけを出す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:list-buffers"
+msgid ""
+"Display a list of names of existing buffers.\n"
+"The list is displayed in a buffer named *Buffer List*.\n"
+"The first column shows \".\" for the buffer you came from, then \"%\" for a read-only\n"
+"buffer and \"*\" for a modified buffer; then follow the name, size, mode and file.\n"
+"With a non-negative prefix argument FILES-ONLY, show only the buffers that visit files."
+msgstr ""
+"今あるバッファの名前の一覧を出す.\n"
+"一覧は *Buffer List* という名前のバッファに出す.\n"
+"最初の列は, 来たバッファに \".\" を, 次に読み出し専用のバッファに \"%\", 変更したバッファに \"*\" を出す.\n"
+"そのあとに, 名前, 大きさ, モード, ファイルが続く.\n"
+"前置引数 FILES-ONLY が 0 以上なら, ファイルを訪れているバッファだけを出す."
+
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"
 msgid "If non-nil, `dabbrev-expand' only looks backwards."

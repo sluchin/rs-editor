@@ -1,0 +1,6 @@
+ C R M Buffer    Size Mode File 
+.   *scratch*                 0 Fundamental      
+  * short                    12 Fundamental      
+  * a-very-long-buffer-name-over-19      12 Fundamental      
+  * 名前あいうえおかきくけこさしすせそたち      12 Fundamental      
+    big                 1234567 Fundamental      

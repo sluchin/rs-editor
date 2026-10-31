@@ -4,6 +4,66 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-use-header-line"
+msgid ""
+"If non-nil, use the header line to display Buffer Menu column titles.\n"
+"This editor has no header line, so the titles are the first line of the buffer."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-name-width"
+msgid "Width of buffer name column in the Buffer Menu."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-size-width"
+msgid "Width of buffer size column in the Buffer Menu."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-mode-width"
+msgid "Width of mode name column in the Buffer Menu."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu-files-only"
+msgid "Non-nil if the current Buffer Menu lists only file buffers."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--column"
+msgid "Pad TEXT to WIDTH columns (on the left if RIGHT), then add the one space between columns."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--file-name"
+msgid "Replace the home directory in FILE with ~."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:buff-menu--row"
+msgid "Return the line of the Buffer Menu for the buffer NAME (OLD is the buffer the command was run in)."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:list-buffers-noselect"
+msgid ""
+"Create and return a buffer with a list of names of existing buffers.\n"
+"The buffer is named *Buffer List*.\n"
+"If FILES-ONLY is non-nil, show only the buffers that visit files."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:list-buffers"
+msgid ""
+"Display a list of names of existing buffers.\n"
+"The list is displayed in a buffer named *Buffer List*.\n"
+"The first column shows \".\" for the buffer you came from, then \"%\" for a read-only\n"
+"buffer and \"*\" for a modified buffer; then follow the name, size, mode and file.\n"
+"With a non-negative prefix argument FILES-ONLY, show only the buffers that visit files."
+msgstr ""
+
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"
 msgid "If non-nil, `dabbrev-expand' only looks backwards."

@@ -156,6 +156,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x s", "save-some-buffers"),
     ("C-x C-v", "find-alternate-file"),
     ("C-x i", "insert-file"),
+    ("C-x C-b", "list-buffers"),
     ("C-x C-c", "save-buffers-kill-terminal"),
     ("C-x b", "switch-to-buffer"),
     ("C-x k", "kill-buffer"),
