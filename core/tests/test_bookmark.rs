@@ -136,3 +136,29 @@ fn test_errors() {
         .contains("file not found"));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn test_set_no_overwrite_signals_an_error_or_pushes() {
+    let (ev, host, dir) = setup("no-overwrite");
+    let file = dir.join("e.txt");
+    std::fs::write(&file, "0123456789\n").unwrap();
+    visit(&ev, &host, &file);
+    ev.eval_with("(bookmark-set-no-overwrite \"a\")", &host)
+        .unwrap();
+    assert!(ev
+        .eval_with("(bookmark-set-no-overwrite \"a\")", &host)
+        .unwrap_err()
+        .contains("A bookmark named \"a\" already exists"));
+    ev.eval_with("(goto-char 8)", &host).unwrap();
+    ev.eval_with("(bookmark-set-no-overwrite \"a\" #t)", &host)
+        .unwrap();
+    let count = ev
+        .eval_with("(length bookmark-alist)", &host)
+        .unwrap()
+        .to_string();
+    assert_eq!(count, "2");
+    ev.eval_with("(goto-char 1)", &host).unwrap();
+    ev.eval_with("(bookmark-jump \"a\")", &host).unwrap();
+    assert_eq!(point(&host), 8);
+    std::fs::remove_dir_all(dir).unwrap();
+}

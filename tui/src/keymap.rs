@@ -161,6 +161,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x b", "switch-to-buffer"),
     ("C-x d", "dired"),
     ("C-x r m", "bookmark-set"),
+    ("C-x r M", "bookmark-set-no-overwrite"),
     ("C-x r b", "bookmark-jump"),
     ("C-x 4 d", "dired-other-window"),
     ("C-x k", "kill-buffer"),

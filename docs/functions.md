@@ -569,7 +569,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `bookmark-bmenu-list` |  | bookmark | `C-x r l` |  |  |  | 9 |
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
-| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` |  |  |  | 9 |
+| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み | `C-x r M` | Lisp (`lisp/bookmark.scm`) | 済 |
 | `xref-find-apropos` |  | xref | `C-M-.` |  |  |  | 11 |
 | `xref-find-definitions` |  | xref | `M-.` |  |  |  | 11 |
 | `xref-find-definitions-other-frame` |  | xref | `C-x 5 .` |  |  |  | 12 |

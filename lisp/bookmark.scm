@@ -40,11 +40,16 @@ Each element is (NAME (filename FILE) (front-context-string STRING)
     (make-directory (file-name-directory file))
     (write-file-string file (format "%S\n" bookmark-alist))))
 
-(define (bookmark--store record)
-  "Add RECORD to `bookmark-alist', replacing the bookmark of the same name in place."
+(define (bookmark--store record mode)
+  "Add RECORD to `bookmark-alist'.
+MODE is `overwrite' to replace the bookmark of the same name in place,
+`push' to put RECORD in front of the others of the same name,
+and anything else to signal an error if the name is taken."
   (let ((name (car record)))
+    (when (and (assoc name bookmark-alist) (not (member mode '(overwrite push))))
+      (error "A bookmark named \"%s\" already exists" name))
     (set! bookmark-alist
-          (if (assoc name bookmark-alist)
+          (if (and (assoc name bookmark-alist) (eq? mode 'overwrite))
               (map (lambda (old) (if (equal? (car old) name) record old)) bookmark-alist)
               (cons record bookmark-alist)))
     (set! bookmark-current-bookmark name)
@@ -68,21 +73,37 @@ Each element is (NAME (filename FILE) (front-context-string STRING)
         (let ((m (regexp-match "([^/]+)$" file))) (if m (cadr m) file))
         (buffer-name))))
 
-(define-command (bookmark-set . args)
-  "Set a bookmark named NAME, at point of the current buffer, and save the bookmarks.
-Interactively, read NAME in the minibuffer; an empty input means the default,
-the last bookmark or the file name.  A bookmark of the same name is replaced.
-The bookmark records the file, the position and the text around it."
+(define (bookmark--set args prompt mode)
+  "Set a bookmark for `bookmark-set' and `bookmark-set-no-overwrite'.
+ARGS is the command's arguments, PROMPT the minibuffer prompt, and MODE as in `bookmark--store'."
   (unless (buffer-file-name)
     (error "Buffer not visiting a file"))
   (bookmark-maybe-load-default-file)
   (let* ((default (or bookmark-current-bookmark (bookmark--default-name)))
          (name (if (null? args)
-                   (read-string (format "Set bookmark (default %s): " default))
+                   (read-string (format "%s (default %s): " prompt default))
                    (car args)))
          (name (if (equal? name "") default name)))
-    (bookmark--store (bookmark--make-record name))
+    (bookmark--store (bookmark--make-record name) mode)
     #f))
+
+(define-command (bookmark-set . args)
+  "Set a bookmark named NAME, at point of the current buffer, and save the bookmarks.
+Interactively, read NAME in the minibuffer; an empty input means the default,
+the last bookmark or the file name.  A bookmark of the same name is replaced.
+The bookmark records the file, the position and the text around it."
+  (bookmark--set args "Set bookmark" 'overwrite))
+
+(define-command (bookmark-set-no-overwrite . args)
+  "Set a bookmark named NAME at the current location, like `bookmark-set'.
+If a bookmark named NAME already exists, signal an error, unless the second argument
+PUSH-BOOKMARK is true (interactively, a prefix argument).  Then the new bookmark is put in front,
+so it is the one in effect, and the others of the same name stay behind it."
+  (bookmark--set (if (null? args) '() (list (car args)))
+                 "Set bookmark"
+                 (if (if (null? args) (current-prefix-arg) (and (pair? (cdr args)) (cadr args)))
+                     'push
+                     'no-overwrite)))
 
 (define (bookmark--search-back text pattern from)
   "Return the last index of PATTERN in TEXT that starts at FROM or before, or #f."

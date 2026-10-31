@@ -53,8 +53,16 @@ msgstr "ブックマークを `bookmark-default-file' に書く."
 
 #: lisp/bookmark.scm
 msgctxt "function:bookmark--store"
-msgid "Add RECORD to `bookmark-alist', replacing the bookmark of the same name in place."
-msgstr "RECORD を `bookmark-alist' に足す. 同じ名前のブックマークがあれば, その場で置き換える."
+msgid ""
+"Add RECORD to `bookmark-alist'.\n"
+"MODE is `overwrite' to replace the bookmark of the same name in place,\n"
+"`push' to put RECORD in front of the others of the same name,\n"
+"and anything else to signal an error if the name is taken."
+msgstr ""
+"RECORD を `bookmark-alist' に足す.\n"
+"MODE が `overwrite' なら, 同じ名前のブックマークをその場で置き換え,\n"
+"`push' なら, 同じ名前のものの前に置き,\n"
+"それ以外で名前が使われていれば, エラーにする."
 
 #: lisp/bookmark.scm
 msgctxt "function:bookmark--make-record"
@@ -65,6 +73,15 @@ msgstr "今のバッファのカーソルの位置の, 名前 NAME のブック�
 msgctxt "function:bookmark--default-name"
 msgid "Return the name offered by default: the file name of the buffer, or the buffer name."
 msgstr "既定で示す名前を返す: バッファのファイル名, または, バッファの名前."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--set"
+msgid ""
+"Set a bookmark for `bookmark-set' and `bookmark-set-no-overwrite'.\n"
+"ARGS is the command's arguments, PROMPT the minibuffer prompt, and MODE as in `bookmark--store'."
+msgstr ""
+"`bookmark-set' と `bookmark-set-no-overwrite' のためにブックマークを付ける.\n"
+"ARGS はコマンドの引数, PROMPT はミニバッファの問い, MODE は `bookmark--store' と同じ."
 
 #: lisp/bookmark.scm
 msgctxt "function:bookmark-set"
@@ -78,6 +95,19 @@ msgstr ""
 "対話では, NAME をミニバッファで読む. 空の入力は, 既定の名前,\n"
 "最後のブックマークかファイル名, を表す. 同じ名前のブックマークは置き換える.\n"
 "ブックマークは, ファイルと, 位置と, その周りの文字を覚える."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-set-no-overwrite"
+msgid ""
+"Set a bookmark named NAME at the current location, like `bookmark-set'.\n"
+"If a bookmark named NAME already exists, signal an error, unless the second argument\n"
+"PUSH-BOOKMARK is true (interactively, a prefix argument).  Then the new bookmark is put in front,\n"
+"so it is the one in effect, and the others of the same name stay behind it."
+msgstr ""
+"今の位置に名前 NAME のブックマークを付ける (`bookmark-set' と同じ).\n"
+"同じ名前のブックマークがあれば, 2 番目の引数 PUSH-BOOKMARK (対話では前置引数) が\n"
+"真でない限り, エラーにする. 真なら, 新しいものを前に置いて有効にし,\n"
+"同じ名前の古いものは後ろに残す."
 
 #: lisp/bookmark.scm
 msgctxt "function:bookmark--search-back"

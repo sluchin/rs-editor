@@ -49,7 +49,11 @@ msgstr ""
 
 #: lisp/bookmark.scm
 msgctxt "function:bookmark--store"
-msgid "Add RECORD to `bookmark-alist', replacing the bookmark of the same name in place."
+msgid ""
+"Add RECORD to `bookmark-alist'.\n"
+"MODE is `overwrite' to replace the bookmark of the same name in place,\n"
+"`push' to put RECORD in front of the others of the same name,\n"
+"and anything else to signal an error if the name is taken."
 msgstr ""
 
 #: lisp/bookmark.scm
@@ -63,12 +67,28 @@ msgid "Return the name offered by default: the file name of the buffer, or the b
 msgstr ""
 
 #: lisp/bookmark.scm
+msgctxt "function:bookmark--set"
+msgid ""
+"Set a bookmark for `bookmark-set' and `bookmark-set-no-overwrite'.\n"
+"ARGS is the command's arguments, PROMPT the minibuffer prompt, and MODE as in `bookmark--store'."
+msgstr ""
+
+#: lisp/bookmark.scm
 msgctxt "function:bookmark-set"
 msgid ""
 "Set a bookmark named NAME, at point of the current buffer, and save the bookmarks.\n"
 "Interactively, read NAME in the minibuffer; an empty input means the default,\n"
 "the last bookmark or the file name.  A bookmark of the same name is replaced.\n"
 "The bookmark records the file, the position and the text around it."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-set-no-overwrite"
+msgid ""
+"Set a bookmark named NAME at the current location, like `bookmark-set'.\n"
+"If a bookmark named NAME already exists, signal an error, unless the second argument\n"
+"PUSH-BOOKMARK is true (interactively, a prefix argument).  Then the new bookmark is put in front,\n"
+"so it is the one in effect, and the others of the same name stay behind it."
 msgstr ""
 
 #: lisp/bookmark.scm
