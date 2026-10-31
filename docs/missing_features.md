@@ -1,7 +1,7 @@
 # 未実装の Emacs デフォルト機能
 
 rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装しているものと、まだ実装していないものをまとめました。
-キーの一覧は [KEYBINDINGS.md](./KEYBINDINGS.md)、dired との比較は [DIRED_VS_RS_FILER.md](./DIRED_VS_RS_FILER.md) にあります。
+キーの一覧は [KEYBINDINGS.md](html/fe/media/KEYBINDINGS.md)、dired との比較は [DIRED_VS_RS_FILER.md](dired_vs_rs_filer.md) にあります。
 
 ## ✅ 実装済み
 
