@@ -254,7 +254,7 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 
 Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor の dired は、`C-x d` でディレクトリの一覧（`ls -al`）を出すだけで、dired の中のキーは、全て未実装です。**
 一覧は `M-x revert-buffer` で作り直せます。
-rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](DIRED_VS_RS_FILER.md) にまとめています。
+rs-filer のキーとの違いは [DIRED_VS_RS_FILER.md](dired_vs_rs_filer.md) にまとめています。
 
 ### Dired を開く
 

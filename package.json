@@ -31,8 +31,8 @@
     "coverage:clean": "npm run coverage:fe && npm run coverage:be:clean",
     "test:watch": "vitest",
     "check": "npm run format:check && npm run lint:all && npm run test:all",
-    "doc:fe": "typedoc --entryPointStrategy expand ./src --out docs/html/fe",
-    "doc:be": "CARGO_TARGET_DIR=target/doc_build cargo doc --workspace --no-deps && rm -rf docs/html/be && mkdir -p docs/html/be && cp -r target/doc_build/doc/* docs/html/be/",
+    "doc:fe": "typedoc --entryPointStrategy expand ./src --out build/docs/fe",
+    "doc:be": "CARGO_TARGET_DIR=target/doc_build cargo doc --workspace --no-deps && rm -rf build/docs/be && mkdir -p build/docs/be && cp -r target/doc_build/doc/* build/docs/be/",
     "doc": "npm run doc:fe && npm run doc:be",
     "format:markdown": "markdownlint-cli2 --fix",
     "format:markdown:check": "markdownlint-cli2"
