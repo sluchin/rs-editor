@@ -6,6 +6,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 ## ✅ 実装済み
 
 **カーソル移動**
+
 - C-f, C-b - 前後に移動
 - C-n, C-p - 上下に移動 (続けて押すあいだ、桁を保つ)
 - C-a, C-e - 行の開始・末尾
@@ -23,6 +24,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-M-a, C-M-e - defun の始めと終わり（beginning-of-defun, end-of-defun）
 
 **削除・編集**
+
 - C-d - 1 文字削除
 - C-k - 行削除（kill-line。続けたキルは 1 つにつなげる）
 - M-d, M-DEL - 単語削除（kill-word, backward-kill-word）
@@ -48,23 +50,27 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-/, C-x C-/ - Undo / Redo（バッファごと）
 
 **改行と字下げ**
+
 - RET, C-j - 改行（RET は字下げもする）
 - TAB, C-M-q, C-M-\ - 字下げ（Emacs の scheme-mode と emacs-lisp-mode と同じ計算）
 - 括弧の強調（show-paren-mode）、シンタックスハイライト（font-lock）
 
 **リージョン選択**
+
 - C-SPC - マーク設定（移動で範囲が広がる。transient-mark-mode）
 - C-x C-x - カーソルとマークの入れ替え
 - C-x h - バッファ全体選択
 - M-@, C-M-SPC, C-M-h - 単語、S 式、defun を選ぶ（mark-word, mark-sexp, mark-defun）
 
 **検索と置換**
+
 - C-s, C-r - 前方・後方検索（isearch）
 - C-M-s, C-M-r - 正規表現の検索
 - isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み、検索の履歴（isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance）
 - M-%, C-M-% - 置換（query-replace, query-replace-regexp）。 M-x replace-string, replace-regexp
 
 **ファイル操作**
+
 - C-x C-f - ファイルを開く（find-file。Tab でファイルの名前を補完）
 - C-x C-s - 保存（save-buffer）
 - C-x C-w - 別のファイルに保存（write-file）
@@ -76,16 +82,19 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-x d - ディレクトリの一覧（dired。一覧を出すだけ）
 
 **バッファ管理**
+
 - C-x b - バッファ切り替え
 - C-x k - バッファを閉じる
 - C-x C-b - バッファ一覧
 - C-x C-c - 終了（保存していないバッファがあれば確認）
 
 **ウィンドウ**
+
 - C-x 2, C-x 3 - ウィンドウを分ける
 - C-x o, C-x 0, C-x 1 - ウィンドウを移る、消す、ほかを消す
 
 **Lisp**
+
 - C-x C-e, M-: - 式の評価（eval-last-sexp, eval-expression）
 - 初期設定ファイル（`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`、`~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load, require, load-path
 - 色とフォント（set-background-color, set-foreground-color, set-frame-font, set-face-attribute）
@@ -93,18 +102,22 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - ERT（`ert-deftest`、`should`、`M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`）
 
 **検索とプロジェクト**
+
 - M-x grep（外のコマンドを使わず、エディタが探す）、`*grep*` の RET（compile-goto-error）、M-g n, M-g p, C-x `（next-error, previous-error）
 - F8, M-x project-tree - 左のサイドバーの、プロジェクトのファイルのツリー
 
 **ヘルプ**
+
 - C-h k - キーの説明（describe-key）
 - C-h b - キーの割り当ての一覧（describe-bindings）
 
 **前置引数とマクロ**
+
 - C-u, M-0 から M-9 - 前置引数
 - C-x (, C-x ), C-x e - キーボードマクロ
 
 **その他**
+
 - M-x - コマンド実行（Tab で補完）
 - ミニバッファの M-p, M-n - 入力の履歴（previous-history-element, next-history-element）
 - C-g - キャンセル（keyboard-quit）
@@ -172,12 +185,14 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 括弧の自動補完は IDE 固有の機能で、Emacs の既定には無い。括弧の強調は、Emacs の既定 (show-paren-mode) なので、作り直した。
 
 **削除したもの:**
+
 - ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Lisp のモード (`lispMode.ts`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく、色を付ける)
 - ❌ **括弧マッチハイライト** (`findMatchingBracket`、`findUnmatchedClose` from `bracketMatch.ts`) - Emacs の show-paren-mode と同じく、`showParen.ts` で作り直した
 - ❌ **括弧自動補完** (`bracketAutoClose.ts`) - IDE 固有機能
 - ❌ **REPL コンポーネント** (`REPL.tsx`) - 評価は Emacs と同じく `C-x C-e` と `M-:` で行い、結果をミニバッファに出す
 
 **保持したもの:**
+
 - ✅ **S-expression ナビゲーション** (`forwardSexp`、`backwardSexp`、`killSexp`) - Emacs Lisp に対応する機能
 
 ---
@@ -187,6 +202,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
 
 次の候補は、よく使い、手間の小さいものから:
+
 1. Lisp の移動: `C-M-n`、`C-M-p`
 2. ヘルプ: `C-h f`、`C-h v`
 3. Dired の中のキー（`RET` で開く、`^` で親へ、`g` で作り直す）

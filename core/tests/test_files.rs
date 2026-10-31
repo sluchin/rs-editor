@@ -108,7 +108,8 @@ fn test_read_key_and_write_buffer_arguments() {
     assert_eq!(ev.eval_with("(read-key)", &editor).unwrap(), "\"q\"");
     assert_eq!(prompts(&editor), vec![""]);
     assert_eq!(
-        ev.eval_with("(read-key \"a\" \"b\" \"c\")", &editor).unwrap_err(),
+        ev.eval_with("(read-key \"a\" \"b\" \"c\")", &editor)
+            .unwrap_err(),
         "read-key expects 0 to 2 arguments"
     );
     for code in [

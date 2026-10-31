@@ -179,7 +179,7 @@
       Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は、出さない。
 - [ ] isearch の `M-p`、`M-n`: Emacs (`search-ring-update` が `nil`) は、履歴の文字を、ミニバッファで直させる。今は、すぐに探す。
 - [ ] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら、今のファイルの名前など) を出す。今は、出さない。
-- [ ] `M-x grep`: Emacs は、grep のコマンドの行 (`grep --color=auto -nH --null -e `) を聞き、外の grep を動かす。今は、正規表現とディレクトリを聞き、      エディタが、ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ、大文字と小文字を区別しない
+- [ ] `M-x grep`: Emacs は、grep のコマンドの行 (`grep --color=auto -nH --null -e`) を聞き、外の grep を動かす。今は、正規表現とディレクトリを聞き、      エディタが、ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ、大文字と小文字を区別しない
       (Emacs の `rgrep` の `case-fold-search` と同じ)。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは、探さない。
       既定の正規表現 (カーソルの所の言葉) は、まだ。
 

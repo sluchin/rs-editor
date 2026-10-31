@@ -30,16 +30,20 @@ msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (
 ### 1. docstring を英語で書く
 
 - 関数とコマンド (`define`、`define-command`) は、引数の後に文字列を書きます。
+
   ```scheme
   (define (org-take items n)
     "Return the first N elements of ITEMS."
     ...)
   ```
+
   本体が文字列だけの関数では、その文字列は docstring になりません (値です)。docstring を付けるときは、その前に書きます。
 - 変数は、`define` の 3 つ目に書きます。
+
   ```scheme
   (define org-directory "~/org" "Directory where Org files are kept.")
   ```
+
 - Emacs の書き方に合わせます。
   - 1 行目は、それだけで分かる 1 つの文にします (命令形: `Return ...`、`Move ...`)。
   - 引数は大文字で書きます (`ITEMS`、`N`)。
@@ -61,7 +65,7 @@ npm run po:update
   - 無くなった docstring の項目は消す。
 - 言語ごとに、訳した数、`fuzzy` の数、訳していない数を出す。
 
-```
+```text
 po/ja.po: 534 translated, 0 fuzzy, 0 untranslated
 ```
 
@@ -70,7 +74,7 @@ po/ja.po: 534 translated, 0 fuzzy, 0 untranslated
 `po/ja.po` を開いて、次のように直します (エディタで直すか、Poedit などの翻訳の道具を使う)。
 
 - 訳していない項目: `msgstr ""` に訳を書く。
-- `fuzzy` の項目: `#| msgid` (元の英文) と今の `msgid` を比べて訳を直し、`#, fuzzy` の行と `#| ` の行を消す。
+- `fuzzy` の項目: `#| msgid` (元の英文) と今の `msgid` を比べて訳を直し、`#, fuzzy` の行と `#|` の行を消す。
   `fuzzy` のままの訳は使われず、英語の docstring が出る。
 
 訳の書き方:
