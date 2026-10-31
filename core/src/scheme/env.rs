@@ -34,7 +34,7 @@ struct Registry {
 }
 
 /// 放した環境を除く, 覚えている数の始め.
-const PRUNE_AT: usize = 1024;
+pub const PRUNE_AT: usize = 1024;
 
 impl Env {
     /// 外側のない環境を作ります.
@@ -117,6 +117,19 @@ impl Env {
             .iter()
             .filter(|frame| frame.strong_count() > 0)
             .count()
+    }
+
+    /// 一番外側の環境が覚えている環境の数 (放した環境も, 掃除するまでは数える).
+    pub fn registered_frames(&self) -> usize {
+        let registry = self.0.lock().unwrap().registry.clone();
+        let registry = registry.lock().unwrap();
+        registry.frames.len()
+    }
+
+    /// この環境が, まだ放されていなければ `true` を返す関数を返します (環境を持たずに, 解放を確かめる).
+    pub fn alive_probe(&self) -> impl Fn() -> bool {
+        let weak = Arc::downgrade(&self.0);
+        move || weak.strong_count() > 0
     }
 
     /// 変数の値を, 外側へたどって探します.
@@ -208,75 +221,5 @@ fn push_envs(value: &Value, envs: &mut Vec<Env>) {
             }
         }
         _ => {}
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn looks_up_the_outer_environments() {
-        let global = Env::new();
-        global.define("a", Value::Number(1.0));
-        let inner = global.child();
-        inner.define("b", Value::Number(2.0));
-        assert_eq!(inner.get("a"), Some(Value::Number(1.0)));
-        assert_eq!(inner.get("b"), Some(Value::Number(2.0)));
-        assert_eq!(global.get("b"), None);
-    }
-
-    #[test]
-    fn set_changes_the_nearest_variable() {
-        let global = Env::new();
-        global.define("a", Value::Number(1.0));
-        let inner = global.child();
-        assert!(inner.set("a", Value::Number(3.0)));
-        assert_eq!(global.get("a"), Some(Value::Number(3.0)));
-        assert!(!inner.set("none", Value::Nil));
-    }
-
-    #[test]
-    fn collect_breaks_the_cycles_that_cannot_be_reached() {
-        use crate::scheme::value::Lambda;
-        let global = Env::new();
-        let lambda = |env: &Env| {
-            Value::Lambda(Arc::new(Lambda {
-                name: None,
-                params: Vec::new(),
-                rest: None,
-                body: Vec::new(),
-                env: env.clone(),
-            }))
-        };
-        // 環境と手続きの輪 (一番外側から, たどれない)
-        let lost = global.child();
-        lost.define("f", lambda(&lost));
-        let weak = Arc::downgrade(&lost.0);
-        drop(lost);
-        // 一番外側から, リストの中の手続きでたどれる輪
-        let kept = global.child();
-        kept.define("g", lambda(&kept));
-        global.define("h", Value::List(vec![lambda(&kept), Value::Nil].into()));
-        drop(kept);
-        assert_eq!(global.live_frames(), 2);
-
-        global.collect();
-        assert!(weak.upgrade().is_none());
-        assert_eq!(global.live_frames(), 1);
-        global.define("h", Value::Nil);
-        global.collect();
-        assert_eq!(global.live_frames(), 0);
-    }
-
-    #[test]
-    fn child_forgets_the_released_frames() {
-        let global = Env::new();
-        for _ in 0..PRUNE_AT * 3 {
-            global.child();
-        }
-        let registry = global.0.lock().unwrap().registry.clone();
-        assert!(registry.lock().unwrap().frames.len() <= PRUNE_AT + 1);
-        assert_eq!(global.live_frames(), 0);
     }
 }

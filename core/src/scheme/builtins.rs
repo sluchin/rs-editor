@@ -154,7 +154,7 @@ pub const NAMES: &[&str] = &[
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
     match name {
         "+" => Ok(Value::Number(numbers(name, &args)?.iter().sum())),
         "*" => Ok(Value::Number(numbers(name, &args)?.iter().product())),

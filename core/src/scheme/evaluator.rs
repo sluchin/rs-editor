@@ -376,7 +376,7 @@ enum Step {
 }
 
 /// 1 回の評価 (入れ子の深さと, エディタを持つ).
-pub(crate) struct Machine<'a> {
+pub struct Machine<'a> {
     /// 評価器 (定義とコマンドとキーを覚えている).
     pub(crate) evaluator: &'a Evaluator,
     /// エディタ (エディタの操作を頼む先).
@@ -400,7 +400,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 1 回の評価.
-    fn new(evaluator: &'a Evaluator, host: &'a dyn Host) -> Self {
+    pub fn new(evaluator: &'a Evaluator, host: &'a dyn Host) -> Self {
         Machine {
             evaluator,
             host,
@@ -1161,109 +1161,4 @@ fn handles(conditions: &Value, message: &str) -> bool {
         "error" | "t" => !quit,
         _ => false,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn evaluates_addition() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(+ 1 2 3)").unwrap(), "6");
-    }
-
-    #[test]
-    fn evaluates_subtraction() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(- 10 3)").unwrap(), "7");
-    }
-
-    #[test]
-    fn evaluates_unary_minus_as_negation() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(- 5)").unwrap(), "-5");
-    }
-
-    #[test]
-    fn evaluates_multiplication() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(* 2 3 4)").unwrap(), "24");
-    }
-
-    #[test]
-    fn evaluates_division() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(/ 20 4)").unwrap(), "5");
-    }
-
-    #[test]
-    fn division_by_zero_is_an_error() {
-        let eval = Evaluator::new();
-        assert!(eval.eval("(/ 1 0)").is_err());
-    }
-
-    #[test]
-    fn evaluates_nested_expressions() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(+ 1 (* 2 3))").unwrap(), "7");
-    }
-
-    #[test]
-    fn evaluates_quote() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(quote (a b c))").unwrap(), "(a b c)");
-        assert_eq!(eval.eval("'(a b c)").unwrap(), "(a b c)");
-    }
-
-    #[test]
-    fn evaluates_list() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(list 1 2 3)").unwrap(), "(1 2 3)");
-    }
-
-    #[test]
-    fn evaluates_multiple_top_level_forms_line_by_line() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(+ 1 1)\n(+ 2 2)").unwrap(), "2\n4");
-    }
-
-    #[test]
-    fn empty_input_evaluates_to_empty_string() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("").unwrap(), "");
-    }
-
-    #[test]
-    fn unknown_operator_is_an_error() {
-        let eval = Evaluator::new();
-        assert_eq!(
-            eval.eval("(unknown-op 1 2)").unwrap_err(),
-            "Unbound variable: unknown-op"
-        );
-    }
-
-    #[test]
-    fn wrong_argument_type_is_an_error() {
-        let eval = Evaluator::new();
-        assert!(eval.eval(r#"(+ 1 "two")"#).is_err());
-    }
-
-    #[test]
-    fn unknown_builtin_is_an_error() {
-        // 組み込みの手続きの値は, 名前の一覧からしか作らないので, 評価では起きない
-        let evaluator = Evaluator::new();
-        let mut machine = Machine::new(&evaluator, &NoHost);
-        assert_eq!(
-            builtins::call(&mut machine, "none", vec![]),
-            Err("Unknown procedure: none".to_string())
-        );
-    }
-
-    #[test]
-    fn remembers_definitions_between_evaluations() {
-        let eval = Evaluator::new();
-        assert_eq!(eval.eval("(define x 10)").unwrap(), "x");
-        assert_eq!(eval.eval("(* x 2)").unwrap(), "20");
-    }
 }
