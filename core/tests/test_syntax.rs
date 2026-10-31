@@ -57,7 +57,10 @@ fn test_against_emacs() {
             // 入れ子にできるコメント (`#| |#`) の中から後ろへ読む結果は, 比べない. Emacs は, コメントの中と知らずに
             // 読み (`|` を文字列の印とするなど), 意味のある結果にならない. 外から読んだ結果は, 比べる.
             let state = source.parse_state(pos);
-            if kind.contains(" -") && state.in_comment && state.nested {
+            let block = state
+                .start
+                .is_some_and(|start| text.chars().nth(start + 1) == Some('|'));
+            if kind.contains(" -") && state.in_comment && state.nested && block {
                 skipped += 1;
                 continue;
             }
@@ -227,4 +230,7 @@ fn test_scheme_datum_comment_in_scan_lists() {
             "{text:?} from {from} count {count} depth {depth}"
         );
     }
+    // `#;` が範囲の外なら, 式の終わりの印で止まる (Emacs の `narrow-to-region` の後の `forward-comment`)
+    let narrow = Source::new("#;a b", Dialect::Scheme).narrow(1, 5);
+    assert_eq!(narrow.skip_comments(3, -1), (3, false));
 }

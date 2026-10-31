@@ -2,8 +2,10 @@
 //!
 //! 構文表は, Emacs 30 の Fundamental モード (`standard-syntax-table`), emacs-lisp-mode, scheme-mode のものです.
 //! Lisp のモードでは, `;` から行の終わりまでがコメントで, Scheme では `#| |#` もコメントです (入れ子にできる).
+//! Scheme の `#;` の後ろの式も, コメントです (Emacs の `scheme-syntax-propertize` と同じく, 文字の構文を上書きする).
 //! 位置は 0 から数える文字の位置です. 期待値は, `emacs -Q --batch` の結果 (`tools/syntax/run.sh` で作る) と比べます.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::sync::OnceLock;
 
@@ -65,6 +67,13 @@ const FLAG_END1: u8 = 4;
 /// 終わりの 2 文字目.
 const FLAG_END2: u8 = 8;
 
+/// コメントの型 a (`;` から行の終わりまで).
+const STYLE_A: u8 = 0;
+/// コメントの型 b (Scheme の `#| |#`).
+const STYLE_B: u8 = 1;
+/// コメントの型 c (Scheme の `#;` の式).
+const STYLE_C: u8 = 2;
+
 /// 文字の構文.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Syntax {
@@ -72,13 +81,58 @@ pub struct Syntax {
     pub class: Class,
     /// 2 文字のコメントの印 (Scheme の `#|` と `|#`).
     flags: u8,
+    /// コメントの型 (Emacs の flag の `b` と `c`).
+    style: u8,
+    /// 入れ子にできるコメントの印なら `true` (Emacs の flag の `n`).
+    nested: bool,
 }
 
 impl Syntax {
     /// 印の無い構文.
     fn plain(class: Class) -> Self {
-        Syntax { class, flags: 0 }
+        Syntax {
+            class,
+            flags: 0,
+            style: STYLE_A,
+            nested: false,
+        }
     }
+
+    /// `#;` の式のコメントの印 (Emacs の `< cn` と `> cn`).
+    fn datum_comment(class: Class) -> Self {
+        Syntax {
+            class,
+            flags: 0,
+            style: STYLE_C,
+            nested: true,
+        }
+    }
+}
+
+/// コメントの種類: 型と, 入れ子にできるか.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct CommentKind {
+    /// 型.
+    style: u8,
+    /// 入れ子にできるなら `true`.
+    nested: bool,
+}
+
+impl CommentKind {
+    /// 1 文字の印のコメントの種類.
+    fn of(syntax: Syntax) -> Self {
+        CommentKind {
+            style: syntax.style,
+            nested: syntax.nested,
+        }
+    }
+
+    /// 2 文字の印 (Scheme の `#|` と `|#`) のコメントの種類: 型 b の, 入れ子にできるコメント
+    /// (Emacs の `SYNTAX_FLAGS_COMMENT_STYLE`. 2 文字の印は, ほかに無い).
+    const BLOCK: CommentKind = CommentKind {
+        style: STYLE_B,
+        nested: true,
+    };
 }
 
 /// ASCII でない括弧 (開く括弧と閉じる括弧を, 交互に並べる).
@@ -152,14 +206,18 @@ fn unicode_classes() -> &'static (Regex, Regex, Regex) {
 pub fn syntax_of(c: char, dialect: Dialect) -> Syntax {
     if c.is_ascii() {
         if dialect == Dialect::Scheme && (c == '#' || c == '|') {
-            let flags = if c == '#' {
-                FLAG_START1 | FLAG_END2
-            } else {
+            // `#` は `' 14`, `|` は `" 23bn` (`#| |#` は, 型 b の入れ子にできるコメント)
+            let pipe = c == '|';
+            let flags = if pipe {
                 FLAG_START2 | FLAG_END1
+            } else {
+                FLAG_START1 | FLAG_END2
             };
             return Syntax {
                 class: scheme(c),
                 flags,
+                style: if pipe { STYLE_B } else { STYLE_A },
+                nested: pipe,
             };
         }
         if c.is_ascii_alphanumeric() {
@@ -228,7 +286,7 @@ pub struct ParseState {
     pub in_string: bool,
     /// コメントの中なら `true`.
     pub in_comment: bool,
-    /// コメントが, 入れ子にできるコメント (Scheme の `#| |#`) なら `true`.
+    /// コメントが, 入れ子にできるコメント (Scheme の `#| |#` と `#;`) なら `true`.
     pub nested: bool,
     /// 文字列かコメントの始め (どちらの中でもなければ `None`).
     pub start: Option<usize>,
@@ -245,92 +303,8 @@ pub struct Source {
     min: usize,
     /// 範囲の終わり.
     max: usize,
-    /// Scheme の `#;` の式のコメント: (`#;` の位置, 式の最後の文字の位置). Emacs の `scheme-syntax-propertize` と同じ.
-    datum_comments: Vec<(usize, usize)>,
-}
-
-/// Scheme の本文から, `#;` の式のコメントを探します (`#;` の位置と, 式の最後の文字の位置).
-fn scheme_datum_comments(chars: &[char]) -> Vec<(usize, usize)> {
-    let at = |p: usize| chars.get(p).copied();
-    // 式の終わりの位置 (最後の文字) を返します. 式が無ければ `None`.
-    fn datum_end(chars: &[char], start: usize) -> Option<usize> {
-        let at = |p: usize| chars.get(p).copied();
-        let mut i = start;
-        while matches!(at(i), Some(c) if c.is_whitespace()) {
-            i += 1;
-        }
-        // 式の前の印 (`'`, `` ` ``, `,`, `#`)
-        while matches!(at(i), Some('\'' | '`' | ',' | '#')) && !matches!(at(i + 1), Some('\\')) {
-            i += 1;
-        }
-        match at(i)? {
-            '(' | '[' => {
-                let mut depth = 0;
-                let mut j = i;
-                while let Some(c) = at(j) {
-                    match c {
-                        '"' => j = string_end(chars, j),
-                        ';' => {
-                            while matches!(at(j), Some(c) if c != '\n') {
-                                j += 1;
-                            }
-                        }
-                        '(' | '[' => depth += 1,
-                        ')' | ']' => {
-                            depth -= 1;
-                            if depth == 0 {
-                                return Some(j);
-                            }
-                        }
-                        _ => {}
-                    }
-                    j += 1;
-                }
-                None
-            }
-            '"' => Some(string_end(chars, i)),
-            _ => {
-                let mut j = i;
-                while matches!(at(j), Some(c) if !c.is_whitespace() && !"()[]\";".contains(c)) {
-                    j += 1;
-                }
-                (j > i).then(|| j - 1)
-            }
-        }
-    }
-    // 文字列の終わりの `"` の位置 (始めの `"` の位置から)
-    fn string_end(chars: &[char], start: usize) -> usize {
-        let mut j = start + 1;
-        loop {
-            match chars.get(j).copied() {
-                Some('\\') => j += 2,
-                Some('"') | None => return j.min(chars.len().saturating_sub(1)),
-                Some(_) => j += 1,
-            }
-        }
-    }
-    let mut found = Vec::new();
-    let mut i = 0;
-    while i < chars.len() {
-        match at(i) {
-            Some(';') => {
-                while matches!(at(i), Some(c) if c != '\n') {
-                    i += 1;
-                }
-            }
-            Some('"') => i = string_end(chars, i) + 1,
-            Some('#') if at(i + 1) == Some(';') => match datum_end(chars, i + 2) {
-                Some(last) => {
-                    found.push((i, last));
-                    i = last + 1;
-                }
-                None => i += 2,
-            },
-            Some('#') if at(i + 1) == Some('\\') => i += 3,
-            _ => i += 1,
-        }
-    }
-    found
+    /// 位置ごとに上書きした構文 (Emacs の `syntax-table` のテキスト属性. Scheme の `#;` の式のコメントの印).
+    props: HashMap<usize, Syntax>,
 }
 
 impl Source {
@@ -343,17 +317,95 @@ impl Source {
     pub fn new(text: &str, dialect: Dialect) -> Self {
         let chars: Vec<char> = text.chars().collect();
         let max = chars.len();
-        let datum_comments = if dialect == Dialect::Scheme {
-            scheme_datum_comments(&chars)
-        } else {
-            Vec::new()
-        };
-        Source {
+        let mut source = Source {
             chars,
             dialect,
             min: 0,
             max,
-            datum_comments,
+            props: HashMap::new(),
+        };
+        if dialect == Dialect::Scheme {
+            source.propertize_datum_comments();
+        }
+        source
+    }
+
+    /// `#;` を探します (`from` から, `limit` までに終わるもの). 見つかれば, `#` の位置.
+    fn find_datum_comment(&self, from: usize, limit: usize) -> Option<usize> {
+        (from..limit.saturating_sub(1))
+            .find(|&at| self.chars[at] == '#' && self.chars[at + 1] == ';')
+    }
+
+    /// `#;` の `#` をコメントの始めにし, 後ろの式の最後の文字をコメントの終わりにします
+    /// (Emacs の `scheme-syntax-propertize`. 本文全体を, 前から 1 回だけ読む).
+    fn propertize_datum_comments(&mut self) {
+        let end = self.chars.len();
+        let mut point = 0;
+        while let Some(at) = self.find_datum_comment(point, end) {
+            self.props
+                .insert(at, Syntax::datum_comment(Class::CommentStart));
+            point = self.sexp_comment(at + 2, end);
+        }
+    }
+
+    /// `#;` の後ろの点から, 式のコメントの終わりに印を付けます (Emacs の `scheme-syntax-propertize-sexp-comment`).
+    /// `#;` が, 文字列や別のコメントの中なら, 何もしない.
+    ///
+    /// # Returns
+    ///
+    /// 次に `#;` を探し始める位置.
+    fn sexp_comment(&mut self, point: usize, end: usize) -> usize {
+        let (state, comment) = self.parse(self.min, point);
+        match (comment, state.start) {
+            (Some((kind, _)), Some(start)) if kind.style == STYLE_C => {
+                let mut checked = point;
+                self.sexp_comment_from(start + 2, &mut checked, end)
+            }
+            _ => point,
+        }
+    }
+
+    /// `startpos` から式を読み, その最後の文字に, コメントの終わりの印を付けます. 読み飛ばした所に `#;` があれば,
+    /// 先にその式に印を付けてから, 読み直す (Emacs の `scheme-syntax-propertize-sexp-comment` の `loop`).
+    ///
+    /// # Returns
+    ///
+    /// 式の終わり (読めなければ `end`).
+    fn sexp_comment_from(&mut self, startpos: usize, checked: &mut usize, end: usize) -> usize {
+        loop {
+            // forward-sexp: 式が無ければ終わりまで, 読めなければ (scan-error) 失敗
+            let found = match self.scan_lists(startpos, 1, 0, true) {
+                Ok(next) => Some(next.unwrap_or(end)),
+                Err(_) => None,
+            };
+            let limit = found.unwrap_or(end).min(end);
+            if *checked < limit {
+                // 読み飛ばした所の `#;` (文字列とコメントの中のものは除く) を, 入れ子の式のコメントにする
+                let mut point = *checked;
+                let mut nested = None;
+                while let Some(at) = self.find_datum_comment(point, limit) {
+                    point = at + 2;
+                    if self.parse(startpos, at).0.start.is_none() {
+                        nested = Some(at);
+                        break;
+                    }
+                }
+                if nested.is_none() {
+                    point = limit;
+                }
+                *checked = point;
+                if let Some(at) = nested.filter(|_| point < limit) {
+                    self.props
+                        .insert(at, Syntax::datum_comment(Class::CommentStart));
+                    self.sexp_comment_from(point, checked, end);
+                    continue;
+                }
+            }
+            if let Some(found) = found {
+                self.props
+                    .insert(found - 1, Syntax::datum_comment(Class::CommentEnd));
+            }
+            return found.unwrap_or(end);
         }
     }
 
@@ -371,6 +423,9 @@ impl Source {
 
     /// 位置の文字の構文. 本文の外は単語とする.
     fn syntax_at(&self, pos: usize) -> Syntax {
+        if let Some(syntax) = self.props.get(&pos) {
+            return *syntax;
+        }
         let at = |p: usize| self.chars.get(p).copied();
         if self.dialect == Dialect::Elisp {
             // `,@` の `@` は, 後ろの記号に付けない. `##` は, 空の名前の記号 (Emacs の `elisp-mode-syntax-propertize`)
@@ -386,20 +441,9 @@ impl Source {
         at(pos).map_or(Syntax::plain(Class::Word), |c| syntax_of(c, self.dialect))
     }
 
-    /// 位置の文字の種類. `#;` の式のコメントの最後の文字は, 空白とする (Emacs の `> cn`).
+    /// 位置の文字の種類.
     fn class_at(&self, pos: usize) -> Class {
-        if self.datum_comments.iter().any(|&(_, last)| last == pos) {
-            return Class::Space;
-        }
         self.syntax_at(pos).class
-    }
-
-    /// 位置から `#;` の式のコメントが始まるなら, その式の最後の文字の位置.
-    fn datum_comment_end(&self, pos: usize) -> Option<usize> {
-        self.datum_comments
-            .binary_search_by_key(&pos, |&(start, _)| start)
-            .ok()
-            .map(|k| self.datum_comments[k].1)
     }
 
     /// 位置の文字.
@@ -458,52 +502,51 @@ impl Source {
 
     /// 範囲の始めから位置までを読んで, 構文の状態を返します (Emacs の `syntax-ppss`).
     pub fn parse_state(&self, pos: usize) -> ParseState {
+        self.parse(self.min, pos).0
+    }
+
+    /// `from` から `pos` までを読んで, 構文の状態と, 中にいるコメントの種類と入れ子の深さを返します
+    /// (Emacs の `parse-partial-sexp`).
+    fn parse(&self, from: usize, pos: usize) -> (ParseState, Option<(CommentKind, usize)>) {
         let mut state = ParseState::default();
-        // 文字列の終わりの文字, コメントの入れ子の深さ (`;` のコメントは 0)
+        // 文字列の終わりの文字, 中にいるコメントの種類と入れ子の深さ
         let mut term = None;
+        let mut comment: Option<CommentKind> = None;
         let mut nesting = 0;
-        let mut i = self.min;
+        let mut i = from;
         while i < pos {
             let class = self.class_at(i);
             let ch = self.char_at(i);
+            let mut next = i + 1;
             if state.in_string {
-                if ch == term {
+                // 閉じるのは, 文字列の構文の, 同じ文字だけ (`#;` の式の終わりの `"` は, コメントの終わり)
+                if ch == term && class == Class::Str {
                     state.in_string = false;
                 } else if class == Class::Escape {
-                    i += 1;
+                    next += 1;
                 }
-            } else if state.in_comment {
-                if nesting == 0 {
-                    if class == Class::CommentEnd {
+            } else if let Some(kind) = comment {
+                match self.comment_step(i, kind, &mut nesting, pos) {
+                    Ok(end) => {
+                        comment = None;
                         state.in_comment = false;
+                        next = end;
                     }
-                } else if self.pair(i, FLAG_END1, FLAG_END2, pos) {
-                    i += 1;
-                    nesting -= 1;
-                    if nesting == 0 {
-                        state.in_comment = false;
-                    }
-                } else if self.pair(i, FLAG_START1, FLAG_START2, pos) {
-                    i += 1;
-                    nesting += 1;
+                    Err(at) => next = at,
                 }
-            } else if self.pair(i, FLAG_START1, FLAG_START2, pos) {
+            } else if let Some((len, kind)) = self.comment_start(i, pos) {
+                comment = Some(kind);
                 state.in_comment = true;
-                state.nested = true;
+                state.nested = kind.nested;
                 state.start = Some(i);
-                nesting = 1;
-                i += 1;
-            } else if class == Class::CommentStart {
-                state.in_comment = true;
-                state.nested = false;
-                state.start = Some(i);
-                nesting = 0;
+                nesting = usize::from(kind.nested);
+                next = i + len;
             } else if class == Class::Str {
                 state.in_string = true;
                 state.start = Some(i);
                 term = ch;
             } else if class == Class::Escape {
-                i += 1;
+                next += 1;
             } else if class == Class::Open {
                 state.opens.push(i);
                 state.depth += 1;
@@ -515,9 +558,58 @@ impl Source {
                 state.start = None;
                 state.nested = false;
             }
-            i += 1;
+            i = next;
         }
-        state
+        (state, comment.map(|kind| (kind, nesting)))
+    }
+
+    /// 位置から始まるコメントの始めの印 (`max` より前に収まるもの): 印の長さと, コメントの種類.
+    fn comment_start(&self, pos: usize, max: usize) -> Option<(usize, CommentKind)> {
+        if self.pair(pos, FLAG_START1, FLAG_START2, max) {
+            let kind = CommentKind::BLOCK;
+            return Some((2, kind));
+        }
+        let syntax = self.syntax_at(pos);
+        (pos < max && syntax.class == Class::CommentStart).then(|| (1, CommentKind::of(syntax)))
+    }
+
+    /// コメントの中の位置 `i` を読みます (Emacs の `forw_comment` の 1 回り). 同じ型の入れ子の印で, 深さを変える.
+    ///
+    /// # Returns
+    ///
+    /// コメントが終われば, 終わりの印の後ろ (`Ok`). 続けば, 次に読む位置 (`Err`).
+    fn comment_step(
+        &self,
+        i: usize,
+        kind: CommentKind,
+        nesting: &mut usize,
+        max: usize,
+    ) -> Result<usize, usize> {
+        let syntax = self.syntax_at(i);
+        if syntax.class == Class::CommentEnd && syntax.style == kind.style {
+            if !syntax.nested && !kind.nested {
+                return Ok(i + 1);
+            }
+            if syntax.nested && kind.nested {
+                *nesting -= 1;
+                if *nesting == 0 {
+                    return Ok(i + 1);
+                }
+            }
+        }
+        if kind.nested && syntax.class == Class::CommentStart && CommentKind::of(syntax) == kind {
+            *nesting += 1;
+        }
+        if self.pair(i, FLAG_END1, FLAG_END2, max) && CommentKind::BLOCK == kind {
+            *nesting -= 1;
+            return if *nesting == 0 { Ok(i + 2) } else { Err(i + 2) };
+        }
+        if kind.nested && self.pair(i, FLAG_START1, FLAG_START2, max) && CommentKind::BLOCK == kind
+        {
+            *nesting += 1;
+            return Err(i + 2);
+        }
+        Err(i + 1)
     }
 
     /// コメントの終わりまで読みます (Emacs の `forw_comment`).
@@ -525,30 +617,20 @@ impl Source {
     /// # Arguments
     ///
     /// * `from` - コメントの始めの印の後ろ.
-    /// * `nesting` - 入れ子の深さ (`;` のコメントは 0, `#|` のコメントは 1).
+    /// * `kind` - コメントの種類.
     /// * `max` - 範囲の終わり.
     ///
     /// # Returns
     ///
     /// コメントの後ろ. 終わらなければ `None`.
-    fn forward_comment_body(&self, from: usize, mut nesting: usize, max: usize) -> Option<usize> {
+    fn forward_comment_body(&self, from: usize, kind: CommentKind, max: usize) -> Option<usize> {
+        let mut nesting = usize::from(kind.nested);
         let mut i = from;
         while i < max {
-            if nesting == 0 {
-                if self.class_at(i) == Class::CommentEnd {
-                    return Some(i + 1);
-                }
-            } else if self.pair(i, FLAG_END1, FLAG_END2, max) {
-                i += 1;
-                nesting -= 1;
-                if nesting == 0 {
-                    return Some(i + 1);
-                }
-            } else if self.pair(i, FLAG_START1, FLAG_START2, max) {
-                i += 1;
-                nesting += 1;
+            match self.comment_step(i, kind, &mut nesting, max) {
+                Ok(end) => return Some(end),
+                Err(next) => i = next,
             }
-            i += 1;
         }
         None
     }
@@ -573,30 +655,136 @@ impl Source {
         count % 2 == 1
     }
 
-    /// 終わりの印 (`;` のコメントの改行, `|#`) から, コメントの始めを探します (Emacs の `back_comment`).
-    /// その種類のコメントの終わりでなければ (`#| |#` の中の改行など) `None`.
-    fn back_comment(&self, from: usize, nested: bool) -> Option<usize> {
-        let state = self.parse_state(from);
-        if !(state.in_comment && state.nested == nested) {
-            return None;
-        }
-        let outer = state.start?;
-        if !nested {
-            return Some(outer);
-        }
-        // 入れ子のコメントは, 終わりの印に合う, 一番内側の始めの印 (`#|`) を探す
-        let mut depth = 1;
-        let inner = (outer..from).rev().find(|&at| {
-            if self.pair(at, FLAG_START1, FLAG_START2, self.max) {
-                depth -= 1;
-                return depth == 0;
+    /// 終わりの印 (`;` のコメントの改行, `|#`, `#;` の式の最後の文字. `from` はその 1 文字目) から, 前へ, コメントの
+    /// 始めを探します (Emacs の `back_comment`). 前へ読みながら, 同じ種類のコメントの始めの印を探し, 文字列の印や
+    /// 別の種類のコメントが混じって分からなければ, 前から読み直す. `kind` のコメントの終わりでなければ `None`.
+    fn back_comment(&self, from: usize, kind: CommentKind) -> Option<usize> {
+        let stop = self.min;
+        let comment_end = from;
+        let mut from = from;
+        // 文字列の印の数の偶奇 (開いている文字列の印), 分からなくなったか
+        let mut string_style: Option<char> = None;
+        let mut string_lossage = false;
+        let mut comment_lossage = false;
+        let mut comstart_pos = None;
+        let mut defun_start = None;
+        let mut nesting = 1;
+        let mut lossage = false;
+        // 前に読んだ (後ろの) 文字の構文. 始めは, 印の無い空白 (Emacs の 0)
+        let mut syntax = Syntax::plain(Class::Space);
+        while from > stop {
+            from -= 1;
+            let prev_syntax = syntax;
+            syntax = self.syntax_at(from);
+            let c = self.char_at(from);
+            let mut code = syntax.class;
+            // 2 文字の印
+            let com2start = syntax.flags & FLAG_START1 != 0
+                && prev_syntax.flags & FLAG_START2 != 0
+                && CommentKind::BLOCK == kind;
+            let mut com2end = syntax.flags & FLAG_END1 != 0 && prev_syntax.flags & FLAG_END2 != 0;
+            let comstart = com2start || code == Class::CommentStart;
+            // 2 文字の印が重なっていれば (`|#|` など), 前から読み直す
+            if from > stop && (com2end || comstart) {
+                let next = self.syntax_at(from - 1);
+                if ((comstart || kind.nested)
+                    && syntax.flags & FLAG_END2 != 0
+                    && next.flags & FLAG_END1 != 0)
+                    || ((com2end || kind.nested)
+                        && syntax.flags & FLAG_START2 != 0
+                        && kind.style == STYLE_B
+                        && next.flags & FLAG_START1 != 0)
+                {
+                    lossage = true;
+                    break;
+                }
             }
-            if self.pair(at, FLAG_END1, FLAG_END2, self.max) {
-                depth += 1;
+            if com2start && comstart_pos.is_none() {
+                com2end = false;
             }
-            false
+            if com2end {
+                code = Class::CommentEnd;
+            } else if com2start {
+                code = Class::CommentStart;
+            } else if code == Class::CommentStart && CommentKind::of(syntax) != kind {
+                // 別の種類のコメントの始めは, 見ない
+                continue;
+            }
+            if code != Class::CommentEnd && self.char_quoted(from) {
+                continue;
+            }
+            match code {
+                Class::Str => match string_style {
+                    None => string_style = c,
+                    Some(open) if Some(open) == c => string_style = None,
+                    Some(_) => string_lossage = true,
+                },
+                Class::CommentStart => {
+                    if string_style.is_some() || comment_lossage || string_lossage {
+                        lossage = true;
+                        break;
+                    }
+                    if !kind.nested {
+                        // 一番前の始めの印まで探す
+                        comstart_pos = Some(from);
+                    } else {
+                        nesting -= 1;
+                        if nesting == 0 {
+                            return Some(from);
+                        }
+                    }
+                }
+                Class::CommentEnd => {
+                    let nested = (com2end && prev_syntax.nested) || syntax.nested;
+                    if syntax.style == kind.style && nested == kind.nested {
+                        // 同じ種類の終わりの印: それより前は, その印のコメント
+                        if !kind.nested {
+                            break;
+                        }
+                        nesting += 1;
+                    } else if comstart_pos.is_some() || c != Some('\n') {
+                        comment_lossage = true;
+                    }
+                }
+                // 行の始めの開く括弧は, 文字列とコメントの外とする (Emacs の `open-paren-in-column-0-is-defun-start`)
+                Class::Open if from == stop || self.char_at(from - 1) == Some('\n') => {
+                    defun_start = Some(from);
+                    break;
+                }
+                _ => {}
+            }
+        }
+        if !lossage {
+            return comstart_pos;
+        }
+        // 前から読み直す. 始めは, 行の始めの開く括弧か, 終わりの印を含む文字列かコメントの始め (`syntax-ppss`)
+        let mut start = defun_start.unwrap_or_else(|| {
+            self.parse(self.min, comment_end)
+                .0
+                .start
+                .unwrap_or(comment_end)
         });
-        Some(inner.unwrap_or(outer))
+        let mut found = None;
+        while start < comment_end {
+            let (state, comment) = self.parse(start, comment_end);
+            start = comment_end;
+            match comment {
+                Some((k, depth))
+                    if k.style == kind.style
+                        && k.nested == kind.nested
+                        && (!kind.nested || depth == 1) =>
+                {
+                    found = state.start;
+                }
+                // 別のコメントの中なら, 入れ子かもしれないので, そのコメントの中から読み直す
+                Some(_) => {
+                    found = None;
+                    start = state.start.map_or(comment_end, |s| s + 2);
+                }
+                None => found = None,
+            }
+        }
+        found
     }
 
     /// 括弧の深さを数えながら, 式を読みます (Emacs の `scan-lists` と `scan-sexps`).
@@ -634,20 +822,15 @@ impl Source {
         while count > 0 {
             let mut done = false;
             while from < max && !done {
-                // Scheme の `#;` の式は, コメントとして飛ばす
-                if let Some(last) = self.datum_comment_end(from) {
-                    from = last + 1;
-                    continue;
-                }
                 let mut class = self.scan_class(from, sexp);
                 if depth == min_depth {
                     last_good = from;
                 }
-                // `#|` のコメント
-                let mut nesting = 0;
+                // コメントの始め (`;`, `#|`, `#;` の `#`)
+                let mut comment = CommentKind::of(self.syntax_at(from));
                 if ignore_comments && self.pair(from, FLAG_START1, FLAG_START2, max) {
                     class = Class::CommentStart;
-                    nesting = 1;
+                    comment = CommentKind::BLOCK;
                     from += 1;
                 }
                 from += 1;
@@ -682,7 +865,7 @@ impl Source {
                         done = true;
                     }
                     Class::CommentStart => {
-                        let end = self.forward_comment_body(from, nesting, max);
+                        let end = self.forward_comment_body(from, comment, max);
                         from = end.unwrap_or(max);
                         if end.is_none() {
                             if depth == 0 {
@@ -716,7 +899,7 @@ impl Source {
                             if from >= max {
                                 return Err(lose(from));
                             }
-                            if self.char_at(from) == term {
+                            if self.char_at(from) == term && self.class_at(from) == Class::Str {
                                 break;
                             }
                             if self.scan_class(from, sexp) == Class::Escape {
@@ -753,12 +936,12 @@ impl Source {
                 if depth == min_depth {
                     last_good = from;
                 }
-                // `|#` のコメントの終わり
-                let nested =
-                    ignore_comments && from > min && self.pair(from - 1, FLAG_END1, FLAG_END2, max);
-                if nested {
+                // コメントの終わり (改行, `|#`, `#;` の式の最後の文字)
+                let mut comment = CommentKind::of(self.syntax_at(from));
+                if ignore_comments && from > min && self.pair(from - 1, FLAG_END1, FLAG_END2, max) {
                     class = Class::CommentEnd;
                     from -= 1;
+                    comment = CommentKind::BLOCK;
                 }
                 if class != Class::CommentEnd && self.char_quoted(from) {
                     from -= 1;
@@ -803,7 +986,7 @@ impl Source {
                         }
                     }
                     Class::CommentEnd => {
-                        if let Some(start) = self.back_comment(from, nested) {
+                        if let Some(start) = self.back_comment(from, comment) {
                             from = start;
                         }
                     }
@@ -818,7 +1001,10 @@ impl Source {
                                 });
                             }
                             from -= 1;
-                            if !self.char_quoted(from) && self.char_at(from) == term {
+                            if !self.char_quoted(from)
+                                && self.char_at(from) == term
+                                && self.class_at(from) == Class::Str
+                            {
                                 break;
                             }
                         }
@@ -844,6 +1030,15 @@ impl Source {
         Ok(Some(from))
     }
 
+    /// コメントの外で, 空白と見る文字か (Emacs の `forward-comment`: 空白と, コメントの終わりの改行).
+    fn blank_between_comments(&self, pos: usize) -> bool {
+        match self.class_at(pos) {
+            Class::Space => true,
+            Class::CommentEnd => self.char_at(pos) == Some('\n'),
+            _ => false,
+        }
+    }
+
     /// 空白とコメントを飛ばします (Emacs の `forward-comment` の前向き. 改行も空白とする).
     ///
     /// # Arguments
@@ -858,15 +1053,14 @@ impl Source {
         let max = self.max;
         let mut pos = from;
         for _ in 0..count {
-            while pos < max && matches!(self.class_at(pos), Class::Space | Class::CommentEnd) {
+            while pos < max && self.blank_between_comments(pos) {
                 pos += 1;
             }
-            let nesting = usize::from(self.pair(pos, FLAG_START1, FLAG_START2, max));
-            if nesting == 0 && !self.is_comment_start(pos) {
+            let Some((len, kind)) = self.comment_start(pos, max) else {
                 return pos;
-            }
+            };
             pos = self
-                .forward_comment_body(pos + 1 + nesting, nesting, max)
+                .forward_comment_body(pos + len, kind, max)
                 .unwrap_or(max);
         }
         pos
@@ -883,10 +1077,10 @@ impl Source {
         for _ in 0..count.unsigned_abs() {
             if count > 0 {
                 let mut q = p;
-                while q < max && matches!(self.class_at(q), Class::Space | Class::CommentEnd) {
+                while q < max && self.blank_between_comments(q) {
                     q += 1;
                 }
-                if !(self.is_comment_start(q) || self.pair(q, FLAG_START1, FLAG_START2, max)) {
+                if self.comment_start(q, max).is_none() {
                     return (q, false);
                 }
                 p = self.forward_comment(q, 1);
@@ -897,7 +1091,8 @@ impl Source {
                     return (p, false);
                 }
                 if p >= min + 2 && self.pair(p - 2, FLAG_END1, FLAG_END2, max) {
-                    match self.back_comment(p - 2, true) {
+                    let kind = CommentKind::BLOCK;
+                    match self.back_comment(p - 2, kind) {
                         Some(start) => {
                             p = start;
                             break;
@@ -905,14 +1100,16 @@ impl Source {
                         None => return (p, false),
                     }
                 }
-                match self.class_at(p - 1) {
-                    Class::CommentEnd => match self.back_comment(p - 1, false) {
+                let syntax = self.syntax_at(p - 1);
+                match syntax.class {
+                    Class::CommentEnd => match self.back_comment(p - 1, CommentKind::of(syntax)) {
                         Some(start) => {
                             p = start;
                             break;
                         }
-                        // コメントの終わりでない改行は, 空白
-                        None => p -= 1,
+                        // コメントの終わりでない改行は, 空白. ほかの終わりの印は, そこで止まる
+                        None if self.char_at(p - 1) == Some('\n') => p -= 1,
+                        None => return (p, false),
                     },
                     Class::Space => p -= 1,
                     _ => return (p, false),

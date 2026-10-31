@@ -165,14 +165,6 @@
 - [ ] `C-n`、`C-p` (`C-x C-n` で桁を決めていないとき): Emacs は、表示の桁 (タブと全角の文字の幅) を保つ。
       今は、行の始めからの文字の数を保つ。
 - [ ] Scheme の `#;` でコメントにした式と、`#/.../` (正規表現): Emacs の scheme-mode は、式の移動 (`C-M-f`、`C-M-u` など) でも、      コメントと文字列として読む。今は、字下げと括弧の強調だけで、そう読む。
-- [ ] Scheme の `#;` の構文の走査 (`core/src/syntax.rs`): Emacs の scheme-mode (`scheme-syntax-propertize`) は、`#;` から式の終わりまでを
-      コメントとして読む。今は、前向きの `scan-lists` が式を飛ばすだけで、次の問いが Emacs と違う
-      (`tools/syntax/dump.el` の本文に `#;` の例を足して `core/tests/syntax.json` を作ると、418 件違う)。
-  - `parse-partial-sexp` (`ppss`): `#;` の中と後ろの状態 (コメントの中か、コメントの始まりの位置、入れ子のコメントか) が違う。
-  - `forward-comment`: `#;` の式を、コメントとして飛ばさない。
-  - `backward-prefix-chars`: `#;` の位置で、戻る先が違う。
-  - 後ろ向きの `scan-lists` と `scan-sexps`: `#;` の式を飛ばさずに読む (`#;(a b) c` の終わりから 1 つ戻ると、エラーになる)。
-  - 前向きの `scan-lists` でも違う形: 閉じていない文字列 (`#;"abc`)、文字の後ろ (`#;#\( x`)、`#;` の入れ子 (`#;(#;(a) b) c`)。
 - [ ] `M-@`、`C-M-SPC`、`C-M-h` の負の前置引数 (前へ選ぶ)。
 - [ ] `M-SPC`: Linux のデスクトップ (GNOME など) は、Alt+Space をウィンドウのメニューに使うので、エディタにキーが届かないことがある。
       Emacs と同じく、`ESC SPC` でも動くようにするか、届かないことを README に書く。
