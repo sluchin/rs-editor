@@ -2,7 +2,7 @@
 ;; 本文の全ての位置から, 編集のコマンド (simple.el) を動かし, 本文, カーソル, kill-ring の先頭, マーク, this-command を書く.
 ;; 形: [[名前, 手順, 種, マーク, 本文, [位置ごとの結果]], ...].
 ;;   手順: [[コマンド, 引数, 前のコマンド], ...]. 引数: 数, null (nil), true (t), "sym:名前" (記号), {"c":"a"} (文字), {"l":[4]} (リスト).
-;;     引数 "region" は, 点とマークの間 (kill-region の BEG END). 前のコマンドが "keep" なら, last-command を変えない.
+;;     引数 "region" は, 点とマークの間 (kill-region の BEG END). ["region", 引数...] は, BEG END の後ろに引数を足す. 前のコマンドが "keep" なら, last-command を変えない.
 ;;   種: 動かす前に kill-new で入れる文字列 (後のものが先頭).
 ;;   結果: [本文, カーソル, kill-ring の先頭 または null, マーク または null, this-command または null, mark-active, deactivate-mark, 出したメッセージ または null]
 ;;         または ["error", メッセージ, 本文, カーソル]. 位置は 0 から数える.
@@ -51,6 +51,37 @@
          (one "split-line" "split-line" [])
          (one "newline" "newline" [])
          (one "newline" "newline" [2]))
+   (mapcar (lambda (a) (one "upcase-word" "upcase-word" a)) '([1] [2] [-1] [-2]))
+   (mapcar (lambda (a) (one "downcase-word" "downcase-word" a)) '([1] [2] [-1]))
+   (mapcar (lambda (a) (one "capitalize-word" "capitalize-word" a)) '([1] [2] [-1] [-2]))
+   (list (one "upcase-region" "upcase-region" "region" nil 1)
+         (one "downcase-region" "downcase-region" "region" nil 1)
+         (one "capitalize-region" "capitalize-region" "region" nil 1))
+   ;; 矩形
+   (list (one "kill-rectangle" "kill-rectangle" "region" nil 1)
+         (one "kill-rectangle" "kill-rectangle" ["region" t] nil 1)
+         (one "kill-rectangle" "kill-rectangle" "region" nil 9)
+         (one "string-rectangle" "string-rectangle" ["region" "XY"] nil 1)
+         (one "string-rectangle" "string-rectangle" ["region" ""] nil 12)
+         (list "kill-yank-rectangle"
+               (vector (step "kill-rectangle" "region") (step "end-of-buffer" []) (step "yank-rectangle" []))
+               (vector) 1)
+         (list "kill-yank-rectangle"
+               (vector (step "kill-rectangle" "region") (step "beginning-of-buffer" []) (step "yank-rectangle" []))
+               (vector) 5))
+   ;; レジスタ
+   (list (list "copy-insert-register"
+               (vector (step "copy-to-register" [((c . "a")) 1 4]) (step "end-of-buffer" []) (step "insert-register" [((c . "a"))]))
+               (vector) nil)
+         (list "copy-insert-register-mark"
+               (vector (step "copy-to-register" [((c . "a")) 2 6]) (step "beginning-of-buffer" []) (step "insert-register" [((c . "a")) nil]))
+               (vector) nil)
+         (list "copy-delete-register"
+               (vector (step "copy-to-register" [((c . "a")) 2 5 t]) (step "insert-register" [((c . "a")) t]))
+               (vector) nil)
+         (list "insert-empty-register" (vector (step "insert-register" [((c . "z"))])) (vector) nil)
+         (list "copy-register-region" (vector (step "copy-to-register" [((c . "q")) 1 3])) (vector) 1))
+   (mapcar (lambda (a) (one "delete-char" "delete-char" a)) '([1] [3] [-2] [0] [2 t] [-1 t] [4 t]))
    (mapcar (lambda (a) (one "transpose-chars" "transpose-chars" a)) '([1] [-1] [2]))
    (mapcar (lambda (a) (one "transpose-words" "transpose-words" a)) '([1] [-1] [2]))
    (mapcar (lambda (a) (one "transpose-lines" "transpose-lines" a)) '([1] [-1] [2]))
@@ -112,9 +143,12 @@
                  do (let ((cmd (aref step 0)) (args (aref step 1)) (last (aref step 2)))
                       (unless (equal last "keep") (setq last-command (and last (intern last))))
                       (setq this-command (intern cmd))
-                      (if (equal args "region")
-                          (funcall (intern cmd) (region-beginning) (region-end))
-                        (apply (intern cmd) (mapcar #'decode-arg (append args nil))))
+                      (cond ((equal args "region")
+                             (funcall (intern cmd) (region-beginning) (region-end)))
+                            ((and (vectorp args) (> (length args) 0) (equal (aref args 0) "region"))
+                             (apply (intern cmd) (region-beginning) (region-end)
+                                    (mapcar #'decode-arg (cdr (append args nil)))))
+                            (t (apply (intern cmd) (mapcar #'decode-arg (append args nil)))))
                       (unless (equal last "keep") nil)))
         (vector (buffer-string) (1- (point)) (car kill-ring)
                 (and (mark t) (1- (mark t)))

@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 15 個: Lisp 0 個, TypeScript 15 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 16 個: Lisp 1 個, TypeScript 15 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -178,20 +178,20 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `beginning-of-line` | ◯ |  |  |  |  |
 | `buffer-enable-undo` |  |  |  |  |  |
 | `call-last-kbd-macro` | ◯ |  | 実装済み | `C-x e` | TypeScript (`src/lib/emacs.ts`) |
-| `capitalize-region` | ◯ |  |  |  |  |
-| `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | TypeScript (`src/lib/emacs.ts`) |
+| `capitalize-region` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
+| `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `chmod` |  |  |  |  |  |
 | `copy-file` | ◯ |  |  |  |  |
 | `decode-coding-region` |  |  |  |  |  |
 | `defining-kbd-macro` |  |  |  |  |  |
-| `delete-char` | ◯ | `C-d` | 実装済み | `C-d` | TypeScript (`src/lib/emacs.ts`) |
+| `delete-char` | ◯ | `C-d` | 実装済み | `C-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `delete-frame` | ◯ | `C-x 5 0` |  |  |  |
 | `delete-other-windows-internal` |  |  |  |  |  |
 | `delete-process` |  |  |  |  |  |
 | `delete-region` | ◯ |  |  |  |  |
 | `do-auto-save` | ◯ |  |  |  |  |
-| `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | TypeScript (`src/lib/emacs.ts`) |
-| `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | TypeScript (`src/lib/emacs.ts`) |
+| `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `encode-coding-region` |  |  |  |  |  |
 | `end-kbd-macro` | ◯ |  | 実装済み | `C-x )` | TypeScript (`src/lib/emacs.ts`) |
 | `end-of-line` | ◯ |  |  |  |  |
@@ -262,8 +262,8 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `transpose-regions` |  |  |  |  |  |
 | `unix-sync` |  |  |  |  |  |
 | `upcase-initials-region` |  |  |  |  |  |
-| `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | TypeScript (`src/lib/emacs.ts`) |
-| `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | TypeScript (`src/lib/emacs.ts`) |
+| `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `widen` | ◯ | `C-x n w` |  |  |  |
 | `write-region` | ◯ |  |  |  |  |
 | `x-menu-bar-open-internal` |  |  |  |  |  |
@@ -281,7 +281,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
 | 5 | S 式, 段落, ページ | 19 | 5 | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
-| 7 | 検索, 置換, 強調 | 16 | 10 | 6 |
+| 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 22 | 17 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
@@ -326,7 +326,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **7. 検索, 置換, 強調**
 
-- isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
+- 【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: `replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), `isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる). 強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, `\#` `\,` `\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, 強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
 
 **8. 矩形, レジスタ, キーボードマクロ, 略語**
 
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 131 個: Lisp 48 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 140 個: Lisp 57 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -517,29 +517,29 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `comment-line` |  | newcomment | `C-x C-;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `comment-set-column` |  | newcomment | `C-x ;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `occur` | ◯ | replace | `M-s o` |  |  |  | 7 |
-| `query-replace` | ◯ | replace | `M-%` | 実装済み | `M-%` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `query-replace-regexp` | ◯ | replace | `C-M-%` | 実装済み | `C-M-%` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `isearch-backward` | ◯ | isearch | `C-r` | 実装済み | `C-r` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `isearch-backward-regexp` | ◯ | isearch | `C-M-r` | 実装済み | `C-M-r` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `isearch-forward` | ◯ | isearch | `C-s` | 実装済み | `C-s` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `isearch-forward-regexp` | ◯ | isearch | `C-M-s` | 実装済み | `C-M-s` | TypeScript (`src/hooks/useSearch.ts`) | 7 |
-| `isearch-forward-symbol` |  | isearch | `M-s _` |  |  |  | 7 |
-| `isearch-forward-symbol-at-point` |  | isearch | `M-s .` |  |  |  | 7 |
+| `occur` | ◯ | replace | `M-s o` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `query-replace` | ◯ | replace | `M-%` | 実装済み | `M-%` | TypeScript (`src/hooks/useSearch.ts`, `lisp/replace.scm`) | 7 |
+| `query-replace-regexp` | ◯ | replace | `C-M-%` | 実装済み | `C-M-%` | TypeScript (`src/hooks/useSearch.ts`, `lisp/replace.scm`) | 7 |
+| `isearch-backward` | ◯ | isearch | `C-r` | 実装済み | `C-r` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
+| `isearch-backward-regexp` | ◯ | isearch | `C-M-r` | 実装済み | `C-M-r` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
+| `isearch-forward` | ◯ | isearch | `C-s` | 実装済み | `C-s` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
+| `isearch-forward-regexp` | ◯ | isearch | `C-M-s` | 実装済み | `C-M-s` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
+| `isearch-forward-symbol` |  | isearch | `M-s _` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-symbol-at-point` |  | isearch | `M-s .` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` |  |  |  | 7 |
-| `isearch-forward-word` |  | isearch | `M-s w` |  |  |  | 7 |
+| `isearch-forward-word` |  | isearch | `M-s w` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `clear-rectangle` | ◯ | rect | `C-x r c` |  |  |  | 8 |
 | `copy-rectangle-as-kill` |  | rect | `C-x r M-w` |  |  |  | 8 |
 | `delete-rectangle` | ◯ | rect | `C-x r d` |  |  |  | 8 |
-| `kill-rectangle` | ◯ | rect | `C-x r k` | 実装済み | `C-x r k` | TypeScript (`src/lib/emacs.ts`) | 8 |
+| `kill-rectangle` | ◯ | rect | `C-x r k` | 実装済み | `C-x r k` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
 | `open-rectangle` | ◯ | rect | `C-x r o` |  |  |  | 8 |
 | `rectangle-number-lines` |  | rect | `C-x r N` |  |  |  | 8 |
-| `string-rectangle` |  | rect | `C-x r t` | 実装済み | `C-x r t` | TypeScript (`src/App.tsx`) | 8 |
-| `yank-rectangle` | ◯ | rect | `C-x r y` | 実装済み | `C-x r y` | TypeScript (`src/lib/emacs.ts`) | 8 |
+| `string-rectangle` |  | rect | `C-x r t` | 実装済み | `C-x r t` | TypeScript (`src/App.tsx`, `lisp/rect.scm`) | 8 |
+| `yank-rectangle` | ◯ | rect | `C-x r y` | 実装済み | `C-x r y` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
 | `copy-rectangle-to-register` |  | register | `C-x r r` |  |  |  | 8 |
-| `copy-to-register` | ◯ | register | `C-x r s`, `C-x r x` | 実装済み | `C-x r s`, `C-x r x` | TypeScript (`src/lib/emacs.ts`) | 8 |
+| `copy-to-register` | ◯ | register | `C-x r s`, `C-x r x` | 実装済み | `C-x r s`, `C-x r x` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
 | `increment-register` | ◯ | register | `C-x r +` |  |  |  | 8 |
-| `insert-register` | ◯ | register | `C-x r g`, `C-x r i` | 実装済み | `C-x r i`, `C-x r g` | TypeScript (`src/lib/emacs.ts`) | 8 |
+| `insert-register` | ◯ | register | `C-x r g`, `C-x r i` | 実装済み | `C-x r i`, `C-x r g` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
 | `jump-to-register` |  | register | `C-x r j` |  |  |  | 8 |
 | `number-to-register` | ◯ | register | `C-x r n` |  |  |  | 8 |
 | `point-to-register` | ◯ | register | `C-x r C-@`, `C-x r SPC`, `C-x r C-SPC` |  |  |  | 8 |
@@ -577,11 +577,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `xref-find-references` |  | xref | `M-?` |  |  |  | 11 |
 | `xref-go-back` |  | xref | `M-,` |  |  |  | 11 |
 | `xref-go-forward` |  | xref | `C-M-,` |  |  |  | 11 |
-| `highlight-lines-matching-regexp` |  | loaddefs | `M-s h l` |  |  |  | 7 |
-| `highlight-phrase` |  | loaddefs | `M-s h p` |  |  |  | 7 |
-| `highlight-regexp` |  | loaddefs | `M-s h r` |  |  |  | 7 |
-| `highlight-symbol-at-point` |  | loaddefs | `M-s h .` |  |  |  | 7 |
-| `unhighlight-regexp` |  | loaddefs | `M-s h u` |  |  |  | 7 |
+| `highlight-lines-matching-regexp` |  | loaddefs | `M-s h l` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-phrase` |  | loaddefs | `M-s h p` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | TypeScript (`src/App.tsx`) | 11 |
 | `describe-copying` |  | help | `C-h C-c`, `<f1> C-c`, `<help> C-c` |  |  |  | 12 |
 | `describe-distribution` |  | help | `C-h C-o`, `<f1> C-o`, `<help> C-o` |  |  |  | 12 |

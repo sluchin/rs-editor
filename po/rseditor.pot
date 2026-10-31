@@ -3199,6 +3199,121 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr ""
 
+#: lisp/rect.scm
+msgctxt "variable:killed-rectangle"
+msgid "Rectangle for `yank-rectangle' to insert: a list of strings, one for each line."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "variable:string-rectangle-history"
+msgid "History list for `string-rectangle'."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:rect--without-tabs"
+msgid "Call THUNK with indent-tabs-mode turned off."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:apply-on-rectangle"
+msgid ""
+"Call FUNCTION for each line of the rectangle with corners at START and END.\n"
+"FUNCTION is called with the start and end columns of the rectangle, plus ARGS,\n"
+"and point is at the beginning of the line.  Return point after the last call."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:rect--delete-line"
+msgid "Delete the columns from LEFT to RIGHT of the current line."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:rect--delete-extract-line"
+msgid "Delete the columns from LEFT to RIGHT of the current line, and return the deleted text."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:delete-extract-rectangle"
+msgid ""
+"Delete the contents of the rectangle with corners at START and END.\n"
+"Return it as a list of strings, one for each line of the rectangle.\n"
+"With an optional FILL argument, also fill lines where nothing has to be deleted."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:insert-rectangle"
+msgid ""
+"Insert text of RECTANGLE with upper left corner at point.\n"
+"RECTANGLE's first line is inserted at point, its second line is inserted at a point\n"
+"vertically under point, etc.  RECTANGLE should be a list of strings.\n"
+"After this command, the mark is at the upper left corner and point is at the lower right corner."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:kill-rectangle"
+msgid ""
+"Delete the region-rectangle and save it as the last killed one.\n"
+"Called from a program with the corners START and END, delete that rectangle.\n"
+"With a prefix argument (or a FILL argument), also fill lines where nothing has to be deleted."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:yank-rectangle"
+msgid "Yank the last killed rectangle with upper left corner at point."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:rect--string-line"
+msgid "Replace the columns from LEFT to RIGHT of the current line with STRING."
+msgstr ""
+
+#: lisp/rect.scm
+msgctxt "function:string-rectangle"
+msgid ""
+"Replace rectangle contents with STRING on each line.\n"
+"The length of STRING need not be the same as the rectangle width.\n"
+"Called from a program, takes three arguments: START, END and STRING."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "variable:register-alist"
+msgid ""
+"List of elements (NAME CONTENTS), one for each Emacs register.\n"
+"NAME is a one-character string, and CONTENTS is a string, a number or a rectangle."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "function:get-register"
+msgid "Return the contents of the register REGISTER, or #f if it is empty."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "function:set-register"
+msgid "Set the contents of the register REGISTER to VALUE, and return VALUE."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "function:register--read"
+msgid "Read the name of a register with PROMPT."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "function:copy-to-register"
+msgid ""
+"Copy the region into the register REGISTER.\n"
+"Called from a program with REGISTER, START and END (and a true DELETE-FLAG to delete the text),\n"
+"copy the text between START and END.  Interactively, with a prefix argument, delete the region."
+msgstr ""
+
+#: lisp/register.scm
+msgctxt "function:insert-register"
+msgid ""
+"Insert contents of the register REGISTER.  REGISTER is a one-character string.\n"
+"Normally puts point before and mark after the inserted text.\n"
+"If the optional second argument ARG is true, puts mark before and point after.\n"
+"Interactively, ARG is true unless there is a prefix argument."
+msgstr ""
+
 #: lisp/replace.scm
 msgctxt "variable:case-replace"
 msgid "Non-nil means `query-replace' should preserve case in replacements."
@@ -3592,6 +3707,16 @@ msgid "Insert tabs (if indent-tabs-mode) and spaces so that point gets to COLUMN
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:move-to-column"
+msgid ""
+"Move point to column COLUMN in the current line, and return the column where it ends up.\n"
+"The column of a tab or a wide character can be beyond COLUMN.\n"
+"If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if\n"
+"indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN\n"
+"is in the middle of a tab, change the tab into spaces."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:newline"
 msgid ""
 "Insert N newlines.  N is the prefix argument, or 1.\n"
@@ -3681,6 +3806,14 @@ msgctxt "function:default-indent-new-line"
 msgid ""
 "Break the line at point and delete the spaces around the break.\n"
 "The new line is not indented yet: indentation comes with the indentation commands."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-char"
+msgid ""
+"Delete the following N characters (previous if N is negative).\n"
+"Optional second arg KILLFLAG non-nil means to kill (save in kill ring) instead of delete.\n"
+"Interactively, N is the prefix argument, and KILLFLAG is true if there is a prefix argument."
 msgstr ""
 
 #: lisp/simple.scm
@@ -3788,6 +3921,64 @@ msgid ""
 "Kill the current line, with its newline.\n"
 "With an argument N, kill that many lines from the current line; a negative N kills\n"
 "backward, also killing the preceding newline.  With 0, kill the line without its newline."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--casify-region"
+msgid "Convert the text between point and the mark, or between the two positions in ARGS, with MODE."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--casify-word"
+msgid ""
+"Convert the N words after point (before point if N is negative) with MODE.\n"
+"Point moves to the end of the converted text, except for a negative N."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:upcase-region"
+msgid ""
+"Convert the region to upper case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:downcase-region"
+msgid ""
+"Convert the region to lower case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:capitalize-region"
+msgid ""
+"Convert the region to capitalized form.\n"
+"Capitalized form means each word's first character is upper case and the rest lower case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:upcase-word"
+msgid ""
+"Convert to upper case from point to end of word, moving over.\n"
+"With argument N, do this to that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:downcase-word"
+msgid ""
+"Convert to lower case from point to end of word, moving over.\n"
+"With argument N, do this to that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:capitalize-word"
+msgid ""
+"Capitalize from point to the end of word, moving over.\n"
+"With argument N, capitalize that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
 msgstr ""
 
 #: lisp/simple.scm

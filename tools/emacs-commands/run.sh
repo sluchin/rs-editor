@@ -1,5 +1,5 @@
 #!/bin/sh
-# Emacs の組み込みのコマンドと, エディタの基本のコマンドと, その既定のキーの一覧を作り, FUNCTIONS.md に書く.
+# Emacs の組み込みのコマンドと, エディタの基本のコマンドと, その既定のキーの一覧を作り, docs/functions.md に書く.
 #
 # 使い方: tools/emacs-commands/run.sh
 #   OUT        途中のファイルを置くディレクトリ (既定は一時ディレクトリ)
@@ -31,4 +31,4 @@ it('dump', () => {
 EOF
 (cd "$root" && npx vitest run "$test_file" >/dev/null)
 
-python3 "$here/generate.py" "$out" "$root/FUNCTIONS.md"
+python3 "$here/generate.py" "$out" "$root/docs/functions.md"

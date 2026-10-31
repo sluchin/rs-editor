@@ -27,6 +27,7 @@ const NATIVE: &[&str] = &[
     "bolp",
     "eolp",
     "delete-char",
+    "casify-region",
     "insert-before-markers",
     "current-column",
     "move-to-column",

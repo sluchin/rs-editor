@@ -6,6 +6,7 @@
 
 pub mod atomic;
 pub mod buffer;
+pub mod casefiddle;
 pub mod comment;
 pub mod editor;
 pub mod fill;

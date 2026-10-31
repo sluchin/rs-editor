@@ -21,6 +21,10 @@ const SIMPLE: &str = include_str!("../../lisp/simple.scm");
 const REPLACE: &str = include_str!("../../lisp/replace.scm");
 const ISEARCH: &str = include_str!("../../lisp/isearch.scm");
 
+/// 矩形とレジスタ (Lisp. `simple.scm` の後に読む).
+const RECT: &str = include_str!("../../lisp/rect.scm");
+const REGISTER: &str = include_str!("../../lisp/register.scm");
+
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -67,6 +71,8 @@ impl App {
         evaluator.eval_with(SIMPLE, &host)?;
         evaluator.eval_with(REPLACE, &host)?;
         evaluator.eval_with(ISEARCH, &host)?;
+        evaluator.eval_with(RECT, &host)?;
+        evaluator.eval_with(REGISTER, &host)?;
         let app = App {
             host,
             evaluator,

@@ -237,6 +237,34 @@ Signal an error at the beginning of the buffer."
             ((< current column)
              (insert (simple--spaces (- column current))))))))
 
+(define simple--move-to-column move-to-column)
+
+(define (move-to-column column . rest)
+  "Move point to column COLUMN in the current line, and return the column where it ends up.
+The column of a tab or a wide character can be beyond COLUMN.
+If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if
+indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN
+is in the middle of a tab, change the tab into spaces."
+  (let* ((force (and (pair? rest) (car rest)))
+         (reached (simple--move-to-column column)))
+    (when (and force (> reached column) (equal? (char-before) "\t"))
+      (backward-char 1)
+      (let ((previous (current-column)))
+        (if (< previous column)
+            (begin
+              ;; タブの前に桁までの空白を入れ, タブを消して, 元の桁まで字下げし直す
+              (insert (simple--spaces (- column previous)))
+              (delete-char 1)
+              (let ((goal (point)))
+                (simple--indent-to reached)
+                (goto-char goal)
+                (set! reached column)))
+            (forward-char 1))))
+    (when (and (< reached column) (eq? force #t))
+      (simple--indent-to column)
+      (set! reached column))
+    reached))
+
 (define-command (newline . args)
   "Insert N newlines.  N is the prefix argument, or 1.
 Signal an error if N is negative."
@@ -383,6 +411,22 @@ The new line is not indented yet: indentation comes with the indentation command
     (backward-char 1)
     (simple--delete-space " \t" #f))
   (simple--delete-space " \t" #f))
+
+(define simple--delete-char delete-char)
+
+(define-command (delete-char . args)
+  "Delete the following N characters (previous if N is negative).
+Optional second arg KILLFLAG non-nil means to kill (save in kill ring) instead of delete.
+Interactively, N is the prefix argument, and KILLFLAG is true if there is a prefix argument."
+  (let ((n (simple--arg args))
+        (kill (if (and (pair? args) (pair? (cdr args))) (cadr args) (and (null? args) (current-prefix-arg)))))
+    (if kill
+        (let ((target (+ (point) n)))
+          (if (or (< target (point-min)) (> target (point-max)))
+              (error "Args out of range")
+              (simple--kill (point) target)))
+        (simple--delete-char n))
+    #f))
 
 (define-command (delete-forward-char . args)
   "Delete the N characters after point (the N characters before point if N is negative)."
@@ -591,6 +635,57 @@ backward, also killing the preceding newline.  With 0, kill the line without its
                      p)))))
       (kill-region begin-position end-position)
       (kill-region (simple--marker begin-position begin-position end-position) (point)))))
+
+;;; Case
+
+(define (simple--casify-region mode args)
+  "Convert the text between point and the mark, or between the two positions in ARGS, with MODE."
+  (if (null? args)
+      (casify-region mode (region-beginning) (region-end))
+      (casify-region mode (car args) (cadr args)))
+  #f)
+
+(define (simple--casify-word mode args)
+  "Convert the N words after point (before point if N is negative) with MODE.
+Point moves to the end of the converted text, except for a negative N."
+  (let* ((start (point))
+         (far (save-excursion (forward-word (simple--arg args)) (point))))
+    (goto-char (casify-region mode start far))
+    #f))
+
+(define-command (upcase-region . args)
+  "Convert the region to upper case.
+Called from Lisp with the two positions BEG and END, convert the text between them."
+  (simple--casify-region "upcase" args))
+
+(define-command (downcase-region . args)
+  "Convert the region to lower case.
+Called from Lisp with the two positions BEG and END, convert the text between them."
+  (simple--casify-region "downcase" args))
+
+(define-command (capitalize-region . args)
+  "Convert the region to capitalized form.
+Capitalized form means each word's first character is upper case and the rest lower case.
+Called from Lisp with the two positions BEG and END, convert the text between them."
+  (simple--casify-region "capitalize" args))
+
+(define-command (upcase-word . args)
+  "Convert to upper case from point to end of word, moving over.
+With argument N, do this to that many words; a negative N converts the words before point
+and leaves point where it is."
+  (simple--casify-word "upcase" args))
+
+(define-command (downcase-word . args)
+  "Convert to lower case from point to end of word, moving over.
+With argument N, do this to that many words; a negative N converts the words before point
+and leaves point where it is."
+  (simple--casify-word "downcase" args))
+
+(define-command (capitalize-word . args)
+  "Capitalize from point to the end of word, moving over.
+With argument N, capitalize that many words; a negative N converts the words before point
+and leaves point where it is."
+  (simple--casify-word "capitalize" args))
 
 (define-command (kill-word . args)
   "Kill the characters forward until the end of a word.

@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
+use crate::casefiddle::{self, Case};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
 use crate::indent::{self, Config as IndentConfig, Plan};
 use crate::paragraph::{forward_paragraph, forward_sentence};
@@ -697,6 +698,19 @@ impl<U: Host> EditorHost<U> {
                 }
                 b.delete_region(b.point(), target as usize)?;
                 Value::Nil
+            }
+            "casify-region" => {
+                let case = Case::parse(text(op, args, 0)?).ok_or_else(|| {
+                    format!("{op}: unknown case {}", text(op, args, 0).unwrap_or(""))
+                })?;
+                let (from, to) = (pos(op, args, 1)?, pos(op, args, 2)?);
+                let (from, to) = if from <= to { (from, to) } else { (to, from) };
+                let source = Source::from_buffer(b, b.dialect());
+                let converted = casefiddle::convert(&b.substring(from, to)?, case, |i| {
+                    source.class_of(from + i) == Class::Word
+                });
+                b.replace_region(from, to, &converted)?;
+                at(from + converted.chars().count())
             }
             "current-column" => Value::Number(b.current_column() as f64),
             "skip-chars-forward" | "skip-chars-backward" => {

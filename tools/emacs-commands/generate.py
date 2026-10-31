@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Emacs の組み込みのコマンド (C で書いたもの) と, エディタの基本のコマンド (Lisp で書いたもの) と,
-その既定のキーの一覧を作り, FUNCTIONS.md の印の間に書く.
+その既定のキーの一覧を作り, docs/functions.md の印の間に書く.
 
-使い方: generate.py <出力のディレクトリ> <FUNCTIONS.md>
+使い方: generate.py <出力のディレクトリ> <docs/functions.md>
 
 出力のディレクトリには, run.sh が作ったファイルを置く.
   q-*             emacs -Q (既定のコマンドとキー)
@@ -190,7 +190,7 @@ def plan_lines(essential, all_commands, rs):
 
 def main():
     out, target = Path(sys.argv[1]), Path(sys.argv[2])
-    root = target.parent
+    root = Path(__file__).resolve().parents[2]
     all_commands = load_commands(out / 'q-commands.tsv')
     commands = sorted(c for c, library in all_commands.items() if library == '(C)')
     keys = load_keys(out / 'q-keys.tsv')

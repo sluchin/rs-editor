@@ -3422,6 +3422,146 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr "Org のバッファに移る."
 
+#: lisp/rect.scm
+msgctxt "variable:killed-rectangle"
+msgid "Rectangle for `yank-rectangle' to insert: a list of strings, one for each line."
+msgstr "`yank-rectangle` が入れる矩形. 行ごとの文字列の並び."
+
+#: lisp/rect.scm
+msgctxt "variable:string-rectangle-history"
+msgid "History list for `string-rectangle'."
+msgstr "`string-rectangle` の入力の履歴."
+
+#: lisp/rect.scm
+msgctxt "function:rect--without-tabs"
+msgid "Call THUNK with indent-tabs-mode turned off."
+msgstr "`indent-tabs-mode` を切って, THUNK を呼ぶ."
+
+#: lisp/rect.scm
+msgctxt "function:apply-on-rectangle"
+msgid ""
+"Call FUNCTION for each line of the rectangle with corners at START and END.\n"
+"FUNCTION is called with the start and end columns of the rectangle, plus ARGS,\n"
+"and point is at the beginning of the line.  Return point after the last call."
+msgstr ""
+"START と END を角とする矩形の各行について, FUNCTION を呼ぶ.\n"
+"FUNCTION には, 矩形の左と右の桁と, ARGS を渡す. 呼ぶときの点は, 行の始め.\n"
+"最後に呼んだ後の点を返す."
+
+#: lisp/rect.scm
+msgctxt "function:rect--delete-line"
+msgid "Delete the columns from LEFT to RIGHT of the current line."
+msgstr "今の行の, LEFT から RIGHT までの桁を消す."
+
+#: lisp/rect.scm
+msgctxt "function:rect--delete-extract-line"
+msgid "Delete the columns from LEFT to RIGHT of the current line, and return the deleted text."
+msgstr "今の行の, LEFT から RIGHT までの桁を消して, 消した文字を返す."
+
+#: lisp/rect.scm
+msgctxt "function:delete-extract-rectangle"
+msgid ""
+"Delete the contents of the rectangle with corners at START and END.\n"
+"Return it as a list of strings, one for each line of the rectangle.\n"
+"With an optional FILL argument, also fill lines where nothing has to be deleted."
+msgstr ""
+"START と END を角とする矩形の中身を消す.\n"
+"消した中身を, 矩形の行ごとの文字列の並びで返す.\n"
+"オプションの FILL があれば, 消す物が無い行も桁まで埋める."
+
+#: lisp/rect.scm
+msgctxt "function:insert-rectangle"
+msgid ""
+"Insert text of RECTANGLE with upper left corner at point.\n"
+"RECTANGLE's first line is inserted at point, its second line is inserted at a point\n"
+"vertically under point, etc.  RECTANGLE should be a list of strings.\n"
+"After this command, the mark is at the upper left corner and point is at the lower right corner."
+msgstr ""
+"RECTANGLE の文字を, 点を左上の角として入れる.\n"
+"RECTANGLE の 1 行目は点に入れ, 2 行目は点の真下に入れ, 以下も同じ.\n"
+"RECTANGLE は文字列の並び.\n"
+"入れた後は, マークが左上の角で, 点が右下の角になる."
+
+#: lisp/rect.scm
+msgctxt "function:kill-rectangle"
+msgid ""
+"Delete the region-rectangle and save it as the last killed one.\n"
+"Called from a program with the corners START and END, delete that rectangle.\n"
+"With a prefix argument (or a FILL argument), also fill lines where nothing has to be deleted."
+msgstr ""
+"リージョンの矩形を消して, 最後に消した矩形として覚える.\n"
+"プログラムから呼ぶときは, 角の START と END で矩形を決めて消す.\n"
+"前置引数 (か FILL) があれば, 消す物が無い行も桁まで埋める."
+
+#: lisp/rect.scm
+msgctxt "function:yank-rectangle"
+msgid "Yank the last killed rectangle with upper left corner at point."
+msgstr "最後に消した矩形を, 点を左上の角として入れる."
+
+#: lisp/rect.scm
+msgctxt "function:rect--string-line"
+msgid "Replace the columns from LEFT to RIGHT of the current line with STRING."
+msgstr "今の行の, LEFT から RIGHT までの桁を STRING に置き換える."
+
+#: lisp/rect.scm
+msgctxt "function:string-rectangle"
+msgid ""
+"Replace rectangle contents with STRING on each line.\n"
+"The length of STRING need not be the same as the rectangle width.\n"
+"Called from a program, takes three arguments: START, END and STRING."
+msgstr ""
+"矩形の中身を, 各行で STRING に置き換える.\n"
+"STRING の長さは, 矩形の幅と同じでなくてよい.\n"
+"プログラムから呼ぶときの引数は, START と END と STRING の 3 つ."
+
+#: lisp/register.scm
+msgctxt "variable:register-alist"
+msgid ""
+"List of elements (NAME CONTENTS), one for each Emacs register.\n"
+"NAME is a one-character string, and CONTENTS is a string, a number or a rectangle."
+msgstr ""
+"Emacs のレジスタごとの (NAME CONTENTS) の並び.\n"
+"NAME は 1 文字の文字列で, CONTENTS は文字列か数か矩形."
+
+#: lisp/register.scm
+msgctxt "function:get-register"
+msgid "Return the contents of the register REGISTER, or #f if it is empty."
+msgstr "レジスタ REGISTER の中身を返す. 空なら #f."
+
+#: lisp/register.scm
+msgctxt "function:set-register"
+msgid "Set the contents of the register REGISTER to VALUE, and return VALUE."
+msgstr "レジスタ REGISTER の中身を VALUE にして, VALUE を返す."
+
+#: lisp/register.scm
+msgctxt "function:register--read"
+msgid "Read the name of a register with PROMPT."
+msgstr "PROMPT で, レジスタの名前を読む."
+
+#: lisp/register.scm
+msgctxt "function:copy-to-register"
+msgid ""
+"Copy the region into the register REGISTER.\n"
+"Called from a program with REGISTER, START and END (and a true DELETE-FLAG to delete the text),\n"
+"copy the text between START and END.  Interactively, with a prefix argument, delete the region."
+msgstr ""
+"リージョンをレジスタ REGISTER に入れる.\n"
+"プログラムから REGISTER と START と END (と, 文字を消すなら真の DELETE-FLAG) を渡すと,\n"
+"START と END の間を入れる. 対話的に使うときは, 前置引数があれば, リージョンを消す."
+
+#: lisp/register.scm
+msgctxt "function:insert-register"
+msgid ""
+"Insert contents of the register REGISTER.  REGISTER is a one-character string.\n"
+"Normally puts point before and mark after the inserted text.\n"
+"If the optional second argument ARG is true, puts mark before and point after.\n"
+"Interactively, ARG is true unless there is a prefix argument."
+msgstr ""
+"レジスタ REGISTER の中身を入れる. REGISTER は 1 文字の文字列.\n"
+"普通は, 入れた文字の前に点を, 後ろにマークを置く.\n"
+"オプションの第 2 引数 ARG が真なら, 前にマークを, 後ろに点を置く.\n"
+"対話的に使うときは, 前置引数が無ければ ARG は真."
+
 #: lisp/replace.scm
 msgctxt "variable:case-replace"
 msgid "Non-nil means `query-replace' should preserve case in replacements."
@@ -3879,6 +4019,20 @@ msgid "Insert tabs (if indent-tabs-mode) and spaces so that point gets to COLUMN
 msgstr "点が COLUMN の桁になるように, タブ (indent-tabs-mode のとき) と空白を入れる."
 
 #: lisp/simple.scm
+msgctxt "function:move-to-column"
+msgid ""
+"Move point to column COLUMN in the current line, and return the column where it ends up.\n"
+"The column of a tab or a wide character can be beyond COLUMN.\n"
+"If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if\n"
+"indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN\n"
+"is in the middle of a tab, change the tab into spaces."
+msgstr ""
+"今の行の桁 COLUMN へ点を動かして, 着いた桁を返す.\n"
+"タブや幅の広い文字の桁は, COLUMN を越えることがある.\n"
+"オプションの第 2 引数 FORCE が #t で行が短ければ, 行の終わりに空白 (`indent-tabs-mode` ならタブも) を足して COLUMN まで届かせる.\n"
+"FORCE がほかの真の値で COLUMN がタブの途中なら, そのタブを空白にする."
+
+#: lisp/simple.scm
 msgctxt "function:newline"
 msgid ""
 "Insert N newlines.  N is the prefix argument, or 1.\n"
@@ -3986,6 +4140,17 @@ msgid ""
 msgstr ""
 "点で行を分けて, 分けた所の空白を消す.\n"
 "新しい行はまだ字下げしない. 字下げは, 字下げのコマンドで行う."
+
+#: lisp/simple.scm
+msgctxt "function:delete-char"
+msgid ""
+"Delete the following N characters (previous if N is negative).\n"
+"Optional second arg KILLFLAG non-nil means to kill (save in kill ring) instead of delete.\n"
+"Interactively, N is the prefix argument, and KILLFLAG is true if there is a prefix argument."
+msgstr ""
+"後ろの N 文字を消す (N が負なら前の文字).\n"
+"オプションの第 2 引数 KILLFLAG が真なら, 消さずに切る (kill-ring に入れる).\n"
+"対話的に使うときは, N は前置引数で, 前置引数があれば KILLFLAG は真."
 
 #: lisp/simple.scm
 msgctxt "function:delete-forward-char"
@@ -4113,6 +4278,79 @@ msgid ""
 msgstr ""
 "今の行を, 改行ごと kill する.\n"
 "引数 N があれば, 今の行から N 行を kill する. 負なら前向きで, 前の改行も kill する. 0 なら, 改行を除いて kill する."
+
+#: lisp/simple.scm
+msgctxt "function:simple--casify-region"
+msgid "Convert the text between point and the mark, or between the two positions in ARGS, with MODE."
+msgstr "点とマークの間か, ARGS の 2 つの位置の間の文字を, MODE で変換する."
+
+#: lisp/simple.scm
+msgctxt "function:simple--casify-word"
+msgid ""
+"Convert the N words after point (before point if N is negative) with MODE.\n"
+"Point moves to the end of the converted text, except for a negative N."
+msgstr ""
+"点の後ろ (N が負なら前) の N 語を, MODE で変換する.\n"
+"点は, 変換した文字の終わりへ動く (N が負のときは動かない)."
+
+#: lisp/simple.scm
+msgctxt "function:upcase-region"
+msgid ""
+"Convert the region to upper case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+"リージョンを大文字にする.\n"
+"Lisp から 2 つの位置 BEG と END を渡すと, その間の文字を変換する."
+
+#: lisp/simple.scm
+msgctxt "function:downcase-region"
+msgid ""
+"Convert the region to lower case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+"リージョンを小文字にする.\n"
+"Lisp から 2 つの位置 BEG と END を渡すと, その間の文字を変換する."
+
+#: lisp/simple.scm
+msgctxt "function:capitalize-region"
+msgid ""
+"Convert the region to capitalized form.\n"
+"Capitalized form means each word's first character is upper case and the rest lower case.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+"リージョンを, 単語の頭だけ大文字にする.\n"
+"各単語の初めの文字を大文字に, 残りを小文字にする.\n"
+"Lisp から 2 つの位置 BEG と END を渡すと, その間の文字を変換する."
+
+#: lisp/simple.scm
+msgctxt "function:upcase-word"
+msgid ""
+"Convert to upper case from point to end of word, moving over.\n"
+"With argument N, do this to that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
+msgstr ""
+"点から単語の終わりまでを大文字にして, 点を進める.\n"
+"引数 N があれば, N 語を変換する. N が負なら, 点の前の語を変換して, 点は動かさない."
+
+#: lisp/simple.scm
+msgctxt "function:downcase-word"
+msgid ""
+"Convert to lower case from point to end of word, moving over.\n"
+"With argument N, do this to that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
+msgstr ""
+"点から単語の終わりまでを小文字にして, 点を進める.\n"
+"引数 N があれば, N 語を変換する. N が負なら, 点の前の語を変換して, 点は動かさない."
+
+#: lisp/simple.scm
+msgctxt "function:capitalize-word"
+msgid ""
+"Capitalize from point to the end of word, moving over.\n"
+"With argument N, capitalize that many words; a negative N converts the words before point\n"
+"and leaves point where it is."
+msgstr ""
+"点から単語の終わりまでを, 頭だけ大文字にして, 点を進める.\n"
+"引数 N があれば, N 語を変換する. N が負なら, 点の前の語を変換して, 点は動かさない."
 
 #: lisp/simple.scm
 msgctxt "function:kill-word"

@@ -554,6 +554,49 @@ impl Buffer {
         Ok(text)
     }
 
+    /// 範囲の文字を置き換えます. カーソル, マーク, マーカーは, 範囲の外ならずらし, 範囲の中なら動かさない
+    /// (Emacs の `casify_region` の `replace_range_2`. 大文字と小文字の変換で使う). 範囲は, 逆でもよい.
+    ///
+    /// # Errors
+    ///
+    /// 範囲がバッファの外のとき.
+    pub fn replace_region(&mut self, from: usize, to: usize, text: &str) -> Result<(), String> {
+        let (from, to) = self.range(from, to)?;
+        if from == to && text.is_empty() {
+            return Ok(());
+        }
+        // 変えなくても, 変えようとしたことは覚える (Emacs の `modify_text`)
+        self.deactivate_requested = true;
+        if self.text.slice(from..to) == text {
+            return Ok(());
+        }
+        let new_len = text.chars().count();
+        let mut saved = Vec::new();
+        self.for_each_position(|p| saved.push(*p));
+        self.delete_region(from, to)?;
+        self.insert_at(from, text)?;
+        let mut saved = saved.into_iter();
+        self.for_each_position(|p| {
+            let old = saved.next().unwrap_or(*p);
+            *p = if old <= from {
+                old
+            } else if old >= to {
+                old - (to - from) + new_len
+            } else {
+                old.min(from + new_len)
+            };
+        });
+        Ok(())
+    }
+
+    /// カーソル, マーク, マークの履歴, マーカーの位置を, 順に `f` で書き換えます.
+    fn for_each_position(&mut self, mut f: impl FnMut(&mut usize)) {
+        f(&mut self.point);
+        self.mark.iter_mut().for_each(&mut f);
+        self.mark_ring.iter_mut().for_each(&mut f);
+        self.markers.iter_mut().flatten().for_each(&mut f);
+    }
+
     /// 位置を覚えるマーカーを作ります (Emacs の `point-marker`). 本文を書き換えると, 位置を追う
     /// (入れた所と同じ位置なら, 動かない. 消した範囲の中なら, 消した所の始め).
     ///
@@ -635,7 +678,8 @@ impl Buffer {
             self.mark_ring.truncate(MARK_RING_MAX);
         }
         self.mark = Some(pos.min(self.len()));
-        self.mark_active = activate;
+        // 使っているマークは, そのまま使う (Emacs の `push-mark` は `set-marker` で, `mark-active` を変えない)
+        self.mark_active |= activate;
     }
 
     /// マークの履歴の先頭を, マークにします (Emacs の `pop-mark`). 今のマークは履歴の最後に回す.

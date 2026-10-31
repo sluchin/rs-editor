@@ -86,7 +86,14 @@ fn run(
         }
         run.push_str(&format!("(set! this-command '{command})"));
         let args = match &step[1] {
-            Json::Array(items) => items.iter().map(scheme_arg).collect::<Vec<_>>().join(" "),
+            Json::Array(items) => items
+                .iter()
+                .map(|item| match item.as_str() {
+                    Some("region") => "(region-beginning) (region-end)".to_string(),
+                    _ => scheme_arg(item),
+                })
+                .collect::<Vec<_>>()
+                .join(" "),
             _ => String::new(),
         };
         run.push_str(&format!("({command} {args})"));
@@ -139,6 +146,10 @@ fn test_against_emacs() {
     let host = EditorHost::new(Editor::new(), FakeUi::default());
     ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
         .unwrap();
+    ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
+        .unwrap();
+    ev.eval_with(include_str!("../../lisp/register.scm"), &host)
+        .unwrap();
     {
         let mut editor = host.editor();
         editor.get_buffer_create("other").load("OTHER");
@@ -156,7 +167,16 @@ fn test_against_emacs() {
                 text,
                 pos,
             );
-            if &actual != expected {
+            // Emacs の範囲外のエラーは, バッファと位置を添える. こちらは, 添えない
+            let mut expected = expected.clone();
+            if expected[0] == "error"
+                && expected[1]
+                    .as_str()
+                    .is_some_and(|m| m.starts_with("Args out of range"))
+            {
+                expected[1] = json!("Args out of range");
+            }
+            if actual != expected {
                 failures.push(format!(
                     "{name} {} {text:?} at {pos}: expected {expected}, got {actual}",
                     json!(steps.iter().map(|s| s[1].clone()).collect::<Vec<_>>())
