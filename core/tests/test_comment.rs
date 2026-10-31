@@ -97,3 +97,20 @@ fn test_blank_line_gets_a_comment_at_the_indentation() {
         ("(a\n ;; \n b)".to_string(), 7)
     );
 }
+
+#[test]
+fn test_code_line_keeps_trailing_space_and_double_semicolons() {
+    // 式の後ろの空白は残し, その後ろから comment-column まで字下げする
+    assert_eq!(
+        dwim("(a)   ", None, 0),
+        ("(a)   \t\t\t\t\t;".to_string(), 12)
+    );
+    assert_eq!(
+        dwim("(a)  \t", None, 2),
+        ("(a)  \t\t\t\t\t;".to_string(), 11)
+    );
+    assert_eq!(dwim("a  ", None, 1), ("a  \t\t\t\t\t;".to_string(), 9));
+    // 式の後ろの `;;` のコメントは, 動かさず, コメントの文字の後ろへ動く
+    assert_eq!(dwim("(a) ;; x", None, 4), ("(a) ;; x".to_string(), 7));
+    assert_eq!(dwim("(a) ;; x", None, 0), ("(a) ;; x".to_string(), 7));
+}

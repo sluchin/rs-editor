@@ -225,11 +225,9 @@ pub fn comment_dwim(
             cursor: Some(cursor),
         });
     }
-    // 式の後ろは, 後ろの空白を除いて, comment-column (式がそれより長ければ, 空白 1 つの後) に `; ` を入れる
-    let mut code = text.len();
-    while matches!(text[code - 1], ' ' | '\t') {
-        code -= 1;
-    }
+    // 式の後ろは, 行の終わり (後ろの空白も残す. Emacs の `comment-indent`) から, comment-column
+    // (行がそれより長ければ, 空白 1 つの後) に `;` を入れる
+    let code = text.len();
     let col = column_at(text, code, config.tab_width);
     let column = trailing_column(lines, &found, n, comment_column, config);
     let insert = whitespace(col, column.max(col + 1), config) + ";";
