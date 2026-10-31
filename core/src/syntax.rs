@@ -245,6 +245,92 @@ pub struct Source {
     min: usize,
     /// 範囲の終わり.
     max: usize,
+    /// Scheme の `#;` の式のコメント: (`#;` の位置, 式の最後の文字の位置). Emacs の `scheme-syntax-propertize` と同じ.
+    datum_comments: Vec<(usize, usize)>,
+}
+
+/// Scheme の本文から, `#;` の式のコメントを探します (`#;` の位置と, 式の最後の文字の位置).
+fn scheme_datum_comments(chars: &[char]) -> Vec<(usize, usize)> {
+    let at = |p: usize| chars.get(p).copied();
+    // 式の終わりの位置 (最後の文字) を返します. 式が無ければ `None`.
+    fn datum_end(chars: &[char], start: usize) -> Option<usize> {
+        let at = |p: usize| chars.get(p).copied();
+        let mut i = start;
+        while matches!(at(i), Some(c) if c.is_whitespace()) {
+            i += 1;
+        }
+        // 式の前の印 (`'`, `` ` ``, `,`, `#`)
+        while matches!(at(i), Some('\'' | '`' | ',' | '#')) && !matches!(at(i + 1), Some('\\')) {
+            i += 1;
+        }
+        match at(i)? {
+            '(' | '[' => {
+                let mut depth = 0;
+                let mut j = i;
+                while let Some(c) = at(j) {
+                    match c {
+                        '"' => j = string_end(chars, j),
+                        ';' => {
+                            while matches!(at(j), Some(c) if c != '\n') {
+                                j += 1;
+                            }
+                        }
+                        '(' | '[' => depth += 1,
+                        ')' | ']' => {
+                            depth -= 1;
+                            if depth == 0 {
+                                return Some(j);
+                            }
+                        }
+                        _ => {}
+                    }
+                    j += 1;
+                }
+                None
+            }
+            '"' => Some(string_end(chars, i)),
+            _ => {
+                let mut j = i;
+                while matches!(at(j), Some(c) if !c.is_whitespace() && !"()[]\";".contains(c)) {
+                    j += 1;
+                }
+                (j > i).then(|| j - 1)
+            }
+        }
+    }
+    // 文字列の終わりの `"` の位置 (始めの `"` の位置から)
+    fn string_end(chars: &[char], start: usize) -> usize {
+        let mut j = start + 1;
+        loop {
+            match chars.get(j).copied() {
+                Some('\\') => j += 2,
+                Some('"') | None => return j.min(chars.len().saturating_sub(1)),
+                Some(_) => j += 1,
+            }
+        }
+    }
+    let mut found = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        match at(i) {
+            Some(';') => {
+                while matches!(at(i), Some(c) if c != '\n') {
+                    i += 1;
+                }
+            }
+            Some('"') => i = string_end(chars, i) + 1,
+            Some('#') if at(i + 1) == Some(';') => match datum_end(chars, i + 2) {
+                Some(last) => {
+                    found.push((i, last));
+                    i = last + 1;
+                }
+                None => i += 2,
+            },
+            Some('#') if at(i + 1) == Some('\\') => i += 3,
+            _ => i += 1,
+        }
+    }
+    found
 }
 
 impl Source {
@@ -257,11 +343,17 @@ impl Source {
     pub fn new(text: &str, dialect: Dialect) -> Self {
         let chars: Vec<char> = text.chars().collect();
         let max = chars.len();
+        let datum_comments = if dialect == Dialect::Scheme {
+            scheme_datum_comments(&chars)
+        } else {
+            Vec::new()
+        };
         Source {
             chars,
             dialect,
             min: 0,
             max,
+            datum_comments,
         }
     }
 
@@ -294,9 +386,20 @@ impl Source {
         at(pos).map_or(Syntax::plain(Class::Word), |c| syntax_of(c, self.dialect))
     }
 
-    /// 位置の文字の種類.
+    /// 位置の文字の種類. `#;` の式のコメントの最後の文字は, 空白とする (Emacs の `> cn`).
     fn class_at(&self, pos: usize) -> Class {
+        if self.datum_comments.iter().any(|&(_, last)| last == pos) {
+            return Class::Space;
+        }
         self.syntax_at(pos).class
+    }
+
+    /// 位置から `#;` の式のコメントが始まるなら, その式の最後の文字の位置.
+    fn datum_comment_end(&self, pos: usize) -> Option<usize> {
+        self.datum_comments
+            .binary_search_by_key(&pos, |&(start, _)| start)
+            .ok()
+            .map(|k| self.datum_comments[k].1)
     }
 
     /// 位置の文字.
@@ -531,6 +634,11 @@ impl Source {
         while count > 0 {
             let mut done = false;
             while from < max && !done {
+                // Scheme の `#;` の式は, コメントとして飛ばす
+                if let Some(last) = self.datum_comment_end(from) {
+                    from = last + 1;
+                    continue;
+                }
                 let mut class = self.scan_class(from, sexp);
                 if depth == min_depth {
                     last_good = from;
