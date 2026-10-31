@@ -78,6 +78,8 @@
 
 ### 前提条件
 
+Docker を使わないときの、道具とパッケージの一覧は [setup.md](setup.md) です。
+
 - Node.js 18 以上
 - Rust 1.70 以上
 - Tauri CLI 2
