@@ -132,7 +132,7 @@ fn starts_with(text: &[char], i: usize, pattern: &str) -> bool {
 }
 
 /// 名前の終わりの文字 (空白, 括弧, `"`, `;`, 式の前の印).
-fn delimiter(c: char) -> bool {
+pub(crate) fn delimiter(c: char) -> bool {
     c.is_whitespace() || "()[]\";'`,".contains(c)
 }
 
@@ -181,6 +181,10 @@ pub struct LispParser {
     stack: Vec<Frame>,
     /// 文字列の中か.
     in_string: bool,
+    /// 開いている文字列の, `"` の桁.
+    string_col: usize,
+    /// 文字列が閉じる行の, 式の始めを, 行頭の最初のトークンと見るなら `true` (行ごとに新しく読む Emacs の経路).
+    first_token: bool,
     /// 文字列が, `#;` でコメントにした式なら `true` (Emacs は, コメントの中と見る).
     comment_string: bool,
     /// `#| |#` のコメントの深さ (Scheme).
@@ -201,12 +205,20 @@ impl LispParser {
             tab_width,
             stack: Vec::new(),
             in_string: false,
+            string_col: 0,
+            first_token: false,
             comment_string: false,
             block_comment: 0,
             datum: None,
             first_sexp_col: Vec::new(),
             comment: None,
         }
+    }
+
+    /// 行ごとに新しく読む (Emacs の `indent-for-tab-command` や `newline` の経路) ように, 式の始めを決めます.
+    pub fn fresh(mut self, fresh: bool) -> Self {
+        self.first_token = fresh;
+        self
     }
 
     /// 開いているリストの数.
@@ -254,10 +266,16 @@ impl LispParser {
             let ch = text[i];
             let col = column_at(text, i, tab);
             if self.in_string {
-                // 行が文字列の中で始まると, Emacs は閉じる `"` を, 式の始めと見る
+                // 文字列が閉じると, 文字列の式の始め (開いた `"` の桁) が, この行の始めの式になる
                 if ch == '"' {
                     if !self.comment_string {
-                        self.set_first(line, col);
+                        // Scheme は行ごとに新しく読むので, 行の最初の式 (行頭から) を見る. Emacs Lisp は, 文字列の式の始めを見る
+                        let first = if self.first_token {
+                            column_at(text, indent_length(text), tab)
+                        } else {
+                            self.string_col
+                        };
+                        self.set_first(line, first);
                     }
                     self.in_string = false;
                     self.comment_string = false;
@@ -290,6 +308,7 @@ impl LispParser {
             } else if ch == '"' {
                 self.element(Kind::Other, col, &mut prefix, line, String::new());
                 self.in_string = true;
+                self.string_col = col;
                 i += 1;
             } else if ch == '(' || ch == '[' {
                 self.element(Kind::List, col, &mut prefix, line, String::new());
@@ -469,6 +488,8 @@ pub struct IndentLines {
     pub empty_lines: bool,
     /// 字下げを続ける間 (`indent-sexp`): カーソルの行 (1 から) と, 行の中の位置.
     pub while_deeper: Option<(usize, usize)>,
+    /// 行を順に読む (Emacs Lisp の `lisp-indent-region` と `indent-sexp`) なら `true`. 行ごとに新しく読むなら `false`.
+    pub incremental: bool,
 }
 
 /// 行の字下げを変えた結果.
@@ -486,7 +507,9 @@ pub struct IndentResult {
 pub fn indent_lines(lines: &[Vec<char>], options: IndentLines, config: &Config) -> IndentResult {
     let mut result = IndentResult::default();
     let tab = config.tab_width;
-    let mut parser = config.lisp().then(|| LispParser::new(config.scheme(), tab));
+    let mut parser = config
+        .lisp()
+        .then(|| LispParser::new(config.scheme(), tab).fresh(!options.incremental));
     let mut previous: Option<Vec<char>> =
         (options.from > 1).then(|| lines[options.from - 2].clone());
     if let Some(p) = parser.as_mut() {
@@ -603,6 +626,13 @@ fn cursor_after_indent(lines: &[Vec<char>], pos: usize, result: &IndentResult) -
     let old_length = indent_length(line);
     let new_length = indent_length(result.lines.get(&n).unwrap_or(line));
     let new_from = map_pos(&edits, starts[n - 1], false);
+    // `;` 1 つと空白のコメント: カーソルが `;` の前か後ろなら, `;` の後ろへ (Emacs の `comment-indent`)
+    if line.get(old_length) == Some(&';')
+        && matches!(line.get(old_length + 1), Some(' ' | '\t'))
+        && offset <= old_length + 1
+    {
+        return new_from + new_length + 1;
+    }
     if offset <= old_length {
         new_from + new_length
     } else {
@@ -699,7 +729,7 @@ pub fn indent_for_tab(lines: &[Vec<char>], pos: usize, config: &Config) -> Plan 
     }
 }
 
-/// 行の範囲を字下げします (Emacs の `indent-region`). 終わりが行の始めなら, その行は含めない.
+/// 行の範囲を字下げします (Emacs の `indent-region`). 行の始めが終わり以上の行は含めない (空のリージョンは何もしない).
 pub fn indent_region(
     lines: &[Vec<char>],
     from: usize,
@@ -710,43 +740,173 @@ pub fn indent_region(
     let starts = line_starts(lines);
     let line_of = |pos: usize| starts.partition_point(|&s| s <= pos);
     let last = line_of(to);
-    let end = if to == starts[last - 1] && to > from {
+    let end = if to == starts[last - 1] {
         last - 1
     } else {
         last
     };
+    // Emacs Lisp は, 始めの行を, 終わりに関係なく字下げする (`lisp-indent-region`)
+    let to = if config.dialect == Dialect::Elisp {
+        end.max(line_of(from))
+    } else {
+        end
+    };
     let options = IndentLines {
         from: line_of(from),
-        to: end,
+        to,
+        incremental: !config.scheme(),
         ..IndentLines::default()
     };
     let result = indent_lines(lines, options, config);
     let edits = edits_of(lines, &result);
+    let cursor = point_after_edits(lines, &edits, point, config);
     Plan {
-        cursor: Some(map_pos(&edits, point, true)),
+        cursor: Some(cursor),
         edits,
     }
 }
 
+/// 点の位置を, 字下げの変更の後ろへ直します (Emacs の `indent-line-to` と `save-excursion` の印と同じ).
+/// 点が, 行頭の空白を変えた所の中にあれば: 減らすときは文字の始め, 大きく増やすときは空白の始め (空白を入れ直す),
+/// 残して足すだけなら, 空白の中の同じ位置. 行頭でない変更 (コメント) の中なら, 変更の始め.
+fn point_after_edits(lines: &[Vec<char>], edits: &[Edit], point: usize, config: &Config) -> usize {
+    let starts = line_starts(lines);
+    let tab = config.tab_width;
+    match edits
+        .iter()
+        .find(|e| e.from < e.to && e.from <= point && point <= e.to)
+    {
+        Some(e) => {
+            let k = starts.partition_point(|&s| s <= e.from) - 1;
+            let from = map_pos(edits, e.from, false);
+            // 行の始めは, 変えても動かない (Emacs の `indent-line-to` は, 空白の前の点を残す)
+            if starts[k] != e.from || point == e.from {
+                return from;
+            }
+            let line = &lines[k];
+            let cur = column_at(line, indent_length(line), tab);
+            let insert: Vec<char> = e.insert.chars().collect();
+            let column = column_at(&insert, insert.len(), tab);
+            if cur > column {
+                from + insert.len()
+            } else if column - (cur / tab) * tab >= tab {
+                from
+            } else {
+                from + (point - e.from)
+            }
+        }
+        None => map_pos(edits, point, false),
+    }
+}
+
 /// カーソルの後ろの式 (終わりは `end`) の, 次の行からを字下げします (Emacs の `indent-sexp`. Lisp だけ).
+/// 点の行の後ろの `;` のコメントも, `indent-for-comment` と同じにそろえます. 空白だけの行と, `;` で始まる行は変えません.
 pub fn indent_sexp(lines: &[Vec<char>], pos: usize, end: usize, config: &Config) -> Plan {
     if !config.lisp() {
         return Plan::default();
     }
     let starts = line_starts(lines);
-    let n = starts.partition_point(|&s| s <= pos);
-    // 行の始めが, 式の終わりより前の行だけ
-    let last = starts.partition_point(|&s| s < end);
-    let options = IndentLines {
-        from: n + 1,
-        to: last,
-        skip_blank: true,
-        ..IndentLines::default()
+    let tab = config.tab_width;
+    let scheme = config.scheme();
+    let first = starts.partition_point(|&s| s <= pos);
+    let mut parser = LispParser::new(scheme, tab);
+    for (n, text) in lines.iter().enumerate().take(first - 1) {
+        parser.scan_line(text, n, 0, text.len());
+    }
+    let mut edits: Vec<Edit> = Vec::new();
+    // 字下げ (行の始めの空白) を変えた編集の始め. 点の位置は, これだけ `point_after_edits` で直す
+    let mut indents: Vec<usize> = Vec::new();
+    let mut line = first;
+    let mut text = lines[first - 1].clone();
+    // 今の行の, 字下げの桁 (Emacs の `calculate-lisp-indent`. コメントの行の `;;` で使う)
+    let mut pending = lisp_indent(&parser, &text, scheme);
+    // 変えた行の, 始めの空白の長さの差 (元の行の桁に直すのに使う)
+    let mut lead_shift: i64 = 0;
+    loop {
+        parser.scan_line(&text, line - 1, 0, text.len());
+        // 行の後ろの `;` のコメント (Emacs の `indent-for-comment`). 終わりより前のものだけ
+        if let Some(i) = parser.comment {
+            let comment = starts[line - 1] + (i as i64 - lead_shift) as usize;
+            let double = text.get(i + 1) == Some(&';');
+            let triple = text.get(i + 2) == Some(&';');
+            let code_end = text[..i]
+                .iter()
+                .rposition(|c| !matches!(c, ' ' | '\t'))
+                .map_or(0, |p| p + 1);
+            let orig = |k: usize| (k as i64 - lead_shift) as usize;
+            let change = if code_end == 0 && double && !triple {
+                // `;;` だけの行は, 字下げの桁にそろえる (Emacs の `lisp-comment-indent`)
+                pending.map(|col| (starts[line - 1], whitespace(0, col, config)))
+            } else if code_end == 0 && !double {
+                Some((starts[line - 1], whitespace(0, COMMENT_COLUMN, config)))
+            } else if code_end > 0 && !double {
+                let col = column_at(&text, code_end, tab);
+                let target = COMMENT_COLUMN.max(col + 1);
+                Some((
+                    starts[line - 1] + orig(code_end),
+                    whitespace(col, target, config),
+                ))
+            } else {
+                None
+            };
+            if let Some((from, insert)) = change {
+                let old: String = text[code_end..i].iter().collect();
+                if comment <= end && insert != old {
+                    if code_end == 0 {
+                        indents.push(from);
+                    }
+                    edits.push(Edit {
+                        from,
+                        to: starts[line - 1] + orig(i),
+                        insert,
+                    });
+                }
+            }
+        }
+        // 次の行. 始めが終わりより後ろなら, 止める
+        let next = line + 1;
+        if next > lines.len() || starts[next - 1] >= end {
+            break;
+        }
+        let original = &lines[next - 1];
+        let length = indent_length(original);
+        let code = original.get(length).copied();
+        let indent = lisp_indent(&parser, original, scheme);
+        let mut next_text = original.clone();
+        // 空白だけの行と, `;` で始まる行は, 字下げを変えない (コメントの行は, 上の `indent-for-comment` で)
+        if code.is_some() && code != Some(';') {
+            if let Some(col) = indent {
+                if column_at(original, length, tab) != col {
+                    let insert = indent_to(&original[..length], col, config);
+                    indents.push(starts[next - 1]);
+                    edits.push(Edit {
+                        from: starts[next - 1],
+                        to: starts[next - 1] + length,
+                        insert: insert.clone(),
+                    });
+                    let mut changed: Vec<char> = insert.chars().collect();
+                    changed.extend_from_slice(&original[length..]);
+                    next_text = changed;
+                }
+            }
+        }
+        lead_shift = next_text.len() as i64 - original.len() as i64;
+        pending = indent;
+        text = next_text;
+        line = next;
+    }
+    // 点が, 字下げを変えた行の空白の中なら, その規則で. コメントの中なら, 変更の始め
+    let cursor = match edits
+        .iter()
+        .find(|e| e.from < e.to && e.from <= pos && pos <= e.to)
+    {
+        Some(e) if indents.contains(&e.from) => point_after_edits(lines, &edits, pos, config),
+        Some(e) => map_pos(&edits, e.from, false),
+        None => map_pos(&edits, pos, false),
     };
-    let result = indent_lines(lines, options, config);
     Plan {
-        edits: edits_of(lines, &result),
-        cursor: None,
+        cursor: Some(cursor),
+        edits,
     }
 }
 
@@ -807,7 +967,10 @@ pub fn newline_and_indent(lines: &[Vec<char>], pos: usize, config: &Config) -> P
     // 字下げを計算しなかった (文字列の中) なら, カーソルは新しい行の始め
     let line_start = starts[n - 1];
     let cursor = if next.computed.contains(&(n + 1)) {
-        line_start + insert.len()
+        // 続きが `;` と空白のコメントなら, カーソルは `;` の後ろ (`indent_for_tab` と同じ)
+        let comment =
+            config.lisp() && tail.first() == Some(&';') && matches!(tail.get(1), Some(' ' | '\t'));
+        line_start + insert.len() + usize::from(comment)
     } else {
         line_start + prev.len() + 1
     };

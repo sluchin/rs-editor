@@ -133,6 +133,28 @@ fn at(pos: usize) -> Value {
 
 /// `indent-sexp` で字下げする式の終わり: 点の後ろの式の終わり. 終わりが行の途中で, 行の終わりが式の中なら, 行の終わりを越える式まで.
 fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, String> {
+    // 点が, `(` の直後の文字の途中で, そのシンボルの後ろに式が無ければ (行末かコメントまで), Emacs はエラーにする
+    let symbol = |c: Option<char>| c.is_some_and(|c| !indent::delimiter(c));
+    if point > 0 && symbol(source.char_at(point - 1)) && symbol(source.char_at(point)) {
+        let mut start = point;
+        while start > 0 && symbol(source.char_at(start - 1)) {
+            start -= 1;
+        }
+        let mut stop = point;
+        while symbol(source.char_at(stop)) {
+            stop += 1;
+        }
+        let mut rest = stop;
+        while matches!(source.char_at(rest), Some(' ' | '\t')) {
+            rest += 1;
+        }
+        if start > 0
+            && source.char_at(start - 1) == Some('(')
+            && matches!(source.char_at(rest), None | Some('\n' | ';'))
+        {
+            return Err("End position is smaller than start position".to_string());
+        }
+    }
     let mut end = forward_sexp(source, point).map_err(|e| e.to_string())?;
     let mut eol = end;
     while eol < source.size() && source.char_at(eol) != Some('\n') {
