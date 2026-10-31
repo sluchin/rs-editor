@@ -224,11 +224,6 @@ impl LispParser {
         self
     }
 
-    /// 開いているリストの数.
-    pub fn depth(&self) -> usize {
-        self.stack.len()
-    }
-
     /// 行の始めの式の桁を覚えます (まだ決まっていなければ).
     fn set_first(&mut self, line: usize, col: usize) {
         if self.first_sexp_col.len() <= line {
@@ -490,8 +485,6 @@ pub struct IndentLines {
     pub skip_blank: bool,
     /// 空の行も字下げするなら `true` (`RET` の新しい行).
     pub empty_lines: bool,
-    /// 字下げを続ける間 (`indent-sexp`): カーソルの行 (1 から) と, 行の中の位置.
-    pub while_deeper: Option<(usize, usize)>,
     /// 行を順に読む (Emacs Lisp の `lisp-indent-region` と `indent-sexp`) なら `true`. 行ごとに新しく読むなら `false`.
     pub incremental: bool,
 }
@@ -521,19 +514,8 @@ pub fn indent_lines(lines: &[Vec<char>], options: IndentLines, config: &Config) 
             p.scan_line(text, n, 0, text.len());
         }
     }
-    // indent-sexp: カーソルの行の, カーソルの所の深さより深い間だけ
-    let mut depth = 0;
-    if let (Some((line, index)), Some(p)) = (options.while_deeper, parser.as_mut()) {
-        let text = &lines[line - 1];
-        p.scan_line(text, line - 1, 0, index);
-        depth = p.depth();
-        p.scan_line(text, line - 1, index, text.len());
-    }
     for n in options.from..=options.to.min(lines.len()) {
         let mut text = lines[n - 1].clone();
-        if options.while_deeper.is_some() && parser.as_ref().is_some_and(|p| p.depth() <= depth) {
-            break;
-        }
         if (!text.is_empty() || options.empty_lines) && !(blank(&text) && options.skip_blank) {
             let col = match parser.as_ref() {
                 Some(p) => lisp_indent(p, &text, config.scheme()),
