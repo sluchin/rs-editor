@@ -135,6 +135,10 @@ git config user.name "Tetsuya Higashi"
 git config user.email "996846+sluchin@users.noreply.github.com"
 ```
 
+## テストの規約
+
+- **Rust のテストは, 各クレートの `tests/` (`core/tests/`, `tui/tests/`, `src-tauri/tests/`) にファイルを分けて置く** (本番のソースの中に `#[cfg(test)] mod tests` を書かない). ファイルの名前は `test_<対象のモジュール>.rs`. テストが呼ぶ関数は `pub` にする.
+
 ## 開発ルール
 
 - Markdown (`*.md`) の日本語の文章は、句読点に「、」「。」を使う (「,」「.」は使わない)。インラインコード・コードブロック・URL・ファイル名・数値 (`1.2.0`、`1,000`) は対象外。見出しや番号付きリストの「1.」の形は変えない。`docs/` の生成物と、この `CLAUDE.md` は対象外。
