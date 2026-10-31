@@ -355,7 +355,7 @@ howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (
 
 ## キーバインド
 
-rs-editor は Emacs スタイルのキーバインドをサポートしています。詳細は [KEYBINDINGS.md](docs/html/fe/media/KEYBINDINGS.md) を参照してください。
+rs-editor は Emacs スタイルのキーバインドをサポートしています。詳細は [KEYBINDINGS.md](docs/html/fe/media/KEYBINDINGS.md) を参照してください。今後の実装計画や未対応の項目については [TODO.md](TODO.md) を参照してください。
 
 ### よく使うショートカット
 
