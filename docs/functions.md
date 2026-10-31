@@ -283,7 +283,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 21 | 16 | 5 |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 19 | 14 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
 | 12 | 入れない | 23 | 23 | - |
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 141 個: Lisp 58 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 143 個: Lisp 60 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -566,10 +566,10 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
 | `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
-| `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み | `C-x r l` | Lisp (`lisp/bookmark.scm`) | 済 |
+| `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
-| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み | `C-x r M` | Lisp (`lisp/bookmark.scm`) | 済 |
+| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
 | `xref-find-apropos` |  | xref | `C-M-.` |  |  |  | 11 |
 | `xref-find-definitions` |  | xref | `M-.` |  |  |  | 11 |
 | `xref-find-definitions-other-frame` |  | xref | `C-x 5 .` |  |  |  | 12 |
