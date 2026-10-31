@@ -36,6 +36,7 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 ## 開発ワークフロー
 - **開発サーバーを起動**: `npm run tauri:dev` — フロントエンドと Rust は両方とも変更時に自動リロード
 - **テスト**: `npm run test`（`tests/frontend/` の Vitest）と `npm run test:scheme`（`tests/lisp/*.scm` の ERT）と `cargo test --workspace`
+- **Markdown のチェック**: `npm run format:markdown:check` (`markdownlint-cli2`。直すときは `npm run format:markdown`)。`npx markdownlint` は別のパッケージ名なので動かない。`npm install` をしていない環境では, `sudo npm install -g markdownlint-cli2` で入れて, `markdownlint-cli2 docs/functions.md` のようにファイルを指定して動かす。
 - **フォーマット + リント**: `npm run check`（format:check、lint、test を実行 — CI ゲート）
 - CI は `main` へのすべてのプッシュ/PR で同じ内容を実行
 
