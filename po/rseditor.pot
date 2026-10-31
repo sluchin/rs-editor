@@ -1359,6 +1359,101 @@ msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
 msgstr ""
 
+#: lisp/isearch.scm
+msgctxt "variable:isearch-ring"
+msgid "List of the previous search strings (the newest first)."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "variable:isearch-regexp-ring"
+msgid "List of the previous regexp search strings (the newest first)."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--pattern"
+msgid "Return the regexp to search for, or #f to search for the string itself."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--search-string"
+msgid "Search from point for the search string.  Return #t (point moved to the match) or #f."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--search"
+msgid "Do the search with the current search string."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--looking-at"
+msgid "Return #t if the search string matches at point."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--odd-backslashes"
+msgid "Return #t if STRING ends in an odd number of backslashes."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--fallback"
+msgid "Return point to the previous successful match so that a regexp can be made liberal (Emacs isearch-fallback)."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--yank-word"
+msgid "Add the word after point (or after the current match) to the search string."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--printing-key"
+msgid "Return the string to add to the search string for KEY, or #f if KEY is not a printing key."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-mode"
+msgid ""
+"Search incrementally.  FORWARD is the direction, REGEXP #t for a regexp search, FUNCTION #f, `word' or `symbol'.\n"
+"The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,\n"
+"C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode,\n"
+"RET exits, C-g backs up to the last match or, if it was found, cancels the search.\n"
+"Another key exits the search, and is ignored."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward"
+msgid "Do incremental search forward.  With a prefix argument, do a regexp search."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-backward"
+msgid "Do incremental search backward.  With a prefix argument, do a regexp search."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-regexp"
+msgid "Do incremental search forward for a regexp."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-backward-regexp"
+msgid "Do incremental search backward for a regexp."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-word"
+msgid "Do incremental search forward for a sequence of words, ignoring punctuation."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-symbol"
+msgid "Do incremental search forward for a symbol."
+msgstr ""
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-symbol-at-point"
+msgid "Do incremental search forward for the symbol found near point."
+msgstr ""
+
 #: lisp/org.scm
 msgctxt "variable:org-directory"
 msgid "Directory where Org files are kept."
@@ -3102,6 +3197,174 @@ msgstr ""
 #: lisp/org.scm
 msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:case-replace"
+msgid "Non-nil means `query-replace' should preserve case in replacements."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:query-replace-from-history"
+msgid "History list for the search strings of `query-replace'."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--no-upper-p"
+msgid "Return #t if STRING has no uppercase letter (a letter after a backslash does not count in a regexp)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--search"
+msgid "Search for STRING from point up to LIMIT.  Return #t on success, leaving point after (before if BACKWARD) the match."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--shift"
+msgid "Shift every position of the match data DATA by DELTA."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:perform-replace"
+msgid ""
+"Replace some occurrences of FROM with TO, and return #f.\n"
+"QUERY means ask about each match.  REGEXP means FROM is a regexp, and TO may use \\& and \\N.\n"
+"DELIMITED means match only whole words.  START and END (or #f) bound the replacement; BACKWARD searches backward."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--read-args"
+msgid "Read the string to replace and its replacement from the minibuffer.  Return (FROM TO)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--region-bounds"
+msgid "Return (START END) of the active region, or (#f #f)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--command"
+msgid "Run a replace command: ARGS are (FROM TO DELIMITED START END BACKWARD), read interactively if empty."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace-string"
+msgid ""
+"Replace occurrences of FROM-STRING with TO-STRING, from point to the end of the buffer (or in the region).\n"
+"Arguments: FROM-STRING TO-STRING [DELIMITED START END BACKWARD]."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace-regexp"
+msgid ""
+"Replace things after point matching REGEXP with TO-STRING.\n"
+"In TO-STRING, \\& stands for the whole match, and \\N for the Nth parenthesized group."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:query-replace"
+msgid ""
+"Replace some occurrences of FROM-STRING with TO-STRING, asking about each.\n"
+"Keys: SPC or y replaces, DEL or n skips, RET or q exits, . replaces and exits, , replaces and asks again, ! replaces all the rest."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:query-replace-regexp"
+msgid ""
+"Replace some things after point matching REGEXP with TO-STRING, asking about each.\n"
+"See `query-replace' for the keys."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:occur--targets"
+msgid "Alist of the occur buffers and their targets: (BUFFER-NAME (OCCUR-LINE SOURCE-BUFFER POSITION) ...)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--collect"
+msgid "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES), and the number of matches."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--indent-continuation"
+msgid "Prefix each line of TEXT after the first (a match across lines) with the context marker."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--lines-of"
+msgid "Return the line numbers to show: each matching line (in TEXT-LINES, with the lines it spans) and NLINES lines around it."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur"
+msgid ""
+"Show all lines in the current buffer containing a match for REGEXP, in the *Occur* buffer.\n"
+"With a numeric prefix argument NLINES, also show NLINES lines of context around each match.\n"
+"In the *Occur* buffer, RET goes to the match on the current line."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--current-target"
+msgid "Return (SOURCE POSITION) of the occurrence on the current line of the *Occur* buffer, or #f."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur-mode-goto-occurrence"
+msgid "Go to the occurrence on the current line of the *Occur* buffer."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur-next"
+msgid "Move to the next occurrence in the *Occur* buffer."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur-prev"
+msgid "Move to the previous occurrence in the *Occur* buffer."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:hi-lock-face-defaults"
+msgid "Default face names for the hi-lock commands."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:hi-lock--next-face"
+msgid "Return the next face of `hi-lock-face-defaults', cycling through them."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:highlight-regexp"
+msgid ""
+"Highlight each match of REGEXP in the current buffer with FACE (SUBEXP selects a group).\n"
+"Interactively, read REGEXP and use the next face of `hi-lock-face-defaults'."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:unhighlight-regexp"
+msgid ""
+"Remove the highlighting of REGEXP set by `highlight-regexp'.\n"
+"With #t, or with a prefix argument interactively, remove all of it."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:highlight-phrase"
+msgid "Highlight each match of PHRASE, in which any run of white space matches any other."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:hi-lock--symbol-at-point"
+msgid "Return the symbol at or next to point, or #f."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:highlight-symbol-at-point"
+msgid "Highlight each occurrence of the symbol at point."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:highlight-lines-matching-regexp"
+msgid "Highlight the lines that match REGEXP."
 msgstr ""
 
 #: lisp/simple.scm

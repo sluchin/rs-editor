@@ -1402,6 +1402,106 @@ msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
 msgstr "メニューの, 今の日時を返す (%here% 用)"
 
+#: lisp/isearch.scm
+msgctxt "variable:isearch-ring"
+msgid "List of the previous search strings (the newest first)."
+msgstr "前の検索の文字列の一覧 (新しい順)."
+
+#: lisp/isearch.scm
+msgctxt "variable:isearch-regexp-ring"
+msgid "List of the previous regexp search strings (the newest first)."
+msgstr "前の正規表現の検索の文字列の一覧 (新しい順)."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--pattern"
+msgid "Return the regexp to search for, or #f to search for the string itself."
+msgstr "検索する正規表現を返す. 文字列そのものを検索するなら #f を返す."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--search-string"
+msgid "Search from point for the search string.  Return #t (point moved to the match) or #f."
+msgstr "点から検索の文字列を検索する. 一致すれば (点を一致の位置へ動かして) #t を, 無ければ #f を返す."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--search"
+msgid "Do the search with the current search string."
+msgstr "今の検索の文字列で検索する."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--looking-at"
+msgid "Return #t if the search string matches at point."
+msgstr "検索の文字列が点の位置で一致すれば #t を返す."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--odd-backslashes"
+msgid "Return #t if STRING ends in an odd number of backslashes."
+msgstr "STRING が奇数個のバックスラッシュで終わっていれば #t を返す."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--fallback"
+msgid "Return point to the previous successful match so that a regexp can be made liberal (Emacs isearch-fallback)."
+msgstr "正規表現を緩くできるように, 前に成功した一致の位置へ点を戻す (Emacs の isearch-fallback)."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--yank-word"
+msgid "Add the word after point (or after the current match) to the search string."
+msgstr "点の後ろの単語 (今の一致があれば, その後ろの単語) を, 検索の文字列に加える."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--printing-key"
+msgid "Return the string to add to the search string for KEY, or #f if KEY is not a printing key."
+msgstr "KEY を検索の文字列に加える文字列を返す. KEY が表示できる文字のキーでなければ #f を返す."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-mode"
+msgid ""
+"Search incrementally.  FORWARD is the direction, REGEXP #t for a regexp search, FUNCTION #f, `word' or `symbol'.\n"
+"The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,\n"
+"C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode,\n"
+"RET exits, C-g backs up to the last match or, if it was found, cancels the search.\n"
+"Another key exits the search, and is ignored."
+msgstr ""
+"インクリメンタルサーチをする. FORWARD は向き, REGEXP が #t なら正規表現の検索, FUNCTION は #f, `word' か `symbol'.\n"
+"キー: C-s と C-r で前か後ろへの検索を繰り返す. DEL は最後の文字を消す,\n"
+"C-w は点の単語を加える. C-q は次のキーをそのまま入れる. M-r は正規表現のモードを切り替える,\n"
+"RET で終わる. C-g は最後の一致まで戻る. 一致が見つかっていれば, 検索をやめる.\n"
+"ほかのキーで検索を終わり, そのキーは無視する."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward"
+msgid "Do incremental search forward.  With a prefix argument, do a regexp search."
+msgstr "前向きのインクリメンタルサーチをする. 前置引数があれば正規表現の検索をする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-backward"
+msgid "Do incremental search backward.  With a prefix argument, do a regexp search."
+msgstr "後ろ向きのインクリメンタルサーチをする. 前置引数があれば正規表現の検索をする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-regexp"
+msgid "Do incremental search forward for a regexp."
+msgstr "正規表現で前向きのインクリメンタルサーチをする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-backward-regexp"
+msgid "Do incremental search backward for a regexp."
+msgstr "正規表現で後ろ向きのインクリメンタルサーチをする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-word"
+msgid "Do incremental search forward for a sequence of words, ignoring punctuation."
+msgstr "句読点を無視して, 単語の並びを前向きにインクリメンタルサーチする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-symbol"
+msgid "Do incremental search forward for a symbol."
+msgstr "シンボルを前向きにインクリメンタルサーチする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch-forward-symbol-at-point"
+msgid "Do incremental search forward for the symbol found near point."
+msgstr "点の近くにあるシンボルを前向きにインクリメンタルサーチする."
+
 #: lisp/org.scm
 msgctxt "variable:org-directory"
 msgid "Directory where Org files are kept."
@@ -3322,6 +3422,192 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr "Org のバッファに移る."
 
+#: lisp/replace.scm
+msgctxt "variable:case-replace"
+msgid "Non-nil means `query-replace' should preserve case in replacements."
+msgstr "非 nil なら, `query-replace' は置換で大文字と小文字を保つ."
+
+#: lisp/replace.scm
+msgctxt "variable:query-replace-from-history"
+msgid "History list for the search strings of `query-replace'."
+msgstr "`query-replace' の検索の文字列の履歴の一覧."
+
+#: lisp/replace.scm
+msgctxt "function:replace--no-upper-p"
+msgid "Return #t if STRING has no uppercase letter (a letter after a backslash does not count in a regexp)."
+msgstr "STRING に大文字が無ければ #t を返す (正規表現では, バックスラッシュの後ろの文字は数えない)."
+
+#: lisp/replace.scm
+msgctxt "function:replace--search"
+msgid "Search for STRING from point up to LIMIT.  Return #t on success, leaving point after (before if BACKWARD) the match."
+msgstr "点から LIMIT までに STRING を検索する. 成功すれば #t を返し, 点は一致の後ろに (BACKWARD なら前に) 残す."
+
+#: lisp/replace.scm
+msgctxt "function:replace--shift"
+msgid "Shift every position of the match data DATA by DELTA."
+msgstr "一致のデータ DATA の全ての位置を DELTA だけずらす."
+
+#: lisp/replace.scm
+msgctxt "function:perform-replace"
+msgid ""
+"Replace some occurrences of FROM with TO, and return #f.\n"
+"QUERY means ask about each match.  REGEXP means FROM is a regexp, and TO may use \\& and \\N.\n"
+"DELIMITED means match only whole words.  START and END (or #f) bound the replacement; BACKWARD searches backward."
+msgstr ""
+"FROM を TO に置き換えて, #f を返す.\n"
+"QUERY は一致ごとに聞く. REGEXP は FROM が正規表現であることを表し, TO では \\& と \\N を使える.\n"
+"DELIMITED は単語全体の一致だけを対象にする. START と END (または #f) は置換の範囲を表す. BACKWARD は後ろへ検索する."
+
+#: lisp/replace.scm
+msgctxt "function:replace--read-args"
+msgid "Read the string to replace and its replacement from the minibuffer.  Return (FROM TO)."
+msgstr "置換する文字列と, その置き換えをミニバッファで読む. (FROM TO) を返す."
+
+#: lisp/replace.scm
+msgctxt "function:replace--region-bounds"
+msgid "Return (START END) of the active region, or (#f #f)."
+msgstr "有効なリージョンの (START END) を返す. 無ければ (#f #f)."
+
+#: lisp/replace.scm
+msgctxt "function:replace--command"
+msgid "Run a replace command: ARGS are (FROM TO DELIMITED START END BACKWARD), read interactively if empty."
+msgstr "置換のコマンドを実行する. ARGS は (FROM TO DELIMITED START END BACKWARD). 空なら対話的に読む."
+
+#: lisp/replace.scm
+msgctxt "function:replace-string"
+msgid ""
+"Replace occurrences of FROM-STRING with TO-STRING, from point to the end of the buffer (or in the region).\n"
+"Arguments: FROM-STRING TO-STRING [DELIMITED START END BACKWARD]."
+msgstr ""
+"点から, バッファの終わり (またはリージョン) まで, FROM-STRING を TO-STRING に置き換える.\n"
+"引数: FROM-STRING TO-STRING [DELIMITED START END BACKWARD]."
+
+#: lisp/replace.scm
+msgctxt "function:replace-regexp"
+msgid ""
+"Replace things after point matching REGEXP with TO-STRING.\n"
+"In TO-STRING, \\& stands for the whole match, and \\N for the Nth parenthesized group."
+msgstr ""
+"点の後ろで REGEXP に一致するものを TO-STRING に置き換える.\n"
+"TO-STRING の中で, \\& は一致全体を, \\N は N 番目の括弧のグループを表す."
+
+#: lisp/replace.scm
+msgctxt "function:query-replace"
+msgid ""
+"Replace some occurrences of FROM-STRING with TO-STRING, asking about each.\n"
+"Keys: SPC or y replaces, DEL or n skips, RET or q exits, . replaces and exits, , replaces and asks again, ! replaces all the rest."
+msgstr ""
+"FROM-STRING を TO-STRING に置き換える. 一致ごとに聞く.\n"
+"キー: SPC か y で置換, DEL か n で飛ばす, RET か q で終わる, . で置換して終わる, , で置換してまた聞く, ! で残り全てを置換する."
+
+#: lisp/replace.scm
+msgctxt "function:query-replace-regexp"
+msgid ""
+"Replace some things after point matching REGEXP with TO-STRING, asking about each.\n"
+"See `query-replace' for the keys."
+msgstr ""
+"点の後ろで REGEXP に一致するものを TO-STRING に置き換える. 一致ごとに聞く.\n"
+"キーは `query-replace' と同じ."
+
+#: lisp/replace.scm
+msgctxt "variable:occur--targets"
+msgid "Alist of the occur buffers and their targets: (BUFFER-NAME (OCCUR-LINE SOURCE-BUFFER POSITION) ...)."
+msgstr "*Occur* バッファと, その対象の alist: (BUFFER-NAME (OCCUR-LINE SOURCE-BUFFER POSITION) ...)."
+
+#: lisp/replace.scm
+msgctxt "function:occur--collect"
+msgid "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES), and the number of matches."
+msgstr "今のバッファで一致した行を (LINE TEXT POSITION MATCHES) のリストとして, 一致の数とともに返す."
+
+#: lisp/replace.scm
+msgctxt "function:occur--indent-continuation"
+msgid "Prefix each line of TEXT after the first (a match across lines) with the context marker."
+msgstr "TEXT の 1 行目より後ろの各行 (行をまたぐ一致) の前に, 文脈の印を付ける."
+
+#: lisp/replace.scm
+msgctxt "function:occur--lines-of"
+msgid "Return the line numbers to show: each matching line (in TEXT-LINES, with the lines it spans) and NLINES lines around it."
+msgstr "出す行の番号を返す: 一致した各行 (TEXT-LINES の中で, その行が覆う行とともに) と, その前後の NLINES 行."
+
+#: lisp/replace.scm
+msgctxt "function:occur"
+msgid ""
+"Show all lines in the current buffer containing a match for REGEXP, in the *Occur* buffer.\n"
+"With a numeric prefix argument NLINES, also show NLINES lines of context around each match.\n"
+"In the *Occur* buffer, RET goes to the match on the current line."
+msgstr ""
+"今のバッファで REGEXP に一致する全ての行を, *Occur* バッファに出す.\n"
+"前置の数の引数 NLINES があれば, 各一致の前後 NLINES 行の文脈も出す.\n"
+"*Occur* バッファでは, RET で今の行の一致へ行く."
+
+#: lisp/replace.scm
+msgctxt "function:occur--current-target"
+msgid "Return (SOURCE POSITION) of the occurrence on the current line of the *Occur* buffer, or #f."
+msgstr "*Occur* バッファで今の行にある出現の (SOURCE POSITION) を返す. 無ければ #f."
+
+#: lisp/replace.scm
+msgctxt "function:occur-mode-goto-occurrence"
+msgid "Go to the occurrence on the current line of the *Occur* buffer."
+msgstr "*Occur* バッファで今の行にある出現へ行く."
+
+#: lisp/replace.scm
+msgctxt "function:occur-next"
+msgid "Move to the next occurrence in the *Occur* buffer."
+msgstr "*Occur* バッファで次の出現へ動く."
+
+#: lisp/replace.scm
+msgctxt "function:occur-prev"
+msgid "Move to the previous occurrence in the *Occur* buffer."
+msgstr "*Occur* バッファで前の出現へ動く."
+
+#: lisp/replace.scm
+msgctxt "variable:hi-lock-face-defaults"
+msgid "Default face names for the hi-lock commands."
+msgstr "hi-lock のコマンドの既定の face の名前."
+
+#: lisp/replace.scm
+msgctxt "function:hi-lock--next-face"
+msgid "Return the next face of `hi-lock-face-defaults', cycling through them."
+msgstr "`hi-lock-face-defaults' の次の face を返す (一周したら最初に戻る)."
+
+#: lisp/replace.scm
+msgctxt "function:highlight-regexp"
+msgid ""
+"Highlight each match of REGEXP in the current buffer with FACE (SUBEXP selects a group).\n"
+"Interactively, read REGEXP and use the next face of `hi-lock-face-defaults'."
+msgstr ""
+"今のバッファで REGEXP の各一致を FACE で強調する (SUBEXP はグループを選ぶ).\n"
+"対話的に使うと, REGEXP を読み, `hi-lock-face-defaults' の次の face を使う."
+
+#: lisp/replace.scm
+msgctxt "function:unhighlight-regexp"
+msgid ""
+"Remove the highlighting of REGEXP set by `highlight-regexp'.\n"
+"With #t, or with a prefix argument interactively, remove all of it."
+msgstr ""
+"`highlight-regexp' で付けた, REGEXP の強調を消す.\n"
+"#t のとき, または対話的に前置引数を付けたときは, 全ての強調を消す."
+
+#: lisp/replace.scm
+msgctxt "function:highlight-phrase"
+msgid "Highlight each match of PHRASE, in which any run of white space matches any other."
+msgstr "PHRASE の各一致を強調する. 空白の並びは, どの空白の並びとも一致する."
+
+#: lisp/replace.scm
+msgctxt "function:hi-lock--symbol-at-point"
+msgid "Return the symbol at or next to point, or #f."
+msgstr "点にあるか, 点の隣にあるシンボルを返す. 無ければ #f."
+
+#: lisp/replace.scm
+msgctxt "function:highlight-symbol-at-point"
+msgid "Highlight each occurrence of the symbol at point."
+msgstr "点にあるシンボルの出現を, それぞれ強調する."
+
+#: lisp/replace.scm
+msgctxt "function:highlight-lines-matching-regexp"
+msgid "Highlight the lines that match REGEXP."
+msgstr "REGEXP に一致する行を強調する."
+
 #: lisp/simple.scm
 msgctxt "variable:last-command"
 msgid ""
@@ -3622,6 +3908,9 @@ msgid ""
 "In a Lisp buffer, fix the indentation of the line; with an active region, indent the region.\n"
 "Elsewhere, move to the next indent point of the previous line (indent-relative)."
 msgstr ""
+"今の行かリージョンを字下げする. または点に空白を入れる.\n"
+"Lisp のバッファでは, 行の字下げを直す. リージョンが有効なら, リージョンを字下げする.\n"
+"ほかでは, 前の行の次の字下げの位置 (indent-relative) へ動く."
 
 #: lisp/simple.scm
 msgctxt "function:indent-region"
@@ -3629,6 +3918,8 @@ msgid ""
 "Indent each nonblank line in the region (the lines from START to END).\n"
 "Without arguments, the region is used."
 msgstr ""
+"リージョン (START から END までの行) の空でない行を, それぞれ字下げする.\n"
+"引数を省くと, リージョンを使う."
 
 #: lisp/simple.scm
 msgctxt "function:indent-sexp"
@@ -3641,6 +3932,8 @@ msgid ""
 "Indent all lines starting in the region by ARG columns (the prefix argument, default 1).\n"
 "Without START and END, the region is used."
 msgstr ""
+"リージョンで始まる行を全て ARG 桁だけ字下げする (前置引数, 既定は 1).\n"
+"START と END を省くと, リージョンを使う."
 
 #: lisp/simple.scm
 msgctxt "function:tab-to-tab-stop"
@@ -3653,6 +3946,8 @@ msgid ""
 "Set the fill prefix to the current line up to point.\n"
 "At the beginning of a line, cancel the fill prefix."
 msgstr ""
+"点までの今の行を, 詰めの接頭辞にする.\n"
+"行の先頭にいるときは, 詰めの接頭辞を取り消す."
 
 #: lisp/simple.scm
 msgctxt "function:fill-paragraph"
@@ -3675,6 +3970,8 @@ msgid ""
 "Comment or uncomment the current line, then move to the next line.\n"
 "With an active region, comment or uncomment the lines it covers instead."
 msgstr ""
+"今の行をコメントにするか, コメントを外して, 次の行へ動く.\n"
+"有効なリージョンがあれば, 代わりにそれが覆う行をコメントにするか, コメントを外す."
 
 #: lisp/simple.scm
 msgctxt "function:comment-set-column"
