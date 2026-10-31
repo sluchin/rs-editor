@@ -721,3 +721,59 @@ fn test_global_mark_ring() {
         "ERR No global mark set"
     );
 }
+
+#[test]
+fn test_replace_match_and_set_match_data_like_emacs() {
+    // 値は `emacs -Q --batch` の結果. 一致が無いときと, 無い括弧は, 同じエラー
+    assert_eq!(
+        run_last("(replace-match \"x\")"),
+        "ERR replace-match subexpression does not exist"
+    );
+    // 括弧の番号は 5 つ目の引数 (4 つ目は STRING)
+    let after_b = "(insert \"ab\") (goto-char 1) (re-search-forward \"\\\\(x\\\\)\\\\|b\") ";
+    assert_eq!(
+        run_last(&format!("{after_b}(replace-match \"x\" #f #f #f 1)")),
+        "ERR replace-match subexpression does not exist"
+    );
+    assert_eq!(
+        run_last(&format!(
+            "{after_b}(replace-match \"x\" #f #f #f 0) (buffer-string)"
+        )),
+        "\"ax\""
+    );
+    assert_eq!(
+        run_last(&format!("{after_b}(replace-match \"x\" #f #f \"ab\")")),
+        "ERR replace-match: STRING is not supported"
+    );
+    // 余った要素は捨てる. 数でも #f でもない要素は, エラー
+    assert_eq!(
+        run_last("(insert \"abc\") (set-match-data '(1 2 3)) (match-data)"),
+        "(1 2)"
+    );
+    assert_eq!(
+        run_last("(insert \"abc\") (set-match-data '(1 2 #f #f)) (match-data)"),
+        "(1 2)"
+    );
+    assert_eq!(
+        run_last("(set-match-data '(1 2 a b))"),
+        "ERR set-match-data expects a number"
+    );
+    assert_eq!(
+        run_last("(set-match-data 5)"),
+        "ERR set-match-data expects a list"
+    );
+    assert_eq!(run_last("(set-match-data '()) (match-data)"), "()");
+}
+
+#[test]
+fn test_indent_sexp_stops_at_an_unfinished_list() {
+    // 行の終わりが閉じていないリストの中: 読めるところまで (`emacs -Q --batch` では, 何も変わらない)
+    for text in ["a (b", "a (b\\n  c"] {
+        assert_eq!(
+            run_last(&format!(
+                "(set-syntax-dialect 'scheme) (insert \"{text}\") (goto-char 1) (indent-sexp-op #t) (list (buffer-string) (point))"
+            )),
+            format!("(\"{text}\" 1)")
+        );
+    }
+}

@@ -760,14 +760,14 @@ impl<U: Host> EditorHost<U> {
             "replace-match" | "match-substitute-replacement" => {
                 let fixed = args.get(1).is_some_and(Value::is_non_nil);
                 let literal = args.get(2).is_some_and(Value::is_non_nil);
-                let sub = int_or(op, args, 3, 0)?.max(0) as usize;
+                // 引数は Emacs と同じ (NEWTEXT FIXEDCASE LITERAL STRING SUBEXP). 文字列の中の置き換え (STRING) は, まだ無い
+                if args.get(3).is_some_and(Value::is_non_nil) {
+                    return Err(format!("{op}: STRING is not supported"));
+                }
+                let sub = int_or(op, args, 4, 0)?.max(0) as usize;
                 let data = b.match_data().to_vec();
                 let Some((from, to)) = data.get(sub).copied().flatten() else {
-                    return Err(if data.is_empty() {
-                        "replace-match called before any match found".to_string()
-                    } else {
-                        "replace-match subexpression does not exist".to_string()
-                    });
+                    return Err("replace-match subexpression does not exist".to_string());
                 };
                 let newtext = text(op, args, 0)?;
                 let matched = b.substring(from, to)?;
@@ -800,19 +800,24 @@ impl<U: Host> EditorHost<U> {
             "set-match-data" => {
                 let items = match args.first() {
                     Some(Value::List(items)) => items.to_vec(),
+                    Some(Value::Nil) => Vec::new(),
                     _ => return Err("set-match-data expects a list".to_string()),
                 };
-                let number = |v: &Value| match v {
-                    Value::Number(n) => Some((*n as i64 - 1).max(0) as usize),
-                    _ => None,
-                };
-                b.match_data = items
-                    .chunks(2)
-                    .map(|pair| match pair {
-                        [s, e] => number(s).zip(number(e)),
-                        _ => None,
-                    })
-                    .collect();
+                // (始め 終わり) の組ごと. 合わなかった括弧は #f の組. 余った要素は捨てる (Emacs と同じ)
+                let position = |n: f64| (n as i64 - 1).max(0) as usize;
+                let mut data = Vec::new();
+                for [s, e] in items.as_chunks::<2>().0 {
+                    data.push(match (s, e) {
+                        (Value::Number(s), Value::Number(e)) => Some((position(*s), position(*e))),
+                        (s, e) if !s.is_non_nil() && !e.is_non_nil() => None,
+                        _ => return Err("set-match-data expects a number".to_string()),
+                    });
+                }
+                // 終わりの合わなかった括弧は, 持たない (Emacs の `match-data` は返さない)
+                while data.last() == Some(&None) {
+                    data.pop();
+                }
+                b.match_data = data;
                 Value::Nil
             }
             "highlight-regexp" => {

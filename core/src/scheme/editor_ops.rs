@@ -46,12 +46,12 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("highlighted-regexps", &[], 0),
     (
         "match-substitute-replacement",
-        &[Kind::Text, Kind::Any, Kind::Any, Kind::Number],
+        &[Kind::Text, Kind::Any, Kind::Any, Kind::Any, Kind::Number],
         1,
     ),
     (
         "replace-match",
-        &[Kind::Text, Kind::Any, Kind::Any, Kind::Number],
+        &[Kind::Text, Kind::Any, Kind::Any, Kind::Any, Kind::Number],
         1,
     ),
     ("mark", &[], 0),
