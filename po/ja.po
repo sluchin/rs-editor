@@ -382,6 +382,45 @@ msgid "\"Edit\" directory DIRNAME.  Like `dired' but selects in another window."
 msgstr "ディレクトリ DIRNAME を「編集」する. `dired' と同じだが, 別のウィンドウで選ぶ."
 
 #: lisp/dired.scm
+msgctxt "function:dired--goto-file"
+msgid "Move point to the name NAME in the current Dired buffer.  Return #f if the listing has no such file."
+msgstr "今の Dired のバッファで, 名前 NAME にカーソルを移す. 一覧に無ければ #f を返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--jump"
+msgid "Show the Dired buffer of the directory of FILE with point on FILE.  List the directory again if FILE is missing."
+msgstr "FILE のあるディレクトリの Dired のバッファを出し, カーソルを FILE に置く. FILE が無ければ, 一覧を作り直す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--jump-file"
+msgid "Return the file `dired-jump' starts from: the visited file, the directory of a Dired buffer, or the home."
+msgstr "`dired-jump' の始めのファイルを返す: 開いているファイル, Dired のバッファのディレクトリ, またはホーム."
+
+#: lisp/dired.scm
+msgctxt "function:dired-jump"
+msgid ""
+"Jump to Dired buffer corresponding to current buffer.\n"
+"If in a buffer visiting a file, Dired that file's directory and\n"
+"move to that file's line in the directory listing.\n"
+"If the current buffer isn't visiting a file, Dired the home directory.\n"
+"If in Dired already, pop up a level and go to the old directory's line.\n"
+"When OTHER-WINDOW is true, jump to Dired buffer in other window.\n"
+"When FILE-NAME is given, jump to its line in Dired."
+msgstr ""
+"今のバッファに当たる Dired のバッファに移る.\n"
+"ファイルを開いているバッファなら, そのファイルのディレクトリを Dired で開き,\n"
+"一覧のそのファイルの行に移る.\n"
+"ファイルのないバッファなら, ホームのディレクトリを Dired で開く.\n"
+"すでに Dired なら, 一つ上のディレクトリに上がり, 元のディレクトリの行に移る.\n"
+"OTHER-WINDOW が真なら, 別のウィンドウに出す.\n"
+"FILE-NAME があれば, その行に移る."
+
+#: lisp/dired.scm
+msgctxt "function:dired-jump-other-window"
+msgid "Like `dired-jump' but in other window."
+msgstr "`dired-jump' と同じだが, 別のウィンドウに出す."
+
+#: lisp/dired.scm
 msgctxt "function:dired--revert"
 msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
 msgstr "今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す."
@@ -396,6 +435,17 @@ msgstr ""
 "ファイル FILENAME を編集する.\n"
 "FILENAME のファイルのバッファに切り替える (無ければ, 作る).\n"
 "対話的に呼ぶと, FILENAME をミニバッファで (ファイルの名前を補完しながら) 聞く."
+
+#: lisp/files.scm
+msgctxt "function:find-file-other-window"
+msgid ""
+"Edit file FILENAME, in another window.\n"
+"Like `find-file' but creates a new window or reuses an existing one.\n"
+"Interactively, read FILENAME in the minibuffer with file name completion."
+msgstr ""
+"ファイル FILENAME を, 別のウィンドウで編集する.\n"
+"`find-file' と同じだが, 新しいウィンドウを作るか, 既にあるものを使う.\n"
+"対話では, FILENAME をミニバッファで, ファイル名を補完しながら読む."
 
 #: lisp/files.scm
 msgctxt "function:find-alternate-file"

@@ -86,6 +86,53 @@ The listing is made by `ls -al'.  An existing Dired buffer of the directory is s
     (other-window 1)
     #f))
 
+(define (dired--goto-file name)
+  "Move point to the name NAME in the current Dired buffer.  Return #f if the listing has no such file."
+  (goto-char (point-min))
+  (and (re-search-forward (string-append "[A-Z][a-z][a-z] +[0-9]+ +[0-9:]+ " (regexp-quote name) "$")
+                          #f #t)
+       (begin (goto-char (match-beginning 0))
+              (re-search-forward "[A-Z][a-z][a-z] +[0-9]+ +[0-9:]+ " (line-end-position) #t)
+              #t)))
+
+(define (dired--jump other file)
+  "Show the Dired buffer of the directory of FILE with point on FILE.  List the directory again if FILE is missing."
+  (let* ((path (dired--directory-file-name (expand-file-name file)))
+         (dir (dired--directory-file-name (or (file-name-directory path) "/")))
+         (dir (if (equal? dir "") "/" dir))
+         (name (dired--base-name path))
+         (buffer (dired-noselect dir)))
+    (if other
+        (begin (display-buffer buffer) (other-window 1))
+        (switch-to-buffer buffer))
+    (unless (or (equal? path "/") (dired--goto-file name))
+      (dired--revert)
+      (dired--goto-file name))
+    #f))
+
+(define (dired--jump-file)
+  "Return the file `dired-jump' starts from: the visited file, the directory of a Dired buffer, or the home."
+  (let ((entry (assoc (buffer-name) dired--directories))
+        (file (buffer-file-name)))
+    (cond (entry (cadr entry))
+          (file file)
+          (else (expand-file-name "~/")))))
+
+(define-command (dired-jump . args)
+  "Jump to Dired buffer corresponding to current buffer.
+If in a buffer visiting a file, Dired that file's directory and
+move to that file's line in the directory listing.
+If the current buffer isn't visiting a file, Dired the home directory.
+If in Dired already, pop up a level and go to the old directory's line.
+When OTHER-WINDOW is true, jump to Dired buffer in other window.
+When FILE-NAME is given, jump to its line in Dired."
+  (dired--jump (and (pair? args) (car args))
+               (if (and (pair? args) (pair? (cdr args))) (cadr args) (dired--jump-file))))
+
+(define-command (dired-jump-other-window . args)
+  "Like `dired-jump' but in other window."
+  (dired--jump #t (if (pair? args) (car args) (dired--jump-file))))
+
 (define (dired--revert)
   "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
   (let ((entry (assoc (buffer-name) dired--directories)))

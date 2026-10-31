@@ -693,3 +693,27 @@ fn test_bookmark_set_and_jump_with_the_keys() {
     fx.press("C-x r b");
     assert_eq!(fx.point(), 3);
 }
+
+#[test]
+fn test_find_file_other_window_and_dired_jump_with_the_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dir.path().join("a.txt");
+    let b = dir.path().join("b.txt");
+    std::fs::write(&a, "from a").unwrap();
+    std::fs::write(&b, "from b").unwrap();
+    let mut fx = Fixture::sized(12, 60, &[a.to_str().unwrap().to_string()]).unwrap();
+    // 別のウィンドウで開く
+    let typed = |path: &std::path::Path| {
+        let keys: Vec<String> = path.display().to_string().chars().map(String::from).collect();
+        format!("{} RET", keys.join(" "))
+    };
+    fx.feed(&typed(&b));
+    fx.press("C-x 4 f");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+    assert_eq!(fx.text(), "from b");
+    // ファイルのバッファから, dired の, そのファイルの行へ
+    fx.press("C-x C-j");
+    assert!(fx.text()[fx.point()..].starts_with("b.txt\n"));
+    fx.press("C-x 4 C-j");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+}

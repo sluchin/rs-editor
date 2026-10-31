@@ -178,3 +178,49 @@ fn test_dired_other_window_and_the_default_directory() {
     );
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn test_dired_jump_goes_to_the_line_of_the_file_and_up_a_level() {
+    let (ev, host) = setup();
+    let dir = temp_dir("jump");
+    let file = dir.join("a.txt");
+    ev.eval_with(
+        &format!("(switch-to-buffer (find-file-noselect {:?}))", file.display().to_string()),
+        &host,
+    )
+    .unwrap();
+    ev.eval_with("(dired-jump)", &host).unwrap();
+    {
+        let editor = host.editor();
+        let buffer = editor.current_buffer();
+        assert_eq!(editor.current_buffer_name(), "rseditor-dired-jump");
+        assert!(buffer.text()[buffer.point()..].starts_with("a.txt\n"));
+    }
+    // dired のバッファからは, 一つ上のディレクトリの, このディレクトリの行へ
+    ev.eval_with("(dired-jump)", &host).unwrap();
+    {
+        let editor = host.editor();
+        let buffer = editor.current_buffer();
+        assert!(buffer.text()[buffer.point()..].starts_with("rseditor-dired-jump\n"));
+    }
+    // 無いファイルは, 一覧を作り直しても見つからない. 先頭のまま
+    ev.eval_with(
+        &format!("(dired-jump #f {:?})", dir.join("none").display().to_string()),
+        &host,
+    )
+    .unwrap();
+    // 別のウィンドウ, ファイルのないバッファ (ホーム), 根
+    ev.eval_with("(delete-other-windows)", &host).unwrap();
+    ev.eval_with(
+        &format!("(dired-jump-other-window {:?})", file.display().to_string()),
+        &host,
+    )
+    .unwrap();
+    assert_eq!(host.editor().window_list().len(), 2);
+    ev.eval_with("(switch-to-buffer \"*scratch*\")", &host)
+        .unwrap();
+    ev.eval_with("(dired-jump)", &host).unwrap();
+    ev.eval_with("(dired-jump #f \"/\")", &host).unwrap();
+    assert_eq!(host.editor().current_buffer_name(), "/");
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -409,6 +409,7 @@ fn test_define_command_and_global_set_key() {
             "ert",
             "switch-to-buffer",
             "find-file",
+            "find-file-other-window",
             "find-alternate-file",
             "insert-file",
             "write-file",

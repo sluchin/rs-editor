@@ -326,6 +326,38 @@ msgid "\"Edit\" directory DIRNAME.  Like `dired' but selects in another window."
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired--goto-file"
+msgid "Move point to the name NAME in the current Dired buffer.  Return #f if the listing has no such file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--jump"
+msgid "Show the Dired buffer of the directory of FILE with point on FILE.  List the directory again if FILE is missing."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--jump-file"
+msgid "Return the file `dired-jump' starts from: the visited file, the directory of a Dired buffer, or the home."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-jump"
+msgid ""
+"Jump to Dired buffer corresponding to current buffer.\n"
+"If in a buffer visiting a file, Dired that file's directory and\n"
+"move to that file's line in the directory listing.\n"
+"If the current buffer isn't visiting a file, Dired the home directory.\n"
+"If in Dired already, pop up a level and go to the old directory's line.\n"
+"When OTHER-WINDOW is true, jump to Dired buffer in other window.\n"
+"When FILE-NAME is given, jump to its line in Dired."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-jump-other-window"
+msgid "Like `dired-jump' but in other window."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired--revert"
 msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
 msgstr ""
@@ -335,6 +367,14 @@ msgctxt "function:find-file"
 msgid ""
 "Edit file FILENAME.\n"
 "Switch to a buffer visiting file FILENAME, creating one if none already exists.\n"
+"Interactively, read FILENAME in the minibuffer with file name completion."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:find-file-other-window"
+msgid ""
+"Edit file FILENAME, in another window.\n"
+"Like `find-file' but creates a new window or reuses an existing one.\n"
 "Interactively, read FILENAME in the minibuffer with file name completion."
 msgstr ""
 

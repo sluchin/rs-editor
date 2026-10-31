@@ -10,6 +10,15 @@ Interactively, read FILENAME in the minibuffer with file name completion."
   (let ((filename (if (null? args) (read-file-name "Find file: ") (car args))))
     (switch-to-buffer (find-file-noselect filename))))
 
+(define-command (find-file-other-window . args)
+  "Edit file FILENAME, in another window.
+Like `find-file' but creates a new window or reuses an existing one.
+Interactively, read FILENAME in the minibuffer with file name completion."
+  (let ((filename (if (null? args) (read-file-name "Find file in other window: ") (car args))))
+    (display-buffer (find-file-noselect filename))
+    (other-window 1)
+    #f))
+
 (define-command (find-alternate-file . args)
   "Find file FILENAME, select its buffer, and kill the previous buffer.
 If the current buffer visits a file and is modified, ask before killing it.

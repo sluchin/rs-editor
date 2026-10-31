@@ -283,7 +283,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 19 | 14 | 5 |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 16 | 11 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
 | 12 | 入れない | 23 | 23 | - |
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 143 個: Lisp 60 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 146 個: Lisp 63 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -425,7 +425,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `find-alternate-file` | ◯ | files | `C-x C-v` | 実装済み | `C-x C-v` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file` | ◯ | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-other-frame` | ◯ | files | `C-x 5 f`, `C-x 5 C-f` |  |  |  | 12 |
-| `find-file-other-window` | ◯ | files | `C-x 4 f`, `C-x 4 C-f` |  |  |  | 9 |
+| `find-file-other-window` | ◯ | files | `C-x 4 f`, `C-x 4 C-f` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-read-only` |  | files | `C-x C-r` |  |  |  | 9 |
 | `find-file-read-only-other-frame` |  | files | `C-x 5 r` |  |  |  | 12 |
 | `find-file-read-only-other-window` |  | files | `C-x 4 r` |  |  |  | 9 |
@@ -561,8 +561,8 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | TypeScript (`src/App.tsx`, `lisp/buff-menu.scm`) | 9 |
 | `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/dired.scm`) | 9 |
-| `dired-jump` |  | dired | `C-x C-j` |  |  |  | 9 |
-| `dired-jump-other-window` |  | dired | `C-x 4 C-j` |  |  |  | 9 |
+| `dired-jump` |  | dired | `C-x C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
+| `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
 | `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
