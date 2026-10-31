@@ -1,0 +1,4 @@
+# cargo tarpaulin の既定の設定. 手元の `cargo tarpaulin` も, CI の coverage のジョブ (`npm run coverage:be`) と同じ計測
+# (LLVM の source-based coverage) にする. ほかの指定 (`--workspace`, `--fail-under 100` など) は, コマンドの行で渡す.
+[coverage]
+engine = "Llvm"
