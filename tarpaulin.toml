@@ -2,3 +2,5 @@
 # (LLVM の source-based coverage) にする. ほかの指定 (`--workspace`, `--fail-under 100` など) は, コマンドの行で渡す.
 [coverage]
 engine = "Llvm"
+# 本文の全ての位置で Emacs と比べるテスト (`core/tests/test_lisp.rs`) は, 計測中は 60 秒 (既定) より長くかかる
+timeout = "10m"
