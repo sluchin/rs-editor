@@ -5329,6 +5329,16 @@ msgstr ""
 "引数 N があれば, N ページ先 (負なら前) のページにする."
 
 #: lisp/simple.scm
+msgctxt "function:simple--page-line-counts"
+msgid "Return (TOTAL BEFORE AFTER): the number of lines on the current page, before point and after point."
+msgstr "(TOTAL BEFORE AFTER) を返す: 今のページの行数と, カーソルの前の行数と, 後ろの行数."
+
+#: lisp/simple.scm
+msgctxt "function:count-lines-page"
+msgid "Report number of lines on current page, and how many are before or after point."
+msgstr "今のページの行数と, カーソルの前と後ろの行数を知らせる."
+
+#: lisp/simple.scm
 msgctxt "function:simple--forward-sexp"
 msgid "Move forward across N sexps, signalling the scan error as is."
 msgstr "N 個の式を越える. 式の走査の失敗は, そのまま知らせる."
@@ -5582,6 +5592,52 @@ msgstr "式 EXPRESSION を command-history の先頭に入れる (すでに先�
 msgctxt "function:eval-expression"
 msgid "Read an expression in the minibuffer, evaluate it, and show the value."
 msgstr "式をミニバッファで読んで, 評価して, 値を出す."
+
+#: lisp/simple.scm
+msgctxt "variable:parens-require-spaces"
+msgid ""
+"If true, add whitespace as needed when inserting parentheses.\n"
+"This affects `insert-parentheses'."
+msgstr ""
+"真なら, 括弧を入れるとき, 必要に応じて空白を足す.\n"
+"`insert-parentheses' に効く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--insert-pair"
+msgid "Enclose following sexps in OPEN and CLOSE as `insert-parentheses' does for the prefix argument RAW."
+msgstr "前置引数 RAW について, `insert-parentheses' と同じに, 続く S 式を OPEN と CLOSE で囲む."
+
+#: lisp/simple.scm
+msgctxt "function:insert-parentheses"
+msgid ""
+"Enclose following ARG sexps in parentheses.\n"
+"Leave point after open-paren.\n"
+"A negative ARG encloses the preceding ARG sexps instead.\n"
+"No argument is equivalent to zero: just insert `()' and leave point between.\n"
+"If `parens-require-spaces' is true, this command also inserts a space\n"
+"before and after, depending on the surrounding characters.\n"
+"If region is active, insert enclosing characters at region boundaries.\n"
+"\n"
+"This command assumes point is not in a string or comment."
+msgstr ""
+"続く ARG 個の S 式を括弧で囲む.\n"
+"開き括弧の後ろにカーソルを置く.\n"
+"ARG が負なら, 前の ARG 個の S 式を囲む.\n"
+"引数が無いのは 0 と同じで, `()' を入れて, 間にカーソルを置く.\n"
+"`parens-require-spaces' が真なら, 前後の文字に合わせて空白も入れる.\n"
+"リージョンがあるときは, リージョンの両端に入れる.\n"
+"\n"
+"カーソルが文字列やコメントの中にないものとして動く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--newline-and-indent"
+msgid "Delete the horizontal space before point, insert a newline, and indent the new line (not the previous one)."
+msgstr "カーソルの前の空白を消し, 改行を入れ, 新しい行を字下げする (前の行は直さない)."
+
+#: lisp/simple.scm
+msgctxt "function:move-past-close-and-reindent"
+msgid "Move past next `)', delete indentation before it, then indent after it."
+msgstr "次の `)' の後ろに移り, その前の字下げを消し, 後ろを字下げする."
 
 #: lisp/subr.scm
 msgctxt "function:y-or-n-p"

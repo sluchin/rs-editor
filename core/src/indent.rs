@@ -670,6 +670,7 @@ pub fn indent_for_tab(lines: &[Vec<char>], pos: usize, config: &Config) -> Plan 
         let options = IndentLines {
             from: n,
             to: n,
+            empty_lines: true,
             ..IndentLines::default()
         };
         let result = indent_lines(lines, options, config);
@@ -916,7 +917,12 @@ pub fn indent_sexp(lines: &[Vec<char>], pos: usize, end: usize, config: &Config)
 
 /// `RET` (Emacs の `newline` と `electric-indent-mode`). 改行を入れ, 前の行の字下げを直して (Lisp だけ),
 /// 前の行の終わりの空白を消し, 新しい行を字下げします.
-pub fn newline_and_indent(lines: &[Vec<char>], pos: usize, config: &Config) -> Plan {
+pub fn newline_and_indent(
+    lines: &[Vec<char>],
+    pos: usize,
+    config: &Config,
+    reindent_previous: bool,
+) -> Plan {
     let starts = line_starts(lines);
     let n = starts.partition_point(|&s| s <= pos);
     let line = &lines[n - 1];
@@ -937,9 +943,9 @@ pub fn newline_and_indent(lines: &[Vec<char>], pos: usize, config: &Config) -> P
         doc.insert(n, next.to_vec());
         doc
     };
-    // 前の行の字下げを直す (Fundamental モードは, 直さない)
+    // 前の行の字下げを直す (Fundamental モードと, `newline-and-indent` は, 直さない)
     let mut prev = head.clone();
-    if config.lisp() {
+    if config.lisp() && reindent_previous {
         let simulated = with(&head, &new_next);
         let options = IndentLines {
             from: n,

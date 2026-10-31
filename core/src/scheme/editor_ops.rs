@@ -120,6 +120,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ),
     ("indent-sexp-op", &[Kind::Any], 1),
     ("newline-and-indent-op", &[Kind::Any], 1),
+    ("plain-newline-and-indent-op", &[Kind::Any], 1),
     (
         "fill-paragraph-op",
         &[Kind::Number, Kind::Any, Kind::Any],
@@ -254,6 +255,7 @@ pub const NAMES: &[&str] = &[
     "indent-region-op",
     "indent-sexp-op",
     "newline-and-indent-op",
+    "plain-newline-and-indent-op",
     "fill-paragraph-op",
     "comment-dwim-op",
     "comment-region-op",

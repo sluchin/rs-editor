@@ -1434,6 +1434,28 @@ With argument N, mark the page N pages forward (backward if negative)."
     (push-mark (point) #t #t)
     (forward-page -1)))
 
+;;; Pages
+
+(define (simple--page-line-counts)
+  "Return (TOTAL BEFORE AFTER): the number of lines on the current page, before point and after point."
+  (save-excursion
+    (let ((opoint (point)))
+      (forward-page 1)
+      (forward-line 0)
+      (unless (looking-at (regexp-quote simple--page-mark)) (goto-char (line-end-position)))
+      (let ((end (point)))
+        (forward-page -1)
+        (list (simple--count-lines (point) end)
+              (simple--count-lines (point) opoint)
+              (simple--count-lines opoint end))))))
+
+(define-command (count-lines-page . args)
+  "Report number of lines on current page, and how many are before or after point."
+  (let* ((counts (simple--page-line-counts))
+         (total (car counts)))
+    (message (format (if (= total 1) "Page has %d line (%d + %d)" "Page has %d lines (%d + %d)")
+                     total (cadr counts) (caddr counts)))))
+
 ;;; S-expressions, defuns, paragraphs and sentences
 
 (define (simple--forward-sexp n)
@@ -1692,3 +1714,69 @@ With the argument N, use the Nth previous command (1 is the last)."
 (provide 'simple)
 
 ;;; simple.scm ends here
+
+;;; Parentheses
+
+(define parens-require-spaces #t
+  "If true, add whitespace as needed when inserting parentheses.
+This affects `insert-parentheses'.")
+
+(define (simple--insert-pair raw open close)
+  "Enclose following sexps in OPEN and CLOSE as `insert-parentheses' does for the prefix argument RAW."
+  (if (region-active-p)
+      (begin
+        (save-excursion (goto-char (region-end)) (insert close))
+        (goto-char (region-beginning))
+        (insert open))
+      (let ((arg (if raw (prefix-numeric-value raw) 0)))
+        (cond ((> arg 0) (skip-chars-forward " \t"))
+              ((< arg 0) (simple--forward-sexp arg) (set! arg (- arg))))
+        (when (and parens-require-spaces
+                   (not (bobp))
+                   (member (char-syntax (char-before)) (list "w" "_" (char-syntax close))))
+          (insert " "))
+        (insert open)
+        (save-excursion
+          (unless (= arg 0) (simple--forward-sexp arg))
+          (insert close)
+          (when (and parens-require-spaces
+                     (not (eobp))
+                     (member (char-syntax (char-after)) (list "w" "_" (char-syntax open))))
+            (insert " "))))))
+
+(define-command (insert-parentheses . args)
+  "Enclose following ARG sexps in parentheses.
+Leave point after open-paren.
+A negative ARG encloses the preceding ARG sexps instead.
+No argument is equivalent to zero: just insert `()' and leave point between.
+If `parens-require-spaces' is true, this command also inserts a space
+before and after, depending on the surrounding characters.
+If region is active, insert enclosing characters at region boundaries.
+
+This command assumes point is not in a string or comment."
+  (simple--insert-pair (simple--raw-arg args) "(" ")"))
+
+(define (simple--newline-and-indent)
+  "Delete the horizontal space before point, insert a newline, and indent the new line (not the previous one)."
+  (plain-newline-and-indent-op indent-tabs-mode))
+
+(define-command (move-past-close-and-reindent . args)
+  "Move past next `)', delete indentation before it, then indent after it."
+  ;; Called from Lisp, up-list neither leaves a string first nor says "At top level": it reports the scan error
+  (goto-char (scan-lists (point) 1 1))
+  (forward-char -1)
+  (let loop ()
+    (when (save-excursion
+            (let ((before-paren (point)))
+              (back-to-indentation)
+              (and (= (point) before-paren)
+                   (begin
+                     (forward-line 0)
+                     (forward-char -1)
+                     (let ((state (syntax-ppss (point))))
+                       (and (not (list-ref state 3)) (not (list-ref state 4))))))))
+      (delete-indentation)
+      (loop)))
+  (forward-char 1)
+  (simple--newline-and-indent)
+  #f)

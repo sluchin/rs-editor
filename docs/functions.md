@@ -279,7 +279,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
-| 5 | S 式, 段落, ページ | 19 | 5 | 14 |
+| 5 | S 式, 段落, ページ | 16 | 2 | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 146 個: Lisp 63 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 149 個: Lisp 66 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -490,11 +490,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `end-of-defun` | ◯ | lisp | `C-M-e`, `C-M-<end>`, `ESC C-<end>` | 実装済み | `C-M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `forward-list` | ◯ | lisp | `C-M-n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `forward-sexp` | ◯ | lisp | `C-M-f`, `C-M-<right>`, `ESC C-<right>` | 実装済み | `C-M-f` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `insert-parentheses` | ◯ | lisp | `M-(` |  |  |  | 5 |
+| `insert-parentheses` | ◯ | lisp | `M-(` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-sexp` | ◯ | lisp | `C-M-k` | 実装済み | `C-M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `move-past-close-and-reindent` | ◯ | lisp | `M-)` |  |  |  | 5 |
+| `move-past-close-and-reindent` | ◯ | lisp | `M-)` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `narrow-to-defun` |  | lisp | `C-x n d` |  |  |  | 5 |
 | `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
@@ -508,7 +508,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `mark-paragraph` | ◯ | paragraphs | `M-h` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `backward-page` | ◯ | page | `C-x [` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `count-lines-page` | ◯ | page | `C-x l` |  |  |  | 5 |
+| `count-lines-page` | ◯ | page | `C-x l` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `forward-page` | ◯ | page | `C-x ]` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-page` | ◯ | page | `C-x C-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `narrow-to-page` | ◯ | page | `C-x n p` |  |  |  | 5 |

@@ -999,6 +999,7 @@ impl<U: Host> EditorHost<U> {
             | "indent-region-op"
             | "indent-sexp-op"
             | "newline-and-indent-op"
+            | "plain-newline-and-indent-op"
             | "fill-paragraph-op"
             | "comment-dwim-op"
             | "comment-region-op" => {
@@ -1052,7 +1053,12 @@ impl<U: Host> EditorHost<U> {
                         let end = sexp_end_for_indent(&source, point)?;
                         indent::indent_sexp(&lines, point, end, &config)
                     }
-                    _ => indent::newline_and_indent(&lines, point, &config),
+                    _ => indent::newline_and_indent(
+                        &lines,
+                        point,
+                        &config,
+                        op == "newline-and-indent-op",
+                    ),
                 };
                 apply_plan(b, point, plan)?;
                 Value::Nil

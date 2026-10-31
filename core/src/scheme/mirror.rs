@@ -75,6 +75,7 @@ const NATIVE: &[&str] = &[
     "indent-region-op",
     "indent-sexp-op",
     "newline-and-indent-op",
+    "plain-newline-and-indent-op",
     "fill-paragraph-op",
     "comment-dwim-op",
     "comment-region-op",

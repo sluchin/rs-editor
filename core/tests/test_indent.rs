@@ -2,7 +2,9 @@
 //! (`indent-tabs-mode` は `t`). 本文の全ての位置からの比べは `core/tests/lisp.json` (`test_lisp.rs`) で行うので,
 //! ここでは, その表に無い形を試す.
 
-use rseditor_core::indent::{indent_region, indent_sexp, Config, Plan};
+use rseditor_core::indent::{
+    indent_for_tab, indent_region, indent_sexp, newline_and_indent, Config, Plan,
+};
 use rseditor_core::syntax::Dialect;
 
 /// 設定.
@@ -81,4 +83,24 @@ fn test_indent_sexp_is_only_for_lisp() {
     // Lisp でないバッファでは, 何もしない (このエディタの決まり. コマンドの説明のとおり)
     let plan = indent_sexp(&split("(a\nb)"), 0, 5, &config(Dialect::Fundamental));
     assert!(plan.edits.is_empty() && plan.cursor.is_none());
+}
+
+#[test]
+fn test_tab_indents_an_empty_line_in_lisp() {
+    // Emacs の `indent-for-tab-command` は, 空の行も字下げする
+    let text = "(defun foo (a b)\n\n  x)\n";
+    let plan = indent_for_tab(&split(text), 17, &config(Dialect::Elisp));
+    assert_eq!(apply(text, &plan), "(defun foo (a b)\n  \n  x)\n");
+}
+
+#[test]
+fn test_newline_and_indent_can_leave_the_previous_line() {
+    // `RET` は前の行の字下げも直す. `newline-and-indent` (reindent_previous が偽) は, 新しい行だけ
+    let text = "  (a\n   b)";
+    let lines = split(text);
+    let config = config(Dialect::Elisp);
+    let with = newline_and_indent(&lines, 4, &config, true);
+    assert_eq!(apply(text, &with), "(a\n \n   b)");
+    let without = newline_and_indent(&lines, 4, &config, false);
+    assert_eq!(apply(text, &without), "  (a\n   \n   b)");
 }

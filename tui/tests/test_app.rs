@@ -722,3 +722,13 @@ fn test_find_file_other_window_and_dired_jump_with_the_keys() {
     fx.press("C-x 4 C-j");
     assert_eq!(fx.app.host().editor().window_list().len(), 2);
 }
+
+#[test]
+fn test_insert_parentheses_and_count_lines_page_with_the_keys() {
+    let mut fx = Fixture::new();
+    fx.press("M-(");
+    assert_eq!(fx.text(), "()");
+    assert_eq!(fx.point(), 1);
+    fx.press("C-x l");
+    assert_eq!(fx.app.message(), "Page has 1 line (1 + 1)");
+}

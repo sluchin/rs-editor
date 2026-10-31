@@ -4821,6 +4821,16 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:simple--page-line-counts"
+msgid "Return (TOTAL BEFORE AFTER): the number of lines on the current page, before point and after point."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:count-lines-page"
+msgid "Report number of lines on current page, and how many are before or after point."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--forward-sexp"
 msgid "Move forward across N sexps, signalling the scan error as is."
 msgstr ""
@@ -5033,6 +5043,42 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:eval-expression"
 msgid "Read an expression in the minibuffer, evaluate it, and show the value."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:parens-require-spaces"
+msgid ""
+"If true, add whitespace as needed when inserting parentheses.\n"
+"This affects `insert-parentheses'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--insert-pair"
+msgid "Enclose following sexps in OPEN and CLOSE as `insert-parentheses' does for the prefix argument RAW."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:insert-parentheses"
+msgid ""
+"Enclose following ARG sexps in parentheses.\n"
+"Leave point after open-paren.\n"
+"A negative ARG encloses the preceding ARG sexps instead.\n"
+"No argument is equivalent to zero: just insert `()' and leave point between.\n"
+"If `parens-require-spaces' is true, this command also inserts a space\n"
+"before and after, depending on the surrounding characters.\n"
+"If region is active, insert enclosing characters at region boundaries.\n"
+"\n"
+"This command assumes point is not in a string or comment."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--newline-and-indent"
+msgid "Delete the horizontal space before point, insert a newline, and indent the new line (not the previous one)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:move-past-close-and-reindent"
+msgid "Move past next `)', delete indentation before it, then indent after it."
 msgstr ""
 
 #: lisp/subr.scm

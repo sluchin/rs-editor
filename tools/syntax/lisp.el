@@ -32,6 +32,9 @@
 ;; transpose-sexps は, バックスラッシュで quote した文字と, `##` `,@` の前後で, まだ Emacs と同じではない
 (defconst transpose-excluded "\\\\\\|##")
 
+;; move-past-close-and-reindent は, scheme-mode で, `{}` を括弧に使う本文と, `|sym (|` を含む本文の字下げが, まだ Emacs と同じではない
+(defconst reindent-excluded "{x \\||sym")
+
 ;; 段落と文は, emacs-lisp-mode と fundamental-mode で同じなので, fundamental-mode と scheme-mode だけ
 (defconst text-modes '(fundamental-mode scheme-mode))
 (defconst lisp-modes '(emacs-lisp-mode scheme-mode))
@@ -84,7 +87,12 @@
          (one "forward-page" [] nil '(fundamental-mode) 'prose) (one "forward-page" [2] nil '(fundamental-mode) 'prose)
          (one "forward-page" [-1] nil '(fundamental-mode) 'prose) (one "backward-page" [] nil '(fundamental-mode) 'prose)
          (one "mark-page" [] nil '(fundamental-mode) 'prose) (one "mark-page" [1] nil '(fundamental-mode) 'prose)
-         (one "mark-page" [-1] nil '(fundamental-mode) 'prose))))
+         (one "mark-page" [-1] nil '(fundamental-mode) 'prose)
+         (one "count-lines-page" [] nil '(fundamental-mode) 'prose)
+         (one "insert-parentheses" [] nil all-modes 'code) (one "insert-parentheses" [1] nil all-modes 'code)
+         (one "insert-parentheses" [2] nil all-modes 'code) (one "insert-parentheses" [-1] nil all-modes 'code)
+         (one "insert-parentheses" [] 3 all-modes 'code)
+         (one "move-past-close-and-reindent" [] nil lisp-modes 'code reindent-excluded))))
 
 (defun decode-arg (a)
   (cond ((null a) nil)
