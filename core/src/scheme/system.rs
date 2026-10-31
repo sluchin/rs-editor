@@ -33,6 +33,7 @@ pub const NAMES: &[&str] = &[
     "delete-file",
     "delete-directory",
     "directory-files-recursively",
+    "directory-listing",
     "file-modification-time",
     "file-newer-than-file-p",
     "current-time",
@@ -138,6 +139,10 @@ pub(crate) fn call(
             let path = expand_args(machine, name, &args)?;
             std::fs::create_dir_all(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
             Ok(Value::Nil)
+        }),
+        "directory-listing" => fixed::<1>(name, args).and_then(|args| {
+            let path = expand_args(machine, name, &args)?;
+            directory_listing("ls", &path).map(Value::String)
         }),
         "make-temp-file" => make_temp_file(name, &args),
         "delete-file" => fixed::<1>(name, args).and_then(|args| {
@@ -426,6 +431,30 @@ pub fn expand_file_name(path: &str, base: &Path, home: &Path) -> PathBuf {
 /// 文字列.
 fn path_string(path: &Path) -> String {
     path.to_string_lossy().into_owned()
+}
+
+/// ディレクトリの一覧を, `ls -al` で作ります (dired の本文の元. 日付などの書式を一定にするため `LC_ALL=C`).
+///
+/// # Arguments
+///
+/// * `program` - `ls` のプログラム.
+/// * `path` - ディレクトリ.
+///
+/// # Returns
+///
+/// `ls` の出力. 読めない, または `ls` が失敗したときは, 理由の文字列の [`Err`].
+pub fn directory_listing(program: &str, path: &Path) -> Result<String, String> {
+    std::fs::read_dir(path).map_err(|e| format!("{}: {}", path.display(), e))?;
+    let output = std::process::Command::new(program)
+        .args(["-al", "--"])
+        .arg(path)
+        .env("LC_ALL", "C")
+        .output()
+        .map_err(|e| format!("{program}: {e}"))?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
 /// ディレクトリの下 (深くまで) の, 名前が正規表現に合うファイルを集めます. `.` で始まるものは, 除きます.

@@ -31,6 +31,9 @@ const DABBREV: &str = include_str!("../../lisp/dabbrev.scm");
 /// バッファの一覧 (Lisp).
 const BUFF_MENU: &str = include_str!("../../lisp/buff-menu.scm");
 
+/// ディレクトリの一覧 (Lisp).
+const DIRED: &str = include_str!("../../lisp/dired.scm");
+
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -83,6 +86,7 @@ impl App {
         evaluator.eval_with(REGISTER, &host)?;
         evaluator.eval_with(DABBREV, &host)?;
         evaluator.eval_with(BUFF_MENU, &host)?;
+        evaluator.eval_with(DIRED, &host)?;
         let app = App {
             host,
             evaluator,

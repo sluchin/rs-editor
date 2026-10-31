@@ -159,6 +159,8 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x C-b", "list-buffers"),
     ("C-x C-c", "save-buffers-kill-terminal"),
     ("C-x b", "switch-to-buffer"),
+    ("C-x d", "dired"),
+    ("C-x 4 d", "dired-other-window"),
     ("C-x k", "kill-buffer"),
     ("C-x 2", "split-window-below"),
     ("C-x 3", "split-window-right"),

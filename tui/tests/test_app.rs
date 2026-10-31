@@ -638,3 +638,32 @@ fn test_list_buffers_shows_the_list_in_another_window() {
         .text()
         .contains("*scratch*"));
 }
+
+#[test]
+fn test_dired_starts_from_the_directory_of_the_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dir.path().join("a.txt");
+    std::fs::write(&a, "from a").unwrap();
+    let mut fx = Fixture::sized(12, 60, &[a.to_str().unwrap().to_string()]).unwrap();
+    // 始めの入力は, ファイルのディレクトリ
+    fx.feed("RET");
+    fx.press("C-x d");
+    let name = dir
+        .path()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    assert_eq!(fx.app.host().editor().current_buffer_name(), name);
+    assert!(fx
+        .text()
+        .starts_with(&format!("  {}:", dir.path().display())));
+    assert!(fx.text().contains(" a.txt\n"));
+    // 別のウィンドウに出す
+    fx.feed("RET");
+    fx.press("C-x b");
+    fx.feed("RET");
+    fx.press("C-x 4 d");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+}

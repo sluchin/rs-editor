@@ -283,7 +283,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 22 | 17 | 5 |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 21 | 16 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
 | 12 | 入れない | 23 | 23 | - |
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 140 個: Lisp 57 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 141 個: Lisp 58 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -560,12 +560,12 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `dabbrev-completion` |  | dabbrev | `C-M-/` |  |  |  | 8 |
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | TypeScript (`src/App.tsx`, `lisp/buff-menu.scm`) | 9 |
-| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`) | 9 |
+| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/dired.scm`) | 9 |
 | `dired-jump` |  | dired | `C-x C-j` |  |  |  | 9 |
 | `dired-jump-other-window` |  | dired | `C-x 4 C-j` |  |  |  | 9 |
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
-| `dired-other-window` | ◯ | dired | `C-x 4 d` |  |  |  | 9 |
+| `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `bookmark-bmenu-list` |  | bookmark | `C-x r l` |  |  |  | 9 |
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | TypeScript (`src/hooks/useBookmarks.ts`) | 9 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | TypeScript (`src/hooks/useBookmarks.ts`) | 9 |

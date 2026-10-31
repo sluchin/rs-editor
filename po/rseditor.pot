@@ -126,6 +126,71 @@ msgid ""
 "replace the previously-made expansion with the next possible expansion not yet tried."
 msgstr ""
 
+#: lisp/dired.scm
+msgctxt "variable:dired--directories"
+msgid "List of (BUFFER-NAME DIRECTORY) for the Dired buffers."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--directory-file-name"
+msgid "Return DIR without the trailing slashes (\"/\" stays)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--base-name"
+msgid "Return the name of the Dired buffer for DIR (its last component; \"/\" stays)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--text"
+msgid "Return the text of the Dired buffer of DIR: the directory, then the `ls -al' lines indented by two spaces."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--goto-first-file"
+msgid "Move point to the name of the first file (after \".\" and \"..\"), or to the end if there is none."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--fill"
+msgid "Replace the text of the current buffer with the listing of DIR."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--live"
+msgid "Forget the Dired buffers that no longer exist."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-noselect"
+msgid ""
+"Like `dired' but return the Dired buffer (its name) without selecting it.\n"
+"An existing Dired buffer of the same directory is reused."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--default-directory"
+msgid "Return the directory to start from: the directory of the Dired buffer or of the visited file, or the home."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired"
+msgid ""
+"\"Edit\" directory DIRNAME--delete, rename, print, etc. some files in it.\n"
+"Interactively, read DIRNAME in the minibuffer with file name completion.\n"
+"The listing is made by `ls -al'.  An existing Dired buffer of the directory is shown again."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-other-window"
+msgid "\"Edit\" directory DIRNAME.  Like `dired' but selects in another window."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--revert"
+msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
+msgstr ""
+
 #: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""

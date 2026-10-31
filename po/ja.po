@@ -148,6 +148,76 @@ msgstr ""
 "\n"
 "点が前の展開の終わりから動いておらず, 引数が無いなら, 前の展開を, まだ試していない次の候補に置き換える."
 
+#: lisp/dired.scm
+msgctxt "variable:dired--directories"
+msgid "List of (BUFFER-NAME DIRECTORY) for the Dired buffers."
+msgstr "dired のバッファの (バッファ名 ディレクトリ) のリスト."
+
+#: lisp/dired.scm
+msgctxt "function:dired--directory-file-name"
+msgid "Return DIR without the trailing slashes (\"/\" stays)."
+msgstr "DIR の終わりの / を除いたものを返す (\"/\" は, そのまま)."
+
+#: lisp/dired.scm
+msgctxt "function:dired--base-name"
+msgid "Return the name of the Dired buffer for DIR (its last component; \"/\" stays)."
+msgstr "DIR の dired のバッファの名前 (最後の部分. \"/\" は, そのまま) を返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--text"
+msgid "Return the text of the Dired buffer of DIR: the directory, then the `ls -al' lines indented by two spaces."
+msgstr "DIR の dired のバッファの本文を返す: ディレクトリ, 続けて `ls -al' の行を 2 文字字下げして."
+
+#: lisp/dired.scm
+msgctxt "function:dired--goto-first-file"
+msgid "Move point to the name of the first file (after \".\" and \"..\"), or to the end if there is none."
+msgstr "最初のファイル (「.」と「..」の次) の名前へ点を動かす. 無ければ終わりへ."
+
+#: lisp/dired.scm
+msgctxt "function:dired--fill"
+msgid "Replace the text of the current buffer with the listing of DIR."
+msgstr "今のバッファの本文を, DIR の一覧に置き換える."
+
+#: lisp/dired.scm
+msgctxt "function:dired--live"
+msgid "Forget the Dired buffers that no longer exist."
+msgstr "もう無い dired のバッファを忘れる."
+
+#: lisp/dired.scm
+msgctxt "function:dired-noselect"
+msgid ""
+"Like `dired' but return the Dired buffer (its name) without selecting it.\n"
+"An existing Dired buffer of the same directory is reused."
+msgstr ""
+"`dired' と同じだが, dired のバッファ (の名前) を返し, 選ばない.\n"
+"同じディレクトリの dired のバッファがあれば, それを使う."
+
+#: lisp/dired.scm
+msgctxt "function:dired--default-directory"
+msgid "Return the directory to start from: the directory of the Dired buffer or of the visited file, or the home."
+msgstr "始めに出すディレクトリを返す: dired のバッファか, 訪れているファイルのディレクトリ, 無ければホーム."
+
+#: lisp/dired.scm
+msgctxt "function:dired"
+msgid ""
+"\"Edit\" directory DIRNAME--delete, rename, print, etc. some files in it.\n"
+"Interactively, read DIRNAME in the minibuffer with file name completion.\n"
+"The listing is made by `ls -al'.  An existing Dired buffer of the directory is shown again."
+msgstr ""
+"ディレクトリ DIRNAME を「編集」する--中のファイルを消す, 名前を変える, 印刷するなど.\n"
+"対話的には, DIRNAME をミニバッファで, ファイル名の補完付きで読む.\n"
+"一覧は `ls -al' で作る. そのディレクトリの dired のバッファがあれば, それをまた出す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-other-window"
+msgid "\"Edit\" directory DIRNAME.  Like `dired' but selects in another window."
+msgstr "ディレクトリ DIRNAME を「編集」する. `dired' と同じだが, 別のウィンドウで選ぶ."
+
+#: lisp/dired.scm
+msgctxt "function:dired--revert"
+msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
+msgstr "今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す."
+
 #: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""
