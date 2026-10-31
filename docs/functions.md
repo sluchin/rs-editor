@@ -558,7 +558,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `inverse-add-global-abbrev` | ◯ | abbrev | `C-x a -`, `C-x a i g` |  |  |  | 8 |
 | `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` |  |  |  | 8 |
 | `dabbrev-completion` |  | dabbrev | `C-M-/` |  |  |  | 8 |
-| `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`) | 8 |
+| `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | TypeScript (`src/App.tsx`) | 9 |
 | `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`) | 9 |
 | `dired-jump` |  | dired | `C-x C-j` |  |  |  | 9 |

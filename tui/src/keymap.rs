@@ -93,6 +93,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-M-o", "split-line"),
     ("M-z", "zap-to-char"),
     ("M-\\", "delete-horizontal-space"),
+    ("M-/", "dabbrev-expand"),
     ("M-^", "delete-indentation"),
     ("C-x C-o", "delete-blank-lines"),
     ("M-SPC", "cycle-spacing"),

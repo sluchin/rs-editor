@@ -4,6 +4,68 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: lisp/dabbrev.scm
+msgctxt "variable:dabbrev-backward-only"
+msgid "If non-nil, `dabbrev-expand' only looks backwards."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "variable:dabbrev-case-replace"
+msgid "Controls whether dabbrev preserves case when expanding the abbreviation."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--ignore-case-p"
+msgid "Return non-nil if case should be ignored when searching for ABBREV."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--goto-start-of-abbrev"
+msgid "Back over all abbrev type characters."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--abbrev-at-point"
+msgid "Extract the symbol before point to serve as abbreviation."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--search"
+msgid "Search for something that could be used to expand ABBREV, leaving point at its end."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--try-find"
+msgid "Search for ABBREV, backwards if REVERSE, N times.  Return the expansion found."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--find-expansion"
+msgid ""
+"Find one occurrence of ABBREV, and return the expansion.\n"
+"DIRECTION > 0 means look that many times backwards, < 0 forwards, = 0 both."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--substitute-expansion"
+msgid "Replace OLD (or ABBREV, if OLD is false) before point with EXPANSION."
+msgstr ""
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev-expand"
+msgid ""
+"Expand previous word \"dynamically\".\n"
+"\n"
+"Expands to the most recent, preceding word for which this is a prefix.\n"
+"If no suitable preceding word is found, words following point are considered.\n"
+"\n"
+"A positive prefix argument, N, says to take the Nth backward *distinct* possibility.\n"
+"A negative argument says search forward.\n"
+"\n"
+"If the cursor has not moved from the end of the previous expansion and no argument is given,\n"
+"replace the previously-made expansion with the next possible expansion not yet tried."
+msgstr ""
+
 #: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""

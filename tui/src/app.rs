@@ -25,6 +25,9 @@ const ISEARCH: &str = include_str!("../../lisp/isearch.scm");
 const RECT: &str = include_str!("../../lisp/rect.scm");
 const REGISTER: &str = include_str!("../../lisp/register.scm");
 
+/// 動的略語 (Lisp. `replace.scm` の後に読む).
+const DABBREV: &str = include_str!("../../lisp/dabbrev.scm");
+
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -75,6 +78,7 @@ impl App {
         evaluator.eval_with(ISEARCH, &host)?;
         evaluator.eval_with(RECT, &host)?;
         evaluator.eval_with(REGISTER, &host)?;
+        evaluator.eval_with(DABBREV, &host)?;
         let app = App {
             host,
             evaluator,

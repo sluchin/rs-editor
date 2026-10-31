@@ -12,6 +12,7 @@
 
 ;; 対話的に使うときと同じに, マークは, transient-mark-mode で使う. message は, 出した文字を覚える
 (transient-mark-mode 1)
+(setq dabbrev-check-other-buffers nil)
 (defvar last-message nil)
 (advice-add 'message :override
             (lambda (fmt &rest args)
@@ -24,7 +25,8 @@
     ""
     "x"
     "a\n\n\n\nb\n\n"
-    "one two three"))
+    "one two three"
+    "foobar food Foo\nfoo FOOBAZ fo bar_x barx\nbar-y b"))
 
 (defun step (cmd args &optional last) (vector cmd args last))
 
@@ -81,6 +83,22 @@
                (vector) nil)
          (list "insert-empty-register" (vector (step "insert-register" [((c . "z"))])) (vector) nil)
          (list "copy-register-region" (vector (step "copy-to-register" [((c . "q")) 1 3])) (vector) 1))
+   ;; 動的略語
+   (append
+    (mapcar (lambda (a) (one "dabbrev-expand" "dabbrev-expand" a)) '([nil] [1] [2] [-1] [-2]))
+    (list (list "dabbrev-expand-twice"
+                (vector (step "dabbrev-expand" [nil]) (step "dabbrev-expand" [nil] "dabbrev-expand"))
+                (vector) nil)
+          (list "dabbrev-expand-thrice"
+                (vector (step "dabbrev-expand" [nil]) (step "dabbrev-expand" [nil] "dabbrev-expand")
+                        (step "dabbrev-expand" [nil] "dabbrev-expand"))
+                (vector) nil)
+          (list "dabbrev-expand-all"
+                (vector (step "dabbrev-expand" [nil]) (step "dabbrev-expand" [nil] "dabbrev-expand")
+                        (step "dabbrev-expand" [nil] "dabbrev-expand") (step "dabbrev-expand" [nil] "dabbrev-expand")
+                        (step "dabbrev-expand" [nil] "dabbrev-expand") (step "dabbrev-expand" [nil] "dabbrev-expand")
+                        (step "dabbrev-expand" [nil] "dabbrev-expand"))
+                (vector) nil)))
    (mapcar (lambda (a) (one "delete-char" "delete-char" a)) '([1] [3] [-2] [0] [2 t] [-1 t] [4 t]))
    (mapcar (lambda (a) (one "transpose-chars" "transpose-chars" a)) '([1] [-1] [2]))
    (mapcar (lambda (a) (one "transpose-words" "transpose-words" a)) '([1] [-1] [2]))

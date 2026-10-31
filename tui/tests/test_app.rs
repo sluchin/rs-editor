@@ -605,3 +605,20 @@ fn test_execute_kbd_macro_ignores_bad_arguments() {
     fx.app.flush_macro();
     assert_eq!(fx.text(), "a");
 }
+
+#[test]
+fn test_dabbrev_expand_cycles_through_the_candidates() {
+    let mut fx = Fixture::new();
+    fx.press("f o o b a r SPC f o o d SPC f o o");
+    // 近い順に, 続けて押すと次の候補, 尽きたら略語に戻る
+    fx.press("M-/");
+    assert_eq!(fx.text(), "foobar food food");
+    fx.press("M-/");
+    assert_eq!(fx.text(), "foobar food foobar");
+    fx.press("M-/");
+    assert_eq!(fx.text(), "foobar food foo");
+    assert_eq!(
+        fx.app.message(),
+        "No further dynamic expansion for ‘foo’ found"
+    );
+}

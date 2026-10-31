@@ -150,6 +150,10 @@ fn test_against_emacs() {
         .unwrap();
     ev.eval_with(include_str!("../../lisp/register.scm"), &host)
         .unwrap();
+    ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
+        .unwrap();
+    ev.eval_with(include_str!("../../lisp/dabbrev.scm"), &host)
+        .unwrap();
     {
         let mut editor = host.editor();
         editor.get_buffer_create("other").load("OTHER");

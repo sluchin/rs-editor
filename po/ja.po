@@ -5,6 +5,79 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: ja\n"
 
+#: lisp/dabbrev.scm
+msgctxt "variable:dabbrev-backward-only"
+msgid "If non-nil, `dabbrev-expand' only looks backwards."
+msgstr "真なら, `dabbrev-expand' は, 後ろ向きだけに探す."
+
+#: lisp/dabbrev.scm
+msgctxt "variable:dabbrev-case-replace"
+msgid "Controls whether dabbrev preserves case when expanding the abbreviation."
+msgstr "略語を展開するとき, dabbrev が大文字小文字を保つかを決める."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--ignore-case-p"
+msgid "Return non-nil if case should be ignored when searching for ABBREV."
+msgstr "ABBREV を探すとき, 大文字小文字を区別しないなら真を返す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--goto-start-of-abbrev"
+msgid "Back over all abbrev type characters."
+msgstr "略語の文字の分だけ, 戻る."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--abbrev-at-point"
+msgid "Extract the symbol before point to serve as abbreviation."
+msgstr "点の前の記号を, 略語として取り出す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--search"
+msgid "Search for something that could be used to expand ABBREV, leaving point at its end."
+msgstr "ABBREV を展開するのに使えるものを探し, 点をその終わりに置く."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--try-find"
+msgid "Search for ABBREV, backwards if REVERSE, N times.  Return the expansion found."
+msgstr "ABBREV を N 回探す (REVERSE なら後ろ向き). 見つけた展開を返す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--find-expansion"
+msgid ""
+"Find one occurrence of ABBREV, and return the expansion.\n"
+"DIRECTION > 0 means look that many times backwards, < 0 forwards, = 0 both."
+msgstr ""
+"ABBREV の出現を 1 つ探し, 展開を返す.\n"
+"DIRECTION が 0 より大きければ, その回数だけ後ろ向きに探し, 小さければ前向きに, 0 なら両方向に探す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--substitute-expansion"
+msgid "Replace OLD (or ABBREV, if OLD is false) before point with EXPANSION."
+msgstr "点の前の OLD (偽なら ABBREV) を, EXPANSION に置き換える."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev-expand"
+msgid ""
+"Expand previous word \"dynamically\".\n"
+"\n"
+"Expands to the most recent, preceding word for which this is a prefix.\n"
+"If no suitable preceding word is found, words following point are considered.\n"
+"\n"
+"A positive prefix argument, N, says to take the Nth backward *distinct* possibility.\n"
+"A negative argument says search forward.\n"
+"\n"
+"If the cursor has not moved from the end of the previous expansion and no argument is given,\n"
+"replace the previously-made expansion with the next possible expansion not yet tried."
+msgstr ""
+"直前の単語を「動的に」展開する.\n"
+"\n"
+"点の前の語を接頭辞とする単語のうち, 一番近い前の単語に展開する.\n"
+"合う前の単語が無ければ, 点の後ろの単語を考える.\n"
+"\n"
+"正の前置引数 N は, 後ろ向きの N 番目の異なる候補を取る.\n"
+"負の引数は, 前向きに探す.\n"
+"\n"
+"点が前の展開の終わりから動いておらず, 引数が無いなら, 前の展開を, まだ試していない次の候補に置き換える."
+
 #: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""
