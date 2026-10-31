@@ -82,9 +82,16 @@ fn test_against_emacs() {
     assert!(skipped * 50 < compared, "skipped {skipped} of {compared}");
     assert!(
         failures.is_empty(),
-        "{} differences:\n{:#?}",
+        "{} differences:\n{:#?}\n{}",
         failures.len(),
-        kinds
+        kinds,
+        failures
+            .iter()
+            .filter(|f| std::env::var("SHOW").is_ok_and(|s| f.contains(&s)))
+            .take(30)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n")
     );
 }
 
@@ -166,4 +173,58 @@ fn test_designators_and_class_chars() {
     assert!(class_chars(Dialect::Fundamental, Class::Open).contains('「'));
     assert!(class_chars(Dialect::Fundamental, Class::Close).contains('」'));
     assert!(class_chars(Dialect::Fundamental, Class::Word).contains("\\p{L}"));
+}
+
+#[test]
+fn test_scheme_datum_comment_in_scan_lists() {
+    // 値は `emacs -Q --batch` の `scan-lists` の結果 (位置は 0 から数える). `#;` の式は, コメントとして飛ばす
+    let cases: Vec<(&str, usize, i64, i64, Value)> = vec![
+        ("(a #;(b ; c\n d) e)", 0, 1, 0, json!(18)),
+        (
+            "(a #;(b ; c\n d) e)",
+            2,
+            1,
+            0,
+            json!(["error", "Containing expression ends prematurely", 17, 18]),
+        ),
+        ("(a #;(b ; c\n d) e)", 18, -1, 0, json!(0)),
+        ("(a #;(b ; c\n d) e)", 2, 1, 1, json!(18)),
+        ("#;(a b) c", 0, 1, 0, Value::Null),
+        ("#;(a b) c", 0, 2, 0, Value::Null),
+        ("#;\"s b\" c", 0, 1, 0, Value::Null),
+        ("#;abc d", 0, 1, 0, Value::Null),
+        ("#;abc d", 7, -1, 0, Value::Null),
+        ("#;) x", 0, 1, 0, json!(5)),
+        (
+            "#;) x",
+            4,
+            -1,
+            0,
+            json!(["error", "Unbalanced parentheses", 2, 0]),
+        ),
+        ("#;(a \"x)\" b) c", 0, 1, 0, Value::Null),
+        ("(x #;[b {c}] d)", 0, 1, 0, json!(15)),
+        ("#;'a (b)", 0, 1, 0, json!(8)),
+        ("#;'a (b)", 8, -1, 0, json!(5)),
+        ("#;'(a . b) c", 0, 1, 0, Value::Null),
+        ("#; (a b) c", 0, 1, 0, Value::Null),
+        ("#; (a b) c", 0, 2, 0, Value::Null),
+        ("#;(a b", 0, 1, 0, json!(6)),
+        (
+            "#;(a b",
+            0,
+            1,
+            1,
+            json!(["error", "Unbalanced parentheses", 0, 6]),
+        ),
+        ("#; (a b", 0, 1, 0, json!(7)),
+    ];
+    for (text, from, count, depth, expected) in cases {
+        let source = Source::new(text, Dialect::Scheme);
+        let actual = scan(source.scan_lists(from, count, depth, false));
+        assert_eq!(
+            actual, expected,
+            "{text:?} from {from} count {count} depth {depth}"
+        );
+    }
 }
