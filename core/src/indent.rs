@@ -158,6 +158,8 @@ struct Element {
     kind: Kind,
     /// 名前 (シンボルなら).
     text: String,
+    /// 最後の式と見ないなら `true` (`indent-sexp` を始めた点を含む文字列).
+    hidden: bool,
 }
 
 /// 開いているリスト.
@@ -172,6 +174,7 @@ struct Frame {
 }
 
 /// Lisp の本文を, 行ごとに読みます (Emacs の `parse-partial-sexp`). 開いているリストと, 文字列の中かを覚えます.
+#[derive(Clone)]
 pub struct LispParser {
     /// Scheme か.
     scheme: bool,
@@ -251,6 +254,7 @@ impl LispParser {
                 line,
                 kind,
                 text: name,
+                hidden: false,
             });
         }
     }
@@ -415,7 +419,7 @@ fn lisp_indent(parser: &LispParser, text: &[char], scheme: bool) -> Option<usize
         return Some(0);
     };
     let elements = &frame.elements;
-    let (Some(first), Some(last)) = (elements.first(), elements.last()) else {
+    let (Some(first), Some(last)) = (elements.first(), elements.iter().rfind(|e| !e.hidden)) else {
         return Some(frame.col + 1);
     };
     // 最後の式が始まる行の, 始めの式の桁
@@ -822,8 +826,26 @@ pub fn indent_sexp(lines: &[Vec<char>], pos: usize, end: usize, config: &Config)
     let mut pending = lisp_indent(&parser, &text, scheme);
     // 変えた行の, 始めの空白の長さの差 (元の行の桁に直すのに使う)
     let mut lead_shift: i64 = 0;
+    // 点が文字列の中なら, Emacs は, 点から読み始めるので, その文字列を最後の式と見ない (深さと, 要素の番号).
+    // `lisp-indent-specform` は, 位置から数えるので, 引数には数える
+    let mut probe = parser.clone();
+    probe.scan_line(&text, first - 1, 0, pos - starts[first - 1]);
+    let mut open_string = probe
+        .in_string
+        .then(|| {
+            probe
+                .stack
+                .last()
+                .map(|f| (probe.stack.len(), f.elements.len() - 1))
+        })
+        .flatten();
     loop {
         parser.scan_line(&text, line - 1, 0, text.len());
+        if let Some((depth, index)) = open_string.take() {
+            if let Some(frame) = parser.stack.get_mut(depth - 1) {
+                frame.elements[index].hidden = true;
+            }
+        }
         // 行の後ろの `;` のコメント (Emacs の `indent-for-comment`). 終わりより前のものだけ
         if let Some(i) = parser.comment {
             let comment = starts[line - 1] + (i as i64 - lead_shift) as usize;
