@@ -136,6 +136,43 @@ msgstr ""
 "対話では, 名前をミニバッファで補完しながら読む. 既定は, 最後のブックマーク.\n"
 "ファイルの本文が変わっていれば, 周りの文字から位置を探し直す."
 
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-sort-flag"
+msgid "Non-nil means that bookmarks are sorted by name in the bookmark list."
+msgstr "非 nil なら, ブックマークの一覧を名前で並べる."
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-bmenu-buffer"
+msgid "Name of the buffer of the bookmark list."
+msgstr "ブックマークの一覧のバッファの名前."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--row"
+msgid ""
+"Return the line of the bookmark list for RECORD: two columns of marks, the annotation mark,\n"
+"the name padded to 30 columns, the width of the empty type column, then the file."
+msgstr ""
+"RECORD の, ブックマークの一覧の 1 行を返す: 印の 2 列, 注釈の印,\n"
+"30 桁に詰めた名前, 空の種類の列の幅, ファイル."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--sorted"
+msgid "Return `bookmark-alist', sorted by name ignoring case if `bookmark-sort-flag' is true."
+msgstr "`bookmark-sort-flag' が真なら, 大文字小文字を区別せず名前で並べた `bookmark-alist' を返す."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-bmenu-list"
+msgid ""
+"Display a list of existing bookmarks.\n"
+"The list is displayed in a buffer named *Bookmark List*.\n"
+"Each line has a * in front of the name if the bookmark has an annotation, then the name and the file.\n"
+"The bookmarks are sorted by name, ignoring case, unless `bookmark-sort-flag' is false."
+msgstr ""
+"存在するブックマークの一覧を出す.\n"
+"一覧は *Bookmark List* というバッファに出す.\n"
+"注釈のあるブックマークは名前の前に * を付け, 名前とファイルを並べる.\n"
+"`bookmark-sort-flag' が偽でなければ, 大文字小文字を区別せず, 名前で並べる."
+
 #: lisp/buff-menu.scm
 msgctxt "variable:Buffer-menu-use-header-line"
 msgid ""

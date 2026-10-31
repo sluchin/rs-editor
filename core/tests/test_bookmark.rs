@@ -162,3 +162,51 @@ fn test_set_no_overwrite_signals_an_error_or_pushes() {
     assert_eq!(point(&host), 8);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn test_bookmark_bmenu_list_matches_emacs() {
+    let (ev, host, dir) = setup("bmenu");
+    // 保存先は無いので, 読み込み済みにして, 一覧を直接決める (`tools/syntax/bookmarks.el` と同じ)
+    ev.eval_with(
+        r#"(begin
+  (set! bookmark-alist-loaded #t)
+  (set! bookmark-alist
+        '(("foo" (filename "/tmp/foo.txt") (position 1))
+          ("Bar" (filename "~/x/y.txt") (annotation "hi"))
+          ("a-name-that-is-longer-than-thirty-nine-characters-xx" (filename "/z"))
+          ("名前あいう" (filename "/m"))
+          ("baz" (filename "/b"))
+          ("nofile" (position 3))))
+  (bookmark-bmenu-list))"#,
+        &host,
+    )
+    .unwrap();
+    let editor = host.editor();
+    assert_eq!(editor.current_buffer_name(), "*Bookmark List*");
+    assert_eq!(
+        editor.current_buffer().text(),
+        include_str!("bookmarks.txt")
+    );
+    assert_eq!(editor.current_buffer().point(), 0);
+    assert!(!editor.current_buffer().modified());
+    drop(editor);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn test_bookmark_bmenu_list_unsorted_and_empty() {
+    let (ev, host, dir) = setup("bmenu-unsorted");
+    ev.eval_with("(bookmark-bmenu-list)", &host).unwrap();
+    assert_eq!(host.editor().current_buffer().text(), "");
+    ev.eval_with(
+        r#"(begin
+  (set! bookmark-sort-flag #f)
+  (set! bookmark-alist '(("b" (filename "/1")) ("a" (filename "/2"))))
+  (bookmark-bmenu-list))"#,
+        &host,
+    )
+    .unwrap();
+    let text = host.editor().current_buffer().text();
+    assert!(text.starts_with("    b ") && text.contains("\n    a "));
+    std::fs::remove_dir_all(dir).unwrap();
+}

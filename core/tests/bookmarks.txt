@@ -1,0 +1,6 @@
+    a-name-that-is-longer-than-thirty-nine-characters-xx          /z
+  * Bar                                     ~/x/y.txt
+    baz                                     /b
+    foo                                     /tmp/foo.txt
+    nofile                                  -- Unknown location --
+    名前あいう                              /m

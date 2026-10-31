@@ -566,7 +566,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
 | `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
-| `bookmark-bmenu-list` |  | bookmark | `C-x r l` |  |  |  | 9 |
+| `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み | `C-x r l` | Lisp (`lisp/bookmark.scm`) | 済 |
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み | `C-x r M` | Lisp (`lisp/bookmark.scm`) | 済 |

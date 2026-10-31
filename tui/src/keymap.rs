@@ -163,6 +163,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x r m", "bookmark-set"),
     ("C-x r M", "bookmark-set-no-overwrite"),
     ("C-x r b", "bookmark-jump"),
+    ("C-x r l", "bookmark-bmenu-list"),
     ("C-x 4 d", "dired-other-window"),
     ("C-x k", "kill-buffer"),
     ("C-x 2", "split-window-below"),

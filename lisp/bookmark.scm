@@ -156,6 +156,48 @@ If the text of the file has changed, find the position again from the text aroun
       (set! bookmark-current-bookmark name)
       #f)))
 
+(define bookmark-sort-flag #t
+  "Non-nil means that bookmarks are sorted by name in the bookmark list.")
+
+(define bookmark-bmenu-buffer "*Bookmark List*"
+  "Name of the buffer of the bookmark list.")
+
+(define (bookmark--spaces n)
+  (if (<= n 0) "" (string-append " " (bookmark--spaces (- n 1)))))
+
+(define (bookmark--row record)
+  "Return the line of the bookmark list for RECORD: two columns of marks, the annotation mark,
+the name padded to 30 columns, the width of the empty type column, then the file."
+  (let ((name (car record))
+        (file (bookmark--get record 'filename))
+        (note (bookmark--get record 'annotation)))
+    (string-append "  "
+                   (if (and note (not (equal? note ""))) "* " "  ")
+                   name
+                   (bookmark--spaces (- 30 (string-width name)))
+                   (bookmark--spaces 10)
+                   (or file "-- Unknown location --")
+                   "\n")))
+
+(define (bookmark--sorted)
+  "Return `bookmark-alist', sorted by name ignoring case if `bookmark-sort-flag' is true."
+  (if bookmark-sort-flag
+      (sort bookmark-alist (lambda (a b) (string<? (string-downcase (car a)) (string-downcase (car b)))))
+      bookmark-alist))
+
+(define-command (bookmark-bmenu-list . args)
+  "Display a list of existing bookmarks.
+The list is displayed in a buffer named *Bookmark List*.
+Each line has a * in front of the name if the bookmark has an annotation, then the name and the file.
+The bookmarks are sorted by name, ignoring case, unless `bookmark-sort-flag' is false."
+  (bookmark-maybe-load-default-file)
+  (switch-to-buffer bookmark-bmenu-buffer)
+  (delete-region (point-min) (point-max))
+  (insert (apply string-append (map bookmark--row (bookmark--sorted))))
+  (goto-char (point-min))
+  (set-buffer-modified-p #f)
+  #f)
+
 (provide 'bookmark)
 
 ;;; bookmark.scm ends here

@@ -112,6 +112,37 @@ msgid ""
 "If the text of the file has changed, find the position again from the text around it."
 msgstr ""
 
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-sort-flag"
+msgid "Non-nil means that bookmarks are sorted by name in the bookmark list."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-bmenu-buffer"
+msgid "Name of the buffer of the bookmark list."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--row"
+msgid ""
+"Return the line of the bookmark list for RECORD: two columns of marks, the annotation mark,\n"
+"the name padded to 30 columns, the width of the empty type column, then the file."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--sorted"
+msgid "Return `bookmark-alist', sorted by name ignoring case if `bookmark-sort-flag' is true."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-bmenu-list"
+msgid ""
+"Display a list of existing bookmarks.\n"
+"The list is displayed in a buffer named *Bookmark List*.\n"
+"Each line has a * in front of the name if the bookmark has an annotation, then the name and the file.\n"
+"The bookmarks are sorted by name, ignoring case, unless `bookmark-sort-flag' is false."
+msgstr ""
+
 #: lisp/buff-menu.scm
 msgctxt "variable:Buffer-menu-use-header-line"
 msgid ""
