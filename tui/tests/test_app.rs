@@ -704,7 +704,12 @@ fn test_find_file_other_window_and_dired_jump_with_the_keys() {
     let mut fx = Fixture::sized(12, 60, &[a.to_str().unwrap().to_string()]).unwrap();
     // 別のウィンドウで開く
     let typed = |path: &std::path::Path| {
-        let keys: Vec<String> = path.display().to_string().chars().map(String::from).collect();
+        let keys: Vec<String> = path
+            .display()
+            .to_string()
+            .chars()
+            .map(String::from)
+            .collect();
         format!("{} RET", keys.join(" "))
     };
     fx.feed(&typed(&b));

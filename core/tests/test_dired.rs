@@ -185,7 +185,10 @@ fn test_dired_jump_goes_to_the_line_of_the_file_and_up_a_level() {
     let dir = temp_dir("jump");
     let file = dir.join("a.txt");
     ev.eval_with(
-        &format!("(switch-to-buffer (find-file-noselect {:?}))", file.display().to_string()),
+        &format!(
+            "(switch-to-buffer (find-file-noselect {:?}))",
+            file.display().to_string()
+        ),
         &host,
     )
     .unwrap();
@@ -205,7 +208,10 @@ fn test_dired_jump_goes_to_the_line_of_the_file_and_up_a_level() {
     }
     // 無いファイルは, 一覧を作り直しても見つからない. 先頭のまま
     ev.eval_with(
-        &format!("(dired-jump #f {:?})", dir.join("none").display().to_string()),
+        &format!(
+            "(dired-jump #f {:?})",
+            dir.join("none").display().to_string()
+        ),
         &host,
     )
     .unwrap();

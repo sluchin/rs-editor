@@ -28,7 +28,10 @@ fn setup(name: &str) -> (Evaluator, EditorHost<NoUi>, std::path::PathBuf) {
         .unwrap();
     let saved = dir.join("sub").join("bookmarks");
     ev.eval_with(
-        &format!("(set! bookmark-default-file {:?})", saved.display().to_string()),
+        &format!(
+            "(set! bookmark-default-file {:?})",
+            saved.display().to_string()
+        ),
         &host,
     )
     .unwrap();
@@ -36,8 +39,11 @@ fn setup(name: &str) -> (Evaluator, EditorHost<NoUi>, std::path::PathBuf) {
 }
 
 fn visit(ev: &Evaluator, host: &EditorHost<NoUi>, path: &std::path::Path) {
-    ev.eval_with(&format!("(find-file {:?})", path.display().to_string()), host)
-        .unwrap();
+    ev.eval_with(
+        &format!("(find-file {:?})", path.display().to_string()),
+        host,
+    )
+    .unwrap();
 }
 
 /// カーソルの位置 (Lisp と同じく 1 から数える).
@@ -78,7 +84,10 @@ fn test_jump_follows_the_edited_text_and_a_new_session_reads_the_file() {
     let (ev2, host2, _) = setup("edit-2");
     let saved = dir.join("sub").join("bookmarks");
     ev2.eval_with(
-        &format!("(set! bookmark-default-file {:?})", saved.display().to_string()),
+        &format!(
+            "(set! bookmark-default-file {:?})",
+            saved.display().to_string()
+        ),
         &host2,
     )
     .unwrap();
