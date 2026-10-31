@@ -763,6 +763,12 @@ fn test_replace_match_and_set_match_data_like_emacs() {
         "ERR set-match-data expects a list"
     );
     assert_eq!(run_last("(set-match-data '()) (match-data)"), "()");
+    assert_eq!(
+        run_last(
+            "(insert \"ab\") (goto-char 1) (search-forward \"b\") (set-match-data #f) (match-data)"
+        ),
+        "()"
+    );
 }
 
 #[test]

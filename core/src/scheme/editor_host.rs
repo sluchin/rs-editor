@@ -800,7 +800,8 @@ impl<U: Host> EditorHost<U> {
             "set-match-data" => {
                 let items = match args.first() {
                     Some(Value::List(items)) => items.to_vec(),
-                    Some(Value::Nil) => Vec::new(),
+                    // Emacs の nil (`#f`) は, 空のリストと同じ
+                    Some(v) if !v.is_non_nil() => Vec::new(),
                     _ => return Err("set-match-data expects a list".to_string()),
                 };
                 // (始め 終わり) の組ごと. 合わなかった括弧は #f の組. 余った要素は捨てる (Emacs と同じ)
