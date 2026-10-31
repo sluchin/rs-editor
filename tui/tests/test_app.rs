@@ -667,3 +667,29 @@ fn test_dired_starts_from_the_directory_of_the_file() {
     fx.press("C-x 4 d");
     assert_eq!(fx.app.host().editor().window_list().len(), 2);
 }
+
+#[test]
+fn test_bookmark_set_and_jump_with_the_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dir.path().join("a.txt");
+    std::fs::write(&a, "hello world\n").unwrap();
+    let mut fx = Fixture::sized(12, 60, &[a.to_str().unwrap().to_string()]).unwrap();
+    let saved = dir.path().join("bookmarks");
+    fx.app
+        .eval(&format!(
+            "(set! bookmark-default-file {:?})",
+            saved.display().to_string()
+        ))
+        .unwrap();
+    fx.press("C-f C-f C-f");
+    // 空の入力は, 既定の名前 (ファイル名)
+    fx.feed("RET");
+    fx.press("C-x r m");
+    assert!(std::fs::read_to_string(&saved)
+        .unwrap()
+        .starts_with("((\"a.txt\""));
+    fx.press("C-e");
+    fx.feed("RET");
+    fx.press("C-x r b");
+    assert_eq!(fx.point(), 3);
+}

@@ -34,6 +34,9 @@ const BUFF_MENU: &str = include_str!("../../lisp/buff-menu.scm");
 /// ディレクトリの一覧 (Lisp).
 const DIRED: &str = include_str!("../../lisp/dired.scm");
 
+/// ブックマーク (Lisp).
+const BOOKMARK: &str = include_str!("../../lisp/bookmark.scm");
+
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -87,6 +90,7 @@ impl App {
         evaluator.eval_with(DABBREV, &host)?;
         evaluator.eval_with(BUFF_MENU, &host)?;
         evaluator.eval_with(DIRED, &host)?;
+        evaluator.eval_with(BOOKMARK, &host)?;
         let app = App {
             host,
             evaluator,

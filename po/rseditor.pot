@@ -4,6 +4,94 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-default-file"
+msgid "File in which to save bookmarks by default."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-search-size"
+msgid "Length of the context strings recorded around a bookmark's position."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-alist"
+msgid ""
+"Association list of bookmarks.\n"
+"Each element is (NAME (filename FILE) (front-context-string STRING)\n"
+"(rear-context-string STRING) (position POINT)).  The newest bookmark comes first."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-alist-loaded"
+msgid "Non-nil once the bookmarks in `bookmark-default-file' have been read."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "variable:bookmark-current-bookmark"
+msgid "Name of the bookmark set or jumped to last, or #f."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--get"
+msgid "Return the value of KEY in the bookmark RECORD, or #f."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-maybe-load-default-file"
+msgid "Read `bookmark-default-file' into `bookmark-alist' the first time."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-save"
+msgid "Write the bookmarks to `bookmark-default-file'."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--store"
+msgid "Add RECORD to `bookmark-alist', replacing the bookmark of the same name in place."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--make-record"
+msgid "Return the bookmark NAME for the point of the current buffer."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--default-name"
+msgid "Return the name offered by default: the file name of the buffer, or the buffer name."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-set"
+msgid ""
+"Set a bookmark named NAME, at point of the current buffer, and save the bookmarks.\n"
+"Interactively, read NAME in the minibuffer; an empty input means the default,\n"
+"the last bookmark or the file name.  A bookmark of the same name is replaced.\n"
+"The bookmark records the file, the position and the text around it."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--search-back"
+msgid "Return the last index of PATTERN in TEXT that starts at FROM or before, or #f."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark--position"
+msgid ""
+"Return the point of the bookmark RECORD in the current buffer.\n"
+"Search the text after the recorded position for the front context, then the text before for the rear context,\n"
+"so that the position follows the edits of the file."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-jump"
+msgid ""
+"Jump to the bookmark BOOKMARK, visiting its file.\n"
+"Interactively, read the name in the minibuffer with completion; the default is the last bookmark.\n"
+"If the text of the file has changed, find the position again from the text around it."
+msgstr ""
+
 #: lisp/buff-menu.scm
 msgctxt "variable:Buffer-menu-use-header-line"
 msgid ""
