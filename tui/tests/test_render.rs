@@ -275,3 +275,18 @@ fn test_truncate_lines_and_selective_display() {
     let (lines, _) = draw_with("a\n  b\n\tc\n\nd", 8, 10, selective);
     assert_eq!(&lines[..3], ["a", "", "d"]);
 }
+
+#[test]
+fn test_narrowed_buffer_shows_only_the_accessible_part() {
+    let mut editor = Editor::new();
+    editor
+        .current_buffer_mut()
+        .insert("zero\none\ntwo\nthree\n");
+    editor.current_buffer_mut().narrow_to_region(7, 12).unwrap();
+    let mut tops = BTreeMap::new();
+    let frame = render(&editor, &mut tops, 6, 20, "", None);
+    // 始めと終わりが行の途中: 見える範囲だけを出す. 窓の上の行は, 見える範囲の最初の行
+    assert_eq!(&frame.lines()[..3], ["e", "two", ""]);
+    assert_eq!(tops.values().copied().collect::<Vec<_>>(), [1]);
+    assert_eq!(frame.cursor, (1, 3));
+}

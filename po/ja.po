@@ -4387,24 +4387,37 @@ msgstr ""
 "本文は左から右へ書くので, これは forward-word と同じ."
 
 #: lisp/simple.scm
+msgctxt "function:simple--goto-line"
+msgid ""
+"Go to the line given by ARGS (or the prefix argument, or read with PROMPT).\n"
+"If RELATIVE, count from the beginning of the accessible part; otherwise widen first, then\n"
+"widen the buffer for good if the line is outside the accessible part."
+msgstr ""
+"ARGS(なければ前置引数, それもなければ PROMPT で読んだ数)の行へ行く.\n"
+"RELATIVE なら, 見えている部分の始めから数える. そうでなければ, 先に絞り込みをやめて数え,\n"
+"行が見えている部分の外なら, 絞り込みをそのままやめる."
+
+#: lisp/simple.scm
 msgctxt "function:goto-line"
 msgid ""
 "Go to line N, counting from line 1 at the beginning of the buffer.\n"
 "N is the argument or the numeric prefix argument; otherwise read it in the minibuffer.\n"
-"Push the mark at the previous position, unless the mark is active."
+"Push the mark at the previous position, unless the mark is active.\n"
+"If the line is outside the narrowed part, widen the buffer."
 msgstr ""
-"N 行目へ行く. 数えるのは, バッファの始めの行を 1 として.\n"
-"N は引数か前置引数の数. 無ければ, ミニバッファで読む.\n"
-"マークを使っているときを除いて, 前の位置にマークを置く."
+"N 行目へ行く. 数えるのは, バッファの始めの行(1 行目)から.\n"
+"N は引数か前置引数の数で, なければミニバッファで読む.\n"
+"マークが有効でなければ, 前の位置にマークを置く.\n"
+"行が絞り込みの外なら, 絞り込みをやめる."
 
 #: lisp/simple.scm
 msgctxt "function:goto-line-relative"
 msgid ""
 "Go to line N, counting from the line at the beginning of the accessible part.\n"
-"The buffer is never narrowed, so this is goto-line."
+"N is the argument or the numeric prefix argument; otherwise read it in the minibuffer."
 msgstr ""
 "N 行目へ行く. 数えるのは, 見えている部分の始めの行から.\n"
-"バッファは狭めないので, goto-line と同じ."
+"N は引数か前置引数の数で, なければミニバッファで読む."
 
 #: lisp/simple.scm
 msgctxt "function:scroll-up-command"
@@ -5072,10 +5085,12 @@ msgstr "ASCII の文字 CHAR を, Emacs がキーとして書く形 (C-a, SPC �
 msgctxt "function:what-cursor-position"
 msgid ""
 "Print information about the cursor position in the echo area:\n"
-"the character after point with its codes, the position, and the column."
+"the character after point with its codes, the position, and the column.\n"
+"In a narrowed buffer, also show the accessible range as <BEG-END>."
 msgstr ""
 "カーソルの位置の情報をエコーエリアに出す:\n"
-"点の後の文字とその符号, 位置, 桁."
+"点の後の文字とその符号, 位置, 桁.\n"
+"絞り込んだバッファでは, 見える範囲も <BEG-END> で出す."
 
 #: lisp/simple.scm
 msgctxt "function:simple--round-percent"
@@ -5329,6 +5344,60 @@ msgstr ""
 "引数 N があれば, N ページ先 (負なら前) のページにする."
 
 #: lisp/simple.scm
+msgctxt "function:narrow-to-region"
+msgid ""
+"Restrict editing in this buffer to the current region.\n"
+"The rest of the text becomes temporarily invisible and unchangeable.\n"
+"Called from Lisp with START and END, restrict to that range instead."
+msgstr ""
+"このバッファの編集を, 今のリージョンに限る.\n"
+"それ以外の本文は, 一時的に見えなくなり, 変えられなくなる.\n"
+"Lisp から START と END を付けて呼ぶと, その範囲に絞り込む."
+
+#: lisp/simple.scm
+msgctxt "function:widen"
+msgid ""
+"Remove restrictions (narrowing) from the current buffer.\n"
+"This allows the buffer's full text to be seen and edited."
+msgstr ""
+"このバッファの絞り込みをやめる.\n"
+"バッファの本文の全体が見えて, 編集できるようになる."
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-delimiter-p"
+msgid "Return true if point is at a page delimiter: a form feed at the start of a line."
+msgstr "カーソルがページの区切り(行の始めの改ページ文字)にあれば真を返す."
+
+#: lisp/simple.scm
+msgctxt "function:narrow-to-page"
+msgid ""
+"Make text outside current page invisible.\n"
+"A numeric argument specifies to move forward or backward by that many pages,\n"
+"thus showing a page other than the one point was originally in."
+msgstr ""
+"今のページの外の本文を見えなくする.\n"
+"数の引数で, その数だけ前や後ろのページへ動いてから絞り込むので,\n"
+"最初にカーソルがあったのとは別のページを見せられる."
+
+#: lisp/simple.scm
+msgctxt "variable:narrow-to-defun-include-comments"
+msgid "Whether narrow-to-defun includes the comments before a defun."
+msgstr "narrow-to-defun が, defun の前のコメントを含めるか."
+
+#: lisp/simple.scm
+msgctxt "function:narrow-to-defun"
+msgid ""
+"Make text outside current defun invisible.\n"
+"The current defun is the one that contains point or follows point.\n"
+"Preceding comments are included if INCLUDE-COMMENTS is true.\n"
+"Called from the keyboard, use the value of narrow-to-defun-include-comments."
+msgstr ""
+"今の defun の外の本文を見えなくする.\n"
+"今の defun は, カーソルを含むか, カーソルの後ろにあるもの.\n"
+"INCLUDE-COMMENTS が真なら, 前のコメントも含める.\n"
+"キーボードから呼ぶと, narrow-to-defun-include-comments の値を使う."
+
+#: lisp/simple.scm
 msgctxt "function:simple--page-line-counts"
 msgid "Return (TOTAL BEFORE AFTER): the number of lines on the current page, before point and after point."
 msgstr "(TOTAL BEFORE AFTER) を返す: 今のページの行数と, カーソルの前の行数と, 後ろの行数."
@@ -5459,6 +5528,11 @@ msgid ""
 msgstr ""
 "defun の始め (0 桁の開く括弧) まで戻る.\n"
 "引数 N があれば N 回. 繰り返しでなければ, 先にマークを置く."
+
+#: lisp/simple.scm
+msgctxt "function:simple--end-of-defun"
+msgid "Move forward N defuns.  If SCAN-ERRORS, an unbalanced defun signals the scan error that Lisp code sees."
+msgstr "N 個後ろの defun の終わりへ動く. SCAN-ERRORS なら, 括弧が合わない defun は, Lisp のコードが見る scan-error で失敗する."
 
 #: lisp/simple.scm
 msgctxt "function:end-of-defun"

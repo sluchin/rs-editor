@@ -20,7 +20,7 @@ use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
 use crate::sexp::{
-    beginning_of_defun, end_of_defun, forward_sexp, mark_defun, up_list, MotionError,
+    beginning_of_defun, end_of_defun_scanning, forward_sexp, mark_defun, up_list, MotionError,
 };
 use crate::syntax::{class_of_designator, syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
@@ -644,8 +644,8 @@ impl<U: Host> EditorHost<U> {
         let b = ed.current_buffer_mut();
         Ok(Some(match op {
             "point" => at(b.point()),
-            "point-min" => at(0),
-            "point-max" => at(b.len()),
+            "point-min" => at(b.begv()),
+            "point-max" => at(b.zv()),
             "goto-char" => {
                 b.set_point(pos(op, args, 0)?);
                 at(b.point())
@@ -665,11 +665,13 @@ impl<U: Host> EditorHost<U> {
                 Value::Nil
             }
             "erase-buffer" => {
+                // 絞り込んでいても, 全てを消す (Emacs の `erase-buffer` は, 先に `widen` する)
+                b.widen();
                 let len = b.len();
                 b.delete_region(0, len)?;
                 Value::Nil
             }
-            "buffer-string" => Value::String(b.text()),
+            "buffer-string" => Value::String(b.visible_text()),
             "buffer-substring" => Value::String(b.substring(pos(op, args, 0)?, pos(op, args, 1)?)?),
             "buffer-name" => Value::String(b.name().to_string()),
             "buffer-size" => Value::Number(b.len() as f64),
@@ -710,10 +712,10 @@ impl<U: Host> EditorHost<U> {
             "delete-char" => {
                 let n = int(op, args, 0)?;
                 let target = b.point() as i64 + n;
-                if target < 0 {
+                if target < b.begv() as i64 {
                     return Err("Beginning of buffer".to_string());
                 }
-                if target > b.len() as i64 {
+                if target > b.zv() as i64 {
                     return Err("End of buffer".to_string());
                 }
                 b.delete_region(b.point(), target as usize)?;
@@ -922,6 +924,20 @@ impl<U: Host> EditorHost<U> {
                 b.marker_release(int(op, args, 0)?.max(0) as usize);
                 Value::Nil
             }
+            "narrow-to-region" => {
+                b.narrow_to_region(pos(op, args, 0)?, pos(op, args, 1)?)?;
+                Value::Nil
+            }
+            "widen" => {
+                b.widen();
+                Value::Nil
+            }
+            "buffer-narrowed-p" => Value::Boolean(b.narrowed()),
+            "restriction-save" => Value::Number(b.save_restriction() as f64),
+            "restriction-restore" => {
+                b.restore_restriction(int(op, args, 0)?.max(0) as usize);
+                Value::Nil
+            }
             "undo-boundary" => {
                 b.undo_boundary();
                 Value::Nil
@@ -966,7 +982,12 @@ impl<U: Host> EditorHost<U> {
                 let source = Source::from_buffer(b, b.dialect());
                 moved(
                     b,
-                    end_of_defun(&source, pos(op, args, 0)?, int_or(op, args, 1, 1)?),
+                    end_of_defun_scanning(
+                        &source,
+                        pos(op, args, 0)?,
+                        int_or(op, args, 1, 1)?,
+                        args.get(2).is_some_and(Value::is_non_nil),
+                    ),
                 )?
             }
             "mark-defun-range" => {
@@ -1167,7 +1188,7 @@ impl<U: Host> EditorHost<U> {
                 Value::Boolean(false) | Value::Nil => Err(format!("Search failed: \"{needle}\"")),
                 Value::Boolean(true) => Ok(nil()),
                 _ => {
-                    b.set_point(bound.unwrap_or(if forward { b.len() } else { 0 }));
+                    b.set_point(bound.unwrap_or(if forward { b.zv() } else { b.begv() }));
                     Ok(nil())
                 }
             },
@@ -1214,6 +1235,7 @@ fn primitive_undo(b: &mut Buffer, op: &str, args: &[Value]) -> Result<Value, Str
 
 /// バッファの本文を置き換えます. 前と後ろの同じ所は残すので, カーソルは同じ文字の所に残る.
 fn replace_text(b: &mut Buffer, new: &str) {
+    b.widen();
     let old: Vec<char> = b.text().chars().collect();
     let new: Vec<char> = new.chars().collect();
     let start = old.iter().zip(&new).take_while(|(a, b)| a == b).count();

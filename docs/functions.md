@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 16 個: Lisp 1 個, TypeScript 15 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 18 個: Lisp 3 個, TypeScript 15 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -227,7 +227,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `modify-syntax-entry` |  |  |  |  |  |
 | `move-to-column` |  | `M-g TAB` |  |  |  |
 | `move-to-window-line` | ◯ |  |  |  |  |
-| `narrow-to-region` | ◯ | `C-x n n` |  |  |  |
+| `narrow-to-region` | ◯ | `C-x n n` | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `open-dribble-file` |  |  |  |  |  |
 | `open-termscript` |  |  |  |  |  |
 | `posix-search-backward` |  |  |  |  |  |
@@ -264,7 +264,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `upcase-initials-region` |  |  |  |  |  |
 | `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
-| `widen` | ◯ | `C-x n w` |  |  |  |
+| `widen` | ◯ | `C-x n w` | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `write-region` | ◯ |  |  |  |  |
 | `x-menu-bar-open-internal` |  |  |  |  |  |
 | `x-print-frames-dialog` |  |  |  |  |  |
@@ -279,7 +279,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
-| 5 | S 式, 段落, ページ | 16 | 2 | 14 |
+| 5 | S 式, 段落, ページ | 14 | - | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
@@ -318,7 +318,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **5. S 式, 段落, ページ**
 
-- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). 画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
+- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`insert-parentheses`、`move-past-close-and-reindent`、`count-lines-page` も済 (`move-past-close-and-reindent` は、scheme-mode の `{}` と `|sym (|` を含む本文の字下げだけ Emacs と違う)。絞り込みは、核に作った (`Buffer::narrow_to_region`、`widen`、`save-restriction`、`buffer-narrowed-p`。点、移動、検索、構文の走査、`buffer-string`、`erase-buffer`、窓の描画が、見える範囲だけを扱う。`goto-line` は、絞り込みの外の行なら絞り込みをやめる)。`narrow-to-region`、`widen`、`narrow-to-page`、`narrow-to-defun` は、Emacs と一致 (`core/tests/test_lisp.rs`、`core/tests/test_narrow.rs`)。違いが残るのは、段落、文、字下げ、整形の計算 (`forward-paragraph` など) が、絞り込みを見ずに本文の全体を読むこと、画面 (Tauri) がまだ絞り込めないこと。画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
 
 **6. 字下げ, 整形, コメント**
 
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 149 個: Lisp 66 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 151 個: Lisp 68 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -495,7 +495,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
 | `move-past-close-and-reindent` | ◯ | lisp | `M-)` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `narrow-to-defun` |  | lisp | `C-x n d` |  |  |  | 5 |
+| `narrow-to-defun` |  | lisp | `C-x n d` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `indent-rigidly` | ◯ | indent | `C-x TAB` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -511,7 +511,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `count-lines-page` | ◯ | page | `C-x l` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `forward-page` | ◯ | page | `C-x ]` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-page` | ◯ | page | `C-x C-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `narrow-to-page` | ◯ | page | `C-x n p` |  |  |  | 5 |
+| `narrow-to-page` | ◯ | page | `C-x n p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
 | `set-fill-prefix` | ◯ | fill | `C-x .` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |

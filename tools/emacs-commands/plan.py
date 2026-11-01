@@ -49,7 +49,11 @@ STEPS = [
       'マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。']),
     (5, 'S 式, 段落, ページ',
      ['【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 '
-      '(`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う). '
+      '(`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。'
+      '`insert-parentheses`、`move-past-close-and-reindent`、`count-lines-page` も済 (`move-past-close-and-reindent` は、scheme-mode の `{}` と `|sym (|` を含む本文の字下げだけ Emacs と違う)。'
+      '絞り込みは、核に作った (`Buffer::narrow_to_region`、`widen`、`save-restriction`、`buffer-narrowed-p`。点、移動、検索、構文の走査、`buffer-string`、`erase-buffer`、窓の描画が、見える範囲だけを扱う。`goto-line` は、絞り込みの外の行なら絞り込みをやめる)。'
+      '`narrow-to-region`、`widen`、`narrow-to-page`、`narrow-to-defun` は、Emacs と一致 (`core/tests/test_lisp.rs`、`core/tests/test_narrow.rs`)。'
+      '違いが残るのは、段落、文、字下げ、整形の計算 (`forward-paragraph` など) が、絞り込みを見ずに本文の全体を読むこと、画面 (Tauri) がまだ絞り込めないこと。'
       '画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】'
       '括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。']),
     (6, '字下げ, 整形, コメント',

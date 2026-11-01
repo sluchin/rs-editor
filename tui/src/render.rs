@@ -216,6 +216,8 @@ pub fn render_with(
             .get_buffer(editor.window_buffer(rect.id).unwrap())
             .unwrap();
         let top = tops.entry(rect.id).or_insert(0);
+        // 絞り込んでいれば, 見える範囲の最初の行から
+        *top = (*top).max(buffer.first_line());
         let point_line = buffer.line_of_position(buffer.point());
         let is_selected = rect.id == selected;
         if is_selected {

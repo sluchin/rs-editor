@@ -409,9 +409,9 @@ impl Source {
         }
     }
 
-    /// バッファの本文から作ります.
+    /// バッファの本文から作ります (絞り込んでいれば, 見える範囲だけを読む).
     pub fn from_buffer(buffer: &Buffer, dialect: Dialect) -> Self {
-        Source::new(&buffer.text(), dialect)
+        Source::new(&buffer.text(), dialect).narrow(buffer.begv(), buffer.zv())
     }
 
     /// 読む範囲を決めます (範囲は本文の中に収める).

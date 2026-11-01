@@ -628,6 +628,23 @@ impl<'a> Machine<'a> {
         outcome
     }
 
+    /// 今の絞り込みを覚えて本体を評価し, 終わったら戻します (`save-restriction`). 本体が失敗しても戻す.
+    /// 絞り込みの無い画面 (Tauri) では, 覚えずに評価する.
+    fn save_restriction(&mut self, body: &[Value], env: &Env) -> Result<Value, String> {
+        let saved = self.host.call("current-buffer", vec![])?;
+        let id = self.host.call("restriction-save", vec![]).ok();
+        let outcome = self.eval_body(body, env);
+        if let Some(id) = id {
+            // 覚えたバッファで戻してから, 本体の終わりのバッファに戻る (消したバッファは, 戻さない)
+            let current = self.host.call("current-buffer", vec![])?;
+            if self.host.call("set-buffer", vec![saved]).is_ok() {
+                self.host.call("restriction-restore", vec![id])?;
+                self.host.call("set-buffer", vec![current])?;
+            }
+        }
+        outcome
+    }
+
     /// 式を順に評価して, 最後の値を返します.
     fn eval_body(&mut self, body: &[Value], env: &Env) -> Result<Value, String> {
         let mut value = Value::Nil;
@@ -806,6 +823,7 @@ impl<'a> Machine<'a> {
                 }
                 _ => return Err("unwind-protect expects a body form".to_string()),
             },
+            "save-restriction" => Step::Done(self.save_restriction(args, env)?),
             "save-current-buffer" | "save-excursion" | "with-current-buffer" => {
                 Step::Done(self.save_buffer_state(op, args, env)?)
             }

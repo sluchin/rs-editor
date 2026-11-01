@@ -732,3 +732,20 @@ fn test_insert_parentheses_and_count_lines_page_with_the_keys() {
     fx.press("C-x l");
     assert_eq!(fx.app.message(), "Page has 1 line (1 + 1)");
 }
+
+#[test]
+fn test_narrowing_with_the_keys() {
+    let mut fx = Fixture::new();
+    fx.feed("(a)\n\u{c}\n(b)\n(c)");
+    fx.press("C-x [");
+    fx.press("C-x n p");
+    assert!(fx.app.host().editor().current_buffer().narrowed());
+    fx.press("C-x n w");
+    assert!(!fx.app.host().editor().current_buffer().narrowed());
+    fx.press("C-x n d");
+    assert!(fx.app.host().editor().current_buffer().narrowed());
+    fx.press("C-x n w");
+    fx.press("C-x h");
+    fx.press("C-x n n");
+    assert!(fx.app.host().editor().current_buffer().narrowed());
+}

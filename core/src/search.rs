@@ -393,7 +393,7 @@ impl Buffer {
         let haystack = self.text.to_string();
         let limit = self
             .text
-            .char_to_byte(bound.unwrap_or(self.len()).min(self.len()));
+            .char_to_byte(bound.unwrap_or(self.zv()).min(self.zv()));
         let mut from = self.text.char_to_byte(self.point);
         let mut last = None;
         for _ in 0..count.max(1) {
@@ -426,7 +426,7 @@ impl Buffer {
         count: usize,
     ) -> Option<usize> {
         let haystack = self.text.to_string();
-        let lower = bound.unwrap_or(0).min(self.len());
+        let lower = bound.unwrap_or(0).clamp(self.begv(), self.point);
         let mut limit = self.point;
         let mut found_at = None;
         for _ in 0..count.max(1) {
@@ -447,7 +447,8 @@ impl Buffer {
     pub fn looking_at(&mut self, pattern: &Pattern) -> bool {
         let haystack = self.text.to_string();
         let from = self.text.char_to_byte(self.point);
-        match Self::match_from(pattern, &haystack, from, haystack.len(), true) {
+        let limit = self.text.char_to_byte(self.zv());
+        match Self::match_from(pattern, &haystack, from, limit, true) {
             Some(found) => {
                 self.remember(&found);
                 true
@@ -591,12 +592,12 @@ impl Buffer {
     pub fn skip_chars(&mut self, set: &CharSet, forward: bool, limit: Option<usize>) -> i64 {
         let start = self.point;
         if forward {
-            let end = limit.unwrap_or(self.len()).min(self.len()).max(start);
+            let end = limit.unwrap_or(self.zv()).min(self.zv()).max(start);
             while self.point < end && set.contains(self.text.char(self.point)) {
                 self.point += 1;
             }
         } else {
-            let end = limit.unwrap_or(0).min(start);
+            let end = limit.unwrap_or(0).max(self.begv()).min(start);
             while self.point > end && set.contains(self.text.char(self.point - 1)) {
                 self.point -= 1;
             }

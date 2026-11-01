@@ -108,7 +108,8 @@ fn run(
     result = result.and_then(|_| ev.eval_with(&code, host));
     let editor = host.editor();
     let buffer = editor.current_buffer();
-    let (body, point) = (buffer.text(), buffer.point());
+    // 絞り込んでいれば, 見える範囲の本文 (Emacs の `buffer-string`)
+    let (body, point) = (buffer.visible_text(), buffer.point());
     // 本文が動かす前と同じなら, null
     let body = if body == text {
         Json::Null

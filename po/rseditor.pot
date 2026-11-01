@@ -4019,18 +4019,27 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:simple--goto-line"
+msgid ""
+"Go to the line given by ARGS (or the prefix argument, or read with PROMPT).\n"
+"If RELATIVE, count from the beginning of the accessible part; otherwise widen first, then\n"
+"widen the buffer for good if the line is outside the accessible part."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:goto-line"
 msgid ""
 "Go to line N, counting from line 1 at the beginning of the buffer.\n"
 "N is the argument or the numeric prefix argument; otherwise read it in the minibuffer.\n"
-"Push the mark at the previous position, unless the mark is active."
+"Push the mark at the previous position, unless the mark is active.\n"
+"If the line is outside the narrowed part, widen the buffer."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:goto-line-relative"
 msgid ""
 "Go to line N, counting from the line at the beginning of the accessible part.\n"
-"The buffer is never narrowed, so this is goto-line."
+"N is the argument or the numeric prefix argument; otherwise read it in the minibuffer."
 msgstr ""
 
 #: lisp/simple.scm
@@ -4591,7 +4600,8 @@ msgstr ""
 msgctxt "function:what-cursor-position"
 msgid ""
 "Print information about the cursor position in the echo area:\n"
-"the character after point with its codes, the position, and the column."
+"the character after point with its codes, the position, and the column.\n"
+"In a narrowed buffer, also show the accessible range as <BEG-END>."
 msgstr ""
 
 #: lisp/simple.scm
@@ -4821,6 +4831,48 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:narrow-to-region"
+msgid ""
+"Restrict editing in this buffer to the current region.\n"
+"The rest of the text becomes temporarily invisible and unchangeable.\n"
+"Called from Lisp with START and END, restrict to that range instead."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:widen"
+msgid ""
+"Remove restrictions (narrowing) from the current buffer.\n"
+"This allows the buffer's full text to be seen and edited."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--page-delimiter-p"
+msgid "Return true if point is at a page delimiter: a form feed at the start of a line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:narrow-to-page"
+msgid ""
+"Make text outside current page invisible.\n"
+"A numeric argument specifies to move forward or backward by that many pages,\n"
+"thus showing a page other than the one point was originally in."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:narrow-to-defun-include-comments"
+msgid "Whether narrow-to-defun includes the comments before a defun."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:narrow-to-defun"
+msgid ""
+"Make text outside current defun invisible.\n"
+"The current defun is the one that contains point or follows point.\n"
+"Preceding comments are included if INCLUDE-COMMENTS is true.\n"
+"Called from the keyboard, use the value of narrow-to-defun-include-comments."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--page-line-counts"
 msgid "Return (TOTAL BEFORE AFTER): the number of lines on the current page, before point and after point."
 msgstr ""
@@ -4924,6 +4976,11 @@ msgctxt "function:beginning-of-defun"
 msgid ""
 "Move backward to the beginning of a defun (an open paren in column 0).\n"
 "With argument N, do it N times.  Push the mark first, unless repeated."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--end-of-defun"
+msgid "Move forward N defuns.  If SCAN-ERRORS, an unbalanced defun signals the scan error that Lisp code sees."
 msgstr ""
 
 #: lisp/simple.scm

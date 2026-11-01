@@ -185,6 +185,21 @@ pub fn beginning_of_defun(source: &Source, pos: usize) -> usize {
 ///
 /// 括弧が合わないとき.
 pub fn end_of_defun(source: &Source, pos: usize, arg: i64) -> Result<usize, MotionError> {
+    end_of_defun_scanning(source, pos, arg, false)
+}
+
+/// `end_of_defun` で, `scan_error` が真なら, 括弧が合わない理由を, Emacs の `scan-error` の表示 (`Scan error: "Unbalanced parentheses", 1, 12`)
+/// にする (Lisp から `end-of-defun` を呼ぶと, この形になる).
+///
+/// # Errors
+///
+/// 括弧が合わないとき.
+pub fn end_of_defun_scanning(
+    source: &Source,
+    pos: usize,
+    arg: i64,
+    scan_error: bool,
+) -> Result<usize, MotionError> {
     // defun の後ろの空白と, 改行かコメントまでを飛ばす
     let skip = |mut p: usize| {
         if line_start(source, p) == p {
@@ -202,7 +217,11 @@ pub fn end_of_defun(source: &Source, pos: usize, arg: i64) -> Result<usize, Moti
     let scan = |from: usize| {
         forward_sexp(source, from).map_err(|e| MotionError {
             point: from,
-            message: e.message.to_string(),
+            message: if scan_error {
+                e.to_string()
+            } else {
+                e.message.to_string()
+            },
         })
     };
     let mut arg = arg.max(1);

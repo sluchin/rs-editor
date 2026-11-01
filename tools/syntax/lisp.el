@@ -92,7 +92,12 @@
          (one "insert-parentheses" [] nil all-modes 'code) (one "insert-parentheses" [1] nil all-modes 'code)
          (one "insert-parentheses" [2] nil all-modes 'code) (one "insert-parentheses" [-1] nil all-modes 'code)
          (one "insert-parentheses" [] 3 all-modes 'code)
-         (one "move-past-close-and-reindent" [] nil lisp-modes 'code reindent-excluded))))
+         (one "move-past-close-and-reindent" [] nil lisp-modes 'code reindent-excluded)
+         (one "narrow-to-region" [] 3 all-modes 'code) (one "narrow-to-region" [] 0 all-modes 'code)
+         (list "narrow-to-region+widen" (vector (step "narrow-to-region" []) (step "widen" [])) [] 3 all-modes 'code nil nil)
+         (one "narrow-to-defun" [] nil lisp-modes 'code) (one "narrow-to-defun" [] 3 lisp-modes 'code)
+         (one "narrow-to-page" [] nil '(fundamental-mode) 'prose) (one "narrow-to-page" [1] nil '(fundamental-mode) 'prose)
+         (one "narrow-to-page" [2] nil '(fundamental-mode) 'prose) (one "narrow-to-page" [-1] nil '(fundamental-mode) 'prose))))
 
 (defun decode-arg (a)
   (cond ((null a) nil)

@@ -181,21 +181,35 @@ The text is written from left to right, so this is backward-word."
 The text is written from left to right, so this is forward-word."
   (forward-word (simple--arg args)))
 
+(define (simple--goto-line args prompt relative)
+  "Go to the line given by ARGS (or the prefix argument, or read with PROMPT).
+If RELATIVE, count from the beginning of the accessible part; otherwise widen first, then
+widen the buffer for good if the line is outside the accessible part."
+  (let ((n (cond ((pair? args) (car args))
+                 ((current-prefix-arg) (prefix-numeric-value (current-prefix-arg)))
+                 (else (string->number (read-string prompt))))))
+    (or (region-active-p) (push-mark (point)))
+    (let ((pos (save-restriction
+                 (if (not relative) (widen))
+                 (goto-char (point-min))
+                 (forward-line (- n 1))
+                 (point))))
+      (if (and (not relative) (buffer-narrowed-p)
+               (not (and (<= (point-min) pos) (<= pos (point-max)))))
+          (widen))
+      (goto-char pos))))
+
 (define-command (goto-line . args)
   "Go to line N, counting from line 1 at the beginning of the buffer.
 N is the argument or the numeric prefix argument; otherwise read it in the minibuffer.
-Push the mark at the previous position, unless the mark is active."
-  (let ((n (cond ((pair? args) (car args))
-                 ((current-prefix-arg) (prefix-numeric-value (current-prefix-arg)))
-                 (else (string->number (read-string "Goto line: "))))))
-    (or (region-active-p) (push-mark (point)))
-    (goto-char (point-min))
-    (forward-line (- n 1))))
+Push the mark at the previous position, unless the mark is active.
+If the line is outside the narrowed part, widen the buffer."
+  (simple--goto-line args "Goto line: " #f))
 
 (define-command (goto-line-relative . args)
   "Go to line N, counting from the line at the beginning of the accessible part.
-The buffer is never narrowed, so this is goto-line."
-  (apply goto-line args))
+N is the argument or the numeric prefix argument; otherwise read it in the minibuffer."
+  (simple--goto-line args "Goto line relative: " #t))
 
 (define-command (scroll-up-command . args)
   "Scroll the text of the window up by almost one window height.
@@ -1081,22 +1095,27 @@ C-u without digits or minus sign provides 4 as argument."
 
 (define-command (what-cursor-position . args)
   "Print information about the cursor position in the echo area:
-the character after point with its codes, the position, and the column."
+the character after point with its codes, the position, and the column.
+In a narrowed buffer, also show the accessible range as <BEG-END>."
   (let* ((total (buffer-size))
          (pos (point))
          (percent (simple--round-percent (- pos 1) (max 1 total)))
          (column (current-column))
-         (narrowed #f))
+         (range (if (and (= (point-min) 1) (= (point-max) (+ total 1)))
+                    ""
+                    (format " <%d-%d>" (point-min) (point-max)))))
     (if (eobp)
-        (message "%s" (format "point=%d of %d (EOB) column=%d" pos total column))
+        (if (equal? range "")
+            (message "%s" (format "point=%d of %d (EOB) column=%d" pos total column))
+            (message "%s" (format "point=%d of %d (%d%%)%s column=%d" pos total percent range column)))
         (let* ((char (char-after))
                (code (string-to-char char))
                (shown (if (< code 128) (simple--single-key-description char) char))
                (encoding (if (>= code 128)
                              (format "(%d, #o%o, #x%x, file ...)" code code code)
                              (format "(%d, #o%o, #x%x)" code code code))))
-          (message "%s" (format "Char: %s %s point=%d of %d (%d%%) column=%d"
-                                shown encoding pos total percent column))))))
+          (message "%s" (format "Char: %s %s point=%d of %d (%d%%)%s column=%d"
+                                shown encoding pos total percent range column))))))
 
 (define (simple--round-percent n total)
   "Return 100 * N / TOTAL rounded to the nearest integer, ties to even (like Emacs round)."
@@ -1403,7 +1422,9 @@ A page boundary is a line that starts with a form feed."
   (let loop ((count (simple--arg args)))
     (cond ((and (> count 0) (not (eobp)))
            (if (and (bolp) (equal? (char-after) simple--page-mark))
-               (forward-char 1)
+               (begin
+                 (set-match-data (list (point) (+ (point) 1)))
+                 (forward-char 1))
                (begin
                  (if (bolp) (forward-char 1))
                  (if (not (simple--page-forward-search)) (goto-char (point-max)))))
@@ -1433,6 +1454,110 @@ With argument N, mark the page N pages forward (backward if negative)."
     (forward-page 1)
     (push-mark (point) #t #t)
     (forward-page -1)))
+
+;;; Narrowing
+
+(define simple--narrow-to-region narrow-to-region)
+(define simple--widen widen)
+
+(define-command (narrow-to-region . args)
+  "Restrict editing in this buffer to the current region.
+The rest of the text becomes temporarily invisible and unchangeable.
+Called from Lisp with START and END, restrict to that range instead."
+  (if (and (pair? args) (pair? (cdr args)))
+      (simple--narrow-to-region (car args) (cadr args))
+      (let ((from (region-beginning))
+            (to (region-end)))
+        (simple--narrow-to-region from to))))
+
+(define-command (widen . args)
+  "Remove restrictions (narrowing) from the current buffer.
+This allows the buffer's full text to be seen and edited."
+  (simple--widen))
+
+(define (simple--page-delimiter-p)
+  "Return true if point is at a page delimiter: a form feed at the start of a line."
+  (and (bolp) (looking-at (regexp-quote simple--page-mark))))
+
+(define-command (narrow-to-page . args)
+  "Make text outside current page invisible.
+A numeric argument specifies to move forward or backward by that many pages,
+thus showing a page other than the one point was originally in."
+  (let ((arg (let ((raw (simple--raw-arg args))) (if raw (prefix-numeric-value raw) 0))))
+    (save-excursion
+      (widen)
+      (cond ((> arg 0) (forward-page arg))
+            ((< arg 0)
+             (let* ((opoint (point))
+                    (adjust (save-excursion
+                              (goto-char (line-beginning-position))
+                              (if (and (simple--page-delimiter-p) (= (match-end 0) opoint)) 0 1))))
+               (forward-page (- arg adjust)))))
+      (set-match-data #f)
+      (forward-page 1)
+      ;; Stop at the end of the buffer, or at the start of the delimiter line.
+      (if (and (match-beginning 0)
+               (save-excursion (goto-char (match-beginning 0)) (simple--page-delimiter-p)))
+          (goto-char (match-beginning 0)))
+      (let* ((end (point))
+             (start (begin
+                      (forward-page -1)
+                      (if (and (eolp) (not (bobp))) (forward-line 1))
+                      (point))))
+        (narrow-to-region start end)))))
+
+(define narrow-to-defun-include-comments #f
+  "Whether narrow-to-defun includes the comments before a defun.")
+
+(define-command (narrow-to-defun . args)
+  "Make text outside current defun invisible.
+The current defun is the one that contains point or follows point.
+Preceding comments are included if INCLUDE-COMMENTS is true.
+Called from the keyboard, use the value of narrow-to-defun-include-comments."
+  (let ((include-comments (if (null? args) narrow-to-defun-include-comments (car args))))
+    (save-excursion
+      (widen)
+      (let ((opoint (point))
+            (start #f)
+            (end #f))
+        ;; Move one character forward first, since beginning-of-defun on the first
+        ;; character of a defun goes to the previous one.
+        (let ((here (point)))
+          (unless (eolp) (forward-char 1))
+          (beginning-of-defun)
+          (when (< (point) here)
+            (goto-char here)
+            (beginning-of-defun)))
+        (set! start (point))
+        (simple--end-of-defun 1 #t)
+        (set! end (point))
+        (let loop ()
+          (when (looking-at "^\n")
+            (forward-line 1)
+            (loop)))
+        (unless (> (point) opoint)
+          ;; beginning-of-defun moved back one defun, so this is the wrong one.
+          (goto-char opoint)
+          (simple--end-of-defun 1 #t)
+          (set! end (point))
+          (beginning-of-defun)
+          (set! start (point)))
+        (when include-comments
+          (goto-char start)
+          ;; Move back past all preceding comments (and whitespace).
+          (when (forward-comment -1)
+            (let loop ()
+              (when (forward-comment -1) (loop)))
+            ;; Move forwards past any page breaks within these comments.
+            (let loop ()
+              (when (re-search-forward (string-append "^" simple--page-mark) start #t) (loop)))
+            ;; Lastly, move past any empty lines.
+            (skip-chars-forward "[:space:]\n")
+            (goto-char (line-beginning-position))
+            (set! start (point))))
+        (goto-char end)
+        (re-search-backward "^\n" (- (point) 1) #t)
+        (narrow-to-region start end)))))
 
 ;;; Pages
 
@@ -1581,11 +1706,15 @@ With argument N, do it N times.  Push the mark first, unless repeated."
       (goto-char (beginning-of-defun-position (point)))
       (loop (- n 1)))))
 
+(define (simple--end-of-defun n scan-errors)
+  "Move forward N defuns.  If SCAN-ERRORS, an unbalanced defun signals the scan error that Lisp code sees."
+  (goto-char (end-of-defun-position (point) n scan-errors)))
+
 (define-command (end-of-defun . args)
   "Move forward to the end of a defun.  With argument N, do it N times.
 Push the mark first, unless repeated."
   (simple--push-mark-for-defun 'end-of-defun)
-  (goto-char (end-of-defun-position (point) (simple--arg args))))
+  (simple--end-of-defun (simple--arg args) #f))
 
 (define-command (mark-defun . args)
   "Put the region around the current defun, including the comments before it.

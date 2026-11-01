@@ -74,6 +74,10 @@ pub struct Buffer {
     deactivate_requested: bool,
     /// 強調する正規表現 (Emacs の `highlight-regexp`).
     highlights: Vec<Highlight>,
+    /// 絞り込んだ範囲 (Emacs の `BEGV` と `ZV`. 絞り込んでいなければ `None`).
+    restriction: Option<(usize, usize)>,
+    /// `save-restriction` が覚えている絞り込み (解いたものは `None`. 絞り込んでいなかったときは `Some(None)`).
+    saved_restrictions: Vec<Option<Option<(usize, usize)>>>,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -112,6 +116,8 @@ impl Buffer {
             point_at_boundary: None,
             deactivate_requested: false,
             highlights: Vec::new(),
+            restriction: None,
+            saved_restrictions: Vec::new(),
         }
     }
 
@@ -155,6 +161,7 @@ impl Buffer {
         self.mark_ring.clear();
         self.modified = false;
         self.undo.clear();
+        self.restriction = None;
     }
 
     /// バッファの名前.
@@ -202,9 +209,77 @@ impl Buffer {
         self.len() == 0
     }
 
+    /// 見える範囲の始め (Emacs の `point-min`. 絞り込んでいなければ 0).
+    pub fn begv(&self) -> usize {
+        self.restriction.map_or(0, |(from, _)| from)
+    }
+
+    /// 見える範囲の終わり (Emacs の `point-max`. 絞り込んでいなければ本文の長さ).
+    pub fn zv(&self) -> usize {
+        self.restriction.map_or_else(|| self.len(), |(_, to)| to)
+    }
+
+    /// 絞り込んでいるか (Emacs の `buffer-narrowed-p`).
+    pub fn narrowed(&self) -> bool {
+        self.restriction.is_some()
+    }
+
+    /// 範囲に絞り込みます (Emacs の `narrow-to-region`). 始めと終わりは, 逆でもよい.
+    /// カーソルは, 見える範囲の中に収める.
+    ///
+    /// # Errors
+    ///
+    /// 範囲が本文の外のとき.
+    pub fn narrow_to_region(&mut self, from: usize, to: usize) -> Result<(), String> {
+        let (from, to) = if from <= to { (from, to) } else { (to, from) };
+        if to > self.len() {
+            return Err("Args out of range".to_string());
+        }
+        self.restriction = Some((from, to));
+        self.point = self.point.clamp(from, to);
+        Ok(())
+    }
+
+    /// 絞り込みをやめます (Emacs の `widen`).
+    pub fn widen(&mut self) {
+        self.restriction = None;
+    }
+
+    /// 今の絞り込みを覚えます (Emacs の `save-restriction`). 本文を書き換えると, 覚えた範囲も追う.
+    ///
+    /// # Returns
+    ///
+    /// 覚えたものの番号.
+    pub fn save_restriction(&mut self) -> usize {
+        let saved = Some(self.restriction);
+        if let Some(free) = self.saved_restrictions.iter().position(Option::is_none) {
+            self.saved_restrictions[free] = saved;
+            return free;
+        }
+        self.saved_restrictions.push(saved);
+        self.saved_restrictions.len() - 1
+    }
+
+    /// 覚えた絞り込みに戻して, 覚えたものを解きます. 番号が合わなければ, 何もしない.
+    pub fn restore_restriction(&mut self, id: usize) {
+        let Some(slot) = self.saved_restrictions.get_mut(id) else {
+            return;
+        };
+        if let Some(restriction) = slot.take() {
+            self.restriction = restriction;
+            let (from, to) = (self.begv(), self.zv());
+            self.point = self.point.clamp(from, to);
+        }
+    }
+
     /// 本文の全体.
     pub fn text(&self) -> String {
         self.text.to_string()
+    }
+
+    /// 見える範囲の本文 (Emacs の `buffer-string`).
+    pub fn visible_text(&self) -> String {
+        self.text.slice(self.begv()..self.zv()).to_string()
     }
 
     /// 範囲の本文 (Emacs の `buffer-substring`). 始めと終わりは, 逆でもよい.
@@ -224,29 +299,38 @@ impl Buffer {
 
     /// カーソルを置きます (バッファの外なら, 端に置く).
     pub fn set_point(&mut self, pos: usize) {
-        self.point = pos.min(self.len());
+        self.point = pos.clamp(self.begv(), self.zv());
     }
 
-    /// 範囲を, 始めが小さい順にして, バッファの中か確かめます.
+    /// 範囲を, 始めが小さい順にして, 見える範囲の中か確かめます.
     fn range(&self, from: usize, to: usize) -> Result<(usize, usize), String> {
         let (from, to) = if from <= to { (from, to) } else { (to, from) };
-        if to > self.len() {
+        if from < self.begv() || to > self.zv() {
             return Err("Args out of range".to_string());
         }
         Ok((from, to))
     }
 
-    /// 行の数 (最後の改行の後ろの, 空の行も 1 行とする).
+    /// 見える範囲の行の数 (最後の改行の後ろの, 空の行も 1 行とする). 数えるのは, 本文の始めの行から見える範囲の終わりの行まで.
     pub fn line_count(&self) -> usize {
-        self.text.len_lines()
+        self.line_of(self.zv()) + 1
     }
 
-    /// 行 (0 から数える) の文字. 終わりの改行は含めない. 行が無ければ空.
+    /// 見える範囲の, 最初の行の番号 (0 から数える).
+    pub fn first_line(&self) -> usize {
+        self.line_of(self.begv())
+    }
+
+    /// 行 (0 から数える) の文字. 終わりの改行は含めない. 行が無ければ空. 絞り込んでいれば, 見える範囲だけ.
     pub fn line_text(&self, line: usize) -> String {
         if line >= self.line_count() {
             return String::new();
         }
-        let text = self.text.line(line).to_string();
+        let start = self.line_start(line).max(self.begv());
+        let text = self
+            .text
+            .slice(start..self.line_start(line + 1).min(self.zv()));
+        let text = text.to_string();
         text.strip_suffix('\n').unwrap_or(&text).to_string()
     }
 
@@ -257,27 +341,27 @@ impl Buffer {
 
     /// 位置の文字 (Emacs の `char-after`). バッファの外なら `None`.
     pub fn char_after(&self, pos: usize) -> Option<char> {
-        (pos < self.len()).then(|| self.text.char(pos))
+        (pos >= self.begv() && pos < self.zv()).then(|| self.text.char(pos))
     }
 
     /// 位置の前の文字 (Emacs の `char-before`). 無ければ `None`.
     pub fn char_before(&self, pos: usize) -> Option<char> {
-        (pos > 0 && pos <= self.len()).then(|| self.text.char(pos - 1))
+        (pos > self.begv() && pos <= self.zv()).then(|| self.text.char(pos - 1))
     }
 
     /// カーソルがバッファの始めか (Emacs の `bobp`).
     pub fn bobp(&self) -> bool {
-        self.point == 0
+        self.point == self.begv()
     }
 
     /// カーソルがバッファの終わりか (Emacs の `eobp`).
     pub fn eobp(&self) -> bool {
-        self.point == self.len()
+        self.point == self.zv()
     }
 
     /// カーソルが行の始めか (Emacs の `bolp`).
     pub fn bolp(&self) -> bool {
-        self.point == 0 || self.char_before(self.point) == Some('\n')
+        self.point == self.begv() || self.char_before(self.point) == Some('\n')
     }
 
     /// カーソルが行の終わりか (Emacs の `eolp`).
@@ -292,12 +376,12 @@ impl Buffer {
     /// 端を越えるとき. カーソルは端まで動かしてから, 失敗にする ("Beginning of buffer" か "End of buffer").
     pub fn forward_char(&mut self, n: i64) -> Result<(), String> {
         let target = self.point as i64 + n;
-        if target < 0 {
-            self.point = 0;
+        if target < self.begv() as i64 {
+            self.point = self.begv();
             return Err("Beginning of buffer".to_string());
         }
-        if target > self.len() as i64 {
-            self.point = self.len();
+        if target > self.zv() as i64 {
+            self.point = self.zv();
             return Err("End of buffer".to_string());
         }
         self.point = target as usize;
@@ -329,15 +413,17 @@ impl Buffer {
     pub fn line_beginning_position(&self, n: i64) -> usize {
         self.relative_line(n)
             .map_or(0, |line| self.line_start(line))
+            .clamp(self.begv(), self.zv())
     }
 
     /// 行の終わりの位置 (Emacs の `line-end-position`). `n` の数え方は `line_beginning_position` と同じ.
     pub fn line_end_position(&self, n: i64) -> usize {
-        match self.relative_line(n) {
+        let end = match self.relative_line(n) {
             None => 0,
             Some(line) if line + 1 >= self.text.len_lines() => self.len(),
             Some(line) => self.line_start(line + 1) - 1,
-        }
+        };
+        end.clamp(self.begv(), self.zv())
     }
 
     /// 行を動きます (Emacs の `forward-line`). カーソルは行の始めに置きます.
@@ -349,8 +435,8 @@ impl Buffer {
         if n <= 0 {
             let mut pos = self.line_beginning_position(1);
             let mut moved = 0;
-            while moved < -n && pos > 0 {
-                pos = self.line_start(self.line_of(pos - 1));
+            while moved < -n && pos > self.begv() {
+                pos = self.line_start(self.line_of(pos - 1)).max(self.begv());
                 moved += 1;
             }
             self.point = pos;
@@ -359,14 +445,17 @@ impl Buffer {
         let mut pos = self.point;
         let mut moved = 0;
         while moved < n {
-            match self.next_newline(pos) {
+            match self
+                .next_newline(pos)
+                .filter(|&newline| newline < self.zv())
+            {
                 Some(newline) => pos = newline + 1,
                 None => {
                     // 終わりに改行の無い行に文字があれば, 1 行動いたと数える
-                    if pos < self.len() {
+                    if pos < self.zv() {
                         moved += 1;
                     }
-                    pos = self.len();
+                    pos = self.zv();
                     break;
                 }
             }
@@ -394,7 +483,7 @@ impl Buffer {
 
     /// 位置の桁.
     fn column_of(&self, pos: usize) -> usize {
-        let start = self.line_start(self.line_of(pos));
+        let start = self.line_start(self.line_of(pos)).max(self.begv());
         self.text
             .slice(start..pos)
             .chars()
@@ -443,6 +532,25 @@ impl Buffer {
         self.mark.iter_mut().for_each(shift);
         self.mark_ring.iter_mut().for_each(shift);
         self.markers.iter_mut().flatten().for_each(shift);
+        // 絞り込みの始めは動かず, 終わりは, 終わりに入れた文字も含める
+        let grow = |to: &mut usize| {
+            if *to >= pos {
+                *to += len;
+            }
+        };
+        let begin = |from: &mut usize| {
+            if *from > pos {
+                *from += len;
+            }
+        };
+        for (from, to) in self
+            .restriction
+            .iter_mut()
+            .chain(self.saved_restrictions.iter_mut().flatten().flatten())
+        {
+            begin(from);
+            grow(to);
+        }
     }
 
     /// 位置の記録を, 消した範囲の分だけずらします.
@@ -458,6 +566,14 @@ impl Buffer {
         self.mark.iter_mut().for_each(shift);
         self.mark_ring.iter_mut().for_each(shift);
         self.markers.iter_mut().flatten().for_each(shift);
+        for (restricted_from, restricted_to) in self
+            .restriction
+            .iter_mut()
+            .chain(self.saved_restrictions.iter_mut().flatten().flatten())
+        {
+            shift(restricted_from);
+            shift(restricted_to);
+        }
     }
 
     /// 区切りの直後の変更の前に、区切りでのカーソルを履歴に覚えます (変更の所と同じなら, 要らない).
@@ -499,7 +615,7 @@ impl Buffer {
         text: &str,
         before_markers: bool,
     ) -> Result<(), String> {
-        if pos > self.len() {
+        if pos < self.begv() || pos > self.zv() {
             return Err("Args out of range".to_string());
         }
         let len = text.chars().count();
