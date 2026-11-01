@@ -256,6 +256,7 @@
 
 (define (isearch-mode forward regexp function . initial)
   "Search incrementally.  FORWARD is the direction, REGEXP #t for a regexp search, FUNCTION #f, `word' or `symbol'.
+INITIAL is (STRING GOTO ERROR): the initial search string, a position to move to, and an error to show.
 The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,
 C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode,
 RET exits, C-g backs up to the last match or, if it was found, cancels the search.
@@ -275,7 +276,12 @@ Another key exits the search, and is ignored."
   (set! isearch--just-started #t)
   (set! isearch--opoint (point))
   (isearch--push-state)
-  (if (pair? initial) (isearch--add (car initial)))
+  (if (and (pair? initial) (pair? (cdr initial)) (cadr initial)) (goto-char (cadr initial)))
+  (if (and (pair? initial) (pair? (cdr initial)) (pair? (cddr initial)) (caddr initial))
+      (begin
+        (set! isearch--error (caddr initial))
+        (isearch--push-state)))
+  (if (and (pair? initial) (car initial)) (isearch--add (car initial)))
   (let loop ()
     (let ((key (read-key (isearch--prompt) #t)))
       (cond ((equal? key "C-s") (isearch--repeat #t) (loop))
@@ -316,12 +322,88 @@ Another key exits the search, and is ignored."
   "Do incremental search forward for a symbol."
   (isearch-mode #t #f 'symbol))
 
+(define isearch-forward-thing-at-point-things '(region url symbol sexp)
+  "A list of things to try to get the \"thing\" at point, for isearch-forward-thing-at-point
+(Emacs names this variable isearch-forward-thing-at-point too, but here a name is one binding).
+Each element is `region', `url', `symbol' or `sexp'.")
+
+(define (isearch--bounds-of-thing begin-op end-op)
+  "Return (START END), the thing at point found with BEGIN-OP and END-OP, or #f."
+  (let ((orig (point)))
+    (condition-case e
+        (save-excursion
+          ;; A buffer with nothing but white space has no thing.
+          (goto-char (point-min))
+          (if (not (re-search-forward "[^\t\n ]" #f #t)) (error "No thing"))
+          (goto-char orig)
+          (end-op)
+          (begin-op)
+          (let ((beg (point)))
+            (if (<= beg orig)
+                ;; Moving back reached the point; find the real end that goes with BEG.
+                (let ((real-end (begin (end-op) (point))))
+                  (if (and (<= orig real-end) (< beg real-end)) (list beg real-end) #f))
+                ;; Try again, moving backward first, to find a thing that ends at the point.
+                (begin
+                  (goto-char orig)
+                  (begin-op)
+                  (end-op)
+                  (let* ((end (point))
+                         (real-beg (begin (begin-op) (point))))
+                    (if (and (<= real-beg orig) (<= orig end) (< real-beg end)) (list real-beg end) #f))))))
+      (error #f))))
+
+(define (isearch--symbol-end)
+  "Move point to the end of the next symbol, or to the end of the buffer."
+  (re-search-forward "\\(\\sw\\|\\s_\\)+" #f 'move))
+
+(define (isearch--symbol-beginning)
+  "Move point to the beginning of the current symbol."
+  (re-search-backward "\\(\\sw\\|\\s_\\)+")
+  (skip-syntax-backward "w_"))
+
+(define (isearch--sexp-end)
+  "Move point to the end of the next sexp, or stay at a scan error.
+Emacs compares the syntax descriptor of the char after point with a char here, so it always moves by sexp."
+  (condition-case e (forward-sexp 1) (error #f)))
+
+(define (isearch--sexp-beginning)
+  "Move point to the beginning of the current sexp."
+  (let ((syntax (char-syntax (char-before))))
+    (if (or (equal? syntax "(") (and (equal? syntax "\"") (list-ref (syntax-ppss) 3)))
+        (forward-char -1)
+        (forward-sexp -1))))
+
+(define (isearch--thing-bounds thing)
+  "Return (START END) for THING (`region', `url', `symbol' or `sexp') at point, or #f."
+  (cond ((eq? thing 'region) (and (use-region-p) (list (region-beginning) (region-end))))
+        ((eq? thing 'symbol) (isearch--bounds-of-thing isearch--symbol-beginning isearch--symbol-end))
+        ((eq? thing 'sexp) (isearch--bounds-of-thing isearch--sexp-beginning isearch--sexp-end))
+        (else #f)))
+
+(define-command (isearch-forward-thing-at-point . args)
+  "Do incremental search forward for the \"thing\" found near point.
+Like ordinary incremental search except that the \"thing\" found at point
+is added to the search string initially.  The variable isearch-forward-thing-at-point-things
+lists the things to try; with `region' in the list and the region active, the region is used."
+  (let ((bounds (let loop ((things isearch-forward-thing-at-point-things))
+                  (and (pair? things) (or (isearch--thing-bounds (car things)) (loop (cdr things)))))))
+    (if bounds
+        (let ((text (buffer-substring (car bounds) (cadr bounds)))
+              (goto (and (< (car bounds) (point)) (car bounds))))
+          (when (use-region-p) (deactivate-mark))
+          (isearch-mode #t #f #f text goto))
+        (isearch-mode #t #f #f #f #f "No thing at point"))))
+
 (define-command (isearch-forward-symbol-at-point . args)
-  "Do incremental search forward for the symbol found near point."
-  (let ((symbol (hi-lock--symbol-at-point)))
-    (if (not symbol)
-        (error "No symbol at point")
-        (isearch-mode #t #f 'symbol symbol))))
+  "Do incremental search forward for a symbol found near point.
+Like ordinary incremental search except that the symbol found at point
+is added to the search string initially, as a symbol search."
+  (let ((bounds (isearch--thing-bounds 'symbol)))
+    (if bounds
+        (isearch-mode #t #f 'symbol (buffer-substring (car bounds) (cadr bounds))
+                      (and (< (car bounds) (point)) (car bounds)))
+        (isearch-mode #t #f 'symbol #f #f "No symbol at point"))))
 
 (provide 'isearch)
 

@@ -136,3 +136,49 @@ fn test_against_emacs() {
             .join("\n")
     );
 }
+
+/// 本文とカーソルを決めて, 手順を動かし, カーソルと最後のメッセージを返す.
+fn thing_at_point(
+    text: &str,
+    mark: Option<usize>,
+    pos: usize,
+    keys: &[&str],
+) -> (usize, Option<String>) {
+    let ev = Evaluator::new();
+    let host = EditorHost::new(Editor::new(), FakeUi::default());
+    for source in [
+        include_str!("../../lisp/simple.scm"),
+        include_str!("../../lisp/replace.scm"),
+        include_str!("../../lisp/isearch.scm"),
+    ] {
+        ev.eval_with(source, &host).unwrap();
+    }
+    host.editor().set_buffer("*scratch*").unwrap();
+    {
+        let mut editor = host.editor();
+        let buffer = editor.current_buffer_mut();
+        buffer.load(text);
+        buffer.set_point(pos);
+        if let Some(mark) = mark {
+            buffer.set_mark(mark);
+            buffer.set_point(pos);
+        }
+    }
+    *host.ui().keys.lock().unwrap() = keys.iter().map(|k| k.to_string()).collect();
+    // 入力が尽きたら失敗する (そのときの問いが, 最後のメッセージ)
+    let _ = ev.eval_with("(isearch-forward-thing-at-point)", &host);
+    let point = host.editor().current_buffer().point();
+    let message = host.ui().message.lock().unwrap().clone();
+    (point, message)
+}
+
+#[test]
+fn test_thing_at_point_uses_the_region_and_reports_no_thing() {
+    // 期待値は, `emacs -Q --batch` の結果
+    // リージョンがあれば, その文字を探す文字列にする (カーソルがリージョンの終わりなら, 始めから探す)
+    let (point, _) = thing_at_point("foo bar foo bar", Some(4), 7, &["Enter"]);
+    assert_eq!(point, 7);
+    // 物が無ければ, 「物が無い」と出して, そのまま入力を待つ
+    let (_, message) = thing_at_point("   ", None, 1, &[]);
+    assert_eq!(message.as_deref(), Some("I-search:  [No thing at point]"));
+}

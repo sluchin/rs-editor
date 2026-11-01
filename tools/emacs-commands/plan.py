@@ -69,9 +69,9 @@ STEPS = [
     (7, '検索, 置換, 強調',
      ['【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: '
       '`replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), '
-      '`isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる). '
+      '`isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる)、`isearch-forward-thing-at-point` と `isearch-forward-symbol-at-point` (カーソルの所の物を初めの文字列にする。物は `region`、`symbol`、`sexp` で、`url` は無い。変数 `isearch-forward-thing-at-point` は、同じ名前の命令があるので `isearch-forward-thing-at-point-things`)。'
       '強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), '
-      'ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, '
+      'ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, 記号の検索 (`isearch-forward-symbol`) で空白や正規表現の特別な文字を打つこと, 空白を打つと, 続く空白の全てに合う (lax whitespace) 動きが無いこと, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, '
       '`\\#` `\\,` `\\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, '
       '強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】'
       'isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。']),

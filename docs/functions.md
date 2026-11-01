@@ -281,7 +281,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
 | 5 | S 式, 段落, ページ | 14 | - | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
-| 7 | 検索, 置換, 強調 | 7 | 1 | 6 |
+| 7 | 検索, 置換, 強調 | 6 | - | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 16 | 11 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
@@ -326,7 +326,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **7. 検索, 置換, 強調**
 
-- 【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: `replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), `isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる). 強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, `\#` `\,` `\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, 強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
+- 【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: `replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), `isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる)、`isearch-forward-thing-at-point` と `isearch-forward-symbol-at-point` (カーソルの所の物を初めの文字列にする。物は `region`、`symbol`、`sexp` で、`url` は無い。変数 `isearch-forward-thing-at-point` は、同じ名前の命令があるので `isearch-forward-thing-at-point-things`)。強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, 記号の検索 (`isearch-forward-symbol`) で空白や正規表現の特別な文字を打つこと, 空白を打つと, 続く空白の全てに合う (lax whitespace) 動きが無いこと, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, `\#` `\,` `\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, 強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
 
 **8. 矩形, レジスタ, キーボードマクロ, 略語**
 
@@ -349,7 +349,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 151 個: Lisp 68 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 152 個: Lisp 69 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -526,7 +526,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `isearch-forward-regexp` | ◯ | isearch | `C-M-s` | 実装済み | `C-M-s` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
 | `isearch-forward-symbol` |  | isearch | `M-s _` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `isearch-forward-symbol-at-point` |  | isearch | `M-s .` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` |  |  |  | 7 |
+| `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `isearch-forward-word` |  | isearch | `M-s w` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `clear-rectangle` | ◯ | rect | `C-x r c` |  |  |  | 8 |
 | `copy-rectangle-as-kill` |  | rect | `C-x r M-w` |  |  |  | 8 |

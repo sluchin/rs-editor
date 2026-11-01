@@ -70,6 +70,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("M-s w", "isearch-forward-word"),
     ("M-s _", "isearch-forward-symbol"),
     ("M-s .", "isearch-forward-symbol-at-point"),
+    ("M-s M-.", "isearch-forward-thing-at-point"),
     ("M-%", "query-replace"),
     ("C-M-%", "query-replace-regexp"),
     ("M-s o", "occur"),

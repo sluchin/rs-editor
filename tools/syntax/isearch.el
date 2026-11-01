@@ -14,11 +14,21 @@
 
 (defconst texts '("foo bar foo baz" "aXbxAxB" "a\nb\nfoo\nfoo" "" "oooo ooo"))
 (defconst starts '(isearch-forward isearch-backward isearch-forward-regexp isearch-backward-regexp))
+;; 位置の物を初めの文字列にする命令は, 式や記号のある本文で
+(defconst thing-starts '(isearch-forward-thing-at-point isearch-forward-symbol-at-point))
+(defconst thing-texts '("(foo bar) baz" "foo-bar baz_q 'x" "\"a b\" (c (d))" "x" "" " \n "))
+(defconst combos
+  (append (cl-loop for s in starts append (mapcar (lambda (tx) (cons s tx)) texts))
+          (cl-loop for s in thing-starts append (mapcar (lambda (tx) (cons s tx)) thing-texts))))
 (defconst key-lists
   '(("f" "o" "o") ("f" "o" "o" "C-s") ("f" "o" "o" "C-s" "C-s" "C-s") ("z") ("f" "x") ("o" "o" "Backspace")
     ("f" "x" "C-g") ("f" "o" "C-r") ("o" "C-s" "C-r") ("b" "a" "r") (" ") ("a" "Backspace" "Backspace")
     ("f" "o" "o" "C-g" "C-g") ("o" "o" "C-r" "C-r" "C-s") ("x" "C-s" "C-s" "C-s" "C-s") ("a" "x" "C-s" "C-s")
     ("o" "C-r" "C-r" "C-r" "C-r") ("." "*") ("o" "+") ("\\" "(") ("^" "f") ("o" "$")))
+
+;; 記号の検索 (isearch-forward-symbol) は, 空白と正規表現の特別な文字を打つと, まだ Emacs と同じではない
+(defconst symbol-key-lists
+  (cl-remove-if (lambda (k) (member k '((" ") ("." "*") ("\\" "(") ("^" "f")))) key-lists))
 
 (defun key-cmd (k)
   (cond ((equal k "C-s") (lambda () (isearch-repeat-forward)))
@@ -29,9 +39,9 @@
         (t (lambda () (let ((last-command-event (aref k 0))) (isearch-printing-char))))))
 
 (defvar results nil)
-(dolist (start starts)
-  (dolist (text texts)
-    (dolist (keys key-lists)
+(dolist (pair combos)
+  (let ((start (car pair)) (text (cdr pair)))
+    (dolist (keys (if (eq start 'isearch-forward-symbol-at-point) symbol-key-lists key-lists))
       (let ((per-pos nil) (full (append keys nil)))
         (dotimes (i (1+ (length text)))
           (with-temp-buffer
