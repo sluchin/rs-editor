@@ -19,6 +19,9 @@ use crate::scheme::help;
 use crate::scheme::hooks;
 use crate::scheme::host::{Host, NoHost};
 use crate::scheme::loadup;
+
+/// `message` の記録の行数の上限.
+const MESSAGE_LOG_MAX: usize = 1000;
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
 use crate::scheme::value::{Lambda, Value};
@@ -56,6 +59,8 @@ pub struct Evaluator {
     variable_docs: Mutex<HashMap<String, String>>,
     /// 名前を定義したファイル (読み込んでいるファイルの, 一番外側の `define`. Emacs の `symbol-file`).
     symbol_files: Mutex<HashMap<String, String>>,
+    /// `message` が出した文 (Emacs の `*Messages*`). 古いものから.
+    message_log: Mutex<Vec<String>>,
 }
 
 impl Default for Evaluator {
@@ -115,6 +120,7 @@ impl Evaluator {
             tests: Mutex::new(Vec::new()),
             variable_docs: Mutex::new(HashMap::new()),
             symbol_files: Mutex::new(HashMap::new()),
+            message_log: Mutex::new(Vec::new()),
         };
         // M-x ert
         let mut machine = Machine::new(&evaluator, &NoHost);
@@ -249,6 +255,27 @@ impl Evaluator {
     /// docstring. 無ければ [`None`].
     pub(crate) fn variable_documentation(&self, name: &str) -> Option<String> {
         self.variable_docs.lock().unwrap().get(name).cloned()
+    }
+
+    /// `message` が出した文を覚えます (空の文は覚えない. 1000 行を超えたら古いものを捨てる).
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - 出した文.
+    pub(crate) fn log_message(&self, text: &str) {
+        if text.is_empty() {
+            return;
+        }
+        let mut log = self.message_log.lock().unwrap();
+        log.push(text.to_string());
+        if log.len() > MESSAGE_LOG_MAX {
+            log.remove(0);
+        }
+    }
+
+    /// `message` が出した文を返します (古いものから).
+    pub(crate) fn message_log(&self) -> Vec<String> {
+        self.message_log.lock().unwrap().clone()
     }
 
     /// 名前を定義したファイルを返します.

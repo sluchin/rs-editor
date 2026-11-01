@@ -285,7 +285,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 5 | - | 5 |
 | 10 | ウィンドウ | 12 | 4 | 8 |
-| 11 | ヘルプ, xref, info | 27 | 25 | 2 |
+| 11 | ヘルプ, xref, info | 2 | - | 2 |
 | 12 | 入れない | 23 | 23 | - |
 
 **1. 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため)**
@@ -345,13 +345,13 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **11. ヘルプ, xref, info**
 
-- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。
+- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). `emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). `describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, `info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
 
 **12. 入れない**
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 209 個: Lisp 126 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 234 個: Lisp 151 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -572,50 +572,50 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | TypeScript (`src/hooks/useBookmarks.ts`, `lisp/bookmark.scm`) | 9 |
 | `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
-| `xref-find-apropos` |  | xref | `C-M-.` |  |  |  | 11 |
-| `xref-find-definitions` |  | xref | `M-.` |  |  |  | 11 |
+| `xref-find-apropos` |  | xref | `C-M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-find-definitions` |  | xref | `M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
 | `xref-find-definitions-other-frame` |  | xref | `C-x 5 .` |  |  |  | 12 |
-| `xref-find-definitions-other-window` |  | xref | `C-x 4 .` |  |  |  | 11 |
-| `xref-find-references` |  | xref | `M-?` |  |  |  | 11 |
-| `xref-go-back` |  | xref | `M-,` |  |  |  | 11 |
-| `xref-go-forward` |  | xref | `C-M-,` |  |  |  | 11 |
+| `xref-find-definitions-other-window` |  | xref | `C-x 4 .` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-find-references` |  | xref | `M-?` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-go-back` |  | xref | `M-,` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-go-forward` |  | xref | `C-M-,` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
 | `highlight-lines-matching-regexp` |  | loaddefs | `M-s h l` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `highlight-phrase` |  | loaddefs | `M-s h p` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | TypeScript (`src/App.tsx`) | 11 |
+| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | TypeScript (`src/App.tsx`, `lisp/help.scm`) | 11 |
 | `describe-copying` |  | help | `C-h C-c`, `<f1> C-c`, `<help> C-c` |  |  |  | 12 |
 | `describe-distribution` |  | help | `C-h C-o`, `<f1> C-o`, `<help> C-o` |  |  |  | 12 |
 | `describe-gnu-project` |  | help | `C-h g`, `<f1> g`, `<help> g` |  |  |  | 12 |
-| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | TypeScript (`src/lib/emacs.ts`) | 11 |
-| `describe-key-briefly` | ◯ | help | `C-h c`, `<f1> c`, `<help> c` |  |  |  | 11 |
+| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | TypeScript (`src/lib/emacs.ts`, `lisp/help.scm`) | 11 |
+| `describe-key-briefly` | ◯ | help | `C-h c`, `<f1> c`, `<help> c` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
 | `describe-no-warranty` |  | help | `C-h C-w`, `<f1> C-w`, `<help> C-w` |  |  |  | 12 |
-| `help-for-help` |  | help | `C-h ?`, `<f1> ?`, `C-h C-h`, `<f1> C-h` ほか 8 |  |  |  | 11 |
-| `help-quick-toggle` |  | help | `C-h C-q`, `<f1> C-q`, `<help> C-q` |  |  |  | 11 |
-| `help-quit` |  | help | `C-h q`, `<f1> q`, `<help> q` |  |  |  | 11 |
-| `search-forward-help-for-help` |  | help | `C-h C-s`, `<f1> C-s`, `<help> C-s` |  |  |  | 11 |
-| `view-echo-area-messages` |  | help | `C-h e`, `<f1> e`, `<help> e` |  |  |  | 11 |
+| `help-for-help` |  | help | `C-h ?`, `<f1> ?`, `C-h C-h`, `<f1> C-h` ほか 8 | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `help-quick-toggle` |  | help | `C-h C-q`, `<f1> C-q`, `<help> C-q` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `help-quit` |  | help | `C-h q`, `<f1> q`, `<help> q` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `search-forward-help-for-help` |  | help | `C-h C-s`, `<f1> C-s`, `<help> C-s` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `view-echo-area-messages` |  | help | `C-h e`, `<f1> e`, `<help> e` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
 | `view-emacs-FAQ` |  | help | `C-h C-f`, `<f1> C-f`, `<help> C-f` |  |  |  | 12 |
 | `view-emacs-debugging` |  | help | `C-h C-d`, `<f1> C-d`, `<help> C-d` |  |  |  | 12 |
 | `view-emacs-news` |  | help | `C-h n`, `<f1> n`, `C-h C-n`, `<f1> C-n` ほか 2 |  |  |  | 12 |
 | `view-emacs-problems` |  | help | `C-h C-p`, `<f1> C-p`, `<help> C-p` |  |  |  | 12 |
 | `view-emacs-todo` |  | help | `C-h C-t`, `<f1> C-t`, `<help> C-t` |  |  |  | 12 |
 | `view-external-packages` |  | help | `C-h C-e`, `<f1> C-e`, `<help> C-e` |  |  |  | 12 |
-| `view-lossage` | ◯ | help | `C-h l`, `<f1> l`, `<help> l` |  |  |  | 11 |
+| `view-lossage` | ◯ | help | `C-h l`, `<f1> l`, `<help> l` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
 | `view-order-manuals` |  | help | `C-h RET`, `<f1> RET`, `<help> RET` |  |  |  | 12 |
-| `where-is` | ◯ | help | `C-h w`, `<f1> w`, `<help> w` |  |  |  | 11 |
-| `describe-command` |  | help-fns | `C-h x`, `<f1> x`, `<help> x` |  |  |  | 11 |
+| `where-is` | ◯ | help | `C-h w`, `<f1> w`, `<help> w` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `describe-command` |  | help-fns | `C-h x`, `<f1> x`, `<help> x` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
 | `describe-function` | ◯ | help-fns | `C-h f`, `<f1> f`, `<help> f` | 実装済み | `C-h f` | Lisp (`lisp/help-fns.scm`) | 済 |
-| `describe-symbol` |  | help-fns | `C-h o`, `<f1> o`, `<help> o` |  |  |  | 11 |
-| `describe-syntax` | ◯ | help-fns | `C-h s`, `<f1> s`, `<help> s` |  |  |  | 11 |
-| `describe-variable` | ◯ | help-fns | `C-h v`, `<f1> v`, `<help> v` |  |  |  | 11 |
-| `help-find-source` |  | help-fns | `C-h 4 s`, `<f1> 4 s`, `<help> 4 s` |  |  |  | 11 |
-| `Info-goto-emacs-command-node` |  | info | `C-h F`, `<f1> F`, `<help> F` |  |  |  | 11 |
-| `Info-goto-emacs-key-command-node` |  | info | `C-h K`, `<f1> K`, `<help> K` |  |  |  | 11 |
-| `info` | ◯ | info | `C-h i`, `<f1> i`, `<help> i` |  |  |  | 11 |
-| `info-display-manual` |  | info | `C-h R`, `<f1> R`, `<help> R` |  |  |  | 11 |
-| `info-emacs-manual` |  | info | `C-h r`, `<f1> r`, `<help> r` |  |  |  | 11 |
-| `info-other-window` |  | info | `C-h 4 i`, `<f1> 4 i`, `<help> 4 i` |  |  |  | 11 |
+| `describe-symbol` |  | help-fns | `C-h o`, `<f1> o`, `<help> o` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `describe-syntax` | ◯ | help-fns | `C-h s`, `<f1> s`, `<help> s` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `describe-variable` | ◯ | help-fns | `C-h v`, `<f1> v`, `<help> v` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `help-find-source` |  | help-fns | `C-h 4 s`, `<f1> 4 s`, `<help> 4 s` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `Info-goto-emacs-command-node` |  | info | `C-h F`, `<f1> F`, `<help> F` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `Info-goto-emacs-key-command-node` |  | info | `C-h K`, `<f1> K`, `<help> K` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `info` | ◯ | info | `C-h i`, `<f1> i`, `<help> i` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `info-display-manual` |  | info | `C-h R`, `<f1> R`, `<help> R` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `info-emacs-manual` |  | info | `C-h r`, `<f1> r`, `<help> r` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `info-other-window` |  | info | `C-h 4 i`, `<f1> 4 i`, `<help> 4 i` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
 
 <!-- emacs-commands:end -->

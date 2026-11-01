@@ -995,6 +995,174 @@ msgstr ""
 "FUNCTION (記号) の説明を全て出す.\n"
 "対話的に呼ぶと, FUNCTION をミニバッファで (補完しながら) 聞く."
 
+#: lisp/help.scm
+msgctxt "function:help--variable-names"
+msgid "Return the names of all variables, sorted."
+msgstr "全ての変数の名前を, 順に並べて返す."
+
+#: lisp/help.scm
+msgctxt "function:help--command-names"
+msgid "Return the names of all commands, sorted."
+msgstr "全てのコマンドの名前を, 順に並べて返す."
+
+#: lisp/help.scm
+msgctxt "function:help--read-symbol"
+msgid "Read a symbol with PROMPT, completing in NAMES."
+msgstr "PROMPT で記号を読む (NAMES から補完する)."
+
+#: lisp/help.scm
+msgctxt "function:help-variable-text"
+msgid "Return the text of the help of VARIABLE (a symbol)."
+msgstr "VARIABLE (記号)のヘルプの文章を返す."
+
+#: lisp/help.scm
+msgctxt "function:describe-variable"
+msgid ""
+"Display the full documentation of VARIABLE (a symbol).\n"
+"Interactively, read VARIABLE in the minibuffer with completion."
+msgstr ""
+"VARIABLE (記号)の完全な説明を出す.\n"
+"対話では, VARIABLE をミニバッファで (補完しながら) 聞く."
+
+#: lisp/help.scm
+msgctxt "function:describe-command"
+msgid ""
+"Display the full documentation of COMMAND (a symbol).\n"
+"Interactively, read COMMAND in the minibuffer with completion."
+msgstr ""
+"COMMAND (記号)の完全な説明を出す.\n"
+"対話では, COMMAND をミニバッファで (補完しながら) 聞く."
+
+#: lisp/help.scm
+msgctxt "function:describe-symbol"
+msgid ""
+"Display the full documentation of SYMBOL.\n"
+"Show the function and the variable of that name, if there are any.\n"
+"Interactively, read SYMBOL in the minibuffer with completion."
+msgstr ""
+"SYMBOL の完全な説明を出す.\n"
+"その名前の関数と変数があれば, 両方を出す.\n"
+"対話では, SYMBOL をミニバッファで (補完しながら) 聞く."
+
+#: lisp/help.scm
+msgctxt "function:help--key-name"
+msgid "Return the name of KEY, as `read-key' returned it, in the notation of key bindings."
+msgstr "`read-key' が返した KEY を, キーの割り当ての書き方の名前にして返す."
+
+#: lisp/help.scm
+msgctxt "function:help--read-key-sequence"
+msgid "Read keys with PROMPT until they make a complete key sequence; return it as a string such as \"C-x C-f\"."
+msgstr "キーを, 1 つのキーの並びになるまで PROMPT で読んで, \"C-x C-f\" のような文字列で返す."
+
+#: lisp/help.scm
+msgctxt "function:help--key-command"
+msgid "Return the name of the command KEYS (a string such as \"C-x C-f\") runs, or #f."
+msgstr "KEYS (\"C-x C-f\" のような文字列)が動かすコマンドの名前を返す. 無ければ #f."
+
+#: lisp/help.scm
+msgctxt "function:describe-key"
+msgid ""
+"Display documentation of the function invoked by KEY.\n"
+"Interactively, read the key sequence after the prompt."
+msgstr ""
+"KEY が呼ぶ関数の説明を出す.\n"
+"対話では, 促しの後で, キーの並びを読む."
+
+#: lisp/help.scm
+msgctxt "function:describe-key-briefly"
+msgid ""
+"Print the name of the function KEY invokes.  KEY is a string such as \"C-x C-f\".\n"
+"Interactively, read the key sequence after the prompt."
+msgstr ""
+"KEY が呼ぶ関数の名前を出す. KEY は \"C-x C-f\" のような文字列.\n"
+"対話では, 促しの後で, キーの並びを読む."
+
+#: lisp/help.scm
+msgctxt "function:where-is"
+msgid ""
+"Print message listing the key sequences that invoke the command DEFINITION.\n"
+"Interactively, read the command name in the minibuffer with completion."
+msgstr ""
+"コマンド DEFINITION を呼ぶキーの並びを, メッセージに出す.\n"
+"対話では, コマンドの名前をミニバッファで (補完しながら) 聞く."
+
+#: lisp/help.scm
+msgctxt "function:describe-bindings"
+msgid "Display a buffer showing a list of all defined keys, and their definitions."
+msgstr "定義された全てのキーと, その定義の一覧を, バッファに出す."
+
+#: lisp/help.scm
+msgctxt "function:view-lossage"
+msgid "Display the last 300 input keystrokes."
+msgstr "最近の 300 個のキーを出す."
+
+#: lisp/help.scm
+msgctxt "function:help--wrap"
+msgid "Return TEXT with its lines broken between words so that none is longer than WIDTH."
+msgstr "TEXT を, どの行も WIDTH より長くならないように, 単語の間で折り返して返す."
+
+#: lisp/help.scm
+msgctxt "function:view-echo-area-messages"
+msgid ""
+"View the log of recent echo-area messages: the `*Messages*' buffer.\n"
+"The buffer is shown in another window, with point at its end."
+msgstr ""
+"エコー領域のメッセージの最近の記録 (`*Messages*' バッファ)を見る.\n"
+"バッファは別の窓に出して, 点は最後に置く."
+
+#: lisp/help.scm
+msgctxt "function:help-for-help"
+msgid ""
+"You have typed \\[help-for-help], the help character.  Type a Help option.\n"
+"The options are listed in the *Help* buffer."
+msgstr ""
+"\\[help-for-help] は, ヘルプの文字です. ヘルプの選択肢を打ってください.\n"
+"選択肢は *Help* バッファに出る."
+
+#: lisp/help.scm
+msgctxt "function:help-quit"
+msgid "Just exit from the help command's prompt."
+msgstr "ヘルプのコマンドの促しから抜ける (それだけ)."
+
+#: lisp/help.scm
+msgctxt "function:help-quick-toggle"
+msgid "Toggle the display of the short help of the common help commands."
+msgstr "よく使うヘルプのコマンドの短い説明の表示を, 切り替える."
+
+#: lisp/help.scm
+msgctxt "function:search-forward-help-for-help"
+msgid "Search forward in the help for help text."
+msgstr "ヘルプの説明の文章を, 前向きに探す."
+
+#: lisp/help.scm
+msgctxt "function:help--syntax-description"
+msgid "Return the description of the syntax class character CLASS."
+msgstr "構文の種類の文字 CLASS の説明を返す."
+
+#: lisp/help.scm
+msgctxt "function:help--char-string"
+msgid "Return CODE as a string, control characters as ^X."
+msgstr "CODE を文字列にして返す (制御文字は ^X)."
+
+#: lisp/help.scm
+msgctxt "function:help--syntax-run"
+msgid "Return the line that says the characters START to END have the syntax CLASS."
+msgstr "文字 START から END が, 構文 CLASS であることを言う行を返す."
+
+#: lisp/help.scm
+msgctxt "function:help--syntax-text"
+msgid "Return the text of the syntax table of the current buffer, for the ASCII characters."
+msgstr "今のバッファの構文表を, ASCII の文字について, 文章にして返す."
+
+#: lisp/help.scm
+msgctxt "function:describe-syntax"
+msgid ""
+"Describe the syntax specifications in the syntax table of the current buffer.\n"
+"The ASCII characters are listed in runs that have the same syntax."
+msgstr ""
+"今のバッファの構文表の指定を説明する.\n"
+"ASCII の文字を, 同じ構文が続く範囲ごとに並べる."
+
 #: lisp/howm.scm
 msgctxt "variable:howm-directory"
 msgid "Directory where memos are stored."
@@ -2206,6 +2374,75 @@ msgstr "メニューの, KEYWORD に合うメモを返す (%here% 用)"
 msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
 msgstr "メニューの, 今の日時を返す (%here% 用)"
+
+#: lisp/info.scm
+msgctxt "variable:Info-directory-list"
+msgid "List of directories to search for Info files."
+msgstr "Info のファイルを探すディレクトリのリスト."
+
+#: lisp/info.scm
+msgctxt "function:info--file"
+msgid "Return the file of MANUAL in `Info-directory-list', or #f."
+msgstr "`Info-directory-list' から, MANUAL のファイルを返す. 無ければ #f."
+
+#: lisp/info.scm
+msgctxt "function:info--read"
+msgid "Return the text of the Info FILE (decompressed, if it ends in .gz)."
+msgstr "Info のファイル FILE の文章を返す (.gz なら, 展開する)."
+
+#: lisp/info.scm
+msgctxt "function:info--show"
+msgid "Show MANUAL in the *info* buffer and return the buffer name."
+msgstr "MANUAL を *info* バッファに出して, バッファの名前を返す."
+
+#: lisp/info.scm
+msgctxt "function:info--manual-argument"
+msgid "Return the manual name in ARGS, or read one with PROMPT."
+msgstr "ARGS にあるマニュアルの名前を返す. 無ければ, PROMPT で読む."
+
+#: lisp/info.scm
+msgctxt "function:info"
+msgid ""
+"Enter Info, the documentation browser.\n"
+"Show the Info directory, the list of the manuals.  With a file name argument,\n"
+"show that manual."
+msgstr ""
+"Info (文書の閲覧)に入る.\n"
+"Info のディレクトリ (マニュアルの一覧)を出す. ファイル名の引数があれば, そのマニュアルを出す."
+
+#: lisp/info.scm
+msgctxt "function:info-other-window"
+msgid "Like `info' but show the manual in another window."
+msgstr "`info' と同じだが, マニュアルを別の窓に出す."
+
+#: lisp/info.scm
+msgctxt "function:info-display-manual"
+msgid "Display an Info buffer showing MANUAL, a manual name such as \"elisp\"."
+msgstr "MANUAL (\"elisp\" のようなマニュアルの名前)を出す Info のバッファを出す."
+
+#: lisp/info.scm
+msgctxt "function:info-emacs-manual"
+msgid "Display the Emacs manual in Info mode."
+msgstr "Emacs のマニュアルを, Info で出す."
+
+#: lisp/info.scm
+msgctxt "function:info--goto-index-entry"
+msgid "In the Emacs manual, go to the node of the index entry NAME."
+msgstr "Emacs のマニュアルの, 索引の項目 NAME の節へ移る."
+
+#: lisp/info.scm
+msgctxt "function:Info-goto-emacs-command-node"
+msgid "Go to the Info node in the Emacs manual for command COMMAND."
+msgstr "コマンド COMMAND の, Emacs のマニュアルの Info の節へ移る."
+
+#: lisp/info.scm
+msgctxt "function:Info-goto-emacs-key-command-node"
+msgid ""
+"Go to the node in the Emacs manual which describes the command bound to KEY.\n"
+"KEY is a string such as \"C-x C-f\"."
+msgstr ""
+"KEY に割り当てたコマンドを説明する, Emacs のマニュアルの節へ移る.\n"
+"KEY は \"C-x C-f\" のような文字列."
 
 #: lisp/isearch.scm
 msgctxt "variable:isearch-ring"
@@ -6902,3 +7139,131 @@ msgstr ""
 "点を窓の中の位置に動かす: 真ん中, 上, 下の順.\n"
 "数の引数 N があれば, 窓の N 行目の行頭へ動かす\n"
 "(負なら, 下から数える)."
+
+#: lisp/xref.scm
+msgctxt "variable:xref--back-stack"
+msgid "List of (BUFFER-NAME MARKER) to go back to, the latest first."
+msgstr "戻る先の (バッファの名前 マーカー)のリスト (新しいものが先)."
+
+#: lisp/xref.scm
+msgctxt "variable:xref--forward-stack"
+msgid "List of (BUFFER-NAME MARKER) to go forward to, the latest first."
+msgstr "進む先の (バッファの名前 マーカー)のリスト (新しいものが先)."
+
+#: lisp/xref.scm
+msgctxt "variable:xref-prompt-for-identifier"
+msgid "If non-nil, `xref-find-definitions' always reads the identifier in the minibuffer."
+msgstr "真なら, `xref-find-definitions' は, 必ず識別子をミニバッファで読む."
+
+#: lisp/xref.scm
+msgctxt "variable:xref-project-directory"
+msgid "The directory `xref-find-references' searches."
+msgstr "`xref-find-references' が探すディレクトリ."
+
+#: lisp/xref.scm
+msgctxt "function:xref--location"
+msgid "Return (BUFFER-NAME MARKER) for point."
+msgstr "点の (バッファの名前 マーカー)を返す."
+
+#: lisp/xref.scm
+msgctxt "function:xref--push-marker-stack"
+msgid "Remember the current location, for `xref-go-back'."
+msgstr "今の場所を, `xref-go-back' のために覚える."
+
+#: lisp/xref.scm
+msgctxt "function:xref--jump"
+msgid "Show the buffer of LOCATION in the selected window and put point at its marker."
+msgstr "LOCATION のバッファを, 選んでいる窓に出して, 点をそのマーカーに置く."
+
+#: lisp/xref.scm
+msgctxt "function:xref-go-back"
+msgid "Go back to the previous position in xref history."
+msgstr "xref の履歴の, 前の場所へ戻る."
+
+#: lisp/xref.scm
+msgctxt "function:xref-go-forward"
+msgid "Go to the point where we previously were, before `xref-go-back'."
+msgstr "`xref-go-back' の前にいた場所へ進む."
+
+#: lisp/xref.scm
+msgctxt "function:xref--identifier-at-point"
+msgid "Return the symbol at or next to point, or #f."
+msgstr "点の所か, 隣の記号を返す. 無ければ #f."
+
+#: lisp/xref.scm
+msgctxt "function:xref--read-identifier"
+msgid "Read an identifier with PROMPT; the default is the symbol at point."
+msgstr "識別子を PROMPT で読む. 既定は, 点の所の記号."
+
+#: lisp/xref.scm
+msgctxt "function:xref--identifier"
+msgid "Return the identifier ARGS name, the symbol at point, or one read with PROMPT."
+msgstr "ARGS が示す識別子か, 点の所の記号か, PROMPT で読んだものを返す."
+
+#: lisp/xref.scm
+msgctxt "function:xref--definition-regexp"
+msgid "Return a regexp (for `grep') that matches the line that defines NAME."
+msgstr "NAME を定義する行に合う正規表現 (`grep' 用)を返す."
+
+#: lisp/xref.scm
+msgctxt "function:xref--definition"
+msgid "Return (FILE LINE) of the definition of NAME, or #f."
+msgstr "NAME の定義の (ファイル 行)を返す. 無ければ #f."
+
+#: lisp/xref.scm
+msgctxt "function:xref--goto-definition"
+msgid "Go to the definition of NAME, in another window if OTHER-WINDOW."
+msgstr "NAME の定義へ移る. OTHER-WINDOW なら, 別の窓で."
+
+#: lisp/xref.scm
+msgctxt "function:xref-find-definitions"
+msgid ""
+"Find the definition of the identifier at point.\n"
+"With a prefix argument, or if there is no identifier at point, read it in the minibuffer."
+msgstr ""
+"点の所の識別子の定義を探す.\n"
+"前置引数があるか, 点の所に識別子が無ければ, ミニバッファで読む."
+
+#: lisp/xref.scm
+msgctxt "function:xref-find-definitions-other-window"
+msgid "Like `xref-find-definitions' but switch to the other window."
+msgstr "`xref-find-definitions' と同じだが, 別の窓に出す."
+
+#: lisp/xref.scm
+msgctxt "function:xref--project-files"
+msgid "Return the files below `xref-project-directory', not those in .git, target, or node_modules."
+msgstr "今のディレクトリの下のファイルを返す (.git, target, node_modules の中は除く)."
+
+#: lisp/xref.scm
+msgctxt "function:xref--show"
+msgid "Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name."
+msgstr "TITLE の下に LINES (文字列)を *xref* バッファに入れて, 別の窓に出す. バッファの名前を返す."
+
+#: lisp/xref.scm
+msgctxt "function:xref-find-references"
+msgid ""
+"Find references to the identifier at point.\n"
+"With a prefix argument, or if there is no identifier at point, read it in the minibuffer.\n"
+"The references are listed in the *xref* buffer as FILE:LINE:TEXT."
+msgstr ""
+"点の所の識別子の参照を探す.\n"
+"前置引数があるか, 点の所に識別子が無ければ, ミニバッファで読む.\n"
+"参照は, FILE:LINE:TEXT の形で *xref* バッファに並べる."
+
+#: lisp/xref.scm
+msgctxt "function:xref-find-apropos"
+msgid ""
+"Find all meaningful symbols that match PATTERN, a regexp.\n"
+"They are listed in the *xref* buffer as NAME (FILE)."
+msgstr ""
+"正規表現 PATTERN に合う, 意味のある記号を全て探す.\n"
+"*xref* バッファに, NAME (FILE) の形で並べる."
+
+#: lisp/xref.scm
+msgctxt "function:help-find-source"
+msgid ""
+"Switch to the source of the function whose description is shown in *Help*, in another window.\n"
+"Interactively, read the function name in the minibuffer."
+msgstr ""
+"*Help* に説明を出した関数のソースへ, 別の窓で移る.\n"
+"対話では, 関数の名前をミニバッファで聞く."

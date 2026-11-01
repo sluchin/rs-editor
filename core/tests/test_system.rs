@@ -728,6 +728,16 @@ fn test_buffer_operations() {
             "buffer-file-name expects 0 or 1 arguments",
         ),
         ("(kill-buffer 1)", "kill-buffer expects strings"),
+        ("(key-binding)", "key-binding expects 1 argument, given 0"),
+        ("(key-binding 1)", "key-binding expects strings"),
+        (
+            "(all-key-bindings 1)",
+            "all-key-bindings expects 0 arguments, given 1",
+        ),
+        (
+            "(recent-keys 1)",
+            "recent-keys expects 0 arguments, given 1",
+        ),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }

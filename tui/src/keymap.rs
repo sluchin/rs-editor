@@ -255,6 +255,34 @@ const DEFAULT: &[(&str, &str)] = &[
     ("M-X", "execute-extended-command-for-buffer"),
     ("C-x M-:", "repeat-complex-command"),
     ("C-h f", "describe-function"),
+    ("C-h v", "describe-variable"),
+    ("C-h x", "describe-command"),
+    ("C-h o", "describe-symbol"),
+    ("C-h k", "describe-key"),
+    ("C-h c", "describe-key-briefly"),
+    ("C-h w", "where-is"),
+    ("C-h b", "describe-bindings"),
+    ("C-h l", "view-lossage"),
+    ("C-h e", "view-echo-area-messages"),
+    ("C-h s", "describe-syntax"),
+    ("C-h ?", "help-for-help"),
+    ("C-h C-h", "help-for-help"),
+    ("C-h q", "help-quit"),
+    ("C-h C-q", "help-quick-toggle"),
+    ("C-h C-s", "search-forward-help-for-help"),
+    ("C-h 4 s", "help-find-source"),
+    ("C-h i", "info"),
+    ("C-h 4 i", "info-other-window"),
+    ("C-h R", "info-display-manual"),
+    ("C-h r", "info-emacs-manual"),
+    ("C-h F", "Info-goto-emacs-command-node"),
+    ("C-h K", "Info-goto-emacs-key-command-node"),
+    ("M-.", "xref-find-definitions"),
+    ("M-,", "xref-go-back"),
+    ("C-M-,", "xref-go-forward"),
+    ("M-?", "xref-find-references"),
+    ("C-M-.", "xref-find-apropos"),
+    ("C-x 4 .", "xref-find-definitions-other-window"),
 ];
 
 /// キーの割り当て.
@@ -297,6 +325,14 @@ impl Keymap {
             return Lookup::Prefix;
         }
         Lookup::Unbound
+    }
+
+    /// 全ての割り当て (キーの並びと, コマンド. 後で割り当てたもので置き換えたものは, 含めない).
+    pub fn bindings(&self) -> Vec<(String, String)> {
+        self.entries
+            .iter()
+            .map(|(keys, command)| (keys.join(" "), command.clone()))
+            .collect()
     }
 
     /// コマンドに割り当てたキー (Emacs の `where-is-internal`).

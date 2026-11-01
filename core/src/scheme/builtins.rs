@@ -142,6 +142,10 @@ pub const NAMES: &[&str] = &[
     // ヘルプ (ほかは help.rs)
     "where-is-internal",
     "editor-command-names",
+    // キーの割り当てと最近のキー (ターミナルのアプリが答える)
+    "key-binding",
+    "all-key-bindings",
+    "recent-keys",
 ];
 
 /// 組み込みの手続きを呼びます.
@@ -593,6 +597,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "message" => {
             let text = format(&args)?;
+            machine.evaluator.log_message(&text);
             machine.host.call(name, vec![Value::String(text.clone())])?;
             Ok(Value::String(text))
         }
@@ -829,6 +834,16 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 return Err("where-is-internal expects a symbol".to_string());
             };
             machine.host.call(name, vec![Value::String(command)])
+        }
+        "key-binding" => {
+            // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
+            let [keys] = fixed::<1>(name, args)?;
+            string(name, &keys)?;
+            machine.host.call(name, vec![keys])
+        }
+        "all-key-bindings" | "recent-keys" => {
+            fixed::<0>(name, args)?;
+            machine.host.call(name, vec![])
         }
         "editor-command-names" => {
             // 画面 (TypeScript) で書いたコマンドの名前

@@ -125,7 +125,13 @@ STEPS = [
       '`move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。'
       '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
     (11, 'ヘルプ, xref, info',
-     ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。']),
+     ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。'
+     '【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). '
+     '`emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). '
+     '`describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。'
+     '違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, '
+     '`info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。'
+     '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
     (12, '入れない',
      ['rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。']),
 ]

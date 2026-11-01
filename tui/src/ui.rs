@@ -10,7 +10,7 @@ use rseditor_core::editor::Editor;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
-use crate::keymap::Keymap;
+use crate::keymap::{Keymap, Lookup};
 use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
 
@@ -32,7 +32,12 @@ pub struct UiState {
     pub macro_loop: Vec<String>,
     /// 今のキーが, キーボードマクロから来たものか.
     pub executing_macro: bool,
+    /// 画面から読んだ最近のキー (古いものから. `view-lossage` に使う).
+    pub recent_keys: VecDeque<String>,
 }
+
+/// 覚えておく最近のキーの数 (Emacs の `recent-keys` と同じ).
+const RECENT_KEYS_MAX: usize = 300;
 
 impl UiState {
     /// 打ったことにするキーを 1 つ取ります (繰り返すマクロは, 尽きたら始めから).
@@ -62,7 +67,12 @@ pub fn next_key(state: &Mutex<UiState>) -> Option<(String, bool)> {
     if let Some(key) = state.pop_macro_key() {
         return Some((key, false));
     }
-    state.screen.read_key().map(|key| (key, true))
+    let key = state.screen.read_key()?;
+    state.recent_keys.push_back(key.clone());
+    if state.recent_keys.len() > RECENT_KEYS_MAX {
+        state.recent_keys.pop_front();
+    }
+    Some((key, true))
 }
 
 /// 入力の補完.
@@ -409,6 +419,40 @@ impl Host for UiHost {
                 let keys = self.keymap.lock().unwrap().keys_for(&text(&args, 0));
                 Ok(Value::List(keys.into_iter().map(Value::String).collect()))
             }
+            // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
+            "key-binding" => {
+                let keys: Vec<String> = text(&args, 0).split(' ').map(str::to_string).collect();
+                Ok(match self.keymap.lock().unwrap().lookup(&keys) {
+                    Lookup::Command(command) => Value::String(command),
+                    Lookup::Prefix => Value::Boolean(true),
+                    Lookup::Unbound => Value::Boolean(false),
+                })
+            }
+            // 全ての割り当て: (キー コマンド) のリスト
+            "all-key-bindings" => Ok(Value::List(
+                self.keymap
+                    .lock()
+                    .unwrap()
+                    .bindings()
+                    .into_iter()
+                    .map(|(keys, command)| {
+                        Value::List(
+                            vec![Value::String(keys), Value::String(command)]
+                                .into_iter()
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            )),
+            // 最近のキー (古いものから)
+            "recent-keys" => Ok(Value::List(
+                self.state()
+                    .recent_keys
+                    .iter()
+                    .cloned()
+                    .map(Value::String)
+                    .collect(),
+            )),
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
             "command" => Err(format!("Undefined command: {}", text(&args, 0))),
             // 色, 下線, 隠すこと: 端末では何もしない

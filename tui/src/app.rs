@@ -1,6 +1,6 @@
 //! ターミナルのエディタ: キーを受けて、コマンドを動かし、画面を描く.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use rseditor_core::editor::Editor;
@@ -35,6 +35,11 @@ const BUFF_MENU: &str = include_str!("../../lisp/buff-menu.scm");
 
 /// ディレクトリの一覧 (Lisp).
 const DIRED: &str = include_str!("../../lisp/dired.scm");
+
+/// ヘルプ, 定義へ移るコマンド, Info (Lisp. `simple.scm` と `isearch.scm` の後に読む).
+const HELP: &str = include_str!("../../lisp/help.scm");
+const XREF: &str = include_str!("../../lisp/xref.scm");
+const INFO: &str = include_str!("../../lisp/info.scm");
 
 /// ブックマーク (Lisp).
 const BOOKMARK: &str = include_str!("../../lisp/bookmark.scm");
@@ -81,6 +86,7 @@ impl App {
             macro_keys: Default::default(),
             macro_loop: Vec::new(),
             executing_macro: false,
+            recent_keys: VecDeque::new(),
         }));
         let ui = UiHost::new(state.clone(), editor.clone(), keymap.clone());
         let host = EditorHost::shared(editor, ui);
@@ -95,6 +101,9 @@ impl App {
         evaluator.eval_with(DABBREV, &host)?;
         evaluator.eval_with(BUFF_MENU, &host)?;
         evaluator.eval_with(DIRED, &host)?;
+        evaluator.eval_with(HELP, &host)?;
+        evaluator.eval_with(XREF, &host)?;
+        evaluator.eval_with(INFO, &host)?;
         evaluator.eval_with(BOOKMARK, &host)?;
         let app = App {
             host,

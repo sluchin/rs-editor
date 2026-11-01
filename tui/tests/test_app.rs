@@ -3,6 +3,8 @@
 mod common;
 use common::Fixture;
 
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::value::Value;
 #[test]
 fn test_typing_and_basic_movement() {
     let mut fx = Fixture::new();
@@ -917,4 +919,195 @@ fn test_scroll_other_window_and_move_to_window_line() {
     fx.press("C-x o");
     fx.press("M-<end> M-<home>");
     assert_eq!(fx.point(), 0);
+}
+
+/// *Help* バッファの本文.
+fn help_text(fx: &Fixture) -> String {
+    let host = fx.app.host();
+    let editor = host.editor();
+    editor.get_buffer("*Help*").unwrap().text()
+}
+
+#[test]
+fn test_help_keys() {
+    let mut fx = Fixture::new();
+    // C-h c: キーが走らせるコマンドを, メッセージに出す
+    fx.feed("C-h c C-f");
+    fx.app.run();
+    assert_eq!(
+        fx.app.message(),
+        "C-f runs the command forward-char (found in global-map)"
+    );
+    // 続きのあるキーは, 続けて読む. 割り当てが無ければ, 未定義
+    fx.feed("C-h c C-x C-f");
+    fx.app.run();
+    assert_eq!(
+        fx.app.message(),
+        "C-x C-f runs the command find-file (found in global-map)"
+    );
+    fx.feed("C-h c C-M-z");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "C-M-z is undefined");
+    // C-h k: *Help* に説明を出す
+    fx.feed("C-h k C-x C-f");
+    fx.app.run();
+    assert!(help_text(&fx).starts_with("C-x C-f runs the command find-file"));
+    // C-h w: コマンドのキー
+    fx.feed("C-h w f i n d - f i l e RET");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "find-file is on C-x C-f");
+    // C-h v, C-h x, C-h o: 変数, コマンド, 記号
+    fx.feed("C-h v x r e f - p r o j e c t - d i r e c t o r y RET");
+    fx.app.run();
+    assert!(help_text(&fx).contains("Its value is \".\"."));
+    fx.feed("C-h x f i n d - f i l e RET");
+    fx.app.run();
+    assert!(help_text(&fx).starts_with("find-file is an interactive Lisp function"));
+    fx.feed("C-h o x r e f - g o - b a c k RET");
+    fx.app.run();
+    assert!(help_text(&fx).starts_with("xref-go-back is"));
+    // C-h b: 全ての割り当て. C-h l: 最近のキー. C-h e: メッセージの記録
+    fx.feed("C-h b");
+    fx.app.run();
+    assert!(help_text(&fx).contains("C-x C-f                 find-file\n"));
+    fx.feed("C-h l");
+    fx.app.run();
+    assert!(help_text(&fx).contains("C-h l"));
+    fx.feed("C-h e");
+    fx.app.run();
+    let messages = fx
+        .app
+        .host()
+        .editor()
+        .get_buffer("*Messages*")
+        .unwrap()
+        .text();
+    assert!(messages.contains("find-file is on C-x C-f"));
+    // C-h ?, C-h s, C-h q
+    fx.feed("C-h ?");
+    fx.app.run();
+    assert!(help_text(&fx).starts_with("You have typed C-h"));
+    fx.feed("C-h s");
+    fx.app.run();
+    assert!(help_text(&fx).starts_with("The syntax table"));
+    fx.feed("C-h q");
+    fx.app.run();
+}
+
+#[test]
+fn test_help_host_operations() {
+    let mut fx = Fixture::new();
+    let host = fx.app.host();
+    let string = |s: &str| Value::String(s.to_string());
+    assert_eq!(
+        host.call("key-binding", vec![string("C-x C-f")])
+            .unwrap()
+            .to_string(),
+        "\"find-file\""
+    );
+    assert_eq!(
+        host.call("key-binding", vec![string("C-x")])
+            .unwrap()
+            .to_string(),
+        "#t"
+    );
+    assert_eq!(
+        host.call("key-binding", vec![string("C-M-z")])
+            .unwrap()
+            .to_string(),
+        "#f"
+    );
+    let bindings = host.call("all-key-bindings", vec![]).unwrap().to_string();
+    assert!(bindings.contains("(\"C-x C-f\" \"find-file\")"));
+    // 最近のキー: 画面から読んだもの (300 まで)
+    assert_eq!(host.call("recent-keys", vec![]).unwrap().to_string(), "()");
+    fx.feed("a b");
+    fx.app.run();
+    assert_eq!(
+        fx.app
+            .host()
+            .call("recent-keys", vec![])
+            .unwrap()
+            .to_string(),
+        "(\"a\" \"b\")"
+    );
+    fx.feed(&"a ".repeat(305));
+    fx.app.run();
+    let recent = fx.app.host().call("recent-keys", vec![]).unwrap();
+    let Value::List(keys) = recent else {
+        panic!("a list")
+    };
+    assert_eq!(keys.len(), 300);
+}
+
+#[test]
+fn test_xref_keys() {
+    let mut fx = Fixture::new();
+    let dir = tempfile::tempdir().unwrap();
+    let defs = dir.path().join("defs.scm");
+    std::fs::write(&defs, "(define (tui-sample-fn x)\n  x)\n").unwrap();
+    fx.app
+        .eval(&format!("(load \"{}\")", defs.to_str().unwrap()))
+        .unwrap();
+    // M-.: 点の所の名前の定義へ. M-,: 戻る. C-M-,: また進む
+    fx.press("t u i - s a m p l e - f n");
+    fx.press("M-.");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "defs.scm");
+    fx.press("M-,");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "*scratch*");
+    fx.press("C-M-,");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "defs.scm");
+    // C-x 4 .: 別の窓に出す
+    fx.press("M-, C-x 4 .");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+    // M-?: 参照 (探すディレクトリの下に, 無い名前)
+    fx.app
+        .eval(&format!(
+            "(set! xref-project-directory \"{}\")",
+            dir.path().to_str().unwrap()
+        ))
+        .unwrap();
+    fx.app.eval("(set! xref-prompt-for-identifier #t)").unwrap();
+    fx.feed("q q q - n o RET");
+    fx.press("C-x 1 M-?");
+    assert_eq!(fx.app.message(), "No references found for: qqq-no");
+    // C-M-.: 名前の正規表現に合う定義
+    fx.feed("^ t u i - s a m p RET");
+    fx.press("C-M-.");
+    let listed = fx.app.host().editor().get_buffer("*xref*").unwrap().text();
+    assert!(listed.contains("tui-sample-fn"));
+}
+
+#[test]
+fn test_info_keys() {
+    let mut fx = Fixture::new();
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().to_str().unwrap().to_string();
+    std::fs::write(format!("{path}/dir"), "Info directory\n").unwrap();
+    std::fs::write(format!("{path}/emacs.info"), "x\n").unwrap();
+    std::fs::write(format!("{path}/m.info"), "manual m\n").unwrap();
+    fx.app
+        .eval(&format!("(set! Info-directory-list (list \"{path}\"))"))
+        .unwrap();
+    fx.press("C-h i");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "*info*");
+    fx.press("C-h 4 i");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+    fx.press("C-x 1 C-h r");
+    assert_eq!(fx.app.host().editor().current_buffer().text(), "x\n");
+    fx.feed("m RET");
+    fx.press("C-h R");
+    assert_eq!(fx.app.host().editor().current_buffer().text(), "manual m\n");
+    fx.feed("f i n d - f i l e RET");
+    fx.press("C-h F");
+    assert_eq!(
+        fx.app.message(),
+        "Couldn't find documentation for find-file"
+    );
+    fx.feed("C-f");
+    fx.press("C-h K");
+    assert_eq!(
+        fx.app.message(),
+        "Couldn't find documentation for forward-char"
+    );
 }

@@ -15,6 +15,9 @@ pub const NAMES: &[&str] = &[
     "help-function-arglist",
     "commandp",
     "fboundp",
+    "boundp",
+    "symbol-value",
+    "message-log",
     "symbol-file",
     "mapatoms",
 ];
@@ -179,6 +182,35 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 Some(Value::Lambda(_) | Value::Function(_))
             )))
         }
+        "boundp" => {
+            // 一番外側の環境に, 名前があるか (手続きも含む)
+            let [symbol] = fixed::<1>(name, args)?;
+            let Value::Symbol(symbol) = symbol else {
+                return Err("boundp expects a symbol".to_string());
+            };
+            Ok(Value::Boolean(
+                machine.evaluator.global().get(&symbol).is_some(),
+            ))
+        }
+        "symbol-value" => {
+            let [symbol] = fixed::<1>(name, args)?;
+            let Value::Symbol(symbol) = symbol else {
+                return Err("symbol-value expects a symbol".to_string());
+            };
+            machine
+                .evaluator
+                .global()
+                .get(&symbol)
+                .ok_or_else(|| format!("Symbol's value as variable is void: {symbol}"))
+        }
+        "message-log" => Ok(Value::List(
+            machine
+                .evaluator
+                .message_log()
+                .into_iter()
+                .map(Value::String)
+                .collect(),
+        )),
         "symbol-file" => {
             // 定義を読んだファイル. 分からなければ #f
             let symbol = match args.as_slice() {

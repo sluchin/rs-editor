@@ -724,6 +724,24 @@ fn test_documentation() {
 }
 
 #[test]
+fn test_boundp_and_symbol_value() {
+    // 手続きも, 変数も, 名前があれば boundp. 値は symbol-value
+    assert_eq!(
+        eval("(define v 3) (list (boundp 'v) (boundp 'car) (boundp 'nothing) (symbol-value 'v))"),
+        "v\n(#t #t #f 3)"
+    );
+    assert_eq!(
+        eval_err("(symbol-value 'nothing)"),
+        "Symbol's value as variable is void: nothing"
+    );
+    assert_eq!(eval_err("(boundp 1)"), "boundp expects a symbol");
+    assert_eq!(
+        eval_err("(symbol-value 1)"),
+        "symbol-value expects a symbol"
+    );
+}
+
+#[test]
 fn test_string_escapes() {
     let ev = Evaluator::new();
     assert_eq!(
