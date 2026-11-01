@@ -234,3 +234,42 @@ fn test_generate_new_buffer_name_and_rename() {
         "Empty string is invalid as a buffer name"
     );
 }
+
+#[test]
+fn test_split_root_balance_and_resize_windows() {
+    let mut editor = Editor::new();
+    editor.set_screen_size(25, 80);
+    // 画面の全体を分ける. 新しいウィンドウは, 選んでいるウィンドウと同じバッファを出す
+    editor.split_window(Direction::Right);
+    let root = editor.split_root_window(Direction::Below);
+    assert_eq!(root, 3);
+    assert_eq!(editor.window_list(), vec![1, 2, 3]);
+    assert_eq!(editor.selected_window(), 1);
+    assert_eq!(editor.window_buffer(3), Some(SCRATCH));
+    // 大きさは, 行と桁で数える (画面の最後の 1 行は, ミニバッファ)
+    assert_eq!(editor.window_total_height(1), Some(12));
+    assert_eq!(editor.window_total_height(3), Some(12));
+    assert_eq!(editor.window_total_width(1), Some(40));
+    assert_eq!(editor.window_total_width(3), Some(80));
+    assert_eq!(editor.window_total_height(9), None);
+    assert_eq!(editor.window_total_width(9), None);
+    editor.resize_window(1, 4, false).unwrap();
+    assert_eq!(editor.window_total_height(1), Some(16));
+    assert_eq!(editor.window_total_height(3), Some(8));
+    editor.resize_window(2, -10, true).unwrap();
+    assert_eq!(editor.window_total_width(2), Some(30));
+    assert_eq!(editor.window_total_width(1), Some(50));
+    editor.balance_windows();
+    assert_eq!(editor.window_total_width(1), Some(40));
+    assert_eq!(editor.window_total_height(1), Some(12));
+    assert_eq!(
+        editor.resize_window(9, 1, false).unwrap_err(),
+        "No such window: 9"
+    );
+    // その向きに分けていないウィンドウは, 変えられない
+    editor.delete_window(2).unwrap();
+    assert_eq!(
+        editor.resize_window(1, 1, true).unwrap_err(),
+        "Cannot resize window 1"
+    );
+}

@@ -489,16 +489,40 @@ impl<U: Host> EditorHost<U> {
                     .map(|w| Value::Number(w as f64))
                     .collect(),
             ),
-            "split-window" => {
+            "split-window" | "split-root-window" => {
                 let direction = match args.first() {
                     Some(v) if v.is_non_nil() => match name(op, args, 0)? {
                         "below" | "below-sides" => Direction::Below,
                         "right" | "right-sides" => Direction::Right,
-                        other => return Err(format!("split-window: unknown direction {other}")),
+                        other => return Err(format!("{op}: unknown direction {other}")),
                     },
                     _ => Direction::Below,
                 };
-                Value::Number(ed.split_window(direction) as f64)
+                let new = if op == "split-window" {
+                    ed.split_window(direction)
+                } else {
+                    ed.split_root_window(direction)
+                };
+                Value::Number(new as f64)
+            }
+            "window-balance" => {
+                ed.balance_windows();
+                Value::Nil
+            }
+            "window-resize" => {
+                let w = window(ed, op, args, 0)?;
+                let horizontal = args.get(2).is_some_and(Value::is_non_nil);
+                ed.resize_window(w, int(op, args, 1)?, horizontal)?;
+                Value::Nil
+            }
+            "window-total-height" | "window-total-width" => {
+                let w = window(ed, op, args, 0)?;
+                let size = if op == "window-total-height" {
+                    ed.window_total_height(w)
+                } else {
+                    ed.window_total_width(w)
+                };
+                Value::Number(size.ok_or_else(|| format!("No such window: {w}"))? as f64)
             }
             "delete-window" => {
                 let w = window(ed, op, args, 0)?;

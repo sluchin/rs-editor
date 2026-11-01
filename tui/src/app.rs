@@ -139,9 +139,10 @@ impl App {
 
     /// 画面を描きます.
     pub fn draw(&self) {
-        let editor = self.host.editor();
+        let mut editor = self.host.editor();
         let mut state = self.state.lock().unwrap();
         let (rows, cols) = state.screen.size();
+        editor.set_screen_size(rows, cols);
         let message = state.message.clone();
         let display = state.display;
         let frame = render_with(

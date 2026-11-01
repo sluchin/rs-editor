@@ -712,11 +712,11 @@ fn test_buffer_operations() {
             "completing-read: not a candidate: 1",
         ),
         (
-            "(display-buffer)",
+            "(window--display-buffer)",
             "display-buffer expects 1 or 2 arguments",
         ),
         (
-            "(display-buffer \"b\" \"x\")",
+            "(window--display-buffer \"b\" \"x\")",
             "display-buffer expects numbers",
         ),
         (

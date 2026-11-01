@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use crate::buffer::Buffer;
 use crate::kbd_macro::KbdMacro;
 use crate::kill_ring::KillRing;
-use crate::window::{Direction, Layout};
+use crate::window::{Direction, Layout, FULL};
 
 /// 前置引数 (Emacs の `current-prefix-arg`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,6 +46,8 @@ pub struct Editor {
     selected: usize,
     /// 次に作るウィンドウの番号.
     next_window: usize,
+    /// 画面の大きさ (行, 桁). 窓の大きさの計算に使う.
+    screen: (usize, usize),
     /// kill-ring.
     pub kill_ring: KillRing,
     /// キーボードマクロ.
@@ -91,6 +93,7 @@ impl Editor {
             window_buffers: BTreeMap::from([(1, SCRATCH.to_string())]),
             selected: 1,
             next_window: 2,
+            screen: (24, 80),
             kill_ring: KillRing::new(),
             kbd_macro: KbdMacro::default(),
             prefix_arg: None,
@@ -387,6 +390,85 @@ impl Editor {
         self.window_buffers = BTreeMap::from([(self.selected, shown)]);
     }
 
+    /// 画面の大きさ (行, 桁) を知らせます. 窓の大きさを, 行と桁で数えるのに使う.
+    pub fn set_screen_size(&mut self, rows: usize, cols: usize) {
+        self.screen = (rows, cols);
+    }
+
+    /// ウィンドウの全体の高さ (行. モードラインを含む. 画面の最後の 1 行は, ミニバッファ).
+    pub fn window_total_height(&self, window: usize) -> Option<usize> {
+        let rows = self.screen.0.saturating_sub(1);
+        self.layout
+            .rects(FULL)
+            .into_iter()
+            .find(|r| r.id == window)
+            .map(|r| to_cells(r.top + r.height, rows) - to_cells(r.top, rows))
+    }
+
+    /// ウィンドウの全体の幅 (桁).
+    pub fn window_total_width(&self, window: usize) -> Option<usize> {
+        let cols = self.screen.1;
+        self.layout
+            .rects(FULL)
+            .into_iter()
+            .find(|r| r.id == window)
+            .map(|r| to_cells(r.left + r.width, cols) - to_cells(r.left, cols))
+    }
+
+    /// 画面の全体を 2 つに分けます (Emacs の `split-root-window`). 新しいウィンドウは, 下か右で, 選んでいるウィンドウと同じバッファを出す.
+    /// 選んでいるウィンドウは変わらない.
+    ///
+    /// # Returns
+    ///
+    /// 新しいウィンドウ.
+    pub fn split_root_window(&mut self, direction: Direction) -> usize {
+        let new = self.next_window;
+        self.next_window += 1;
+        let layout = std::mem::replace(&mut self.layout, Layout::Window(0));
+        self.layout = layout.split_root(new, direction);
+        let shown = self.window_buffers[&self.selected].clone();
+        self.window_buffers.insert(new, shown);
+        new
+    }
+
+    /// 全てのウィンドウを同じ大きさにします (Emacs の `balance-windows`).
+    pub fn balance_windows(&mut self) {
+        self.layout.balance();
+    }
+
+    /// ウィンドウの大きさを変えます (Emacs の `enlarge-window`. 負の数なら小さくする).
+    ///
+    /// # Arguments
+    ///
+    /// * `window` - 大きさを変えるウィンドウ.
+    /// * `delta` - 変える行数 (`horizontal` なら桁数).
+    /// * `horizontal` - 幅を変えるか.
+    ///
+    /// # Errors
+    ///
+    /// ウィンドウが無いとき, またはその向きに変えられないとき.
+    pub fn resize_window(
+        &mut self,
+        window: usize,
+        delta: i64,
+        horizontal: bool,
+    ) -> Result<(), String> {
+        if !self.window_buffers.contains_key(&window) {
+            return Err(format!("No such window: {window}"));
+        }
+        let (direction, total) = if horizontal {
+            (Direction::Right, self.screen.1)
+        } else {
+            (Direction::Below, self.screen.0.saturating_sub(1))
+        };
+        let percent = delta as f64 * 100.0 / total.max(1) as f64;
+        if self.layout.resize(window, direction, percent, FULL) {
+            Ok(())
+        } else {
+            Err(format!("Cannot resize window {window}"))
+        }
+    }
+
     /// 今のウィンドウの設定を覚えます (Emacs の `current-window-configuration`).
     ///
     /// # Returns
@@ -442,4 +524,9 @@ impl Editor {
         // 分け方にあるウィンドウは, 必ず出している
         let _ = self.select_window(next);
     }
+}
+
+/// 窓の枠の位置 (割合 %) を、画面のマスにします.
+fn to_cells(percent: f64, total: usize) -> usize {
+    (percent / 100.0 * total as f64).round() as usize
 }

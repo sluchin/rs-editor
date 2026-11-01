@@ -5911,3 +5911,191 @@ msgid ""
 "Interactively, read the name in the minibuffer with completion;\n"
 "the default is another buffer."
 msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--other-window-for-scrolling"
+msgid "Return the window after the selected one, the one the scrolling commands act on."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--call-in-window"
+msgid "Call THUNK with WINDOW selected, then select the window that was selected before."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--pop-to-buffer-other-window"
+msgid "Show buffer NAME in another window (splitting if there is only one) and select that window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--default-buffer-name"
+msgid "Return the buffer name in ARGS, or read one (default: another buffer) with PROMPT."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:switch-to-buffer-other-window"
+msgid ""
+"Select the buffer BUFFER-OR-NAME in another window.\n"
+"If there is only one window, split it.  If there is no buffer named BUFFER-OR-NAME, create one."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:display-buffer"
+msgid ""
+"Show buffer BUFFER-OR-NAME in some window, without selecting it.\n"
+"If there is only one window, split it.  Interactively, read the name in the minibuffer."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--buffer-names"
+msgid "Return the names of the buffers that `next-buffer' and `previous-buffer' may show."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:next-buffer"
+msgid ""
+"In the selected window, switch to the next buffer in the buffer list.\n"
+"With a numeric prefix argument N, switch N buffers forward."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:previous-buffer"
+msgid ""
+"In the selected window, switch to the previous buffer in the buffer list.\n"
+"With a numeric prefix argument N, switch N buffers back."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:delete-windows-on"
+msgid ""
+"Delete all windows showing the buffer BUFFER-OR-NAME (default: the current buffer).\n"
+"If it is the only window, show another buffer in it instead."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--show-buffer"
+msgid "Show buffer NAME in WINDOW; if WINDOW is the selected one, make the buffer current too."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:kill-buffer-and-window"
+msgid "Kill the current buffer and delete the selected window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:quit-window"
+msgid ""
+"Quit the selected window and bury its buffer.\n"
+"If there are other windows, delete the window; otherwise show another buffer in it.\n"
+"With a prefix argument, kill the buffer instead of burying it."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:scroll-other-window"
+msgid ""
+"Scroll next window upward ARG lines; or near full screen if no ARG.\n"
+"A negative ARG scrolls downward, and `-' means a screenful downward."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:scroll-other-window-down"
+msgid "Scroll the next window downward ARG lines; or near full screen if no ARG."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:beginning-of-buffer-other-window"
+msgid ""
+"Move point to the beginning of the buffer in the next window.\n"
+"With numeric argument N, put point N/10 of the way from the beginning."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:end-of-buffer-other-window"
+msgid ""
+"Move point to the end of the buffer in the next window.\n"
+"With numeric argument N, put point N/10 of the way from the end."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:recenter-other-window"
+msgid "Call `recenter-top-bottom' in the next window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "variable:window-min-height"
+msgid "The minimum total height, in lines, of any window (the mode line included)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:split-root-window-below"
+msgid "Split the whole screen into two windows, one above the other; the new one is at the bottom."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:split-root-window-right"
+msgid "Split the whole screen into two windows side by side; the new one is at the right."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:balance-windows"
+msgid "Make all windows the same height and width."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:enlarge-window"
+msgid ""
+"Make the selected window ARG lines taller (negative: shorter).\n"
+"Take the lines from the neighbouring window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:shrink-window"
+msgid "Make the selected window ARG lines shorter (negative: taller)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:enlarge-window-horizontally"
+msgid "Make the selected window ARG columns wider (negative: narrower)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:shrink-window-horizontally"
+msgid "Make the selected window ARG columns narrower (negative: wider)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--buffer-lines"
+msgid "Return the number of lines of text in the current buffer."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--fit-height"
+msgid "Return the total height, in lines, that shows all the text of the current buffer."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:shrink-window-if-larger-than-buffer"
+msgid ""
+"Shrink the selected window if it is taller than its buffer's text.\n"
+"Do nothing if there is only one window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:fit-window-to-buffer"
+msgid ""
+"Adjust the height of the selected window to show all the text of its buffer.\n"
+"Do nothing if there is only one window."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "variable:window--line-position"
+msgid "Where `move-to-window-line-top-bottom' put point last: 0 middle, 1 top, 2 bottom."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:move-to-window-line-top-bottom"
+msgid ""
+"Position point relative to the window: the middle, then the top, then the bottom.\n"
+"With a numeric argument N, put point at the beginning of line N of the window\n"
+"(negative: counted from the bottom)."
+msgstr ""

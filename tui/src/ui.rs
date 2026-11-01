@@ -106,9 +106,10 @@ impl UiHost {
 
     /// 画面を描きます. 入力を読んでいるときは、ミニバッファを出す.
     fn draw(&self, minibuffer: Option<&Minibuffer>) {
-        let editor = self.editor.lock().unwrap();
+        let mut editor = self.editor.lock().unwrap();
         let mut state = self.state();
         let (rows, cols) = state.screen.size();
+        editor.set_screen_size(rows, cols);
         let message = state.message.clone();
         let display = state.display;
         let frame = render_with(
@@ -362,14 +363,30 @@ impl Host for UiHost {
             "window-body-height" => {
                 let editor = self.editor.lock().unwrap();
                 let state = self.state();
-                let rows = state.screen.size().0.saturating_sub(1);
-                let height = editor
-                    .layout()
-                    .rects(rseditor_core::window::FULL)
-                    .into_iter()
-                    .find(|r| r.id == editor.selected_window())
-                    .map_or(rows, |r| (r.height / 100.0 * rows as f64).round() as usize);
-                Ok(Value::Number(height.saturating_sub(1) as f64))
+                Ok(Value::Number(body_height(&editor, &state) as f64))
+            }
+            "move-to-window-line" => {
+                let mut editor = self.editor.lock().unwrap();
+                let state = self.state();
+                let height = body_height(&editor, &state);
+                let top = state
+                    .tops
+                    .get(&editor.selected_window())
+                    .copied()
+                    .unwrap_or(0);
+                // 行の番号は, 窓の一番上の行から. 負の数は一番下の行から数える
+                let row = match args.first() {
+                    Some(Value::Number(n)) if *n >= 0.0 => *n as usize,
+                    Some(Value::Number(n)) => height.saturating_sub((-n) as usize),
+                    _ => height / 2,
+                }
+                .min(height.saturating_sub(1));
+                let buffer = editor.current_buffer_mut();
+                let last = buffer.line_count().saturating_sub(1);
+                let line = (top + row).min(last);
+                let current = buffer.line_of_position(buffer.point());
+                buffer.forward_line(line as i64 - current as i64);
+                Ok(Value::Number((line - top.min(line)) as f64))
             }
             "recenter" => {
                 let editor = self.editor.lock().unwrap();
@@ -406,4 +423,16 @@ impl Host for UiHost {
             other => Err(format!("The terminal does not support {other}")),
         }
     }
+}
+
+/// 選んでいる窓の, 本文の行の数 (モードラインは含まない).
+fn body_height(editor: &Editor, state: &UiState) -> usize {
+    let rows = state.screen.size().0.saturating_sub(1);
+    let height = editor
+        .layout()
+        .rects(rseditor_core::window::FULL)
+        .into_iter()
+        .find(|r| r.id == editor.selected_window())
+        .map_or(rows, |r| (r.height / 100.0 * rows as f64).round() as usize);
+    height.saturating_sub(1)
 }

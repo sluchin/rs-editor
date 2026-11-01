@@ -113,7 +113,17 @@ STEPS = [
       '`find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。'
       '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
     (10, 'ウィンドウ',
-     ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。']),
+     ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。'
+      '【Lisp 版とターミナルのアプリは済 (`lisp/window.scm`, `lisp/simple.scm`, `core/src/window.rs`, `tui/`). '
+      'バッチの Emacs には窓が 1 つしか無いので, `emacs -Q --batch` との比べは無く, Rust のテストで試す (`core/tests/test_window_commands.rs`, `core/tests/test_window.rs`, `core/tests/test_editor.rs`, `tui/tests/test_app.rs`). '
+      '窓の木に分ける割合を持たせ (`enlarge-window`, `shrink-window`, `balance-windows`, `fit-window-to-buffer` などが変える), 画面の大きさを核に知らせて (`Editor::set_screen_size`), 窓の大きさを行と桁で数える。'
+      '違いが残るのは, 窓ごとの点 (`window-point`) と先頭の行 (`window-start`) が無く, 点はバッファごとなので, 同じバッファを出した窓では `scroll-other-window` が選んだ窓の点も動かすこと, '
+      '`next-buffer` と `previous-buffer` が, 窓ごとの前のバッファの履歴ではなく, バッファの一覧の順に替えること, `quit-window` と `delete-windows-on` がバッファを後ろに回さないこと (`bury-buffer` が無い), '
+      '大きさを変えるときに, 隣の窓の最小の高さを守らず, 割合を 5% から 95% に収めるだけなこと, `fit-window-to-buffer` が高さだけを合わせること (幅, `fit-window-to-buffer-horizontally`, 最大の高さの変数が無い), '
+      '`enlarge-window` が行の数で言った量にぴったり合わないことがある (割合から丸めるため) こと, '
+      '`same-window-prefix`, `other-window-prefix`, `toggle-window-dedicated`, `window-toggle-side-windows` (窓を固定する, 横の窓) が無いこと, '
+      '`move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。'
+      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
     (11, 'ヘルプ, xref, info',
      ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。']),
     (12, '入れない',

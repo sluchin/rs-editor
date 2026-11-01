@@ -847,3 +847,74 @@ fn test_shell_and_read_only_keys() {
         .buffer_list()
         .contains(&"new".to_string()));
 }
+
+#[test]
+fn test_window_keys() {
+    let mut fx = Fixture::new();
+    // C-x 4 b: 別の窓に出す (窓が 1 つなら分ける)
+    fx.feed("C-x 4 b o t h e r RET");
+    fx.app.run();
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "other");
+    // C-x 4 0: バッファを消して, 窓も消す
+    fx.press("C-x 4 0");
+    assert_eq!(fx.app.host().editor().window_list().len(), 1);
+    assert!(fx.app.host().editor().get_buffer("other").is_none());
+    // C-x w 2, C-x w 3: 画面の全体を分ける
+    fx.press("C-x w 2 C-x w 3");
+    assert_eq!(fx.app.host().editor().window_list().len(), 3);
+    // C-x ^ と C-x }: 窓を大きくする. C-x +: 同じ大きさにする
+    fx.app.draw();
+    let before = fx.app.host().editor().window_total_height(1).unwrap();
+    fx.press("C-x ^");
+    let after = fx.app.host().editor().window_total_height(1).unwrap();
+    assert_eq!(after, before + 1);
+    fx.press("C-x } C-x { C-x +");
+    // C-x w 0: バッファ (既定は今のもの) を出している窓を消す
+    fx.feed("RET");
+    fx.press("C-x w 0");
+    assert_eq!(fx.app.host().editor().window_list().len(), 1);
+    fx.press("C-x 2 C-x w -");
+    let selected = fx.app.host().editor().selected_window();
+    assert_eq!(
+        fx.app.host().editor().window_total_height(selected),
+        Some(4)
+    );
+    // C-x w q: 窓を 1 つ消す
+    fx.press("C-x 2 C-x -");
+    fx.press("C-x w q");
+    assert_eq!(fx.app.host().editor().window_list().len(), 2);
+}
+
+#[test]
+fn test_scroll_other_window_and_move_to_window_line() {
+    let mut fx = Fixture::new();
+    fx.app
+        .eval("(let loop ((i 0)) (if (< i 40) (begin (insert (format \"l%d\\n\" i)) (loop (+ i 1)))))")
+        .unwrap();
+    fx.press("M-<");
+    // M-r: 真ん中, 上, 下の順
+    fx.press("M-r");
+    assert_eq!(fx.point(), 15);
+    fx.press("M-r");
+    assert_eq!(fx.point(), 0);
+    fx.press("M-r");
+    assert_eq!(fx.point(), 27);
+    fx.press("M-r");
+    assert_eq!(fx.point(), 15);
+    // 数を付けると, その行 (負なら, 下から)
+    assert_eq!(fx.app.eval("(move-to-window-line 3)").unwrap(), "3");
+    assert_eq!(fx.point(), 9);
+    assert_eq!(fx.app.eval("(move-to-window-line -2)").unwrap(), "8");
+    assert_eq!(fx.point(), 24);
+    // 窓の外の行は, 窓の中に収める
+    assert_eq!(fx.app.eval("(move-to-window-line 99)").unwrap(), "9");
+    // C-M-v: 次の窓を進める
+    fx.press("M-< C-x 2 C-M-v");
+    // 窓の点は, バッファごと (窓ごとではない)
+    assert_eq!(fx.point(), 9);
+    fx.press("C-x o M-<");
+    fx.press("C-x o");
+    fx.press("M-<end> M-<home>");
+    assert_eq!(fx.point(), 0);
+}

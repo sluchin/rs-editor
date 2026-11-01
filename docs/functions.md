@@ -284,7 +284,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 7 | 検索, 置換, 強調 | 6 | - | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 5 | - | 5 |
-| 10 | ウィンドウ | 33 | 25 | 8 |
+| 10 | ウィンドウ | 12 | 4 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
 | 12 | 入れない | 23 | 23 | - |
 
@@ -341,7 +341,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **10. ウィンドウ**
 
-- 窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。
+- 窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。【Lisp 版とターミナルのアプリは済 (`lisp/window.scm`, `lisp/simple.scm`, `core/src/window.rs`, `tui/`). バッチの Emacs には窓が 1 つしか無いので, `emacs -Q --batch` との比べは無く, Rust のテストで試す (`core/tests/test_window_commands.rs`, `core/tests/test_window.rs`, `core/tests/test_editor.rs`, `tui/tests/test_app.rs`). 窓の木に分ける割合を持たせ (`enlarge-window`, `shrink-window`, `balance-windows`, `fit-window-to-buffer` などが変える), 画面の大きさを核に知らせて (`Editor::set_screen_size`), 窓の大きさを行と桁で数える。違いが残るのは, 窓ごとの点 (`window-point`) と先頭の行 (`window-start`) が無く, 点はバッファごとなので, 同じバッファを出した窓では `scroll-other-window` が選んだ窓の点も動かすこと, `next-buffer` と `previous-buffer` が, 窓ごとの前のバッファの履歴ではなく, バッファの一覧の順に替えること, `quit-window` と `delete-windows-on` がバッファを後ろに回さないこと (`bury-buffer` が無い), 大きさを変えるときに, 隣の窓の最小の高さを守らず, 割合を 5% から 95% に収めるだけなこと, `fit-window-to-buffer` が高さだけを合わせること (幅, `fit-window-to-buffer-horizontally`, 最大の高さの変数が無い), `enlarge-window` が行の数で言った量にぴったり合わないことがある (割合から丸めるため) こと, `same-window-prefix`, `other-window-prefix`, `toggle-window-dedicated`, `window-toggle-side-windows` (窓を固定する, 横の窓) が無いこと, `move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
 
 **11. ヘルプ, xref, info**
 
@@ -351,7 +351,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 188 個: Lisp 105 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 209 個: Lisp 126 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -440,41 +440,41 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `save-buffers-kill-terminal` |  | files | `C-x C-c` | 実装済み | `C-x C-c` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 9 |
 | `save-some-buffers` | ◯ | files | `C-x s` | 実装済み | `C-x s` | Lisp (`lisp/files.scm`) | 済 |
 | `write-file` | ◯ | files | `C-x C-w` | 実装済み | `C-x C-w` | Lisp (`lisp/files.scm`) | 済 |
-| `balance-windows` |  | window | `C-x +` |  |  |  | 10 |
-| `beginning-of-buffer-other-window` |  | window | `M-<home>`, `M-<begin>`, `ESC <home>`, `ESC <begin>` |  |  |  | 10 |
+| `balance-windows` |  | window | `C-x +` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `beginning-of-buffer-other-window` |  | window | `M-<home>`, `M-<begin>`, `ESC <home>`, `ESC <begin>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `delete-other-windows` | ◯ | window | `C-x 1` | 実装済み | `C-x 1` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
 | `delete-window` | ◯ | window | `C-x 0` | 実装済み | `C-x 0` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
-| `delete-windows-on` |  | window | `C-x w 0` |  |  |  | 10 |
-| `display-buffer` |  | window | `C-x 4 C-o` |  |  |  | 10 |
+| `delete-windows-on` |  | window | `C-x w 0` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `display-buffer` |  | window | `C-x 4 C-o` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `display-buffer-other-frame` |  | window | `C-x 5 C-o` |  |  |  | 12 |
-| `end-of-buffer-other-window` |  | window | `M-<end>`, `ESC <end>` |  |  |  | 10 |
-| `enlarge-window` | ◯ | window | `C-x ^` |  |  |  | 10 |
-| `enlarge-window-horizontally` | ◯ | window | `C-x }` |  |  |  | 10 |
-| `fit-window-to-buffer` |  | window | `C-x w -` |  |  |  | 10 |
+| `end-of-buffer-other-window` |  | window | `M-<end>`, `ESC <end>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `enlarge-window` | ◯ | window | `C-x ^` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `enlarge-window-horizontally` | ◯ | window | `C-x }` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `fit-window-to-buffer` |  | window | `C-x w -` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `handle-select-window` |  | window | `<select-window>` |  |  |  | 12 |
-| `kill-buffer-and-window` | ◯ | window | `C-x 4 0` |  |  |  | 10 |
-| `move-to-window-line-top-bottom` |  | window | `M-r` |  |  |  | 10 |
-| `next-buffer` |  | window | `C-x <right>`, `<XF86Forward>`, `C-x C-<right>` |  |  |  | 10 |
+| `kill-buffer-and-window` | ◯ | window | `C-x 4 0` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `move-to-window-line-top-bottom` |  | window | `M-r` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `next-buffer` |  | window | `C-x <right>`, `<XF86Forward>`, `C-x C-<right>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `other-window` | ◯ | window | `C-x o` | 実装済み | `C-x o` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
 | `other-window-prefix` |  | window | `C-x 4 4` |  |  |  | 10 |
-| `previous-buffer` |  | window | `<XF86Back>`, `C-x <left>`, `C-x C-<left>` |  |  |  | 10 |
-| `quit-window` |  | window | `C-x w q` |  |  |  | 10 |
-| `recenter-other-window` |  | window | `C-M-S-l` |  |  |  | 10 |
+| `previous-buffer` |  | window | `<XF86Back>`, `C-x <left>`, `C-x C-<left>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `quit-window` |  | window | `C-x w q` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `recenter-other-window` |  | window | `C-M-S-l` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `recenter-top-bottom` |  | window | `C-l` | 実装済み | `C-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
 | `same-window-prefix` |  | window | `C-x 4 1` |  |  |  | 10 |
 | `scroll-down-command` |  | window | `M-v`, `<prior>` | 実装済み | `M-v` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
-| `scroll-other-window` | ◯ | window | `C-M-v`, `M-<next>`, `ESC <next>` |  |  |  | 10 |
-| `scroll-other-window-down` | ◯ | window | `C-M-S-v`, `M-<prior>`, `ESC <prior>` |  |  |  | 10 |
+| `scroll-other-window` | ◯ | window | `C-M-v`, `M-<next>`, `ESC <next>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `scroll-other-window-down` | ◯ | window | `C-M-S-v`, `M-<prior>`, `ESC <prior>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `scroll-up-command` |  | window | `C-v`, `<next>` | 実装済み | `C-v` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
-| `shrink-window-horizontally` | ◯ | window | `C-x {` |  |  |  | 10 |
-| `shrink-window-if-larger-than-buffer` | ◯ | window | `C-x -` |  |  |  | 10 |
-| `split-root-window-below` |  | window | `C-x w 2` |  |  |  | 10 |
-| `split-root-window-right` |  | window | `C-x w 3` |  |  |  | 10 |
+| `shrink-window-horizontally` | ◯ | window | `C-x {` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `shrink-window-if-larger-than-buffer` | ◯ | window | `C-x -` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `split-root-window-below` |  | window | `C-x w 2` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `split-root-window-right` |  | window | `C-x w 3` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `split-window-below` |  | window | `C-x 2` | 実装済み | `C-x 2` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
 | `split-window-right` |  | window | `C-x 3` | 実装済み | `C-x 3` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
 | `switch-to-buffer` | ◯ | window | `C-x b` | 実装済み | `C-x b` | Lisp (`lisp/window.scm`) | 済 |
 | `switch-to-buffer-other-frame` | ◯ | window | `C-x 5 b` |  |  |  | 12 |
-| `switch-to-buffer-other-window` | ◯ | window | `C-x 4 b` |  |  |  | 10 |
+| `switch-to-buffer-other-window` | ◯ | window | `C-x 4 b` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
 | `toggle-window-dedicated` |  | window | `C-x w d` |  |  |  | 10 |
 | `window-toggle-side-windows` |  | window | `C-x w s` |  |  |  | 10 |
 | `complete-symbol` |  | bindings | `C-M-i` | 実装済み |  | Lisp (`lisp/minibuffer.scm`) | 済 |
