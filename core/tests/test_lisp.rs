@@ -150,6 +150,8 @@ fn test_against_emacs() {
     let host = EditorHost::new(Editor::new(), FakeUi::default());
     ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
         .unwrap();
+    ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
+        .unwrap();
     {
         host.editor().set_buffer("*scratch*").unwrap();
     }

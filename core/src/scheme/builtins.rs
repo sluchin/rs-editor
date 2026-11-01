@@ -1308,7 +1308,8 @@ fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
     }
 }
 
-/// `format` の文字列を作ります. `%s` (文字列は引用符なし), `%S` (書いたとおり), `%d` (整数), `%%` を使えます.
+/// `format` の文字列を作ります. `%s` (文字列は引用符なし), `%S` (書いたとおり), `%d` (整数), `%o`, `%x`, `%X`, `%%` を使えます.
+/// `%` の後ろに, 旗 `-` (左に寄せる) と `0` (0 で埋める) と, 幅を付けられます (`%3d`, `%-4s`, `%03d`).
 ///
 /// # Arguments
 ///
@@ -1330,7 +1331,21 @@ fn format(args: &[Value]) -> Result<String, String> {
             result.push(c);
             continue;
         }
-        let directive = chars.next();
+        // 旗 (`-` は左に寄せる, `0` は 0 で埋める) と, 幅
+        let (mut left, mut zero, mut width) = (false, false, 0usize);
+        let mut directive = chars.next();
+        while let Some(flag @ ('-' | '0')) = directive {
+            if flag == '-' {
+                left = true;
+            } else {
+                zero = true;
+            }
+            directive = chars.next();
+        }
+        while let Some(digit) = directive.and_then(|d| d.to_digit(10)) {
+            width = width * 10 + digit as usize;
+            directive = chars.next();
+        }
         if directive == Some('%') {
             result.push('%');
             continue;
@@ -1338,14 +1353,37 @@ fn format(args: &[Value]) -> Result<String, String> {
         let value = values
             .next()
             .ok_or_else(|| "format: not enough arguments".to_string())?;
-        match directive {
-            Some('s') => result.push_str(&value.to_display()),
-            Some('S') => result.push_str(&value.to_string()),
-            Some('d') => result.push_str(&format!("{}", number("format", value)?.trunc() as i64)),
-            Some('o') => result.push_str(&format!("{:o}", number("format", value)?.trunc() as i64)),
-            Some('x') => result.push_str(&format!("{:x}", number("format", value)?.trunc() as i64)),
-            Some('X') => result.push_str(&format!("{:X}", number("format", value)?.trunc() as i64)),
+        let (text, numeric) = match directive {
+            Some('s') => (value.to_display(), false),
+            Some('S') => (value.to_string(), false),
+            Some('d') => (format!("{}", number("format", value)?.trunc() as i64), true),
+            Some('o') => (
+                format!("{:o}", number("format", value)?.trunc() as i64),
+                true,
+            ),
+            Some('x') => (
+                format!("{:x}", number("format", value)?.trunc() as i64),
+                true,
+            ),
+            Some('X') => (
+                format!("{:X}", number("format", value)?.trunc() as i64),
+                true,
+            ),
             _ => return Err("format: invalid directive".to_string()),
+        };
+        let pad = width.saturating_sub(text.chars().count());
+        if left {
+            result.push_str(&text);
+            result.extend(std::iter::repeat_n(' ', pad));
+        } else if zero && numeric {
+            // 符号の後ろに 0 を入れる
+            let (sign, digits) = text.strip_prefix('-').map_or(("", &text[..]), |d| ("-", d));
+            result.push_str(sign);
+            result.extend(std::iter::repeat_n('0', pad));
+            result.push_str(digits);
+        } else {
+            result.extend(std::iter::repeat_n(' ', pad));
+            result.push_str(&text);
         }
     }
     Ok(result)

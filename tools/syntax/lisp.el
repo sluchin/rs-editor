@@ -46,8 +46,31 @@
         ((or (< index 12) (= index (1- (length base-texts)))) 'prose)
         (t 'code)))
 
+;; 矩形の命令は, 複数行の本文 (式と字下げ) で, マークから
+;; 矩形の命令は, 「（日本 語）...」の本文 (「×」と「—」などの桁の数え方が, まだ Emacs と同じではない) を除く
+(defconst rect-excluded "（日本")
+
+(defconst rect-cases
+  (cl-loop for kind in '(code indent)
+           append (cl-loop for mark in '(2 9)
+                           append (list (one "clear-rectangle" [] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "clear-rectangle" [4] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "clear-rectangle" [] mark '(fundamental-mode) kind rect-excluded 'notabs)
+                                        (one "delete-rectangle" [] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "delete-rectangle" [4] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "open-rectangle" [] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "open-rectangle" [4] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "open-rectangle" [] mark '(fundamental-mode) kind rect-excluded 'notabs)
+                                        (one "rectangle-number-lines" [] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "kill-rectangle" [] mark '(fundamental-mode) kind rect-excluded)
+                                        (one "kill-rectangle" [4] mark '(fundamental-mode) kind rect-excluded)
+                                        (list "copy-rectangle-as-kill+yank-rectangle"
+                                              (vector (step "copy-rectangle-as-kill" []) (step "yank-rectangle" []))
+                                              [] mark '(fundamental-mode) kind rect-excluded nil)))))
+
 (defconst cases
   (append
+   rect-cases
    (list (one "forward-sexp" [] nil all-modes 'code) (one "forward-sexp" [-1] nil all-modes 'code)
          (one "forward-sexp" [2] nil lisp-modes 'code)
          (one "backward-sexp" [] nil lisp-modes 'code) (one "forward-list" [] nil lisp-modes 'code)

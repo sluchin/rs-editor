@@ -162,3 +162,33 @@ fn test_delete_windows() {
     assert_eq!(editor.window_list(), vec![2]);
     assert_eq!(editor.window_buffer(5), None);
 }
+
+#[test]
+fn test_window_configuration() {
+    let mut editor = Editor::new();
+    editor.get_buffer_create("a");
+    editor.get_buffer_create("b");
+    let second = editor.split_window(Direction::Below);
+    editor.set_window_buffer(second, "a").unwrap();
+    let saved = editor.save_window_configuration();
+    // 設定を覚えた後に, ウィンドウを分け直し, バッファを変え, 選び直す
+    editor.delete_other_windows();
+    editor
+        .set_window_buffer(editor.selected_window(), "b")
+        .unwrap();
+    editor.select_window(editor.selected_window()).unwrap();
+    assert_eq!(editor.window_list().len(), 1);
+    editor.restore_window_configuration(saved).unwrap();
+    assert_eq!(editor.window_list(), vec![1, second]);
+    assert_eq!(editor.window_buffer(1), Some(SCRATCH));
+    assert_eq!(editor.window_buffer(second), Some("a"));
+    assert_eq!(editor.selected_window(), 1);
+    assert_eq!(editor.current_buffer_name(), SCRATCH);
+    // 覚えた後に消したバッファを出していたウィンドウは, 今のバッファを出す
+    editor.kill_buffer("a").unwrap();
+    editor.restore_window_configuration(saved).unwrap();
+    assert_eq!(editor.window_buffer(second), Some(SCRATCH));
+    // 新しいウィンドウの番号は, 戻した設定のものと重ならない
+    assert_eq!(editor.split_window(Direction::Right), second + 1);
+    assert!(editor.restore_window_configuration(99).is_err());
+}

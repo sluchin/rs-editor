@@ -39,6 +39,8 @@ impl NcursesScreen {
                     KEY_NPAGE => "<next>",
                     KEY_PPAGE => "<prior>",
                     KEY_DC => "<delete>",
+                    code if code == KEY_F(3) => "<f3>",
+                    code if code == KEY_F(4) => "<f4>",
                     KEY_BACKSPACE => "DEL",
                     KEY_ENTER => "RET",
                     _ => return Some(String::new()),

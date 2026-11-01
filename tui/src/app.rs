@@ -78,6 +78,7 @@ impl App {
             display: Display::default(),
             macro_keys: Default::default(),
             macro_loop: Vec::new(),
+            executing_macro: false,
         }));
         let ui = UiHost::new(state.clone(), editor.clone(), keymap.clone());
         let host = EditorHost::shared(editor, ui);

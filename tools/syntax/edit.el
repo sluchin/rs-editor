@@ -71,6 +71,51 @@
          (list "kill-yank-rectangle"
                (vector (step "kill-rectangle" "region") (step "beginning-of-buffer" []) (step "yank-rectangle" []))
                (vector) 5))
+   ;; 矩形 (そのほか)
+   (list (one "delete-rectangle" "delete-rectangle" "region" nil 1)
+         (one "delete-rectangle" "delete-rectangle" ["region" t] nil 9)
+         (one "clear-rectangle" "clear-rectangle" "region" nil 1)
+         (one "clear-rectangle" "clear-rectangle" ["region" t] nil 9)
+         (one "open-rectangle" "open-rectangle" "region" nil 1)
+         (one "open-rectangle" "open-rectangle" ["region" t] nil 9)
+         (one "rectangle-number-lines" "rectangle-number-lines" ["region" 1] nil 9)
+         (one "rectangle-number-lines" "rectangle-number-lines" ["region" 8 "<%02d>"] nil 1)
+         (list "copy-yank-rectangle"
+               (vector (step "copy-rectangle-as-kill" "region") (step "end-of-buffer" []) (step "yank-rectangle" []))
+               (vector) 1))
+   ;; レジスタ (そのほか)
+   (list (list "copy-rectangle-to-register"
+               (vector (step "copy-rectangle-to-register" [((c . "a")) 2 9]) (step "end-of-buffer" []) (step "insert-register" [((c . "a"))]))
+               (vector) nil)
+         (list "copy-rectangle-to-register-delete"
+               (vector (step "copy-rectangle-to-register" [((c . "a")) 2 9 t]) (step "insert-register" [((c . "a")) t]))
+               (vector) nil)
+         (list "number-to-register-prefix"
+               (vector (step "number-to-register" [5 ((c . "n"))]) (step "insert-register" [((c . "n")) t]))
+               (vector) nil)
+         (list "number-to-register-buffer"
+               (vector (step "number-to-register" [nil ((c . "n"))]) (step "insert-register" [((c . "n")) t]))
+               (vector) nil)
+         (list "number-to-register-increment"
+               (vector (step "number-to-register" [5 ((c . "n"))]) (step "increment-register" [3 ((c . "n"))])
+                       (step "insert-register" [((c . "n")) t]))
+               (vector) nil)
+         (list "increment-register-text"
+               (vector (step "copy-to-register" [((c . "t")) 1 3]) (step "increment-register" [nil ((c . "t"))])
+                       (step "end-of-buffer" []) (step "insert-register" [((c . "t")) t]))
+               (vector) 3)
+         (list "increment-register-empty"
+               (vector (step "increment-register" [nil ((c . "e"))]) (step "end-of-buffer" [])
+                       (step "insert-register" [((c . "e")) t]))
+               (vector) 3)
+         (list "append-to-register"
+               (vector (step "copy-to-register" [((c . "t")) 1 3]) (step "append-to-register" [((c . "t")) 3 5])
+                       (step "end-of-buffer" []) (step "insert-register" [((c . "t")) t]))
+               (vector) nil)
+         (list "point-jump-register"
+               (vector (step "point-to-register" [((c . "p"))]) (step "end-of-buffer" []) (step "jump-to-register" [((c . "p"))]))
+               (vector) nil)
+         (list "jump-empty-register" (vector (step "jump-to-register" [((c . "z"))])) (vector) nil))
    ;; レジスタ
    (list (list "copy-insert-register"
                (vector (step "copy-to-register" [((c . "a")) 1 4]) (step "end-of-buffer" []) (step "insert-register" [((c . "a"))]))

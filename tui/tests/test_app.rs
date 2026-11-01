@@ -541,9 +541,9 @@ fn test_keyboard_macro_errors_and_append() {
     fx.press("C-x e");
     assert_eq!(fx.app.message(), "No kbd macro has been defined");
     fx.press("C-x )");
-    assert_eq!(fx.app.message(), "Not defining kbd macro");
+    assert_eq!(fx.app.message(), "Not defining keyboard macro");
     fx.press("C-x ( C-x (");
-    assert_eq!(fx.app.message(), "Already defining kbd macro");
+    assert_eq!(fx.app.message(), "Already defining keyboard macro.");
     // `C-x e` は, 覚えている途中なら, そこで終えて動かす
     fx.feed("x C-x e");
     fx.app.run();
@@ -748,4 +748,26 @@ fn test_narrowing_with_the_keys() {
     fx.press("C-x h");
     fx.press("C-x n n");
     assert!(fx.app.host().editor().current_buffer().narrowed());
+}
+
+#[test]
+fn test_kmacro_counter_and_naming() {
+    let mut fx = Fixture::new();
+    // F3 は, 覚えている途中ならカウンターを入れる (1 回ごとに 1 増える). F4 は終える
+    fx.feed("<f3> <f3> RET <f4>");
+    fx.app.run();
+    assert_eq!(fx.text(), "0\n");
+    fx.feed("<f4> <f4>");
+    fx.app.run();
+    assert_eq!(fx.text(), "0\n1\n2\n");
+    // 前置引数を付けて始めると, カウンターがその値になる
+    fx.feed("C-u 7 C-x C-k s C-x C-k C-i C-x C-k C-i C-u C-x C-k C-i C-x )");
+    fx.app.run();
+    assert_eq!(fx.text(), "0\n1\n2\n788");
+    // 名前を付ける
+    fx.feed("C-x C-k n h e l l o RET");
+    fx.app.run();
+    fx.feed("M-x h e l l o RET");
+    fx.app.run();
+    assert_eq!(fx.text(), "0\n1\n2\n78891010");
 }

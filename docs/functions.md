@@ -282,7 +282,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 5 | S 式, 段落, ページ | 14 | - | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 6 | - | 6 |
-| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 32 | 26 | 6 |
+| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 15 | 9 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 16 | 11 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
@@ -331,6 +331,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 **8. 矩形, レジスタ, キーボードマクロ, 略語**
 
 - 矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。
+- 【矩形とレジスタとキーボードマクロは Lisp 版が済 (`lisp/rect.scm`, `lisp/register.scm`, `lisp/simple.scm`). `emacs -Q --batch` の結果と一致: 矩形 (`clear-rectangle`, `delete-rectangle`, `open-rectangle`, `rectangle-number-lines`, `kill-rectangle`, `copy-rectangle-as-kill` と `yank-rectangle`) と, レジスタ (`copy-rectangle-to-register`, `number-to-register`, `increment-register`, `append-to-register`, `point-to-register`, `jump-to-register`) (`core/tests/test_lisp.rs`, `core/tests/test_edit.rs`). ウィンドウ構成のレジスタ (`window-configuration-to-register`) は, バッチの Emacs に窓が無いので Rust のテストだけ (`core/tests/test_register.rs`, `core/tests/test_editor.rs`). キーボードマクロの `kmacro-*` (カウンター, `F3`, `F4`, 名前を付ける) も, 同じ理由で `tui/tests/test_app.rs` で試す. 違いが残るのは, 幅の違う文字 (全角, 曖昧幅) を含む行の矩形の桁の数え方, `kmacro-end-call-mouse` (マウス) と, キーボードマクロのリング (`kmacro-cycle-ring-next` など) が無いこと。略語 (`abbrev`), `dabbrev-completion`, `complete-symbol` はまだ。】
 
 **9. ファイル, バッファ, dired, ブックマーク, シェル**
 
@@ -349,7 +350,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 152 個: Lisp 69 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 169 個: Lisp 86 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -528,29 +529,29 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `isearch-forward-symbol-at-point` |  | isearch | `M-s .` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
 | `isearch-forward-word` |  | isearch | `M-s w` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `clear-rectangle` | ◯ | rect | `C-x r c` |  |  |  | 8 |
-| `copy-rectangle-as-kill` |  | rect | `C-x r M-w` |  |  |  | 8 |
-| `delete-rectangle` | ◯ | rect | `C-x r d` |  |  |  | 8 |
+| `clear-rectangle` | ◯ | rect | `C-x r c` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
+| `copy-rectangle-as-kill` |  | rect | `C-x r M-w` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
+| `delete-rectangle` | ◯ | rect | `C-x r d` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
 | `kill-rectangle` | ◯ | rect | `C-x r k` | 実装済み | `C-x r k` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
-| `open-rectangle` | ◯ | rect | `C-x r o` |  |  |  | 8 |
-| `rectangle-number-lines` |  | rect | `C-x r N` |  |  |  | 8 |
+| `open-rectangle` | ◯ | rect | `C-x r o` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
+| `rectangle-number-lines` |  | rect | `C-x r N` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
 | `string-rectangle` |  | rect | `C-x r t` | 実装済み | `C-x r t` | TypeScript (`src/App.tsx`, `lisp/rect.scm`) | 8 |
 | `yank-rectangle` | ◯ | rect | `C-x r y` | 実装済み | `C-x r y` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
-| `copy-rectangle-to-register` |  | register | `C-x r r` |  |  |  | 8 |
+| `copy-rectangle-to-register` |  | register | `C-x r r` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
 | `copy-to-register` | ◯ | register | `C-x r s`, `C-x r x` | 実装済み | `C-x r s`, `C-x r x` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
-| `increment-register` | ◯ | register | `C-x r +` |  |  |  | 8 |
+| `increment-register` | ◯ | register | `C-x r +` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
 | `insert-register` | ◯ | register | `C-x r g`, `C-x r i` | 実装済み | `C-x r i`, `C-x r g` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
-| `jump-to-register` |  | register | `C-x r j` |  |  |  | 8 |
-| `number-to-register` | ◯ | register | `C-x r n` |  |  |  | 8 |
-| `point-to-register` | ◯ | register | `C-x r C-@`, `C-x r SPC`, `C-x r C-SPC` |  |  |  | 8 |
-| `window-configuration-to-register` |  | register | `C-x r w` |  |  |  | 8 |
-| `kmacro-end-and-call-macro` |  | kmacro | `C-x e` |  |  |  | 8 |
+| `jump-to-register` |  | register | `C-x r j` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
+| `number-to-register` | ◯ | register | `C-x r n` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
+| `point-to-register` | ◯ | register | `C-x r C-@`, `C-x r SPC`, `C-x r C-SPC` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
+| `window-configuration-to-register` |  | register | `C-x r w` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
+| `kmacro-end-and-call-macro` |  | kmacro | `C-x e` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `kmacro-end-call-mouse` |  | kmacro | `S-<mouse-3>` |  |  |  | 8 |
-| `kmacro-end-macro` |  | kmacro | `C-x )` |  |  |  | 8 |
-| `kmacro-end-or-call-macro` |  | kmacro | `<f4>` |  |  |  | 8 |
-| `kmacro-name-last-macro` |  | kmacro | `C-x C-k n` |  |  |  | 8 |
-| `kmacro-start-macro` |  | kmacro | `C-x (`, `C-x C-k s`, `C-x C-k C-s` |  |  |  | 8 |
-| `kmacro-start-macro-or-insert-counter` |  | kmacro | `<f3>` |  |  |  | 8 |
+| `kmacro-end-macro` |  | kmacro | `C-x )` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-end-or-call-macro` |  | kmacro | `<f4>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-name-last-macro` |  | kmacro | `C-x C-k n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-start-macro` |  | kmacro | `C-x (`, `C-x C-k s`, `C-x C-k C-s` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-start-macro-or-insert-counter` |  | kmacro | `<f3>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `abbrev-prefix-mark` | ◯ | abbrev | `M-'` |  |  |  | 8 |
 | `add-global-abbrev` | ◯ | abbrev | `C-x a g` |  |  |  | 8 |
 | `add-mode-abbrev` | ◯ | abbrev | `C-x a +`, `C-x a l`, `C-x a C-a` |  |  |  | 8 |

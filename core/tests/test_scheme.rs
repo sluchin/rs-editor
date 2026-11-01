@@ -349,6 +349,11 @@ fn test_string_procedures() {
         eval("(format \"%s=%S %d%% %s\" \"a\" \"b\" 3.7 '(1 \"x\"))"),
         "\"a=\\\"b\\\" 3% (1 \\\"x\\\")\""
     );
+    // 幅と旗 (期待値は Emacs の結果)
+    assert_eq!(
+        eval("(format \"%3d|%-3d|%03d|%5s|%-5s|%03d|%2d\" 5 5 5 \"ab\" \"ab\" -5 123)"),
+        "\"  5|5  |005|   ab|ab   |-05|123\""
+    );
 }
 
 #[test]

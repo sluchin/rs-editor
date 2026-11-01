@@ -485,6 +485,11 @@ impl<U: Host> EditorHost<U> {
                 ed.delete_window(w)?;
                 Value::Nil
             }
+            "current-window-configuration" => Value::Number(ed.save_window_configuration() as f64),
+            "set-window-configuration" => {
+                ed.restore_window_configuration(int(op, args, 0)?.max(0) as usize)?;
+                nil()
+            }
             "delete-other-windows" => {
                 ed.delete_other_windows();
                 Value::Nil

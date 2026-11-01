@@ -54,3 +54,99 @@ Interactively, ARG is true unless there is a prefix argument."
           (else (error "Register does not contain text")))
     (unless arg (exchange-point-and-mark))
     #f))
+
+(define-command (copy-rectangle-to-register . args)
+  "Copy rectangular region of text between START and END into REGISTER.
+If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after copying.
+Called from Lisp, takes four arguments: REGISTER, START, END and DELETE-FLAG."
+  (let* ((keyboard (null? args))
+         (register (if keyboard (register--read "Copy rectangle to register: ") (car args)))
+         (start (if keyboard (region-beginning) (cadr args)))
+         (end (if keyboard (region-end) (caddr args)))
+         (delete (if keyboard (current-prefix-arg) (and (> (length args) 3) (list-ref args 3))))
+         (rectangle (if delete (delete-extract-rectangle start end) (extract-rectangle start end))))
+    (set-register register rectangle)
+    (when (and (not delete) keyboard) (set-deactivate-mark #t))
+    #f))
+
+(define-command (number-to-register . args)
+  "Store NUMBER in REGISTER.  If NUMBER is false, read a decimal number from the buffer
+at point, and move point to the end of that number.
+Interactively, NUMBER is the prefix argument (none means false)."
+  (let* ((keyboard (null? args))
+         (number (if keyboard (current-prefix-arg) (car args)))
+         (register (if keyboard (register--read "Number to register: ") (cadr args))))
+    (set-register register
+                  (cond (number (prefix-numeric-value number))
+                        ((looking-at "\\s-*-?[0-9]+")
+                         (goto-char (match-end 0))
+                         (string->number (string-trim (match-string 0))))
+                        (else 0)))
+    #f))
+
+(define-command (append-to-register . args)
+  "Append the region between START and END to REGISTER.
+If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after appending."
+  (let* ((keyboard (null? args))
+         (register (if keyboard (register--read "Append to register: ") (car args)))
+         (start (if keyboard (region-beginning) (cadr args)))
+         (end (if keyboard (region-end) (caddr args)))
+         (delete (if keyboard (current-prefix-arg) (and (> (length args) 3) (list-ref args 3))))
+         (value (get-register register))
+         (text (buffer-substring start end)))
+    (set-register register
+                  (cond ((not value) text)
+                        ((string? value) (string-append value text))
+                        (else (error "Register does not contain text"))))
+    (set-deactivate-mark #t)
+    (when delete (delete-region start end))
+    #f))
+
+(define-command (increment-register . args)
+  "Augment contents of REGISTER using PREFIX.
+If REGISTER contains a number, add the numeric value of PREFIX to it.
+If REGISTER is empty or contains text, append the region to it, deleting the region
+if PREFIX is true.  Interactively, PREFIX is the raw prefix argument."
+  (let* ((keyboard (null? args))
+         (prefix (if keyboard (current-prefix-arg) (car args)))
+         (register (if keyboard (register--read "Increment register: ") (cadr args)))
+         (value (get-register register)))
+    (cond ((number? value) (set-register register (+ (prefix-numeric-value prefix) value)))
+          ((or (not value) (string? value))
+           (append-to-register register (region-beginning) (region-end) prefix))
+          (else (error "Register does not contain a number or text")))
+    #f))
+
+(define-command (point-to-register . args)
+  "Store the current location of point in REGISTER.
+Use jump-to-register to go to that location."
+  (let ((register (if (null? args) (register--read "Point to register: ") (car args))))
+    (set-register register (list 'marker (buffer-name) (point-marker)))
+    #f))
+
+(define-command (window-configuration-to-register . args)
+  "Store the window configuration of the selected frame in REGISTER.
+Use jump-to-register to restore the configuration."
+  (let ((register (if (null? args) (register--read "Window configuration to register: ") (car args))))
+    (set-register register (list 'window-configuration (current-window-configuration) (buffer-name) (point-marker)))
+    #f))
+
+(define-command (jump-to-register . args)
+  "Go to the location stored in REGISTER, or restore the configuration stored there.
+Push the mark if going to the location moves point, unless called in succession."
+  (let* ((register (if (null? args) (register--read "Jump to register: ") (car args)))
+         (value (get-register register)))
+    (cond ((and (pair? value) (eq? (car value) 'marker))
+           (unless (get-buffer (cadr value)) (error "That register's buffer no longer exists"))
+           (switch-to-buffer (cadr value))
+           (let ((position (marker-position (caddr value))))
+             (unless (or (= (point) position) (eq? last-command 'jump-to-register))
+               (push-mark))
+             (goto-char position)))
+          ((and (pair? value) (eq? (car value) 'window-configuration))
+           (set-window-configuration (cadr value))
+           (when (get-buffer (caddr value))
+             (with-current-buffer (caddr value)
+               (goto-char (marker-position (list-ref value 3))))))
+          (else (error "Register doesn’t contain a buffer position or configuration")))
+    #f))

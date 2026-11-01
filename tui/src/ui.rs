@@ -30,6 +30,8 @@ pub struct UiState {
     pub macro_keys: VecDeque<String>,
     /// 失敗するまで繰り返すマクロのキー (`call-last-kbd-macro` の引数が 0 のとき).
     pub macro_loop: Vec<String>,
+    /// 今のキーが, キーボードマクロから来たものか.
+    pub executing_macro: bool,
 }
 
 impl UiState {
@@ -38,7 +40,9 @@ impl UiState {
         if self.macro_keys.is_empty() && !self.macro_loop.is_empty() {
             self.macro_keys = self.macro_loop.iter().cloned().collect();
         }
-        self.macro_keys.pop_front()
+        let key = self.macro_keys.pop_front();
+        self.executing_macro = key.is_some();
+        key
     }
 
     /// 動かしているキーボードマクロを止めます.
@@ -354,6 +358,7 @@ impl Host for UiHost {
                 }
                 Ok(Value::Nil)
             }
+            "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
             "window-body-height" => {
                 let editor = self.editor.lock().unwrap();
                 let state = self.state();

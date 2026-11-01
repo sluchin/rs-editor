@@ -54,6 +54,19 @@ pub struct Editor {
     pub prefix_arg: Option<PrefixArg>,
     /// バッファをまたぐマークの履歴 (Emacs の `global-mark-ring`. 新しいものが先. バッファの名前と, そのバッファのマーカー).
     pub global_mark_ring: Vec<(String, usize)>,
+    /// 覚えたウィンドウの設定 (Emacs の `current-window-configuration`. 番号で引く).
+    window_configurations: Vec<WindowConfiguration>,
+}
+
+/// ウィンドウの設定: 分け方と, ウィンドウごとのバッファと, 選んでいるウィンドウ.
+#[derive(Debug, Clone)]
+struct WindowConfiguration {
+    /// ウィンドウの分け方.
+    layout: Layout,
+    /// ウィンドウごとのバッファの名前.
+    window_buffers: BTreeMap<usize, String>,
+    /// 選んでいるウィンドウ.
+    selected: usize,
 }
 
 /// `global-mark-ring` の長さの上限 (Emacs の `global-mark-ring-max`).
@@ -82,6 +95,7 @@ impl Editor {
             kbd_macro: KbdMacro::default(),
             prefix_arg: None,
             global_mark_ring: Vec::new(),
+            window_configurations: Vec::new(),
         }
     }
 
@@ -309,6 +323,53 @@ impl Editor {
         self.layout = Layout::Window(self.selected);
         let shown = self.window_buffers[&self.selected].clone();
         self.window_buffers = BTreeMap::from([(self.selected, shown)]);
+    }
+
+    /// 今のウィンドウの設定を覚えます (Emacs の `current-window-configuration`).
+    ///
+    /// # Returns
+    ///
+    /// 覚えた設定の番号.
+    pub fn save_window_configuration(&mut self) -> usize {
+        self.window_configurations.push(WindowConfiguration {
+            layout: self.layout.clone(),
+            window_buffers: self.window_buffers.clone(),
+            selected: self.selected,
+        });
+        self.window_configurations.len() - 1
+    }
+
+    /// 覚えたウィンドウの設定に戻します (Emacs の `set-window-configuration`). 選ぶウィンドウのバッファが、今のバッファになる.
+    /// その後に消したバッファを出していたウィンドウは、今のバッファを出す.
+    ///
+    /// # Errors
+    ///
+    /// 番号の設定が無いとき.
+    pub fn restore_window_configuration(&mut self, id: usize) -> Result<(), String> {
+        let config = self
+            .window_configurations
+            .get(id)
+            .ok_or("Wrong type argument: window-configuration-p")?
+            .clone();
+        let fallback = self.current.clone();
+        self.layout = config.layout;
+        self.window_buffers = config
+            .window_buffers
+            .into_iter()
+            .map(|(window, name)| {
+                let name = if self.get_buffer(&name).is_some() {
+                    name
+                } else {
+                    fallback.clone()
+                };
+                (window, name)
+            })
+            .collect();
+        // 設定を覚えた後に作ったウィンドウの番号と、重ならない
+        self.next_window = self
+            .next_window
+            .max(self.window_buffers.keys().max().map_or(1, |m| m + 1));
+        self.select_window(config.selected)
     }
 
     /// 次のウィンドウを選びます (Emacs の `other-window` の 1). 最後の次は, 最初.

@@ -76,7 +76,15 @@ STEPS = [
       '強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】'
       'isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。']),
     (8, '矩形, レジスタ, キーボードマクロ, 略語',
-     ['矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。']),
+     ['矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。',
+      '【矩形とレジスタとキーボードマクロは Lisp 版が済 (`lisp/rect.scm`, `lisp/register.scm`, `lisp/simple.scm`). '
+      '`emacs -Q --batch` の結果と一致: 矩形 (`clear-rectangle`, `delete-rectangle`, `open-rectangle`, `rectangle-number-lines`, `kill-rectangle`, `copy-rectangle-as-kill` と `yank-rectangle`) と, '
+      'レジスタ (`copy-rectangle-to-register`, `number-to-register`, `increment-register`, `append-to-register`, `point-to-register`, `jump-to-register`) (`core/tests/test_lisp.rs`, `core/tests/test_edit.rs`). '
+      'ウィンドウ構成のレジスタ (`window-configuration-to-register`) は, バッチの Emacs に窓が無いので Rust のテストだけ (`core/tests/test_register.rs`, `core/tests/test_editor.rs`). '
+      'キーボードマクロの `kmacro-*` (カウンター, `F3`, `F4`, 名前を付ける) も, 同じ理由で `tui/tests/test_app.rs` で試す. '
+      '違いが残るのは, 幅の違う文字 (全角, 曖昧幅) を含む行の矩形の桁の数え方, '
+      '`kmacro-end-call-mouse` (マウス) と, キーボードマクロのリング (`kmacro-cycle-ring-next` など) が無いこと。'
+      '略語 (`abbrev`), `dabbrev-completion`, `complete-symbol` はまだ。】']),
     (9, 'ファイル, バッファ, dired, ブックマーク, シェル',
      ['ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。',
       '`save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。']),

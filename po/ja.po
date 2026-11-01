@@ -4009,6 +4009,93 @@ msgstr ""
 "STRING の長さは, 矩形の幅と同じでなくてよい.\n"
 "プログラムから呼ぶときの引数は, START と END と STRING の 3 つ."
 
+#: lisp/rect.scm
+msgctxt "function:rect--args"
+msgid "Return (START END FILL) for a rectangle command: from ARGS (START END [FILL]), or the region and the prefix argument."
+msgstr "矩形のコマンドの (START END FILL) を返す. ARGS (START END [FILL]) か, リージョンと前置引数から."
+
+#: lisp/rect.scm
+msgctxt "function:rect--extract-line"
+msgid "Return the text of the columns from LEFT to RIGHT of the current line, with tabs and missing columns as spaces."
+msgstr "今の行の LEFT 列から RIGHT 列までの文字列を返す. タブと足りない桁は空白にする."
+
+#: lisp/rect.scm
+msgctxt "function:extract-rectangle"
+msgid ""
+"Return the contents of the rectangle with corners at START and END.\n"
+"Return it as a list of strings, one for each line of the rectangle."
+msgstr ""
+"START と END を角とする矩形の内容を返す.\n"
+"矩形の各行を 1 つずつの文字列にした一覧で返す."
+
+#: lisp/rect.scm
+msgctxt "function:copy-rectangle-as-kill"
+msgid "Copy the region-rectangle and save it as the last killed one."
+msgstr "リージョンの矩形をコピーして, 最後に kill したものとして覚える."
+
+#: lisp/rect.scm
+msgctxt "function:delete-rectangle"
+msgid ""
+"Delete (don't save) text in the region-rectangle.\n"
+"The same range of columns is deleted in each line starting with the\n"
+"line where the region begins and ending with the line where the region ends.\n"
+"With a prefix (or a FILL) argument, also fill lines where nothing has to be deleted."
+msgstr ""
+"リージョンの矩形の文字を (kill せずに) 削除する.\n"
+"リージョンの始まる行から終わる行まで, 各行で同じ範囲の桁を削除する.\n"
+"前置引数 (か FILL) があれば, 削除するものが無い行も埋める."
+
+#: lisp/rect.scm
+msgctxt "function:rect--open-line"
+msgid "Open a blank of the width of the rectangle at column LEFT of the current line."
+msgstr "今の行の LEFT 列に, 矩形の幅の空白を開ける."
+
+#: lisp/rect.scm
+msgctxt "function:open-rectangle"
+msgid ""
+"Blank out the region-rectangle, shifting text right.\n"
+"The text previously in the region is not overwritten by the blanks,\n"
+"but instead winds up to the right of the rectangle.\n"
+"With a prefix (or a FILL) argument, fill with blanks even if there is\n"
+"no text on the right side of the rectangle."
+msgstr ""
+"リージョンの矩形を空白にして, 文字を右にずらす.\n"
+"矩形にあった文字は空白で上書きされず, 矩形の右に移る.\n"
+"前置引数 (か FILL) があれば, 矩形の右に文字が無くても空白で埋める."
+
+#: lisp/rect.scm
+msgctxt "function:rect--clear-line"
+msgid "Blank out the columns from LEFT to RIGHT of the current line."
+msgstr "今の行の LEFT 列から RIGHT 列までを空白にする."
+
+#: lisp/rect.scm
+msgctxt "function:clear-rectangle"
+msgid ""
+"Blank out the region-rectangle.\n"
+"The text previously in the region is overwritten with blanks.\n"
+"With a prefix (or a FILL) argument, also fill with blanks the parts of the\n"
+"rectangle which were empty."
+msgstr ""
+"リージョンの矩形を空白にする.\n"
+"矩形にあった文字は空白で上書きされる.\n"
+"前置引数 (か FILL) があれば, 矩形のうち空だった部分も空白で埋める."
+
+#: lisp/rect.scm
+msgctxt "function:rect--default-line-number-format"
+msgid "Return the default format string for numbering the lines from START-AT."
+msgstr "START-AT から行に番号を付けるときの, 既定の書式の文字列を返す."
+
+#: lisp/rect.scm
+msgctxt "function:rectangle-number-lines"
+msgid ""
+"Insert numbers in front of the region-rectangle.\n"
+"START-AT, if given, is the number from which to begin counting.  FORMAT, if given,\n"
+"is a format string for the line count.  With a prefix argument, read START-AT and FORMAT."
+msgstr ""
+"リージョンの矩形の前に番号を挿入する.\n"
+"START-AT があれば, 数え始める数. FORMAT があれば, 行の番号の書式の文字列.\n"
+"前置引数があれば, START-AT と FORMAT を読む."
+
 #: lisp/register.scm
 msgctxt "variable:register-alist"
 msgid ""
@@ -4056,6 +4143,77 @@ msgstr ""
 "普通は, 入れた文字の前に点を, 後ろにマークを置く.\n"
 "オプションの第 2 引数 ARG が真なら, 前にマークを, 後ろに点を置く.\n"
 "対話的に使うときは, 前置引数が無ければ ARG は真."
+
+#: lisp/register.scm
+msgctxt "function:copy-rectangle-to-register"
+msgid ""
+"Copy rectangular region of text between START and END into REGISTER.\n"
+"If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after copying.\n"
+"Called from Lisp, takes four arguments: REGISTER, START, END and DELETE-FLAG."
+msgstr ""
+"START と END の間の矩形の文字を REGISTER にコピーする.\n"
+"DELETE-FLAG が真 (対話では前置引数があるとき) なら, コピーしたあとリージョンを削除する.\n"
+"Lisp からは, REGISTER, START, END, DELETE-FLAG の 4 つの引数を取る."
+
+#: lisp/register.scm
+msgctxt "function:number-to-register"
+msgid ""
+"Store NUMBER in REGISTER.  If NUMBER is false, read a decimal number from the buffer\n"
+"at point, and move point to the end of that number.\n"
+"Interactively, NUMBER is the prefix argument (none means false)."
+msgstr ""
+"NUMBER を REGISTER に入れる. NUMBER が偽なら, ポイントにある 10 進数を\n"
+"バッファから読み, ポイントをその数の終わりに動かす.\n"
+"対話では, NUMBER は前置引数 (無ければ偽)."
+
+#: lisp/register.scm
+msgctxt "function:append-to-register"
+msgid ""
+"Append the region between START and END to REGISTER.\n"
+"If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after appending."
+msgstr ""
+"START と END の間のリージョンを REGISTER に追加する.\n"
+"DELETE-FLAG が真 (対話では前置引数があるとき) なら, 追加したあとリージョンを削除する."
+
+#: lisp/register.scm
+msgctxt "function:increment-register"
+msgid ""
+"Augment contents of REGISTER using PREFIX.\n"
+"If REGISTER contains a number, add the numeric value of PREFIX to it.\n"
+"If REGISTER is empty or contains text, append the region to it, deleting the region\n"
+"if PREFIX is true.  Interactively, PREFIX is the raw prefix argument."
+msgstr ""
+"PREFIX を使って REGISTER の内容を増やす.\n"
+"REGISTER が数なら, PREFIX の数値を足す.\n"
+"REGISTER が空か文字列なら, リージョンを追加し, PREFIX が真ならリージョンを削除する.\n"
+"対話では, PREFIX は生の前置引数."
+
+#: lisp/register.scm
+msgctxt "function:point-to-register"
+msgid ""
+"Store the current location of point in REGISTER.\n"
+"Use jump-to-register to go to that location."
+msgstr ""
+"今のポイントの位置を REGISTER に入れる.\n"
+"その位置へ行くには jump-to-register を使う."
+
+#: lisp/register.scm
+msgctxt "function:window-configuration-to-register"
+msgid ""
+"Store the window configuration of the selected frame in REGISTER.\n"
+"Use jump-to-register to restore the configuration."
+msgstr ""
+"選んでいるフレームのウィンドウの構成を REGISTER に入れる.\n"
+"構成を戻すには jump-to-register を使う."
+
+#: lisp/register.scm
+msgctxt "function:jump-to-register"
+msgid ""
+"Go to the location stored in REGISTER, or restore the configuration stored there.\n"
+"Push the mark if going to the location moves point, unless called in succession."
+msgstr ""
+"REGISTER に入れた位置へ行く. 構成が入っていれば, それを戻す.\n"
+"位置へ行くとポイントが動くときは, 続けて呼んだ場合を除き, マークを積む."
 
 #: lisp/replace.scm
 msgctxt "variable:case-replace"
@@ -4818,6 +4976,76 @@ msgid ""
 msgstr ""
 "最後に覚えたキーボードマクロを動かす.\n"
 "前置引数は, 繰り返す回数. 0 なら, 失敗するまで繰り返す."
+
+#: lisp/simple.scm
+msgctxt "variable:kmacro-counter"
+msgid "Current keyboard macro counter."
+msgstr "キーボードマクロの今のカウンター."
+
+#: lisp/simple.scm
+msgctxt "variable:kmacro-last-counter"
+msgid "Last counter inserted by `kmacro-insert-counter'."
+msgstr "`kmacro-insert-counter' が最後に挿入したカウンター."
+
+#: lisp/simple.scm
+msgctxt "variable:kmacro-counter-format"
+msgid "Format to use when inserting the keyboard macro counter."
+msgstr "キーボードマクロのカウンターを挿入するときの書式."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-start-macro"
+msgid ""
+"Record subsequent keyboard input, defining a keyboard macro.\n"
+"Without a prefix argument, the counter is reset to 0.  With a numeric prefix argument, the\n"
+"counter is set to it.  With C-u, append to the last macro and keep the counter."
+msgstr ""
+"これから打つキーを覚えて, キーボードマクロを定義する.\n"
+"前置引数が無ければ, カウンターを 0 に戻す. 数の前置引数があれば, カウンターをその値にする.\n"
+"C-u なら, 最後のマクロの続きに覚え, カウンターは変えない."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-insert-counter"
+msgid ""
+"Insert the next value of the keyboard macro counter and increment it.\n"
+"With a numeric prefix argument, increment by that amount.  With C-u, insert the previous\n"
+"value without incrementing."
+msgstr ""
+"キーボードマクロのカウンターの次の値を挿入して, 1 増やす.\n"
+"数の前置引数があれば, その分だけ増やす. C-u なら, 増やさずに前の値を挿入する."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-start-macro-or-insert-counter"
+msgid "Start defining a keyboard macro, or insert the counter if one is being defined."
+msgstr "キーボードマクロの定義を始める. 定義の途中なら, カウンターを挿入する."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-end-macro"
+msgid ""
+"Finish defining a keyboard macro.\n"
+"With numeric arg, repeat the macro now that many times, counting the definition just\n"
+"completed as the first repetition.  An argument of zero means repeat until error."
+msgstr ""
+"キーボードマクロの定義を終える.\n"
+"数の前置引数があれば, 今定義したものを 1 回目と数えて, その回数だけ繰り返す. 0 は, 失敗するまで繰り返す."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-end-and-call-macro"
+msgid ""
+"Call the last keyboard macro, ending the definition first if one is in progress.\n"
+"A prefix argument serves as a repeat count; zero means repeat until error."
+msgstr ""
+"最後のキーボードマクロを動かす. 定義の途中なら, 先に終える.\n"
+"前置引数は繰り返す回数. 0 は, 失敗するまで繰り返す."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-end-or-call-macro"
+msgid "End the keyboard macro being defined, or call the last one."
+msgstr "定義の途中のキーボードマクロを終える. 途中でなければ, 最後のマクロを動かす."
+
+#: lisp/simple.scm
+msgctxt "function:kmacro-name-last-macro"
+msgid "Assign a name to the last keyboard macro defined."
+msgstr "最後に定義したキーボードマクロに名前を付ける."
 
 #: lisp/simple.scm
 msgctxt "function:simple--casify-region"

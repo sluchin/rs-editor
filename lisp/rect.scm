@@ -115,3 +115,129 @@ Called from a program, takes three arguments: START, END and STRING."
                      (read-string "String rectangle: "))))
     (goto-char (apply-on-rectangle rect--string-line start end string #t))
     #f))
+
+(define (rect--args args)
+  "Return (START END FILL) for a rectangle command: from ARGS (START END [FILL]), or the region and the prefix argument."
+  (if (null? args)
+      (list (region-beginning) (region-end) (current-prefix-arg))
+      (list (car args) (cadr args) (and (pair? (cddr args)) (caddr args)))))
+
+(define (rect--extract-line left right lines)
+  "Return the text of the columns from LEFT to RIGHT of the current line, with tabs and missing columns as spaces."
+  (move-to-column left)
+  (let* ((start (point))
+         (begin-extra (- (current-column) left)))
+    (move-to-column right)
+    (let* ((end (point))
+           (end-extra (- right (current-column)))
+           (line (buffer-substring start end)))
+      (when (< begin-extra 0)
+        (set! end-extra (+ end-extra begin-extra))
+        (set! begin-extra 0))
+      (when (< end-extra 0) (set! end-extra 0))
+      (goto-char start)
+      (let loop ()
+        (when (search-forward "\t" end #t)
+          (let ((width (- (current-column) (save-excursion (forward-char -1) (current-column)))))
+            (set! line (string-append (substring line 0 (+ (string-length line) (- (point) end 1)))
+                                      (simple--spaces width)
+                                      (substring line (+ (string-length line) (- (point) end))))))
+          (loop)))
+      (if (or (> begin-extra 0) (> end-extra 0))
+          (string-append (simple--spaces begin-extra) line (simple--spaces end-extra))
+          line))))
+
+(define (extract-rectangle start end)
+  "Return the contents of the rectangle with corners at START and END.
+Return it as a list of strings, one for each line of the rectangle."
+  (let ((lines '()))
+    (apply-on-rectangle (lambda (left right) (set! lines (cons (rect--extract-line left right lines) lines)))
+                        start end)
+    (reverse lines)))
+
+(define-command (copy-rectangle-as-kill . args)
+  "Copy the region-rectangle and save it as the last killed one."
+  (let ((bounds (rect--args args)))
+    (set! killed-rectangle (extract-rectangle (car bounds) (cadr bounds)))
+    (set-deactivate-mark #t)
+    #f))
+
+(define-command (delete-rectangle . args)
+  "Delete (don't save) text in the region-rectangle.
+The same range of columns is deleted in each line starting with the
+line where the region begins and ending with the line where the region ends.
+With a prefix (or a FILL) argument, also fill lines where nothing has to be deleted."
+  (let ((bounds (rect--args args)))
+    (rect--without-tabs
+     (lambda ()
+       (apply-on-rectangle (lambda (left right) (rect--delete-line left right (caddr bounds)))
+                           (car bounds) (cadr bounds))))
+    #f))
+
+(define (rect--open-line left right fill)
+  "Open a blank of the width of the rectangle at column LEFT of the current line."
+  (when (= (move-to-column left (if fill #t 'coerce)) left)
+    (unless (and (not fill) (= (point) (line-end-position)))
+      (simple--indent-to right))))
+
+(define-command (open-rectangle . args)
+  "Blank out the region-rectangle, shifting text right.
+The text previously in the region is not overwritten by the blanks,
+but instead winds up to the right of the rectangle.
+With a prefix (or a FILL) argument, fill with blanks even if there is
+no text on the right side of the rectangle."
+  (let ((bounds (rect--args args)))
+    (apply-on-rectangle rect--open-line (car bounds) (cadr bounds) (caddr bounds))
+    (goto-char (car bounds))
+    #f))
+
+(define (rect--clear-line left right fill)
+  "Blank out the columns from LEFT to RIGHT of the current line."
+  (let ((line-end (line-end-position)))
+    (when (= (move-to-column left (if fill #t 'coerce)) left)
+      (if (and (not fill)
+               (<= (save-excursion (goto-char line-end) (current-column)) right))
+          (delete-region (point) line-end)
+          (let ((from (point)))
+            (move-to-column right #t)
+            (let ((column (current-column)))
+              (delete-region from (point))
+              (simple--indent-to column)))))))
+
+(define-command (clear-rectangle . args)
+  "Blank out the region-rectangle.
+The text previously in the region is overwritten with blanks.
+With a prefix (or a FILL) argument, also fill with blanks the parts of the
+rectangle which were empty."
+  (let ((bounds (rect--args args)))
+    (apply-on-rectangle rect--clear-line (car bounds) (cadr bounds) (caddr bounds))
+    #f))
+
+(define (rect--default-line-number-format start end start-at)
+  "Return the default format string for numbering the lines from START-AT."
+  (string-append "%"
+                 (number->string (string-length (number->string (+ (simple--count-lines start end) start-at))))
+                 "d "))
+
+(define-command (rectangle-number-lines . args)
+  "Insert numbers in front of the region-rectangle.
+START-AT, if given, is the number from which to begin counting.  FORMAT, if given,
+is a format string for the line count.  With a prefix argument, read START-AT and FORMAT."
+  (let* ((start (if (>= (length args) 2) (car args) (region-beginning)))
+         (end (if (>= (length args) 2) (cadr args) (region-end)))
+         (start-at (cond ((>= (length args) 3) (caddr args))
+                         ((and (null? args) (current-prefix-arg))
+                          (string->number (read-string "Number to count from: " "1")))
+                         (else 1)))
+         (format-string (cond ((>= (length args) 4) (list-ref args 3))
+                              ((and (null? args) (current-prefix-arg))
+                               (read-string "Format string: " (rect--default-line-number-format start end start-at)))
+                              (else #f)))
+         (format-string (or format-string (rect--default-line-number-format start end start-at)))
+         (counter start-at))
+    (apply-on-rectangle (lambda (left right)
+                          (move-to-column left #t)
+                          (insert (format format-string counter))
+                          (set! counter (+ counter 1)))
+                        start end)
+    #f))

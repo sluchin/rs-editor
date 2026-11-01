@@ -684,6 +684,87 @@ A prefix argument serves as a repeat count.  Zero means repeat until error."
                              (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))))
   #f)
 
+;;; Keyboard macros (kmacro)
+
+(define kmacro-counter 0 "Current keyboard macro counter.")
+(define kmacro-last-counter 0 "Last counter inserted by `kmacro-insert-counter'.")
+(define kmacro-counter-format "%d" "Format to use when inserting the keyboard macro counter.")
+
+(define-command (kmacro-start-macro . args)
+  "Record subsequent keyboard input, defining a keyboard macro.
+Without a prefix argument, the counter is reset to 0.  With a numeric prefix argument, the
+counter is set to it.  With C-u, append to the last macro and keep the counter."
+  (let ((arg (if (null? args) (current-prefix-arg) (car args))))
+    (if (kbd-macro-defining-p)
+        (message "Already defining keyboard macro.")
+        (begin
+          (if (not (pair? arg))
+              (begin (set! kmacro-last-counter kmacro-counter)
+                     (set! kmacro-counter (if arg (prefix-numeric-value arg) 0))))
+          (simple--start-kbd-macro (pair? arg)))))
+  #f)
+
+(define-command (kmacro-insert-counter . args)
+  "Insert the next value of the keyboard macro counter and increment it.
+With a numeric prefix argument, increment by that amount.  With C-u, insert the previous
+value without incrementing."
+  (let ((arg (if (null? args) (current-prefix-arg) (car args))))
+    (if (pair? arg)
+        (insert (format kmacro-counter-format kmacro-last-counter))
+        (begin
+          (insert (format kmacro-counter-format kmacro-counter))
+          (set! kmacro-last-counter kmacro-counter)
+          (set! kmacro-counter (+ kmacro-counter (prefix-numeric-value arg))))))
+  #f)
+
+(define-command (kmacro-start-macro-or-insert-counter . args)
+  "Start defining a keyboard macro, or insert the counter if one is being defined."
+  (if (or (kbd-macro-defining-p) (executing-kbd-macro-p))
+      (kmacro-insert-counter)
+      (kmacro-start-macro))
+  #f)
+
+(define-command (kmacro-end-macro . args)
+  "Finish defining a keyboard macro.
+With numeric arg, repeat the macro now that many times, counting the definition just
+completed as the first repetition.  An argument of zero means repeat until error."
+  (if (not (kbd-macro-defining-p))
+      (error "Not defining keyboard macro")
+      (begin
+        (end-kbd-macro (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
+        (if (null? (last-kbd-macro)) (message "Ignore empty macro"))))
+  #f)
+
+(define-command (kmacro-end-and-call-macro . args)
+  "Call the last keyboard macro, ending the definition first if one is in progress.
+A prefix argument serves as a repeat count; zero means repeat until error."
+  (if (kbd-macro-defining-p) (kmacro-end-macro 1))
+  (if (null? (last-kbd-macro))
+      (error "No kbd macro has been defined")
+      (execute-kbd-macro (last-kbd-macro)
+                         (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args))))
+  #f)
+
+(define-command (kmacro-end-or-call-macro . args)
+  "End the keyboard macro being defined, or call the last one."
+  (if (kbd-macro-defining-p)
+      (kmacro-end-macro)
+      (call-last-kbd-macro))
+  #f)
+
+(define-command (kmacro-name-last-macro . args)
+  "Assign a name to the last keyboard macro defined."
+  (if (null? (last-kbd-macro))
+      (error "No keyboard macro defined")
+      (let ((name (if (null? args) (read-string "Name for last kbd macro: ") (car args))))
+        (if (equal? name "")
+            (error "No command name given")
+            (eval (list 'define-command (list (string->symbol name))
+                        "Keyboard macro."
+                        (list 'execute-kbd-macro (list 'quote (last-kbd-macro)) 1)
+                        #f)))))
+  #f)
+
 ;;; Case
 
 (define (simple--casify-region mode args)
