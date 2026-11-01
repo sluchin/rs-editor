@@ -26,6 +26,8 @@ const RECT: &str = include_str!("../../lisp/rect.scm");
 const REGISTER: &str = include_str!("../../lisp/register.scm");
 
 /// 動的略語 (Lisp. `replace.scm` の後に読む).
+const MINIBUFFER: &str = include_str!("../../lisp/minibuffer.scm");
+const ABBREV: &str = include_str!("../../lisp/abbrev.scm");
 const DABBREV: &str = include_str!("../../lisp/dabbrev.scm");
 
 /// バッファの一覧 (Lisp).
@@ -88,6 +90,8 @@ impl App {
         evaluator.eval_with(ISEARCH, &host)?;
         evaluator.eval_with(RECT, &host)?;
         evaluator.eval_with(REGISTER, &host)?;
+        evaluator.eval_with(ABBREV, &host)?;
+        evaluator.eval_with(MINIBUFFER, &host)?;
         evaluator.eval_with(DABBREV, &host)?;
         evaluator.eval_with(BUFF_MENU, &host)?;
         evaluator.eval_with(DIRED, &host)?;

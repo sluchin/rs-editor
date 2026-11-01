@@ -84,7 +84,17 @@ STEPS = [
       'キーボードマクロの `kmacro-*` (カウンター, `F3`, `F4`, 名前を付ける) も, 同じ理由で `tui/tests/test_app.rs` で試す. '
       '違いが残るのは, 幅の違う文字 (全角, 曖昧幅) を含む行の矩形の桁の数え方, '
       '`kmacro-end-call-mouse` (マウス) と, キーボードマクロのリング (`kmacro-cycle-ring-next` など) が無いこと。'
-      '略語 (`abbrev`), `dabbrev-completion`, `complete-symbol` はまだ。】']),
+      '略語 (`lisp/abbrev.scm`: `expand-abbrev`, `abbrev-prefix-mark`, `add-global-abbrev`, `add-mode-abbrev`, `inverse-add-global-abbrev`, `inverse-add-mode-abbrev`) も済で, '
+      '`emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 大文字と小文字の展開, 前置引数, 取り消し, 作り直しの問い, 接頭辞の印を, 本文の全ての位置から). '
+      '違いが残るのは, 略語の表がメジャーモードごとではなく, 全てのバッファで 1 つのローカルの表と, グローバルの表だけなこと, '
+      '`abbrev-mode` (打つと自動で展開する) と, 略語の保存 (`write-abbrev-file`) と, 表の親 (`:parents`), 展開のフックの `no-self-insert` が無いこと。'
+      '`dabbrev-completion` (`lisp/dabbrev.scm`) と, 補完の土台 (`completion-at-point`, `lisp/minibuffer.scm`) も済で, `dabbrev-completion` は `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 本文の全ての位置から, 補完した本文と, カーソルと, 出したメッセージ). '
+      '`complete-symbol` は, 補完する名前が Emacs と別 (Emacs は Emacs Lisp の記号, こちらは評価器に定義された Scheme の名前) なので, `core/tests/test_minibuffer.rs` で試す。'
+      '補完の違いは, 候補の選び方が先頭の一致だけ (partial-completion などの方式が無い), `*Completions*` が 1 行ずつの簡単な一覧 (列に並べず, 選んで確定もできない), '
+      '`dabbrev-completion` が他のバッファを探さない (前置引数を付けても今のバッファだけ) こと。'
+      '`dabbrev-expand` の違いは, 展開の後に空白を入れて続けると次の語を取る機能と, 他のバッファを探す機能が無いこと。'
+      '略語の違いを無くすには, (1) メジャーモードごとの略語の表と `abbrev-mode`: エディタにメジャーモードの仕組み (バッファごとのモードと, 変数 `local-abbrev-table`) と, 文字を打つたびに略語を展開するか決める処理 (Emacs の `self-insert-command` の後の `abbrev-mode` の判定) を足す必要があり, エディタ側の変更が大きい。 '
+      '(2) 略語の保存 (`write-abbrev-file`, `read-abbrev-file`) と表の親 (`:parents`), 展開のフックの `no-self-insert` は, Lisp だけで書ける。】']),
     (9, 'ファイル, バッファ, dired, ブックマーク, シェル',
      ['ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。',
       '`save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。']),

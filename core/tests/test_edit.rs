@@ -13,6 +13,8 @@ use serde_json::{json, Value as Json};
 #[derive(Default)]
 struct FakeUi {
     message: std::sync::Mutex<Option<String>>,
+    /// `read-string` と `read-key` が返す入力 (略語のコマンドの問い).
+    inputs: std::sync::Mutex<std::collections::VecDeque<String>>,
 }
 
 impl Host for FakeUi {
@@ -20,10 +22,26 @@ impl Host for FakeUi {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
-                    *self.message.lock().unwrap() = Some(text.clone());
+                    // 空の文字列は, エコー領域を消す (Emacs の `(message nil)`)
+                    *self.message.lock().unwrap() = Some(text.clone()).filter(|t| !t.is_empty());
                 }
                 Ok(Value::Nil)
             }
+            // 入力が尽きたら, `read-key` (`y-or-n-p`) は n (Emacs の試験では, 尽きた `y-or-n-p` は偽)
+            "read-key" => Ok(Value::String(
+                self.inputs
+                    .lock()
+                    .unwrap()
+                    .pop_front()
+                    .unwrap_or_else(|| "n".to_string()),
+            )),
+            "read-string" => self
+                .inputs
+                .lock()
+                .unwrap()
+                .pop_front()
+                .map(Value::String)
+                .ok_or_else(|| "no input".to_string()),
             other => Err(format!("ui: {other}")),
         }
     }
@@ -40,6 +58,7 @@ fn scheme_arg(arg: &Json) -> String {
             Some(name) => format!("'{name}"),
             None => format!("{s:?}"),
         },
+        Json::Object(o) if o.contains_key("v") => o["v"].as_str().unwrap().to_string(),
         Json::Object(o) if o.contains_key("c") => format!("{:?}", o["c"].as_str().unwrap()),
         Json::Object(o) if o.contains_key("l") => {
             let items: Vec<String> = o["l"].as_array().unwrap().iter().map(scheme_arg).collect();
@@ -70,13 +89,29 @@ fn run(
         }
     }
     *host.ui().message.lock().unwrap() = None;
-    let mut code = String::from("(set! simple--cycle-context #f) (set! last-command #f)\n");
+    host.ui().inputs.lock().unwrap().clear();
+    let mut code = String::from(
+        "(set! simple--cycle-context #f) (set! last-command #f)
+         (clear-abbrev-table global-abbrev-table) (clear-abbrev-table local-abbrev-table)
+         (set! abbrev-start-location #f)\n",
+    );
     for seed in seeds {
         code.push_str(&format!("(kill-new {})\n", scheme_arg(seed)));
     }
     let mut result = Ok(String::new());
     for step in steps {
         let command = step[0].as_str().unwrap();
+        if command == "abbrev-inputs" {
+            let mut inputs = host.ui().inputs.lock().unwrap();
+            inputs.extend(
+                step[1]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|i| i.as_str().unwrap().to_string()),
+            );
+            continue;
+        }
         let mut run = String::new();
         if step[2] != "keep" {
             run.push_str(&match step[2].as_str() {
@@ -152,6 +187,10 @@ fn test_against_emacs() {
         .unwrap();
     ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
         .unwrap();
+    ev.eval_with(include_str!("../../lisp/abbrev.scm"), &host)
+        .unwrap();
+    ev.eval_with(include_str!("../../lisp/minibuffer.scm"), &host)
+        .unwrap();
     ev.eval_with(include_str!("../../lisp/dabbrev.scm"), &host)
         .unwrap();
     {
@@ -161,6 +200,10 @@ fn test_against_emacs() {
     }
     let mut failures = Vec::new();
     for (name, steps, seeds, mark, text, results) in &table {
+        // ONLY=名前 で, 名前に含む手順だけ試す
+        if std::env::var("ONLY").is_ok_and(|only| !name.contains(&only)) {
+            continue;
+        }
         for (pos, expected) in results.iter().enumerate() {
             let actual = run(
                 &ev,

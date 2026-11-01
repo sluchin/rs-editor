@@ -792,6 +792,12 @@ Called from Lisp with the two positions BEG and END, convert the text between th
 Called from Lisp with the two positions BEG and END, convert the text between them."
   (simple--casify-region "downcase" args))
 
+(define-command (upcase-initials-region . args)
+  "Upcase the initial of each word in the region.
+Subsequent letters of each word are not changed.
+Called from Lisp with the two positions BEG and END, convert the text between them."
+  (simple--casify-region "upcase-initials" args))
+
 (define-command (capitalize-region . args)
   "Convert the region to capitalized form.
 Capitalized form means each word's first character is upper case and the rest lower case.

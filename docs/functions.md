@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 18 個: Lisp 3 個, TypeScript 15 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 19 個: Lisp 4 個, TypeScript 15 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -261,7 +261,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `top-level` |  |  |  |  |  |
 | `transpose-regions` |  |  |  |  |  |
 | `unix-sync` |  |  |  |  |  |
-| `upcase-initials-region` |  |  |  |  |  |
+| `upcase-initials-region` |  |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
 | `widen` | ◯ | `C-x n w` | 実装済み |  | Lisp (`lisp/simple.scm`) |
@@ -282,7 +282,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 5 | S 式, 段落, ページ | 14 | - | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 6 | - | 6 |
-| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 15 | 9 | 6 |
+| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
 | 9 | ファイル, バッファ, dired, ブックマーク, シェル | 16 | 11 | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
@@ -331,7 +331,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 **8. 矩形, レジスタ, キーボードマクロ, 略語**
 
 - 矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。
-- 【矩形とレジスタとキーボードマクロは Lisp 版が済 (`lisp/rect.scm`, `lisp/register.scm`, `lisp/simple.scm`). `emacs -Q --batch` の結果と一致: 矩形 (`clear-rectangle`, `delete-rectangle`, `open-rectangle`, `rectangle-number-lines`, `kill-rectangle`, `copy-rectangle-as-kill` と `yank-rectangle`) と, レジスタ (`copy-rectangle-to-register`, `number-to-register`, `increment-register`, `append-to-register`, `point-to-register`, `jump-to-register`) (`core/tests/test_lisp.rs`, `core/tests/test_edit.rs`). ウィンドウ構成のレジスタ (`window-configuration-to-register`) は, バッチの Emacs に窓が無いので Rust のテストだけ (`core/tests/test_register.rs`, `core/tests/test_editor.rs`). キーボードマクロの `kmacro-*` (カウンター, `F3`, `F4`, 名前を付ける) も, 同じ理由で `tui/tests/test_app.rs` で試す. 違いが残るのは, 幅の違う文字 (全角, 曖昧幅) を含む行の矩形の桁の数え方, `kmacro-end-call-mouse` (マウス) と, キーボードマクロのリング (`kmacro-cycle-ring-next` など) が無いこと。略語 (`abbrev`), `dabbrev-completion`, `complete-symbol` はまだ。】
+- 【矩形とレジスタとキーボードマクロは Lisp 版が済 (`lisp/rect.scm`, `lisp/register.scm`, `lisp/simple.scm`). `emacs -Q --batch` の結果と一致: 矩形 (`clear-rectangle`, `delete-rectangle`, `open-rectangle`, `rectangle-number-lines`, `kill-rectangle`, `copy-rectangle-as-kill` と `yank-rectangle`) と, レジスタ (`copy-rectangle-to-register`, `number-to-register`, `increment-register`, `append-to-register`, `point-to-register`, `jump-to-register`) (`core/tests/test_lisp.rs`, `core/tests/test_edit.rs`). ウィンドウ構成のレジスタ (`window-configuration-to-register`) は, バッチの Emacs に窓が無いので Rust のテストだけ (`core/tests/test_register.rs`, `core/tests/test_editor.rs`). キーボードマクロの `kmacro-*` (カウンター, `F3`, `F4`, 名前を付ける) も, 同じ理由で `tui/tests/test_app.rs` で試す. 違いが残るのは, 幅の違う文字 (全角, 曖昧幅) を含む行の矩形の桁の数え方, `kmacro-end-call-mouse` (マウス) と, キーボードマクロのリング (`kmacro-cycle-ring-next` など) が無いこと。略語 (`lisp/abbrev.scm`: `expand-abbrev`, `abbrev-prefix-mark`, `add-global-abbrev`, `add-mode-abbrev`, `inverse-add-global-abbrev`, `inverse-add-mode-abbrev`) も済で, `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 大文字と小文字の展開, 前置引数, 取り消し, 作り直しの問い, 接頭辞の印を, 本文の全ての位置から). 違いが残るのは, 略語の表がメジャーモードごとではなく, 全てのバッファで 1 つのローカルの表と, グローバルの表だけなこと, `abbrev-mode` (打つと自動で展開する) と, 略語の保存 (`write-abbrev-file`) と, 表の親 (`:parents`), 展開のフックの `no-self-insert` が無いこと。`dabbrev-completion` (`lisp/dabbrev.scm`) と, 補完の土台 (`completion-at-point`, `lisp/minibuffer.scm`) も済で, `dabbrev-completion` は `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 本文の全ての位置から, 補完した本文と, カーソルと, 出したメッセージ). `complete-symbol` は, 補完する名前が Emacs と別 (Emacs は Emacs Lisp の記号, こちらは評価器に定義された Scheme の名前) なので, `core/tests/test_minibuffer.rs` で試す。補完の違いは, 候補の選び方が先頭の一致だけ (partial-completion などの方式が無い), `*Completions*` が 1 行ずつの簡単な一覧 (列に並べず, 選んで確定もできない), `dabbrev-completion` が他のバッファを探さない (前置引数を付けても今のバッファだけ) こと。`dabbrev-expand` の違いは, 展開の後に空白を入れて続けると次の語を取る機能と, 他のバッファを探す機能が無いこと。略語の違いを無くすには, (1) メジャーモードごとの略語の表と `abbrev-mode`: エディタにメジャーモードの仕組み (バッファごとのモードと, 変数 `local-abbrev-table`) と, 文字を打つたびに略語を展開するか決める処理 (Emacs の `self-insert-command` の後の `abbrev-mode` の判定) を足す必要があり, エディタ側の変更が大きい。 (2) 略語の保存 (`write-abbrev-file`, `read-abbrev-file`) と表の親 (`:parents`), 展開のフックの `no-self-insert` は, Lisp だけで書ける。】
 
 **9. ファイル, バッファ, dired, ブックマーク, シェル**
 
@@ -350,7 +350,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 169 個: Lisp 86 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 177 個: Lisp 94 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -476,7 +476,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `switch-to-buffer-other-window` | ◯ | window | `C-x 4 b` |  |  |  | 10 |
 | `toggle-window-dedicated` |  | window | `C-x w d` |  |  |  | 10 |
 | `window-toggle-side-windows` |  | window | `C-x w s` |  |  |  | 10 |
-| `complete-symbol` |  | bindings | `C-M-i` |  |  |  | 8 |
+| `complete-symbol` |  | bindings | `C-M-i` | 実装済み |  | Lisp (`lisp/minibuffer.scm`) | 済 |
 | `ignore-preserving-kill-region` |  | bindings | `<mouse-movement>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `left-char` |  | bindings | `<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `left-word` |  | bindings | `C-<left>`, `M-<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -552,13 +552,13 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `kmacro-name-last-macro` |  | kmacro | `C-x C-k n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `kmacro-start-macro` |  | kmacro | `C-x (`, `C-x C-k s`, `C-x C-k C-s` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `kmacro-start-macro-or-insert-counter` |  | kmacro | `<f3>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `abbrev-prefix-mark` | ◯ | abbrev | `M-'` |  |  |  | 8 |
-| `add-global-abbrev` | ◯ | abbrev | `C-x a g` |  |  |  | 8 |
-| `add-mode-abbrev` | ◯ | abbrev | `C-x a +`, `C-x a l`, `C-x a C-a` |  |  |  | 8 |
-| `expand-abbrev` | ◯ | abbrev | `C-x '`, `C-x a '`, `C-x a e` |  |  |  | 8 |
-| `inverse-add-global-abbrev` | ◯ | abbrev | `C-x a -`, `C-x a i g` |  |  |  | 8 |
-| `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` |  |  |  | 8 |
-| `dabbrev-completion` |  | dabbrev | `C-M-/` |  |  |  | 8 |
+| `abbrev-prefix-mark` | ◯ | abbrev | `M-'` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `add-global-abbrev` | ◯ | abbrev | `C-x a g` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `add-mode-abbrev` | ◯ | abbrev | `C-x a +`, `C-x a l`, `C-x a C-a` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `expand-abbrev` | ◯ | abbrev | `C-x '`, `C-x a '`, `C-x a e` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `inverse-add-global-abbrev` | ◯ | abbrev | `C-x a -`, `C-x a i g` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
+| `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み |  | Lisp (`lisp/dabbrev.scm`) | 済 |
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | TypeScript (`src/App.tsx`, `lisp/buff-menu.scm`) | 9 |
 | `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/dired.scm`) | 9 |

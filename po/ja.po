@@ -5,6 +5,257 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: ja\n"
 
+#: lisp/abbrev.scm
+msgctxt "function:make-abbrev-table"
+msgid ""
+"Create a new, empty abbrev table.\n"
+"An abbrev table is called with an operation (get, put, clear or names) and its arguments."
+msgstr ""
+"空の略語の表を作る.\n"
+"略語の表は, 操作 (get, put, clear, names) とその引数を付けて呼ぶ."
+
+#: lisp/abbrev.scm
+msgctxt "function:clear-abbrev-table"
+msgid "Undefine all abbrevs in abbrev table TABLE, leaving TABLE empty."
+msgstr "略語の表 TABLE の略語を全て取り消して, 空にする."
+
+#: lisp/abbrev.scm
+msgctxt "variable:global-abbrev-table"
+msgid "The abbrev table whose abbrevs affect all buffers."
+msgstr "全てのバッファに効く略語の表."
+
+#: lisp/abbrev.scm
+msgctxt "variable:local-abbrev-table"
+msgid "Local (mode-specific) abbrev table."
+msgstr "ローカル (モードごと) の略語の表."
+
+#: lisp/abbrev.scm
+msgctxt "variable:only-global-abbrevs"
+msgid ""
+"Non-nil means user plans to use global abbrevs only.\n"
+"This makes the commands that normally define mode-specific abbrevs define global abbrevs instead."
+msgstr ""
+"非 nil なら, グローバルな略語だけを使うつもりであることを表す.\n"
+"モードごとの略語を定義するコマンドが, 代わりにグローバルな略語を定義する."
+
+#: lisp/abbrev.scm
+msgctxt "variable:abbrev-all-caps"
+msgid "Non-nil means expand multi-word abbrevs in all caps if the abbrev was so."
+msgstr "非 nil なら, 略語が大文字だったとき, 複数の語の展開も全て大文字にする."
+
+#: lisp/abbrev.scm
+msgctxt "variable:abbrev-start-location"
+msgid ""
+"Buffer position for `expand-abbrev' to use as the start of the abbrev.\n"
+"When nil, use the word before point as the abbrev.\n"
+"Calling `expand-abbrev' sets this to nil."
+msgstr ""
+"`expand-abbrev' が略語の始まりに使うバッファの位置.\n"
+"nil なら, ポイントの前の単語を略語にする.\n"
+"`expand-abbrev' を呼ぶと nil になる."
+
+#: lisp/abbrev.scm
+msgctxt "variable:last-abbrev"
+msgid "The abbrev of the last abbrev expanded."
+msgstr "最後に展開した略語."
+
+#: lisp/abbrev.scm
+msgctxt "variable:last-abbrev-text"
+msgid "The exact text of the last abbrev that was expanded."
+msgstr "最後に展開した略語の, 打った文字列そのもの."
+
+#: lisp/abbrev.scm
+msgctxt "variable:last-abbrev-location"
+msgid "The location of the start of the last abbrev that was expanded."
+msgstr "最後に展開した略語の始まりの位置."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--active-tables"
+msgid "Return the abbrev tables to look in: TABLE only, or the local and the global table."
+msgstr "探す略語の表を返す. TABLE があればそれだけ, 無ければローカルとグローバルの表."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--entry"
+msgid "Return the entry of ABBREV in TABLE (name expansion hook count), folding case, or #f if it has no expansion."
+msgstr "TABLE の中の ABBREV の項目 (名前 展開 フック 回数) を, 大文字と小文字を区別せずに返す. 展開が無ければ偽."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--symbol"
+msgid "Return the entry of ABBREV in the TABLE (or the active tables), or #f."
+msgstr "表 TABLE (無ければ今有効な表) の中の ABBREV の項目を返す. 無ければ偽."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev-expansion"
+msgid ""
+"Return the string that ABBREV expands into in the current buffer.\n"
+"Optionally specify an abbrev TABLE as second arg; then ABBREV is looked up in that table only."
+msgstr ""
+"今のバッファで ABBREV が展開される文字列を返す.\n"
+"2 番目の引数で略語の表 TABLE を選ぶと, その表だけから探す."
+
+#: lisp/abbrev.scm
+msgctxt "function:define-abbrev"
+msgid ""
+"Define ABBREV in TABLE, to expand into EXPANSION and optionally call HOOK.\n"
+"ABBREV must be a string, and should be lower-case.\n"
+"To undefine an abbrev, define it with EXPANSION = nil.\n"
+"If HOOK is non-nil, it should be a function of no arguments;\n"
+"it is called after EXPANSION is inserted."
+msgstr ""
+"TABLE に, EXPANSION に展開され, HOOK を呼ぶこともある略語 ABBREV を定義する.\n"
+"ABBREV は文字列で, 小文字がよい.\n"
+"略語を取り消すには, EXPANSION を nil にして定義する.\n"
+"HOOK があれば, 引数の無い関数で, EXPANSION を挿入した後に呼ぶ."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--add"
+msgid "Define an abbrev in TABLE whose expansion is ARG words before point; read the abbrev from the minibuffer."
+msgstr "ポイントの前の ARG 語を展開とする略語を TABLE に定義する. 略語はミニバッファで読む."
+
+#: lisp/abbrev.scm
+msgctxt "function:add-mode-abbrev"
+msgid ""
+"Define a mode-specific abbrev whose expansion is the last word before point.\n"
+"If there's an active region, use that as the expansion.\n"
+"\n"
+"Prefix argument ARG says how many words before point to use for the expansion;\n"
+"zero means the entire region is the expansion.\n"
+"\n"
+"A negative ARG means to undefine the specified abbrev.\n"
+"\n"
+"This command reads the abbreviation from the minibuffer."
+msgstr ""
+"ポイントの前の単語を展開とする, モードごとの略語を定義する.\n"
+"リージョンが有効なら, それを展開とする.\n"
+"\n"
+"前置引数 ARG は, ポイントの前の何語を展開とするか. 0 なら, リージョン全体が展開になる.\n"
+"\n"
+"ARG が負なら, 指定した略語を取り消す.\n"
+"\n"
+"このコマンドは, 略語をミニバッファで読む."
+
+#: lisp/abbrev.scm
+msgctxt "function:add-global-abbrev"
+msgid ""
+"Define a global (all modes) abbrev whose expansion is last word before point.\n"
+"If there's an active region, use that as the expansion.\n"
+"\n"
+"Prefix argument ARG says how many words before point to use for the expansion;\n"
+"zero means the entire region is the expansion.\n"
+"\n"
+"A negative ARG means to undefine the specified abbrev.\n"
+"\n"
+"This command reads the abbreviation from the minibuffer."
+msgstr ""
+"ポイントの前の単語を展開とする, グローバル (全てのモード) の略語を定義する.\n"
+"リージョンが有効なら, それを展開とする.\n"
+"\n"
+"前置引数 ARG は, ポイントの前の何語を展開とするか. 0 なら, リージョン全体が展開になる.\n"
+"\n"
+"ARG が負なら, 指定した略語を取り消す.\n"
+"\n"
+"このコマンドは, 略語をミニバッファで読む."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--inverse-add"
+msgid "Define the Nth word before point as an abbrev in TABLE, reading the expansion, and expand it."
+msgstr "ポイントの前の N 番目の単語を略語として TABLE に定義し, 展開をミニバッファで読んで, 展開する."
+
+#: lisp/abbrev.scm
+msgctxt "function:inverse-add-mode-abbrev"
+msgid ""
+"Define the word before point as a mode-specific abbreviation.\n"
+"With prefix argument N, define the Nth word before point as the\n"
+"abbreviation.  Negative N means use the Nth word after point.\n"
+"\n"
+"If `only-global-abbrevs' is non-nil, this command defines a\n"
+"global (mode-independent) abbrev instead of a mode-specific one.\n"
+"\n"
+"This command reads the expansion from the minibuffer, defines the\n"
+"abbrev, and then expands the abbreviation in the current buffer."
+msgstr ""
+"ポイントの前の単語を, モードごとの略語として定義する.\n"
+"前置引数 N があれば, ポイントの前の N 番目の単語を略語にする.\n"
+"N が負なら, ポイントの後の N 番目の単語を使う.\n"
+"\n"
+"`only-global-abbrevs' が非 nil なら, モードごとではなく,\n"
+"グローバル (モードによらない) 略語を定義する.\n"
+"\n"
+"このコマンドは, 展開をミニバッファで読み, 略語を定義して,\n"
+"今のバッファの略語を展開する."
+
+#: lisp/abbrev.scm
+msgctxt "function:inverse-add-global-abbrev"
+msgid ""
+"Define the word before point as a global (mode-independent) abbreviation.\n"
+"With prefix argument N, define the Nth word before point as the\n"
+"abbreviation.  Negative N means use the Nth word after point.\n"
+"\n"
+"This command reads the expansion from the minibuffer, defines the\n"
+"abbrev, and then expands the abbreviation in the current buffer."
+msgstr ""
+"ポイントの前の単語を, グローバル (モードによらない) 略語として定義する.\n"
+"前置引数 N があれば, ポイントの前の N 番目の単語を略語にする.\n"
+"N が負なら, ポイントの後の N 番目の単語を使う.\n"
+"\n"
+"このコマンドは, 展開をミニバッファで読み, 略語を定義して,\n"
+"今のバッファの略語を展開する."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev-prefix-mark"
+msgid ""
+"Mark point as the beginning of an abbreviation.\n"
+"The abbrev to be expanded starts at point rather than at the\n"
+"beginning of a word.  This way, you can expand an abbrev with\n"
+"a prefix: insert the prefix, use this command, then insert the\n"
+"abbrev.\n"
+"\n"
+"This command inserts a hyphen after the prefix, and if the abbrev\n"
+"is subsequently expanded, this hyphen will be removed.\n"
+"\n"
+"If the prefix is itself an abbrev, this command expands it,\n"
+"unless ARG is non-nil.  Interactively, ARG is the prefix\n"
+"argument."
+msgstr ""
+"ポイントを略語の始まりとして印を付ける.\n"
+"展開する略語は, 単語の始めではなくポイントから始まる.\n"
+"こうすると, 接頭辞を付けて略語を展開できる:\n"
+"接頭辞を挿入し, このコマンドを使ってから, 略語を挿入する.\n"
+"\n"
+"このコマンドは, 接頭辞の後にハイフンを挿入する.\n"
+"後で略語を展開すると, このハイフンは消える.\n"
+"\n"
+"接頭辞自身が略語なら, このコマンドはそれを展開する.\n"
+"ただし ARG が非 nil なら展開しない. 対話では, ARG は前置引数."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--before-point"
+msgid "Try and find an abbrev before point.  Return (ENTRY NAME START END) if found, #f otherwise."
+msgstr "ポイントの前の略語を探す. 見つかれば (項目 名前 始め 終わり) を, 無ければ偽を返す."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--insert"
+msgid ""
+"Replace the text from WORDSTART to WORDEND with the expansion of ENTRY (found as NAME).\n"
+"Return #t."
+msgstr ""
+"WORDSTART から WORDEND までの文字を, ENTRY の展開に置き換える (NAME で見つけた).\n"
+"展開したら #t を返す."
+
+#: lisp/abbrev.scm
+msgctxt "function:abbrev--expand"
+msgid "Expand the abbrev before point, if there is an abbrev there.  Return #t if one was expanded."
+msgstr "ポイントの前に略語があれば展開する. 展開したら #t を返す."
+
+#: lisp/abbrev.scm
+msgctxt "function:expand-abbrev"
+msgid ""
+"Expand the abbrev before point, if there is an abbrev there.\n"
+"Effective when explicitly called even when `abbrev-mode' is nil."
+msgstr ""
+"ポイントの前に略語があれば展開する.\n"
+"`abbrev-mode' が nil でも, 明示的に呼べば効く."
+
 #: lisp/bookmark.scm
 msgctxt "variable:bookmark-default-file"
 msgid "File in which to save bookmarks by default."
@@ -254,6 +505,11 @@ msgid "Controls whether dabbrev preserves case when expanding the abbreviation."
 msgstr "略語を展開するとき, dabbrev が大文字小文字を保つかを決める."
 
 #: lisp/dabbrev.scm
+msgctxt "function:dabbrev--location"
+msgid "Return the position of `dabbrev--last-expansion-location' (a number, or a marker kept across the edit)."
+msgstr "`dabbrev--last-expansion-location' の位置を返す (数か, 編集をまたいで保つマーカー)."
+
+#: lisp/dabbrev.scm
 msgctxt "function:dabbrev--ignore-case-p"
 msgid "Return non-nil if case should be ignored when searching for ABBREV."
 msgstr "ABBREV を探すとき, 大文字小文字を区別しないなら真を返す."
@@ -315,6 +571,36 @@ msgstr ""
 "負の引数は, 前向きに探す.\n"
 "\n"
 "点が前の展開の終わりから動いておらず, 引数が無いなら, 前の展開を, まだ試していない次の候補に置き換える."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--capitalize"
+msgid "Return STRING with the first letter of each word upper case and the rest lower case."
+msgstr "STRING の各単語の頭の文字を大文字に, 残りを小文字にして返す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--find-all-expansions"
+msgid ""
+"Return a list of all possible expansions of ABBREV, the last one found first.\n"
+"If IGNORE-CASE is non-nil, accept matches which differ in case."
+msgstr ""
+"ABBREV の展開の候補を全て一覧にして返す (最後に見つけたものが先頭).\n"
+"IGNORE-CASE が非 nil なら, 大文字と小文字の違うものも受け入れる."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev--capf"
+msgid "Return (START END CANDIDATES) for the dabbrev completion of the abbreviation at point."
+msgstr "ポイントの略語の dabbrev による補完の (START END CANDIDATES) を返す."
+
+#: lisp/dabbrev.scm
+msgctxt "function:dabbrev-completion"
+msgid ""
+"Completion on current word.\n"
+"Like `dabbrev-expand' but finds all expansions in the current buffer\n"
+"and presents suggestions for completion."
+msgstr ""
+"ポイントの単語の補完.\n"
+"`dabbrev-expand' と同じように, 今のバッファの中の全ての展開を探し,\n"
+"補完の候補として示す."
 
 #: lisp/dired.scm
 msgctxt "variable:dired--directories"
@@ -1996,6 +2282,71 @@ msgid ""
 msgstr ""
 "点の近くにあるシンボルを前向きにインクリメンタルサーチする.\n"
 "普通のインクリメンタルサーチと同じだが, 点にあるシンボルを検索の文字列の初めに加え, シンボルの検索にする."
+
+#: lisp/minibuffer.scm
+msgctxt "variable:completion-at-point-functions"
+msgid ""
+"List of functions to be used by `completion-at-point'.\n"
+"Each function is called with no argument and returns (START END CANDIDATES) for the text at\n"
+"point, or #f if it does not apply."
+msgstr ""
+"`completion-at-point' が使う関数の一覧.\n"
+"各関数は引数なしで呼ばれ, ポイントの所の文字について (START END CANDIDATES) を返す.\n"
+"当てはまらなければ #f を返す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:completion--common-prefix"
+msgid "Return the longest string that is a prefix of every string in STRINGS."
+msgstr "STRINGS の全ての文字列の先頭に共通する, 一番長い文字列を返す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:completion--dedupe"
+msgid "Return STRINGS without duplicates, keeping the first of each."
+msgstr "STRINGS から重複を除いて返す (同じものは, 先のものを残す)."
+
+#: lisp/minibuffer.scm
+msgctxt "function:completion--show-list"
+msgid "Show CANDIDATES in the *Completions* buffer, in another window."
+msgstr "CANDIDATES を, 別のウィンドウの *Completions* バッファに出す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:completion-in-region"
+msgid ""
+"Complete the text between START and END using CANDIDATES (a list of strings).\n"
+"Insert the longest common prefix of the candidates that start with the text.  If that adds\n"
+"nothing, list the candidates in the *Completions* buffer.  Return #t if there was a match."
+msgstr ""
+"START と END の間の文字を, CANDIDATES (文字列の一覧) で補完する.\n"
+"文字で始まる候補の, 共通する先頭の部分を挿入する. 何も増えなければ,\n"
+"候補を *Completions* バッファに一覧する. 合うものがあれば #t を返す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:completion-at-point"
+msgid ""
+"Perform completion on the text around point.\n"
+"The completion method is determined by `completion-at-point-functions'."
+msgstr ""
+"ポイントの所の文字を補完する.\n"
+"補完の方法は `completion-at-point-functions' で決まる."
+
+#: lisp/minibuffer.scm
+msgctxt "function:complete-symbol--candidates"
+msgid "Return the names defined in the evaluator that start with PREFIX."
+msgstr "評価器で定義されている名前のうち, PREFIX で始まるものを返す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:complete-symbol--capf"
+msgid "Return (START END CANDIDATES) for the symbol before point."
+msgstr "ポイントの前の記号の (START END CANDIDATES) を返す."
+
+#: lisp/minibuffer.scm
+msgctxt "function:complete-symbol"
+msgid ""
+"Perform completion on the symbol preceding point.\n"
+"Complete with the names defined in the Scheme evaluator."
+msgstr ""
+"ポイントの前の記号を補完する.\n"
+"Scheme の評価器で定義されている名前で補完する."
 
 #: lisp/org.scm
 msgctxt "variable:org-directory"
@@ -5078,6 +5429,17 @@ msgid ""
 msgstr ""
 "リージョンを小文字にする.\n"
 "Lisp から 2 つの位置 BEG と END を渡すと, その間の文字を変換する."
+
+#: lisp/simple.scm
+msgctxt "function:upcase-initials-region"
+msgid ""
+"Upcase the initial of each word in the region.\n"
+"Subsequent letters of each word are not changed.\n"
+"Called from Lisp with the two positions BEG and END, convert the text between them."
+msgstr ""
+"リージョンの各単語の頭を大文字にする.\n"
+"単語の残りの文字は変えない.\n"
+"Lisp からは, 2 つの位置 BEG と END を付けて呼ぶと, その間の文字を変換する."
 
 #: lisp/simple.scm
 msgctxt "function:capitalize-region"

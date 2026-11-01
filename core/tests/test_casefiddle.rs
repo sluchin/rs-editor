@@ -32,6 +32,11 @@ fn test_convert() {
     );
     // 2 文字になる文字は, 大文字にすると 2 文字とも大文字, 単語の初めなら 2 文字目は小文字
     assert_eq!(convert("straße", Case::Up, |_| true), "STRASSE");
+    assert_eq!(
+        convert("foo bAR", Case::Initials, word("foo bAR")),
+        "Foo BAR"
+    );
+    assert_eq!(Case::parse("upcase-initials"), Some(Case::Initials));
     assert_eq!(convert("ßa", Case::Capitalize, |_| true), "Ssa");
     assert_eq!(Case::parse("upcase"), Some(Case::Up));
     assert_eq!(Case::parse("downcase"), Some(Case::Down));

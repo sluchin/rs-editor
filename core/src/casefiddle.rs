@@ -9,15 +9,18 @@ pub enum Case {
     Down,
     /// 単語の初めを大文字, 残りを小文字 (`capitalize`).
     Capitalize,
+    /// 単語の初めだけ大文字, 残りはそのまま (`upcase-initials`).
+    Initials,
 }
 
 impl Case {
-    /// 名前 (`upcase`, `downcase`, `capitalize`) から種類を返します.
+    /// 名前 (`upcase`, `downcase`, `capitalize`, `upcase-initials`) から種類を返します.
     pub fn parse(name: &str) -> Option<Self> {
         match name {
             "upcase" => Some(Case::Up),
             "downcase" => Some(Case::Down),
             "capitalize" => Some(Case::Capitalize),
+            "upcase-initials" => Some(Case::Initials),
             _ => None,
         }
     }
@@ -55,6 +58,8 @@ pub fn convert(text: &str, case: Case, is_word: impl Fn(usize) -> bool) -> Strin
             Case::Down => out.extend(c.to_lowercase()),
             Case::Capitalize if in_word => out.extend(c.to_lowercase()),
             Case::Capitalize => upcase(c, true, &mut out),
+            Case::Initials if in_word => out.push(c),
+            Case::Initials => upcase(c, true, &mut out),
         }
         in_word = is_word(i);
     }

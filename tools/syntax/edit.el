@@ -26,7 +26,12 @@
     "x"
     "a\n\n\n\nb\n\n"
     "one two three"
-    "foobar food Foo\nfoo FOOBAZ fo bar_x barx\nbar-y b"))
+    "foobar food Foo\nfoo FOOBAZ fo bar_x barx\nbar-y b"
+    "abc ABC Abc foo FOO Foo x"))
+
+(defvar abbrev-inputs nil)
+(advice-add 'read-string :override (lambda (&rest _) (pop abbrev-inputs)))
+(advice-add 'y-or-n-p :override (lambda (&rest _) (equal (pop abbrev-inputs) "y")))
 
 (defun step (cmd args &optional last) (vector cmd args last))
 
@@ -128,10 +133,79 @@
                (vector) nil)
          (list "insert-empty-register" (vector (step "insert-register" [((c . "z"))])) (vector) nil)
          (list "copy-register-region" (vector (step "copy-to-register" [((c . "q")) 1 3])) (vector) 1))
+   ;; 略語
+   (let ((defs (vector (step "define-abbrev" '(((v . "global-abbrev-table")) "abc" "alphabet city"))
+                       (step "define-abbrev" '(((v . "global-abbrev-table")) "foo" "foo bar baz"))
+                       (step "define-abbrev" '(((v . "global-abbrev-table")) "one" "uno"))
+                       (step "define-abbrev" '(((v . "global-abbrev-table")) "def" "!def")))))
+     (cl-flet ((with (&rest steps) (vconcat defs steps))
+               (inputs (&rest xs) (step "abbrev-inputs" (vconcat xs))))
+       (list (list "expand-abbrev" (with (step "expand-abbrev" [])) (vector) nil)
+             (list "expand-abbrev-twice" (with (step "expand-abbrev" []) (step "expand-abbrev" [])) (vector) nil)
+             (list "abbrev-prefix-mark"
+                   (with (step "end-of-buffer" []) (step "insert" ["pre"]) (step "abbrev-prefix-mark" [nil])
+                         (step "insert" ["abc"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "abbrev-prefix-mark-arg"
+                   (with (step "end-of-buffer" []) (step "insert" ["pre"]) (step "abbrev-prefix-mark" [t])
+                         (step "insert" ["one"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "abbrev-prefix-mark-expands"
+                   (with (step "end-of-buffer" []) (step "insert" [" one"]) (step "abbrev-prefix-mark" [nil])
+                         (step "insert" ["def"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-global-abbrev"
+                   (with (inputs "zz") (step "add-global-abbrev" [nil]) (step "end-of-buffer" [])
+                         (step "insert" [" zz"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-global-abbrev-2"
+                   (with (inputs "Zz") (step "add-global-abbrev" [2]) (step "end-of-buffer" [])
+                         (step "insert" [" zz"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-global-abbrev-region"
+                   (with (inputs "zz") (step "add-global-abbrev" [nil]) (step "end-of-buffer" [])
+                         (step "insert" [" zz"]) (step "expand-abbrev" []))
+                   (vector) 3)
+             (list "add-global-abbrev-0"
+                   (with (inputs "zz") (step "add-global-abbrev" [0]) (step "end-of-buffer" [])
+                         (step "insert" [" zz"]) (step "expand-abbrev" []))
+                   (vector) 3)
+             (list "add-global-abbrev-undefine"
+                   (with (inputs "abc") (step "add-global-abbrev" [-1]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-global-abbrev-redefine"
+                   (with (inputs "abc" "y") (step "add-global-abbrev" [1]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-global-abbrev-keep"
+                   (with (inputs "abc" "n") (step "add-global-abbrev" [1]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "add-mode-abbrev"
+                   (with (inputs "zz") (step "add-mode-abbrev" [nil]) (step "end-of-buffer" [])
+                         (step "insert" [" zz"]) (step "expand-abbrev" []))
+                   (vector) nil)
+             (list "inverse-add-global-abbrev"
+                   (with (inputs "expanded text") (step "inverse-add-global-abbrev" [1]))
+                   (vector) nil)
+             (list "inverse-add-global-abbrev-2"
+                   (with (inputs "expanded text") (step "inverse-add-global-abbrev" [2]))
+                   (vector) nil)
+             (list "inverse-add-global-abbrev-after"
+                   (with (inputs "expanded text") (step "inverse-add-global-abbrev" [-1]))
+                   (vector) nil)
+             (list "inverse-add-global-abbrev-redefine"
+                   (with (inputs "new" "y") (step "inverse-add-global-abbrev" [1]))
+                   (vector) nil)
+             (list "inverse-add-mode-abbrev"
+                   (with (inputs "expanded text") (step "inverse-add-mode-abbrev" [1]))
+                   (vector) nil))))
    ;; 動的略語
    (append
     (mapcar (lambda (a) (one "dabbrev-expand" "dabbrev-expand" a)) '([nil] [1] [2] [-1] [-2]))
-    (list (list "dabbrev-expand-twice"
+    (list (one "dabbrev-completion" "dabbrev-completion" [nil])
+          (list "dabbrev-completion-twice"
+                (vector (step "dabbrev-completion" [nil]) (step "dabbrev-completion" [nil] "dabbrev-completion"))
+                (vector) nil)
+          (list "dabbrev-expand-twice"
                 (vector (step "dabbrev-expand" [nil]) (step "dabbrev-expand" [nil] "dabbrev-expand"))
                 (vector) nil)
           (list "dabbrev-expand-thrice"
@@ -191,10 +265,13 @@
         ((stringp a) a)
         ((and (consp a) (assq 'c a)) (string-to-char (cdr (assq 'c a))))
         ((and (consp a) (assq 'l a)) (append (cdr (assq 'l a)) nil))
+        ((and (consp a) (assq 'v a)) (symbol-value (intern (cdr (assq 'v a)))))
         (t a)))
 
 (defun run-steps (steps seeds mark pos)
-  (setq kill-ring nil kill-ring-yank-pointer nil)
+  (setq kill-ring nil kill-ring-yank-pointer nil abbrev-inputs nil abbrev-start-location nil)
+  (clear-abbrev-table global-abbrev-table)
+  (clear-abbrev-table local-abbrev-table)
   (dolist (s (append seeds nil)) (kill-new s))
   (goto-char pos)
   (set-mark nil)
@@ -206,7 +283,9 @@
                  do (let ((cmd (aref step 0)) (args (aref step 1)) (last (aref step 2)))
                       (unless (equal last "keep") (setq last-command (and last (intern last))))
                       (setq this-command (intern cmd))
-                      (cond ((equal args "region")
+                      (cond ((equal cmd "abbrev-inputs")
+                             (setq abbrev-inputs (append abbrev-inputs (append args nil))))
+                            ((equal args "region")
                              (funcall (intern cmd) (region-beginning) (region-end)))
                             ((and (vectorp args) (> (length args) 0) (equal (aref args 0) "region"))
                              (apply (intern cmd) (region-beginning) (region-end)
@@ -226,13 +305,14 @@
 (with-current-buffer "other" (insert "OTHER"))
 (dolist (text texts)
   (dolist (case cases)
-    (let* ((name (nth 0 case)) (steps (nth 1 case)) (seeds (nth 2 case)) (mark (nth 3 case))
+    (progn
+     (let* ((name (nth 0 case)) (steps (nth 1 case)) (seeds (nth 2 case)) (mark (nth 3 case))
            (per-pos nil))
       (dotimes (i (1+ (length text)))
         (with-temp-buffer
           (insert text)
           (push (run-steps steps seeds mark (1+ i)) per-pos)))
-      (push (list name steps (or seeds []) (or mark :json-false) text (vconcat (nreverse per-pos))) results))))
+      (push (list name steps (or seeds []) (or mark :json-false) text (vconcat (nreverse per-pos))) results)))))
 
 (with-temp-file (expand-file-name (or (getenv "OUT") "edit.json"))
   (insert (json-encode (vconcat (nreverse results)))))

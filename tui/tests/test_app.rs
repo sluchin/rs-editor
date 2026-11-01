@@ -771,3 +771,37 @@ fn test_kmacro_counter_and_naming() {
     fx.app.run();
     assert_eq!(fx.text(), "0\n1\n2\n78891010");
 }
+
+#[test]
+fn test_abbrev_keys() {
+    let mut fx = Fixture::new();
+    // 直前の単語を略語にして, 展開する (`C-x a g` で略語を聞かれる)
+    fx.feed("h e l l o SPC w o r l d C-x a g z z RET SPC z z C-x ' ");
+    fx.app.run();
+    assert_eq!(fx.text(), "hello world world");
+    // 前置引数 2 で, 2 語
+    fx.feed("C-u 2 C-x a g q q RET SPC q q C-x a e");
+    fx.app.run();
+    assert_eq!(fx.text(), "hello world world world world");
+    // 前の語を略語にして, 展開を聞く
+    fx.feed("SPC a b c C-x a - a b c d RET");
+    fx.app.run();
+    assert_eq!(fx.text(), "hello world world world world abcd");
+    // 接頭辞の印 (ハイフンは展開で消える)
+    fx.feed("SPC p r e M-' z z C-x '");
+    fx.app.run();
+    assert_eq!(fx.text(), "hello world world world world abcd preworld");
+}
+
+#[test]
+fn test_completion_keys() {
+    let mut fx = Fixture::new();
+    // C-M-i: Scheme の名前を補完する
+    fx.feed("s t r i n g - a p p e C-M-i");
+    fx.app.run();
+    assert_eq!(fx.text(), "string-append");
+    // C-M-/: バッファの中の語で補完する
+    fx.feed("SPC f o o b a r SPC f o o b a z SPC f o o C-M-/");
+    fx.app.run();
+    assert_eq!(fx.text(), "string-append foobar foobaz fooba");
+}
