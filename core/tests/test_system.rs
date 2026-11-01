@@ -1011,3 +1011,46 @@ fn test_read_file_name() {
         format!("{:?}", "Edit file FILENAME.\nSwitch to a buffer visiting file FILENAME, creating one if none already exists.\nInteractively, read FILENAME in the minibuffer with file name completion.")
     );
 }
+
+#[test]
+fn test_call_shell_command() {
+    let ev = Evaluator::new();
+    // 出力と終了コード. エラーの出力も混ざる
+    assert_eq!(
+        ev.eval("(call-shell-command \"echo out; echo err 1>&2; exit 3\" #f #f)")
+            .unwrap(),
+        "(3 \"out\\nerr\\n\")"
+    );
+    // 標準入力
+    assert_eq!(
+        ev.eval("(call-shell-command \"tr a-z A-Z\" \"abc\" #f)")
+            .unwrap(),
+        "(0 \"ABC\")"
+    );
+    // 動かす所
+    let dir = tempdir().unwrap();
+    let path = fs::canonicalize(dir.path()).unwrap();
+    assert_eq!(
+        ev.eval(&format!(
+            "(call-shell-command \"pwd\" #f {:?})",
+            path.display().to_string()
+        ))
+        .unwrap(),
+        format!("(0 \"{}\\n\")", path.display())
+    );
+    // 動かす所が無ければ失敗
+    assert!(ev
+        .eval("(call-shell-command \"true\" #f \"/nonexistent-dir\")")
+        .unwrap_err()
+        .starts_with("sh: "));
+    // 信号で終わると -1
+    assert_eq!(
+        ev.eval("(call-shell-command \"kill -9 $$\" #f #f)")
+            .unwrap(),
+        "(-1 \"\")"
+    );
+    assert_eq!(
+        ev.eval("(call-shell-command 1 #f #f)").unwrap_err(),
+        "call-shell-command expects strings"
+    );
+}

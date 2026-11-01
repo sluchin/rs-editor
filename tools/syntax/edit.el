@@ -133,6 +133,82 @@
                (vector) nil)
          (list "insert-empty-register" (vector (step "insert-register" [((c . "z"))])) (vector) nil)
          (list "copy-register-region" (vector (step "copy-to-register" [((c . "q")) 1 3])) (vector) 1))
+   ;; バッファ
+   (list (list "clone-buffer"
+               (vector (step "clone-buffer" ["clone-x"]) (step "set-buffer" ["clone-x"]))
+               (vector) nil)
+         (list "clone-buffer-mark"
+               (vector (step "clone-buffer" ["clone-x"]) (step "set-buffer" ["clone-x"]))
+               (vector) 2)
+         (list "clone-buffer-narrowed"
+               (vector (step "narrow-to-region" [2 6]) (step "clone-buffer" ["clone-x"]) (step "set-buffer" ["clone-x"]))
+               (vector) nil)
+         (list "clone-buffer-edit"
+               (vector (step "clone-buffer" ["clone-x"]) (step "set-buffer" ["clone-x"]) (step "insert" ["Z"]))
+               (vector) nil)
+         (list "clone-buffer-twice"
+               (vector (step "clone-buffer" ["clone-x"]) (step "clone-buffer" ["clone-x"]) (step "set-buffer" ["clone-x<2>"]))
+               (vector) nil)
+         (one "not-modified" "not-modified" [nil])
+         (one "not-modified-arg" "not-modified" [t]))
+   ;; 読み取り専用
+   (let ((ro (lambda (cmd args &optional mark) (list (concat "read-only-" cmd)
+                                                       (vector (step "read-only-mode" [1]) (step cmd args))
+                                                       (vector) mark))))
+     (list (funcall ro "insert" ["x"])
+           (funcall ro "delete-char" [1])
+           (funcall ro "kill-word" [1])
+           (funcall ro "kill-line" [])
+           (funcall ro "upcase-word" [1])
+           (funcall ro "newline" [])
+           (funcall ro "transpose-chars" [1])
+           (funcall ro "delete-horizontal-space" [])
+           (funcall ro "kill-region" ["region"] 1)
+           (funcall ro "upcase-region" ["region"] 1)
+           (funcall ro "yank" [])
+           (funcall ro "open-line" [1])
+           (funcall ro "just-one-space" [])
+           (list "read-only-off"
+                 (vector (step "read-only-mode" [1]) (step "read-only-mode" [-1]) (step "insert" ["x"]))
+                 (vector) nil)))
+   ;; シェル
+   (list (list "shell-command"
+               (vector (step "shell-command" ["echo hi"]) (step "insert-buffer" ["*Shell Command Output*"]))
+               (vector) nil)
+         (list "shell-command-long"
+               (vector (step "shell-command" ["printf 'a\\nb\\nc\\nd\\ne\\nf\\ng\\nh\\n'"])
+                       (step "insert-buffer" ["*Shell Command Output*"]))
+               (vector) nil)
+         (list "shell-command-mixed"
+               (vector (step "shell-command" ["echo a; echo b 1>&2; echo c"])
+                       (step "insert-buffer" ["*Shell Command Output*"]))
+               (vector) nil)
+         (list "shell-command-no-output" (vector (step "shell-command" ["true"])) (vector) nil)
+         (list "shell-command-fail" (vector (step "shell-command" ["false"])) (vector) nil)
+         (list "shell-command-fail-output" (vector (step "shell-command" ["echo x; exit 3"])) (vector) nil)
+         (list "shell-command-insert" (vector (step "shell-command" ["echo hi" t])) (vector) nil)
+         (list "shell-command-insert-twice"
+               (vector (step "shell-command" ["echo hi" t]) (step "shell-command" ["echo ho" t]))
+               (vector) nil)
+         (list "shell-command-buffer"
+               (vector (step "shell-command" ["echo hi" "*foo*"]) (step "insert-buffer" ["*foo*"]))
+               (vector) nil)
+         (list "shell-command-on-region"
+               (vector (step "shell-command-on-region" ["region" "tr a-z A-Z"])
+                       (step "insert-buffer" ["*Shell Command Output*"]))
+               (vector) 1)
+         (list "shell-command-on-region-replace"
+               (vector (step "shell-command-on-region" ["region" "tr a-z A-Z" nil t]))
+               (vector) 1)
+         (list "shell-command-on-region-replace-back"
+               (vector (step "goto-char" [9]) (step "shell-command-on-region" ["region" "tr a-z A-Z" nil t]))
+               (vector) 1)
+         (list "shell-command-on-region-t"
+               (vector (step "shell-command-on-region" ["region" "tr a-z A-Z" t]))
+               (vector) 1)
+         (list "shell-command-on-region-empty"
+               (vector (step "shell-command-on-region" ["region" "cat"]))
+               (vector) 1))
    ;; 略語
    (let ((defs (vector (step "define-abbrev" '(((v . "global-abbrev-table")) "abc" "alphabet city"))
                        (step "define-abbrev" '(((v . "global-abbrev-table")) "foo" "foo bar baz"))
@@ -270,6 +346,8 @@
 
 (defun run-steps (steps seeds mark pos)
   (setq kill-ring nil kill-ring-yank-pointer nil abbrev-inputs nil abbrev-start-location nil)
+  (when (get-buffer "clone-x") (kill-buffer "clone-x"))
+  (when (get-buffer "clone-x<2>") (kill-buffer "clone-x<2>"))
   (clear-abbrev-table global-abbrev-table)
   (clear-abbrev-table local-abbrev-table)
   (dolist (s (append seeds nil)) (kill-new s))

@@ -38,3 +38,11 @@ Return #f if FILENAME has no /."
 (provide 'subr)
 
 ;;; subr.scm ends here
+
+(define (shell-quote-argument argument)
+  "Quote ARGUMENT for passing as argument to an inferior shell."
+  (if (equal? argument "")
+      "''"
+      (string-append "'"
+                     (string-join (split-string argument "'") "'\\''")
+                     "'")))

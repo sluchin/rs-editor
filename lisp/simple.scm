@@ -1996,3 +1996,258 @@ This command assumes point is not in a string or comment."
   (forward-char 1)
   (simple--newline-and-indent)
   #f)
+
+;;; Shell commands
+
+(define shell-command-buffer-name "*Shell Command Output*"
+  "Name of the output buffer for shell commands.")
+
+(define shell-command-buffer-name-async "*Async Shell Command*"
+  "Name of the output buffer for asynchronous shell commands.")
+
+(define (simple--max-mini-window-lines)
+  "Return the number of lines the echo area may use before a buffer is displayed instead."
+  (condition-case e (* 0.25 (+ 1 (window-body-height))) (error 6.25)))
+
+(define (simple--nth args n)
+  "Return the Nth element of ARGS (from 0), or #f if there are not that many."
+  (cond ((null? args) #f) ((= n 0) (car args)) (else (simple--nth (cdr args) (- n 1)))))
+
+(define (simple--screen-lines text width)
+  "Return the number of screen lines TEXT takes in WIDTH columns."
+  (apply + (map (lambda (line) (max 1 (quotient (+ (string-width line) (- width 1)) width)))
+                (split-string text "\n"))))
+
+(define (simple--display-message-or-buffer name)
+  "Show the text of the buffer NAME in the echo area if it is short, otherwise display the buffer."
+  (with-current-buffer name
+    (let* ((text (buffer-string))
+           (trimmed (if (and (> (string-length text) 0)
+                             (equal? (substring text (- (string-length text) 1)) "\n"))
+                        (substring text 0 (- (string-length text) 1))
+                        text))
+           (lines (if (equal? text "") 0 (simple--screen-lines trimmed 80))))
+      (cond ((= lines 0) #f)
+            ;; Not in the echo area if the buffer is already displayed in a window.
+            ((and (<= lines (max 1 (simple--max-mini-window-lines)))
+                  (not (member name (map window-buffer (window-list)))))
+             (goto-char (point-max))
+             (if (bolp) (backward-char 1))
+             (message trimmed))
+            (else
+             (goto-char (point-min))
+             (display-buffer name))))))
+
+(define (simple--call-shell-region start end command delete)
+  "Run COMMAND with the text from START to END as input, and insert the output at point.
+If DELETE is true, delete that text first.  Return the exit code."
+  (let* ((from (min start end))
+         (to (max start end))
+         (result (call-shell-command command (buffer-substring from to) #f)))
+    (if delete (delete-region from to))
+    (insert (cadr result))
+    (car result)))
+
+(define (simple--shell-report exit-status)
+  "Report an EXIT-STATUS of a shell command that printed no output."
+  (message (if (equal? exit-status 0)
+               "(Shell command succeeded with no output)"
+               (format "(Shell command failed with code %d and no output)" exit-status))))
+
+(define-command (shell-command-on-region . args)
+  "Execute string COMMAND in inferior shell with region as input.
+Normally display output (if any) in temp buffer `*Shell Command Output*';
+Prefix arg means replace the region with it.  Return the exit code of COMMAND.
+
+Called from Lisp with START, END, COMMAND, OUTPUT-BUFFER and REPLACE (and the unused
+ERROR-BUFFER and DISPLAY-ERROR-BUFFER).  If OUTPUT-BUFFER is a buffer name, erase that buffer and
+insert the output there; if it is another non-nil value, replace the region with the output.
+If REPLACE is non-nil, delete the region and insert the output in its place."
+  (let* ((interactive (null? args))
+         (_ (if (and interactive (not (mark)))
+                (user-error "The mark is not set now, so there is no region")))
+         (command (if interactive (read-string "Shell command on region: ") (simple--nth args 2)))
+         (start (if interactive (region-beginning) (car args)))
+         (end (if interactive (region-end) (cadr args)))
+         (output-buffer (if interactive (current-prefix-arg) (simple--nth args 3)))
+         (replace (if interactive (current-prefix-arg) (simple--nth args 4)))
+         (exit-status #f))
+    (if (or replace (and output-buffer (not (string? output-buffer))))
+        ;; Replace the region with the output of the command.
+        (let ((swap (and replace (< start end))))
+          (goto-char start)
+          (if (and replace (not (eq? replace 'no-mark)))
+              (push-mark (point) #t))
+          (set! exit-status (simple--call-shell-region start end command replace))
+          (if (and replace swap (not (eq? replace 'no-mark)))
+              (exchange-point-and-mark)))
+        ;; Put the output in a buffer, replacing its entire contents.
+        (let ((name (or output-buffer shell-command-buffer-name)))
+          (get-buffer-create name)
+          (if (equal? name (buffer-name))
+              ;; The input is the output buffer: keep only the region, and replace it.
+              (begin
+                (delete-region (max start end) (point-max))
+                (delete-region (point-min) (min start end))
+                (set! exit-status (simple--call-shell-region (point-min) (point-max) command #t)))
+              (let ((input (buffer-substring (min start end) (max start end))))
+                (with-current-buffer name
+                  (set-buffer-read-only #f)
+                  (erase-buffer)
+                  (let ((result (call-shell-command command input #f)))
+                    (insert (cadr result))
+                    (set! exit-status (car result))))))
+          (if (> (with-current-buffer name (buffer-size)) 0)
+              (simple--display-message-or-buffer name)
+              (simple--shell-report exit-status))))
+    exit-status))
+
+(define-command (shell-command . args)
+  "Execute string COMMAND in inferior shell; display output, if any.
+With prefix argument, insert the COMMAND's output at point.
+If COMMAND ends in `&', execute it asynchronously (this editor runs it to the end first, and
+shows its output in `*Async Shell Command*').
+The output appears in the buffer `*Shell Command Output*'.  If the output is short enough to
+display in the echo area, it is shown there.
+
+The optional second argument OUTPUT-BUFFER, if non-nil, says to put the output in some other
+buffer.  If OUTPUT-BUFFER is a buffer name, erase that buffer and insert the output there.  If it
+is not a buffer name and not nil (which happens interactively when the prefix argument is
+given), insert the output in the current buffer after point leaving mark after it."
+  (let* ((interactive (null? args))
+         (command (if interactive (read-string "Shell command: ") (car args)))
+         (output-buffer (if interactive (current-prefix-arg) (simple--nth args 1))))
+    (cond ((pair? (regexp-match-positions "[ \t]*&[ \t]*$" command))
+           (let* ((start (car (car (regexp-match-positions "[ \t]*&[ \t]*$" command))))
+                  (command (substring command 0 start))
+                  (name (if (string? output-buffer) output-buffer shell-command-buffer-name-async))
+                  (result (call-shell-command command #f #f)))
+             (get-buffer-create name)
+             (with-current-buffer name
+               (set-buffer-read-only #f)
+               (erase-buffer)
+               (insert (cadr result)))
+             (display-buffer name)
+             (message (format "%s: %s." command
+                              (if (equal? (car result) 0)
+                                  "finished"
+                                  (format "exited abnormally with code %d" (car result)))))
+             #f))
+          ((and output-buffer (or (not (string? output-buffer)) (equal? output-buffer (buffer-name))))
+           ;; Synchronous command with output in the current buffer.
+           (barf-if-buffer-read-only)
+           (push-mark (point) #t)
+           (let ((result (call-shell-command command #f #f)))
+             (insert (cadr result)))
+           ;; Like `exchange-point-and-mark', but without activating the mark.
+           (let ((end (point)))
+             (goto-char (mark))
+             (set-mark end)
+             (deactivate-mark))
+           #f)
+          (else
+           (shell-command-on-region (point) (point) command output-buffer #f)
+           #f))))
+
+(define-command (async-shell-command . args)
+  "Execute string COMMAND asynchronously in background.
+Like `shell-command', but adds `&' at the end of COMMAND to execute it asynchronously.
+The output appears in the buffer `*Async Shell Command*'.
+In this editor the command is run to the end before the next command is read."
+  (let ((command (if (null? args) (read-string "Async shell command: ") (car args))))
+    (shell-command (string-append command " &")
+                   (if (and (pair? args) (pair? (cdr args))) (cadr args) shell-command-buffer-name-async))))
+
+;;; Buffers
+
+(define simple--rename-buffer rename-buffer)
+
+(define-command (rename-buffer . args)
+  "Change current buffer's name to NEWNAME (a string).
+If second arg UNIQUE is nil or omitted, it is an error if a buffer named NEWNAME already exists.
+If UNIQUE is non-nil, come up with a new name using `generate-new-buffer-name'.
+Interactively, you can set UNIQUE with a prefix argument.
+Return the name actually given to the buffer."
+  (if (null? args)
+      (simple--rename-buffer (read-string "Rename buffer (to new name): ") (and (current-prefix-arg) #t))
+      (simple--rename-buffer (car args) (and (pair? (cdr args)) (cadr args)))))
+
+(define (simple--clone-name name)
+  "Return NAME without a trailing <N>."
+  (let ((match (regexp-match-positions "<[0-9]+>$" name)))
+    (if (pair? match) (substring name 0 (car (car match))) name)))
+
+(define (simple--clone-buffer newname)
+  "Create a twin copy of the current buffer named after NEWNAME, and return its name."
+  (if (buffer-file-name) (error "Cannot clone a file-visiting buffer"))
+  (let* ((newname (simple--clone-name (or newname (buffer-name))))
+         (text (save-restriction (widen) (buffer-string)))
+         (begv (point-min))
+         (zv (point-max))
+         (pt (point))
+         (mk (and (region-active-p) (mark)))
+         (modified (buffer-modified-p))
+         (new (generate-new-buffer newname)))
+    (with-current-buffer new
+      (insert text)
+      (narrow-to-region begv zv)
+      (goto-char pt)
+      (if mk (set-mark mk))
+      (set-buffer-modified-p modified)
+      ;; Inserting the text of the twin must not ask to deactivate the mark.
+      (set-deactivate-mark #f))
+    new))
+
+(define-command (clone-buffer . args)
+  "Create and return a twin copy of the current buffer.
+Unlike an indirect buffer, the new buffer can be edited independently of the old one.
+NEWNAME is the name of the new buffer.  It may be modified by adding or incrementing <N> at the
+end as necessary to create a unique buffer name.  If nil, it defaults to the name of the current
+buffer, with the proper suffix.  If DISPLAY-FLAG is non-nil, the new buffer is shown in another
+window.  Trying to clone a file-visiting buffer results in an error.
+Interactively, DISPLAY-FLAG is t and NEWNAME is the name of the current buffer with appropriate
+suffix.  However, if a prefix argument is given, then the command prompts for NEWNAME."
+  (let* ((interactive (null? args))
+         (_ (if (and interactive (buffer-file-name)) (error "Cannot clone a file-visiting buffer")))
+         (newname (if interactive
+                      (and (current-prefix-arg) (read-string "Name of new cloned buffer: " (buffer-name)))
+                      (car args)))
+         (display (if interactive #t (and (pair? (cdr args)) (cadr args))))
+         (new (simple--clone-buffer newname)))
+    (if display (display-buffer new))
+    new))
+
+(define-command (clone-indirect-buffer-other-window . args)
+  "Like `clone-buffer' but display in another window and select it.
+This editor has no indirect buffers: the new buffer is a twin copy whose text is not shared."
+  (let* ((interactive (null? args))
+         (newname (if interactive
+                      (and (current-prefix-arg) (read-string "Name of indirect buffer: " (buffer-name)))
+                      (car args)))
+         (new (simple--clone-buffer newname)))
+    (display-buffer new)
+    (other-window 1)
+    new))
+
+(define (simple--mode-arg args)
+  "Return what a minor mode command does for ARGS: 1 to enable, 0 to disable, or toggle."
+  (cond ((null? args) (let ((arg (current-prefix-arg)))
+                        (cond ((not arg) 'toggle)
+                              ((eq? arg '-) 0)
+                              (else (if (> (prefix-numeric-value arg) 0) 1 0)))))
+        ((or (not (car args)) (eq? (car args) 'toggle))
+         (if (eq? (car args) 'toggle) 'toggle 1))
+        ((and (number? (car args)) (<= (car args) 0)) 0)
+        (else 1)))
+
+(define-command (read-only-mode . args)
+  "Change whether the current buffer is read-only.
+With no argument (or `toggle'), toggle it.  With a positive argument, make the buffer read-only;
+with zero or a negative argument, make it writable."
+  (let* ((interactive (null? args))
+         (mode (simple--mode-arg args))
+         (on (if (eq? mode 'toggle) (not (buffer-read-only)) (= mode 1))))
+    (set-buffer-read-only on)
+    (if interactive
+        (message (if on "Read-Only mode enabled in current buffer" "Read-Only mode disabled in current buffer")))
+    on))

@@ -97,7 +97,21 @@ STEPS = [
       '(2) 略語の保存 (`write-abbrev-file`, `read-abbrev-file`) と表の親 (`:parents`), 展開のフックの `no-self-insert` は, Lisp だけで書ける。】']),
     (9, 'ファイル, バッファ, dired, ブックマーク, シェル',
      ['ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。',
-      '`save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。']),
+      '`save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。',
+      '【シェルとバッファの命令は Lisp 版が済 (`lisp/simple.scm`, `lisp/files.scm`). `emacs -Q --batch` の結果と一致: '
+      '`shell-command` と `shell-command-on-region` (出力のバッファ, 今のバッファに入れる, 領域の置き換え, エコー領域か別のバッファか, 終了コードのメッセージ), '
+      '`clone-buffer` (本文, 点, マーク, 絞り込み), `not-modified`, 読み取り専用のバッファでの編集の失敗 (`insert`, `delete-char`, `kill-word`, `upcase-region` など) (`core/tests/test_edit.rs`). '
+      '`async-shell-command`, `rename-buffer`, `rename-uniquely`, `read-only-mode`, `find-file-read-only`, `revert-buffer-quick`, `list-directory`, `clone-indirect-buffer-other-window` は '
+      '名前, ファイル, 問いが絡むので Rust で試す (`core/tests/test_simple_buffers.rs`, `core/tests/test_editor.rs`, `core/tests/test_buffer.rs`). '
+      '違いが残るのは, 非同期のシェルのコマンド (`&` で終わる命令と `async-shell-command`) を終わりまで動かしてから次を読むこと (プロセスのバッファ, 途中の出力, 止めることが無い), '
+      '標準エラーを別のバッファに分けられないこと (`error-buffer` は使わず, 出力に混ぜる), 領域が不連続のとき (`region-noncontiguous-p`) と `shell-command-dont-erase-buffer` が無いこと, '
+      '`clone-indirect-buffer-other-window` が本文を共有する間接バッファではなく, 本文を写した双子のバッファになること, '
+      '`clone-buffer` がメジャーモードとバッファごとの変数を写さないこと (モードが無い), '
+      '`read-only-mode` がマイナーモードではなく命令で, 文字ごとの `read-only` の属性と `inhibit-read-only` と `view-mode` が無いこと, '
+      '`list-directory` の一覧が `ls` の出力のままで (`ls -CF` の列の幅は端末の幅で決まる), `*Directory*` が help-mode でなく, 取り消しの記録を止めないこと, '
+      '`revert-buffer-quick` が自動保存のファイルからの読み直し (前置引数) と `revert-buffer-quick-short-answers` に対応しないこと, '
+      '`find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。'
+      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
     (10, 'ウィンドウ',
      ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。']),
     (11, 'ヘルプ, xref, info',

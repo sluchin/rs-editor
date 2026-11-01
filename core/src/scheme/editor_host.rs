@@ -390,6 +390,26 @@ impl<U: Host> EditorHost<U> {
             "get-buffer-create" => {
                 Value::String(ed.get_buffer_create(text(op, args, 0)?).name().to_string())
             }
+            "generate-new-buffer-name" => Value::String(ed.generate_new_buffer_name(
+                text(op, args, 0)?,
+                args.get(1).and_then(|v| match v {
+                    Value::String(s) => Some(s.as_str()),
+                    _ => None,
+                }),
+            )),
+            "rename-buffer" => Value::String(
+                ed.rename_buffer(text(op, args, 0)?, args.get(1).is_some_and(Value::is_true))?,
+            ),
+            "barf-if-buffer-read-only" => {
+                ed.current_buffer().ensure_writable()?;
+                Value::Nil
+            }
+            "buffer-read-only" => Value::Boolean(ed.current_buffer().read_only()),
+            "set-buffer-read-only" => {
+                ed.current_buffer_mut()
+                    .set_read_only(args.first().is_some_and(Value::is_true));
+                Value::Nil
+            }
             "generate-new-buffer" => Value::String(ed.generate_new_buffer(text(op, args, 0)?)),
             "set-buffer" => {
                 let name = text(op, args, 0)?;
@@ -638,7 +658,11 @@ impl<U: Host> EditorHost<U> {
                 return Ok(Some(Value::Nil));
             }
             "insert-for-yank" => {
-                ed.current_buffer_mut().insert(text(op, args, 0)?);
+                let buffer = ed.current_buffer_mut();
+                if !text(op, args, 0)?.is_empty() {
+                    buffer.ensure_writable()?;
+                }
+                buffer.insert(text(op, args, 0)?);
                 return Ok(Some(Value::Nil));
             }
             _ => {}
@@ -657,12 +681,20 @@ impl<U: Host> EditorHost<U> {
             }
             "insert" => {
                 for i in 0..args.len() {
-                    b.insert(text(op, args, i)?);
+                    let piece = text(op, args, i)?;
+                    if !piece.is_empty() {
+                        b.ensure_writable()?;
+                    }
+                    b.insert(piece);
                 }
                 Value::Nil
             }
             "insert-before-markers" => {
-                b.insert_before_markers(text(op, args, 0)?);
+                let piece = text(op, args, 0)?;
+                if !piece.is_empty() {
+                    b.ensure_writable()?;
+                }
+                b.insert_before_markers(piece);
                 Value::Nil
             }
             "delete-region" => {
@@ -1240,6 +1272,15 @@ fn primitive_undo(b: &mut Buffer, op: &str, args: &[Value]) -> Result<Value, Str
 
 /// バッファの本文を置き換えます. 前と後ろの同じ所は残すので, カーソルは同じ文字の所に残る.
 fn replace_text(b: &mut Buffer, new: &str) {
+    // 読み取り専用のバッファも書き換える (Emacs の `inhibit-read-only`)
+    let read_only = b.read_only();
+    b.set_read_only(false);
+    replace_text_inner(b, new);
+    b.set_read_only(read_only);
+}
+
+/// `replace_text` の本体.
+fn replace_text_inner(b: &mut Buffer, new: &str) {
     b.widen();
     let old: Vec<char> = b.text().chars().collect();
     let new: Vec<char> = new.chars().collect();

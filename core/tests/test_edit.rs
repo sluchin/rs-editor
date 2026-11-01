@@ -28,6 +28,7 @@ impl Host for FakeUi {
                 Ok(Value::Nil)
             }
             // 入力が尽きたら, `read-key` (`y-or-n-p`) は n (Emacs の試験では, 尽きた `y-or-n-p` は偽)
+            "display-buffer" => Ok(Value::Nil),
             "read-key" => Ok(Value::String(
                 self.inputs
                     .lock()
@@ -80,6 +81,15 @@ fn run(
 ) -> Json {
     {
         let mut editor = host.editor();
+        // 前の手順が作ったバッファを片付ける
+        editor.set_buffer("*scratch*").unwrap();
+        for name in ["clone-x", "clone-x<2>"] {
+            if editor.get_buffer(name).is_some() {
+                editor.kill_buffer(name).unwrap();
+            }
+        }
+        editor.set_buffer("*scratch*").unwrap();
+        editor.current_buffer_mut().set_read_only(false);
         editor.kill_ring = KillRing::new();
         let buffer = editor.current_buffer_mut();
         buffer.load(text);
@@ -143,7 +153,7 @@ fn run(
     result = result.and_then(|_| ev.eval_with(&code, host));
     let editor = host.editor();
     let buffer = editor.current_buffer();
-    let (body, point) = (buffer.text(), buffer.point());
+    let (body, point) = (buffer.visible_text(), buffer.point());
     match result {
         Err(message) => json!(["error", message, body, point]),
         Ok(_) => {
@@ -222,6 +232,13 @@ fn test_against_emacs() {
                     .is_some_and(|m| m.starts_with("Args out of range"))
             {
                 expected[1] = json!("Args out of range");
+            }
+            // Emacs の試験のバッファの名前は, こちらの `*scratch*`
+            if expected[0] == "error" {
+                expected[1] = json!(expected[1]
+                    .as_str()
+                    .unwrap()
+                    .replace("#<buffer  *temp*>", "#<buffer *scratch*>"));
             }
             if actual != expected {
                 failures.push(format!(

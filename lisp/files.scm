@@ -100,20 +100,113 @@ Return #f if the buffer visits no file."
     (and file
          (string-append (or (file-name-directory file) "") "#" (file-name-nondirectory file) "#"))))
 
-(define-command (revert-buffer)
+(define-command (revert-buffer . args)
   "Replace the buffer text with the text of the visited file on disk.
-Ask before reverting. A Dired buffer is listed again without asking.
+Ask before reverting, unless the optional second argument NOCONFIRM is true.
+A Dired buffer is listed again without asking.
 Point stays at the same character, and the change can be undone."
   (cond ((files--revert-dired) #t)
         ((not (buffer-file-name))
          (message "Buffer does not seem to be associated with any file"))
         (else
-         (let ((file (buffer-file-name)))
-           (when (yes-or-no-p (if (buffer-modified-p)
-                                  (format "Discard edits and reread from %s? " file)
-                                  (format "Revert buffer from file %s? " file)))
+         (let ((file (buffer-file-name))
+               (noconfirm (and (pair? args) (pair? (cdr args)) (cadr args))))
+           (when (or noconfirm
+                     (yes-or-no-p (if (buffer-modified-p)
+                                      (format "Discard edits and reread from %s? " file)
+                                      (format "Revert buffer from file %s? " file))))
              (files--set-buffer-text (read-file-string file) #f))
            (message "")))))
+
+(define-command (revert-buffer-quick . args)
+  "Like `revert-buffer', but asks for less confirmation.
+If the current buffer is visiting a file, and the buffer is not modified, no confirmation is
+required."
+  (cond ((and (buffer-file-name) (not (buffer-modified-p)))
+         (revert-buffer #t #t)
+         (message "Reverted buffer"))
+        (else (revert-buffer #t))))
+
+(define-command (not-modified . args)
+  "Mark current buffer as unmodified, not needing to be saved.
+With prefix ARG, mark buffer as modified, so \\[save-buffer] will save.
+
+It is not a good idea to use this function in Lisp programs, because it prints a message in the
+minibuffer.  Instead, use `set-buffer-modified-p'."
+  (let ((arg (if (null? args) (current-prefix-arg) (car args))))
+    (message (if arg "Modification-flag set" "Modification-flag cleared"))
+    (set-buffer-modified-p (and arg #t))
+    #f))
+
+(define-command (rename-uniquely)
+  "Rename current buffer to a similar name not already taken.
+This function is useful for creating multiple shell process buffers or multiple mail buffers,
+etc."
+  (let* ((base (buffer-name))
+         (match (regexp-match-positions "<[0-9]+>$" base)))
+    (if (and (pair? match)
+             (not (and (buffer-file-name)
+                       (equal? base (file-name-nondirectory (buffer-file-name))))))
+        (set! base (substring base 0 (car (car match)))))
+    (rename-buffer (generate-new-buffer-name base))
+    #f))
+
+(define (files--find-file-read-only finder filename)
+  "Visit FILENAME with FINDER and make its buffer read-only."
+  (if (not (file-exists? filename))
+      (error (format "%s does not exist" filename)))
+  (with-current-buffer (find-file-noselect filename)
+    (set-buffer-read-only #t))
+  (finder filename))
+
+(define-command (find-file-read-only . args)
+  "Edit file FILENAME but don't allow changes.
+Like \\[find-file], but marks buffer as read-only.
+Use \\[read-only-mode] to permit editing."
+  (files--find-file-read-only find-file
+                              (if (null? args) (read-file-name "Find file read-only: ") (car args))))
+
+(define-command (find-file-read-only-other-window . args)
+  "Edit file FILENAME in another window but don't allow changes.
+Like \\[find-file-other-window], but marks buffer as read-only.
+Use \\[read-only-mode] to permit editing."
+  (files--find-file-read-only find-file-other-window
+                              (if (null? args)
+                                  (read-file-name "Find file read-only other window: ")
+                                  (car args))))
+
+(define list-directory-brief-switches "-CF"
+  "Switches for `list-directory' to pass to `ls' for a brief listing.")
+
+(define list-directory-verbose-switches "-l"
+  "Switches for `list-directory' to pass to `ls' for a verbose listing.")
+
+(define-command (list-directory . args)
+  "Display a list of files in or matching DIRNAME, a la `ls'.
+DIRNAME is globbed by the shell if necessary.
+Prefix arg (second arg if noninteractive) means supply -l switch to `ls'.
+Actions controlled by variables `list-directory-brief-switches' and
+`list-directory-verbose-switches'."
+  (let* ((pfx (current-prefix-arg))
+         (verbose (if (null? args) pfx (and (pair? (cdr args)) (cadr args))))
+         (dirname (expand-file-name
+                   (if (null? args)
+                       (read-file-name (if pfx "List directory (verbose): " "List directory (brief): "))
+                       (car args))))
+         (switches (if verbose list-directory-verbose-switches list-directory-brief-switches))
+         (wildcard (not (file-directory? dirname)))
+         (result (call-shell-command
+                  (string-append "ls " switches " -- " (if wildcard dirname (shell-quote-argument dirname)))
+                  #f #f)))
+    (get-buffer-create "*Directory*")
+    (with-current-buffer "*Directory*"
+      (set-buffer-read-only #f)
+      (erase-buffer)
+      (insert "Directory " dirname "\n" (cadr result))
+      (goto-char (point-min)))
+    (display-buffer "*Directory*")
+    #f))
+
 
 (define-command (recover-this-file)
   "Recover the visited file from its auto save file.

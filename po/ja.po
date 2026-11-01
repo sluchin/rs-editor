@@ -810,12 +810,100 @@ msgstr ""
 msgctxt "function:revert-buffer"
 msgid ""
 "Replace the buffer text with the text of the visited file on disk.\n"
-"Ask before reverting. A Dired buffer is listed again without asking.\n"
+"Ask before reverting, unless the optional second argument NOCONFIRM is true.\n"
+"A Dired buffer is listed again without asking.\n"
 "Point stays at the same character, and the change can be undone."
 msgstr ""
-"バッファの本文を, ディスク上の訪れているファイルの本文に置き換える.\n"
-"読み直す前に聞く.dired のバッファは, 聞かずに一覧を作り直す.\n"
-"カーソルは同じ文字の所に残り, 元に戻せる."
+"バッファの本文を, ディスクにある訪れているファイルの本文に置き換える.\n"
+"2 番目の引数 NOCONFIRM が真でなければ, 読み直す前に尋ねる.\n"
+"Dired のバッファは, 尋ねずに一覧を作り直す.\n"
+"カーソルは同じ文字の所に残り, 変更は取り消せる."
+
+#: lisp/files.scm
+msgctxt "function:revert-buffer-quick"
+msgid ""
+"Like `revert-buffer', but asks for less confirmation.\n"
+"If the current buffer is visiting a file, and the buffer is not modified, no confirmation is\n"
+"required."
+msgstr ""
+"`revert-buffer' と同じだが, 尋ねることが少ない.\n"
+"今のバッファがファイルを訪れていて, 書き換えていなければ, 確認なしで読み直す."
+
+#: lisp/files.scm
+msgctxt "function:not-modified"
+msgid ""
+"Mark current buffer as unmodified, not needing to be saved.\n"
+"With prefix ARG, mark buffer as modified, so \\[save-buffer] will save.\n"
+"\n"
+"It is not a good idea to use this function in Lisp programs, because it prints a message in the\n"
+"minibuffer.  Instead, use `set-buffer-modified-p'."
+msgstr ""
+"今のバッファを, 書き換えていない (保存しなくてよい) ことにする.\n"
+"前置引数 ARG があれば, 書き換えたことにして, \\[save-buffer] で保存されるようにする.\n"
+"\n"
+"Lisp のプログラムでこの関数を使うのはよくない. ミニバッファにメッセージを出すから.\n"
+"代わりに `set-buffer-modified-p' を使う."
+
+#: lisp/files.scm
+msgctxt "function:rename-uniquely"
+msgid ""
+"Rename current buffer to a similar name not already taken.\n"
+"This function is useful for creating multiple shell process buffers or multiple mail buffers,\n"
+"etc."
+msgstr ""
+"今のバッファの名前を, まだ使われていない似た名前に変える.\n"
+"シェルのバッファやメールのバッファなどを, 複数作るときに便利."
+
+#: lisp/files.scm
+msgctxt "function:files--find-file-read-only"
+msgid "Visit FILENAME with FINDER and make its buffer read-only."
+msgstr "FINDER で FILENAME を訪れて, そのバッファを読み取り専用にする."
+
+#: lisp/files.scm
+msgctxt "function:find-file-read-only"
+msgid ""
+"Edit file FILENAME but don't allow changes.\n"
+"Like \\[find-file], but marks buffer as read-only.\n"
+"Use \\[read-only-mode] to permit editing."
+msgstr ""
+"ファイル FILENAME を, 変更を許さずに編集する.\n"
+"\\[find-file] と同じだが, バッファを読み取り専用にする.\n"
+"編集できるようにするには \\[read-only-mode] を使う."
+
+#: lisp/files.scm
+msgctxt "function:find-file-read-only-other-window"
+msgid ""
+"Edit file FILENAME in another window but don't allow changes.\n"
+"Like \\[find-file-other-window], but marks buffer as read-only.\n"
+"Use \\[read-only-mode] to permit editing."
+msgstr ""
+"ファイル FILENAME を, 別のウィンドウで, 変更を許さずに編集する.\n"
+"\\[find-file-other-window] と同じだが, バッファを読み取り専用にする.\n"
+"編集できるようにするには \\[read-only-mode] を使う."
+
+#: lisp/files.scm
+msgctxt "variable:list-directory-brief-switches"
+msgid "Switches for `list-directory' to pass to `ls' for a brief listing."
+msgstr "`list-directory' が簡単な一覧のために `ls' に渡すスイッチ."
+
+#: lisp/files.scm
+msgctxt "variable:list-directory-verbose-switches"
+msgid "Switches for `list-directory' to pass to `ls' for a verbose listing."
+msgstr "`list-directory' が詳しい一覧のために `ls' に渡すスイッチ."
+
+#: lisp/files.scm
+msgctxt "function:list-directory"
+msgid ""
+"Display a list of files in or matching DIRNAME, a la `ls'.\n"
+"DIRNAME is globbed by the shell if necessary.\n"
+"Prefix arg (second arg if noninteractive) means supply -l switch to `ls'.\n"
+"Actions controlled by variables `list-directory-brief-switches' and\n"
+"`list-directory-verbose-switches'."
+msgstr ""
+"DIRNAME の中の, または合うファイルの一覧を, `ls' のように出す.\n"
+"必要ならシェルが DIRNAME をワイルドカードで展開する.\n"
+"前置引数 (非対話では 2 番目の引数) があれば, `ls' に -l を付ける.\n"
+"動きは変数 `list-directory-brief-switches' と `list-directory-verbose-switches' で決まる."
 
 #: lisp/files.scm
 msgctxt "function:recover-this-file"
@@ -6367,6 +6455,179 @@ msgctxt "function:move-past-close-and-reindent"
 msgid "Move past next `)', delete indentation before it, then indent after it."
 msgstr "次の `)' の後ろに移り, その前の字下げを消し, 後ろを字下げする."
 
+#: lisp/simple.scm
+msgctxt "variable:shell-command-buffer-name"
+msgid "Name of the output buffer for shell commands."
+msgstr "シェルのコマンドの出力のバッファの名前."
+
+#: lisp/simple.scm
+msgctxt "variable:shell-command-buffer-name-async"
+msgid "Name of the output buffer for asynchronous shell commands."
+msgstr "非同期のシェルのコマンドの出力のバッファの名前."
+
+#: lisp/simple.scm
+msgctxt "function:simple--max-mini-window-lines"
+msgid "Return the number of lines the echo area may use before a buffer is displayed instead."
+msgstr "エコー領域に出せる行数を返す (これより多ければ, 代わりにバッファを出す)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--nth"
+msgid "Return the Nth element of ARGS (from 0), or #f if there are not that many."
+msgstr "ARGS の N 番目 (0 から) を返す. 足りなければ #f."
+
+#: lisp/simple.scm
+msgctxt "function:simple--screen-lines"
+msgid "Return the number of screen lines TEXT takes in WIDTH columns."
+msgstr "TEXT を WIDTH 桁で出したときの画面の行数を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--display-message-or-buffer"
+msgid "Show the text of the buffer NAME in the echo area if it is short, otherwise display the buffer."
+msgstr "バッファ NAME の本文が短ければエコー領域に出し, そうでなければバッファを出す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--call-shell-region"
+msgid ""
+"Run COMMAND with the text from START to END as input, and insert the output at point.\n"
+"If DELETE is true, delete that text first.  Return the exit code."
+msgstr ""
+"START から END までの文字を入力にして COMMAND を動かし, 出力をポイントに入れる.\n"
+"DELETE が真なら, 先にその文字を削除する. 終了コードを返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--shell-report"
+msgid "Report an EXIT-STATUS of a shell command that printed no output."
+msgstr "出力の無かったシェルのコマンドの終了コード EXIT-STATUS を知らせる."
+
+#: lisp/simple.scm
+msgctxt "function:shell-command-on-region"
+msgid ""
+"Execute string COMMAND in inferior shell with region as input.\n"
+"Normally display output (if any) in temp buffer `*Shell Command Output*';\n"
+"Prefix arg means replace the region with it.  Return the exit code of COMMAND.\n"
+"\n"
+"Called from Lisp with START, END, COMMAND, OUTPUT-BUFFER and REPLACE (and the unused\n"
+"ERROR-BUFFER and DISPLAY-ERROR-BUFFER).  If OUTPUT-BUFFER is a buffer name, erase that buffer and\n"
+"insert the output there; if it is another non-nil value, replace the region with the output.\n"
+"If REPLACE is non-nil, delete the region and insert the output in its place."
+msgstr ""
+"リージョンを入力にして, 文字列 COMMAND をシェルで動かす.\n"
+"普通は, 出力 (あれば) を一時バッファ `*Shell Command Output*' に出す.\n"
+"前置引数があれば, リージョンを出力で置き換える. COMMAND の終了コードを返す.\n"
+"\n"
+"Lisp からは START, END, COMMAND, OUTPUT-BUFFER, REPLACE (と, 使わない ERROR-BUFFER, DISPLAY-ERROR-BUFFER) を付けて呼ぶ.\n"
+"OUTPUT-BUFFER がバッファの名前なら, そのバッファを消して出力を入れる.\n"
+"それ以外の非 nil なら, リージョンを出力で置き換える.\n"
+"REPLACE が非 nil なら, リージョンを削除して, その場所に出力を入れる."
+
+#: lisp/simple.scm
+msgctxt "function:shell-command"
+msgid ""
+"Execute string COMMAND in inferior shell; display output, if any.\n"
+"With prefix argument, insert the COMMAND's output at point.\n"
+"If COMMAND ends in `&', execute it asynchronously (this editor runs it to the end first, and\n"
+"shows its output in `*Async Shell Command*').\n"
+"The output appears in the buffer `*Shell Command Output*'.  If the output is short enough to\n"
+"display in the echo area, it is shown there.\n"
+"\n"
+"The optional second argument OUTPUT-BUFFER, if non-nil, says to put the output in some other\n"
+"buffer.  If OUTPUT-BUFFER is a buffer name, erase that buffer and insert the output there.  If it\n"
+"is not a buffer name and not nil (which happens interactively when the prefix argument is\n"
+"given), insert the output in the current buffer after point leaving mark after it."
+msgstr ""
+"文字列 COMMAND をシェルで動かして, 出力 (あれば) を出す.\n"
+"前置引数があれば, COMMAND の出力をポイントに入れる.\n"
+"COMMAND が `&' で終わっていれば, 非同期に動かす (このエディタは終わるまで動かして,\n"
+"出力を `*Async Shell Command*' に出す).\n"
+"出力はバッファ `*Shell Command Output*' に入る. 出力が短くてエコー領域に出せれば, そこに出す.\n"
+"\n"
+"省略できる 2 番目の引数 OUTPUT-BUFFER が非 nil なら, 出力を別のバッファに入れる.\n"
+"バッファの名前なら, そのバッファを消して出力を入れる. バッファの名前でも nil でもなければ\n"
+"(対話で前置引数を付けたとき), 今のバッファのポイントの後ろに入れて, マークを出力の後ろに置く."
+
+#: lisp/simple.scm
+msgctxt "function:async-shell-command"
+msgid ""
+"Execute string COMMAND asynchronously in background.\n"
+"Like `shell-command', but adds `&' at the end of COMMAND to execute it asynchronously.\n"
+"The output appears in the buffer `*Async Shell Command*'.\n"
+"In this editor the command is run to the end before the next command is read."
+msgstr ""
+"文字列 COMMAND を, 背景で非同期に動かす.\n"
+"`shell-command' と同じだが, COMMAND の終わりに `&' を付けて非同期にする.\n"
+"出力はバッファ `*Async Shell Command*' に出る.\n"
+"このエディタは, 次のコマンドを読む前に, コマンドを終わりまで動かす."
+
+#: lisp/simple.scm
+msgctxt "function:rename-buffer"
+msgid ""
+"Change current buffer's name to NEWNAME (a string).\n"
+"If second arg UNIQUE is nil or omitted, it is an error if a buffer named NEWNAME already exists.\n"
+"If UNIQUE is non-nil, come up with a new name using `generate-new-buffer-name'.\n"
+"Interactively, you can set UNIQUE with a prefix argument.\n"
+"Return the name actually given to the buffer."
+msgstr ""
+"今のバッファの名前を NEWNAME (文字列) に変える.\n"
+"2 番目の引数 UNIQUE が nil か省略されていれば, NEWNAME のバッファが既にあるときは失敗する.\n"
+"UNIQUE が非 nil なら, `generate-new-buffer-name' で新しい名前を作る.\n"
+"対話では, 前置引数で UNIQUE を決められる.\n"
+"実際に付けた名前を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--clone-name"
+msgid "Return NAME without a trailing <N>."
+msgstr "NAME の終わりの <N> を除いて返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--clone-buffer"
+msgid "Create a twin copy of the current buffer named after NEWNAME, and return its name."
+msgstr "今のバッファの複製を NEWNAME から作った名前で作って, その名前を返す."
+
+#: lisp/simple.scm
+msgctxt "function:clone-buffer"
+msgid ""
+"Create and return a twin copy of the current buffer.\n"
+"Unlike an indirect buffer, the new buffer can be edited independently of the old one.\n"
+"NEWNAME is the name of the new buffer.  It may be modified by adding or incrementing <N> at the\n"
+"end as necessary to create a unique buffer name.  If nil, it defaults to the name of the current\n"
+"buffer, with the proper suffix.  If DISPLAY-FLAG is non-nil, the new buffer is shown in another\n"
+"window.  Trying to clone a file-visiting buffer results in an error.\n"
+"Interactively, DISPLAY-FLAG is t and NEWNAME is the name of the current buffer with appropriate\n"
+"suffix.  However, if a prefix argument is given, then the command prompts for NEWNAME."
+msgstr ""
+"今のバッファの双子の複製を作って, 返す.\n"
+"間接バッファと違い, 新しいバッファは元のバッファと別に編集できる.\n"
+"NEWNAME は新しいバッファの名前. 一意な名前になるように, 終わりの <N> を付けたり増やしたりする.\n"
+"nil なら, 今のバッファの名前に適切な接尾辞を付けたもの. DISPLAY-FLAG が非 nil なら,\n"
+"新しいバッファを別のウィンドウに出す. ファイルを訪れるバッファは複製できない.\n"
+"対話では, DISPLAY-FLAG は t で, NEWNAME は今のバッファの名前に適切な接尾辞を付けたもの.\n"
+"ただし前置引数があれば, NEWNAME を尋ねる."
+
+#: lisp/simple.scm
+msgctxt "function:clone-indirect-buffer-other-window"
+msgid ""
+"Like `clone-buffer' but display in another window and select it.\n"
+"This editor has no indirect buffers: the new buffer is a twin copy whose text is not shared."
+msgstr ""
+"`clone-buffer' と同じだが, 別のウィンドウに出して, そちらを選ぶ.\n"
+"このエディタに間接バッファは無い. 新しいバッファは, 本文を共有しない双子の複製."
+
+#: lisp/simple.scm
+msgctxt "function:simple--mode-arg"
+msgid "Return what a minor mode command does for ARGS: 1 to enable, 0 to disable, or toggle."
+msgstr "マイナーモードのコマンドが ARGS で何をするかを返す: 有効にする 1, 無効にする 0, または toggle."
+
+#: lisp/simple.scm
+msgctxt "function:read-only-mode"
+msgid ""
+"Change whether the current buffer is read-only.\n"
+"With no argument (or `toggle'), toggle it.  With a positive argument, make the buffer read-only;\n"
+"with zero or a negative argument, make it writable."
+msgstr ""
+"今のバッファを読み取り専用にするかを変える.\n"
+"引数が無い (か `toggle') なら, 切り替える. 正の引数なら読み取り専用に,\n"
+"0 か負の引数なら書き込めるようにする."
+
 #: lisp/subr.scm
 msgctxt "function:y-or-n-p"
 msgid ""
@@ -6402,6 +6663,11 @@ msgstr ""
 msgctxt "function:file-name-nondirectory"
 msgid "Return the file name of FILENAME without its directory part."
 msgstr "FILENAME から, ディレクトリの部分を除いたファイルの名前を返す."
+
+#: lisp/subr.scm
+msgctxt "function:shell-quote-argument"
+msgid "Quote ARGUMENT for passing as argument to an inferior shell."
+msgstr "ARGUMENT を, 下位のシェルに引数として渡せるように引用する."
 
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"

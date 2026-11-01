@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 19 個: Lisp 4 個, TypeScript 15 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 20 個: Lisp 5 個, TypeScript 15 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -239,7 +239,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `recursive-edit` |  |  |  |  |  |
 | `redirect-debugging-output` |  |  |  |  |  |
 | `redraw-display` | ◯ |  |  |  |  |
-| `rename-buffer` | ◯ | `C-x x r` |  |  |  |
+| `rename-buffer` | ◯ | `C-x x r` | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `rename-file` | ◯ |  |  |  |  |
 | `replace-buffer-contents` |  |  |  |  |  |
 | `scroll-down` | ◯ | kmacro-step-edit-map: `M-v`, `<prior>`<br>multi-query-replace-map: `M-v`, `<prior>`<br>query-replace-map: `M-v`, `<prior>` |  |  |  |
@@ -283,7 +283,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 6 | - | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 16 | 11 | 5 |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 5 | - | 5 |
 | 10 | ウィンドウ | 33 | 25 | 8 |
 | 11 | ヘルプ, xref, info | 27 | 25 | 2 |
 | 12 | 入れない | 23 | 23 | - |
@@ -337,6 +337,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。
 - `save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。
+- 【シェルとバッファの命令は Lisp 版が済 (`lisp/simple.scm`, `lisp/files.scm`). `emacs -Q --batch` の結果と一致: `shell-command` と `shell-command-on-region` (出力のバッファ, 今のバッファに入れる, 領域の置き換え, エコー領域か別のバッファか, 終了コードのメッセージ), `clone-buffer` (本文, 点, マーク, 絞り込み), `not-modified`, 読み取り専用のバッファでの編集の失敗 (`insert`, `delete-char`, `kill-word`, `upcase-region` など) (`core/tests/test_edit.rs`). `async-shell-command`, `rename-buffer`, `rename-uniquely`, `read-only-mode`, `find-file-read-only`, `revert-buffer-quick`, `list-directory`, `clone-indirect-buffer-other-window` は 名前, ファイル, 問いが絡むので Rust で試す (`core/tests/test_simple_buffers.rs`, `core/tests/test_editor.rs`, `core/tests/test_buffer.rs`). 違いが残るのは, 非同期のシェルのコマンド (`&` で終わる命令と `async-shell-command`) を終わりまで動かしてから次を読むこと (プロセスのバッファ, 途中の出力, 止めることが無い), 標準エラーを別のバッファに分けられないこと (`error-buffer` は使わず, 出力に混ぜる), 領域が不連続のとき (`region-noncontiguous-p`) と `shell-command-dont-erase-buffer` が無いこと, `clone-indirect-buffer-other-window` が本文を共有する間接バッファではなく, 本文を写した双子のバッファになること, `clone-buffer` がメジャーモードとバッファごとの変数を写さないこと (モードが無い), `read-only-mode` がマイナーモードではなく命令で, 文字ごとの `read-only` の属性と `inhibit-read-only` と `view-mode` が無いこと, `list-directory` の一覧が `ls` の出力のままで (`ls -CF` の列の幅は端末の幅で決まる), `*Directory*` が help-mode でなく, 取り消しの記録を止めないこと, `revert-buffer-quick` が自動保存のファイルからの読み直し (前置引数) と `revert-buffer-quick-short-answers` に対応しないこと, `find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
 
 **10. ウィンドウ**
 
@@ -350,19 +351,19 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 177 個: Lisp 94 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 188 個: Lisp 105 個, TypeScript 83 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
 | `analyze-text-conversion` |  | simple | `<text-conversion>` |  |  |  | 12 |
 | `append-next-kill` | ◯ | simple | `C-M-w` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `async-shell-command` |  | simple | `M-&` |  |  |  | 9 |
+| `async-shell-command` |  | simple | `M-&` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `back-to-indentation` | ◯ | simple | `M-m` | 実装済み | `M-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `backward-kill-word` | ◯ | simple | `M-DEL`, `C-<backspace>` | 実装済み | `M-DEL` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `backward-word` | ◯ | simple | `M-b`, `ESC <left>` | 実装済み | `M-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `beginning-of-buffer` | ◯ | simple | `M-<`, `<begin>`, `C-<home>` | 実装済み | `M-<` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `clone-buffer` |  | simple | `C-x x n` |  |  |  | 9 |
-| `clone-indirect-buffer-other-window` |  | simple | `C-x 4 c` |  |  |  | 9 |
+| `clone-buffer` |  | simple | `C-x x n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `clone-indirect-buffer-other-window` |  | simple | `C-x 4 c` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `compose-mail` |  | simple | `C-x m` |  |  |  | 12 |
 | `compose-mail-other-frame` |  | simple | `C-x 5 m` |  |  |  | 12 |
 | `compose-mail-other-window` |  | simple | `C-x 4 m` |  |  |  | 12 |
@@ -408,8 +409,8 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
 | `set-selective-display` |  | simple | `C-x $` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `shell-command` | ◯ | simple | `M-!` |  |  |  | 9 |
-| `shell-command-on-region` | ◯ | simple | `M-\|` |  |  |  | 9 |
+| `shell-command` | ◯ | simple | `M-!` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `shell-command-on-region` | ◯ | simple | `M-\|` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `split-line` | ◯ | simple | `C-M-o` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
@@ -427,14 +428,14 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `find-file` | ◯ | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-other-frame` | ◯ | files | `C-x 5 f`, `C-x 5 C-f` |  |  |  | 12 |
 | `find-file-other-window` | ◯ | files | `C-x 4 f`, `C-x 4 C-f` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
-| `find-file-read-only` |  | files | `C-x C-r` |  |  |  | 9 |
+| `find-file-read-only` |  | files | `C-x C-r` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-read-only-other-frame` |  | files | `C-x 5 r` |  |  |  | 12 |
-| `find-file-read-only-other-window` |  | files | `C-x 4 r` |  |  |  | 9 |
+| `find-file-read-only-other-window` |  | files | `C-x 4 r` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
 | `insert-file` | ◯ | files | `C-x i` | 実装済み | `C-x i` | Lisp (`lisp/files.scm`) | 済 |
-| `list-directory` | ◯ | files | `C-x C-d` |  |  |  | 9 |
-| `not-modified` | ◯ | files | `M-~` |  |  |  | 9 |
-| `rename-uniquely` |  | files | `C-x x u` |  |  |  | 9 |
-| `revert-buffer-quick` |  | files | `C-x x g` |  |  |  | 9 |
+| `list-directory` | ◯ | files | `C-x C-d` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `not-modified` | ◯ | files | `M-~` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `rename-uniquely` |  | files | `C-x x u` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `revert-buffer-quick` |  | files | `C-x x g` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
 | `save-buffer` | ◯ | files | `C-x C-s` | 実装済み | `C-x C-s` | Lisp (`lisp/files.scm`) | 済 |
 | `save-buffers-kill-terminal` |  | files | `C-x C-c` | 実装済み | `C-x C-c` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 9 |
 | `save-some-buffers` | ◯ | files | `C-x s` | 実装済み | `C-x s` | Lisp (`lisp/files.scm`) | 済 |

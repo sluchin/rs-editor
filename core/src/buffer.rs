@@ -78,6 +78,8 @@ pub struct Buffer {
     restriction: Option<(usize, usize)>,
     /// `save-restriction` が覚えている絞り込み (解いたものは `None`. 絞り込んでいなかったときは `Some(None)`).
     saved_restrictions: Vec<Option<Option<(usize, usize)>>>,
+    /// 読み取り専用か (Emacs の `buffer-read-only`).
+    read_only: bool,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -118,6 +120,7 @@ impl Buffer {
             highlights: Vec::new(),
             restriction: None,
             saved_restrictions: Vec::new(),
+            read_only: false,
         }
     }
 
@@ -187,6 +190,34 @@ impl Buffer {
     /// 構文の方言を決めます.
     pub fn set_dialect(&mut self, dialect: Dialect) {
         self.dialect = dialect;
+    }
+
+    /// バッファの名前を変えます (呼ぶのは `Editor::rename_buffer`. 他のバッファとの重なりは調べない).
+    pub(crate) fn set_name(&mut self, name: &str) {
+        self.name = name.to_string();
+    }
+
+    /// 読み取り専用か (Emacs の `buffer-read-only`).
+    pub fn read_only(&self) -> bool {
+        self.read_only
+    }
+
+    /// 読み取り専用かを決めます.
+    pub fn set_read_only(&mut self, read_only: bool) {
+        self.read_only = read_only;
+    }
+
+    /// 書き換えられるか調べます (Emacs の `barf-if-buffer-read-only`).
+    ///
+    /// # Errors
+    ///
+    /// 読み取り専用のとき.
+    pub fn ensure_writable(&self) -> Result<(), String> {
+        if self.read_only {
+            Err(format!("Buffer is read-only: #<buffer {}>", self.name))
+        } else {
+            Ok(())
+        }
     }
 
     /// 書き換えたか.
@@ -622,6 +653,7 @@ impl Buffer {
         if len == 0 {
             return Ok(());
         }
+        self.ensure_writable()?;
         self.text.insert(pos, text);
         self.deactivate_requested = true;
         self.shift_for_insert(pos, len, before_markers);
@@ -656,6 +688,7 @@ impl Buffer {
         if from == to {
             return Ok(String::new());
         }
+        self.ensure_writable()?;
         let text = self.text.slice(from..to).to_string();
         self.text.remove(from..to);
         self.deactivate_requested = true;
@@ -681,6 +714,7 @@ impl Buffer {
         if from == to && text.is_empty() {
             return Ok(());
         }
+        self.ensure_writable()?;
         // 変えなくても, 変えようとしたことは覚える (Emacs の `modify_text`)
         self.deactivate_requested = true;
         if self.text.slice(from..to) == text {

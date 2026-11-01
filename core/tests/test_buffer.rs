@@ -435,3 +435,25 @@ fn test_line_accessors() {
     assert_eq!(buffer.line_count(), 2);
     assert_eq!(buffer.line_text(1), "");
 }
+
+#[test]
+fn test_read_only() {
+    let mut buffer = Buffer::with_text("ro", "abc");
+    assert!(!buffer.read_only());
+    assert!(buffer.ensure_writable().is_ok());
+    buffer.set_read_only(true);
+    assert!(buffer.read_only());
+    let message = "Buffer is read-only: #<buffer ro>";
+    assert_eq!(buffer.ensure_writable().unwrap_err(), message);
+    // 書き換えようとすると失敗して, 本文は変わらない. 空の書き換えは失敗しない
+    assert_eq!(buffer.insert_at(0, "x").unwrap_err(), message);
+    assert_eq!(buffer.delete_region(0, 1).unwrap_err(), message);
+    assert_eq!(buffer.replace_region(0, 1, "X").unwrap_err(), message);
+    assert!(buffer.insert_at(0, "").is_ok());
+    assert!(buffer.delete_region(1, 1).is_ok());
+    assert!(buffer.replace_region(1, 1, "").is_ok());
+    assert_eq!(buffer.text(), "abc");
+    buffer.set_read_only(false);
+    buffer.insert_at(0, "x").unwrap();
+    assert_eq!(buffer.text(), "xabc");
+}

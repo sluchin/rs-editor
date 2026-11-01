@@ -46,6 +46,7 @@ pub const NAMES: &[&str] = &[
     "regexp-quote",
     "grep",
     "browse-url",
+    "call-shell-command",
 ];
 
 /// URL を開くプログラムの既定 (Lisp の `browse-url-generic-program` の始めの値).
@@ -230,6 +231,24 @@ pub(crate) fn call(
             };
             browse_url(&program, &url)?;
             Ok(Value::Nil)
+        }),
+        // (call-shell-command COMMAND INPUT DIRECTORY): シェルで COMMAND を動かし, (終了コード 出力) を返す.
+        // INPUT (文字列, 無ければ #f) は標準入力に, DIRECTORY (無ければ #f) は動かす所. エラーの出力も, 出力に混ぜる
+        "call-shell-command" => fixed::<3>(name, args).and_then(|[command, input, dir]| {
+            let optional = |value: &Value| match value {
+                Value::String(s) => Some(s.clone()),
+                _ => None,
+            };
+            let (code, output) = run_shell(
+                string(name, &command)?,
+                optional(&input).as_deref(),
+                optional(&dir).as_deref(),
+            )?;
+            Ok(Value::List(
+                vec![Value::Number(f64::from(code)), Value::String(output)]
+                    .into_iter()
+                    .collect(),
+            ))
         }),
         _ => return None,
     };
@@ -692,6 +711,47 @@ fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result
         }
     }
     Ok(Value::List(found.into()))
+}
+
+/// シェル (`sh -c`) でコマンドを動かし, 標準出力とエラーの出力を混ぜて集めます.
+///
+/// # Arguments
+///
+/// * `command` - コマンドの文字列.
+/// * `input` - 標準入力に渡す文字列 (無ければ空).
+/// * `dir` - 動かすディレクトリ (無ければ今の所).
+///
+/// # Returns
+///
+/// 終了コード (信号で終わったときは -1) と, 出力. 動かせなければ, 理由の文字列の [`Err`].
+pub fn run_shell(
+    command: &str,
+    input: Option<&str>,
+    dir: Option<&str>,
+) -> Result<(i32, String), String> {
+    use std::io::Write;
+    let mut process = std::process::Command::new("sh");
+    process
+        .arg("-c")
+        .arg(format!("exec 2>&1; {command}"))
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped());
+    if let Some(dir) = dir {
+        process.current_dir(dir);
+    }
+    let mut child = process.spawn().map_err(|e| format!("sh: {e}"))?;
+    let mut stdin = child.stdin.take().expect("stdin is piped");
+    let text = input.unwrap_or("").to_string();
+    // 出力を読みながら書かないと, 入力が大きいとき止まる
+    let writer = std::thread::spawn(move || {
+        let _ = stdin.write_all(text.as_bytes());
+    });
+    let output = child.wait_with_output().map_err(|e| format!("sh: {e}"))?;
+    let _ = writer.join();
+    Ok((
+        output.status.code().unwrap_or(-1),
+        String::from_utf8_lossy(&output.stdout).into_owned(),
+    ))
 }
 
 /// URL を, プログラムで開きます (終わるのを待たない).

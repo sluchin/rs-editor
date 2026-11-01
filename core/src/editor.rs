@@ -138,6 +138,68 @@ impl Editor {
         candidate
     }
 
+    /// 使われていないバッファの名前を返します (Emacs の `generate-new-buffer-name`). 使われていれば `<2>`, `<3>` を付ける.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 欲しい名前.
+    /// * `ignore` - 使われていないものとして扱う名前.
+    pub fn generate_new_buffer_name(&self, name: &str, ignore: Option<&str>) -> String {
+        let free =
+            |candidate: &str| Some(candidate) == ignore || self.get_buffer(candidate).is_none();
+        let mut candidate = name.to_string();
+        let mut n = 2;
+        while !free(&candidate) {
+            candidate = format!("{name}<{n}>");
+            n += 1;
+        }
+        candidate
+    }
+
+    /// 今のバッファの名前を変えます (Emacs の `rename-buffer`).
+    ///
+    /// # Arguments
+    ///
+    /// * `new` - 新しい名前.
+    /// * `unique` - 真なら, 使われていれば `<2>` などを付ける. 偽なら失敗する.
+    ///
+    /// # Returns
+    ///
+    /// 付けた名前.
+    ///
+    /// # Errors
+    ///
+    /// 名前が空のとき, または使われているとき.
+    pub fn rename_buffer(&mut self, new: &str, unique: bool) -> Result<String, String> {
+        if new.is_empty() {
+            return Err("Empty string is invalid as a buffer name".to_string());
+        }
+        let old = self.current.clone();
+        let new = if unique {
+            self.generate_new_buffer_name(new, Some(&old))
+        } else {
+            new.to_string()
+        };
+        if new != old && self.get_buffer(&new).is_some() {
+            return Err(format!("Buffer name ‘{new}’ is in use"));
+        }
+        let rename = |name: &mut String| {
+            if *name == old {
+                *name = new.clone();
+            }
+        };
+        self.current_buffer_mut().set_name(&new);
+        self.current = new.clone();
+        self.window_buffers.values_mut().for_each(rename);
+        for configuration in &mut self.window_configurations {
+            configuration.window_buffers.values_mut().for_each(rename);
+        }
+        for (name, _) in &mut self.global_mark_ring {
+            rename(name);
+        }
+        Ok(new)
+    }
+
     /// 今のバッファの名前.
     pub fn current_buffer_name(&self) -> &str {
         &self.current

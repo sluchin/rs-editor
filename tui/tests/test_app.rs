@@ -805,3 +805,45 @@ fn test_completion_keys() {
     fx.app.run();
     assert_eq!(fx.text(), "string-append foobar foobaz fooba");
 }
+
+#[test]
+fn test_shell_and_read_only_keys() {
+    let mut fx = Fixture::new();
+    // M-|: マークが無ければ失敗
+    fx.feed("M-|");
+    fx.app.run();
+    assert_eq!(
+        fx.app.message(),
+        "The mark is not set now, so there is no region"
+    );
+    // M-!: コマンドを読んで動かす. 出力が短ければエコー領域に出る
+    fx.feed("M-! e c h o SPC h i RET");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "hi");
+    // 前置引数があれば, 今のバッファに入れる
+    fx.feed("C-u M-! e c h o SPC y o RET");
+    fx.app.run();
+    assert_eq!(fx.text(), "yo\n");
+    // C-x C-q: 読み取り専用にすると, 文字を入れられない
+    fx.feed("C-x C-q");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "Read-Only mode enabled in current buffer");
+    fx.feed("a");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "Buffer is read-only: #<buffer *scratch*>");
+    fx.feed("C-x C-q");
+    fx.app.run();
+    // M-~: 書き換えた印を消す
+    fx.feed("a M-~");
+    fx.app.run();
+    assert_eq!(fx.app.message(), "Modification-flag cleared");
+    // C-x x r: 名前を変える
+    fx.feed("C-x x r n e w RET");
+    fx.app.run();
+    assert!(fx
+        .app
+        .host()
+        .editor()
+        .buffer_list()
+        .contains(&"new".to_string()));
+}

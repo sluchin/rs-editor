@@ -192,3 +192,45 @@ fn test_window_configuration() {
     assert_eq!(editor.split_window(Direction::Right), second + 1);
     assert!(editor.restore_window_configuration(99).is_err());
 }
+
+#[test]
+fn test_generate_new_buffer_name_and_rename() {
+    let mut editor = Editor::new();
+    // 使われていない名前はそのまま. 使われていれば <2>, <3>
+    assert_eq!(editor.generate_new_buffer_name("a", None), "a");
+    editor.get_buffer_create("a");
+    editor.get_buffer_create("a<2>");
+    assert_eq!(editor.generate_new_buffer_name("a", None), "a<3>");
+    // ignore した名前は, 使われていないものとして扱う
+    assert_eq!(editor.generate_new_buffer_name("a", Some("a")), "a");
+    // 名前を変えると, ウィンドウと, 覚えた設定と, global-mark-ring の名前も変わる
+    editor.set_buffer("a").unwrap();
+    let second = editor.split_window(Direction::Below);
+    editor.set_window_buffer(second, "a").unwrap();
+    let saved = editor.save_window_configuration();
+    editor.global_mark_ring.push(("a".to_string(), 0));
+    editor.global_mark_ring.push(("a<2>".to_string(), 0));
+    assert_eq!(editor.rename_buffer("b", false).unwrap(), "b");
+    assert_eq!(editor.current_buffer_name(), "b");
+    assert_eq!(editor.current_buffer().name(), "b");
+    assert!(editor.get_buffer("a").is_none());
+    assert_eq!(editor.window_buffer(second), Some("b"));
+    assert_eq!(
+        editor.global_mark_ring,
+        vec![("b".to_string(), 0), ("a<2>".to_string(), 0)]
+    );
+    editor.restore_window_configuration(saved).unwrap();
+    assert_eq!(editor.window_buffer(second), Some("b"));
+    editor.set_buffer("b").unwrap();
+    // 同じ名前への変更は何もしない. 使われている名前は失敗するが, unique なら <N> を付ける
+    assert_eq!(editor.rename_buffer("b", false).unwrap(), "b");
+    assert_eq!(
+        editor.rename_buffer("a<2>", false).unwrap_err(),
+        "Buffer name ‘a<2>’ is in use"
+    );
+    assert_eq!(editor.rename_buffer("a<2>", true).unwrap(), "a<2><2>");
+    assert_eq!(
+        editor.rename_buffer("", false).unwrap_err(),
+        "Empty string is invalid as a buffer name"
+    );
+}
