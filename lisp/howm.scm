@@ -516,7 +516,7 @@ The collected keywords are reused."
     (set! howm-keyword-cache
           (howm-unique
            (map (lambda (found) (cadr (regexp-match howm-come-from-regexp (list-ref found 2))))
-                (grep howm-come-from-regexp (howm-files))))))
+                (rust-grep howm-come-from-regexp (howm-files))))))
   howm-keyword-cache)
 
 (define (howm-keyword-regexp keywords)
@@ -723,7 +723,7 @@ If the item has no file, search for its text."
 (define (howm-search regexp keyword)
   "Search the memos for REGEXP.
 Lines of \"<<< KEYWORD\" come first, then newer files first."
-  (let* ((found (grep regexp (howm-files)))
+  (let* ((found (rust-grep regexp (howm-files)))
          (come-from (string-append (howm-case-fold "<<<\\s*" keyword) (regexp-quote keyword)))
          (rank (lambda (item) (if (regexp-match come-from (list-ref item 2)) 0 1))))
     (howm-show-summary
@@ -1011,7 +1011,7 @@ Each is a list of (PRIORITY DATE TYPE FILE LINE TEXT)."
                   (late (/ (- now (date-to-time date)) howm-day)))
              (list (howm-priority type late laziness) date type
                    (car found) (cadr found) (car parts))))
-         (grep howm-reminder-regexp (howm-files)))))
+         (rust-grep howm-reminder-regexp (howm-files)))))
 
 (define (howm-reminder-item reminder)
   "Return REMINDER as a summary item, (FILE LINE TEXT)."
@@ -1148,7 +1148,7 @@ Create a memo of \"<<< KEYWORD\" if there is none, or search for it.
 If KEYWORD is %name%, open that menu."
   (cond ((and (howm-menu-keyword? keyword) (howm-menu-find-section keyword))
          (howm-menu-open-section keyword))
-        ((null? (grep (string-append "<<<\\s*" (regexp-quote keyword)) (howm-files)))
+        ((null? (rust-grep (string-append "<<<\\s*" (regexp-quote keyword)) (howm-files)))
          (howm-create-memo (string-append "<<< " keyword)))
         (else (howm-search-keyword-with-history keyword))))
 
@@ -1668,7 +1668,7 @@ FILE is the file of the template; RELOAD refreshes the menu."
   (map (lambda (found)
          (list (format "%s | %s" (howm-file-label (car found)) (list-ref found 2))
                (car found) (cadr found)))
-       (grep (howm-case-fold (regexp-quote keyword) keyword) (howm-files))))
+       (rust-grep (howm-case-fold (regexp-quote keyword) keyword) (howm-files))))
 
 (define (howm-menu-last-update)
   "Return the current date and time for the menu, for %here%."

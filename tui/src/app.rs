@@ -38,6 +38,7 @@ const DIRED: &str = include_str!("../../lisp/dired.scm");
 
 /// ヘルプ, 定義へ移るコマンド, Info (Lisp. `simple.scm` と `isearch.scm` の後に読む).
 const HELP: &str = include_str!("../../lisp/help.scm");
+const COMPILE: &str = include_str!("../../lisp/compile.scm");
 const XREF: &str = include_str!("../../lisp/xref.scm");
 const INFO: &str = include_str!("../../lisp/info.scm");
 
@@ -102,6 +103,7 @@ impl App {
         evaluator.eval_with(BUFF_MENU, &host)?;
         evaluator.eval_with(DIRED, &host)?;
         evaluator.eval_with(HELP, &host)?;
+        evaluator.eval_with(COMPILE, &host)?;
         evaluator.eval_with(XREF, &host)?;
         evaluator.eval_with(INFO, &host)?;
         evaluator.eval_with(BOOKMARK, &host)?;

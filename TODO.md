@@ -586,6 +586,33 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 | [ ] | `M-<f9>` | cscope-display-buffer | 5143 |
 | [ ] | `M-<f10>` | cscope-display-buffer-toggle | 5144 |
 
+## Phase 20: そのほかの機能 (開発メモから)
+
+HackMD の開発メモにあった rs-editor の項目のうち、上の Phase に無いもの。Scheme の整形 (Phase 18)、Scheme の lint (Phase 19)、ヘルプの多言語化 (Phase 17) は、それぞれの Phase で進める。
+
+### 編集のモード
+
+- [ ] paredit: 括弧の対応を崩さずに S 式を編集するマイナーモード (`(` で `()` を入れる、`C-)` で S 式を取り込む、など)。
+- [ ] skk-mode: 日本語入力 (SKK)。dotfiles では `C-\` に割り当てている (下の「dotfiles/.emacs.el の global-map の関数」)。
+- [ ] markdown-mode: Markdown の色分けと、見出しの移動など。
+
+### Org mode
+
+- [ ] org-lint: Org の文書の書き方の誤り (リンク先が無い、日付の形が違う、など) を一覧にする。Phase 19 (Scheme のコードの lint) とは別のもの。
+
+### 作りと画面
+
+- [ ] Scheme のインタプリタを独立させる: `core/src/scheme/` を、エディタの核 (`Editor`, `Buffer`) に頼らない別のクレートに分け、エディタ無しでも使えるようにする。
+- [ ] 画面 (Tauri) でも `*Messages*` バッファでメッセージの記録を見られるようにするか検討する。ターミナルのアプリは `view-echo-area-messages` (`C-h e`) で見られる。
+- [ ] w3m のように、Web のページをエディタの中で見る機能を、Tauri の webview で作れるか検討する。
+
+### 済んだもの
+
+- [x] ERT (Emacs Lisp のテストの仕組み) と同じことを Scheme でできるようにする (`ert-deftest`, `should`, `should-not`)。
+- [x] Org mode (`lisp/org.scm`)。
+- [x] ミニバッファを `C-g` で抜ける。
+- [x] Rust のテストのファイル名を `test_<対象>.rs` にそろえる (`core/tests/test_evaluator_edge_cases.rs`, `src-tauri/tests/test_integration.rs` に改名)。
+
 ## 実装順序の目安
 
 Phase 1 から Phase 12 は、済んだ。これからは、Phase 12, 12.5, 14, 15, 16, 17, 18, 19 の残りと、Phase 13 から、よく使うものを選んで進める。

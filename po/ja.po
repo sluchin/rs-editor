@@ -494,6 +494,106 @@ msgstr ""
 "そのあとに, 名前, 大きさ, モード, ファイルが続く.\n"
 "前置引数 FILES-ONLY が 0 以上なら, ファイルを訪れているバッファだけを出す."
 
+#: lisp/compile.scm
+msgctxt "variable:next-error-last-buffer"
+msgid "The name of the buffer `next-error' reads the locations from, or #f."
+msgstr "`next-error' が場所を読むバッファの名前. 無ければ #f."
+
+#: lisp/compile.scm
+msgctxt "variable:next-error-directory"
+msgid "The directory the file names of `next-error-last-buffer' are relative to."
+msgstr "`next-error-last-buffer' のファイル名の基準になるディレクトリ."
+
+#: lisp/compile.scm
+msgctxt "variable:next-error--start"
+msgid "The position where the locations of `next-error-last-buffer' start."
+msgstr "`next-error-last-buffer' の場所が始まる位置."
+
+#: lisp/compile.scm
+msgctxt "variable:next-error--end"
+msgid "The position where the locations of `next-error-last-buffer' end."
+msgstr "`next-error-last-buffer' の場所が終わる位置."
+
+#: lisp/compile.scm
+msgctxt "function:compile--set-source"
+msgid "Make the buffer NAME the source of `next-error': its locations lie between START and END."
+msgstr "バッファ NAME を `next-error' の元にする. 場所は START から END の間にある."
+
+#: lisp/compile.scm
+msgctxt "function:compile--hit"
+msgid "Return (FILE LINE) if the line TEXT is `FILE:LINE:TEXT', or #f."
+msgstr "行 TEXT が `FILE:LINE:TEXT' なら (FILE LINE) を返す. 違えば #f."
+
+#: lisp/compile.scm
+msgctxt "function:compile--line-hit"
+msgid "Return the location on the line at point, or #f if the line is outside the locations."
+msgstr "点の行にある場所を返す. 行が場所の範囲の外なら #f."
+
+#: lisp/compile.scm
+msgctxt "function:compile--scan"
+msgid ""
+"Move point to the next (or previous) line with a location and return it.\n"
+"If there is none, leave point where it was and return #f."
+msgstr ""
+"点を, 次(前)の場所のある行に動かして, その場所を返す.\n"
+"無ければ, 点を動かさず #f を返す."
+
+#: lisp/compile.scm
+msgctxt "function:compile--visit"
+msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
+msgstr "HIT のファイルと行を訪ねる. OTHER-WINDOW なら別の窓で."
+
+#: lisp/compile.scm
+msgctxt "function:compile--next-error"
+msgid "Visit the next (or previous) location of `next-error-last-buffer'."
+msgstr "`next-error-last-buffer' の, 次(前)の場所を訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:next-error"
+msgid "Visit the next location of the grep (or xref) results."
+msgstr "grep (か xref)の結果の, 次の場所を訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:previous-error"
+msgid "Visit the previous location of the grep (or xref) results."
+msgstr "grep (か xref)の結果の, 前の場所を訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:first-error"
+msgid "Visit the first location of the grep (or xref) results."
+msgstr "grep (か xref)の結果の, 最初の場所を訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:compile-goto-error"
+msgid "Visit the location on the current line of the results, in another window."
+msgstr "結果の今の行にある場所を, 別の窓で訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:grep--home-name"
+msgid "Return PATH with the home directory written as ~."
+msgstr "PATH のホームディレクトリを ~ で書いて返す."
+
+#: lisp/compile.scm
+msgctxt "function:grep--files"
+msgid "Return the files below DIRECTORY, not those in .git, target, or node_modules."
+msgstr "DIRECTORY の下のファイルを返す (.git, target, node_modules の中は除く)."
+
+#: lisp/compile.scm
+msgctxt "function:grep--show"
+msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window; return the buffer name."
+msgstr "HITS ((FILE LINE TEXT) ...) を *grep* バッファに入れて, 別の窓に出す. バッファの名前を返す."
+
+#: lisp/compile.scm
+msgctxt "function:grep"
+msgid ""
+"Search the files below a directory for lines that match a regexp.\n"
+"Interactively, read the regexp and the directory in the minibuffer.\n"
+"The matches are listed in the *grep* buffer; \\[next-error] visits them."
+msgstr ""
+"ディレクトリの下のファイルから, 正規表現に合う行を探す.\n"
+"対話では, 正規表現とディレクトリをミニバッファで読む.\n"
+"合った行は *grep* バッファに並べる. \\[next-error] で順に訪ねる."
+
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"
 msgid "If non-nil, `dabbrev-expand' only looks backwards."
@@ -7236,8 +7336,12 @@ msgstr "今のディレクトリの下のファイルを返す (.git, target, no
 
 #: lisp/xref.scm
 msgctxt "function:xref--show"
-msgid "Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name."
-msgstr "TITLE の下に LINES (文字列)を *xref* バッファに入れて, 別の窓に出す. バッファの名前を返す."
+msgid ""
+"Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name.\n"
+"If LOCATIONS is not empty, the lines are `FILE:LINE:TEXT' and `next-error' visits them."
+msgstr ""
+"TITLE の下に LINES (文字列)を *xref* バッファに入れて, 別の窓に出す. バッファの名前を返す.\n"
+"LOCATIONS があれば, 行は `FILE:LINE:TEXT' で, `next-error' で訪ねる."
 
 #: lisp/xref.scm
 msgctxt "function:xref-find-references"

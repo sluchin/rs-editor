@@ -2,7 +2,7 @@
 
 ;; Emacs の xref.el に当たるもの (`xref-find-definitions`, `xref-go-back` など).
 ;; 定義は, Lisp の `define` と `define-command` を, 名前を定義したファイル (`symbol-file`) から探す.
-;; 参照は, `xref-project-directory` (始めは今のディレクトリ) の下のファイルを, 名前の単語で探す (`grep`).
+;; 参照は, `xref-project-directory` (始めは今のディレクトリ) の下のファイルを, 名前の単語で探す (`rust-grep`).
 
 (define xref--back-stack '()
   "List of (BUFFER-NAME MARKER) to go back to, the latest first.")
@@ -85,7 +85,7 @@
   (let ((file (symbol-file (string->symbol name))))
     (and file
          (file-exists? file)
-         (let ((found (grep (xref--definition-regexp name) (list file))))
+         (let ((found (rust-grep (xref--definition-regexp name) (list file))))
            (and (pair? found)
                 (list file (cadr (car found))))))))
 
@@ -119,13 +119,17 @@ With a prefix argument, or if there is no identifier at point, read it in the mi
             (not (regexp-match "/(\\.git|target|node_modules)/" file)))
           (directory-files-recursively xref-project-directory "")))
 
-(define (xref--show title lines)
-  "Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name."
+(define (xref--show title lines . locations)
+  "Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name.
+If LOCATIONS is not empty, the lines are `FILE:LINE:TEXT' and `next-error' visits them."
   (with-current-buffer (get-buffer-create "*xref*")
     (set-buffer-read-only #f)
     (erase-buffer)
     (insert title "\n\n")
-    (insert (apply string-append (map (lambda (line) (string-append line "\n")) lines)))
+    (let ((start (point)))
+      (insert (apply string-append (map (lambda (line) (string-append line "\n")) lines)))
+      (if (pair? locations)
+          (compile--set-source "*xref*" "" start (point))))
     (goto-char (point-min))
     (set-buffer-modified-p #f)
     (set-buffer-read-only #t))
@@ -137,12 +141,13 @@ With a prefix argument, or if there is no identifier at point, read it in the mi
 With a prefix argument, or if there is no identifier at point, read it in the minibuffer.
 The references are listed in the *xref* buffer as FILE:LINE:TEXT."
   (let* ((name (xref--identifier args "Find references of"))
-         (found (grep (string-append "\\b" (regexp-quote name) "\\b") (xref--project-files))))
+         (found (rust-grep (string-append "\\b" (regexp-quote name) "\\b") (xref--project-files))))
     (if (null? found)
         (user-error (format "No references found for: %s" name)))
     (xref--push-marker-stack)
     (xref--show (format "References to %s:" name)
-                (map (lambda (hit) (format "%s:%d:%s" (car hit) (cadr hit) (caddr hit))) found))
+                (map (lambda (hit) (format "%s:%d:%s" (car hit) (cadr hit) (caddr hit))) found)
+                #t)
     #f))
 
 (define-command (xref-find-apropos . args)

@@ -1,4 +1,4 @@
-//! 組み込みの手続きのうち, ファイル, 時刻, 正規表現を使うもの (`load`, `read-file-string`, `grep` など).
+//! 組み込みの手続きのうち, ファイル, 時刻, 正規表現を使うもの (`load`, `read-file-string`, `rust-grep` など).
 //!
 //! 相対パスは, 読み込んでいるファイル (`load`) のディレクトリ, またはホームディレクトリから数えます.
 
@@ -44,7 +44,7 @@ pub const NAMES: &[&str] = &[
     "regexp-match",
     "regexp-match-positions",
     "regexp-quote",
-    "grep",
+    "rust-grep",
     "browse-url",
     "call-shell-command",
 ];
@@ -214,7 +214,7 @@ pub(crate) fn call(
         "regexp-match" | "regexp-match-positions" => regexp_match(name, &args),
         "regexp-quote" => fixed::<1>(name, args)
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
-        "grep" => fixed::<2>(name, args)
+        "rust-grep" => fixed::<2>(name, args)
             .and_then(|[pattern, files]| grep(machine, name, &pattern, &files)),
         // 環境変数の値. 無ければ #f
         "getenv" => {
@@ -674,7 +674,7 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
     })
 }
 
-/// ファイルの中から, 正規表現に合う行を探します (howm の検索に使う, grep).
+/// ファイルの中から, 正規表現に合う行を探します (howm の検索に使う, rust-grep).
 ///
 /// # Arguments
 ///
@@ -689,7 +689,7 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
 fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result<Value, String> {
     let regex = regexp(string(name, pattern)?)?;
     let Value::List(files) = files else {
-        return Err("grep expects a list of files".to_string());
+        return Err(format!("{name} expects a list of files"));
     };
     let mut found = Vec::new();
     for file in files.iter() {

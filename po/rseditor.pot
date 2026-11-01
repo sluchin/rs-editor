@@ -396,6 +396,101 @@ msgid ""
 "With a non-negative prefix argument FILES-ONLY, show only the buffers that visit files."
 msgstr ""
 
+#: lisp/compile.scm
+msgctxt "variable:next-error-last-buffer"
+msgid "The name of the buffer `next-error' reads the locations from, or #f."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:next-error-directory"
+msgid "The directory the file names of `next-error-last-buffer' are relative to."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:next-error--start"
+msgid "The position where the locations of `next-error-last-buffer' start."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:next-error--end"
+msgid "The position where the locations of `next-error-last-buffer' end."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--set-source"
+msgid "Make the buffer NAME the source of `next-error': its locations lie between START and END."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--hit"
+msgid "Return (FILE LINE) if the line TEXT is `FILE:LINE:TEXT', or #f."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--line-hit"
+msgid "Return the location on the line at point, or #f if the line is outside the locations."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--scan"
+msgid ""
+"Move point to the next (or previous) line with a location and return it.\n"
+"If there is none, leave point where it was and return #f."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--visit"
+msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--next-error"
+msgid "Visit the next (or previous) location of `next-error-last-buffer'."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:next-error"
+msgid "Visit the next location of the grep (or xref) results."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:previous-error"
+msgid "Visit the previous location of the grep (or xref) results."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:first-error"
+msgid "Visit the first location of the grep (or xref) results."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile-goto-error"
+msgid "Visit the location on the current line of the results, in another window."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--home-name"
+msgid "Return PATH with the home directory written as ~."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--files"
+msgid "Return the files below DIRECTORY, not those in .git, target, or node_modules."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--show"
+msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window; return the buffer name."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep"
+msgid ""
+"Search the files below a directory for lines that match a regexp.\n"
+"Interactively, read the regexp and the directory in the minibuffer.\n"
+"The matches are listed in the *grep* buffer; \\[next-error] visits them."
+msgstr ""
+
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"
 msgid "If non-nil, `dabbrev-expand' only looks backwards."
@@ -6408,7 +6503,9 @@ msgstr ""
 
 #: lisp/xref.scm
 msgctxt "function:xref--show"
-msgid "Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name."
+msgid ""
+"Show LINES (strings) under TITLE in the *xref* buffer, in another window; return the buffer name.\n"
+"If LOCATIONS is not empty, the lines are `FILE:LINE:TEXT' and `next-error' visits them."
 msgstr ""
 
 #: lisp/xref.scm

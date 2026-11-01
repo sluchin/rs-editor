@@ -81,6 +81,7 @@ fn eval_with(answers: &[&str], code: &str) -> (String, Vec<String>) {
         include_str!("../../lisp/replace.scm"),
         include_str!("../../lisp/isearch.scm"),
         include_str!("../../lisp/help.scm"),
+        include_str!("../../lisp/compile.scm"),
         include_str!("../../lisp/xref.scm"),
         include_str!("../../lisp/info.scm"),
     ] {

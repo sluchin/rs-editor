@@ -464,7 +464,7 @@ fn test_grep() {
     fs::write(&b, "Foo\n").unwrap();
     let missing = dir.path().join("none.txt");
     let code = format!(
-        "(grep \"(?i)foo\" (list {} {} {}))",
+        "(rust-grep \"(?i)foo\" (list {} {} {}))",
         quoted(&a),
         quoted(&missing),
         quoted(&b)
@@ -479,13 +479,23 @@ fn test_grep() {
     );
     // 相対のパスは, expand-file-name と同じく, 読み込んでいるファイルのディレクトリから読む
     let script = dir.path().join("search.sl");
-    fs::write(&script, "(define found (grep \"bar\" (list \"a.txt\")))").unwrap();
+    fs::write(
+        &script,
+        "(define found (rust-grep \"bar\" (list \"a.txt\")))",
+    )
+    .unwrap();
     assert_eq!(
         eval(&format!("(load {}) found", quoted(&script))),
         "#t\n((\"a.txt\" 2 \"foo bar\"))"
     );
-    assert_eq!(eval_err("(grep \"a\" 1)"), "grep expects a list of files");
-    assert_eq!(eval_err("(grep \"a\" '(1))"), "grep expects strings");
+    assert_eq!(
+        eval_err("(rust-grep \"a\" 1)"),
+        "rust-grep expects a list of files"
+    );
+    assert_eq!(
+        eval_err("(rust-grep \"a\" '(1))"),
+        "rust-grep expects strings"
+    );
 }
 
 #[test]

@@ -1079,6 +1079,38 @@ fn test_xref_keys() {
 }
 
 #[test]
+fn test_next_error_keys() {
+    let mut fx = Fixture::new();
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), "one\nfoo\n").unwrap();
+    std::fs::write(dir.path().join("b.txt"), "foo\n").unwrap();
+    // 結果が無いうちは, 行く所が無い
+    fx.press("M-g n");
+    assert_eq!(
+        fx.app.message(),
+        "No buffers contain error message locations"
+    );
+    fx.app
+        .eval(&format!(
+            "(grep \"foo\" \"{}\")",
+            dir.path().to_str().unwrap()
+        ))
+        .unwrap();
+    // M-g n と C-x ` は次の場所へ, M-g p は前の場所へ
+    fx.press("M-g n");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "a.txt");
+    assert_eq!(fx.point(), 4);
+    fx.press("C-x `");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "b.txt");
+    fx.press("M-g n");
+    assert_eq!(fx.app.message(), "Moved past last grep hit");
+    fx.press("M-g p");
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "a.txt");
+    fx.press("M-g p");
+    assert_eq!(fx.app.message(), "Moved back before first grep hit");
+}
+
+#[test]
 fn test_info_keys() {
     let mut fx = Fixture::new();
     let dir = tempfile::tempdir().unwrap();
