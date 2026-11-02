@@ -1,10 +1,13 @@
 //! rseditor: Emacs のように使えるエディタ (Scheme の評価器付き) のバックエンド.
 //!
-//! ファイルの読み書き ([`commands`]. 書くのは原子的に ([`atomic`])), Scheme の評価 ([`scheme`]), ディレクトリの中の検索 ([`search`]), ログ ([`logging`]) を受け持ちます.
+//! 画面のエディタ ([`session`]. 画面への窓口は `front`), ファイルの読み書き ([`commands`]. 書くのは原子的に ([`atomic`])), Scheme の評価 ([`scheme`]), ディレクトリの中の検索 ([`search`]), ログ ([`logging`]) を受け持ちます.
 
 pub mod commands;
+#[cfg(not(tarpaulin_include))]
+pub mod front;
 pub mod logging;
 pub mod search;
+pub mod session;
 
 pub use rseditor_core::{atomic, scheme};
 
@@ -29,12 +32,14 @@ pub fn run() {
     tauri::Builder::default()
         .manage(Arc::new(Evaluator::new()))
         .manage(Arc::new(Bridge::new(EDITOR_TIMEOUT)))
+        .manage(front::Inputs::default())
         .invoke_handler(tauri::generate_handler![
             logging::log_frontend_message,
             commands::eval_scheme,
             commands::run_lisp_command,
             commands::load_init,
             commands::editor_reply,
+            front::session_input,
             commands::read_file_content,
             commands::write_file_content,
             commands::path_exists,
