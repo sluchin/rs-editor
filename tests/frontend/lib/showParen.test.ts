@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { Compartment, EditorSelection, EditorState, Text } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { indentConfig } from '@/lib/lispIndent'
+import { dialectConfig } from '@/lib/lispParser'
 import { findParen, showParen } from '@/lib/showParen'
 
 /** 作ったエディタ (テストの後に消す). */
@@ -91,7 +91,7 @@ describe('showParen', () => {
       state: EditorState.create({
         doc: doc.replace('|', ''),
         selection: EditorSelection.cursor(doc.indexOf('|')),
-        extensions: [showParen(), indentConfig.of({ dialect, indentTabs: true, tabWidth: 8 })],
+        extensions: [showParen(), dialectConfig.of(dialect)],
       }),
     })
     views.push(view)
@@ -147,17 +147,14 @@ describe('showParen', () => {
       state: EditorState.create({
         doc: '{a}',
         selection: EditorSelection.cursor(3),
-        extensions: [
-          showParen(),
-          mode.of(indentConfig.of({ dialect: 'elisp', indentTabs: true, tabWidth: 8 })),
-        ],
+        extensions: [showParen(), mode.of(dialectConfig.of('elisp'))],
       }),
     })
     views.push(view)
     await focus(view)
     expect(marks(view)).toEqual([])
     view.dispatch({
-      effects: mode.reconfigure(indentConfig.of({ dialect: null, indentTabs: true, tabWidth: 8 })),
+      effects: mode.reconfigure(dialectConfig.of(null)),
     })
     expect(marks(view)).toEqual([
       ['cm-show-paren-match', '{'],

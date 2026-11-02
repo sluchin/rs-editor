@@ -17,7 +17,7 @@ describe('Minibuffer Component (補完)', () => {
     const onInputChange = vi.fn((value: string) => {
       state = { ...(state as MinibufferInputState), input: value }
     })
-    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn() }
+    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn(), onQueryKey: vi.fn() }
     const view = render(<Minibuffer state={state} {...props} />)
     const input = () => view.container.querySelector('input') as HTMLInputElement
     const tab = () => {
@@ -60,7 +60,7 @@ describe('Minibuffer Component (ファイルの名前の補完)', () => {
     const onInputChange = vi.fn((value: string) => {
       state = { ...(state as MinibufferInputState), input: value }
     })
-    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn() }
+    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn(), onQueryKey: vi.fn() }
     const view = render(<Minibuffer state={state} {...props} />)
     const input = () => view.container.querySelector('input') as HTMLInputElement
     await act(async () => {
@@ -83,38 +83,40 @@ describe('Minibuffer Component (ファイルの名前の補完)', () => {
 })
 
 describe('Minibuffer Component (問い)', () => {
-  it('問いでは, 押したキーを知らせ, Esc と C-g で取り消すこと', () => {
+  it('問いでは, 押したキーを Emacs の書き方で知らせること (C-g も. 修飾キーだけと, 変換中のキーは知らせない)', () => {
     const onQueryKey = vi.fn()
     const onCancel = vi.fn()
-    const props = {
-      state: { mode: 'query', prompt: 'Query replacing a with b: ' } as MinibufferState,
-      onInputChange: vi.fn(),
-      onSubmit: vi.fn(),
-      onCancel,
-    }
-    const view = render(<Minibuffer {...props} onQueryKey={onQueryKey} />)
+    const view = render(
+      <Minibuffer
+        state={{ mode: 'query', prompt: 'Query replacing a with b: ' }}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={onCancel}
+        onQueryKey={onQueryKey}
+      />,
+    )
     expect(view.container.textContent).toContain('Query replacing a with b: ')
     const input = view.container.querySelector('input') as HTMLInputElement
     fireEvent.keyDown(input, { key: 'y' })
-    expect(onQueryKey).toHaveBeenCalledWith('y')
-    // 修飾キーと一緒なら, Emacs の書き方で知らせる. 修飾キーだけなら, 知らせない
+    expect(onQueryKey).toHaveBeenLastCalledWith('y')
+    fireEvent.keyDown(input, { key: ' ' })
+    expect(onQueryKey).toHaveBeenLastCalledWith('SPC')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onQueryKey).toHaveBeenLastCalledWith('RET')
     fireEvent.keyDown(input, { key: 'x', ctrlKey: true })
     expect(onQueryKey).toHaveBeenLastCalledWith('C-x')
     fireEvent.keyDown(input, { key: 'x', altKey: true })
     expect(onQueryKey).toHaveBeenLastCalledWith('M-x')
     fireEvent.keyDown(input, { key: 'x', metaKey: true })
     expect(onQueryKey).toHaveBeenLastCalledWith('s-x')
+    fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
+    expect(onQueryKey).toHaveBeenLastCalledWith('C-g')
     fireEvent.keyDown(input, { key: 'Control', ctrlKey: true })
     fireEvent.keyDown(input, { key: 'Shift' })
-    expect(onQueryKey).toHaveBeenCalledTimes(4)
-    fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
-    fireEvent.keyDown(input, { key: ']', ctrlKey: true })
-    fireEvent.keyDown(input, { key: 'Escape' })
-    expect(onCancel).toHaveBeenCalledTimes(3)
-    // 知らせる先がなくても, 落ちない
-    view.rerender(<Minibuffer {...props} />)
-    fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, { key: 'n' })
-    expect(onQueryKey).toHaveBeenCalledTimes(4)
+    fireEvent.keyDown(input, { key: 'a', isComposing: true })
+    fireEvent.keyDown(input, { key: 'a', keyCode: 229 })
+    expect(onQueryKey).toHaveBeenCalledTimes(7)
+    expect(onCancel).not.toHaveBeenCalled()
   })
 })
 
@@ -123,7 +125,13 @@ describe('Minibuffer Component', () => {
     // メッセージモードでメッセージが表示されることを確認.
     const state: MinibufferState = { mode: 'message', text: 'Test message' }
     render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     expect(screen.getByText('Test message')).toBeTruthy()
@@ -133,7 +141,13 @@ describe('Minibuffer Component', () => {
     // テキストが空のときデフォルトメッセージが表示されることを確認.
     const state: MinibufferState = { mode: 'message', text: '' }
     render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     expect(screen.getByText('For information about this editor, see the README.')).toBeTruthy()
@@ -143,7 +157,13 @@ describe('Minibuffer Component', () => {
     // 入力モードで入力フィールドが表示されることを確認.
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: '' }
     const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     expect(container.querySelector('input')).toBeTruthy()
@@ -161,6 +181,7 @@ describe('Minibuffer Component', () => {
         onInputChange={onInputChange}
         onSubmit={vi.fn()}
         onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
       />,
     )
 
@@ -175,7 +196,13 @@ describe('Minibuffer Component', () => {
     const onSubmit = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={onSubmit} onCancel={vi.fn()} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     const input = container.querySelector('input') as HTMLInputElement
@@ -189,7 +216,13 @@ describe('Minibuffer Component', () => {
     const onCancel = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Find file: ', input: 'にほんご' }
     const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={onSubmit} onCancel={onCancel} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        onQueryKey={vi.fn()}
+      />,
     )
     const input = container.querySelector('input') as HTMLInputElement
     fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
@@ -208,7 +241,13 @@ describe('Minibuffer Component', () => {
     const onCancel = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={onCancel} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={onCancel}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     const input = container.querySelector('input') as HTMLInputElement
@@ -222,7 +261,13 @@ describe('Minibuffer Component', () => {
     const onCancel = vi.fn()
     const state: MinibufferState = { mode: 'input', prompt: 'Open file: ', input: 'test.scm' }
     const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={onCancel} />,
+      <Minibuffer
+        state={state}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={onCancel}
+        onQueryKey={vi.fn()}
+      />,
     )
 
     const input = container.querySelector('input') as HTMLInputElement
@@ -235,144 +280,9 @@ describe('Minibuffer Component', () => {
     fireEvent.keyDown(input, { key: ']' })
     expect(onCancel).toHaveBeenCalledTimes(2)
   })
-
-  it('renders isearch mode with forward prompt', () => {
-    // isearch フォワードモードでプロンプトが表示されることを確認.
-    const state: MinibufferState = {
-      mode: 'isearch',
-      regexp: false,
-      direction: 'forward',
-      query: 'test',
-      originalCursor: 0,
-      matchStart: 5,
-      matchEnd: 9,
-    }
-    const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
-    )
-
-    const prompt = container.querySelector('.minibuffer-prompt')
-    expect(prompt?.textContent).toBe('I-search: ')
-    const input = container.querySelector('input') as HTMLInputElement
-    expect(input.value).toBe('test')
-  })
-
-  it('renders isearch mode with backward prompt', () => {
-    // isearch バックワードモードでプロンプトが表示されることを確認.
-    const state: MinibufferState = {
-      mode: 'isearch',
-      regexp: false,
-      direction: 'backward',
-      query: 'test',
-      originalCursor: 20,
-      matchStart: 15,
-      matchEnd: 19,
-    }
-    const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
-    )
-
-    const prompt = container.querySelector('.minibuffer-prompt')
-    expect(prompt?.textContent).toBe('I-search backward: ')
-  })
-
-  it('displays Failing prefix when isearch has no match', () => {
-    // isearch でマッチが無いときに Failing プレフィックスが表示されることを確認.
-    const state: MinibufferState = {
-      mode: 'isearch',
-      regexp: false,
-      direction: 'forward',
-      query: 'xyz',
-      originalCursor: 0,
-      matchStart: null,
-      matchEnd: null,
-    }
-    const { container } = render(
-      <Minibuffer state={state} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
-    )
-
-    const prompt = container.querySelector('.minibuffer-prompt')
-    expect(prompt?.textContent).toBe('Failing I-search: ')
-  })
-
-  it('calls onIsearchRepeat with forward direction on C-s during isearch', () => {
-    // isearch 中に C-s が押されると onIsearchRepeat が呼ばれることを確認.
-    const onIsearchRepeat = vi.fn()
-    const state: MinibufferState = {
-      mode: 'isearch',
-      regexp: false,
-      direction: 'forward',
-      query: 'test',
-      originalCursor: 0,
-      matchStart: 5,
-      matchEnd: 9,
-    }
-    const { container } = render(
-      <Minibuffer
-        state={state}
-        onInputChange={vi.fn()}
-        onSubmit={vi.fn()}
-        onCancel={vi.fn()}
-        onIsearchRepeat={onIsearchRepeat}
-      />,
-    )
-
-    const input = container.querySelector('input') as HTMLInputElement
-    fireEvent.keyDown(input, { key: 's', ctrlKey: true })
-
-    expect(onIsearchRepeat).toHaveBeenCalledWith('forward', state)
-  })
-
-  it('calls onIsearchRepeat with backward direction on C-r during isearch', () => {
-    // isearch 中に C-r が押されると onIsearchRepeat が呼ばれることを確認.
-    const onIsearchRepeat = vi.fn()
-    const state: MinibufferState = {
-      mode: 'isearch',
-      regexp: false,
-      direction: 'forward',
-      query: 'test',
-      originalCursor: 20,
-      matchStart: 5,
-      matchEnd: 9,
-    }
-    const { container } = render(
-      <Minibuffer
-        state={state}
-        onInputChange={vi.fn()}
-        onSubmit={vi.fn()}
-        onCancel={vi.fn()}
-        onIsearchRepeat={onIsearchRepeat}
-      />,
-    )
-
-    const input = container.querySelector('input') as HTMLInputElement
-    fireEvent.keyDown(input, { key: 'r', ctrlKey: true })
-
-    expect(onIsearchRepeat).toHaveBeenCalledWith('backward', state)
-  })
 })
 
-describe('Minibuffer Component (isearch の繰り返し)', () => {
-  const isearch: MinibufferState = {
-    mode: 'isearch',
-    regexp: false,
-    direction: 'forward',
-    query: 'a',
-    originalCursor: 0,
-    matchStart: 0,
-    matchEnd: 1,
-  }
-
-  it('繰り返しの関数がなくても, C-s と C-r は例外にならない', () => {
-    const { container } = render(
-      <Minibuffer state={isearch} onInputChange={vi.fn()} onSubmit={vi.fn()} onCancel={vi.fn()} />,
-    )
-    const input = container.querySelector('input') as HTMLInputElement
-
-    expect(() => fireEvent.keyDown(input, { key: 's', ctrlKey: true })).not.toThrow()
-    expect(() => fireEvent.keyDown(input, { key: 'r', ctrlKey: true })).not.toThrow()
-  })
-
+describe('Minibuffer Component (やめるキー)', () => {
   it('Ctrl と g 以外のキーは, 取り消さない', () => {
     const onCancel = vi.fn()
     const { container } = render(
@@ -381,6 +291,7 @@ describe('Minibuffer Component (isearch の繰り返し)', () => {
         onInputChange={vi.fn()}
         onSubmit={vi.fn()}
         onCancel={onCancel}
+        onQueryKey={vi.fn()}
       />,
     )
     fireEvent.keyDown(container.querySelector('input') as HTMLInputElement, {
@@ -389,13 +300,53 @@ describe('Minibuffer Component (isearch の繰り返し)', () => {
     })
     expect(onCancel).not.toHaveBeenCalled()
   })
+})
 
-  it('isearch では, Enter で検索の文字列を確定する', () => {
-    const onSubmit = vi.fn()
+describe('Minibuffer Component (履歴の端)', () => {
+  it('履歴の新しい端より先へは進まず, 知らせること', () => {
     const { container } = render(
-      <Minibuffer state={isearch} onInputChange={vi.fn()} onSubmit={onSubmit} onCancel={vi.fn()} />,
+      <Minibuffer
+        state={{ mode: 'input', prompt: 'M-x ', input: '', history: ['a'] }}
+        onInputChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        onQueryKey={vi.fn()}
+      />,
     )
-    fireEvent.keyDown(container.querySelector('input') as HTMLInputElement, { key: 'Enter' })
-    expect(onSubmit).toHaveBeenCalledWith('a')
+    fireEvent.keyDown(container.querySelector('input') as HTMLInputElement, {
+      key: 'n',
+      altKey: true,
+    })
+    expect(container.textContent).toContain('[End of history; no default available]')
+  })
+})
+
+describe('Minibuffer Component (履歴を戻る)', () => {
+  it('M-p で古い方へ, M-n で入力していた文字に戻ること', () => {
+    let state: MinibufferInputState = {
+      mode: 'input',
+      prompt: 'M-x ',
+      input: 'typed',
+      history: ['a', 'b'],
+    }
+    const onInputChange = vi.fn((value: string, next: MinibufferInputState) => {
+      state = { ...next, input: value }
+    })
+    const props = { onSubmit: vi.fn(), onCancel: vi.fn(), onQueryKey: vi.fn(), onInputChange }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const key = (k: string) => {
+      fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, {
+        key: k,
+        altKey: true,
+      })
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    key('p')
+    key('p')
+    expect(state.input).toBe('b')
+    key('n')
+    expect(state.input).toBe('a')
+    key('n')
+    expect(state.input).toBe('typed')
   })
 })

@@ -45,16 +45,6 @@ function faceMark(face: string | undefined): Decoration {
 }
 
 /**
- * 色付けの正規表現を確かめます (空の文字に合う正規表現は, 行ごとに探すのが終わらないので, 使えない).
- *
- * @param regexp - 正規表現.
- * @throws 正規表現が誤っているか, 空の文字に合うとき.
- */
-export function checkHighlightRegexp(regexp: string): void {
-  if (new RegExp(regexp).test('')) throw new Error(`Regexp matches the empty string: ${regexp}`)
-}
-
-/**
  * 1 つの色付けの, 印を付ける部品を作ります.
  *
  * @param highlight - 色付けする所.

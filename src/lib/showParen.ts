@@ -11,7 +11,7 @@ import {
   ViewPlugin,
   type ViewUpdate,
 } from '@codemirror/view'
-import { indentConfig, LispParser } from './lispIndent'
+import { type Dialect, dialectConfig, LispParser } from './lispParser'
 
 /** 括弧の対. */
 interface Paren {
@@ -20,9 +20,6 @@ interface Paren {
   /** 対が無いか, 括弧の種類が違えば `true`. */
   mismatch: boolean
 }
-
-/** Lisp の方言 (`null` なら, Lisp でない Fundamental モード). */
-type Dialect = 'scheme' | 'elisp' | null
 
 /** 開く括弧と, 対になる閉じる括弧. */
 const PAIRS: Record<string, string> = { '(': ')', '[': ']', '{': '}' }
@@ -73,10 +70,11 @@ function parens(doc: Text, dialect: Dialect): Map<number, Paren> {
     result.set(top.pos, { match: pos, mismatch })
   }
   if (dialect) {
-    // Lisp は, 字下げと同じく読む (文字列, コメント, `#;` の式, 文字の括弧を除く)
-    const parser = new LispParser(dialect === 'scheme', 8)
+    // Lisp は, 文字列, コメント, `#;` の式, 文字の括弧を除く
     const starts: number[] = []
-    parser.onParen = (line, index, ch) => paren(starts[line] + index, ch)
+    const parser = new LispParser(dialect === 'scheme', (line, index, ch) =>
+      paren(starts[line] + index, ch),
+    )
     for (let n = 1; n <= doc.lines; n++) {
       const line = doc.line(n)
       starts.push(line.from)
@@ -179,7 +177,7 @@ const mismatchMark = Decoration.mark({ class: 'cm-show-paren-mismatch' })
 function decorations(view: EditorView): DecorationSet {
   const { state } = view
   if (!view.hasFocus) return Decoration.none
-  const found = findParen(state.doc, state.selection.main.head, state.facet(indentConfig).dialect)
+  const found = findParen(state.doc, state.selection.main.head, state.facet(dialectConfig))
   if (!found) return Decoration.none
   const { here, paren } = found
   const mark = paren.mismatch ? mismatchMark : matchMark
@@ -217,7 +215,7 @@ export function showParen() {
           update.docChanged ||
           update.selectionSet ||
           update.focusChanged ||
-          update.startState.facet(indentConfig) !== update.state.facet(indentConfig)
+          update.startState.facet(dialectConfig) !== update.state.facet(dialectConfig)
         ) {
           this.decorations = decorations(update.view)
         }

@@ -3,7 +3,14 @@
  */
 
 import '../styles/ModeLine.css'
-import { CursorInfo } from './CodeEditor'
+
+/** カーソルの位置. */
+export interface CursorInfo {
+  /** 行 (1 から数える). */
+  line: number
+  /** 桁 (1 から数える). */
+  column: number
+}
 
 /** {@link ModeLine} のプロパティ. */
 interface ModeLineProps {

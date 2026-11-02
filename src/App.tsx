@@ -1,341 +1,432 @@
 /**
- * アプリの画面. バッファとウィンドウを出し, 機能ごとのフック (`src/hooks/`) のコマンドを, キーと M-x と
- * ミニバッファにつなぎます. バッファのコマンド (C-x b, C-x k, C-x C-b) と, 終わること (C-x C-c) も受け持ちます.
+ * アプリの画面. エディタ (Rust) が送る描く内容 (frame) を, ウィンドウとモードラインとミニバッファに映します.
+ * キーと文字とクリックはエディタに送り, エディタの問い (`read-string` など) にミニバッファで答えます.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import CodeEditor, { EditorHandle } from './components/CodeEditor'
+import WindowView, { type WindowHandle } from './components/WindowView'
 import ModeLine from './components/ModeLine'
-import Minibuffer, { MinibufferInputState, MinibufferIsearchState } from './components/Minibuffer'
+import Minibuffer, {
+  type MinibufferInputState,
+  type MinibufferState,
+} from './components/Minibuffer'
 import ProjectTree from './components/ProjectTree'
-import { type Buffer, headLines } from './lib/buffer'
-import { listDirectory } from './lib/fileOps'
+import { completeFileName } from './lib/complete'
+import { type DocEntry, DocStore } from './lib/docs'
+import type { Highlight } from './lib/faces'
+import { getHomeDir, listDirectory, projectRoot } from './lib/fileOps'
+import { HISTORY_LENGTH, addToHistory } from './lib/history'
+import { emacsKey } from './lib/keys'
 import { DIRED_MODE, majorMode } from './lib/modes'
-import type { KeyBinding } from './lib/lisp'
-import { windowRects } from './lib/windows'
-import { type CommandSet, type Submitters, useMinibuffer } from './hooks/useMinibuffer'
-import { type AppContext, START_CURSOR, useBuffers } from './hooks/useBuffers'
-import { useDirectories } from './hooks/useDirectories'
-import { useFiles } from './hooks/useFiles'
-import { useSearch } from './hooks/useSearch'
-import { useLisp } from './hooks/useLisp'
+import { fileDirectory } from './lib/paths'
+import {
+  type BufferFrame,
+  type Frame,
+  type HighlightFrame,
+  type Input,
+  listenFrames,
+  listenRequests,
+  sendInput,
+  utf16Offset,
+} from './lib/session'
+import { setBackgroundColor, setFont, setForegroundColor } from './lib/theme'
 import './App.css'
 
+/** 色付けの face が既定 (`hi-yellow`) なら, 下線にする (howm のリンクなど). */
+const DEFAULT_FACE = 'hi-yellow'
+
+/** 始めの描く内容 (エディタから受けるまで). */
+const EMPTY_FRAME: Frame = { windows: [], selected: 0, buffers: [], message: '' }
+
+/** ミニバッファで答えを待っている問い. */
+interface Question {
+  /** 出す状態. */
+  state: Exclude<MinibufferState, { mode: 'message' }>
+  /** 入力の履歴の名前. */
+  history: string
+  /** 答える. */
+  resolve: (value: string) => void
+  /** やめる. */
+  reject: (error: Error) => void
+}
+
+/** 色付けの, 前に作ったもの (同じなら, 同じ配列にして, 引き直さない). */
+const highlightCache = new Map<string, Highlight[]>()
+
 /**
- * バッファだけのキーと, Lisp のキーを合わせたもの (同じなら同じ配列にして, エディタが割り当てを作り直さないように).
- * バッファだけのキーの配列ごとに, 合わせた Lisp のキーと, 合わせたものを覚えます.
+ * 描く内容の色付けを, ウィンドウの色付けにします.
+ *
+ * @param highlights - 描く内容の色付け.
+ * @returns 色付け (同じ内容なら, 同じ配列).
  */
-const mergedKeys = new WeakMap<KeyBinding[], { base: KeyBinding[]; merged: KeyBinding[] }>()
-
-/** ファイルを開いていて, 保存していないバッファなら `true` (Emacs は, ファイルのないバッファは聞かない). */
-const isUnsavedFile = (b: { filePath: string | null; modified: boolean }) =>
-  b.modified && b.filePath !== null
-
-/** 保存していないバッファがあるとき, 終わってよいか聞く文. */
-const CONFIRM_EXIT_PROMPT = 'Modified buffers exist; exit anyway? (yes or no) '
+function toHighlights(highlights: readonly HighlightFrame[]): Highlight[] {
+  const key = JSON.stringify(highlights)
+  let cached = highlightCache.get(key)
+  if (!cached) {
+    cached = highlights.flatMap(({ regexp, face, group }) => {
+      // JavaScript で使えない正規表現と, 空の文字に合う正規表現は, 除く
+      try {
+        if (new RegExp(regexp).test('')) return []
+      } catch {
+        return []
+      }
+      const highlight: Highlight = { regexp }
+      if (face !== DEFAULT_FACE) highlight.face = face
+      if (group) highlight.group = group
+      return [highlight]
+    })
+    highlightCache.set(key, cached)
+  }
+  return cached
+}
 
 /**
- * アプリの画面 (ウィンドウ, モードライン, ミニバッファ, バッファの一覧).
+ * パスの `~/` を, ホームディレクトリにします (ディレクトリを読むため).
+ *
+ * @param dir - ディレクトリ.
+ * @param home - ホームディレクトリ.
+ * @returns 展開したディレクトリ.
+ */
+function expandTilde(dir: string, home: string): string {
+  return dir.startsWith('~/') ? home.replace(/\/+$/, '') + dir.slice(1) : dir
+}
+
+/**
+ * アプリの画面 (サイドバー, ウィンドウ, モードライン, ミニバッファ).
  *
  * @returns 画面.
  */
 function App() {
-  const minibuffer = useMinibuffer()
-  const { pendingAction, setPendingAction, minibufferState, setMinibufferState, showMessage } =
-    minibuffer
-  const bufs = useBuffers(showMessage, minibuffer.setMessageSink)
-  const {
-    buffers,
-    layout,
-    windowBuffers,
-    cursors,
-    setCursors,
-    activeWindow,
-    handles,
-    editor,
-    currentBuffer,
-    selectWindow,
-    handleEditorChange,
-  } = bufs
-  const ctx: AppContext = { ...minibuffer, ...bufs }
-  const directories = useDirectories(ctx)
-  const files = useFiles(ctx)
-  const search = useSearch(ctx)
-  const lisp = useLisp(ctx, files.saveBuffer)
-  const { lispKeys } = lisp
-  // 最後に C-x r t で入れた文字 (次の既定)
-  const rectangleString = useRef<string | null>(null)
-
-  // 窓を閉じるとき (× のボタンも) に見る, 今のバッファと, 終わってよいと答えたか
-  const buffersRef = useRef(buffers)
+  // 描く内容と, 出しているバッファの本文
+  const [{ frame, entries }, setShown] = useState<{
+    frame: Frame
+    entries: Record<string, DocEntry>
+  }>({ frame: EMPTY_FRAME, entries: {} })
+  const docs = useRef(new DocStore())
+  const [question, setQuestion] = useState<Question | null>(null)
+  const [inputState, setInputState] = useState<MinibufferInputState | null>(null)
+  const [histories, setHistories] = useState<Record<string, string[]>>({})
+  const [treeRoot, setTreeRoot] = useState<string | null>(null)
+  const views = useRef(new Map<number, WindowHandle>())
+  const home = useRef('/')
+  const heights = useRef('')
   const exitConfirmed = useRef(false)
-  useEffect(() => {
-    buffersRef.current = buffers
-  }, [buffers])
 
-  // 保存していないバッファがあれば, 窓を閉じずに, 終わってよいか聞く
+  const buffer = (name: string): BufferFrame | undefined =>
+    frame.buffers.find((b) => b.name === name)
+  const selectedWindow = frame.windows.find((w) => w.id === frame.selected)
+  const selectedBuffer = selectedWindow && buffer(selectedWindow.buffer)
+
+  /**
+   * バッファの既定のディレクトリ (後ろに `/` を付ける).
+   *
+   * @param b - バッファ (無ければ, ホームディレクトリ).
+   * @returns ディレクトリ.
+   */
+  const defaultDirectory = (b: BufferFrame | undefined): string => {
+    if (b?.directory) return b.directory.replace(/\/*$/, '/')
+    if (b?.file) return fileDirectory(b.file)
+    return home.current.endsWith('/') ? home.current : `${home.current}/`
+  }
+
+  /**
+   * ミニバッファで聞きます.
+   *
+   * @param state - 出す状態.
+   * @param history - 入力の履歴の名前.
+   * @returns 答え. やめたら `Quit` で失敗する.
+   */
+  const ask = (state: Question['state'], history: string): Promise<string> =>
+    new Promise((resolve, reject) => {
+      setInputState(state.mode === 'input' ? state : null)
+      setQuestion({ state, history, resolve, reject })
+    })
+
+  /**
+   * 選んでいるウィンドウを返します.
+   *
+   * @returns ウィンドウ (無ければ, 失敗).
+   */
+  const selectedView = (): WindowHandle => {
+    const view = views.current.get(frame.selected)
+    if (!view) throw new Error('No window is selected')
+    return view
+  }
+
+  /**
+   * 1 から数えた文字の位置を, 選んでいるウィンドウの本文の UTF-16 の位置にします.
+   *
+   * @param value - 位置.
+   * @returns UTF-16 の位置.
+   */
+  const viewOffset = (value: unknown): number =>
+    utf16Offset(selectedView().doc().toString(), Math.max(Number(value) - 1, 0))
+
+  /**
+   * エディタの頼みに答えます.
+   *
+   * @param op - 操作.
+   * @param args - 引数.
+   * @returns 答え.
+   */
+  const perform = (op: string, args: unknown[]): unknown => {
+    const root = document.documentElement
+    switch (op) {
+      case 'read-string': {
+        const prompt = String(args[0])
+        const history = prompt === 'M-x ' ? 'extended-command' : 'minibuffer'
+        return ask({ mode: 'input', prompt, input: String(args[1] ?? '') }, history)
+      }
+      case 'read-file-name':
+        return ask(
+          {
+            mode: 'input',
+            prompt: String(args[0]),
+            input: String(args[1] ?? '') || defaultDirectory(selectedBuffer),
+            complete: (text) =>
+              completeFileName(text, (dir) => listDirectory(expandTilde(dir, home.current))),
+          },
+          'file-name',
+        )
+      case 'completing-read': {
+        const prompt = String(args[0])
+        return ask(
+          {
+            mode: 'input',
+            prompt,
+            input: String(args[2] ?? ''),
+            completions: (args[1] as unknown[]).map(String),
+          },
+          prompt === 'M-x ' ? 'extended-command' : 'minibuffer',
+        )
+      }
+      case 'read-key':
+        return ask({ mode: 'query', prompt: String(args[0] ?? '') }, '')
+      case 'window-top-line':
+        return views.current.get(Number(args[0]))?.topLine() ?? 0
+      case 'recenter':
+        selectedView().recenter()
+        return null
+      case 'outline-flag-region': {
+        const [a, b] = [viewOffset(args[0]), viewOffset(args[1])]
+        selectedView().foldRegion(Math.min(a, b), Math.max(a, b), args[2] === true)
+        return null
+      }
+      case 'outline-invisible-p': {
+        const pos = viewOffset(args[0])
+        return pos < selectedView().doc().length && selectedView().invisible(pos)
+      }
+      case 'set-background-color':
+        setBackgroundColor(root, String(args[0]))
+        return null
+      case 'set-foreground-color':
+        setForegroundColor(root, String(args[0]))
+        return null
+      case 'set-font':
+        setFont(
+          root,
+          typeof args[0] === 'string' ? args[0] : null,
+          typeof args[1] === 'number' ? args[1] : null,
+        )
+        return null
+      case 'toggle-project-tree':
+        if (treeRoot !== null) {
+          setTreeRoot(null)
+          return null
+        }
+        return projectRoot(defaultDirectory(selectedBuffer)).then((dir) => {
+          setTreeRoot(dir.replace(/\/+$/, '') || '/')
+          return null
+        })
+      case 'kill-emacs':
+        exitConfirmed.current = true
+        return getCurrentWindow()
+          .close()
+          .then(() => null)
+      default:
+        throw new Error(`Unknown editor operation: ${op}`)
+    }
+  }
+  const latestPerform = useRef(perform)
+  useEffect(() => {
+    latestPerform.current = perform
+  })
+
+  // 描く内容と頼みを受け始めてから, エディタに描き直してもらう (エディタは, 初めの入力で動き出す)
+  useEffect(() => {
+    let stopped = false
+    const stops: (() => void)[] = []
+    void getHomeDir()
+      .then((dir) => {
+        home.current = dir
+      })
+      .catch(() => undefined)
+    void Promise.all([
+      listenFrames((next) => {
+        docs.current.apply(next.buffers)
+        const shown = next.windows.map((w) => [w.buffer, docs.current.get(w.buffer)])
+        setShown({ frame: next, entries: Object.fromEntries(shown) })
+      }),
+      listenRequests((op, args) => latestPerform.current(op, args)),
+    ]).then((unlistens) => {
+      stops.push(...unlistens)
+      // 受け始める前に, 画面を閉じた (開発版の StrictMode では, 1 度閉じて, 開き直す)
+      if (stopped) stops.forEach((stop) => stop())
+      else void sendInput({ kind: 'redraw' })
+    })
+    return () => {
+      stopped = true
+      stops.forEach((stop) => stop())
+    }
+  }, [])
+
+  // 窓を閉じるときは, エディタに聞く (保存していないバッファがあれば, 終わってよいか聞く)
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested((event) => {
-      if (exitConfirmed.current || !buffersRef.current.some(isUnsavedFile)) return
+      if (exitConfirmed.current) return
       event.preventDefault()
-      setPendingAction('confirm-exit')
-      setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
+      void sendInput({ kind: 'command', name: 'save-buffers-kill-terminal' })
     })
     return () => {
       void unlisten.then((f) => f())
     }
-  }, [setPendingAction, setMinibufferState])
+  }, [])
 
-  /**
-   * アプリを終わります (C-x C-c). 保存していないバッファがあれば, 終わってよいか聞きます.
-   */
-  const handleSaveBuffersKillTerminal = async () => {
-    // 保存していないバッファがあれば, 終わってよいか聞く (Emacs と同じ)
-    if (buffers.some(isUnsavedFile)) {
-      setPendingAction('confirm-exit')
-      setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
-      return
-    }
-    await getCurrentWindow().close()
-  }
-
-  /**
-   * 矩形を置き換える文字を, ミニバッファで聞きます (C-x r t).
-   */
-  const handleStringRectangle = () => {
-    if (!editor.current?.hasMark()) {
-      showMessage('The mark is not set now, so there is no region')
-      return
-    }
-    const last = rectangleString.current
-    setPendingAction('string-rectangle')
-    setMinibufferState({
-      mode: 'input',
-      prompt: last === null ? 'String rectangle: ' : `String rectangle (default ${last}): `,
-      input: '',
-    })
-  }
-
-  /**
-   * 移動する行の番号を, ミニバッファで聞きます (M-g g).
-   */
-  const handleGotoLine = () => {
-    setPendingAction('goto-line')
-    setMinibufferState({ mode: 'input', prompt: 'Goto line: ', input: '' })
-  }
-
-  /**
-   * 実行するコマンドの名前を, ミニバッファで聞きます (M-x).
-   */
-  const handleExecuteCommand = () => {
-    setPendingAction('execute-command')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'M-x ',
-      input: '',
-      completions: [...(editor.current as EditorHandle).commandNames(), ...Object.keys(actions)],
-    })
-  }
-
-  // 画面のコマンドのうち, ここで受け持つもの
-  const appCommands: CommandSet = {
-    actions: {
-      'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
-      'execute-extended-command': handleExecuteCommand,
-      'goto-line': handleGotoLine,
-      'string-rectangle': handleStringRectangle,
-      'abort-minibuffers': () => abortMinibuffer('Not in a minibuffer'),
-      'abort-recursive-edit': () => abortMinibuffer('No recursive edit is in progress'),
-    },
-    submit: {
-      'execute-command': (value) => {
-        showMessage('')
-        if (!editor.current?.run(value.trim())) showMessage(`Undefined command: ${value}`)
-      },
-      'goto-line': (value) => {
-        editor.current?.gotoLine(Number(value))
-        showMessage('')
-      },
-      'confirm-exit': async (value) => {
-        if (value.trim() === 'yes') {
-          exitConfirmed.current = true
-          await getCurrentWindow().close()
-        } else {
-          showMessage('')
-        }
-      },
-      'string-rectangle': (value) => {
-        // 空の入力は, 次の既定にしない (Emacs の履歴と同じ)
-        const string = value === '' ? (rectangleString.current ?? '') : value
-        if (string !== '') rectangleString.current = string
-        editor.current?.stringRectangle(string)
-        showMessage('')
-      },
-    },
-  }
-
-  // 画面のコマンド (キーと M-x から, 名前で呼ぶ). エディタのコマンドは, エディタが持つ.
-  // Lisp で作ったコマンドは, 同じ名前のコマンドより先に使う (最後に置く)
-  const actions: Record<string, () => void> = {
-    ...appCommands.actions,
-    ...bufs.windowCommands.actions,
-    ...directories.commands.actions,
-    ...search.commands.actions,
-    ...lisp.commands.actions,
-  }
-  // Lisp の editor-command-names (C-h f の候補) に, 画面のコマンドの名前を渡す
+  // ウィンドウのフォーカスが外れていても (モードラインを押したときなど), キーをエディタに送る
   useEffect(() => {
-    lisp.setScreenCommandNames(Object.keys(actions))
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target !== document.body) return
+      const key = emacsKey(event)
+      if (key === null) return
+      event.preventDefault()
+      void sendInput({ kind: 'key', key })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  // 描いた後に, ウィンドウの見えている行の数を知らせる (変わったときだけ)
+  useEffect(() => {
+    const list: [number, number][] = [...views.current].map(([id, view]) => [id, view.bodyHeight()])
+    const key = JSON.stringify(list)
+    if (list.length > 0 && key !== heights.current) {
+      heights.current = key
+      void sendInput({ kind: 'resize', heights: list })
+    }
   })
-  const submitters: Submitters = {
-    ...appCommands.submit,
-    ...bufs.windowCommands.submit,
-    ...directories.commands.submit,
-    ...search.commands.submit,
-    ...lisp.commands.submit,
-  }
 
   /**
-   * ミニバッファの入力が変わったときに, 入力を覚えます. isearch なら, 入力した文字で探し直します.
-   *
-   * @param value - 入力.
-   * @param current - ミニバッファの状態.
+   * 問いを閉じます.
    */
-  const handleMinibufferInputChange = (
-    value: string,
-    current: MinibufferInputState | MinibufferIsearchState,
-  ) => {
-    if (current.mode === 'input') {
-      setMinibufferState({ ...current, input: value })
-    } else {
-      search.searchIsearch(current, value)
-    }
+  const closeQuestion = () => {
+    setQuestion(null)
+    setInputState(null)
   }
 
   /**
-   * ミニバッファの入力を確定したときに, 入力を待っていたコマンドを行います.
-   * 待っているコマンドがなければ, isearch を終わります (コマンドのない入力欄は, isearch だけ).
+   * 入力を確定します.
    *
    * @param value - 入力.
    */
-  const handleMinibufferSubmit = async (value: string) => {
-    const action = pendingAction
-    setPendingAction(null)
-    minibuffer.addHistory(action, value)
-    const submit = action && submitters[action]
-    if (submit) {
-      await submit(value)
-    } else {
-      search.finishIsearch(minibufferState as MinibufferIsearchState)
-    }
+  const handleSubmit = (value: string) => {
+    const { history, resolve } = question as Question
+    setHistories((prev) => ({
+      ...prev,
+      [history]: addToHistory(prev[history] ?? [], value, HISTORY_LENGTH),
+    }))
+    closeQuestion()
+    resolve(value)
   }
 
   /**
-   * 1 つのキーで答える問い (Lisp の read-key, query-replace) に答えます.
+   * 入力をやめます (C-g).
+   */
+  const handleCancel = () => {
+    closeQuestion()
+    ;(question as Question).reject(new Error('Quit'))
+  }
+
+  /**
+   * 1 つのキーの問いに答えます.
    *
-   * @param key - 押したキー.
+   * @param key - キー (Emacs の書き方).
    */
   const handleQueryKey = (key: string) => {
-    if (!lisp.answerQuery(key)) search.answerQuery(key)
+    closeQuestion()
+    ;(question as Question).resolve(key)
   }
 
   /**
-   * ミニバッファの入力をやめます (C-g). isearch なら, カーソルを探す前の位置に戻します.
-   */
-  const handleMinibufferCancel = () => {
-    setPendingAction(null)
-    search.cancel(minibufferState)
-    lisp.cancel()
-    showMessage('Quit')
-  }
-
-  /**
-   * ミニバッファを使っていれば, やめます (Emacs の `abort-minibuffers` と `abort-recursive-edit`.
-   * エディタに移っていても, やめられる). 使っていなければ, 誤りを出します.
+   * 入力をエディタに送ります.
    *
-   * @param error - ミニバッファを使っていないときに出す誤り.
+   * @param next - 入力.
    */
-  const abortMinibuffer = (error: string) => {
-    if (minibuffer.isMinibufferActive()) handleMinibufferCancel()
-    else showMessage(error)
+  const send = (next: Input) => {
+    void sendInput(next)
   }
 
-  /**
-   * バッファで使うキーの割り当て (バッファだけのキーを, Lisp のキーより先に置く) を返します.
-   *
-   * @param buffer - バッファ.
-   * @returns 割り当て. 前と同じなら, 前と同じ配列.
-   */
-  const keysFor = (buffer: Buffer): KeyBinding[] => {
-    if (!buffer.keys) return lispKeys
-    const cached = mergedKeys.get(buffer.keys)
-    if (cached?.base === lispKeys) return cached.merged
-    const merged = [...buffer.keys, ...lispKeys]
-    mergedKeys.set(buffer.keys, { base: lispKeys, merged })
-    return merged
-  }
+  const minibufferState: MinibufferState = !question
+    ? { mode: 'message', text: frame.message }
+    : inputState
+      ? { ...inputState, history: histories[question.history] }
+      : question.state
 
   return (
     <div className="app">
       <div className="main">
-        {directories.treeRoot !== null && (
+        {treeRoot !== null && (
           <ProjectTree
-            root={directories.treeRoot}
-            currentFile={currentBuffer.filePath}
+            root={treeRoot}
+            currentFile={selectedBuffer?.file ?? null}
             listDirectory={listDirectory}
-            onOpenFile={(path) => void directories.openFromTree(path)}
+            onOpenFile={(path) => send({ kind: 'find-file', path })}
           />
         )}
         <div className="windows">
-          {windowRects(layout).map((rect) => {
-            const bufferId = windowBuffers[rect.id]
-            const buffer = buffers.find((b) => b.id === bufferId) as Buffer
-            const active = rect.id === activeWindow
-            const mode =
-              buffer.directory !== undefined
-                ? DIRED_MODE
-                : majorMode(buffer.name, buffer.filePath, headLines(buffer.doc))
+          {frame.windows.map((w) => {
+            const b = buffer(w.buffer) as BufferFrame
+            const entry = entries[w.buffer]
+            const active = w.id === frame.selected
+            const mode = b.directory
+              ? DIRED_MODE
+              : majorMode(b.name, b.file, entry.doc.sliceString(0, 1000))
+            const line = entry.doc.lineAt(Math.min(w.point, entry.doc.length))
             return (
               <div
-                key={rect.id}
-                className={`window${rect.left + rect.width < 100 ? ' window-left-of' : ''}`}
+                key={w.id}
+                className={`window${w.left + w.width < 100 ? ' window-left-of' : ''}`}
                 style={{
-                  left: `${rect.left}%`,
-                  top: `${rect.top}%`,
-                  width: `${rect.width}%`,
-                  height: `${rect.height}%`,
+                  left: `${w.left}%`,
+                  top: `${w.top}%`,
+                  width: `${w.width}%`,
+                  height: `${w.height}%`,
                 }}
-                onFocus={() => selectWindow(rect.id)}
               >
-                <CodeEditor
-                  bufferId={bufferId}
-                  initialContent={buffer.doc}
-                  highlights={buffer.highlights}
-                  onChange={(change) => handleEditorChange(rect.id, change)}
-                  onCursorChange={(info) => setCursors((prev) => ({ ...prev, [rect.id]: info }))}
-                  actions={actions}
-                  keyBindings={keysFor(buffer)}
-                  onMessage={showMessage}
-                  disabled={minibufferState.mode !== 'message'}
-                  readOnly={buffer.readOnly}
+                <WindowView
+                  windowId={w.id}
+                  bufferName={w.buffer}
+                  entry={entry}
+                  point={w.point}
+                  mark={w.mark}
                   active={active}
-                  language={mode.language}
-                  indentTabs={mode.indentTabs}
-                  tabWidth={mode.tabWidth}
+                  asking={question !== null}
+                  mode={mode}
+                  highlights={toHighlights(b.highlights)}
+                  onInput={send}
                   handle={(handle) => {
-                    if (handle) handles.current.set(rect.id, handle)
-                    else handles.current.delete(rect.id)
+                    if (handle) views.current.set(w.id, handle)
+                    else views.current.delete(w.id)
                   }}
                 />
                 <ModeLine
-                  bufferName={buffer.name}
-                  modified={buffer.modified}
-                  readOnly={buffer.readOnly}
-                  cursor={cursors[rect.id] ?? START_CURSOR}
+                  bufferName={b.name}
+                  modified={b.modified}
+                  readOnly={b.read_only}
+                  cursor={{ line: line.number, column: w.point - line.from + 1 }}
                   mode={mode.name}
-                  bufferCount={buffers.length}
-                  currentBufferIndex={buffers.findIndex((b) => b.id === bufferId) + 1}
+                  bufferCount={frame.buffers.length}
+                  currentBufferIndex={frame.buffers.indexOf(b) + 1}
                   active={active}
                 />
               </div>
@@ -344,16 +435,10 @@ function App() {
         </div>
       </div>
       <Minibuffer
-        state={
-          minibufferState.mode === 'input'
-            ? { ...minibufferState, history: minibuffer.history }
-            : minibufferState
-        }
-        onInputChange={handleMinibufferInputChange}
-        onSubmit={handleMinibufferSubmit}
-        onCancel={handleMinibufferCancel}
-        onIsearchRepeat={search.handleIsearchRepeat}
-        onIsearchCommand={search.handleIsearchCommand}
+        state={minibufferState}
+        onInputChange={(value, state) => setInputState({ ...state, input: value })}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
         onQueryKey={handleQueryKey}
       />
     </div>

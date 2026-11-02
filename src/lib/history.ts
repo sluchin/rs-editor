@@ -1,13 +1,10 @@
 /**
- * 入力の履歴 (ミニバッファの履歴と, isearch の検索の履歴).
+ * ミニバッファの入力の履歴.
  * エディタ (CodeMirror) に依存しないので, 単体でテストできます.
  */
 
 /** ミニバッファの履歴の数の限り (Emacs の `history-length`). */
 export const HISTORY_LENGTH = 100
-
-/** isearch の検索の履歴の数の限り (Emacs の `search-ring-max`). */
-export const SEARCH_RING_MAX = 16
 
 /**
  * 履歴の先頭に加えます (Emacs の `add-to-history`). 空の文字と, 先頭と同じ文字は, 加えません.

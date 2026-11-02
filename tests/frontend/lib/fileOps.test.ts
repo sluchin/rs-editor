@@ -1,170 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  readFile,
-  writeFile,
-  pathExists,
-  getHomeDir,
-  listDirectory,
-  backupFile,
-  deleteFile,
-  fileNewerThan,
-  projectRoot,
-} from '@/lib/fileOps'
+import { getHomeDir, listDirectory, projectRoot } from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
 vi.mock('@tauri-apps/api/core')
 
-/**
- * ファイル操作ユーティリティ関数のテストスイート.
- * Tauri API 経由のファイルI/O操作をテストします.
- */
 describe('fileOps', () => {
   beforeEach(() => {
-    // 各テストの前にモックをリセット.
     vi.clearAllMocks()
   })
 
-  describe('readFile', () => {
-    // ファイル読み込み機能をテストします.
-
-    it('reads file content from Tauri', async () => {
-      // Tauri の read_file_content コマンドでファイルを読むことを確認.
-      const mockContent = 'file content'
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(mockContent)
-
-      const result = await readFile('/path/to/file.txt')
-
-      expect(tauri.invoke).toHaveBeenCalledWith('read_file_content', { path: '/path/to/file.txt' })
-      expect(result).toBe(mockContent)
-    })
-
-    it('handles file read errors', async () => {
-      // ファイル読み込みエラーが適切に処理されることを確認.
-      const error = new Error('File not found')
-      vi.mocked(tauri.invoke).mockRejectedValueOnce(error)
-
-      await expect(readFile('/nonexistent.txt')).rejects.toThrow('File not found')
-    })
+  it('ホームディレクトリを Tauri に聞き, 失敗を返すこと', async () => {
+    vi.mocked(tauri.invoke).mockResolvedValueOnce('/home/user')
+    expect(await getHomeDir()).toBe('/home/user')
+    expect(tauri.invoke).toHaveBeenCalledWith('home_dir')
+    vi.mocked(tauri.invoke).mockRejectedValueOnce(new Error('No home directory'))
+    await expect(getHomeDir()).rejects.toThrow('No home directory')
   })
 
-  describe('writeFile', () => {
-    // ファイル書き込み機能をテストします.
-
-    it('writes file content via Tauri', async () => {
-      // Tauri の write_file_content コマンドでファイルを書くことを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
-
-      await writeFile('/path/to/file.txt', 'new content')
-
-      expect(tauri.invoke).toHaveBeenCalledWith('write_file_content', {
-        path: '/path/to/file.txt',
-        content: 'new content',
-      })
-    })
-
-    it('handles write errors', async () => {
-      // ファイル書き込みエラーが適切に処理されることを確認.
-      const error = new Error('Permission denied')
-      vi.mocked(tauri.invoke).mockRejectedValueOnce(error)
-
-      await expect(writeFile('/protected.txt', 'content')).rejects.toThrow('Permission denied')
-    })
-
-    it('writes empty content', async () => {
-      // 空の内容を書き込むことができることを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
-
-      await writeFile('/file.txt', '')
-
-      expect(tauri.invoke).toHaveBeenCalledWith('write_file_content', {
-        path: '/file.txt',
-        content: '',
-      })
-    })
+  it('ディレクトリの一覧を Tauri に頼むこと', async () => {
+    vi.mocked(tauri.invoke).mockResolvedValueOnce(['a', 'b/'])
+    expect(await listDirectory('/tmp')).toEqual(['a', 'b/'])
+    expect(tauri.invoke).toHaveBeenCalledWith('list_directory', { path: '/tmp' })
   })
 
-  describe('pathExists', () => {
-    // パス存在確認機能をテストします.
-
-    it('checks if path exists', async () => {
-      // Tauri の path_exists コマンドでパス存在を確認することを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(true)
-
-      const result = await pathExists('/some/path')
-
-      expect(tauri.invoke).toHaveBeenCalledWith('path_exists', { path: '/some/path' })
-      expect(result).toBe(true)
-    })
-
-    it('returns false for nonexistent paths', async () => {
-      // 存在しないパスに対して false を返すことを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(false)
-
-      const result = await pathExists('/nonexistent/path')
-
-      expect(result).toBe(false)
-    })
-
-    it('handles errors checking path existence', async () => {
-      // パス存在確認エラーが適切に処理されることを確認.
-      const error = new Error('Permission denied')
-      vi.mocked(tauri.invoke).mockRejectedValueOnce(error)
-
-      await expect(pathExists('/restricted/path')).rejects.toThrow('Permission denied')
-    })
-  })
-
-  describe('getHomeDir', () => {
-    // ホームディレクトリ取得機能をテストします.
-
-    it('gets home directory path', async () => {
-      // Tauri の home_dir コマンドでホームディレクトリを取得することを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce('/home/user')
-
-      const result = await getHomeDir()
-
-      expect(tauri.invoke).toHaveBeenCalledWith('home_dir')
-      expect(result).toBe('/home/user')
-    })
-
-    it('handles home dir lookup errors', async () => {
-      // ホームディレクトリ取得エラーが適切に処理されることを確認.
-      const error = new Error('Failed to get home directory')
-      vi.mocked(tauri.invoke).mockRejectedValueOnce(error)
-
-      await expect(getHomeDir()).rejects.toThrow('Failed to get home directory')
-    })
-  })
-
-  describe('listDirectory', () => {
-    it('lists the directory with Tauri', async () => {
-      // Tauri の list_directory コマンドで, ディレクトリの中の名前を取ることを確認.
-      vi.mocked(tauri.invoke).mockResolvedValueOnce(['a/', 'b.scm'])
-
-      const result = await listDirectory('/home/u/')
-
-      expect(tauri.invoke).toHaveBeenCalledWith('list_directory', { path: '/home/u/' })
-      expect(result).toEqual(['a/', 'b.scm'])
-    })
-  })
-
-  it('バックアップ, 削除, 新しさ, ディレクトリの一覧を, Tauri に頼むこと', async () => {
-    vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
-    await backupFile('/a')
-    expect(tauri.invoke).toHaveBeenLastCalledWith('backup_file', { path: '/a' })
-    vi.mocked(tauri.invoke).mockResolvedValueOnce(undefined)
-    await deleteFile('/#a#')
-    expect(tauri.invoke).toHaveBeenLastCalledWith('delete_file', { path: '/#a#' })
-    vi.mocked(tauri.invoke).mockResolvedValueOnce(true)
-    expect(await fileNewerThan('/#a#', '/a')).toBe(true)
-    expect(tauri.invoke).toHaveBeenLastCalledWith('file_newer_than', { file1: '/#a#', file2: '/a' })
-  })
-
-  describe('projectRoot', () => {
-    it('プロジェクトの根を聞く', async () => {
-      vi.mocked(tauri.invoke).mockResolvedValueOnce('/p')
-      expect(await projectRoot('/p/src')).toBe('/p')
-      expect(tauri.invoke).toHaveBeenCalledWith('project_root', { directory: '/p/src' })
-    })
+  it('プロジェクトの根を聞くこと', async () => {
+    vi.mocked(tauri.invoke).mockResolvedValueOnce('/proj')
+    expect(await projectRoot('/proj/src')).toBe('/proj')
+    expect(tauri.invoke).toHaveBeenCalledWith('project_root', { directory: '/proj/src' })
   })
 })

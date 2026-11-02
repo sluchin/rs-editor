@@ -1,9 +1,9 @@
 /**
- * ミニバッファ (画面の下の 1 行). メッセージ, 入力 (補完付き), isearch, 1 つのキーで答える問いを出します.
+ * ミニバッファ (画面の下の 1 行). メッセージ, 入力 (補完付き), 1 つのキーで答える問い (`read-key`. isearch も) を出します.
  */
 
 import { useEffect, useRef, useState, KeyboardEvent } from 'react'
-import { MODIFIER_KEYS, eventKeyName, toEmacsKey } from '../lib/emacs'
+import { emacsKey } from '../lib/keys'
 import { complete, type Completion } from '../lib/complete'
 import '../styles/Minibuffer.css'
 
@@ -33,41 +33,7 @@ export interface MinibufferInputState {
   historySaved?: string
 }
 
-/** isearch の状態. */
-export interface MinibufferIsearchState {
-  mode: 'isearch'
-  /** 探す向き. */
-  direction: 'forward' | 'backward'
-  /** 正規表現で探すなら `true`. */
-  regexp: boolean
-  /** 探す文字. */
-  query: string
-  /** 探し始めたときの, カーソルの位置 (やめたら, 戻す). */
-  originalCursor: number
-  /** 合った所の始まり. 合わなければ `null`. */
-  matchStart: number | null
-  /** 合った所の終わり. 合わなければ `null`. */
-  matchEnd: number | null
-  /** M-p と M-n で出した, 検索の履歴の位置 (Emacs の `search-ring-yank-pointer`. 出していなければ無し). */
-  ringIndex?: number
-  /** 続けた M-y で, 取り込んだ文字を除いた, 探す文字 (直前のコマンドが M-y でなければ無し). */
-  yankBase?: string
-  /** 合わないときに C-w で取り込んだ所の終わり (次の C-w は, ここから取り込む). */
-  yankPoint?: number | null
-}
-
-/** isearch の中のコマンド (C-w, M-y, M-p, M-n). */
-export type IsearchCommand = 'yank-word-or-char' | 'yank-pop' | 'ring-retreat' | 'ring-advance'
-
-/** isearch の中のキーと, コマンド. */
-const ISEARCH_KEYS: Record<string, IsearchCommand> = {
-  'C-w': 'yank-word-or-char',
-  'M-y': 'yank-pop',
-  'M-p': 'ring-retreat',
-  'M-n': 'ring-advance',
-}
-
-/** 1 つのキーで答える問い (query-replace の `y`, `n` など). */
+/** 1 つのキーで答える問い (`read-key`. query-replace の `y`, `n`, isearch の文字など). */
 export interface MinibufferQueryState {
   mode: 'query'
   /** プロンプト. */
@@ -75,25 +41,20 @@ export interface MinibufferQueryState {
 }
 
 /** ミニバッファの状態. */
-export type MinibufferState =
-  MinibufferMessageState | MinibufferInputState | MinibufferIsearchState | MinibufferQueryState
+export type MinibufferState = MinibufferMessageState | MinibufferInputState | MinibufferQueryState
 
 /** {@link Minibuffer} のプロパティ. */
 interface MinibufferProps {
   /** ミニバッファの状態. */
   state: MinibufferState
   /** 入力が変わったときに呼びます (Tab で補完したときも). */
-  onInputChange: (value: string, state: MinibufferInputState | MinibufferIsearchState) => void
+  onInputChange: (value: string, state: MinibufferInputState) => void
   /** Enter で入力を確定したときに呼びます. */
   onSubmit: (value: string) => void
   /** C-g (`abort-minibuffers`), C-] (`abort-recursive-edit`) か Escape で, やめたときに呼びます. */
   onCancel: () => void
-  /** isearch で, C-s か C-r を押したときに呼びます (次か前に合う所へ進む). */
-  onIsearchRepeat?: (direction: 'forward' | 'backward', state: MinibufferIsearchState) => void
-  /** 問いに答えたキー (`y`, `n`, `!` など). */
-  onQueryKey?: (key: string) => void
-  /** isearch で, C-w, M-y, M-p, M-n を押したときに呼びます. */
-  onIsearchCommand?: (command: IsearchCommand, state: MinibufferIsearchState) => void
+  /** 問いに答えたキー (Emacs の書き方. `y`, `SPC`, `C-g` など). */
+  onQueryKey: (key: string) => void
 }
 
 /**
@@ -120,9 +81,7 @@ export default function Minibuffer({
   onInputChange,
   onSubmit,
   onCancel,
-  onIsearchRepeat,
   onQueryKey,
-  onIsearchCommand,
 }: MinibufferProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   // Tab で補完したときの, 候補の一覧 (`[No match]` のときは null). 別の入力 (プロンプト) に移ったら, 出さない
@@ -146,19 +105,17 @@ export default function Minibuffer({
 
   if (state.mode === 'query') {
     /**
-     * 問いに答えたキーを受けます. C-g, C-] か Escape なら, やめます.
+     * 問いに答えたキーを, Emacs の書き方で返します (C-g も. やめるかは, エディタが決める).
+     * 修飾キーだけなら, 次のキーを待ちます. 日本語の変換中のキーは, IME に任せます.
      *
      * @param e - キーのイベント.
      */
     const handleQueryKey = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return
+      const key = emacsKey(e.nativeEvent)
+      if (key === null) return
       e.preventDefault()
-      if (isQuitKey(e)) {
-        onCancel()
-      } else if (!MODIFIER_KEYS.includes(e.key)) {
-        // 修飾キーと一緒なら, Emacs の書き方 (`C-x`, `M-x`) で答える (describe-key が使う). 修飾キーだけなら, 次のキーを待つ
-        const modified = e.ctrlKey || e.altKey || e.metaKey
-        onQueryKey?.(modified ? toEmacsKey(eventKeyName(e.nativeEvent)) : e.key)
-      }
+      onQueryKey(key)
     }
     return (
       <div className="minibuffer">
@@ -174,33 +131,9 @@ export default function Minibuffer({
     )
   }
 
-  if (state.mode === 'input' || state.mode === 'isearch') {
+  if (state.mode === 'input') {
     /**
-     * プロンプトを返します. isearch では, 向き, 正規表現か, 合わなかったか (`Failing`) を出します.
-     *
-     * @returns プロンプト.
-     */
-    const getPrompt = (): string => {
-      if (state.mode === 'input') {
-        return state.prompt
-      }
-      const prefix = state.direction === 'forward' ? 'I-search' : 'I-search backward'
-      const failing = state.matchStart === null && state.query !== '' ? 'Failing ' : ''
-      const regexp = state.regexp ? 'Regexp ' : ''
-      return `${failing}${regexp}${prefix}: `
-    }
-
-    /**
-     * 入力欄に出す文字を返します.
-     *
-     * @returns 入力 (isearch なら, 探す文字).
-     */
-    const getValue = (): string => {
-      return state.mode === 'input' ? state.input : state.query
-    }
-
-    /**
-     * 入力欄のキーを受けます. isearch の C-s / C-r, Tab での補完, Enter での確定, C-g / C-] / Escape でやめる.
+     * 入力欄のキーを受けます. Tab での補完, Enter での確定, C-g / C-] / Escape でやめる.
      *
      * @param e - キーのイベント.
      */
@@ -208,23 +141,9 @@ export default function Minibuffer({
       // 日本語などの変換中のキー (変換を確定する Enter も) は, IME に任せる
       // (WebKit は, 確定の Enter で isComposing が false でも, keyCode を 229 にする)
       if (e.nativeEvent.isComposing || e.keyCode === 229) return
-      if (state.mode === 'isearch') {
-        if ((e.ctrlKey && e.key === 's') || (e.ctrlKey && e.key === 'r')) {
-          e.preventDefault()
-          const dir = e.key === 's' ? 'forward' : 'backward'
-          onIsearchRepeat?.(dir, state)
-          return
-        }
-        const command = ISEARCH_KEYS[`${e.ctrlKey ? 'C-' : e.altKey ? 'M-' : ''}${e.key}`]
-        if (command) {
-          e.preventDefault()
-          onIsearchCommand?.(command, state)
-          return
-        }
-      }
 
       // 入力の履歴 (M-p で古い方へ, M-n で新しい方へ)
-      if (state.mode === 'input' && e.altKey && (e.key === 'p' || e.key === 'n')) {
+      if (e.altKey && (e.key === 'p' || e.key === 'n')) {
         e.preventDefault()
         const items = state.history ?? []
         const current = state.historyPos ?? 0
@@ -246,7 +165,7 @@ export default function Minibuffer({
         return
       }
 
-      if (e.key === 'Tab' && state.mode === 'input' && (state.complete || state.completions)) {
+      if (e.key === 'Tab' && (state.complete || state.completions)) {
         e.preventDefault()
         const show = ({ value, matches }: Completion) => {
           setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches)
@@ -265,7 +184,7 @@ export default function Minibuffer({
 
       if (e.key === 'Enter') {
         e.preventDefault()
-        onSubmit(getValue())
+        onSubmit(state.input)
       } else if (isQuitKey(e)) {
         e.preventDefault()
         onCancel()
@@ -274,11 +193,11 @@ export default function Minibuffer({
 
     return (
       <div className="minibuffer">
-        <span className="minibuffer-prompt">{getPrompt()}</span>
+        <span className="minibuffer-prompt">{state.prompt}</span>
         <input
           ref={inputRef}
           className="minibuffer-input"
-          value={getValue()}
+          value={state.input}
           onChange={(e) => {
             setShown([])
             setNote({ key: '', text: '' })
