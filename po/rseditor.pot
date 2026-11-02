@@ -1023,7 +1023,8 @@ msgstr ""
 msgctxt "function:view-echo-area-messages"
 msgid ""
 "View the log of recent echo-area messages: the `*Messages*' buffer.\n"
-"The buffer is shown in another window, with point at its end."
+"The buffer is shown in another window.  A screen that does not write the messages\n"
+"into the buffer by itself gets the log of `message' here."
 msgstr ""
 
 #: lisp/help.scm
@@ -6223,6 +6224,15 @@ msgstr ""
 #: lisp/subr.scm
 msgctxt "function:shell-quote-argument"
 msgid "Quote ARGUMENT for passing as argument to an inferior shell."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:display-warning"
+msgid ""
+"Display a warning message in the `*Warnings*' buffer, creating it if needed.\n"
+"TYPE is a symbol or a list of symbols that says what the warning is about.\n"
+"MESSAGE is the text.  The optional LEVEL (a symbol: debug, warning or error) is warning by default;\n"
+"a debug warning is only added to the buffer, the other levels also show it in another window."
 msgstr ""
 
 #: lisp/window.scm

@@ -44,7 +44,7 @@ function App() {
   const minibuffer = useMinibuffer()
   const { pendingAction, setPendingAction, minibufferState, setMinibufferState, showMessage } =
     minibuffer
-  const bufs = useBuffers(showMessage)
+  const bufs = useBuffers(showMessage, minibuffer.setMessageSink)
   const {
     buffers,
     layout,

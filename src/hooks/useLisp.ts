@@ -161,7 +161,14 @@ export function useLisp(
       }
       unlisten = stop
       loadInitFile()
-        .then((response) => showEvalResult(response, true))
+        .then((response) => {
+          showEvalResult(response, true)
+          // 読めなかったら, *Warnings* にも書く (Emacs と同じ)
+          if (response.error && response.error !== 'Quit') {
+            const text = `An error occurred while loading the init file: ${response.error}`
+            return evalLisp(`(display-warning 'initialization ${JSON.stringify(text)} 'error)`)
+          }
+        })
         .catch((err) => showMessage(`Init file error: ${err}`))
     })
     return () => {
@@ -256,7 +263,7 @@ export function useLisp(
       insert: (text) => handle().insert(text),
       deleteRegion: (from, to) => handle().deleteRegion(from, to),
       bufferName: () => currentBuffer.name,
-      message: (text) => setMinibufferState({ mode: 'message', text }),
+      message: (text) => showMessage(text),
       command: (name) => handle().run(name),
       switchToBuffer: (name) => showBuffer(getBufferCreate(name).buffer.id),
       bufferFileName: (name) => bufferNamed(name).filePath,

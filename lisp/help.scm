@@ -162,17 +162,18 @@ Interactively, read the command name in the minibuffer with completion."
 
 (define-command (view-echo-area-messages . args)
   "View the log of recent echo-area messages: the `*Messages*' buffer.
-The buffer is shown in another window, with point at its end."
+The buffer is shown in another window.  A screen that does not write the messages
+into the buffer by itself gets the log of `message' here."
   (let ((log (message-log)))
     (with-current-buffer (get-buffer-create "*Messages*")
-      (set-buffer-read-only #f)
-      (erase-buffer)
-      (insert (apply string-append (map (lambda (line) (string-append line "\n")) log)))
-      (goto-char (point-max))
-      (set-buffer-modified-p #f)
-      (set-buffer-read-only #t))
-    (display-buffer "*Messages*")
-    #f))
+      (when (= (point-min) (point-max))
+        (set-buffer-read-only #f)
+        (insert (apply string-append (map (lambda (line) (string-append line "\n")) log)))
+        (goto-char (point-max))
+        (set-buffer-modified-p #f)
+        (set-buffer-read-only #t))))
+  (display-buffer "*Messages*")
+  #f)
 
 (define help--for-help-text
   "You have typed C-h, the help character.  Type a Help option:

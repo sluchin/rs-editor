@@ -1230,10 +1230,11 @@ msgstr "TEXT を, どの行も WIDTH より長くならないように, 単語�
 msgctxt "function:view-echo-area-messages"
 msgid ""
 "View the log of recent echo-area messages: the `*Messages*' buffer.\n"
-"The buffer is shown in another window, with point at its end."
+"The buffer is shown in another window.  A screen that does not write the messages\n"
+"into the buffer by itself gets the log of `message' here."
 msgstr ""
 "エコー領域のメッセージの最近の記録 (`*Messages*' バッファ)を見る.\n"
-"バッファは別の窓に出して, 点は最後に置く."
+"バッファは別の窓に出す. メッセージを自分でバッファに書かない画面では, ここで `message' の記録を書く."
 
 #: lisp/help.scm
 msgctxt "function:help-for-help"
@@ -7021,6 +7022,19 @@ msgstr "FILENAME から, ディレクトリの部分を除いたファイルの�
 msgctxt "function:shell-quote-argument"
 msgid "Quote ARGUMENT for passing as argument to an inferior shell."
 msgstr "ARGUMENT を, 下位のシェルに引数として渡せるように引用する."
+
+#: lisp/subr.scm
+msgctxt "function:display-warning"
+msgid ""
+"Display a warning message in the `*Warnings*' buffer, creating it if needed.\n"
+"TYPE is a symbol or a list of symbols that says what the warning is about.\n"
+"MESSAGE is the text.  The optional LEVEL (a symbol: debug, warning or error) is warning by default;\n"
+"a debug warning is only added to the buffer, the other levels also show it in another window."
+msgstr ""
+"警告のメッセージを `*Warnings*' バッファに書く (無ければ作る).\n"
+"TYPE は警告の種類を表すシンボル (またはシンボルのリスト). MESSAGE は文.\n"
+"省いてもよい LEVEL (debug, warning, error のシンボル)の既定は warning.\n"
+"debug はバッファに書くだけで, ほかのレベルは別の窓にも出す."
 
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"

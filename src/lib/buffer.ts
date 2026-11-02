@@ -95,6 +95,19 @@ export function createScratchBuffer(): Buffer {
   }
 }
 
+/** メッセージを書き溜めるバッファの名前 (Emacs と同じ). */
+export const MESSAGES_BUFFER = '*Messages*'
+
+/**
+ * *Messages* バッファを作ります.
+ *
+ * @param doc - 始めの本文 (省くと空).
+ * @returns *Messages* バッファ.
+ */
+export function createMessagesBuffer(doc: Text = Text.empty): Buffer {
+  return { id: generateBufferId(), name: MESSAGES_BUFFER, filePath: null, doc, modified: false }
+}
+
 /**
  * ファイルを読んで, バッファを作ります (まだ出さない). 自動保存のファイルの方が新しければ, そう知らせます.
  *

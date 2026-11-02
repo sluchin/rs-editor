@@ -87,6 +87,8 @@ export function useMinibuffer() {
   // ミニバッファを使っているか (状態を変えたら, 描き直す前でも, すぐに変わる.
   // M-x から呼んだコマンドが, M-x の入力を閉じたことを知れるように)
   const active = useRef(false)
+  // 出したメッセージを受け取る関数 (*Messages* バッファに書く. バッファを持つフックが入れる)
+  const messageSink = useRef<(text: string) => void>(Boolean) // 受け取るまでは, 捨てる
 
   /**
    * ミニバッファの状態を変えます. 関数で変えるときは, 使っているかを変えないこと.
@@ -108,12 +110,22 @@ export function useMinibuffer() {
   const [histories, setHistories] = useState<Record<string, string[]>>({})
 
   /**
-   * ミニバッファに, メッセージを出します.
+   * ミニバッファに, メッセージを出します (空でなければ, *Messages* バッファにも書く).
    *
    * @param text - メッセージ.
    */
   const showMessage = (text: string) => {
+    messageSink.current(text)
     setMinibufferState({ mode: 'message', text })
+  }
+
+  /**
+   * 出したメッセージを受け取る関数を入れます (*Messages* バッファに書く).
+   *
+   * @param sink - 受け取る関数.
+   */
+  const setMessageSink = (sink: (text: string) => void) => {
+    messageSink.current = sink
   }
 
   /**
@@ -143,6 +155,7 @@ export function useMinibuffer() {
     setMinibufferState,
     isMinibufferActive,
     showMessage,
+    setMessageSink,
     addHistory,
     history,
   }

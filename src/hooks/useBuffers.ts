@@ -3,9 +3,16 @@
  * ウィンドウのコマンド (C-x 2, C-x 3, C-x o, C-x 0, C-x 1) を受け持ちます.
  */
 
+import { ChangeSet, Text } from '@codemirror/state'
 import { type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import type { CursorInfo, DocChange, EditorHandle } from '../components/CodeEditor'
-import { type Buffer, createScratchBuffer, uniquifyBufferNames } from '../lib/buffer'
+import {
+  type Buffer,
+  MESSAGES_BUFFER,
+  createMessagesBuffer,
+  createScratchBuffer,
+  uniquifyBufferNames,
+} from '../lib/buffer'
 import { getHomeDir } from '../lib/fileOps'
 import { fileDirectory } from '../lib/paths'
 import { type Layout, deleteWindow, splitWindow, windowIds } from '../lib/windows'
@@ -30,11 +37,18 @@ function generateWindowId(): string {
  * バッファとウィンドウを持ちます.
  *
  * @param showMessage - ミニバッファに, メッセージを出す関数.
+ * @param setMessageSink - 出したメッセージを受け取る関数を入れる関数 (*Messages* バッファに書く).
  * @returns 状態と, 操作の関数と, ウィンドウのコマンド.
  */
-export function useBuffers(showMessage: (text: string) => void) {
+export function useBuffers(
+  showMessage: (text: string) => void,
+  setMessageSink: (sink: (text: string) => void) => void,
+) {
   // 開いているバッファ (開いた順)
-  const [buffers, setBuffersRaw] = useState<Buffer[]>(() => [createScratchBuffer()])
+  const [buffers, setBuffersRaw] = useState<Buffer[]>(() => [
+    createScratchBuffer(),
+    createMessagesBuffer(),
+  ])
   // バッファを変えるたびに, 同じ名前のファイルのバッファの名前を, ディレクトリで区別する (Emacs の uniquify)
   const setBuffers = useCallback(
     (update: SetStateAction<Buffer[]>) =>
@@ -52,6 +66,8 @@ export function useBuffers(showMessage: (text: string) => void) {
   const [activeWindow, setActiveWindow] = useState(FIRST_WINDOW)
   // ホームディレクトリ (ファイルの名前の入力の始め. `/` で終わる)
   const [homeDir, setHomeDir] = useState('/')
+  // 最新のバッファ (メッセージを続けて書くとき, 描くのを待たずに見る)
+  const buffersRef = useRef(buffers)
   // ウィンドウごとのエディタ
   const handles = useRef(new Map<string, EditorHandle>())
   // 選んでいるウィンドウ (描くのを待たずに, すぐ使えるように)
@@ -145,6 +161,35 @@ export function useBuffers(showMessage: (text: string) => void) {
       Object.fromEntries(Object.entries(prev).map(([w, b]) => [w, b === id ? next.id : b])),
     )
   }
+
+  /**
+   * メッセージを, *Messages* バッファの終わりに 1 行書きます (無ければ作る). 出しているウィンドウにも写します.
+   *
+   * @param text - メッセージ (空なら何もしない).
+   */
+  const appendMessage = (text: string) => {
+    if (text === '') return
+    const found = buffersRef.current.find((b) => b.name === MESSAGES_BUFFER)
+    const startDoc = found ? found.doc : Text.empty
+    const changes = ChangeSet.of({ from: startDoc.length, insert: text + '\n' }, startDoc.length)
+    const doc = changes.apply(startDoc)
+    const created = found ? undefined : createMessagesBuffer(doc)
+    buffersRef.current = found
+      ? buffersRef.current.map((b) => (b === found ? { ...b, doc } : b))
+      : [...buffersRef.current, created as Buffer]
+    setBuffers((prev) =>
+      created ? [...prev, created] : prev.map((b) => (b.id === found?.id ? { ...b, doc } : b)),
+    )
+    if (!found) return
+    for (const [w, b] of Object.entries(windowBuffers)) {
+      if (b === found.id) handles.current.get(w)?.sync({ startDoc, changes, doc })
+    }
+  }
+  // 出したメッセージを, *Messages* に書く (描くたびに, 最新の状態で書く関数を入れる)
+  useEffect(() => {
+    buffersRef.current = buffers
+    setMessageSink(appendMessage)
+  })
 
   /**
    * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.

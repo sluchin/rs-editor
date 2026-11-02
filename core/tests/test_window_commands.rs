@@ -405,3 +405,23 @@ fn test_kill_buffer_asks_for_the_name_and_for_a_modified_file() {
     assert_eq!(eval_with(&["a.txt", "yes"], &check), "(#f)");
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+#[test]
+fn test_display_warning_writes_the_warnings_buffer() {
+    // *Warnings* を作って, 警告を足し, ほかの窓に出す
+    assert_eq!(
+        eval(
+            "(display-warning 'initialization \"first\") (display-warning '(mine sub) \"second\" 'error) \
+             (list (length (window-list)) (with-current-buffer \"*Warnings*\" (buffer-substring 1 (point-max))))"
+        ),
+        "(2 \"Warning (initialization): first\\nError (mine): second\\n\")"
+    );
+    // debug は書くだけで, 窓は出さない
+    assert_eq!(
+        eval(
+            "(display-warning 'x \"quiet\" 'debug) \
+             (list (length (window-list)) (with-current-buffer \"*Warnings*\" (buffer-substring 1 (point-max))))"
+        ),
+        "(1 \"Debug (x): quiet\\n\")"
+    );
+}

@@ -343,7 +343,7 @@ describe('App', () => {
     editor.ctrlX('f')
     await editor.submit('/tmp/new.scm')
     expect(editor.text()).toContain('(New file)')
-    expect(editor.text()).toContain('[3/3]')
+    expect(editor.text()).toContain('[4/4]')
   })
 
   it('C-x C-f と保存先で, Tab でファイルの名前を補完する', async () => {
@@ -420,20 +420,20 @@ describe('App', () => {
     editor.ctrlX('f')
     await editor.submit('/p/lib/index.ts')
     expect(editor.text()).toContain('-:--- index.ts<lib>')
-    expect(editor.text()).toContain('[3/3]')
+    expect(editor.text()).toContain('[4/4]')
 
     // C-x b で, 区別した名前で移る
     editor.ctrlX('b', false)
     await editor.submit('index.ts<src>')
     expect(editor.text()).toContain('-:--- index.ts<src>')
-    expect(editor.text()).toContain('[2/3]')
+    expect(editor.text()).toContain('[3/4]')
 
     // 開いているファイルは, 読み直さずに, そのバッファを出す
     mocked.readFile.mockClear()
     editor.ctrlX('f')
     await editor.submit('/p/lib/index.ts')
     expect(mocked.readFile).not.toHaveBeenCalled()
-    expect(editor.text()).toContain('[3/3]')
+    expect(editor.text()).toContain('[4/4]')
 
     // 消すと, 残ったバッファの名前を戻す
     await requests().send('kill-buffer')
@@ -540,11 +540,11 @@ describe('App', () => {
 
     editor.ctrlX('b', false)
     await editor.submit('*scratch*')
-    expect(editor.text()).toContain('[1/2]')
+    expect(editor.text()).toContain('[1/3]')
 
     editor.ctrlX('b', false)
     await editor.submit('nothing')
-    expect(editor.text()).toContain('-:--- nothing [3/3]')
+    expect(editor.text()).toContain('-:--- nothing [4/4]')
   })
 
   it('C-x C-e で, カーソルの前の S 式を評価する (結果, エラー, 失敗, S 式なし)', async () => {
@@ -594,8 +594,72 @@ describe('App', () => {
     expect(mockedListen).toHaveBeenCalledWith('editor-request', expect.any(Function))
     expect(mockedInvoke).toHaveBeenCalledWith('load_init')
     expect(editor.text()).toContain('Error: init.scm: bad')
+    // 読めなかったことは, *Warnings* にも書く
+    expect(mockedInvoke).toHaveBeenCalledWith('eval_scheme', {
+      code: expect.stringContaining('(display-warning \'initialization "An error occurred'),
+    })
     editor.unmount()
     expect(unlisten).toHaveBeenCalled()
+  })
+
+  it('初期設定ファイルを C-g でやめたときは, 警告を書かない', async () => {
+    mockedInvoke.mockResolvedValueOnce(response('', 'Quit'))
+    await setup()
+    expect(mockedInvoke).not.toHaveBeenCalledWith('eval_scheme', {
+      code: expect.stringContaining('display-warning'),
+    })
+  })
+
+  it('*Messages* は始めからあり, 出したメッセージを 1 行ずつ書き, 消しても次のメッセージで作り直す', async () => {
+    const editor = await setup()
+    const { send } = requests()
+    expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*Messages*'] })
+    // 空のメッセージは書かない
+    editor.key('x', { alt: true })
+    await editor.submit('bogus-one')
+    editor.key('x', { alt: true })
+    await editor.submit('bogus-two')
+    editor.ctrlX('b', false)
+    await editor.submit('*Messages*')
+    expect(editor.doc()).toBe('Undefined command: bogus-one\nUndefined command: bogus-two\n')
+    // 出している間に出したメッセージも, すぐ書く (Lisp の message も)
+    await send('message', 'from lisp')
+    expect(editor.doc()).toBe(
+      'Undefined command: bogus-one\nUndefined command: bogus-two\nfrom lisp\n',
+    )
+    // 消しても, 次のメッセージで作り直す
+    await send('kill-buffer')
+    expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*'] })
+    await send('message', 'again')
+    await send('message', '')
+    expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*Messages*'] })
+    editor.ctrlX('b', false)
+    await editor.submit('*Messages*')
+    expect(editor.doc()).toBe('again\n')
+  })
+
+  it('バッファを全て消したら, *scratch* を作り直す', async () => {
+    await setup()
+    const { send } = requests()
+    await send('kill-buffer')
+    await send('kill-buffer')
+    expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*'] })
+  })
+
+  it('*Messages* を別のウィンドウに出していても, メッセージを写す', async () => {
+    const editor = await setup()
+    const { send } = requests()
+    const views = () =>
+      [...editor.container.querySelectorAll('.cm-editor')].map(
+        (el) => EditorView.findFromDOM(el as HTMLElement) as EditorView,
+      )
+    await act(async () => editor.ctrlX('3', false))
+    await act(async () => editor.ctrlX('o', false))
+    editor.ctrlX('b', false)
+    await editor.submit('*Messages*')
+    await act(async () => editor.ctrlX('o', false))
+    await send('message', 'shown elsewhere')
+    expect(views()[1].state.doc.toString()).toBe('shown elsewhere\n')
   })
 
   it('ファイルを開いたら find-file-hook を, 保存したら after-save-hook を, そのバッファで実行する', async () => {
@@ -947,12 +1011,12 @@ describe('App', () => {
         }
       })
     await act(async () => editor.ctrlX('3', false))
-    // 両方のウィンドウで出している *scratch* を消すと, 両方とも新しい *scratch* を出す
+    // 両方のウィンドウで出している *scratch* を消すと, 両方とも次のバッファ (*Messages*) を出す
     await requests().send('kill-buffer')
-    expect(modeLine(0)).toContain('*scratch*')
-    expect(modeLine(1)).toContain('*scratch*')
+    expect(modeLine(0)).toContain('*Messages*')
+    expect(modeLine(1)).toContain('*Messages*')
 
-    // 2 つ目のウィンドウに other を出し, 1 つ目の *scratch* を書き換えても, other は変わらない
+    // 2 つ目のウィンドウに other を出し, 1 つ目の *Messages* を書き換えても, other は変わらない
     await act(async () => editor.ctrlX('o', false))
     await act(async () => editor.ctrlX('b', false))
     await editor.submit('other')
@@ -963,8 +1027,8 @@ describe('App', () => {
     // 2 つ目で other を消すと, 2 つ目だけ, 別のバッファを出す
     await act(async () => editor.ctrlX('o', false))
     await requests().send('kill-buffer')
-    expect(modeLine(0)).toContain('*scratch*')
-    expect(modeLine(1)).toContain('*scratch*')
+    expect(modeLine(0)).toContain('*Messages*')
+    expect(modeLine(1)).toContain('*Messages*')
     expect(views()[1].state.doc.toString()).toBe('edited')
 
     await keyIn2(['x', true], ['0', false])
@@ -1884,7 +1948,9 @@ describe('App', () => {
       })
       expect(mocked.writeFile).toHaveBeenCalledWith('/tmp/b.txt', 'x')
       expect(editor.text()).toContain('Wrote /tmp/b.txt')
-      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', 'b.txt'] })
+      expect(await send('buffer-list')).toMatchObject({
+        value: ['*scratch*', '*Messages*', 'b.txt'],
+      })
       expect(await send('buffer-modified-p', 'b.txt')).toMatchObject({ value: false })
       // 書き換えていないことにするのは, 書き換えていなければ, 何もしない
       expect(await send('set-buffer-modified-p', false)).toMatchObject({ error: null })
@@ -1902,11 +1968,11 @@ describe('App', () => {
       expect(await send('buffer-modified-p')).toMatchObject({ value: false })
       await send('insert', 'x')
       expect(await send('buffer-modified-p', '*b*')).toMatchObject({ value: true })
-      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*b*'] })
+      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*Messages*', '*b*'] })
       expect(await send('buffer-file-name', 'zz')).toMatchObject({ error: 'No such buffer: zz' })
       // 書き換えていても, ファイルの無いバッファは消す
       expect(await send('kill-buffer', '*b*')).toMatchObject({ value: true, error: null })
-      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*'] })
+      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*Messages*'] })
       // 書き換えたファイルのバッファは, 消さない
       mocked.pathExists.mockResolvedValue(true)
       mocked.readFile.mockResolvedValue('note')
@@ -1969,7 +2035,9 @@ describe('App', () => {
       expect(editors()).toHaveLength(2)
       // 無いバッファは作る
       await send('display-buffer', '*new*', 1)
-      expect(await send('buffer-list')).toMatchObject({ value: ['*scratch*', '*b*', '*new*'] })
+      expect(await send('buffer-list')).toMatchObject({
+        value: ['*scratch*', '*Messages*', '*b*', '*new*'],
+      })
     })
 
     it('ファイルを, 出さずに開く', async () => {
