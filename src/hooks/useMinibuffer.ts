@@ -1,11 +1,23 @@
 /**
+ * ディレクトリの先頭の `~` を, ホームディレクトリにします (ディレクトリを読むために. 入力は, そのまま).
+ *
+ * @param dir - ディレクトリ (`~/` で始まるものだけ変える. 入力の `dir` は, 最後の `/` までなので, `~` だけにはならない).
+ * @returns `~` を展開したディレクトリ.
+ */
+async function expandTilde(dir: string): Promise<string> {
+  if (!dir.startsWith('~/')) return dir
+  const home = (await getHomeDir()).replace(/\/+$/, '')
+  return home + dir.slice(1)
+}
+
+/**
  * ミニバッファの状態と, 入力を待っているコマンドと, 入力の履歴. コマンドの組 (`CommandSet`) の型も置きます.
  */
 
 import { type SetStateAction, useCallback, useRef, useState } from 'react'
 import type { MinibufferState } from '../components/Minibuffer'
 import { completeFileName } from '../lib/complete'
-import { listDirectory } from '../lib/fileOps'
+import { getHomeDir, listDirectory } from '../lib/fileOps'
 import { HISTORY_LENGTH, addToHistory } from '../lib/history'
 
 /** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
@@ -59,7 +71,8 @@ export interface CommandSet {
  * @param input - 入力 (パス).
  * @returns 補完した入力と, 候補.
  */
-export const completeFile = (input: string) => completeFileName(input, listDirectory)
+export const completeFile = (input: string) =>
+  completeFileName(input, async (dir) => listDirectory(await expandTilde(dir)))
 
 /**
  * ミニバッファの状態と, 入力を待っているコマンドと, 入力の履歴を持ちます.
