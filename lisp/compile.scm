@@ -110,9 +110,7 @@ If there is none, leave point where it was and return #f."
 
 (define (grep--files directory)
   "Return the files below DIRECTORY, not those in .git, target, or node_modules."
-  (filter (lambda (file)
-            (not (regexp-match "/(\\.git|target|node_modules)/" file)))
-          (directory-files-recursively directory "")))
+  (grep-files directory))
 
 (define (grep--time)
   (format-time-string "%a %b %e %H:%M:%S %Y"))

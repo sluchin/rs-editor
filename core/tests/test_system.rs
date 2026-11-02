@@ -147,6 +147,21 @@ fn test_files() {
             quoted(&dir.path().join("a/z.txt"))
         )
     );
+    // grep で探すファイル: `.` で始まるもの, node_modules と target の下は, 入らずに飛ばす
+    for skipped in ["node_modules", "target", "a/target"] {
+        fs::create_dir_all(dir.path().join(skipped)).unwrap();
+        fs::write(dir.path().join(skipped).join("s.txt"), "").unwrap();
+    }
+    let grep_files = ev
+        .eval(&format!("(grep-files {})", quoted(dir.path())))
+        .unwrap();
+    assert!(grep_files.contains("a/c.md") && grep_files.contains("a/z.txt"));
+    assert!(grep_files.contains("a/b/note.txt"));
+    assert!(!grep_files.contains("s.txt") && !grep_files.contains(".git"));
+    assert_eq!(
+        ev.eval("(grep-files \"/nonexistent-dir-xyz\")").unwrap(),
+        "()"
+    );
     // 無いディレクトリは, 空
     assert_eq!(
         ev.eval("(directory-files-recursively \"/nonexistent-dir-xyz\" \"\")")

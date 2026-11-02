@@ -33,6 +33,7 @@ pub const NAMES: &[&str] = &[
     "delete-file",
     "delete-directory",
     "directory-files-recursively",
+    "grep-files",
     "directory-listing",
     "file-modification-time",
     "file-newer-than-file-p",
@@ -176,6 +177,14 @@ pub(crate) fn call(
             let pattern = regexp(string(name, &pattern)?)?;
             let mut files = Vec::new();
             collect_files(&dir, &pattern, &mut files);
+            files.sort();
+            Ok(Value::List(files.into_iter().map(Value::String).collect()))
+        }),
+        "grep-files" => fixed::<1>(name, args).and_then(|args| {
+            // (grep-files DIR): DIR の下の, 探すファイル (`.` で始まるもの, node_modules と target の下は, 探さない)
+            let dir = expand_args(machine, name, &args)?;
+            let mut files = Vec::new();
+            collect_grep_files(&dir, &mut files);
             files.sort();
             Ok(Value::List(files.into_iter().map(Value::String).collect()))
         }),
@@ -499,6 +508,33 @@ fn collect_files(dir: &Path, pattern: &Regex, files: &mut Vec<String>) {
                 collect_files(&path, pattern, files);
             }
         } else if pattern.is_match(&name) {
+            files.push(path_string(&path));
+        }
+    }
+}
+
+/// ディレクトリの下 (深くまで) の, grep で探すファイルを集めます. `.` で始まるもの, `node_modules` と `target` の下は,
+/// 入らずに飛ばします (大きなディレクトリを, 先に全て数えない). ディレクトリへのシンボリックリンクは, たどりません.
+///
+/// # Arguments
+///
+/// * `dir` - ディレクトリ (読めなければ, 何もしない).
+/// * `files` - 集めたファイルのパスを, 入れる先.
+fn collect_grep_files(dir: &Path, files: &mut Vec<String>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let path = entry.path();
+        if name.starts_with('.') {
+            continue;
+        }
+        if path.is_dir() {
+            if !path.is_symlink() && name != "node_modules" && name != "target" {
+                collect_grep_files(&path, files);
+            }
+        } else {
             files.push(path_string(&path));
         }
     }
