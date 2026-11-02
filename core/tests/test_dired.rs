@@ -11,7 +11,6 @@ use rseditor_core::scheme::system::directory_listing;
 use rseditor_core::scheme::value::Value;
 
 /// 画面の操作を受けない偽物.
-#[derive(Default)]
 struct NoUi;
 
 impl Host for NoUi {
@@ -22,7 +21,7 @@ impl Host for NoUi {
 
 fn setup() -> (Evaluator, EditorHost<NoUi>) {
     let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), NoUi::default());
+    let host = EditorHost::new(Editor::new(), NoUi);
     ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
         .unwrap();
     ev.eval_with(include_str!("../../lisp/dired.scm"), &host)

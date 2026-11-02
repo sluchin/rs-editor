@@ -251,15 +251,6 @@ impl Evaluator {
         self.global.live_frames()
     }
 
-    /// 手続きのある, エディタが実行するフック (`find-file-hook` など) の名前を返します.
-    ///
-    /// # Returns
-    ///
-    /// 名前.
-    pub fn active_hooks(&self) -> Vec<String> {
-        hooks::active(&self.global)
-    }
-
     /// 一番外側の環境を返します (`load` で使う).
     ///
     /// # Returns

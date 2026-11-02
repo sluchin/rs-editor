@@ -706,6 +706,21 @@ msgid "List the directory of the current Dired buffer again, and return #t.  Ret
 msgstr ""
 
 #: lisp/files.scm
+msgctxt "function:find-file-noselect"
+msgid ""
+"Return a buffer visiting file FILENAME, creating one if none already exists.\n"
+"A new buffer runs `find-file-hook' in it."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:files--write-buffer"
+msgid ""
+"Write BUFFER (the current buffer if omitted) into FILENAME, and make it visit the file.\n"
+"The first save after visiting a file keeps the old file as a backup (FILE~),\n"
+"and the auto save file (#FILE#) is deleted. Then run `after-save-hook' in the buffer."
+msgstr ""
+
+#: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""
 "Edit file FILENAME.\n"

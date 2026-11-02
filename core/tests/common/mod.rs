@@ -330,7 +330,16 @@ impl Host for FakeEditor {
                 let (from, to) = (pos(&args[0]), pos(&args[1]));
                 Value::String(self.buffer().text[from - 1..to - 1].iter().collect())
             }
-            "buffer-name" => Value::String(self.name()),
+            "buffer-name" | "current-buffer" => Value::String(self.name()),
+            // with-current-buffer (find-file-hook と after-save-hook を, そのバッファで動かす)
+            "set-buffer" => {
+                let name = text(&args[0]);
+                if !self.buffers.lock().unwrap().contains_key(&name) {
+                    return Err(format!("No such buffer: {name}"));
+                }
+                *self.current.lock().unwrap() = name;
+                Value::Nil
+            }
             "buffer-file-name" => {
                 let name = self.named(&args);
                 self.buffers.lock().unwrap()[&name]

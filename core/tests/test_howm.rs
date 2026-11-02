@@ -1048,7 +1048,11 @@ fn test_random() {
 fn test_find_file_and_after_save_hooks() {
     let (ev, editor, dir) = setup();
     // howm を読むと, エディタが実行するフックに入る
-    assert_eq!(ev.active_hooks(), vec!["find-file-hook", "after-save-hook"]);
+    assert_eq!(
+        ev.eval("(list (member 'howm-find-file-hook find-file-hook) after-save-hook)")
+            .unwrap(),
+        "((howm-find-file-hook) (howm-after-save))"
+    );
     let memo = write_memo(
         dir.path(),
         "2026/10/2026-10-25-120000.txt",

@@ -1,8 +1,8 @@
 //! Emacs のフック (`add-hook`, `run-hooks` など).
 //!
 //! フックは, 手続き (または手続きの名前の記号) のリストを値に持つ変数です.
-//! エディタは, ファイルを開いたとき (`find-file-hook`) と, 保存したとき (`after-save-hook`) に,
-//! そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
+//! ファイルを開いたとき (`find-file-hook`) と, 保存したとき (`after-save-hook`) は,
+//! `lisp/files.scm` の `find-file-noselect` と `files--write-buffer` が, そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
 
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;
@@ -31,23 +31,6 @@ fn functions(global: &Env, hook: &str) -> Vec<Value> {
         Some(Value::List(items)) => items.to_vec(),
         Some(function) => vec![function],
     }
-}
-
-/// 値が入っているフックの名前を返します (エディタは, このフックだけを実行する).
-///
-/// # Arguments
-///
-/// * `global` - 一番外側の環境.
-///
-/// # Returns
-///
-/// [`EDITOR_HOOKS`] のうち, 手続きのあるもの.
-pub(crate) fn active(global: &Env) -> Vec<String> {
-    EDITOR_HOOKS
-        .iter()
-        .filter(|hook| !functions(global, hook).is_empty())
-        .map(|hook| hook.to_string())
-        .collect()
 }
 
 /// フックの名前 (記号) を取り出します.

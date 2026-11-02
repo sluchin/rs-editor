@@ -118,6 +118,10 @@ pub struct Buffer {
     reloaded: bool,
     /// 覚えている変更の文字の数 (UTF-8 のバイト数).
     change_bytes: usize,
+    /// 訪れてから, 保存の前のファイルをバックアップ (`名前~`) に残したか.
+    backed_up: bool,
+    /// 最後に自動保存した本文の版.
+    auto_saved_version: u64,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -165,6 +169,8 @@ impl Buffer {
             changes: Vec::new(),
             reloaded: true,
             change_bytes: 0,
+            backed_up: false,
+            auto_saved_version: 0,
         }
     }
 
@@ -181,6 +187,26 @@ impl Buffer {
     /// 本文の版 (書き換えるたびに増える).
     pub fn version(&self) -> u64 {
         self.version
+    }
+
+    /// 訪れてから, 保存の前のファイルをバックアップ (`名前~`) に残したか.
+    pub fn backed_up(&self) -> bool {
+        self.backed_up
+    }
+
+    /// バックアップを残したかを決めます.
+    pub fn set_backed_up(&mut self, backed_up: bool) {
+        self.backed_up = backed_up;
+    }
+
+    /// 最後に自動保存した本文の版.
+    pub fn auto_saved_version(&self) -> u64 {
+        self.auto_saved_version
+    }
+
+    /// 自動保存した本文の版を覚えます.
+    pub fn set_auto_saved_version(&mut self, version: u64) {
+        self.auto_saved_version = version;
     }
 
     /// 前に取り出してからの本文の変更を取り出します (取り出した後は, 空になる).

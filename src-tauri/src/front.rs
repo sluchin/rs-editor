@@ -65,7 +65,12 @@ pub fn session_input(
         std::thread::Builder::new()
             .name("session".to_string())
             .spawn(move || {
-                if let Err(error) = session::run(front, init_file_path().as_deref(), rx) {
+                if let Err(error) = session::run(
+                    front,
+                    init_file_path().as_deref(),
+                    rx,
+                    session::AUTO_SAVE_TIMEOUT,
+                ) {
                     log::error!("The editor stopped: {error}");
                 }
             })

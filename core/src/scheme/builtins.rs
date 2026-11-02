@@ -122,7 +122,7 @@ pub const NAMES: &[&str] = &[
     "read-file-name",
     "read-key",
     "execute-kbd-macro",
-    "files--write-buffer",
+    "files--write-buffer-file",
     "files--set-buffer-text",
     "buffer-list",
     "buffer-modified-p",
@@ -130,7 +130,7 @@ pub const NAMES: &[&str] = &[
     "kill-new",
     "completing-read",
     "display-buffer",
-    "find-file-noselect",
+    "files--visit-file",
     "highlight-regexp",
     "unhighlight-regexp",
     "outline-flag-region",
@@ -734,10 +734,13 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             machine.host.call(name, args)?;
             Ok(Value::Nil)
         }
-        "find-file-noselect" => {
+        "files--visit-file" => {
+            // (files--visit-file FILENAME): ファイルを訪れるバッファ (フックを動かすのは, Lisp の find-file-noselect)
             let [path] = fixed::<1>(name, args)?;
             let path = machine.expand_file_name(string(name, &path)?);
-            machine.host.call(name, vec![Value::String(path)])
+            machine
+                .host
+                .call("find-file-noselect", vec![Value::String(path)])
         }
         "set-buffer-modified-p" => {
             let [flag] = fixed::<1>(name, args)?;
@@ -807,19 +810,20 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 .call(name, vec![text, Value::Boolean(modified.is_true())])?;
             Ok(Value::Nil)
         }
-        "files--write-buffer" => {
-            // (files--write-buffer FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く
+        "files--write-buffer-file" => {
+            // (files--write-buffer-file FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く
+            // (フックを動かすのは, Lisp の files--write-buffer)
             let (path, buffer) = match args.as_slice() {
                 [path] => (path, None),
                 [path, buffer] => (path, Some(string(name, buffer)?.to_string())),
-                _ => return Err("files--write-buffer expects 1 or 2 arguments".to_string()),
+                _ => return Err("files--write-buffer-file expects 1 or 2 arguments".to_string()),
             };
             let path = machine.expand_file_name(string(name, path)?);
             let args = std::iter::once(path)
                 .chain(buffer)
                 .map(Value::String)
                 .collect();
-            machine.host.call(name, args)?;
+            machine.host.call("files--write-buffer", args)?;
             Ok(Value::Nil)
         }
         "set-frame-font" => {

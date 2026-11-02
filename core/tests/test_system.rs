@@ -615,7 +615,8 @@ fn test_editor_settings() {
             "set-foreground-color \"red\"".to_string(),
             "set-font nil 10".to_string(),
             "local-set-key \"Ctrl-c a\" \"foo\"".to_string(),
-            // find-file は, Lisp (lisp/files.scm) で書いたもの
+            // find-file は, Lisp (lisp/files.scm) で書いたもの (新しいバッファか, 前の一覧と比べる)
+            "buffer-list".to_string(),
             format!(
                 "find-file-noselect {:?}",
                 home.join("x.txt").to_string_lossy()
@@ -676,7 +677,15 @@ fn test_editor_settings() {
             "(pop-to-buffer-same-window 1)",
             "pop-to-buffer-same-window expects strings",
         ),
-        ("(find-file 1)", "find-file-noselect expects strings"),
+        ("(find-file 1)", "files--visit-file expects strings"),
+        (
+            "(files--visit-file)",
+            "files--visit-file expects 1 argument, given 0",
+        ),
+        (
+            "(files--write-buffer-file)",
+            "files--write-buffer-file expects 1 or 2 arguments",
+        ),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }
@@ -705,6 +714,7 @@ fn test_buffer_operations() {
             "completing-read \"P: \" () \"i\"".to_string(),
             "display-buffer \"b\"".to_string(),
             "display-buffer \"b\" 3".to_string(),
+            "buffer-list".to_string(),
             format!("find-file-noselect {:?}", home.join("y").to_string_lossy()),
             "highlight-regexp \"a+\" nil nil".to_string(),
             "unhighlight-regexp \"a+\"".to_string(),
@@ -842,7 +852,11 @@ fn test_read_with_defaults() {
 #[test]
 fn test_hooks() {
     let ev = Evaluator::new();
-    assert!(ev.active_hooks().is_empty());
+    // エディタが実行するフックは, 始めは空
+    assert_eq!(
+        ev.eval("(list find-file-hook after-save-hook)").unwrap(),
+        "(() ())"
+    );
     let code = r#"
 (define log '())
 (define (note x) (set! log (cons x log)))
@@ -867,7 +881,7 @@ fn test_hooks() {
         ev.eval(code).unwrap().lines().last().unwrap(),
         "(first second 3 second single)"
     );
-    assert_eq!(ev.active_hooks(), vec!["find-file-hook", "after-save-hook"]);
+    assert_eq!(ev.eval("after-save-hook").unwrap(), "(first)");
     for (code, error) in [
         ("(add-hook 'h)", "add-hook expects 2 to 4 arguments"),
         ("(add-hook 1 'f)", "add-hook expects a hook symbol, given 1"),
@@ -1037,6 +1051,7 @@ fn test_read_file_name() {
         editor.calls(),
         vec![
             "read-file-name \"Find file: \" \"\"",
+            "buffer-list",
             "find-file-noselect \"/home/b.txt\"",
             "pop-to-buffer-same-window \"/home/b.txt\"",
         ]

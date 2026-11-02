@@ -2,10 +2,11 @@
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use rseditor::scheme::value::Value;
 use rseditor::session::{
-    append_message, run, Front, Input, Session, MESSAGES_BUFFER, SCRATCH_TEXT,
+    append_message, run, Front, Input, Session, AUTO_SAVE_TIMEOUT, MESSAGES_BUFFER, SCRATCH_TEXT,
 };
 use rseditor_core::editor::Editor;
 use rseditor_core::frame::Frame;
@@ -359,8 +360,78 @@ fn test_init_file_and_run() {
         })
         .unwrap();
     drop(sender);
-    run(front.clone(), None, receiver).unwrap();
+    run(front.clone(), None, receiver, AUTO_SAVE_TIMEOUT).unwrap();
     let frames = front.frames.lock().unwrap();
     assert_eq!(frames.len(), 2);
     assert!(frames[1].buffers[0].changes[0].insert == "x");
+}
+
+#[test]
+fn test_auto_save_and_backup() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("a.txt");
+    let path = file.to_string_lossy().into_owned();
+    std::fs::write(&file, "hi\n").unwrap();
+    let (mut session, front) = setup();
+    session.eval(&format!("(find-file {path:?})")).unwrap();
+    session.handle(Input::Text {
+        text: "x".to_string(),
+    });
+    // 書き換えたバッファを, #名前# に書く
+    session.auto_save();
+    let auto = dir.path().join("#a.txt#");
+    assert_eq!(std::fs::read_to_string(&auto).unwrap(), "xhi\n");
+    assert_eq!(last(&front).message, "Auto-saving...done");
+    // 書き換えていなければ, 書かない (描かない)
+    let count = front.frames.lock().unwrap().len();
+    session.auto_save();
+    assert_eq!(front.frames.lock().unwrap().len(), count);
+    // 保存すると, バックアップを残し, 自動保存のファイルを消す
+    key(&mut session, "C-x C-s");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "xhi\n");
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join("a.txt~")).unwrap(),
+        "hi\n"
+    );
+    assert!(!auto.exists());
+    // 入力が無いまま時間が経つと, 自動保存する
+    let front = Arc::new(FakeFront::default());
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let thread = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(50));
+        drop(sender);
+    });
+    run(front.clone(), None, receiver, Duration::from_millis(5)).unwrap();
+    thread.join().unwrap();
+}
+
+#[test]
+fn test_find_file_and_save_hooks() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("a.txt").to_string_lossy().into_owned();
+    let (mut session, front) = setup();
+    session
+        .eval(
+            "(define found '()) (define saved '())
+             (add-hook 'find-file-hook (lambda () (set! found (cons (buffer-name) found))))
+             (add-hook 'after-save-hook (lambda () (set! saved (cons (buffer-name) saved))))",
+        )
+        .unwrap();
+    // 新しいバッファだけ, find-file-hook を動かす (そのバッファで)
+    session.eval(&format!("(find-file {path:?})")).unwrap();
+    session.eval("(switch-to-buffer \"*scratch*\")").unwrap();
+    session.eval(&format!("(find-file {path:?})")).unwrap();
+    assert_eq!(session.eval("found").unwrap(), "(\"a.txt\")");
+    // 保存したら, after-save-hook を動かす. "Wrote" の知らせは残す
+    session.handle(Input::Text {
+        text: "x".to_string(),
+    });
+    key(&mut session, "C-x C-s");
+    assert_eq!(session.eval("saved").unwrap(), "(\"a.txt\")");
+    assert_eq!(last(&front).message, format!("Wrote {path}"));
+    // 別のバッファを書いても, そのバッファで動かす
+    session
+        .eval("(switch-to-buffer \"*scratch*\") (files--write-buffer (buffer-file-name \"a.txt\") \"a.txt\")")
+        .unwrap();
+    assert_eq!(session.eval("saved").unwrap(), "(\"a.txt\" \"a.txt\")");
 }

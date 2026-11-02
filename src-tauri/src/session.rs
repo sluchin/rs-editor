@@ -6,8 +6,9 @@
 
 use std::collections::VecDeque;
 use std::path::Path;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::sync::{Arc, Mutex, MutexGuard};
+use std::time::Duration;
 
 use rseditor_core::command_loop::{read_key_name, CommandLoop, LoopUi};
 use rseditor_core::editor::Editor;
@@ -426,6 +427,16 @@ impl<F: Front> Session<F> {
         self.commands.sync_lisp_keys();
     }
 
+    /// 書き換えたファイルのバッファを, 自動保存のファイル (`#名前#`) に書きます (Emacs の `do-auto-save`).
+    /// 書いたら, "Auto-saving...done" と出して描きます.
+    pub fn auto_save(&mut self) {
+        let saved = rseditor_core::files::auto_save(&mut self.host().editor());
+        if saved > 0 {
+            self.host().ui().show_message("Auto-saving...done");
+            self.host().ui().send_frame();
+        }
+    }
+
     /// 入力を 1 つ処理して, 描く内容を送ります.
     pub fn handle(&mut self, input: Input) {
         match input {
@@ -481,8 +492,11 @@ impl<F: Front> Session<F> {
     }
 }
 
+/// 入力が無いまま, 自動保存するまでの時間 (Emacs の `auto-save-timeout`).
+pub const AUTO_SAVE_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// 画面のエディタを動かします: 作って, 初期設定ファイルを読み, 描いてから, 入力を順に処理します.
-/// 入力の送り手が無くなったら, 終わります.
+/// 入力が `auto_save_timeout` の間無ければ, 自動保存します. 入力の送り手が無くなったら, 終わります.
 ///
 /// # Errors
 ///
@@ -491,12 +505,16 @@ pub fn run<F: Front>(
     front: Arc<F>,
     init_file: Option<&Path>,
     inputs: Receiver<Input>,
+    auto_save_timeout: Duration,
 ) -> Result<(), String> {
     let mut session = Session::new(front)?;
     session.load_init(init_file);
     session.host().ui().send_frame();
-    for input in inputs {
-        session.handle(input);
+    loop {
+        match inputs.recv_timeout(auto_save_timeout) {
+            Ok(input) => session.handle(input),
+            Err(RecvTimeoutError::Timeout) => session.auto_save(),
+            Err(RecvTimeoutError::Disconnected) => return Ok(()),
+        }
     }
-    Ok(())
 }

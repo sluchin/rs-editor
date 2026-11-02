@@ -11,7 +11,6 @@ pub mod hooks;
 pub mod host;
 pub mod keys;
 pub mod loadup;
-pub mod mirror;
 pub mod parser;
 pub mod po;
 pub mod system;

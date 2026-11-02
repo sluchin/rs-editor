@@ -3,6 +3,25 @@
 ;; Emacs の files.el に当たるもの. 起動のときに読む (core/src/scheme/loadup.rs).
 ;; コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の interactive に当たる).
 
+;; バッファを作る, 書く組み込みの手続き (files--visit-file, files--write-buffer-file) を包んで, フックを動かす.
+
+(define (find-file-noselect filename)
+  "Return a buffer visiting file FILENAME, creating one if none already exists.
+A new buffer runs `find-file-hook' in it."
+  (let* ((before (buffer-list))
+         (name (files--visit-file filename)))
+    (unless (member name before)
+      (with-current-buffer name (run-hooks 'find-file-hook)))
+    name))
+
+(define (files--write-buffer filename . buffer)
+  "Write BUFFER (the current buffer if omitted) into FILENAME, and make it visit the file.
+The first save after visiting a file keeps the old file as a backup (FILE~),
+and the auto save file (#FILE#) is deleted. Then run `after-save-hook' in the buffer."
+  (let ((name (if (null? buffer) (buffer-name) (car buffer))))
+    (files--write-buffer-file filename name)
+    (with-current-buffer name (run-hooks 'after-save-hook))))
+
 (define-command (find-file . args)
   "Edit file FILENAME.
 Switch to a buffer visiting file FILENAME, creating one if none already exists.

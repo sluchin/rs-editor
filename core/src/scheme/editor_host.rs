@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard};
 
-use crate::atomic::write_atomic;
 use crate::buffer::{Buffer, UndoEntry};
 use crate::casefiddle::{self, Case};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
@@ -593,13 +592,7 @@ impl<U: Host> EditorHost<U> {
             "files--write-buffer" => {
                 let path = text(op, args, 0)?.to_string();
                 let name = buffer_name(ed, op, args, 1)?;
-                let buffer = ed
-                    .get_buffer_mut(&name)
-                    .ok_or_else(|| format!("No such buffer: {name}"))?;
-                write_atomic(Path::new(&path), buffer.text().as_bytes())
-                    .map_err(|e| format!("{path}: {e}"))?;
-                buffer.set_file(Some(path.clone()));
-                buffer.set_modified(false);
+                crate::files::write_buffer(ed, &name, &path)?;
                 return Ok(Some(Outcome::Message(format!("Wrote {path}"), Value::Nil)));
             }
             "push-mark" => {

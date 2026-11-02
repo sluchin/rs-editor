@@ -837,6 +837,26 @@ msgid "List the directory of the current Dired buffer again, and return #t.  Ret
 msgstr "今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す."
 
 #: lisp/files.scm
+msgctxt "function:find-file-noselect"
+msgid ""
+"Return a buffer visiting file FILENAME, creating one if none already exists.\n"
+"A new buffer runs `find-file-hook' in it."
+msgstr ""
+"ファイル FILENAME を訪れるバッファを返す. 無ければ作る.\n"
+"新しいバッファでは, そのバッファで `find-file-hook' を動かす."
+
+#: lisp/files.scm
+msgctxt "function:files--write-buffer"
+msgid ""
+"Write BUFFER (the current buffer if omitted) into FILENAME, and make it visit the file.\n"
+"The first save after visiting a file keeps the old file as a backup (FILE~),\n"
+"and the auto save file (#FILE#) is deleted. Then run `after-save-hook' in the buffer."
+msgstr ""
+"バッファ BUFFER (省くと, 今のバッファ) を FILENAME に書き, そのファイルを訪れる.\n"
+"訪れてから初めて保存するときは, 前のファイルをバックアップ (FILE~) に残し,\n"
+"自動保存のファイル (#FILE#) を消す. それから, そのバッファで `after-save-hook' を動かす."
+
+#: lisp/files.scm
 msgctxt "function:find-file"
 msgid ""
 "Edit file FILENAME.\n"
