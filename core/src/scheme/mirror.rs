@@ -104,6 +104,7 @@ const KEEPS_MIRROR: &[&str] = &[
     "where-is-internal",
     "editor-command-names",
     "local-set-key",
+    "set-buffer-directory",
     "buffer-file-name",
     "buffer-modified-p",
     "buffer-list",

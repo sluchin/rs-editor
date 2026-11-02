@@ -506,44 +506,6 @@ pub fn file_newer_than(file1: String, file2: String) -> bool {
     }
 }
 
-/// ディレクトリの一覧を, `ls -al` で作ります (Emacs の dired の `dired-listing-switches`).
-/// 日付と `total` の行を, 言語の設定によらず英語で出すように, `LC_ALL=C` で動かします.
-///
-/// # Arguments
-///
-/// * `program` - `ls` のプログラム.
-/// * `path` - ディレクトリのパス.
-///
-/// # Returns
-///
-/// `ls` の出力. ディレクトリを読めないか, `ls` が失敗すれば, 理由の文字列の [`Err`].
-pub fn list_directory_long_with(program: &str, path: &str) -> Result<String, String> {
-    std::fs::read_dir(path).map_err(|e| e.to_string())?;
-    let output = std::process::Command::new(program)
-        .args(["-al", "--", path])
-        .env("LC_ALL", "C")
-        .output()
-        .map_err(|e| e.to_string())?;
-    if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
-    }
-    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
-}
-
-/// ディレクトリの一覧を, `ls -al` で作ります (`C-x d`).
-///
-/// # Arguments
-///
-/// * `path` - ディレクトリのパス.
-///
-/// # Returns
-///
-/// `ls` の出力. 作れなければ, 理由の文字列の [`Err`].
-#[tauri::command]
-pub fn list_directory_long(path: String) -> Result<String, String> {
-    list_directory_long_with("ls", &path)
-}
-
 /// プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
 ///
 /// # Arguments

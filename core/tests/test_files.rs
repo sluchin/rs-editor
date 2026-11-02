@@ -407,7 +407,6 @@ fn test_set_buffer_text_and_revert_dired_arguments() {
     assert!(ev
         .eval_with("(files--set-buffer-text 1 #f)", &editor)
         .is_err());
-    assert!(ev.eval_with("(files--revert-dired 1)", &editor).is_err());
 }
 
 #[test]
@@ -449,17 +448,6 @@ fn test_revert_buffer() {
         )]
     );
     assert!(!editor.buffer().modified);
-    // dired は, 聞かずに作り直す
-    editor
-        .buffers
-        .lock()
-        .unwrap()
-        .insert("*dired*".to_string(), FakeBuffer::default());
-    *editor.current.lock().unwrap() = "*dired*".to_string();
-    answer(&editor, &[]);
-    ev.run_command("revert-buffer", &editor).unwrap();
-    assert_eq!(editor.message(), "Listed again");
-    assert!(prompts(&editor).is_empty());
 }
 
 #[test]

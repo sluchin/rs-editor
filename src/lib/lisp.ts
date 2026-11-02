@@ -122,12 +122,8 @@ export interface LispHost {
   writeBuffer: (path: string, name?: string) => Promise<void>
   /** 今のバッファの本文を置き換えます (カーソルは同じ文字の所に残り, 元に戻せる). `modified` は置き換えた後の変更の有無. */
   setBufferText: (text: string, modified: boolean) => void
-  /**
-   * 今のバッファが dired なら, ディレクトリの一覧を作り直します. 作り直したら, 終わります.
-   *
-   * @returns dired なら `true`.
-   */
-  revertDired: () => Promise<boolean>
+  /** 今のバッファを, dired のバッファにします (`dir` はそのディレクトリ. 後ろに `/` は付けない). */
+  setBufferDirectory: (dir: string) => void
   /**
    * 今のバッファの状態 (Lisp の核に写す). 位置は UTF-16 の単位 (0 から).
    *
@@ -377,8 +373,9 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
     case 'files--set-buffer-text':
       host.setBufferText(String(args[0]), args[1] === true)
       return null
-    case 'files--revert-dired':
-      return host.revertDired()
+    case 'set-buffer-directory':
+      host.setBufferDirectory(String(args[0]))
+      return null
     case 'editor-snapshot': {
       // Lisp の核に写す: 名前, 本文, カーソル, マーク (位置は文字で数え, 1 から), ファイル
       const snapshot = host.snapshot()

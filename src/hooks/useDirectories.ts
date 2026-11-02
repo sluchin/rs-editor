@@ -1,85 +1,24 @@
 /**
- * ディレクトリのコマンド. dired (C-x d) と,
- * サイドバーのプロジェクトのツリー (F8) を受け持ちます.
+ * サイドバーのプロジェクトのツリー (F8) を受け持ちます. dired (C-x d) は, Lisp (`lisp/dired.scm`) です.
  */
 
 import { useState } from 'react'
-import { type Buffer, generateBufferId, toText, visitFile } from '../lib/buffer'
-import { diredBufferName, diredListing } from '../lib/dired'
-import { listDirectoryLong, projectRoot } from '../lib/fileOps'
-import { directoryFileName } from '../lib/paths'
+import { visitFile } from '../lib/buffer'
+import { projectRoot } from '../lib/fileOps'
 import type { AppContext } from './useBuffers'
-import { type CommandSet, completeFile } from './useMinibuffer'
+import type { CommandSet } from './useMinibuffer'
 
 /**
  * ディレクトリのコマンドを作ります.
  *
  * @param ctx - ミニバッファと, バッファとウィンドウ.
- * @returns コマンドと, ツリーの根と, ほかのフックが使う関数.
+ * @returns コマンドと, ツリーの根と, ツリーで選んだファイルを開く関数.
  */
 export function useDirectories(ctx: AppContext) {
-  const {
-    buffers,
-    setBuffers,
-    currentBuffer,
-    setCurrentBufferId,
-    setCurrentText,
-    defaultDirectory,
-    setPendingAction,
-    setMinibufferState,
-    showMessage,
-  } = ctx
+  const { buffers, setBuffers, currentBuffer, setCurrentBufferId, defaultDirectory, showMessage } =
+    ctx
   // サイドバーのプロジェクトのツリーの根 (出していなければ null)
   const [treeRoot, setTreeRoot] = useState<string | null>(null)
-
-  /**
-   * 開くディレクトリの名前を, ミニバッファで聞きます (C-x d).
-   */
-  const handleDired = () => {
-    setPendingAction('dired')
-    setMinibufferState({
-      mode: 'input',
-      prompt: 'Dired (directory): ',
-      input: defaultDirectory(currentBuffer),
-      complete: completeFile,
-    })
-  }
-
-  /**
-   * ディレクトリの一覧を, dired のバッファに出します (同じディレクトリの dired があれば, それを出す).
-   *
-   * @param path - ディレクトリのパス.
-   * @param revert - 選んでいる dired のバッファを, 作り直すなら `true`.
-   */
-  const listDirectoryInto = async (path: string, revert = false) => {
-    const dir = directoryFileName(path)
-    const open = buffers.find((b) => b.directory === dir)
-    if (open && !revert) {
-      setCurrentBufferId(open.id)
-      showMessage('')
-      return
-    }
-    try {
-      const content = diredListing(dir, await listDirectoryLong(dir))
-      if (revert) {
-        setCurrentText(content, false)
-      } else {
-        const buffer: Buffer = {
-          id: generateBufferId(),
-          name: diredBufferName(dir),
-          filePath: null,
-          doc: toText(content),
-          modified: false,
-          directory: dir,
-        }
-        setBuffers((prev) => [...prev, buffer])
-        setCurrentBufferId(buffer.id)
-      }
-      showMessage('')
-    } catch (err) {
-      showMessage(`Error: ${err}`)
-    }
-  }
 
   /**
    * サイドバーのプロジェクトのツリーを, 出すか, 消します (F8). 根は, バッファのディレクトリから上へたどって,
@@ -121,13 +60,9 @@ export function useDirectories(ctx: AppContext) {
 
   const commands: CommandSet = {
     actions: {
-      dired: handleDired,
       'project-tree': () => void handleProjectTree(),
-    },
-    submit: {
-      dired: (value) => listDirectoryInto(value),
     },
   }
 
-  return { commands, treeRoot, openFromTree, listDirectoryInto }
+  return { commands, treeRoot, openFromTree }
 }

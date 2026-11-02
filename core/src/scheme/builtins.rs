@@ -114,6 +114,7 @@ pub const NAMES: &[&str] = &[
     "command-execute",
     "global-set-key",
     "local-set-key",
+    "set-buffer-directory",
     "pop-to-buffer-same-window",
     "buffer-file-name",
     "set-buffer-modified-p",
@@ -123,7 +124,6 @@ pub const NAMES: &[&str] = &[
     "execute-kbd-macro",
     "files--write-buffer",
     "files--set-buffer-text",
-    "files--revert-dired",
     "buffer-list",
     "buffer-modified-p",
     "kill-buffer",
@@ -627,6 +627,13 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             }
             _ => Err("local-set-key expects a key and a command name".to_string()),
         },
+        "set-buffer-directory" => {
+            // (set-buffer-directory DIR): 今のバッファの `default-directory` を DIR にする (dired が使う)
+            let [dir] = fixed::<1>(name, args)?;
+            let dir = string(name, &dir)?.to_string();
+            machine.host.call(name, vec![Value::String(dir)])?;
+            Ok(Value::Nil)
+        }
         "pop-to-buffer-same-window" | "set-background-color" | "set-foreground-color" => {
             let [text] = fixed::<1>(name, args)?;
             string(name, &text)?;
@@ -799,11 +806,6 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 .host
                 .call(name, vec![text, Value::Boolean(modified.is_true())])?;
             Ok(Value::Nil)
-        }
-        "files--revert-dired" => {
-            // (files--revert-dired): 今のバッファが dired なら, 一覧を作り直して #t. dired でなければ #f
-            fixed::<0>(name, args)?;
-            machine.host.call(name, vec![])
         }
         "files--write-buffer" => {
             // (files--write-buffer FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く

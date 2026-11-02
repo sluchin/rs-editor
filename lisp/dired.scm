@@ -2,6 +2,7 @@
 
 ;; Emacs の dired.el に当たるもの (`dired`, `dired-other-window`). 一覧は, Emacs 30 と同じく `ls -al` で作る.
 ;; 一覧を読んで, ファイルを開くなどの dired のコマンド (`dired-find-file` など) は無い.
+;; `set-buffer-directory` は, 画面 (Tauri) に, dired のバッファのディレクトリ (`default-directory`) を教える.
 
 (define dired--directories '()
   "List of (BUFFER-NAME DIRECTORY) for the Dired buffers.")
@@ -38,6 +39,7 @@
   "Replace the text of the current buffer with the listing of DIR."
   (delete-region (point-min) (point-max))
   (insert (dired--text dir))
+  (set-buffer-directory dir)
   (dired--goto-first-file)
   (set-buffer-modified-p #f))
 

@@ -25,6 +25,17 @@ export function directoryFileName(path: string): string {
 }
 
 /**
+ * ディレクトリの名前 (最後の部品) を返します (dired のバッファの名前. `/` は, そのまま).
+ *
+ * @param dir - ディレクトリのパス.
+ * @returns ディレクトリの名前.
+ */
+export function directoryBaseName(dir: string): string {
+  const path = directoryFileName(dir)
+  return path === '/' ? path : path.slice(path.lastIndexOf('/') + 1)
+}
+
+/**
  * 自動保存のファイルのパスを返します (Emacs の `make-auto-save-file-name`. 同じディレクトリの `#名前#`).
  *
  * @param path - ファイルのパス.

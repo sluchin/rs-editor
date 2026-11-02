@@ -83,16 +83,6 @@ export async function fileNewerThan(file1: string, file2: string): Promise<boole
 }
 
 /**
- * ディレクトリの一覧を, `ls -al` で作ります.
- *
- * @param path - ディレクトリのパス.
- * @returns `ls` の出力.
- */
-export async function listDirectoryLong(path: string): Promise<string> {
-  return await invoke<string>('list_directory_long', { path })
-}
-
-/**
  * プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
  *
  * @param directory - ディレクトリ.

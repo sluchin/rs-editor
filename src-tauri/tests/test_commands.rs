@@ -7,8 +7,8 @@ use tempfile::tempdir;
 use rseditor::commands::{
     backup_file, bookmark_file_path, bookmark_file_path_from, delete_file, eval_code,
     eval_code_with, file_newer_than, home_dir, init_file_candidates, init_file_path,
-    list_directory, list_directory_long, list_directory_long_with, load_init_file, path_exists,
-    read_file_content, run_command, write_file_content, EvalResponse,
+    list_directory, load_init_file, path_exists, read_file_content, run_command,
+    write_file_content, EvalResponse,
 };
 use rseditor::scheme::evaluator::{Evaluator, KeyBinding};
 use rseditor::scheme::host::NoHost;
@@ -68,6 +68,10 @@ fn test_eval_code_returns_the_result_or_the_error() {
                 "first-error".to_string(),
                 "compile-goto-error".to_string(),
                 "grep".to_string(),
+                "dired".to_string(),
+                "dired-other-window".to_string(),
+                "dired-jump".to_string(),
+                "dired-jump-other-window".to_string(),
                 "list-buffers".to_string(),
                 "Buffer-menu-this-window".to_string(),
                 "Buffer-menu-other-window".to_string()
@@ -181,6 +185,10 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
             "first-error",
             "compile-goto-error",
             "grep",
+            "dired",
+            "dired-other-window",
+            "dired-jump",
+            "dired-jump-other-window",
             "list-buffers",
             "Buffer-menu-this-window",
             "Buffer-menu-other-window",
@@ -287,6 +295,10 @@ fn test_load_init_file() {
             "first-error",
             "compile-goto-error",
             "grep",
+            "dired",
+            "dired-other-window",
+            "dired-jump",
+            "dired-jump-other-window",
             "list-buffers",
             "Buffer-menu-this-window",
             "Buffer-menu-other-window",
@@ -386,21 +398,6 @@ fn test_file_newer_than_compares_the_modified_times() {
         .unwrap();
     assert!(!file_newer_than(a.clone(), b.clone()));
     assert!(file_newer_than(b, a));
-}
-
-#[test]
-fn test_list_directory_long_runs_ls() {
-    let dir = tempdir().unwrap();
-    fs::write(dir.path().join("a.txt"), "hi").unwrap();
-    let path = dir.path().to_string_lossy().into_owned();
-    let listing = list_directory_long(path.clone()).unwrap();
-    assert!(listing.lines().any(|line| line.ends_with(" a.txt")));
-    // 言語の設定によらず, total の行は英語
-    assert!(listing.starts_with("total "));
-    // ディレクトリを読めないか, ls が無いか, 失敗すれば, 理由を返す
-    assert!(list_directory_long(format!("{}/none", path)).is_err());
-    assert!(list_directory_long_with("/nonexistent-ls", &path).is_err());
-    assert_eq!(list_directory_long_with("false", &path), Err(String::new()));
 }
 
 #[test]

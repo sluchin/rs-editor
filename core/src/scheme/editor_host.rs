@@ -647,7 +647,6 @@ impl<U: Host> EditorHost<U> {
                         .collect(),
                 )
             }
-            "files--revert-dired" => nil(),
             _ => return Ok(None),
         };
         Ok(Some(Outcome::Value(value)))

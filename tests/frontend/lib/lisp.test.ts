@@ -95,7 +95,9 @@ function fakeHost(text: string) {
     setBufferText: (text, modified) => {
       state.calls.push(`set-text ${text} ${modified}`)
     },
-    revertDired: async () => true,
+    setBufferDirectory: (dir) => {
+      state.calls.push(`set-directory ${dir}`)
+    },
     snapshot: () => ({
       name: 'buf',
       text: state.text,
@@ -210,7 +212,7 @@ describe('lisp', () => {
     expect(await run('files--write-buffer', '/b')).toBeNull()
     expect(await run('files--set-buffer-text', 'abc', true)).toBeNull()
     expect(await run('files--set-buffer-text', 'abc', false)).toBeNull()
-    expect(await run('files--revert-dired')).toBe(true)
+    expect(run('set-buffer-directory', '/home/u')).toBeNull()
     expect(run('where-is-internal', 'find-file')).toEqual(['C-x C-f'])
     expect(run('editor-command-names')).toEqual(['save-buffer'])
     expect(run('set-background-color', 'black')).toBeNull()
@@ -224,6 +226,7 @@ describe('lisp', () => {
       'write /b undefined',
       'set-text abc true',
       'set-text abc false',
+      'set-directory /home/u',
       'background black',
       'foreground white',
       'font Mono 14',

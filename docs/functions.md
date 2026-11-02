@@ -397,11 +397,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `move-end-of-line` |  | simple | `C-e`, `<end>` | 実装済み | `C-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `newline` | ◯ | simple | `RET` | 実装済み | `RET`, `C-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/compile.scm`) | 4 |
+| `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | Lisp (`lisp/compile.scm`) | 4 |
 | `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/compile.scm`) | 4 |
+| `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 4 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -562,7 +562,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み |  | Lisp (`lisp/dabbrev.scm`) | 済 |
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | Lisp (`lisp/buff-menu.scm`) | 9 |
-| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/dired.scm`) | 9 |
+| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | Lisp (`lisp/dired.scm`) | 9 |
 | `dired-jump` |  | dired | `C-x C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |

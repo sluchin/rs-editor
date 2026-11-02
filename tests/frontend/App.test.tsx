@@ -28,7 +28,6 @@ vi.mock('@/lib/fileOps', () => ({
   backupFile: vi.fn(),
   deleteFile: vi.fn(),
   fileNewerThan: vi.fn(),
-  listDirectoryLong: vi.fn(),
   projectRoot: vi.fn(),
 }))
 
@@ -67,7 +66,6 @@ const startupCommands: Record<string, () => Promise<void>> = {
     ])
   },
   'revert-buffer': async () => {
-    if (await editorRequest('files--revert-dired', [])) return
     const file = (await editorRequest('buffer-file-name', [])) as string | null
     if (file === null) {
       await editorRequest('message', ['Buffer does not seem to be associated with any file'])
@@ -1337,7 +1335,7 @@ describe('App', () => {
     })
   })
 
-  describe('ファイルのコマンド, 自動保存とバックアップ, dired', () => {
+  describe('ファイルのコマンド, 自動保存とバックアップ', () => {
     afterEach(() => {
       vi.useRealTimers()
     })
@@ -1517,51 +1515,6 @@ describe('App', () => {
       mocked.readFile.mockRejectedValueOnce('gone')
       await editor.submit('yes')
       expect(editor.text()).toContain('Error: gone')
-    })
-
-    it('C-x d で, ディレクトリの一覧を dired のバッファに出し, revert-buffer で作り直すこと', async () => {
-      const editor = await setup()
-      mocked.listDirectoryLong.mockResolvedValueOnce(
-        'total 4\n-rw-r--r-- 1 u u 3 Oct 25 16:42 a.txt\n',
-      )
-      editor.ctrlX('d', false)
-      expect(editor.text()).toContain('Dired (directory): ')
-      expect(editor.input().value).toBe('/home/u/')
-      await editor.submit('/home/u/src/')
-      expect(mocked.listDirectoryLong).toHaveBeenCalledWith('/home/u/src')
-      expect(editor.doc()).toBe('  /home/u/src:\n  -rw-r--r-- 1 u u 3 Oct 25 16:42 a.txt\n')
-      expect(modeLine(editor)).toContain('src')
-      expect(modeLine(editor)).toContain('Dired by name')
-      // dired のバッファの既定のディレクトリは, そのディレクトリ
-      editor.ctrlX('f')
-      expect(editor.input().value).toBe('/home/u/src/')
-      await act(async () => {
-        fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
-      })
-      // 作り直す (聞かない)
-      mocked.listDirectoryLong.mockResolvedValueOnce(
-        'total 0\n-rw-r--r-- 1 u u 3 Oct 25 16:42 b.txt\n',
-      )
-      await mx(editor, 'revert-buffer')
-      expect(editor.doc()).toBe('  /home/u/src:\n  -rw-r--r-- 1 u u 3 Oct 25 16:42 b.txt\n')
-      expect(modeLine(editor)).not.toContain('**')
-      // 同じディレクトリの dired があれば, それを出す
-      editor.ctrlX('b', false)
-      await editor.submit('*scratch*')
-      editor.ctrlX('d', false)
-      await editor.submit('/home/u/src')
-      expect(mocked.listDirectoryLong).toHaveBeenCalledTimes(2)
-      expect(editor.doc()).toContain('b.txt')
-      // ルートのディレクトリ. 読めなければ, 知らせる
-      mocked.listDirectoryLong.mockResolvedValueOnce('')
-      editor.ctrlX('d', false)
-      await editor.submit('/')
-      expect(editor.doc()).toBe('  /:\n')
-      mocked.listDirectoryLong.mockRejectedValueOnce('No such file or directory')
-      editor.ctrlX('d', false)
-      expect(editor.input().value).toBe('/')
-      await editor.submit('/none')
-      expect(editor.text()).toContain('Error: No such file or directory')
     })
   })
 
@@ -1852,6 +1805,26 @@ describe('App', () => {
       const names = (await send('editor-command-names')).value as string[]
       // エディタのコマンドと, 画面のコマンド
       expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer', 'kill-buffer']))
+    })
+
+    it('バッファを dired にする (set-buffer-directory): モードと, 既定のディレクトリが変わる', async () => {
+      const editor = await setup()
+      const { send } = requests()
+      // ほかのバッファは, そのまま
+      editor.ctrlX('b', false)
+      await editor.submit('other')
+      await send('set-buffer-directory', '/home/u/src')
+      expect(editor.container.querySelector('.mode-line')?.textContent).toContain('Dired by name')
+      // dired のバッファの既定のディレクトリは, そのディレクトリ
+      editor.ctrlX('f')
+      expect(editor.input().value).toBe('/home/u/src/')
+      // ルートは, そのまま
+      await act(async () => {
+        fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
+      })
+      await send('set-buffer-directory', '/')
+      editor.ctrlX('f')
+      expect(editor.input().value).toBe('/')
     })
 
     it('ファイルを開く (開いていれば, そのバッファを出す)', async () => {

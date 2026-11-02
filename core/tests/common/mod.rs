@@ -497,14 +497,6 @@ impl Host for FakeEditor {
                 });
                 Value::Nil
             }
-            "files--revert-dired" => {
-                // 名前が *dired* で始まるバッファは dired (一覧を作り直したことを, メッセージに残す)
-                let dired = self.current.lock().unwrap().starts_with("*dired*");
-                if dired {
-                    *self.message.lock().unwrap() = "Listed again".to_string();
-                }
-                Value::Boolean(dired)
-            }
             "read-string" | "read-file-name" | "read-key" => {
                 self.prompts.lock().unwrap().push(text(&args[0]));
                 Value::String(self.answers.lock().unwrap().remove(0))

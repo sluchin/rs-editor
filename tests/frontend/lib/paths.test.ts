@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { autoSaveFileName, directoryFileName, fileDirectory } from '@/lib/paths'
+import { autoSaveFileName, directoryBaseName, directoryFileName, fileDirectory } from '@/lib/paths'
 
 describe('パス', () => {
   it('ディレクトリを返すこと', () => {
@@ -19,5 +19,13 @@ describe('パス', () => {
   it('自動保存のファイルは, 同じディレクトリの #名前# であること', () => {
     expect(autoSaveFileName('/home/u/a.scm')).toBe('/home/u/#a.scm#')
     expect(autoSaveFileName('a.scm')).toBe('#a.scm#')
+  })
+})
+
+describe('directoryBaseName', () => {
+  it('ディレクトリの名前 (最後の部品) を返すこと', () => {
+    expect(directoryBaseName('/home/u/src/')).toBe('src')
+    expect(directoryBaseName('/home/u/src')).toBe('src')
+    expect(directoryBaseName('/')).toBe('/')
   })
 })

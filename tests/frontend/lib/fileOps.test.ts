@@ -8,7 +8,6 @@ import {
   backupFile,
   deleteFile,
   fileNewerThan,
-  listDirectoryLong,
   projectRoot,
 } from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
@@ -159,9 +158,6 @@ describe('fileOps', () => {
     vi.mocked(tauri.invoke).mockResolvedValueOnce(true)
     expect(await fileNewerThan('/#a#', '/a')).toBe(true)
     expect(tauri.invoke).toHaveBeenLastCalledWith('file_newer_than', { file1: '/#a#', file2: '/a' })
-    vi.mocked(tauri.invoke).mockResolvedValueOnce('total 0\n')
-    expect(await listDirectoryLong('/d')).toBe('total 0\n')
-    expect(tauri.invoke).toHaveBeenLastCalledWith('list_directory_long', { path: '/d' })
   })
 
   describe('projectRoot', () => {

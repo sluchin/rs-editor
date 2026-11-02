@@ -44,7 +44,6 @@ pub fn run() {
             commands::backup_file,
             commands::delete_file,
             commands::file_newer_than,
-            commands::list_directory_long,
             commands::project_root
         ])
         .run(tauri::generate_context!())

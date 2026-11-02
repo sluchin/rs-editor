@@ -10,18 +10,27 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::system::directory_listing;
 use rseditor_core::scheme::value::Value;
 
-/// 画面の要る操作を受けない偽物.
-struct NoUi;
+/// `set-buffer-directory` で教えられたディレクトリを覚える偽物 (ほかの画面の操作は受けない).
+#[derive(Default)]
+struct NoUi {
+    directories: std::sync::Mutex<Vec<String>>,
+}
 
 impl Host for NoUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
-        Err(format!("ui: {op}"))
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+        match (op, args.first()) {
+            ("set-buffer-directory", Some(Value::String(dir))) => {
+                self.directories.lock().unwrap().push(dir.clone());
+                Ok(Value::Nil)
+            }
+            _ => Err(format!("ui: {op}")),
+        }
     }
 }
 
 fn setup() -> (Evaluator, EditorHost<NoUi>) {
     let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), NoUi);
+    let host = EditorHost::new(Editor::new(), NoUi::default());
     ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
         .unwrap();
     ev.eval_with(include_str!("../../lisp/dired.scm"), &host)
@@ -75,6 +84,11 @@ fn test_dired_text_and_point_match_emacs() {
     assert!(!buffer.modified());
     assert_eq!(editor.current_buffer_name(), "rseditor-dired-text");
     drop(editor);
+    // 画面には, ディレクトリを教える (後ろに / は付けない)
+    assert_eq!(*host.ui().directories.lock().unwrap(), vec![path]);
+    // 引数は 1 つの文字列
+    assert!(ev.eval_with("(set-buffer-directory)", &host).is_err());
+    assert!(ev.eval_with("(set-buffer-directory 1)", &host).is_err());
     std::fs::remove_dir_all(dir).unwrap();
 }
 

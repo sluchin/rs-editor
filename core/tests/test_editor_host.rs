@@ -608,7 +608,6 @@ fn test_files() {
         eval("(files--set-buffer-text \"\" #f) (buffer-string)"),
         "\"\""
     );
-    assert_eq!(eval("(files--revert-dired)"), "#f");
 }
 
 #[test]

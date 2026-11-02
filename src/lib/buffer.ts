@@ -3,11 +3,10 @@
  */
 
 import { Text } from '@codemirror/state'
-import { diredBufferName } from './dired'
 import type { Highlight } from './faces'
 import { fileNewerThan, pathExists, readFile } from './fileOps'
 import type { KeyBinding } from './lisp'
-import { autoSaveFileName, directoryFileName } from './paths'
+import { autoSaveFileName, directoryBaseName, directoryFileName } from './paths'
 
 /** *scratch* バッファの始めの本文 (Emacs と同じ). */
 const INITIAL_TEXT = `;; This buffer is for text that is not saved, and for Lisp evaluation.
@@ -144,7 +143,7 @@ export function uniquifyBufferNames(buffers: Buffer[]): Buffer[] {
   buffers.forEach((b, index) => {
     const path = b.filePath ?? (b.directory !== undefined ? directoryFileName(b.directory) : null)
     if (path === null) return
-    const base = b.filePath ? bufferNameFromPath(path) : diredBufferName(path)
+    const base = b.filePath ? bufferNameFromPath(path) : directoryBaseName(path)
     const parents = path.split('/').slice(0, -1).filter(Boolean).reverse()
     named.push({ index, base, parents })
   })

@@ -460,6 +460,7 @@ impl Host for UiHost {
             | "unhighlight-regexp"
             | "outline-flag-region"
             | "local-set-key"
+            | "set-buffer-directory"
             | "set-background-color"
             | "set-foreground-color"
             | "set-font" => Ok(Value::Nil),

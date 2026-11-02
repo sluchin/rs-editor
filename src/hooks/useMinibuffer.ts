@@ -22,14 +22,12 @@ export type PendingAction =
   | 'bookmark-jump'
   | 'confirm-revert'
   | 'confirm-recover'
-  | 'dired'
   | 'read-string'
   | 'read-file-name'
   | null
 
 /** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
 const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
-  dired: 'file-name',
   'execute-command': 'extended-command',
   'eval-expression': 'read-expression',
   'goto-line': 'goto-line',

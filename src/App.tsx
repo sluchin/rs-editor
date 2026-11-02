@@ -63,7 +63,7 @@ function App() {
   const files = useFiles(ctx)
   const search = useSearch(ctx)
   const bookmarks = useBookmarks(ctx)
-  const lisp = useLisp(ctx, files.saveBuffer, directories.listDirectoryInto)
+  const lisp = useLisp(ctx, files.saveBuffer)
   const { lispKeys } = lisp
   // 最後に C-x r t で入れた文字 (次の既定)
   const rectangleString = useRef<string | null>(null)
