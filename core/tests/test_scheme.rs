@@ -456,6 +456,9 @@ fn test_define_command_and_global_set_key() {
             "first-error",
             "compile-goto-error",
             "grep",
+            "list-buffers",
+            "Buffer-menu-this-window",
+            "Buffer-menu-other-window",
             "say-hi",
             "shout"
         ]

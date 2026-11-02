@@ -19,6 +19,9 @@ This editor has no header line, so the titles are the first line of the buffer."
 (define Buffer-menu-files-only #f
   "Non-nil if the current Buffer Menu lists only file buffers.")
 
+(define Buffer-menu--names '()
+  "The names of the buffers listed in *Buffer List*, in the order of its lines.")
+
 (define (buff-menu--spaces n)
   (if (<= n 0) "" (string-append " " (buff-menu--spaces (- n 1)))))
 
@@ -69,14 +72,21 @@ The buffer is named *Buffer List*.
 If FILES-ONLY is non-nil, show only the buffers that visit files."
   (let* ((files-only (and (pair? args) (car args) (>= (prefix-numeric-value (car args)) 0)))
          (old (buffer-name))
-         (rows (map (lambda (name) (buff-menu--row name old))
-                    (filter (lambda (name) (buff-menu--listed-p name files-only)) (buffer-list)))))
+         (names (filter (lambda (name) (buff-menu--listed-p name files-only)) (buffer-list)))
+         (rows (map (lambda (name) (buff-menu--row name old)) names)))
     (switch-to-buffer "*Buffer List*")
+    (set-buffer-read-only #f)
     (delete-region (point-min) (point-max))
     (set! Buffer-menu-files-only files-only)
+    (set! Buffer-menu--names names)
     (insert (string-append " C R M Buffer    Size Mode File \n" (apply string-append rows)))
     (goto-char (point-min))
     (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)
+    (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
+              '(("RET" Buffer-menu-this-window) ("f" Buffer-menu-this-window)
+                ("o" Buffer-menu-other-window) ("q" quit-window)
+                ("n" next-line) ("p" previous-line) ("SPC" next-line)))
     (switch-to-buffer old)
     "*Buffer List*"))
 
@@ -87,4 +97,21 @@ The first column shows \".\" for the buffer you came from, then \"%\" for a read
 buffer and \"*\" for a modified buffer; then follow the name, size, mode and file.
 With a non-negative prefix argument FILES-ONLY, show only the buffers that visit files."
   (display-buffer (list-buffers-noselect (if (pair? args) (car args) (current-prefix-arg))))
+  #f)
+
+(define (Buffer-menu-buffer)
+  "Return the name of the buffer described by the current Buffer Menu line."
+  (let ((n (- (simple--count-lines (point-min) (line-beginning-position)) 1)))
+    (if (and (>= n 0) (< n (length Buffer-menu--names)))
+        (list-ref Buffer-menu--names n)
+        (user-error "No buffer on this line"))))
+
+(define-command (Buffer-menu-this-window)
+  "Select this line's buffer in this window."
+  (switch-to-buffer (Buffer-menu-buffer))
+  #f)
+
+(define-command (Buffer-menu-other-window)
+  "Select this line's buffer in another window."
+  (switch-to-buffer-other-window (Buffer-menu-buffer))
   #f)

@@ -364,6 +364,11 @@ msgid "Non-nil if the current Buffer Menu lists only file buffers."
 msgstr ""
 
 #: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu--names"
+msgid "The names of the buffers listed in *Buffer List*, in the order of its lines."
+msgstr ""
+
+#: lisp/buff-menu.scm
 msgctxt "function:buff-menu--column"
 msgid "Pad TEXT to WIDTH columns (on the left if RIGHT), then add the one space between columns."
 msgstr ""
@@ -394,6 +399,21 @@ msgid ""
 "The first column shows \".\" for the buffer you came from, then \"%\" for a read-only\n"
 "buffer and \"*\" for a modified buffer; then follow the name, size, mode and file.\n"
 "With a non-negative prefix argument FILES-ONLY, show only the buffers that visit files."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-buffer"
+msgid "Return the name of the buffer described by the current Buffer Menu line."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-this-window"
+msgid "Select this line's buffer in this window."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-other-window"
+msgid "Select this line's buffer in another window."
 msgstr ""
 
 #: lisp/compile.scm

@@ -413,7 +413,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 - [ ] `C-x x r` (rename-buffer), `C-x x u` (rename-uniquely), `C-x x n` (clone-buffer), `C-x x i` (insert-buffer), `C-x x t` (toggle-truncate-lines)。
 - [ ] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`)。今は、同じ名前になる。
-- [ ] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`s`、`x`、`u`、`~` など)。今は、選ぶだけ。
+- [ ] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`s`、`x`、`u`、`~` など)。今は、`RET`、`f`、`o`、`q`、`n`、`p`、`SPC` だけ (`lisp/buff-menu.scm`)。
 - [ ] `ibuffer`, `C-x LEFT` / `C-x RIGHT` (previous-buffer / next-buffer)。
 - [ ] `C-x 4 C-f` / `C-x 4 b` / `C-x 4 0` / `C-x 4 C-o` / `C-x 4 4` (find-file-other-window など): ほかのウィンドウで。
 - [ ] `C-x ^` / `C-x {` / `C-x }` / `C-x -` / `C-x +` (enlarge-window, shrink-window-horizontally, enlarge-window-horizontally,

@@ -67,7 +67,10 @@ fn test_eval_code_returns_the_result_or_the_error() {
                 "previous-error".to_string(),
                 "first-error".to_string(),
                 "compile-goto-error".to_string(),
-                "grep".to_string()
+                "grep".to_string(),
+                "list-buffers".to_string(),
+                "Buffer-menu-this-window".to_string(),
+                "Buffer-menu-other-window".to_string()
             ],
             keys: vec![KeyBinding {
                 key: "Ctrl-h f".to_string(),
@@ -178,6 +181,9 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
             "first-error",
             "compile-goto-error",
             "grep",
+            "list-buffers",
+            "Buffer-menu-this-window",
+            "Buffer-menu-other-window",
             "hi"
         ]
     );
@@ -281,6 +287,9 @@ fn test_load_init_file() {
             "first-error",
             "compile-goto-error",
             "grep",
+            "list-buffers",
+            "Buffer-menu-this-window",
+            "Buffer-menu-other-window",
             "hello"
         ]
     );

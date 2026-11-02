@@ -11,6 +11,9 @@ struct NoUi;
 
 impl Host for NoUi {
     fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+        if op == "local-set-key" {
+            return Ok(Value::Nil);
+        }
         Err(format!("ui: {op}"))
     }
 }
@@ -113,4 +116,38 @@ fn test_list_buffers_displays_the_list_in_another_window() {
     let editor = host.editor();
     assert_eq!(editor.window_list().len(), 2);
     assert_eq!(editor.current_buffer().name(), "*scratch*");
+}
+
+#[test]
+fn test_buffer_menu_commands_select_the_buffer_of_the_line() {
+    let (ev, host) = setup();
+    ev.eval_with("(get-buffer-create \"other\")", &host)
+        .unwrap();
+    ev.eval_with("(list-buffers-noselect)", &host).unwrap();
+    // 見出しの行では, バッファが無い
+    ev.eval_with("(switch-to-buffer \"*Buffer List*\")", &host)
+        .unwrap();
+    let err = ev
+        .eval_with("(Buffer-menu-this-window)", &host)
+        .unwrap_err();
+    assert!(err.contains("No buffer on this line"), "{err}");
+    // 2 行目 (`*scratch*`) と 3 行目 (`other`)
+    ev.eval_with("(goto-char (point-min)) (forward-line 2)", &host)
+        .unwrap();
+    ev.eval_with("(Buffer-menu-this-window)", &host).unwrap();
+    assert_eq!(host.editor().current_buffer().name(), "other");
+    ev.eval_with("(switch-to-buffer \"*Buffer List*\")", &host)
+        .unwrap();
+    ev.eval_with("(goto-char (point-min)) (forward-line 1)", &host)
+        .unwrap();
+    ev.eval_with("(Buffer-menu-other-window)", &host).unwrap();
+    assert_eq!(host.editor().current_buffer().name(), "*scratch*");
+    assert!(host.editor().window_list().len() >= 2);
+    // 一覧は読み取り専用で, 作り直せる
+    assert!(host
+        .editor()
+        .get_buffer("*Buffer List*")
+        .unwrap()
+        .read_only());
+    ev.eval_with("(list-buffers-noselect)", &host).unwrap();
 }

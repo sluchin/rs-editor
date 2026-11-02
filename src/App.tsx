@@ -3,12 +3,11 @@
  * ミニバッファにつなぎます. バッファのコマンド (C-x b, C-x k, C-x C-b) と, 終わること (C-x C-c) も受け持ちます.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import CodeEditor, { EditorHandle } from './components/CodeEditor'
 import ModeLine from './components/ModeLine'
 import Minibuffer, { MinibufferInputState, MinibufferIsearchState } from './components/Minibuffer'
-import BufferList from './components/BufferList'
 import ProjectTree from './components/ProjectTree'
 import { type Buffer, headLines } from './lib/buffer'
 import { listDirectory } from './lib/fileOps'
@@ -53,10 +52,8 @@ function App() {
     activeWindow,
     handles,
     editor,
-    currentBufferId,
     currentBuffer,
     selectWindow,
-    setCurrentBufferId,
     createNewBuffer,
     killCurrentBuffer,
     handleEditorChange,
@@ -68,8 +65,6 @@ function App() {
   const bookmarks = useBookmarks(ctx)
   const lisp = useLisp(ctx, files.saveBuffer, directories.listDirectoryInto)
   const { lispKeys } = lisp
-  // バッファの一覧 (C-x C-b) を出しているか
-  const [showBufferList, setShowBufferList] = useState(false)
   // 最後に C-x r t で入れた文字 (次の既定)
   const rectangleString = useRef<string | null>(null)
 
@@ -180,7 +175,6 @@ function App() {
   const appCommands: CommandSet = {
     actions: {
       'kill-buffer': handleKillBuffer,
-      'list-buffers': () => setShowBufferList(true),
       'describe-bindings': handleDescribeBindings,
       'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
       'execute-extended-command': handleExecuteCommand,
@@ -364,7 +358,7 @@ function App() {
                   actions={actions}
                   keyBindings={keysFor(buffer)}
                   onMessage={showMessage}
-                  disabled={minibufferState.mode !== 'message' || showBufferList}
+                  disabled={minibufferState.mode !== 'message'}
                   active={active}
                   language={mode.language}
                   indentTabs={mode.indentTabs}
@@ -401,17 +395,6 @@ function App() {
         onIsearchCommand={search.handleIsearchCommand}
         onQueryKey={handleQueryKey}
       />
-      {showBufferList && (
-        <BufferList
-          buffers={buffers}
-          currentBufferId={currentBufferId}
-          onSelectBuffer={(bufferId) => {
-            setCurrentBufferId(bufferId)
-            setShowBufferList(false)
-          }}
-          onClose={() => setShowBufferList(false)}
-        />
-      )}
     </div>
   )
 }

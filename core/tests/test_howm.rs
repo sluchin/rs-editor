@@ -909,7 +909,12 @@ fn test_buffers() {
     assert_eq!(names.len(), 3);
     assert!(names.contains(&"*scratch*".to_string()));
     assert!(names.contains(&b.to_string_lossy().into_owned()));
-    // バッファの一覧
+    // バッファの一覧 (本物の list-buffers は画面の要る操作をするので, 偽物に替える)
+    ev.eval_with(
+        "(define-command (list-buffers) (message \"list-buffers\") #f)",
+        &editor,
+    )
+    .unwrap();
     ev.run_command("howm-list-buffers", &editor).unwrap();
     assert_eq!(editor.message(), "list-buffers");
     // 下線を引き直す

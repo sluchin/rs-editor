@@ -384,10 +384,10 @@ impl Host for FakeEditor {
                 Value::Nil
             }
             "find-file-noselect" => Value::String(self.visit(&text(&args[0]))),
-            // 画面のキーとコマンド (list-buffers だけ. find-file は Lisp と重なる)
+            // 画面のキーとコマンド (kill-buffer だけ. find-file は Lisp と重なる)
             "where-is-internal" => Value::List(
                 match text(&args[0]).as_str() {
-                    "list-buffers" => vec!["C-x C-b"],
+                    "kill-buffer" => vec!["C-x k"],
                     "find-file" => vec!["C-x C-f"],
                     _ => vec![],
                 }
@@ -396,7 +396,7 @@ impl Host for FakeEditor {
                 .collect(),
             ),
             "editor-command-names" => Value::List(
-                ["list-buffers", "find-file"]
+                ["kill-buffer", "find-file"]
                     .into_iter()
                     .map(|name| Value::String(name.to_string()))
                     .collect(),

@@ -561,7 +561,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
 | `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み |  | Lisp (`lisp/dabbrev.scm`) | 済 |
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
-| `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | TypeScript (`src/App.tsx`, `lisp/buff-menu.scm`) | 9 |
+| `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | Lisp (`lisp/buff-menu.scm`) | 9 |
 | `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | TypeScript (`src/hooks/useDirectories.ts`, `lisp/dired.scm`) | 9 |
 | `dired-jump` |  | dired | `C-x C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |

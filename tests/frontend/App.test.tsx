@@ -563,19 +563,6 @@ describe('App', () => {
     expect(editor.text()).toContain('*scratch*')
   })
 
-  it('C-x C-b でバッファの一覧を出し, 選ぶか閉じる', async () => {
-    const editor = await setup()
-
-    editor.ctrlX('b')
-    expect(editor.text()).toContain('Buffer List')
-    fireEvent.click(editor.container.querySelector('.buffer-row') as Element)
-    expect(editor.text()).not.toContain('Buffer List')
-
-    editor.ctrlX('b')
-    fireEvent.click(editor.getByText('×'))
-    expect(editor.text()).not.toContain('Buffer List')
-  })
-
   it('C-x C-e で, カーソルの前の S 式を評価する (結果, エラー, 失敗, S 式なし)', async () => {
     const editor = await setup()
     await editor.type('(+ 1 2)')
@@ -1864,7 +1851,7 @@ describe('App', () => {
       })
       const names = (await send('editor-command-names')).value as string[]
       // エディタのコマンドと, 画面のコマンド
-      expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer', 'list-buffers']))
+      expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer', 'kill-buffer']))
     })
 
     it('ファイルを開く (開いていれば, そのバッファを出す)', async () => {

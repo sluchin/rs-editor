@@ -30,9 +30,6 @@ const MINIBUFFER: &str = include_str!("../../lisp/minibuffer.scm");
 const ABBREV: &str = include_str!("../../lisp/abbrev.scm");
 const DABBREV: &str = include_str!("../../lisp/dabbrev.scm");
 
-/// バッファの一覧 (Lisp).
-const BUFF_MENU: &str = include_str!("../../lisp/buff-menu.scm");
-
 /// ディレクトリの一覧 (Lisp).
 const DIRED: &str = include_str!("../../lisp/dired.scm");
 
@@ -99,7 +96,6 @@ impl App {
         evaluator.eval_with(ABBREV, &host)?;
         evaluator.eval_with(MINIBUFFER, &host)?;
         evaluator.eval_with(DABBREV, &host)?;
-        evaluator.eval_with(BUFF_MENU, &host)?;
         evaluator.eval_with(DIRED, &host)?;
         evaluator.eval_with(HELP, &host)?;
         evaluator.eval_with(XREF, &host)?;

@@ -454,6 +454,11 @@ msgid "Non-nil if the current Buffer Menu lists only file buffers."
 msgstr "今のバッファメニューが, ファイルのバッファだけを並べているなら真."
 
 #: lisp/buff-menu.scm
+msgctxt "variable:Buffer-menu--names"
+msgid "The names of the buffers listed in *Buffer List*, in the order of its lines."
+msgstr "*Buffer List* に並べたバッファの名前を, 行の順に並べたもの."
+
+#: lisp/buff-menu.scm
 msgctxt "function:buff-menu--column"
 msgid "Pad TEXT to WIDTH columns (on the left if RIGHT), then add the one space between columns."
 msgstr "TEXT を WIDTH 桁になるまで埋め (RIGHT なら左に埋め), 列の間の空白を 1 つ足す."
@@ -493,6 +498,21 @@ msgstr ""
 "最初の列は, 来たバッファに \".\" を, 次に読み出し専用のバッファに \"%\", 変更したバッファに \"*\" を出す.\n"
 "そのあとに, 名前, 大きさ, モード, ファイルが続く.\n"
 "前置引数 FILES-ONLY が 0 以上なら, ファイルを訪れているバッファだけを出す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-buffer"
+msgid "Return the name of the buffer described by the current Buffer Menu line."
+msgstr "今の Buffer Menu の行が表すバッファの名前を返す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-this-window"
+msgid "Select this line's buffer in this window."
+msgstr "この行のバッファを, このウィンドウで選ぶ."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-other-window"
+msgid "Select this line's buffer in another window."
+msgstr "この行のバッファを, 別のウィンドウで選ぶ."
 
 #: lisp/compile.scm
 msgctxt "variable:next-error-last-buffer"
