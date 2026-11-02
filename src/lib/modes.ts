@@ -111,6 +111,7 @@ export function majorMode(name: string, filePath: string | null, content: string
   // *scratch* は, Scheme を評価する (Emacs の lisp-interaction-mode)
   if (name === '*scratch*') return { name: 'Lisp Interaction', language: 'scheme', ...indent }
   if (name === '*Help*') return { name: 'Help', language: null, ...indent }
+  if (name === '*grep*') return GREP_MODE
   const mode =
     MODE_NAMES[vars.mode ?? ''] ??
     (filePath ? AUTO_MODES.find(([re]) => re.test(filePath))?.[1] : undefined)

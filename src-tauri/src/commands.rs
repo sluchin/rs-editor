@@ -544,29 +544,6 @@ pub fn list_directory_long(path: String) -> Result<String, String> {
     list_directory_long_with("ls", &path)
 }
 
-/// ディレクトリの下のファイルから, 正規表現に合う行を探します (`M-x grep`). 探すのは, 別のスレッドで行います.
-///
-/// # Arguments
-///
-/// * `pattern` - 正規表現.
-/// * `directory` - ディレクトリ.
-///
-/// # Returns
-///
-/// 合った行. 正規表現が誤っているか, ディレクトリを読めなければ, 理由の文字列の [`Err`].
-#[cfg(not(tarpaulin_include))]
-#[tauri::command]
-pub async fn grep_directory(
-    pattern: String,
-    directory: String,
-) -> Result<Vec<crate::search::GrepMatch>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::search::grep_directory(&pattern, Path::new(&directory))
-    })
-    .await
-    .map_err(|e| e.to_string())?
-}
-
 /// プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
 ///
 /// # Arguments

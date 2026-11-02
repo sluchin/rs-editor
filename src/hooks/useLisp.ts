@@ -248,7 +248,7 @@ export function useLisp(
           buffer.id === currentBufferId
             ? activeWindow
             : Object.keys(windowBuffers).find((w) => windowBuffers[w] === buffer.id)
-        const target = shown ?? displayInOtherWindow(buffer.id, false)
+        const target = shown ?? displayInOtherWindow(buffer.id)
         if (created || !shown) await waitRender()
         if (line !== null) handles.current.get(target)?.gotoLine(line)
       },

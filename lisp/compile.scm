@@ -46,6 +46,13 @@ If there is none, leave point where it was and return #f."
                (goto-char pos)
                (or (compile--line-hit) (loop))))))))
 
+(define (compile--default-directory)
+  "Return the directory `grep' starts from (that of the Dired buffer if dired.scm is loaded, else of the visited file)."
+  (if (fboundp 'dired--default-directory)
+      (dired--default-directory)
+      (let ((file (buffer-file-name)))
+        (or (and file (file-name-directory file)) "~/"))))
+
 (define (compile--visit hit other-window)
   "Visit the file and line of HIT, in another window if OTHER-WINDOW."
   (let* ((file (car hit))
@@ -131,7 +138,8 @@ If there is none, leave point where it was and return #f."
                       (grep--time)))
       (goto-char (point-min))
       (set-buffer-modified-p #f)
-      (set-buffer-read-only #t))
+      (set-buffer-read-only #t)
+      (local-set-key "RET" 'compile-goto-error))
     (compile--set-source "*grep*" directory start end)
     (display-buffer "*grep*")
     "*grep*"))
@@ -143,7 +151,7 @@ The matches are listed in the *grep* buffer; \\[next-error] visits them."
   (let* ((pattern (if (pair? args) (car args) (read-string "Run grep (regexp): ")))
          (dir (if (and (pair? args) (pair? (cdr args)))
                   (cadr args)
-                  (read-file-name "In directory: " (dired--default-directory))))
+                  (read-file-name "In directory: " (compile--default-directory))))
          (directory (let ((expanded (expand-file-name dir)))
                       (if (string-suffix? "/" expanded) expanded (string-append expanded "/"))))
          (hits (map (lambda (hit)

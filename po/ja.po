@@ -539,6 +539,11 @@ msgstr ""
 "無ければ, 点を動かさず #f を返す."
 
 #: lisp/compile.scm
+msgctxt "function:compile--default-directory"
+msgid "Return the directory `grep' starts from (that of the Dired buffer if dired.scm is loaded, else of the visited file)."
+msgstr "`grep' が始めるディレクトリを返す (Dired のバッファならそのディレクトリ, そうでなければ開いているファイルのもの)."
+
+#: lisp/compile.scm
 msgctxt "function:compile--visit"
 msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
 msgstr "HIT のファイルと行を訪ねる. OTHER-WINDOW なら別の窓で."

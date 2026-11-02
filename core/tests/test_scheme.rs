@@ -451,6 +451,11 @@ fn test_define_command_and_global_set_key() {
             "list-directory",
             "recover-this-file",
             "describe-function",
+            "next-error",
+            "previous-error",
+            "first-error",
+            "compile-goto-error",
+            "grep",
             "say-hi",
             "shout"
         ]

@@ -25,8 +25,6 @@ export type PendingAction =
   | 'dired'
   | 'read-string'
   | 'read-file-name'
-  | 'grep'
-  | 'grep-directory'
   | null
 
 /** 入力を待っているコマンドと, 入力の履歴の名前 (同じ名前のコマンドは, 履歴を分け合う). */
@@ -46,8 +44,6 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'confirm-recover': 'yes-or-no-p',
   'read-string': 'minibuffer',
   'read-file-name': 'file-name',
-  grep: 'grep',
-  'grep-directory': 'file-name',
 }
 
 /** ミニバッファの入力を確定したときに, 入力を待っていたコマンドごとに行う関数. */

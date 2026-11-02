@@ -12,7 +12,7 @@ import BufferList from './components/BufferList'
 import ProjectTree from './components/ProjectTree'
 import { type Buffer, headLines } from './lib/buffer'
 import { listDirectory } from './lib/fileOps'
-import { DIRED_MODE, GREP_MODE, majorMode } from './lib/modes'
+import { DIRED_MODE, majorMode } from './lib/modes'
 import { activeKeyBindings, toEmacsKey } from './lib/emacs'
 import type { KeyBinding } from './lib/lisp'
 import { windowRects } from './lib/windows'
@@ -342,9 +342,7 @@ function App() {
             const mode =
               buffer.directory !== undefined
                 ? DIRED_MODE
-                : buffer.grep
-                  ? GREP_MODE
-                  : majorMode(buffer.name, buffer.filePath, headLines(buffer.doc))
+                : majorMode(buffer.name, buffer.filePath, headLines(buffer.doc))
             return (
               <div
                 key={rect.id}

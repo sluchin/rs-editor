@@ -62,7 +62,12 @@ fn test_eval_code_returns_the_result_or_the_error() {
                 "find-file-read-only-other-window".to_string(),
                 "list-directory".to_string(),
                 "recover-this-file".to_string(),
-                "describe-function".to_string()
+                "describe-function".to_string(),
+                "next-error".to_string(),
+                "previous-error".to_string(),
+                "first-error".to_string(),
+                "compile-goto-error".to_string(),
+                "grep".to_string()
             ],
             keys: vec![KeyBinding {
                 key: "Ctrl-h f".to_string(),
@@ -168,6 +173,11 @@ fn test_responses_carry_the_lisp_commands_and_keys() {
             "list-directory",
             "recover-this-file",
             "describe-function",
+            "next-error",
+            "previous-error",
+            "first-error",
+            "compile-goto-error",
+            "grep",
             "hi"
         ]
     );
@@ -266,6 +276,11 @@ fn test_load_init_file() {
             "list-directory",
             "recover-this-file",
             "describe-function",
+            "next-error",
+            "previous-error",
+            "first-error",
+            "compile-goto-error",
+            "grep",
             "hello"
         ]
     );

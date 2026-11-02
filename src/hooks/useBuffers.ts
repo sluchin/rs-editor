@@ -11,10 +11,8 @@ import {
   generateBufferId,
   toText,
   uniquifyBufferNames,
-  visitFile,
 } from '../lib/buffer'
 import { getHomeDir } from '../lib/fileOps'
-import { lineStart } from '../lib/grep'
 import { fileDirectory } from '../lib/paths'
 import { type Layout, deleteWindow, splitWindow, windowIds } from '../lib/windows'
 import type { CommandSet, MinibufferContext } from './useMinibuffer'
@@ -201,20 +199,6 @@ export function useBuffers(showMessage: (text: string) => void) {
   const killCurrentBuffer = () => killBuffer(currentBuffer.id)
 
   /**
-   * バッファを, 別のバッファに置き換えます (出しているウィンドウも).
-   *
-   * @param old - 置き換えるバッファ.
-   * @param next - 新しいバッファ.
-   */
-  const replaceBuffer = (old: string, next: Buffer) => {
-    for (const handle of handles.current.values()) handle.forget(old)
-    setBuffers((prev) => prev.map((b) => (b.id === old ? next : b)))
-    setWindowBuffers((prev) =>
-      Object.fromEntries(Object.entries(prev).map(([w, b]) => [w, b === old ? next.id : b])),
-    )
-  }
-
-  /**
    * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
    * 本文は, エディタの `Text` をそのまま覚え, 別のウィンドウには, 変更だけを写します (本文の全体を写さない).
    *
@@ -235,10 +219,9 @@ export function useBuffers(showMessage: (text: string) => void) {
    * ほかのウィンドウに, バッファを出します. ウィンドウが 1 つなら, 下に分けます (Emacs の `display-buffer`).
    *
    * @param bufferId - バッファ.
-   * @param select - そのウィンドウを選ぶなら `true`.
    * @returns 出したウィンドウ.
    */
-  const displayInOtherWindow = (bufferId: string, select: boolean): string => {
+  const displayInOtherWindow = (bufferId: string): string => {
     const ids = windowIds(layout)
     let target: string
     if (ids.length === 1) {
@@ -248,33 +231,7 @@ export function useBuffers(showMessage: (text: string) => void) {
       target = ids[(ids.indexOf(activeWindowRef.current) + 1) % ids.length]
     }
     setWindowBuffers((prev) => ({ ...prev, [target]: bufferId }))
-    if (select) selectWindow(target)
     return target
-  }
-
-  /**
-   * ファイルを開いて (開いていれば, そのバッファを出して), 行の始めへ動きます.
-   *
-   * @param path - ファイルのパス.
-   * @param line - 行の番号 (1 から).
-   * @param other - ほかのウィンドウに出して, 選ぶなら `true`. `false` なら, 選んでいるウィンドウに出す.
-   */
-  const visitLocation = async (path: string, line: number, other: boolean) => {
-    let buffer = buffers.find((b) => b.filePath === path)
-    if (!buffer) {
-      const visited = (await visitFile(path)).buffer
-      setBuffers((prev) => [...prev, visited])
-      buffer = visited
-    }
-    const pos = lineStart(buffer.doc.toString(), line)
-    if (!other && buffer.id === currentBufferId) {
-      editor.current?.setCursor(pos)
-      return
-    }
-    // バッファを出してから, カーソルを置く
-    setPendingPoint(pos)
-    if (other) displayInOtherWindow(buffer.id, true)
-    else setCurrentBufferId(buffer.id)
   }
 
   /**
@@ -349,10 +306,8 @@ export function useBuffers(showMessage: (text: string) => void) {
     defaultDirectory,
     killBuffer,
     killCurrentBuffer,
-    replaceBuffer,
     handleEditorChange,
     displayInOtherWindow,
-    visitLocation,
     windowCommands,
   }
 }

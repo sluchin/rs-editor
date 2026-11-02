@@ -439,6 +439,11 @@ msgid ""
 msgstr ""
 
 #: lisp/compile.scm
+msgctxt "function:compile--default-directory"
+msgid "Return the directory `grep' starts from (that of the Dired buffer if dired.scm is loaded, else of the visited file)."
+msgstr ""
+
+#: lisp/compile.scm
 msgctxt "function:compile--visit"
 msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
 msgstr ""

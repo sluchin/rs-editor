@@ -314,7 +314,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **4. マーク, 前置引数, 実行**
 
-- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
+- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の `grep` の TypeScript 版は消した (`compile.scm` を `loadup` で読む)】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
 
 **5. S 式, 段落, ページ**
 

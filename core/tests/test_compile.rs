@@ -23,6 +23,7 @@ impl Host for Ui {
                 self.messages.lock().unwrap().push(text.clone());
                 Ok(Value::Nil)
             }
+            ("local-set-key", _) => Ok(Value::Nil),
             _ => Err(format!("ui: {op}")),
         }
     }

@@ -315,7 +315,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 14: M-x grep と、サイドバーのプロジェクトのツリー
 
-- [x] `M-x grep`: 外のコマンドを使わず、エディタ (Rust の `src-tauri/src/search.rs`) が、ディレクトリの下のファイルから探す。
+- [x] `M-x grep`: 外のコマンドを使わず、エディタ (Lisp の `lisp/compile.scm` が `rust-grep` で) が、ディレクトリの下のファイルから探す。
       正規表現とディレクトリを聞き、結果を `*grep*` バッファ (Emacs の grep-mode の形。 `ファイル:行:行の文字`) に、ほかのウィンドウに出す。
       `RET` (compile-goto-error) で、その行のファイルを、ほかのウィンドウに開く。`M-g n`、`M-g p`、`` C-x ` `` で、次・前の合った行へ。
 - [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー。 `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で、出すか消す。

@@ -5,7 +5,6 @@
 import { Text } from '@codemirror/state'
 import { diredBufferName } from './dired'
 import type { Highlight } from './faces'
-import type { GrepMatch } from './fileOps'
 import { fileNewerThan, pathExists, readFile } from './fileOps'
 import type { KeyBinding } from './lisp'
 import { autoSaveFileName, directoryFileName } from './paths'
@@ -40,8 +39,6 @@ export interface Buffer {
   keys?: KeyBinding[]
   /** 色付けする所 (Lisp の `highlight-regexp`. 正規表現は JavaScript の書き方). */
   highlights?: Highlight[]
-  /** `M-x grep` の結果のバッファなら, 探したディレクトリ (`/` で終わる) と, 合った行. */
-  grep?: { directory: string; matches: GrepMatch[] }
 }
 
 /**

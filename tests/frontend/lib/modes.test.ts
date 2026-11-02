@@ -48,6 +48,7 @@ describe('majorMode', () => {
       ...INDENT,
     })
     expect(majorMode('*Help*', null, '')).toEqual({ name: 'Help', language: null, ...INDENT })
+    expect(majorMode('*grep*', null, '')).toMatchObject({ name: 'Grep', language: null })
     expect(majorMode('a.scm', '/tmp/a.scm', '')).toEqual({
       name: 'Scheme',
       language: 'scheme',

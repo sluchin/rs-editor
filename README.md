@@ -29,7 +29,6 @@
 │   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── lib/theme.ts         # 色とフォント (set-background-color, set-frame-font)
-│   ├── lib/grep.ts          # M-x grep の結果のバッファ (*grep*)
 │   ├── App.tsx              # メインアプリケーション (フックのコマンドを、キーとミニバッファにつなぐ)
 │   └── main.tsx             # エントリーポイント
 ├── src-tauri/               # Tauri バックエンド
