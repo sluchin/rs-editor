@@ -166,7 +166,6 @@ fn test_host_operations_of_the_terminal() {
     // 端末では何もしないもの
     for op in [
         "outline-flag-region",
-        "local-set-key",
         "set-background-color",
         "set-foreground-color",
         "set-font",

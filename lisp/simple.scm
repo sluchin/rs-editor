@@ -1911,6 +1911,25 @@ With the argument N, use the Nth previous command (1 is the last)."
   (let ((expression (if (null? args) (read-string "Eval: ") (car args))))
     (message (format "%s" (eval (read expression))))))
 
+(define-command (eval-last-sexp . args)
+  "Evaluate the sexp before point and show its value in the echo area."
+  (let* ((end (point))
+         (start (save-excursion (simple--forward-sexp -1) (point))))
+    (if (>= start end) (user-error "No sexp before point"))
+    (message (format "%S" (eval (read (buffer-substring start end)))))))
+
+(define-command (electric-newline-and-maybe-indent . args)
+  "Insert a newline without indenting it, as `electric-indent-mode' makes C-j do.
+With argument N, insert N newlines."
+  (let loop ((n (simple--arg args)))
+    (when (> n 0)
+      (insert "\n")
+      (loop (- n 1)))))
+
+(define-command (abort-recursive-edit . args)
+  "Abort the command that requested this recursive edit or minibuffer input."
+  (user-error "No recursive edit is in progress"))
+
 (provide 'simple)
 
 ;;; simple.scm ends here

@@ -1,6 +1,6 @@
 //! キーの割り当て (`keymap`) のテスト.
 
-use rseditor_tui::keymap::{from_codemirror, Keymap, Lookup};
+use rseditor_core::keymap::{from_codemirror, Keymap, Lookup};
 
 fn keys(text: &str) -> Vec<String> {
     text.split(' ').map(str::to_string).collect()

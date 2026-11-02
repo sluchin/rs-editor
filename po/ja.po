@@ -6764,6 +6764,25 @@ msgid "Read an expression in the minibuffer, evaluate it, and show the value."
 msgstr "式をミニバッファで読んで, 評価して, 値を出す."
 
 #: lisp/simple.scm
+msgctxt "function:eval-last-sexp"
+msgid "Evaluate the sexp before point and show its value in the echo area."
+msgstr "カーソルの前の S 式を評価し, 値をエコー領域に出す."
+
+#: lisp/simple.scm
+msgctxt "function:electric-newline-and-maybe-indent"
+msgid ""
+"Insert a newline without indenting it, as `electric-indent-mode' makes C-j do.\n"
+"With argument N, insert N newlines."
+msgstr ""
+"字下げせずに改行を入れる (`electric-indent-mode` での C-j と同じ).\n"
+"引数 N を渡すと, N 個の改行を入れる."
+
+#: lisp/simple.scm
+msgctxt "function:abort-recursive-edit"
+msgid "Abort the command that requested this recursive edit or minibuffer input."
+msgstr "再帰編集かミニバッファの入力を求めたコマンドをやめる."
+
+#: lisp/simple.scm
 msgctxt "variable:parens-require-spaces"
 msgid ""
 "If true, add whitespace as needed when inserting parentheses.\n"
@@ -7280,6 +7299,11 @@ msgstr ""
 "点を窓の中の位置に動かす: 真ん中, 上, 下の順.\n"
 "数の引数 N があれば, 窓の N 行目の行頭へ動かす\n"
 "(負なら, 下から数える)."
+
+#: lisp/window.scm
+msgctxt "function:project-tree"
+msgid "Show or hide the tree of the files of the project in the side bar."
+msgstr "サイドバーのプロジェクトのファイルの木を, 出すか隠す."
 
 #: lisp/xref.scm
 msgctxt "variable:xref--back-stack"

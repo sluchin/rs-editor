@@ -10,9 +10,11 @@ use rseditor_core::editor::Editor;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
-use crate::keymap::{Keymap, Lookup};
 use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
+use rseditor_core::command_loop::LoopUi;
+pub use rseditor_core::command_loop::{printable, read_key_name};
+use rseditor_core::keymap::{Keymap, Lookup};
 
 /// 画面とその状態.
 pub struct UiState {
@@ -197,18 +199,6 @@ impl UiHost {
     }
 }
 
-/// キーが、入れる文字なら、その文字.
-pub fn printable(key: &str) -> Option<char> {
-    if key == "SPC" {
-        return Some(' ');
-    }
-    let mut chars = key.chars();
-    match (chars.next(), chars.next()) {
-        (Some(c), None) if !c.is_control() => Some(c),
-        _ => None,
-    }
-}
-
 /// 共通の前の部分 (`items` は、空でない).
 fn common_prefix(items: &[String]) -> String {
     let mut prefix: Vec<char> = items[0].chars().collect();
@@ -269,19 +259,6 @@ fn file_candidates(input: &str) -> Vec<String> {
         .collect();
     found.sort();
     found
-}
-
-/// キーの名前を, `read-key` が返す名前 (Lisp のコマンドが決まりにしている、画面のキーの名前) にします.
-fn read_key_name(key: &str) -> String {
-    match key {
-        "SPC" => " ",
-        "RET" => "Enter",
-        "DEL" => "Backspace",
-        "<delete>" => "Delete",
-        "ESC" => "Escape",
-        other => other,
-    }
-    .to_string()
 }
 
 /// 文字列の引数.
@@ -459,7 +436,6 @@ impl Host for UiHost {
             "highlight-regexp"
             | "unhighlight-regexp"
             | "outline-flag-region"
-            | "local-set-key"
             | "set-buffer-directory"
             | "set-background-color"
             | "set-foreground-color"
@@ -467,6 +443,23 @@ impl Host for UiHost {
             "outline-invisible-p" => Ok(Value::Boolean(false)),
             other => Err(format!("The terminal does not support {other}")),
         }
+    }
+}
+
+impl LoopUi for UiHost {
+    fn say(&self, text: &str) {
+        self.state().message = text.to_string();
+    }
+
+    fn stop_macro(&self) {
+        self.state().stop_macro();
+    }
+
+    fn set_display(&self, truncate_lines: bool, selective_display: Option<usize>) {
+        self.state().display = Display {
+            truncate_lines,
+            selective_display,
+        };
     }
 }
 

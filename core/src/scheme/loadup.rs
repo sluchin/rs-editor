@@ -24,3 +24,33 @@ pub const FILES: &[(&str, &str)] = &[
         include_str!("../../../lisp/buff-menu.scm"),
     ),
 ];
+
+/// エディタの基本のコマンド (Emacs の `simple.el` などに当たる). 画面とターミナルのアプリが, コマンドループを作るときに,
+/// この順で読む ([`crate::scheme::evaluator::Evaluator::load_editor_files`]). 評価器だけを使うテストでは読まない.
+pub const EDITOR_FILES: &[(&str, &str)] = &[
+    ("lisp/simple.scm", include_str!("../../../lisp/simple.scm")),
+    (
+        "lisp/replace.scm",
+        include_str!("../../../lisp/replace.scm"),
+    ),
+    (
+        "lisp/isearch.scm",
+        include_str!("../../../lisp/isearch.scm"),
+    ),
+    ("lisp/rect.scm", include_str!("../../../lisp/rect.scm")),
+    (
+        "lisp/register.scm",
+        include_str!("../../../lisp/register.scm"),
+    ),
+    ("lisp/abbrev.scm", include_str!("../../../lisp/abbrev.scm")),
+    (
+        "lisp/minibuffer.scm",
+        include_str!("../../../lisp/minibuffer.scm"),
+    ),
+    (
+        "lisp/dabbrev.scm",
+        include_str!("../../../lisp/dabbrev.scm"),
+    ),
+    ("lisp/xref.scm", include_str!("../../../lisp/xref.scm")),
+    ("lisp/info.scm", include_str!("../../../lisp/info.scm")),
+];

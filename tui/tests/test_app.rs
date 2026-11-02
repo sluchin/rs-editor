@@ -225,7 +225,7 @@ fn test_unbound_keys_and_prefix_keys() {
     fx.press("C-x C-z");
     assert_eq!(fx.app.message(), "C-x C-z is undefined");
     fx.press("C-]");
-    assert_eq!(fx.app.message(), "C-] is undefined");
+    assert_eq!(fx.app.message(), "No recursive edit is in progress");
     fx.press("<f5>");
     assert_eq!(fx.app.message(), "<f5> is undefined");
     // 日本語も入れられる
@@ -276,6 +276,23 @@ fn test_lisp_key_bindings_and_eval() {
         fx.app.message(),
         "There are no previous complex commands to repeat"
     );
+}
+
+#[test]
+fn test_local_keys_come_before_the_global_keys() {
+    let mut fx = Fixture::new();
+    fx.app
+        .eval("(define-command (insert-local) (insert \"local\")) (local-set-key \"C-c l\" 'insert-local) (local-set-key \"C-f\" 'insert-local)")
+        .unwrap();
+    fx.press("C-c l");
+    assert_eq!(fx.text(), "local");
+    // バッファだけのキーが, 全体のキーより先
+    fx.press("C-f");
+    assert_eq!(fx.text(), "locallocal");
+    // ほかのバッファでは, 全体のキー
+    fx.app.eval("(switch-to-buffer \"other\")").unwrap();
+    fx.press("a C-b C-f");
+    assert_eq!(fx.text(), "a");
 }
 
 #[test]

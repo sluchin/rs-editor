@@ -41,6 +41,32 @@ pub enum UndoEntry {
     Boundary,
 }
 
+/// 本文の変更 (画面に送る. 位置は, 変更する前の本文の UTF-16 の位置).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct TextChange {
+    /// 消す範囲の始め.
+    pub from: usize,
+    /// 消す範囲の終わり.
+    pub to: usize,
+    /// 入れる文字.
+    pub insert: String,
+}
+
+/// 前に取り出してからの本文の変更.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Changes {
+    /// 本文を全て読み直した (変更が多すぎたときも. 画面は本文の全体を使う).
+    Reload,
+    /// 変更の並び (古いものが先).
+    Edits(Vec<TextChange>),
+}
+
+/// 覚えておく変更の数の上限 (超えたら, 全体を読み直したことにする).
+const CHANGES_MAX: usize = 1000;
+
+/// 覚えておく変更の文字の数の上限 (UTF-8 のバイト数).
+const CHANGE_BYTES_MAX: usize = 1 << 20;
+
 /// バッファ.
 #[derive(Debug, Clone)]
 pub struct Buffer {
@@ -80,6 +106,18 @@ pub struct Buffer {
     saved_restrictions: Vec<Option<Option<(usize, usize)>>>,
     /// 読み取り専用か (Emacs の `buffer-read-only`).
     read_only: bool,
+    /// バッファだけのキー (Emacs の `local-set-key`. キーの並び (`C-c C-c`) と, コマンドの名前).
+    local_keys: Vec<(String, String)>,
+    /// dired のディレクトリ (Lisp の `set-buffer-directory`. dired でなければ `None`).
+    directory: Option<String>,
+    /// 本文の版 (書き換えるたびに増える).
+    version: u64,
+    /// 前に取り出してからの本文の変更.
+    changes: Vec<TextChange>,
+    /// 前に取り出してから, 全体を読み直したか (変更が多すぎたときも).
+    reloaded: bool,
+    /// 覚えている変更の文字の数 (UTF-8 のバイト数).
+    change_bytes: usize,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -121,7 +159,94 @@ impl Buffer {
             restriction: None,
             saved_restrictions: Vec::new(),
             read_only: false,
+            local_keys: Vec::new(),
+            directory: None,
+            version: 0,
+            changes: Vec::new(),
+            reloaded: true,
+            change_bytes: 0,
         }
+    }
+
+    /// dired のディレクトリ (dired でなければ `None`).
+    pub fn directory(&self) -> Option<&str> {
+        self.directory.as_deref()
+    }
+
+    /// dired のディレクトリを決めます (Lisp の `set-buffer-directory`).
+    pub fn set_directory(&mut self, directory: Option<String>) {
+        self.directory = directory;
+    }
+
+    /// 本文の版 (書き換えるたびに増える).
+    pub fn version(&self) -> u64 {
+        self.version
+    }
+
+    /// 前に取り出してからの本文の変更を取り出します (取り出した後は, 空になる).
+    pub fn take_changes(&mut self) -> Changes {
+        self.change_bytes = 0;
+        let changes = std::mem::take(&mut self.changes);
+        if std::mem::replace(&mut self.reloaded, false) {
+            Changes::Reload
+        } else {
+            Changes::Edits(changes)
+        }
+    }
+
+    /// 本文の変更を覚えます (書き換える前に呼ぶ. 位置は文字の位置).
+    fn note_change(&mut self, from: usize, to: usize, insert: &str) {
+        self.version += 1;
+        if self.reloaded {
+            return;
+        }
+        let from16 = self.text.char_to_utf16_cu(from);
+        let to16 = self.text.char_to_utf16_cu(to);
+        self.change_bytes += insert.len();
+        self.changes.push(TextChange {
+            from: from16,
+            to: to16,
+            insert: insert.to_string(),
+        });
+        if self.changes.len() > CHANGES_MAX || self.change_bytes > CHANGE_BYTES_MAX {
+            self.reloaded = true;
+            self.changes.clear();
+        }
+    }
+
+    /// 文字の位置を, UTF-16 の位置にします (画面のエディタの位置).
+    pub fn utf16_position(&self, pos: usize) -> usize {
+        self.text.char_to_utf16_cu(pos.min(self.text.len_chars()))
+    }
+
+    /// UTF-16 の位置を, 文字の位置にします (サロゲートの途中は, その文字の始め).
+    pub fn char_position(&self, pos16: usize) -> usize {
+        self.text
+            .utf16_cu_to_char(pos16.min(self.text.len_utf16_cu()))
+    }
+
+    /// 本文を全て読み直したことにします.
+    fn note_reload(&mut self) {
+        self.version += 1;
+        self.reloaded = true;
+        self.changes.clear();
+    }
+
+    /// バッファだけのキー (割り当てた順).
+    pub fn local_keys(&self) -> &[(String, String)] {
+        &self.local_keys
+    }
+
+    /// バッファだけのキーを割り当てます (同じキーは置き換える).
+    ///
+    /// # Arguments
+    ///
+    /// * `keys` - キーの並び (Emacs の書き方. `C-c C-c`).
+    /// * `command` - コマンドの名前.
+    pub fn set_local_key(&mut self, keys: &str, command: &str) {
+        self.local_keys.retain(|(k, _)| k != keys);
+        self.local_keys
+            .push((keys.to_string(), command.to_string()));
     }
 
     /// 強調する正規表現の並び.
@@ -157,6 +282,7 @@ impl Buffer {
 
     /// 本文を読み込みます (ファイルを開いたとき). カーソルは始め, 書き換えていない状態で, 履歴は空にする.
     pub fn load(&mut self, text: &str) {
+        self.note_reload();
         self.text = Rope::from_str(text);
         self.point = 0;
         self.mark = None;
@@ -654,6 +780,7 @@ impl Buffer {
             return Ok(());
         }
         self.ensure_writable()?;
+        self.note_change(pos, pos, text);
         self.text.insert(pos, text);
         self.deactivate_requested = true;
         self.shift_for_insert(pos, len, before_markers);
@@ -690,6 +817,7 @@ impl Buffer {
         }
         self.ensure_writable()?;
         let text = self.text.slice(from..to).to_string();
+        self.note_change(from, to, "");
         self.text.remove(from..to);
         self.deactivate_requested = true;
         self.record_point(from);

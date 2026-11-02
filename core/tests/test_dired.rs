@@ -10,21 +10,13 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::system::directory_listing;
 use rseditor_core::scheme::value::Value;
 
-/// `set-buffer-directory` で教えられたディレクトリを覚える偽物 (ほかの画面の操作は受けない).
+/// 画面の操作を受けない偽物.
 #[derive(Default)]
-struct NoUi {
-    directories: std::sync::Mutex<Vec<String>>,
-}
+struct NoUi;
 
 impl Host for NoUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
-        match (op, args.first()) {
-            ("set-buffer-directory", Some(Value::String(dir))) => {
-                self.directories.lock().unwrap().push(dir.clone());
-                Ok(Value::Nil)
-            }
-            _ => Err(format!("ui: {op}")),
-        }
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+        Err(format!("ui: {op}"))
     }
 }
 
@@ -83,9 +75,9 @@ fn test_dired_text_and_point_match_emacs() {
     assert!(text[buffer.point()..].starts_with("a.txt\n"));
     assert!(!buffer.modified());
     assert_eq!(editor.current_buffer_name(), "rseditor-dired-text");
+    // バッファに, ディレクトリを覚える (後ろに / は付けない)
+    assert_eq!(buffer.directory(), Some(path.as_str()));
     drop(editor);
-    // 画面には, ディレクトリを教える (後ろに / は付けない)
-    assert_eq!(*host.ui().directories.lock().unwrap(), vec![path]);
     // 引数は 1 つの文字列
     assert!(ev.eval_with("(set-buffer-directory)", &host).is_err());
     assert!(ev.eval_with("(set-buffer-directory 1)", &host).is_err());

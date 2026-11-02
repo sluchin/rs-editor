@@ -6025,6 +6025,23 @@ msgid "Read an expression in the minibuffer, evaluate it, and show the value."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:eval-last-sexp"
+msgid "Evaluate the sexp before point and show its value in the echo area."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:electric-newline-and-maybe-indent"
+msgid ""
+"Insert a newline without indenting it, as `electric-indent-mode' makes C-j do.\n"
+"With argument N, insert N newlines."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:abort-recursive-edit"
+msgid "Abort the command that requested this recursive edit or minibuffer input."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "variable:parens-require-spaces"
 msgid ""
 "If true, add whitespace as needed when inserting parentheses.\n"
@@ -6443,6 +6460,11 @@ msgid ""
 "Position point relative to the window: the middle, then the top, then the bottom.\n"
 "With a numeric argument N, put point at the beginning of line N of the window\n"
 "(negative: counted from the bottom)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:project-tree"
+msgid "Show or hide the tree of the files of the project in the side bar."
 msgstr ""
 
 #: lisp/xref.scm

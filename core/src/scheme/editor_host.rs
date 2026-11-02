@@ -917,6 +917,15 @@ impl<U: Host> EditorHost<U> {
                 b.match_data = data;
                 Value::Nil
             }
+            "set-buffer-directory" => {
+                b.set_directory(Some(text(op, args, 0)?.trim_end_matches('/').to_string()));
+                Value::Nil
+            }
+            "local-set-key" => {
+                let keys = crate::keymap::from_codemirror(text(op, args, 0)?);
+                b.set_local_key(&keys, text(op, args, 1)?);
+                Value::Nil
+            }
             "highlight-regexp" => {
                 let regexp = text(op, args, 0)?.to_string();
                 let face = text_opt(op, args, 1)?.unwrap_or("hi-yellow").to_string();

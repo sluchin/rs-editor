@@ -257,6 +257,15 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x w q", "quit-window"),
     ("M-x", "execute-extended-command"),
     ("M-:", "eval-expression"),
+    ("C-x C-e", "eval-last-sexp"),
+    ("M-=", "count-words-region"),
+    ("C-m", "newline"),
+    ("C-i", "indent-for-tab-command"),
+    ("C-j", "electric-newline-and-maybe-indent"),
+    ("C-M-q", "indent-sexp"),
+    ("M-@", "mark-word"),
+    ("C-]", "abort-recursive-edit"),
+    ("<f8>", "project-tree"),
     ("M-X", "execute-extended-command-for-buffer"),
     ("C-x M-:", "repeat-complex-command"),
     ("C-h f", "describe-function"),
@@ -310,6 +319,13 @@ impl Default for Keymap {
 }
 
 impl Keymap {
+    /// 割り当ての無いキーの割り当て (バッファだけのキーに使う).
+    pub fn empty() -> Self {
+        Keymap {
+            entries: Vec::new(),
+        }
+    }
+
     /// キー (`C-x C-f` のように空白で区切る) に, コマンドを割り当てます. 同じキーの割り当ては, 置き換える.
     pub fn bind(&mut self, keys: &str, command: &str) {
         let keys: Vec<String> = keys.split(' ').map(str::to_string).collect();

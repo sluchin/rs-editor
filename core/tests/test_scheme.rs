@@ -436,6 +436,7 @@ fn test_define_command_and_global_set_key() {
             "shrink-window-if-larger-than-buffer",
             "fit-window-to-buffer",
             "move-to-window-line-top-bottom",
+            "project-tree",
             "find-file",
             "find-file-other-window",
             "find-alternate-file",

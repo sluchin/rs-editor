@@ -180,6 +180,31 @@ impl Evaluator {
         })
     }
 
+    /// エディタの基本のコマンド ([`loadup::EDITOR_FILES`]) を読みます (定義したファイルも覚える).
+    ///
+    /// # Arguments
+    ///
+    /// * `host` - エディタ.
+    ///
+    /// # Errors
+    ///
+    /// 読めないとき.
+    pub fn load_editor_files(&self, host: &dyn Host) -> Result<(), String> {
+        for (file, code) in loadup::EDITOR_FILES {
+            self.run(host, |machine| {
+                machine.load_files.push(file.to_string());
+                let result = Parser::new(code).parse().and_then(|values| {
+                    values
+                        .iter()
+                        .try_for_each(|value| machine.eval(value, &self.global).map(|_| ()))
+                });
+                machine.load_files.pop();
+                result
+            })?;
+        }
+        Ok(())
+    }
+
     /// Lisp で作ったコマンド (`define-command`) を実行します.
     ///
     /// # Arguments

@@ -305,6 +305,10 @@ With a numeric argument N, put point at the beginning of line N of the window
                  (else (move-to-window-line -1)))))
     #f))
 
+(define-command (project-tree . args)
+  "Show or hide the tree of the files of the project in the side bar."
+  (toggle-project-tree))
+
 (provide 'window)
 
 ;;; window.scm ends here

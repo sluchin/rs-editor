@@ -199,6 +199,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("move-to-window-line", &[Kind::Number], 0),
     ("recenter", &[], 0),
     ("kill-emacs", &[], 0),
+    ("toggle-project-tree", &[], 0),
 ];
 
 /// 手続きの名前.
@@ -329,6 +330,7 @@ pub const NAMES: &[&str] = &[
     "move-to-window-line",
     "recenter",
     "kill-emacs",
+    "toggle-project-tree",
 ];
 
 /// 引数が決まりに合うか確かめます.
