@@ -379,11 +379,6 @@ impl<F: Front> Session<F> {
         Ok(Session { commands })
     }
 
-    /// コマンドループ (評価器とエディタ).
-    pub fn commands(&self) -> &CommandLoop<SessionUi<F>> {
-        &self.commands
-    }
-
     /// エディタの窓口.
     pub fn host(&self) -> &EditorHost<SessionUi<F>> {
         self.commands.host()
@@ -437,6 +432,20 @@ impl<F: Front> Session<F> {
         }
     }
 
+    /// ウィンドウを選び, カーソルを動かします (マウスで押した所. `anchor` が違えば, そこから選ぶ).
+    fn point(&mut self, window: usize, pos: usize, anchor: Option<usize>) {
+        let mut editor = self.host().editor();
+        if editor.select_window(window).is_ok() {
+            let buffer = editor.current_buffer_mut();
+            let pos = buffer.char_position(pos);
+            match anchor.map(|a| buffer.char_position(a)) {
+                Some(anchor) if anchor != pos => buffer.push_mark(anchor, true),
+                _ => buffer.deactivate_mark(),
+            }
+            buffer.set_point(pos);
+        }
+    }
+
     /// 入力を 1 つ処理して, 描く内容を送ります.
     pub fn handle(&mut self, input: Input) {
         match input {
@@ -449,22 +458,9 @@ impl<F: Front> Session<F> {
                 }
             }
             Input::Text { text } => self.commands.self_insert(&text),
-            Input::Point {
-                window,
-                pos,
-                anchor,
-            } => {
-                let mut editor = self.host().editor();
-                if editor.select_window(window).is_ok() {
-                    let buffer = editor.current_buffer_mut();
-                    let pos = buffer.char_position(pos);
-                    match anchor.map(|a| buffer.char_position(a)) {
-                        Some(anchor) if anchor != pos => buffer.push_mark(anchor, true),
-                        _ => buffer.deactivate_mark(),
-                    }
-                    buffer.set_point(pos);
-                }
-            }
+            // 1 行に書く (行ごとのカバレッジで, パターンの行を数えないように)
+            #[rustfmt::skip]
+            Input::Point { window, pos, anchor } => self.point(window, pos, anchor),
             Input::Command { name } => self.commands.execute(&name),
             Input::FindFile { path } => {
                 let code = format!("(find-file {})", Value::String(path));

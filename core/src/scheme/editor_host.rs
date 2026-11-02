@@ -92,10 +92,6 @@ impl<U: Host> EditorHost<U> {
 
 impl<U: Host> Host for EditorHost<U> {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
-        if !self.ui.is_native(op) {
-            return self.ui.call(op, args);
-        }
-        self.ui.before_native(op)?;
         let outcome = {
             let mut editor = self.editor.lock().unwrap();
             self.dispatch(&mut editor, op, &args)?

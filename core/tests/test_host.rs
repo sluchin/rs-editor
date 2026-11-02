@@ -117,3 +117,39 @@ fn bridge_fails_when_sending_fails_or_nobody_answers() {
     // 時間切れの後の返事は, 捨てる
     assert!(!bridge.reply(2, json!(1), None));
 }
+
+/// マーカーの無い画面 (位置の数で覚える).
+#[derive(Default)]
+struct NoMarkers {
+    calls: std::sync::Mutex<Vec<String>>,
+}
+
+impl Host for NoMarkers {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+        self.calls.lock().unwrap().push(format!(
+            "{op} {}",
+            args.iter()
+                .map(|a| a.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
+        ));
+        match op {
+            "current-buffer" => Ok(Value::String("a".to_string())),
+            "point" => Ok(Value::Number(5.0)),
+            "point-marker" => Err("No markers".to_string()),
+            _ => Ok(Value::Nil),
+        }
+    }
+}
+
+#[test]
+fn save_excursion_keeps_the_position_without_markers() {
+    let ev = rseditor_core::scheme::evaluator::Evaluator::default();
+    let host = NoMarkers::default();
+    assert_eq!(
+        ev.eval_with("(save-excursion (goto-char 1) 7)", &host),
+        Ok("7".to_string())
+    );
+    let calls = host.calls.lock().unwrap();
+    assert_eq!(calls.last().unwrap(), "goto-char 5");
+}

@@ -121,6 +121,15 @@ fn test_read_key_and_write_buffer_arguments() {
             "files--write-buffer-file expects 1 or 2 arguments"
         );
     }
+    // バッファを省くと, 今のバッファを書く
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("a.txt");
+    ev.eval_with(
+        &format!("(insert \"hi\") (files--write-buffer-file {:?})", path),
+        &editor,
+    )
+    .unwrap();
+    assert_eq!(fs::read_to_string(&path).unwrap(), "hi");
 }
 
 #[test]

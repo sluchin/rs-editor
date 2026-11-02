@@ -30,7 +30,13 @@ impl Front for FakeFront {
     fn request(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
         self.requests.lock().unwrap().push(op.to_string());
         if op == "window-top-line" {
-            return Ok(Value::Number(2.0));
+            // 答えを並べていれば, それを返す (画面がまだ描いていないときの 0 など)
+            return Ok(self
+                .answers
+                .lock()
+                .unwrap()
+                .pop_front()
+                .unwrap_or(Value::Number(2.0)));
         }
         if op.starts_with("read-") || op == "completing-read" {
             return self
@@ -397,7 +403,12 @@ fn test_auto_save_and_backup() {
     // 入力が無いまま時間が経つと, 自動保存する
     let front = Arc::new(FakeFront::default());
     let (sender, receiver) = std::sync::mpsc::channel();
+    let watcher = front.clone();
     let thread = std::thread::spawn(move || {
+        // 始めの描画 (エディタを作り終えた) を待ってから, 入力の無い時間を置く
+        while watcher.frames.lock().unwrap().is_empty() {
+            std::thread::yield_now();
+        }
         std::thread::sleep(Duration::from_millis(50));
         drop(sender);
     });
@@ -434,4 +445,23 @@ fn test_find_file_and_save_hooks() {
         .eval("(switch-to-buffer \"*scratch*\") (files--write-buffer (buffer-file-name \"a.txt\") \"a.txt\")")
         .unwrap();
     assert_eq!(session.eval("saved").unwrap(), "(\"a.txt\" \"a.txt\")");
+}
+
+#[test]
+fn test_screen_answers_and_recent_keys() {
+    let (mut session, front) = setup();
+    // 画面の一番上の行が分からなければ (0 や nil), 本文の始めから数える
+    for top in [Value::Number(0.0), Value::Nil] {
+        front.answers.lock().unwrap().push_back(top);
+        session.eval("(move-to-window-line 0)").unwrap();
+        assert_eq!(session.host().editor().current_buffer().point(), 0);
+    }
+    // キーの並びでないものは, 何もしない. 回数が数でなければ 1 回
+    session.eval("(execute-kbd-macro \"x\")").unwrap();
+    session.eval("(execute-kbd-macro '(\"a\") \"n\")").unwrap();
+    // 最近のキー (C-h l) は, 300 個まで覚える
+    for _ in 0..301 {
+        key(&mut session, "C-f");
+    }
+    assert_eq!(session.eval("(length (recent-keys))").unwrap(), "300");
 }
