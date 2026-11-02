@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 20 個: Lisp 5 個, TypeScript 15 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 20 個: Lisp 6 個, TypeScript 14 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -278,14 +278,14 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | 1 | 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため) | - | - | - |
 | 2 | 動き | 10 | - | 10 |
 | 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
-| 4 | マーク, 前置引数, 実行 | 10 | - | 10 |
+| 4 | マーク, 前置引数, 実行 | 8 | - | 8 |
 | 5 | S 式, 段落, ページ | 14 | - | 14 |
 | 6 | 字下げ, 整形, コメント | 4 | - | 4 |
 | 7 | 検索, 置換, 強調 | 6 | - | 6 |
 | 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 5 | - | 5 |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 1 | - | 1 |
 | 10 | ウィンドウ | 12 | 4 | 8 |
-| 11 | ヘルプ, xref, info | 2 | - | 2 |
+| 11 | ヘルプ, xref, info | - | - | - |
 | 12 | 入れない | 23 | 23 | - |
 
 **1. 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため)**
@@ -310,11 +310,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **3. 消す, 切る, 貼る, 元に戻す**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の `describe-key` と `describe-bindings` の TypeScript 版は消した (`help.scm` を `loadup` で読み, 画面はキーの割り当て, 最近のキー, 修飾キー付きの `read-key` を渡す)】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
 
 **4. マーク, 前置引数, 実行**
 
-- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の `grep` の TypeScript 版は消した (`compile.scm` を `loadup` で読む)】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
+- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
 
 **5. S 式, 段落, ページ**
 
@@ -351,7 +351,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 234 個: Lisp 151 個, TypeScript 83 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 234 個: Lisp 159 個, TypeScript 75 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
@@ -397,11 +397,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `move-end-of-line` |  | simple | `C-e`, `<end>` | 実装済み | `C-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `newline` | ◯ | simple | `RET` | 実装済み | `RET`, `C-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | Lisp (`lisp/compile.scm`) | 4 |
+| `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | Lisp (`lisp/compile.scm`) | 済 |
 | `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 4 |
+| `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 済 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
 | `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
@@ -561,16 +561,16 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
 | `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み |  | Lisp (`lisp/dabbrev.scm`) | 済 |
 | `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
-| `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | Lisp (`lisp/buff-menu.scm`) | 9 |
-| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | Lisp (`lisp/dired.scm`) | 9 |
+| `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | Lisp (`lisp/buff-menu.scm`) | 済 |
+| `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-jump` |  | dired | `C-x C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
 | `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
 | `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
-| `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | Lisp (`lisp/bookmark.scm`) | 9 |
-| `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | Lisp (`lisp/bookmark.scm`) | 9 |
+| `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | Lisp (`lisp/bookmark.scm`) | 済 |
+| `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | Lisp (`lisp/bookmark.scm`) | 済 |
 | `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
 | `xref-find-apropos` |  | xref | `C-M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
 | `xref-find-definitions` |  | xref | `M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
@@ -584,32 +584,32 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | Lisp (`lisp/help.scm`) | 11 |
+| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-copying` |  | help | `C-h C-c`, `<f1> C-c`, `<help> C-c` |  |  |  | 12 |
 | `describe-distribution` |  | help | `C-h C-o`, `<f1> C-o`, `<help> C-o` |  |  |  | 12 |
 | `describe-gnu-project` |  | help | `C-h g`, `<f1> g`, `<help> g` |  |  |  | 12 |
-| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | Lisp (`lisp/help.scm`) | 11 |
-| `describe-key-briefly` | ◯ | help | `C-h c`, `<f1> c`, `<help> c` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | Lisp (`lisp/help.scm`) | 済 |
+| `describe-key-briefly` | ◯ | help | `C-h c`, `<f1> c`, `<help> c` | 実装済み | `C-h c` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-no-warranty` |  | help | `C-h C-w`, `<f1> C-w`, `<help> C-w` |  |  |  | 12 |
-| `help-for-help` |  | help | `C-h ?`, `<f1> ?`, `C-h C-h`, `<f1> C-h` ほか 8 | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `help-quick-toggle` |  | help | `C-h C-q`, `<f1> C-q`, `<help> C-q` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `help-quit` |  | help | `C-h q`, `<f1> q`, `<help> q` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `search-forward-help-for-help` |  | help | `C-h C-s`, `<f1> C-s`, `<help> C-s` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `view-echo-area-messages` |  | help | `C-h e`, `<f1> e`, `<help> e` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `help-for-help` |  | help | `C-h ?`, `<f1> ?`, `C-h C-h`, `<f1> C-h` ほか 8 | 実装済み | `C-h ?`, `C-h C-h` | Lisp (`lisp/help.scm`) | 済 |
+| `help-quick-toggle` |  | help | `C-h C-q`, `<f1> C-q`, `<help> C-q` | 実装済み | `C-h C-q` | Lisp (`lisp/help.scm`) | 済 |
+| `help-quit` |  | help | `C-h q`, `<f1> q`, `<help> q` | 実装済み | `C-h q` | Lisp (`lisp/help.scm`) | 済 |
+| `search-forward-help-for-help` |  | help | `C-h C-s`, `<f1> C-s`, `<help> C-s` | 実装済み | `C-h C-s` | Lisp (`lisp/help.scm`) | 済 |
+| `view-echo-area-messages` |  | help | `C-h e`, `<f1> e`, `<help> e` | 実装済み | `C-h e` | Lisp (`lisp/help.scm`) | 済 |
 | `view-emacs-FAQ` |  | help | `C-h C-f`, `<f1> C-f`, `<help> C-f` |  |  |  | 12 |
 | `view-emacs-debugging` |  | help | `C-h C-d`, `<f1> C-d`, `<help> C-d` |  |  |  | 12 |
 | `view-emacs-news` |  | help | `C-h n`, `<f1> n`, `C-h C-n`, `<f1> C-n` ほか 2 |  |  |  | 12 |
 | `view-emacs-problems` |  | help | `C-h C-p`, `<f1> C-p`, `<help> C-p` |  |  |  | 12 |
 | `view-emacs-todo` |  | help | `C-h C-t`, `<f1> C-t`, `<help> C-t` |  |  |  | 12 |
 | `view-external-packages` |  | help | `C-h C-e`, `<f1> C-e`, `<help> C-e` |  |  |  | 12 |
-| `view-lossage` | ◯ | help | `C-h l`, `<f1> l`, `<help> l` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `view-lossage` | ◯ | help | `C-h l`, `<f1> l`, `<help> l` | 実装済み | `C-h l` | Lisp (`lisp/help.scm`) | 済 |
 | `view-order-manuals` |  | help | `C-h RET`, `<f1> RET`, `<help> RET` |  |  |  | 12 |
-| `where-is` | ◯ | help | `C-h w`, `<f1> w`, `<help> w` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `describe-command` |  | help-fns | `C-h x`, `<f1> x`, `<help> x` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `where-is` | ◯ | help | `C-h w`, `<f1> w`, `<help> w` | 実装済み | `C-h w` | Lisp (`lisp/help.scm`) | 済 |
+| `describe-command` |  | help-fns | `C-h x`, `<f1> x`, `<help> x` | 実装済み | `C-h x` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-function` | ◯ | help-fns | `C-h f`, `<f1> f`, `<help> f` | 実装済み | `C-h f` | Lisp (`lisp/help-fns.scm`) | 済 |
-| `describe-symbol` |  | help-fns | `C-h o`, `<f1> o`, `<help> o` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `describe-syntax` | ◯ | help-fns | `C-h s`, `<f1> s`, `<help> s` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
-| `describe-variable` | ◯ | help-fns | `C-h v`, `<f1> v`, `<help> v` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
+| `describe-symbol` |  | help-fns | `C-h o`, `<f1> o`, `<help> o` | 実装済み | `C-h o` | Lisp (`lisp/help.scm`) | 済 |
+| `describe-syntax` | ◯ | help-fns | `C-h s`, `<f1> s`, `<help> s` | 実装済み | `C-h s` | Lisp (`lisp/help.scm`) | 済 |
+| `describe-variable` | ◯ | help-fns | `C-h v`, `<f1> v`, `<help> v` | 実装済み | `C-h v` | Lisp (`lisp/help.scm`) | 済 |
 | `help-find-source` |  | help-fns | `C-h 4 s`, `<f1> 4 s`, `<help> 4 s` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
 | `Info-goto-emacs-command-node` |  | info | `C-h F`, `<f1> F`, `<help> F` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
 | `Info-goto-emacs-key-command-node` |  | info | `C-h K`, `<f1> K`, `<help> K` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
