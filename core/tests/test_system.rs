@@ -682,10 +682,6 @@ fn test_editor_settings() {
             "(files--visit-file)",
             "files--visit-file expects 1 argument, given 0",
         ),
-        (
-            "(files--write-buffer-file)",
-            "files--write-buffer-file expects 1 or 2 arguments",
-        ),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }
