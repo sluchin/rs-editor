@@ -23,7 +23,6 @@ import { HISTORY_LENGTH, addToHistory } from '../lib/history'
 /** ミニバッファの入力を待っているコマンド (入力を確定したときに行う). 待っていなければ `null`. */
 export type PendingAction =
   | 'execute-command'
-  | 'kill-buffer'
   | 'eval-expression'
   | 'goto-line'
   | 'confirm-exit'
@@ -44,7 +43,6 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'replace-from': 'query-replace',
   'replace-to': 'query-replace',
   'string-rectangle': 'string-rectangle',
-  'kill-buffer': 'yes-or-no-p',
   'confirm-exit': 'yes-or-no-p',
   'confirm-revert': 'yes-or-no-p',
   'confirm-recover': 'yes-or-no-p',

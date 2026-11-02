@@ -753,7 +753,8 @@ fn test_date_repeat() {
         assert_eq!(lines, wanted, "{} {}", until, every);
         assert_eq!(editor.message(), format!("{} lines", expected.len()));
         assert_eq!(editor.current_line(), format!("- [{}] 会議", date));
-        ev.eval_with("(kill-buffer)", &editor).unwrap_or_default();
+        ev.eval_with("(kill-buffer (buffer-name))", &editor)
+            .unwrap_or_default();
         editor
             .buffers
             .lock()

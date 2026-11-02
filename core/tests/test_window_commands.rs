@@ -369,3 +369,39 @@ fn test_fit_window_to_buffer() {
         "7"
     );
 }
+
+#[test]
+fn test_kill_buffer_asks_for_the_name_and_for_a_modified_file() {
+    // 名前を答えて消す (空なら今のバッファ). Lisp から名前を渡すと, 聞かずに消す
+    assert_eq!(
+        eval_with(
+            &["b"],
+            "(get-buffer-create \"b\") (kill-buffer) (list (get-buffer \"b\") (buffer-name))"
+        ),
+        "(#f \"*scratch*\")"
+    );
+    assert_eq!(
+        eval_with(
+            &[""],
+            "(get-buffer-create \"b\") (switch-to-buffer \"b\") (kill-buffer) (buffer-name)"
+        ),
+        "\"*scratch*\""
+    );
+    assert_eq!(
+        eval("(get-buffer-create \"b\") (kill-buffer \"b\") (get-buffer \"b\")"),
+        "#f"
+    );
+    // 書き換えたファイルのバッファは, 聞く (no なら消さない)
+    let dir = std::env::temp_dir().join(format!("rseditor-kill-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("a.txt");
+    std::fs::write(&path, "note").unwrap();
+    let code = format!(
+        "(set-buffer (find-file-noselect \"{}\")) (insert \"x\") (set-buffer \"*scratch*\") (kill-buffer)",
+        path.display()
+    );
+    let check = format!("{code} (list (and (get-buffer \"a.txt\") #t))");
+    assert_eq!(eval_with(&["a.txt", "no"], &check), "error: Quit");
+    assert_eq!(eval_with(&["a.txt", "yes"], &check), "(#f)");
+    std::fs::remove_dir_all(&dir).unwrap();
+}

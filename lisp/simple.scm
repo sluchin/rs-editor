@@ -1389,7 +1389,6 @@ undo starts again from the newest change, so undoing an undo redoes the change."
 (define simple--delete-window delete-window)
 (define simple--delete-other-windows delete-other-windows)
 (define simple--other-window other-window)
-(define simple--kill-buffer kill-buffer)
 
 (define-command (split-window-below . args)
   "Split the selected window into two windows, one above the other."
@@ -1410,21 +1409,6 @@ undo starts again from the newest change, so undoing an undo redoes the change."
 (define-command (other-window . args)
   "Select another window.  With argument N, select the Nth window after this one."
   (simple--other-window (simple--arg args)))
-
-(define-command (kill-buffer . args)
-  "Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.
-The default is the current buffer.  Ask before killing a modified file buffer."
-  (let* ((asked (if (null? args)
-                    (completing-read (format "Kill buffer (default %s): " (buffer-name))
-                                     (buffer-list))
-                    (car args)))
-         (name (if (equal? asked "") (buffer-name) asked)))
-    (when (and (buffer-file-name name)
-               (buffer-modified-p name)
-               (not (yes-or-no-p (format "Buffer %s modified; kill anyway? " name))))
-      (error "Quit"))
-    (with-current-buffer name (set-buffer-modified-p #f))
-    (simple--kill-buffer name)))
 
 (define (simple--modified-file-buffers)
   "Return the names of the buffers that visit a file and are modified."

@@ -131,6 +131,24 @@ If it is the only window, show another buffer in it instead."
           ((equal? (car names) name) (loop (cdr names)))
           (else (car names)))))
 
+(define window--kill-buffer kill-buffer)
+
+(define-command (kill-buffer . args)
+  "Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.
+The default is the current buffer.  Ask before killing a modified file buffer.
+Called from Lisp with a name, kill the buffer without asking (an error if it visits a modified file)."
+  (if (pair? args)
+      (window--kill-buffer (car args))
+      (let* ((asked (completing-read (format "Kill buffer (default %s): " (buffer-name))
+                                     (buffer-list)))
+             (name (if (equal? asked "") (buffer-name) asked)))
+        (when (and (buffer-file-name name)
+                   (buffer-modified-p name)
+                   (not (yes-or-no-p (format "Buffer %s modified; kill anyway? " name))))
+          (error "Quit"))
+        (with-current-buffer name (set-buffer-modified-p #f))
+        (window--kill-buffer name))))
+
 (define-command (kill-buffer-and-window . args)
   "Kill the current buffer and delete the selected window."
   (let ((window (selected-window)))

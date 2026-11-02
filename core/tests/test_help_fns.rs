@@ -46,7 +46,7 @@ fn test_describe_function_interactively() {
     assert_eq!(*editor.prompts.lock().unwrap(), vec!["Describe function: "]);
     // 候補は, Lisp と Rust の関数と, 画面のコマンド (重ならず, 名前の順)
     let completions = editor.completions.lock().unwrap().clone();
-    for name in ["car", "describe-function", "find-file", "kill-buffer"] {
+    for name in ["car", "describe-function", "find-file", "goto-line"] {
         assert_eq!(
             completions.iter().filter(|c| *c == name).count(),
             1,
@@ -86,9 +86,9 @@ fn test_describe_function_kinds() {
     let (ev, editor) = setup();
     // 画面 (TypeScript) のコマンド
     assert_eq!(
-        describe(&ev, &editor, "kill-buffer"),
-        "kill-buffer is an interactive built-in command.\n\n\
-         It is bound to C-x k.\n\n\
+        describe(&ev, &editor, "goto-line"),
+        "goto-line is an interactive built-in command.\n\n\
+         It is bound to M-g g.\n\n\
          Not documented.\n"
     );
     // 組み込みの手続き (Rust)
@@ -252,9 +252,9 @@ fn test_help_builtins() {
     );
     // エディタに聞く手続き
     assert_eq!(
-        ev.eval_with("(where-is-internal 'kill-buffer)", &editor)
+        ev.eval_with("(where-is-internal 'goto-line)", &editor)
             .unwrap(),
-        "(\"C-x k\")"
+        "(\"M-g g\")"
     );
     assert_eq!(
         ev.eval("(where-is-internal \"save-buffer\")").unwrap_err(),

@@ -418,6 +418,7 @@ fn test_define_command_and_global_set_key() {
             "next-buffer",
             "previous-buffer",
             "delete-windows-on",
+            "kill-buffer",
             "kill-buffer-and-window",
             "quit-window",
             "scroll-other-window",

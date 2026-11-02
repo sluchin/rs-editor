@@ -210,7 +210,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `indent-to` |  |  |  |  |  |
 | `indent-to-column` |  |  |  |  |  |
 | `insert-char` |  | `C-x 8 RET` |  |  |  |
-| `kill-buffer` | ◯ | `C-x k` | 実装済み | `C-x k` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) |
+| `kill-buffer` | ◯ | `C-x k` | 実装済み | `C-x k` | Lisp (`lisp/window.scm`) |
 | `kill-emacs` |  |  |  |  |  |
 | `kill-local-variable` | ◯ |  |  |  |  |
 | `kill-process` |  |  |  |  |  |

@@ -6348,15 +6348,6 @@ msgid "Select another window.  With argument N, select the Nth window after this
 msgstr "別の窓を選ぶ. 引数 N があれば, この窓から N 番目の窓を選ぶ."
 
 #: lisp/simple.scm
-msgctxt "function:kill-buffer"
-msgid ""
-"Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.\n"
-"The default is the current buffer.  Ask before killing a modified file buffer."
-msgstr ""
-"引数の名前のバッファを消す. 対話的に呼ぶと, ミニバッファで名前を読む.\n"
-"既定は今のバッファ. 書き換えたファイルのバッファは, 聞いてから消す."
-
-#: lisp/simple.scm
 msgctxt "function:simple--modified-file-buffers"
 msgid "Return the names of the buffers that visit a file and are modified."
 msgstr "ファイルを訪れていて, 書き換えたバッファの名前を返す."
@@ -7123,6 +7114,17 @@ msgstr ""
 msgctxt "function:window--show-buffer"
 msgid "Show buffer NAME in WINDOW; if WINDOW is the selected one, make the buffer current too."
 msgstr "バッファ NAME を WINDOW に出す. WINDOW が選んでいる窓なら, そのバッファを今のバッファにもする."
+
+#: lisp/window.scm
+msgctxt "function:kill-buffer"
+msgid ""
+"Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.\n"
+"The default is the current buffer.  Ask before killing a modified file buffer.\n"
+"Called from Lisp with a name, kill the buffer without asking (an error if it visits a modified file)."
+msgstr ""
+"引数の名前のバッファを消す. 対話的に呼ぶと, ミニバッファで名前を読む.\n"
+"既定は今のバッファ. 書き換えたファイルのバッファは, 聞いてから消す.\n"
+"Lisp から名前を渡して呼ぶと, 聞かずに消す (書き換えたファイルのバッファならエラー)."
 
 #: lisp/window.scm
 msgctxt "function:kill-buffer-and-window"

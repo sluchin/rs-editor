@@ -56,7 +56,6 @@ function App() {
     editor,
     currentBuffer,
     selectWindow,
-    killCurrentBuffer,
     handleEditorChange,
   } = bufs
   const ctx: AppContext = { ...minibuffer, ...bufs }
@@ -87,22 +86,6 @@ function App() {
       void unlisten.then((f) => f())
     }
   }, [setPendingAction, setMinibufferState])
-
-  /**
-   * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消してよいか聞きます.
-   */
-  const handleKillBuffer = () => {
-    if (currentBuffer.modified) {
-      setPendingAction('kill-buffer')
-      setMinibufferState({
-        mode: 'input',
-        prompt: `Buffer ${currentBuffer.name} modified; kill anyway? (yes or no) `,
-        input: '',
-      })
-    } else {
-      killCurrentBuffer()
-    }
-  }
 
   /**
    * アプリを終わります (C-x C-c). 保存していないバッファがあれば, 終わってよいか聞きます.
@@ -158,7 +141,6 @@ function App() {
   // 画面のコマンドのうち, ここで受け持つもの
   const appCommands: CommandSet = {
     actions: {
-      'kill-buffer': handleKillBuffer,
       'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
       'execute-extended-command': handleExecuteCommand,
       'goto-line': handleGotoLine,
@@ -167,10 +149,6 @@ function App() {
       'abort-recursive-edit': () => abortMinibuffer('No recursive edit is in progress'),
     },
     submit: {
-      'kill-buffer': (value) => {
-        if (value.trim() === 'yes') killCurrentBuffer()
-        showMessage('')
-      },
       'execute-command': (value) => {
         showMessage('')
         if (!editor.current?.run(value.trim())) showMessage(`Undefined command: ${value}`)

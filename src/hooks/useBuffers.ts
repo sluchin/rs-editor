@@ -147,11 +147,6 @@ export function useBuffers(showMessage: (text: string) => void) {
   }
 
   /**
-   * 選んでいるウィンドウのバッファを消します (保存していなくても消す). 全て消したら, *scratch* を作り直します.
-   */
-  const killCurrentBuffer = () => killBuffer(currentBuffer.id)
-
-  /**
    * ウィンドウで書き換えた本文を, バッファに覚えます. 同じバッファを出している別のウィンドウにも写します.
    * 本文は, エディタの `Text` をそのまま覚え, 別のウィンドウには, 変更だけを写します (本文の全体を写さない).
    *
@@ -256,7 +251,6 @@ export function useBuffers(showMessage: (text: string) => void) {
     setCurrentText,
     defaultDirectory,
     killBuffer,
-    killCurrentBuffer,
     handleEditorChange,
     displayInOtherWindow,
     windowCommands,

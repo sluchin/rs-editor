@@ -265,6 +265,40 @@ async function setup() {
   return { ...view, editor, key, ctrlX, input, settle, submit, type, doc, cursor, text }
 }
 
+/**
+ * 評価器の頼みを送る関数と, 最後の返事を返す関数を作ります.
+ *
+ * @returns 送る関数と, 返事を返す関数.
+ */
+const requests = () => {
+  const handler = mockedListen.mock.calls[0][1]
+  let id = 100
+  /** 頼みを送って, 返事を待つ. */
+  const send = async (op: string, ...args: unknown[]) => {
+    const sent = ++id
+    await act(async () => {
+      handler({ event: 'editor-request', id: 0, payload: { id: sent, op, args } })
+    })
+    await vi.waitFor(() =>
+      expect(
+        mockedInvoke.mock.calls.some(
+          ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
+        ),
+      ).toBe(true),
+    )
+    const [, reply] = mockedInvoke.mock.calls.find(
+      ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
+    ) as [string, { value: unknown; error: string | null }]
+    return reply
+  }
+  /** ファイルを開いて, そのバッファを出す (lisp/files.scm の find-file と同じ順). */
+  const findFile = async (path: string) => {
+    const opened = await send('find-file-noselect', path)
+    return opened.error === null ? send('pop-to-buffer-same-window', opened.value) : opened
+  }
+  return { send, findFile }
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -402,7 +436,7 @@ describe('App', () => {
     expect(editor.text()).toContain('[3/3]')
 
     // 消すと, 残ったバッファの名前を戻す
-    editor.ctrlX('k', false)
+    await requests().send('kill-buffer')
     editor.ctrlX('b', false)
     await editor.submit('index.ts')
     expect(editor.text()).toContain('-:--- index.ts ')
@@ -511,66 +545,6 @@ describe('App', () => {
     editor.ctrlX('b', false)
     await editor.submit('nothing')
     expect(editor.text()).toContain('-:--- nothing [3/3]')
-  })
-
-  it('C-x k で, 変更のないバッファを消し, 最後の 1 つを消すと *scratch* を作り直す', async () => {
-    const editor = await setup()
-    mocked.pathExists.mockResolvedValueOnce(false)
-    editor.ctrlX('f')
-    await editor.submit('/tmp/c.scm')
-    expect(editor.text()).toContain('[2/2]')
-
-    editor.ctrlX('k', false)
-    expect(editor.text()).not.toContain('[2/2]')
-    expect(editor.text()).toContain('*scratch*')
-
-    editor.ctrlX('k', false)
-    expect(editor.text()).toContain('*scratch*')
-  })
-
-  it('C-x k は, 変更したバッファを消してよいか聞き, yes でだけ消す', async () => {
-    const editor = await setup()
-    mocked.pathExists.mockResolvedValueOnce(true)
-    mocked.readFile.mockResolvedValueOnce('x')
-    editor.ctrlX('f')
-    await editor.submit('/tmp/a.scm')
-    await editor.type('changed')
-
-    editor.ctrlX('k', false)
-    expect(editor.text()).toContain('Buffer a.scm modified; kill anyway? (yes or no)')
-    await editor.submit('no')
-    expect(editor.doc()).toBe('changed')
-
-    editor.ctrlX('k', false)
-    await editor.submit('yes')
-    expect(editor.text()).not.toContain('a.scm')
-    expect(editor.doc()).toContain(';; This buffer is for text that is not saved')
-  })
-
-  it('ファイルのない *scratch* は, 変更しても, C-x C-c では聞かない', async () => {
-    const editor = await setup()
-    await editor.type('changed')
-    await act(async () => editor.ctrlX('c'))
-    expect(editor.text()).not.toContain('Modified buffers exist')
-    expect(close).toHaveBeenCalled()
-  })
-
-  it('変更したバッファの C-x k を C-g でやめたあと, 検索を Enter で確定しても, バッファは消さない', async () => {
-    const editor = await setup()
-    mocked.pathExists.mockResolvedValueOnce(true)
-    mocked.readFile.mockResolvedValueOnce('x')
-    editor.ctrlX('f')
-    await editor.submit('/tmp/a.scm')
-    await editor.type('changed')
-    editor.ctrlX('k', false)
-    fireEvent.keyDown(editor.input(), { key: 'g', ctrlKey: true })
-
-    editor.key('s', { ctrl: true })
-    await act(async () => {
-      fireEvent.keyDown(editor.input(), { key: 'Enter' })
-    })
-    expect(editor.doc()).toBe('changed')
-    expect(editor.text()).toContain('a.scm')
   })
 
   it('C-x C-e で, カーソルの前の S 式を評価する (結果, エラー, 失敗, S 式なし)', async () => {
@@ -903,9 +877,9 @@ describe('App', () => {
     fireEvent.change(editor.input(), { target: { value: 'find-fi' } })
     fireEvent.keyDown(editor.input(), { key: 'Tab' })
     expect(editor.input().value).toBe('find-file')
-    fireEvent.change(editor.input(), { target: { value: 'kill-bu' } })
+    fireEvent.change(editor.input(), { target: { value: 'goto-l' } })
     fireEvent.keyDown(editor.input(), { key: 'Tab' })
-    expect(editor.input().value).toBe('kill-buffer')
+    expect(editor.input().value).toBe('goto-line')
     fireEvent.keyDown(editor.input(), { key: 'Escape' })
 
     editor.ctrlX('b', false)
@@ -974,7 +948,7 @@ describe('App', () => {
       })
     await act(async () => editor.ctrlX('3', false))
     // 両方のウィンドウで出している *scratch* を消すと, 両方とも新しい *scratch* を出す
-    await act(async () => editor.ctrlX('k', false))
+    await requests().send('kill-buffer')
     expect(modeLine(0)).toContain('*scratch*')
     expect(modeLine(1)).toContain('*scratch*')
 
@@ -988,7 +962,7 @@ describe('App', () => {
 
     // 2 つ目で other を消すと, 2 つ目だけ, 別のバッファを出す
     await act(async () => editor.ctrlX('o', false))
-    await keyIn2(['x', true], ['k', false])
+    await requests().send('kill-buffer')
     expect(modeLine(0)).toContain('*scratch*')
     expect(modeLine(1)).toContain('*scratch*')
     expect(views()[1].state.doc.toString()).toBe('edited')
@@ -1630,40 +1604,6 @@ describe('App', () => {
       delete document.documentElement.dataset.backgroundMode
     })
 
-    /**
-     * 評価器の頼みを送る関数と, 最後の返事を返す関数を作ります.
-     *
-     * @returns 送る関数と, 返事を返す関数.
-     */
-    const requests = () => {
-      const handler = mockedListen.mock.calls[0][1]
-      let id = 100
-      /** 頼みを送って, 返事を待つ. */
-      const send = async (op: string, ...args: unknown[]) => {
-        const sent = ++id
-        await act(async () => {
-          handler({ event: 'editor-request', id: 0, payload: { id: sent, op, args } })
-        })
-        await vi.waitFor(() =>
-          expect(
-            mockedInvoke.mock.calls.some(
-              ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
-            ),
-          ).toBe(true),
-        )
-        const [, reply] = mockedInvoke.mock.calls.find(
-          ([name, reply]) => name === 'editor_reply' && (reply as { id: number }).id === sent,
-        ) as [string, { value: unknown; error: string | null }]
-        return reply
-      }
-      /** ファイルを開いて, そのバッファを出す (lisp/files.scm の find-file と同じ順). */
-      const findFile = async (path: string) => {
-        const opened = await send('find-file-noselect', path)
-        return opened.error === null ? send('pop-to-buffer-same-window', opened.value) : opened
-      }
-      return { send, findFile }
-    }
-
     it('バッファを出してから, 続きの操作をする', async () => {
       const editor = await setup()
       const { send } = requests()
@@ -1705,7 +1645,7 @@ describe('App', () => {
       })
       const names = (await send('editor-command-names')).value as string[]
       // エディタのコマンドと, 画面のコマンド
-      expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer', 'kill-buffer']))
+      expect(names).toEqual(expect.arrayContaining(['forward-char', 'save-buffer']))
     })
 
     it('キーの割り当てと, 最近のキーを答える (key-binding, all-key-bindings, recent-keys)', async () => {
