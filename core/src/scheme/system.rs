@@ -31,6 +31,7 @@ pub const NAMES: &[&str] = &[
     "make-directory",
     "make-temp-file",
     "delete-file",
+    "copy-file",
     "delete-directory",
     "directory-files-recursively",
     "grep-files",
@@ -152,6 +153,24 @@ pub(crate) fn call(
             std::fs::remove_file(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
             Ok(Value::Nil)
         }),
+        "copy-file" => {
+            // (copy-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
+            let (from, to, ok) = match args.as_slice() {
+                [from, to] => (from, to, false),
+                [from, to, ok] => (from, to, ok.is_true()),
+                _ => return Some(Err("copy-file expects 2 or 3 arguments".to_string())),
+            };
+            (|| {
+                let from = expand_args(machine, name, std::slice::from_ref(from))?;
+                let to = expand_args(machine, name, std::slice::from_ref(to))?;
+                if !ok && to.exists() {
+                    return Err(format!("File already exists: {}", to.display()));
+                }
+                std::fs::copy(&from, &to)
+                    .map(|_| Value::Nil)
+                    .map_err(|e| format!("{}: {}", from.display(), e))
+            })()
+        }
         "delete-directory" => {
             // 2 つ目の引数が真なら, 中身ごと消す
             let (path, recursive) = match args.as_slice() {

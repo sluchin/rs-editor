@@ -440,9 +440,9 @@ fn test_find_file_and_save_hooks() {
     key(&mut session, "C-x C-s");
     assert_eq!(session.eval("saved").unwrap(), "(\"a.txt\")");
     assert_eq!(last(&front).message, format!("Wrote {path}"));
-    // 別のバッファを書いても, そのバッファで動かす
+    // 別のバッファから保存しても (save-some-buffers など), そのバッファで動かす
     session
-        .eval("(switch-to-buffer \"*scratch*\") (files--write-buffer (buffer-file-name \"a.txt\") \"a.txt\")")
+        .eval("(switch-to-buffer \"*scratch*\") (with-current-buffer \"a.txt\" (set-buffer-modified-p #t) (basic-save-buffer))")
         .unwrap();
     assert_eq!(session.eval("saved").unwrap(), "(\"a.txt\" \"a.txt\")");
 }

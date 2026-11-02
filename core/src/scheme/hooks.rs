@@ -2,7 +2,7 @@
 //!
 //! フックは, 手続き (または手続きの名前の記号) のリストを値に持つ変数です.
 //! ファイルを開いたとき (`find-file-hook`) と, 保存したとき (`after-save-hook`) は,
-//! `lisp/files.scm` の `find-file-noselect` と `files--write-buffer` が, そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
+//! `lisp/files.scm` の `find-file-noselect` と `basic-save-buffer` が, そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
 
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;

@@ -211,6 +211,8 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-155 | 初期設定ファイルに `(add-hook 'after-save-hook (lambda () (message "saved")))` | 書き換えて `C-x C-s` | `saved` と出る |
 | IT-156 | `a.txt` を開いた | 別のエディタで `a.txt` を書き換え、`M-x` `revert-buffer` RET `yes` RET | 新しい中身になる。`C-/` で元に戻せる |
 | IT-157 | サイドバーを出す (`F8`) | ファイルを押す | 選んでいるウィンドウに開く。今のファイルが強調される |
+| IT-158 | `~/work/new.txt` が無い | `C-x C-f` `~/work/new.txt` RET、文字を足して `C-x C-s`、もう一度足して `C-x C-s` | 初めの保存では `~/work/new.txt~` はできず、2 度目の保存でできる (Emacs と同じ) |
+| IT-159 | `*scratch*` に文字を足した | `C-x C-w` `~/work/w.txt` RET | `~/work/w.txt` に書かれ、バッファの名前が `w.txt` になる |
 
 ### 4.15 速さ
 

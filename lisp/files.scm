@@ -3,24 +3,48 @@
 ;; Emacs の files.el に当たるもの. 起動のときに読む (core/src/scheme/loadup.rs).
 ;; コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の interactive に当たる).
 
-;; バッファを作る, 書く組み込みの手続き (files--visit-file, files--write-buffer-file) を包んで, フックを動かす.
+(define auto-mode-alist
+  '(("\\.el$" elisp)
+    ("\\.(scm|ss|sld|sls|rkt)$" scheme))
+  "List of (REGEXP DIALECT) to choose the syntax dialect (major mode) of a visited file.
+The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental.")
 
-(define (find-file-noselect filename)
-  "Return a buffer visiting file FILENAME, creating one if none already exists.
-A new buffer runs `find-file-hook' in it."
-  (let* ((before (buffer-list))
-         (name (files--visit-file filename)))
-    (unless (member name before)
-      (with-current-buffer name (run-hooks 'find-file-hook)))
-    name))
+(define (set-auto-mode)
+  "Select the syntax dialect (major mode) of the current buffer from its file name.
+See `auto-mode-alist'."
+  (let ((file (buffer-file-name)))
+    (let loop ((modes auto-mode-alist))
+      (cond ((or (not file) (null? modes)) (set-syntax-dialect 'fundamental))
+            ((regexp-match (car (car modes)) file) (set-syntax-dialect (cadr (car modes))))
+            (else (loop (cdr modes)))))))
 
-(define (files--write-buffer filename . buffer)
-  "Write BUFFER (the current buffer if omitted) into FILENAME, and make it visit the file.
-The first save after visiting a file keeps the old file as a backup (FILE~),
-and the auto save file (#FILE#) is deleted. Then run `after-save-hook' in the buffer."
-  (let ((name (if (null? buffer) (buffer-name) (car buffer))))
-    (files--write-buffer-file filename name)
-    (with-current-buffer name (run-hooks 'after-save-hook))))
+(define (find-buffer-visiting filename)
+  "Return the buffer visiting file FILENAME, or #f if there is none."
+  (let ((file (expand-file-name filename)))
+    (let ((names (filter (lambda (name) (equal? (buffer-file-name name) file)) (buffer-list))))
+      (and (pair? names) (car names)))))
+
+(define (find-file-noselect filename . args)
+  "Read file FILENAME into a buffer and return the buffer.
+If a buffer exists visiting FILENAME, return that one.  A new buffer is named after the file,
+its syntax dialect is chosen by `set-auto-mode', and `find-file-hook' runs in it.
+If FILENAME does not exist, the new buffer is empty and visits it."
+  (let ((file (expand-file-name filename)))
+    (when (file-directory? file)
+      (error (format "%s is a directory" file)))
+    (or (find-buffer-visiting file)
+        (let ((name (generate-new-buffer (file-name-nondirectory file))))
+          (with-current-buffer name
+            (if (file-exists? file)
+                ;; 読めなければ, 作ったバッファを消して失敗する
+                (condition-case e
+                    (insert-file-contents file #t)
+                  (error (kill-buffer name) (error (cadr e))))
+                (files--set-buffer-file-name file))
+            (set-auto-mode)
+            (run-hooks 'find-file-hook)
+            ;; フックが名前を変えることもある
+            (buffer-name))))))
 
 (define-command (find-file . args)
   "Edit file FILENAME.
@@ -59,10 +83,54 @@ Interactively, read FILENAME in the minibuffer; the initial input is the current
   "Insert the contents of file FILENAME at point.
 Point stays before the inserted text.
 Interactively, read FILENAME in the minibuffer with file name completion."
-  (let ((filename (if (null? args) (read-file-name "Insert file: ") (car args)))
-        (pos (point)))
-    (insert (read-file-string filename))
-    (goto-char pos)))
+  (insert-file-contents (if (null? args) (read-file-name "Insert file: ") (car args)))
+  #f)
+
+(define (set-visited-file-name filename . args)
+  "Change the name of the file visited in the current buffer to FILENAME.
+The buffer is renamed after the file, and marked as modified (the new file is not saved yet).
+If FILENAME is #f, the buffer visits no file."
+  (let ((file (and filename (expand-file-name filename))))
+    (files--set-buffer-file-name file)
+    (when file
+      (let ((base (file-name-nondirectory file)))
+        (unless (equal? base (buffer-name))
+          (rename-buffer base #t)))
+      (set-buffer-modified-p #t))))
+
+(define (make-backup-file-name file)
+  "Return the backup file name of FILE (FILE~)."
+  (string-append file "~"))
+
+(define (backup-buffer)
+  "Make a backup of the file visited by the current buffer, if appropriate.
+This is done before the first save after visiting the file: the old file is copied to its
+backup file name (`make-backup-file-name').  Nothing is done if the file does not exist yet."
+  (let ((file (buffer-file-name)))
+    (when (and file
+               (not (files--buffer-backed-up-p))
+               (file-exists? file)
+               (not (file-directory? file)))
+      (copy-file file (make-backup-file-name file) #t)
+      (files--set-buffer-backed-up #t))))
+
+(define (delete-auto-save-file-if-necessary)
+  "Delete the auto save file of the current buffer, if it exists."
+  (let ((auto (make-auto-save-file-name)))
+    (when (and auto (file-exists? auto))
+      (delete-file auto))))
+
+(define (basic-save-buffer . args)
+  "Save the current buffer in its visited file, if it has been modified.
+Make a backup first (`backup-buffer'), delete the auto save file after writing,
+and run `after-save-hook'.  If the buffer visits no file, read a file name."
+  (cond ((not (buffer-file-name)) (files--write-file (read-file-name "Save file: ")))
+        ((buffer-modified-p)
+         (backup-buffer)
+         (write-region #f #f (buffer-file-name) #f #t)
+         (delete-auto-save-file-if-necessary)
+         (run-hooks 'after-save-hook))
+        (else (message "(No changes need to be saved)"))))
 
 (define (files--write-file filename)
   "Write the current buffer into FILENAME, and make the buffer visit it.
@@ -71,7 +139,9 @@ Ask before overwriting an existing file other than the visited one."
            (file-exists? filename)
            (not (y-or-n-p (format "File ‘%s’ exists; overwrite? " filename))))
       (message "Canceled")
-      (files--write-buffer filename)))
+      (begin
+        (set-visited-file-name filename)
+        (basic-save-buffer))))
 
 (define-command (write-file . args)
   "Write the current buffer into file FILENAME, and make the buffer visit it.
@@ -83,9 +153,7 @@ Interactively, read FILENAME in the minibuffer with file name completion."
   "Save the current buffer in its file, if it is modified.
 If the buffer visits no file, read a file name in the minibuffer and write it there.
 The first save after visiting a file keeps the old file as a backup (FILE~)."
-  (cond ((not (buffer-file-name)) (files--write-file (read-file-name "Save file: ")))
-        ((buffer-modified-p) (files--write-buffer (buffer-file-name)))
-        (else (message "(No changes need to be saved)"))))
+  (basic-save-buffer))
 
 (define-command (save-some-buffers)
   "Save some modified file-visiting buffers, asking about each one.
@@ -102,13 +170,13 @@ Answer y or SPC to save it, n or DEL to skip it, ! to save it and all the rest,
                      (file (buffer-file-name name))
                      (key (read-key (format "Save file %s? (y, n, !, ., q) " file))))
                 (cond ((member key '("y" " "))
-                       (files--write-buffer file name)
+                       (with-current-buffer name (basic-save-buffer))
                        (loop (cdr names) (+ saved 1)))
                       ((member key '("n" "Backspace" "Delete")) (loop (cdr names) saved))
                       ((equal? key "!")
-                       (for-each (lambda (name) (files--write-buffer (buffer-file-name name) name))
+                       (for-each (lambda (name) (with-current-buffer name (basic-save-buffer)))
                                  names))
-                      ((equal? key ".") (files--write-buffer file name))
+                      ((equal? key ".") (with-current-buffer name (basic-save-buffer)))
                       ((member key '("q" "Enter")) (loop '() saved))
                       (else (loop names saved)))))))))
 

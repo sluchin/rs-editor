@@ -96,8 +96,13 @@ impl Host for Recorder {
             .unwrap()
             .push(format!("{} {}", op, shown.join(" ")).trim().to_string());
         Ok(match op {
-            "buffer-file-name" | "read-string" | "read-file-name" | "completing-read"
-            | "find-file-noselect" => self.answer.clone(),
+            "buffer-file-name"
+            | "read-string"
+            | "read-file-name"
+            | "completing-read"
+            | "generate-new-buffer"
+            | "buffer-name"
+            | "current-buffer" => self.answer.clone(),
             "buffer-list" => Value::List([self.answer.clone()].into()),
             _ => Value::Nil,
         })
@@ -615,12 +620,20 @@ fn test_editor_settings() {
             "set-foreground-color \"red\"".to_string(),
             "set-font nil 10".to_string(),
             "local-set-key \"Ctrl-c a\" \"foo\"".to_string(),
-            // find-file は, Lisp (lisp/files.scm) で書いたもの (新しいバッファか, 前の一覧と比べる)
+            // find-file は, Lisp (lisp/files.scm) で書いたもの: 訪れているバッファを探し, 無ければ作って訪れる
             "buffer-list".to_string(),
+            "buffer-file-name \"/home/a.txt\"".to_string(),
+            "generate-new-buffer \"x.txt\"".to_string(),
+            "current-buffer".to_string(),
+            "set-buffer \"/home/a.txt\"".to_string(),
             format!(
-                "find-file-noselect {:?}",
+                "files--set-buffer-file-name {:?}",
                 home.join("x.txt").to_string_lossy()
             ),
+            "buffer-file-name".to_string(),
+            "set-syntax-dialect fundamental".to_string(),
+            "buffer-name".to_string(),
+            "set-buffer \"/home/a.txt\"".to_string(),
             "pop-to-buffer-same-window \"/home/a.txt\"".to_string(),
             "pop-to-buffer-same-window \"*howm*\"".to_string(),
             "buffer-file-name".to_string(),
@@ -677,11 +690,7 @@ fn test_editor_settings() {
             "(pop-to-buffer-same-window 1)",
             "pop-to-buffer-same-window expects strings",
         ),
-        ("(find-file 1)", "files--visit-file expects strings"),
-        (
-            "(files--visit-file)",
-            "files--visit-file expects 1 argument, given 0",
-        ),
+        ("(find-file 1)", "expand-file-name expects strings"),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }
@@ -711,7 +720,18 @@ fn test_buffer_operations() {
             "display-buffer \"b\"".to_string(),
             "display-buffer \"b\" 3".to_string(),
             "buffer-list".to_string(),
-            format!("find-file-noselect {:?}", home.join("y").to_string_lossy()),
+            "buffer-file-name \"b\"".to_string(),
+            "generate-new-buffer \"y\"".to_string(),
+            "current-buffer".to_string(),
+            "set-buffer \"b\"".to_string(),
+            format!(
+                "files--set-buffer-file-name {:?}",
+                home.join("y").to_string_lossy()
+            ),
+            "buffer-file-name".to_string(),
+            "set-syntax-dialect fundamental".to_string(),
+            "buffer-name".to_string(),
+            "set-buffer \"b\"".to_string(),
             "highlight-regexp \"a+\" nil nil".to_string(),
             "unhighlight-regexp \"a+\"".to_string(),
             "unhighlight-regexp #t".to_string(),
@@ -1048,7 +1068,8 @@ fn test_read_file_name() {
         vec![
             "read-file-name \"Find file: \" \"\"",
             "buffer-list",
-            "find-file-noselect \"/home/b.txt\"",
+            // 訪れているバッファがあれば, それ
+            "buffer-file-name \"/home/b.txt\"",
             "pop-to-buffer-same-window \"/home/b.txt\"",
         ]
     );

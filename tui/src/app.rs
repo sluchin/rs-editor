@@ -8,7 +8,6 @@ use rseditor_core::editor::Editor;
 use rseditor_core::keymap::Keymap;
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
-use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
 use crate::render::{render_with, Display};
@@ -54,9 +53,11 @@ impl App {
         let app = App { commands, state };
         // 最後のファイルを出す (Emacs と同じ)
         for file in files {
-            let host = app.host();
-            let name = host.call("find-file-noselect", vec![Value::String(file.clone())])?;
-            host.call("pop-to-buffer-same-window", vec![name])?;
+            // Lisp の find-file-noselect (find-file-hook を動かす)
+            app.eval(&format!(
+                "(pop-to-buffer-same-window (find-file-noselect {}))",
+                Value::String(file.clone())
+            ))?;
         }
         Ok(app)
     }

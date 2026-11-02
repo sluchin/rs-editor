@@ -573,28 +573,40 @@ fn test_files() {
         eval("(kill-buffer \"a.scm\")"),
         "ERR Buffer a.scm is modified"
     );
-    assert_eq!(eval("(files--write-buffer (buffer-file-name))"), "nil");
+    eval("(basic-save-buffer)");
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "x(a b)\n");
     assert_eq!(
         host.ui().messages.lock().unwrap().last().unwrap(),
         &format!("Wrote {}", path.display())
     );
     assert_eq!(eval("(buffer-modified-p)"), "#f");
-    // 別の名前に書く. 書けなければ失敗
+    // 別の名前に書く (訪れるファイルは変えない). 範囲, 文字列, 足すこと. 書けなければ失敗
     let out = dir.path().join("out.txt");
-    assert_eq!(
-        eval(&format!(
-            "(files--write-buffer {})",
-            quoted(out.to_str().unwrap())
-        )),
-        "nil"
-    );
+    let o = quoted(out.to_str().unwrap());
+    assert_eq!(eval(&format!("(write-region #f #f {o})")), "nil");
     assert_eq!(std::fs::read_to_string(&out).unwrap(), "x(a b)\n");
-    assert!(eval("(files--write-buffer \"/nonexistent-dir/x/y\")").starts_with("ERR "));
+    assert_eq!(eval("(buffer-file-name)"), quoted(path.to_str().unwrap()));
+    eval(&format!(
+        "(write-region 3 1 {o}) (write-region \"!\" #f {o} #t)"
+    ));
+    assert_eq!(std::fs::read_to_string(&out).unwrap(), "x(!");
+    assert!(eval("(write-region #f #f \"/nonexistent-dir/x/y\")").starts_with("ERR "));
+    assert!(eval("(write-region #f #f \"/nonexistent-dir/x/y\" #t)").starts_with("ERR "));
+    // VISIT が文字列なら, そのファイルを訪れる
+    eval(&format!(
+        "(insert \"y\") (write-region #f #f {o} #f \"~/visited\")"
+    ));
     assert_eq!(
-        eval("(files--write-buffer \"/tmp/zz\" \"nope\")"),
-        "ERR No such buffer: nope"
+        eval("(list (buffer-file-name) (buffer-modified-p))"),
+        format!(
+            "({} #f)",
+            quoted(&format!("{}/visited", dirs::home_dir().unwrap().display()))
+        )
     );
+    eval(&format!("(write-region #f #f {o} #f #t)"));
+    assert_eq!(eval("(buffer-file-name)"), o);
+    assert_eq!(std::fs::read_to_string(&out).unwrap(), "xy(a b)\n");
+    assert!(eval("(write-region #f #f)").starts_with("ERR write-region expects 3 to 5 arguments"));
     assert_eq!(eval("(kill-buffer \"a.scm\")"), "#t");
     // 本文を置き換える: 同じなら変えない. 前後の同じ所は残す
     eval("(set-buffer \"p.txt\") (goto-char 3)");

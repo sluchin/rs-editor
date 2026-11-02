@@ -239,7 +239,7 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
 - [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`。`read-file-name`、`find-file-noselect`、`pop-to-buffer-same-window` を使う)。
 - [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
       `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
-      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      `files--write-buffer` (バッファをファイルに書く。バックアップと自動保存は核の `core/src/files.rs`) を足した。
+      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      ファイルの読み書きの組み込み (Emacs の C と同じ `insert-file-contents`、`write-region`、`do-auto-save`。`core/src/files.rs`) を足した。開くこと、保存すること、バックアップは、Emacs と同じく Lisp (`find-file-noselect`、`basic-save-buffer`、`backup-buffer`)。
       バッファを出す組み込みは、Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
 - [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
       組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。

@@ -122,7 +122,7 @@ pub const NAMES: &[&str] = &[
     "read-file-name",
     "read-key",
     "execute-kbd-macro",
-    "files--write-buffer-file",
+    "write-region",
     "files--set-buffer-text",
     "buffer-list",
     "buffer-modified-p",
@@ -130,7 +130,7 @@ pub const NAMES: &[&str] = &[
     "kill-new",
     "completing-read",
     "display-buffer",
-    "files--visit-file",
+    "insert-file-contents",
     "highlight-regexp",
     "unhighlight-regexp",
     "outline-flag-region",
@@ -734,13 +734,17 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             machine.host.call(name, args)?;
             Ok(Value::Nil)
         }
-        "files--visit-file" => {
-            // (files--visit-file FILENAME): ファイルを訪れるバッファ (フックを動かすのは, Lisp の find-file-noselect)
-            let [path] = fixed::<1>(name, args)?;
-            let path = machine.expand_file_name(string(name, &path)?);
-            machine
-                .host
-                .call("find-file-noselect", vec![Value::String(path)])
+        "insert-file-contents" => {
+            // (insert-file-contents FILENAME [VISIT]): ファイルの名前は, 広げてから渡す
+            let (path, rest) = match args.as_slice() {
+                [path, rest @ ..] if rest.len() <= 1 => (path, rest),
+                _ => return Err("insert-file-contents expects 1 or 2 arguments".to_string()),
+            };
+            let path = Value::String(machine.expand_file_name(string(name, path)?));
+            machine.host.call(
+                name,
+                std::iter::once(path).chain(rest.iter().cloned()).collect(),
+            )
         }
         "set-buffer-modified-p" => {
             let [flag] = fixed::<1>(name, args)?;
@@ -810,21 +814,17 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 .call(name, vec![text, Value::Boolean(modified.is_true())])?;
             Ok(Value::Nil)
         }
-        "files--write-buffer-file" => {
-            // (files--write-buffer-file FILENAME [BUFFER]): バッファ (省くと, 今のバッファ) を, ファイルに書く
-            // (フックを動かすのは, Lisp の files--write-buffer)
-            let (path, buffer) = match args.as_slice() {
-                [path] => (path, None),
-                [path, buffer] => (path, Some(string(name, buffer)?.to_string())),
-                _ => return Err("files--write-buffer-file expects 1 or 2 arguments".to_string()),
-            };
-            let path = machine.expand_file_name(string(name, path)?);
-            let args = std::iter::once(path)
-                .chain(buffer)
-                .map(Value::String)
-                .collect();
-            machine.host.call("files--write-buffer", args)?;
-            Ok(Value::Nil)
+        "write-region" => {
+            // (write-region START END FILENAME [APPEND VISIT]): ファイルの名前 (と, VISIT の文字列) は, 広げてから渡す
+            if !(3..=5).contains(&args.len()) {
+                return Err("write-region expects 3 to 5 arguments".to_string());
+            }
+            let mut args = args;
+            args[2] = Value::String(machine.expand_file_name(string(name, &args[2])?));
+            if let Some(Value::String(visit)) = args.get(4) {
+                args[4] = Value::String(machine.expand_file_name(visit));
+            }
+            machine.host.call(name, args)
         }
         "set-frame-font" => {
             let [font] = fixed::<1>(name, args)?;

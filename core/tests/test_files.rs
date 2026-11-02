@@ -112,24 +112,37 @@ fn test_read_key_and_write_buffer_arguments() {
             .unwrap_err(),
         "read-key expects 0 to 2 arguments"
     );
-    for code in [
-        "(files--write-buffer-file)",
-        "(files--write-buffer-file \"a\" \"b\" \"c\")",
+    // ファイルの読み書きの組み込み (Emacs の C の関数) の引数
+    for (code, error) in [
+        (
+            "(write-region #f #f)",
+            "write-region expects 3 to 5 arguments",
+        ),
+        (
+            "(insert-file-contents)",
+            "insert-file-contents expects 1 or 2 arguments",
+        ),
+        (
+            "(insert-file-contents \"a\" #t 1)",
+            "insert-file-contents expects 1 or 2 arguments",
+        ),
     ] {
-        assert_eq!(
-            ev.eval_with(code, &editor).unwrap_err(),
-            "files--write-buffer-file expects 1 or 2 arguments"
-        );
+        assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error);
     }
-    // バッファを省くと, 今のバッファを書く
+    // ファイルの名前と, 訪れるファイル (VISIT が文字列) の名前は, 広げる
+    let home = dirs::home_dir().unwrap();
     let dir = tempdir().unwrap();
     let path = dir.path().join("a.txt");
     ev.eval_with(
-        &format!("(insert \"hi\") (files--write-buffer-file {:?})", path),
+        &format!("(insert \"hi\") (write-region #f #f {:?} #f \"~/x\")", path),
         &editor,
     )
     .unwrap();
     assert_eq!(fs::read_to_string(&path).unwrap(), "hi");
+    assert_eq!(
+        editor.buffer().file,
+        Some(home.join("x").to_string_lossy().into_owned())
+    );
 }
 
 #[test]

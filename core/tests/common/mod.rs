@@ -28,6 +28,8 @@ pub struct FakeBuffer {
     pub faces: HashMap<String, (Option<String>, Option<usize>)>,
     /// 隠した範囲 (始めと終わり. 1 から数える).
     pub folded: Vec<(usize, usize)>,
+    /// 訪れてから, バックアップを作ったか.
+    pub backed_up: bool,
 }
 
 /// 偽のエディタ (バッファを名前で持つ).
@@ -205,6 +207,21 @@ impl FakeEditor {
             },
         );
         path.to_string()
+    }
+
+    /// 今のバッファの名前を, ファイルのパスにする (偽のエディタでは, ファイルのバッファの名前はパス).
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - パス.
+    pub fn name_after_file(&self, path: &str) {
+        let old = self.name();
+        let mut buffers = self.buffers.lock().unwrap();
+        if old != path && !buffers.contains_key(path) {
+            let buffer = buffers.remove(&old).unwrap();
+            buffers.insert(path.to_string(), buffer);
+            *self.current.lock().unwrap() = path.to_string();
+        }
     }
 
     /// カーソルを, 次か前の行の始めに動かす.
@@ -392,7 +409,83 @@ impl Host for FakeEditor {
                 self.displayed.lock().unwrap().push((text(&args[0]), line));
                 Value::Nil
             }
-            "find-file-noselect" => Value::String(self.visit(&text(&args[0]))),
+            // ファイルを開く (find-file-noselect は Lisp. バッファを作り, 中身を読む)
+            "generate-new-buffer" => {
+                let base = text(&args[0]);
+                let mut buffers = self.buffers.lock().unwrap();
+                let name = (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base}<{n}>")
+                        }
+                    })
+                    .find(|name| !buffers.contains_key(name))
+                    .unwrap();
+                buffers.insert(
+                    name.clone(),
+                    FakeBuffer {
+                        point: 1,
+                        ..Default::default()
+                    },
+                );
+                Value::String(name)
+            }
+            "insert-file-contents" => {
+                // カーソルの後ろに入れる. VISIT なら, そのファイルを訪れる
+                let path = text(&args[0]);
+                let content = fs::read_to_string(&path).map_err(|e| format!("{path}: {e}"))?;
+                let visit = args.get(1).is_some_and(Value::is_non_nil);
+                self.with_buffer(|b| {
+                    let at = b.point - 1;
+                    b.text.splice(at..at, content.chars());
+                    if visit {
+                        b.file = Some(path.clone());
+                        b.modified = false;
+                    }
+                });
+                if visit {
+                    self.name_after_file(&path);
+                }
+                Value::List(
+                    vec![
+                        Value::String(path),
+                        Value::Number(content.chars().count() as f64),
+                    ]
+                    .into_iter()
+                    .collect(),
+                )
+            }
+            "files--set-buffer-file-name" => {
+                let file = args.first().filter(|v| v.is_non_nil()).map(text);
+                self.with_buffer(|b| b.file = file.clone());
+                if let Some(file) = file {
+                    self.name_after_file(&file);
+                }
+                Value::Nil
+            }
+            "set-syntax-dialect" => Value::Nil,
+            "rename-buffer" => {
+                // 同じ名前があれば, 番号を付ける
+                let base = text(&args[0]);
+                let old = self.name();
+                let mut buffers = self.buffers.lock().unwrap();
+                let buffer = buffers.remove(&old).unwrap();
+                let name = (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base}<{n}>")
+                        }
+                    })
+                    .find(|name| !buffers.contains_key(name))
+                    .unwrap();
+                buffers.insert(name.clone(), buffer);
+                *self.current.lock().unwrap() = name.clone();
+                Value::String(name)
+            }
             // 画面のキーとコマンド (goto-line だけ. find-file は Lisp と重なる)
             "where-is-internal" => Value::List(
                 match text(&args[0]).as_str() {
@@ -483,16 +576,28 @@ impl Host for FakeEditor {
                 self.with_buffer(|b| b.keys.insert(key, command));
                 Value::Nil
             }
-            "files--write-buffer" => {
-                // バッファ (省くと, 今のバッファ) を書いて, そのファイルのバッファにする
-                let path = text(&args[0]);
-                let name = self.named(&args[1..]);
-                let mut buffers = self.buffers.lock().unwrap();
-                let buffer = buffers.get_mut(&name).unwrap();
-                fs::write(&path, buffer.text.iter().collect::<String>())
-                    .map_err(|e| e.to_string())?;
-                buffer.file = Some(path.clone());
-                buffer.modified = false;
+            // 保存する (basic-save-buffer は Lisp). 書くのは, バッファの全て
+            "files--buffer-backed-up-p" => Value::Boolean(self.buffer().backed_up),
+            "files--set-buffer-backed-up" => {
+                let flag = args[0].is_non_nil();
+                self.with_buffer(|b| b.backed_up = flag);
+                Value::Nil
+            }
+            "write-region" => {
+                let path = text(&args[2]);
+                let content: String = self.buffer().text.iter().collect();
+                fs::write(&path, content).map_err(|e| e.to_string())?;
+                let visit = match args.get(4) {
+                    Some(Value::String(file)) => Some(file.clone()),
+                    Some(v) if v.is_non_nil() => Some(path.clone()),
+                    _ => None,
+                };
+                if let Some(file) = visit {
+                    self.with_buffer(|b| {
+                        b.file = Some(file);
+                        b.modified = false;
+                    });
+                }
                 *self.message.lock().unwrap() = format!("Wrote {}", path);
                 Value::Nil
             }

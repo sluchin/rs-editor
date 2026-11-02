@@ -1,15 +1,16 @@
-//! バッファをファイルに書くこと (Emacs の files.el のうち, バックアップと自動保存).
+//! ファイルの読み書きの組み込み (Emacs の C の `insert-file-contents`, `write-region`, `do-auto-save` に当たる).
 //!
-//! - 訪れてから初めて保存するとき, 前のファイルをバックアップ (`名前~`) に残します.
-//! - 書き換えたファイルのバッファは, 時々, 自動保存のファイル (同じディレクトリの `#名前#`) に書きます.
-//!   保存したら, 自動保存のファイルを消します.
+//! ファイルを開くこと (`find-file-noselect`), 保存すること (`basic-save-buffer`), バックアップ (`backup-buffer`) と
+//! フックは, Emacs と同じく Lisp (`lisp/files.scm`) で書きます. ここは, 本文とファイルの間で読み書きするだけです.
 
+use std::io::Write;
 use std::path::Path;
 
 use crate::atomic::write_atomic;
+use crate::buffer::Buffer;
 use crate::editor::Editor;
 
-/// 自動保存のファイルの名前を返します (同じディレクトリの `#名前#`. Emacs の `make-auto-save-file-name`).
+/// 自動保存のファイルの名前を返します (同じディレクトリの `#名前#`. Lisp の `make-auto-save-file-name` と同じ).
 ///
 /// # Arguments
 ///
@@ -22,47 +23,106 @@ pub fn auto_save_file_name(path: &str) -> String {
     format!("{dir}#{base}#")
 }
 
-/// バックアップのファイルの名前を返します (`名前~`. Emacs の `make-backup-file-name`).
-///
-/// # Arguments
-///
-/// * `path` - ファイルのパス.
-pub fn backup_file_name(path: &str) -> String {
-    format!("{path}~")
-}
-
-/// バッファをファイルに書きます (Lisp の `files--write-buffer`). バッファはそのファイルを訪れ, 書き換えていないことになります.
-///
-/// 訪れてから初めて書くとき, ファイルがあれば, バックアップに写します. 書いたら, 自動保存のファイルを消します.
-///
-/// # Arguments
-///
-/// * `editor` - エディタ.
-/// * `name` - バッファの名前.
-/// * `path` - ファイルのパス.
-///
-/// # Errors
-///
-/// バッファが無いとき, バックアップかファイルを書けないとき.
-pub fn write_buffer(editor: &mut Editor, name: &str, path: &str) -> Result<(), String> {
-    let buffer = editor
-        .get_buffer_mut(name)
-        .ok_or_else(|| format!("No such buffer: {name}"))?;
-    // 別のファイルに書く (write-file) ときは, 訪れ直したことにする
+/// バッファがファイルを訪れることにします. 書き換えていないことにし, バックアップを作り直せるようにします.
+fn visit(buffer: &mut Buffer, path: &str) {
     if buffer.file() != Some(path) {
         buffer.set_backed_up(false);
     }
-    if !buffer.backed_up() && Path::new(path).is_file() {
-        let backup = backup_file_name(path);
-        std::fs::copy(path, &backup).map_err(|e| format!("{backup}: {e}"))?;
-    }
-    write_atomic(Path::new(path), buffer.text().as_bytes()).map_err(|e| format!("{path}: {e}"))?;
-    buffer.set_backed_up(true);
     buffer.set_file(Some(path.to_string()));
     buffer.set_modified(false);
     let version = buffer.version();
     buffer.set_auto_saved_version(version);
-    let _ = std::fs::remove_file(auto_save_file_name(path));
+}
+
+/// ファイルの中身を, カーソルの後ろに入れます (Emacs の `insert-file-contents`). カーソルは, 入れた文字の前に残ります.
+///
+/// # Arguments
+///
+/// * `buffer` - バッファ.
+/// * `path` - ファイルのパス.
+/// * `visit_file` - 真なら, バッファがそのファイルを訪れ, 書き換えていないことにする (Emacs の VISIT).
+///
+/// # Returns
+///
+/// 入れた文字の数.
+///
+/// # Errors
+///
+/// ファイルを読めないとき, バッファが読み取り専用のとき.
+pub fn insert_file_contents(
+    buffer: &mut Buffer,
+    path: &str,
+    visit_file: bool,
+) -> Result<usize, String> {
+    let content = std::fs::read_to_string(path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            format!("Opening input file: No such file or directory, {path}")
+        } else {
+            format!("{path}: {e}")
+        }
+    })?;
+    if visit_file && buffer.is_empty() {
+        // 空のバッファに訪れるときは, 元に戻す履歴に残さずに読み込む (ファイルを開くとき. 大きなファイルでも速い)
+        buffer.load(&content);
+    } else {
+        let point = buffer.point();
+        buffer.insert_at(point, &content)?;
+        buffer.set_point(point);
+    }
+    if visit_file {
+        visit(buffer, path);
+    }
+    Ok(content.chars().count())
+}
+
+/// 書く本文 (Emacs の `write-region` の START と END).
+pub enum Region<'a> {
+    /// バッファの全て (START が nil).
+    Whole,
+    /// バッファの範囲 (文字の位置).
+    Range(usize, usize),
+    /// 文字列 (START が文字列).
+    Text(&'a str),
+}
+
+/// 本文をファイルに書きます (Emacs の `write-region`). 足さないときは, 原子的に書きます.
+///
+/// # Arguments
+///
+/// * `buffer` - バッファ.
+/// * `region` - 書く本文.
+/// * `path` - ファイルのパス.
+/// * `append` - 真なら, ファイルの後ろに足す.
+/// * `visit_file` - 訪れるファイル (Emacs の VISIT が `t` か文字列). バッファはそのファイルを訪れ, 書き換えていないことになる.
+///
+/// # Errors
+///
+/// 範囲が本文の外のとき, ファイルを書けないとき.
+pub fn write_region(
+    buffer: &mut Buffer,
+    region: Region,
+    path: &str,
+    append: bool,
+    visit_file: Option<&str>,
+) -> Result<(), String> {
+    let text = match region {
+        Region::Whole => buffer.text(),
+        Region::Range(start, end) => buffer.substring(start.min(end), start.max(end))?,
+        Region::Text(text) => text.to_string(),
+    };
+    let written = if append {
+        std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(path)
+            .and_then(|mut file| file.write_all(text.as_bytes()))
+    } else {
+        write_atomic(Path::new(path), text.as_bytes())
+    };
+    written.map_err(|e| format!("{path}: {e}"))?;
+    if let Some(file) = visit_file {
+        visit(buffer, file);
+    }
     Ok(())
 }
 

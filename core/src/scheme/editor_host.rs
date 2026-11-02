@@ -7,12 +7,12 @@
 //! 位置は Emacs と同じく 1 から数えます (核の [`Buffer`] は 0 から数えるので, ここで 1 を足し引きします).
 
 use std::collections::HashMap;
-use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::buffer::{Buffer, UndoEntry};
 use crate::casefiddle::{self, Case};
 use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MAX};
+use crate::files;
 use crate::indent::{self, Config as IndentConfig, Plan};
 use crate::paragraph::{forward_paragraph, forward_sentence};
 use crate::scheme::host::Host;
@@ -299,15 +299,6 @@ fn class_char(class: Class) -> &'static str {
     }
 }
 
-/// ファイルの拡張子から, 構文の方言を決めます.
-pub(crate) fn dialect_of(path: &str) -> Dialect {
-    match Path::new(path).extension().and_then(|e| e.to_str()) {
-        Some("el") => Dialect::Elisp,
-        Some("scm" | "ss" | "sld" | "sls" | "rkt") => Dialect::Scheme,
-        _ => Dialect::Fundamental,
-    }
-}
-
 /// 元に戻す記録を, 評価器の値にします (Emacs の `buffer-undo-list`. ドット対は無いので, 2 つの要素のリスト).
 /// 入れた文字は `(開始 終了)`, 消した文字は `(文字 位置)` (カーソルが終わりにあったときは, 位置が負), 区切りは nil.
 fn entry_value(entry: &UndoEntry) -> Value {
@@ -552,10 +543,6 @@ impl<U: Host> EditorHost<U> {
                     .map(|b| Value::String(b.to_string()))
                     .ok_or_else(|| format!("No such window: {w}"))?
             }
-            "find-file-noselect" => {
-                let path = text(op, args, 0)?;
-                return Ok(Some(Outcome::Value(Value::String(visit(ed, path)?))));
-            }
             "pop-to-buffer-same-window" => {
                 let name = text(op, args, 0)?;
                 ed.get_buffer_create(name);
@@ -585,11 +572,74 @@ impl<U: Host> EditorHost<U> {
                 }
                 Value::Nil
             }
-            "files--write-buffer" => {
+            "insert-file-contents" => {
+                // (insert-file-contents FILENAME [VISIT]): 返すのは (FILENAME 文字の数)
                 let path = text(op, args, 0)?.to_string();
-                let name = buffer_name(ed, op, args, 1)?;
-                crate::files::write_buffer(ed, &name, &path)?;
-                return Ok(Some(Outcome::Message(format!("Wrote {path}"), Value::Nil)));
+                let visit = args.get(1).is_some_and(Value::is_non_nil);
+                let b = ed.current_buffer_mut();
+                b.ensure_writable()?;
+                let count = files::insert_file_contents(b, &path, visit)?;
+                Value::List(
+                    vec![Value::String(path), Value::Number(count as f64)]
+                        .into_iter()
+                        .collect(),
+                )
+            }
+            "write-region" => {
+                // (write-region START END FILENAME [APPEND VISIT]): START が nil なら全て, 文字列なら, その文字列
+                let path = text(op, args, 2)?.to_string();
+                let append = args.get(3).is_some_and(Value::is_non_nil);
+                let visit = match args.get(4) {
+                    Some(Value::String(file)) => Some(file.clone()),
+                    Some(v) if v.is_non_nil() => Some(path.clone()),
+                    _ => None,
+                };
+                let region = match args.first() {
+                    Some(Value::String(s)) => files::Region::Text(s),
+                    Some(v) if v.is_non_nil() => {
+                        files::Region::Range(pos(op, args, 0)?, pos(op, args, 1)?)
+                    }
+                    _ => files::Region::Whole,
+                };
+                files::write_region(
+                    ed.current_buffer_mut(),
+                    region,
+                    &path,
+                    append,
+                    visit.as_deref(),
+                )?;
+                // Emacs は, 訪れるファイルの名前を出す
+                return Ok(Some(Outcome::Message(
+                    format!("Wrote {}", visit.unwrap_or(path)),
+                    Value::Nil,
+                )));
+            }
+            "files--set-buffer-file-name" => {
+                // (files--set-buffer-file-name FILENAME): バッファが訪れるファイルを変える (Emacs の (setq buffer-file-name ...)).
+                // nil なら, 訪れない. 変えたら, バックアップを作り直せるようにする
+                let file = text_opt(op, args, 0)?.map(str::to_string);
+                let b = ed.current_buffer_mut();
+                if b.file() != file.as_deref() {
+                    b.set_backed_up(false);
+                }
+                b.set_file(file);
+                Value::Nil
+            }
+            "files--buffer-backed-up-p" => Value::Boolean(ed.current_buffer().backed_up()),
+            "files--set-buffer-backed-up" => {
+                let flag = args.first().is_some_and(Value::is_non_nil);
+                ed.current_buffer_mut().set_backed_up(flag);
+                Value::Nil
+            }
+            "do-auto-save" => {
+                // 書いたものがあれば, Emacs と同じく知らせる
+                if files::auto_save(ed) > 0 {
+                    return Ok(Some(Outcome::Message(
+                        "Auto-saving...done".to_string(),
+                        Value::Nil,
+                    )));
+                }
+                Value::Nil
             }
             "push-mark" => {
                 let name = ed.current_buffer_name().to_string();
@@ -1319,30 +1369,4 @@ fn replace_text_inner(b: &mut Buffer, new: &str) {
     let _ = b.delete_region(start, old.len() - end);
     let inserted: String = new[start..new.len() - end].iter().collect();
     let _ = b.insert_at(start, &inserted);
-}
-
-/// ファイルを訪れるバッファを返します (Emacs の `find-file-noselect`). 既に訪れていれば, そのバッファ.
-/// 無ければ, ファイルを読んで作る (ファイルが無ければ, 空のバッファ).
-fn visit(ed: &mut Editor, path: &str) -> Result<String, String> {
-    if let Some(existing) = ed
-        .buffer_list()
-        .into_iter()
-        .find(|name| ed.get_buffer(name).and_then(Buffer::file) == Some(path))
-    {
-        return Ok(existing);
-    }
-    let content = match std::fs::read_to_string(path) {
-        Ok(content) => content,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(e) => return Err(format!("{path}: {e}")),
-    };
-    let base = Path::new(path)
-        .file_name()
-        .map_or(path.to_string(), |n| n.to_string_lossy().into_owned());
-    let name = ed.generate_new_buffer(&base);
-    let buffer = ed.get_buffer_mut(&name).unwrap();
-    buffer.load(&content);
-    buffer.set_file(Some(path.to_string()));
-    buffer.set_dialect(dialect_of(path));
-    Ok(name)
 }

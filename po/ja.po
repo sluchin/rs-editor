@@ -837,24 +837,40 @@ msgid "List the directory of the current Dired buffer again, and return #t.  Ret
 msgstr "今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す."
 
 #: lisp/files.scm
-msgctxt "function:find-file-noselect"
+msgctxt "variable:auto-mode-alist"
 msgid ""
-"Return a buffer visiting file FILENAME, creating one if none already exists.\n"
-"A new buffer runs `find-file-hook' in it."
+"List of (REGEXP DIALECT) to choose the syntax dialect (major mode) of a visited file.\n"
+"The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental."
 msgstr ""
-"ファイル FILENAME を訪れるバッファを返す. 無ければ作る.\n"
-"新しいバッファでは, そのバッファで `find-file-hook' を動かす."
+"訪れたファイルの構文の方言 (メジャーモード) を選ぶ (REGEXP DIALECT) のリスト.\n"
+"ファイルの名前に合う初めの REGEXP (Rust の regex の書き方) で決まる. 合わなければ Fundamental."
 
 #: lisp/files.scm
-msgctxt "function:files--write-buffer"
+msgctxt "function:set-auto-mode"
 msgid ""
-"Write BUFFER (the current buffer if omitted) into FILENAME, and make it visit the file.\n"
-"The first save after visiting a file keeps the old file as a backup (FILE~),\n"
-"and the auto save file (#FILE#) is deleted. Then run `after-save-hook' in the buffer."
+"Select the syntax dialect (major mode) of the current buffer from its file name.\n"
+"See `auto-mode-alist'."
 msgstr ""
-"バッファ BUFFER (省くと, 今のバッファ) を FILENAME に書き, そのファイルを訪れる.\n"
-"訪れてから初めて保存するときは, 前のファイルをバックアップ (FILE~) に残し,\n"
-"自動保存のファイル (#FILE#) を消す. それから, そのバッファで `after-save-hook' を動かす."
+"今のバッファの構文の方言 (メジャーモード) を, ファイルの名前から選ぶ.\n"
+"`auto-mode-alist' を見よ."
+
+#: lisp/files.scm
+msgctxt "function:find-buffer-visiting"
+msgid "Return the buffer visiting file FILENAME, or #f if there is none."
+msgstr "ファイル FILENAME を訪れているバッファを返す. 無ければ #f."
+
+#: lisp/files.scm
+msgctxt "function:find-file-noselect"
+msgid ""
+"Read file FILENAME into a buffer and return the buffer.\n"
+"If a buffer exists visiting FILENAME, return that one.  A new buffer is named after the file,\n"
+"its syntax dialect is chosen by `set-auto-mode', and `find-file-hook' runs in it.\n"
+"If FILENAME does not exist, the new buffer is empty and visits it."
+msgstr ""
+"ファイル FILENAME をバッファに読み込み, そのバッファを返す.\n"
+"FILENAME を訪れているバッファがあれば, それを返す. 新しいバッファの名前はファイルの名前で,\n"
+"構文の方言は `set-auto-mode' で選び, そのバッファで `find-file-hook' を動かす.\n"
+"FILENAME が無ければ, 新しいバッファは空で, そのファイルを訪れる."
 
 #: lisp/files.scm
 msgctxt "function:find-file"
@@ -899,6 +915,49 @@ msgstr ""
 "ファイル FILENAME の中身を, ポイントの位置に入れる.\n"
 "ポイントは, 入れた文字の前に残る.\n"
 "対話的には, FILENAME をミニバッファで, ファイル名を補完しながら読む."
+
+#: lisp/files.scm
+msgctxt "function:set-visited-file-name"
+msgid ""
+"Change the name of the file visited in the current buffer to FILENAME.\n"
+"The buffer is renamed after the file, and marked as modified (the new file is not saved yet).\n"
+"If FILENAME is #f, the buffer visits no file."
+msgstr ""
+"今のバッファが訪れるファイルの名前を FILENAME に変える.\n"
+"バッファの名前はファイルの名前にし, 書き換えたことにする (新しいファイルには, まだ保存していない).\n"
+"FILENAME が #f なら, ファイルを訪れない."
+
+#: lisp/files.scm
+msgctxt "function:make-backup-file-name"
+msgid "Return the backup file name of FILE (FILE~)."
+msgstr "ファイル FILE のバックアップのファイルの名前 (FILE~) を返す."
+
+#: lisp/files.scm
+msgctxt "function:backup-buffer"
+msgid ""
+"Make a backup of the file visited by the current buffer, if appropriate.\n"
+"This is done before the first save after visiting the file: the old file is copied to its\n"
+"backup file name (`make-backup-file-name').  Nothing is done if the file does not exist yet."
+msgstr ""
+"今のバッファが訪れるファイルのバックアップを, 要るときに作る.\n"
+"ファイルを訪れてから初めて保存する前に, 前のファイルをバックアップのファイルの名前\n"
+"(`make-backup-file-name') に写す. ファイルがまだ無ければ, 何もしない."
+
+#: lisp/files.scm
+msgctxt "function:delete-auto-save-file-if-necessary"
+msgid "Delete the auto save file of the current buffer, if it exists."
+msgstr "今のバッファの自動保存のファイルがあれば, 消す."
+
+#: lisp/files.scm
+msgctxt "function:basic-save-buffer"
+msgid ""
+"Save the current buffer in its visited file, if it has been modified.\n"
+"Make a backup first (`backup-buffer'), delete the auto save file after writing,\n"
+"and run `after-save-hook'.  If the buffer visits no file, read a file name."
+msgstr ""
+"今のバッファを書き換えていれば, 訪れているファイルに保存する.\n"
+"先にバックアップを作り (`backup-buffer'), 書いた後で自動保存のファイルを消し,\n"
+"`after-save-hook' を動かす. ファイルを訪れていなければ, ファイルの名前を聞く."
 
 #: lisp/files.scm
 msgctxt "function:files--write-file"

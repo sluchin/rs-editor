@@ -96,8 +96,8 @@ Emacs の結果と全ての位置で比べている試験 (`tests/frontend/lib/m
 
 ### 5.5 ファイル
 
-- 読み書きは、Rust の核で行う (`find-file-noselect`、`files--write-buffer`)。原子的な書き込み (`core/src/atomic.rs`) を使う。
-- 自動保存 (`#名前#`) とバックアップ (`名前~`) は、Rust に移す (今は `src/hooks/useFiles.ts`)。
+- 読み書きは、Emacs と同じく、組み込み (Rust の核) の `insert-file-contents`、`write-region` で行う。原子的な書き込み (`core/src/atomic.rs`) を使う。ファイルを開くこと (`find-file-noselect`)、保存すること (`basic-save-buffer`)、バックアップ (`backup-buffer`) は Lisp (`lisp/files.scm`)。
+- 自動保存 (`#名前#`) は、Emacs の `do-auto-save` と同じく Rust の組み込み。バックアップ (`名前~`) は、Emacs の `backup-buffer` と同じく Lisp。
 
 ## 6. 進め方
 
