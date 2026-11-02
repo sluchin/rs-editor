@@ -28,6 +28,8 @@ export interface Buffer {
   doc: Text
   /** 保存してから, 書き換えたら `true`. */
   modified: boolean
+  /** 読み取り専用 (Lisp の `set-buffer-read-only`. 書き換えさせない) なら `true`. */
+  readOnly?: boolean
   /** 保存した回数 (保存したら, Lisp の `after-save-hook` を実行する). */
   saveCount?: number
   /** 開いてから, ファイルのバックアップ (`<file>~`) を作ったら `true` (Emacs の `buffer-backed-up`). */
@@ -105,7 +107,14 @@ export const MESSAGES_BUFFER = '*Messages*'
  * @returns *Messages* バッファ.
  */
 export function createMessagesBuffer(doc: Text = Text.empty): Buffer {
-  return { id: generateBufferId(), name: MESSAGES_BUFFER, filePath: null, doc, modified: false }
+  return {
+    id: generateBufferId(),
+    name: MESSAGES_BUFFER,
+    filePath: null,
+    doc,
+    modified: false,
+    readOnly: true,
+  }
 }
 
 /**

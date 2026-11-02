@@ -28,6 +28,16 @@ describe('ModeLine Component', () => {
     expect(container.textContent).toContain('test.scm')
   })
 
+  it('displays the read-only indicator', () => {
+    const cursorInfo: CursorInfo = { line: 1, column: 0, offset: 0 }
+    const { container, rerender } = render(
+      <ModeLine bufferName="r" modified={false} readOnly cursor={cursorInfo} />,
+    )
+    expect(container.textContent).toContain('-:%%- r')
+    rerender(<ModeLine bufferName="r" modified readOnly cursor={cursorInfo} />)
+    expect(container.textContent).toContain('-:%*- r')
+  })
+
   it('displays modified indicator', () => {
     // 変更されたことを示すインジケーター (**) が表示されることを確認.
     const cursorInfo: CursorInfo = { line: 1, column: 1, offset: 0 }

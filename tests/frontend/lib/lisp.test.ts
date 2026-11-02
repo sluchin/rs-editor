@@ -80,6 +80,9 @@ function fakeHost(text: string) {
     unhighlightRegexp: (regexp) => {
       state.calls.push(`unhighlight ${regexp}`)
     },
+    setReadOnly: (readOnly) => {
+      state.calls.push(`set-read-only ${readOnly}`)
+    },
     setModified: async (modified) => {
       state.modified = modified
     },
@@ -323,10 +326,13 @@ describe('lisp', () => {
     expect(await run('other-window')).toBeNull()
     expect(state.calls).toContain('other-window 2')
     expect(state.calls).toContain('other-window 1')
-    // 読み取り専用 (画面に無いので, 値を返すだけ) と, 前置引数 (無い)
+    // 読み取り専用 (今のバッファに設定する) と, 前置引数 (無い)
     expect(run('set-buffer-read-only', true)).toBe(true)
     expect(run('set-buffer-read-only', false)).toBe(false)
     expect(run('set-buffer-read-only', null)).toBe(false)
+    expect(state.calls).toEqual(
+      expect.arrayContaining(['set-read-only true', 'set-read-only false']),
+    )
     expect(run('current-prefix-arg')).toBeNull()
   })
 

@@ -318,6 +318,7 @@ function App() {
                   keyBindings={keysFor(buffer)}
                   onMessage={showMessage}
                   disabled={minibufferState.mode !== 'message'}
+                  readOnly={buffer.readOnly}
                   active={active}
                   language={mode.language}
                   indentTabs={mode.indentTabs}
@@ -330,6 +331,7 @@ function App() {
                 <ModeLine
                   bufferName={buffer.name}
                   modified={buffer.modified}
+                  readOnly={buffer.readOnly}
                   cursor={cursors[rect.id] ?? START_CURSOR}
                   mode={mode.name}
                   bufferCount={buffers.length}

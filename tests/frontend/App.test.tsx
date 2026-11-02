@@ -638,6 +638,27 @@ describe('App', () => {
     expect(editor.doc()).toBe('again\n')
   })
 
+  it('*Messages* は読み取り専用で (モードラインに %%), set-buffer-read-only で変えられる', async () => {
+    const editor = await setup()
+    const { send } = requests()
+    editor.ctrlX('b', false)
+    await editor.submit('*Messages*')
+    expect(editor.text()).toContain('-:%%- *Messages*')
+    // 書き換えさせない (CodeMirror の readOnly). 外すと書き換えられる
+    expect(editor.editor.state.readOnly).toBe(true)
+    await send('set-buffer-read-only', false)
+    expect(editor.editor.state.readOnly).toBe(false)
+    await editor.type('typed')
+    await send('set-buffer-read-only', true)
+    expect(editor.editor.state.readOnly).toBe(true)
+    expect(editor.text()).toContain('-:%*- *Messages*')
+    // ほかのバッファは, 書き換えられる
+    editor.ctrlX('b', false)
+    await editor.submit('*scratch*')
+    expect(editor.text()).toContain('-:--- *scratch*')
+    expect(editor.editor.state.readOnly).toBe(false)
+  })
+
   it('バッファを全て消したら, *scratch* を作り直す', async () => {
     await setup()
     const { send } = requests()

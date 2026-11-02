@@ -207,6 +207,8 @@ interface CodeEditorProps {
   onMessage: (text: string) => void
   /** ミニバッファで入力しているあいだは `true` (書き換えさせない). */
   disabled: boolean
+  /** バッファが読み取り専用なら `true` (書き換えさせない. フォーカスは取る). 省くと `false`. */
+  readOnly?: boolean
   /** 選んでいるウィンドウなら `true` (フォーカスを取る). 省くと `true`. */
   active?: boolean
   /** シンタックスハイライトと字下げの言語 (省くと, 色を付けず, Fundamental モードの字下げ). */
@@ -248,6 +250,7 @@ export default function CodeEditor({
   keyBindings,
   onMessage,
   disabled,
+  readOnly: bufferReadOnly = false,
   active = true,
   language = null,
   highlights = NO_HIGHLIGHTS,
@@ -261,6 +264,7 @@ export default function CodeEditor({
   const states = useRef(new Map<string, EditorState>())
   const shown = useRef(bufferId)
   const readOnly = useRef(new Compartment())
+  const locked = disabled || bufferReadOnly
   const keys = useRef(new Compartment())
   const highlight = useRef(new Compartment())
   const underline = useRef(new Compartment())
@@ -270,7 +274,7 @@ export default function CodeEditor({
   const latestKeys = useRef(keyBindings)
   const latest = useRef({ onChange, onCursorChange, actions, onMessage })
   const commands = useRef<Record<string, Command>>(undefined)
-  const initial = useRef({ bufferId, initialContent, disabled, active })
+  const initial = useRef({ bufferId, initialContent, disabled: locked, active })
 
   useEffect(() => {
     latest.current = { onChange, onCursorChange, actions, onMessage }
@@ -480,13 +484,13 @@ export default function CodeEditor({
     if (shown.current === bufferId) return
     states.current.set(shown.current, current.state)
     shown.current = bufferId
-    const next = states.current.get(bufferId) ?? createState(initialContent, disabled)
+    const next = states.current.get(bufferId) ?? createState(initialContent, locked)
     states.current.delete(bufferId)
     current.setState(next)
     // 隠していたあいだに, Lisp でキーを割り当てたかもしれない
     current.dispatch({
       effects: [
-        readOnly.current.reconfigure(EditorState.readOnly.of(disabled)),
+        readOnly.current.reconfigure(EditorState.readOnly.of(locked)),
         keys.current.reconfigure(keyExtension()),
         highlight.current.reconfigure(highlightExtension()),
         underline.current.reconfigure(regexpHighlighting(highlights)),
@@ -532,11 +536,11 @@ export default function CodeEditor({
   // ミニバッファで入力しているあいだは, 書き換えさせない. 終わったら, 選んでいるウィンドウのエディタに戻る
   useEffect(() => {
     const current = view.current as EditorView
-    current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(disabled)) })
+    current.dispatch({ effects: readOnly.current.reconfigure(EditorState.readOnly.of(locked)) })
     if (!disabled && active) current.focus()
     // active が変わったときは, 下の効果で合わせる
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled])
+  }, [disabled, bufferReadOnly])
 
   // 選んだウィンドウのエディタに, フォーカスを移す
   useEffect(() => {

@@ -321,6 +321,7 @@ export function useLisp(
         ),
       outlineFlagRegion: (from, to, hide) => handle().foldRegion(from, to, hide),
       invisible: (pos) => handle().invisible(pos),
+      setReadOnly: (readOnly) => updateCurrentBuffer({ readOnly }),
       setModified: (modified) => {
         if (currentBuffer.modified === modified) return Promise.resolve()
         updateCurrentBuffer({ modified })

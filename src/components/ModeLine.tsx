@@ -11,6 +11,8 @@ interface ModeLineProps {
   bufferName: string
   /** 保存してから書き換えたなら `true` (`**` を出す). */
   modified: boolean
+  /** 読み取り専用なら `true` (`%%` か `%*` を出す). 省くと `false`. */
+  readOnly?: boolean
   /** カーソルの位置 (行と桁を出す). */
   cursor: CursorInfo
   /** メジャーモードの名前. 省くと `Scheme`. */
@@ -32,13 +34,14 @@ interface ModeLineProps {
 export default function ModeLine({
   bufferName,
   modified,
+  readOnly = false,
   cursor,
   mode = 'Scheme',
   bufferCount = 1,
   currentBufferIndex = 1,
   active = true,
 }: ModeLineProps) {
-  const status = modified ? '**' : '--'
+  const status = readOnly ? (modified ? '%*' : '%%') : modified ? '**' : '--'
   const bufferIndicator = bufferCount > 1 ? ` [${currentBufferIndex}/${bufferCount}]` : ''
 
   return (

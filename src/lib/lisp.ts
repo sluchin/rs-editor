@@ -100,6 +100,8 @@ export interface LispHost {
   invisible: (pos: number) => boolean
   /** バッファを, 書き換えたことにします (`false` なら, 書き換えていないことにする). 画面に出したら, 終わります. */
   setModified: (modified: boolean) => Promise<void>
+  /** 今のバッファを, 読み取り専用にする (`false` で戻す). */
+  setReadOnly: (readOnly: boolean) => void
   /** バッファだけのキーを割り当てます (Lisp の割り当てより先に使う). */
   localSetKey: (key: string, command: string) => void
   /** コマンドに割り当てたキー (Emacs の書き方. `C-x C-f` など). */
@@ -393,9 +395,12 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       return host.generateNewBuffer(String(args[0]))
     case 'other-window':
       return host.otherWindow(typeof args[0] === 'number' ? args[0] : 1).then(() => null)
-    // 読み取り専用と前置引数は, 画面に無い (何もしない. 前置引数は無い)
-    case 'set-buffer-read-only':
-      return args[0] !== false && args[0] !== null
+    case 'set-buffer-read-only': {
+      const readOnly = args[0] !== false && args[0] !== null
+      host.setReadOnly(readOnly)
+      return readOnly
+    }
+    // 前置引数は, 画面に無い
     case 'current-prefix-arg':
       return null
     case 'key-binding':
