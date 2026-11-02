@@ -30,8 +30,7 @@ const MINIBUFFER: &str = include_str!("../../lisp/minibuffer.scm");
 const ABBREV: &str = include_str!("../../lisp/abbrev.scm");
 const DABBREV: &str = include_str!("../../lisp/dabbrev.scm");
 
-/// ヘルプ, 定義へ移るコマンド, Info (Lisp. `simple.scm` と `isearch.scm` の後に読む).
-const HELP: &str = include_str!("../../lisp/help.scm");
+/// 定義へ移るコマンド, Info (Lisp. `simple.scm` と `isearch.scm` の後に読む).
 const XREF: &str = include_str!("../../lisp/xref.scm");
 const INFO: &str = include_str!("../../lisp/info.scm");
 
@@ -90,7 +89,6 @@ impl App {
         evaluator.eval_with(ABBREV, &host)?;
         evaluator.eval_with(MINIBUFFER, &host)?;
         evaluator.eval_with(DABBREV, &host)?;
-        evaluator.eval_with(HELP, &host)?;
         evaluator.eval_with(XREF, &host)?;
         evaluator.eval_with(INFO, &host)?;
         let app = App {

@@ -5,13 +5,7 @@
 
 import { type SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import type { CursorInfo, DocChange, EditorHandle } from '../components/CodeEditor'
-import {
-  type Buffer,
-  createScratchBuffer,
-  generateBufferId,
-  toText,
-  uniquifyBufferNames,
-} from '../lib/buffer'
+import { type Buffer, createScratchBuffer, uniquifyBufferNames } from '../lib/buffer'
 import { getHomeDir } from '../lib/fileOps'
 import { fileDirectory } from '../lib/paths'
 import { type Layout, deleteWindow, splitWindow, windowIds } from '../lib/windows'
@@ -119,28 +113,6 @@ export function useBuffers(showMessage: (text: string) => void) {
     const handle = editor.current as EditorHandle
     handle.setText(content)
     updateCurrentBuffer({ doc: handle.doc(), modified })
-  }
-
-  /**
-   * バッファを作って, 選んでいるウィンドウに出します. 作ったばかりのバッファは, 変更なしです
-   * (開いたファイルの中身は, ファイルと同じ).
-   *
-   * @param name - バッファの名前.
-   * @param filePath - バッファのファイル.
-   * @param content - 本文.
-   * @returns 作ったバッファ.
-   */
-  const createNewBuffer = (name: string, filePath: string | null = null, content: string = '') => {
-    const newBuffer: Buffer = {
-      id: generateBufferId(),
-      name,
-      filePath,
-      doc: toText(content),
-      modified: false,
-    }
-    setBuffers((prev) => [...prev, newBuffer])
-    setCurrentBufferId(newBuffer.id)
-    return newBuffer
   }
 
   /**
@@ -282,7 +254,6 @@ export function useBuffers(showMessage: (text: string) => void) {
     setCurrentBufferId,
     updateCurrentBuffer,
     setCurrentText,
-    createNewBuffer,
     defaultDirectory,
     killBuffer,
     killCurrentBuffer,

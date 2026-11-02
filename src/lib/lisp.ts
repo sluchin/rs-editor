@@ -106,6 +106,24 @@ export interface LispHost {
   whereIs: (command: string) => string[]
   /** 画面 (TypeScript) で書いたコマンドの名前. */
   editorCommandNames: () => string[]
+  /** 名前のバッファを返します (無ければ, 作る. 出さない). */
+  getBufferCreate: (name: string) => Promise<string>
+  /** 名前のバッファがあれば, その名前を返します (無ければ `null`). */
+  getBuffer: (name: string) => string | null
+  /** 使われていないバッファの名前を返します (`name`, `name<2>`, `name<3>`, ...). `ignore` はあいていると見なす名前. */
+  generateNewBufferName: (name: string, ignore: string | null) => string
+  /** 使われていない名前のバッファを作って, その名前を返します (出さない). */
+  generateNewBuffer: (name: string) => Promise<string>
+  /** 今のバッファを, 名前のバッファにします (選んでいるウィンドウに出す). バッファが無ければ, 失敗. */
+  setBuffer: (name: string) => Promise<string>
+  /** 選ぶウィンドウを, `count` 個先 (負なら前) に変えます. */
+  otherWindow: (count: number) => Promise<void>
+  /** キーの並び (`C-x C-f`) の割り当て: コマンドの名前. 続きのキーがあれば `true`, 無ければ `false`. */
+  keyBinding: (keys: string) => string | boolean
+  /** 全てのキーの割り当て: [キー, コマンド] のリスト (Emacs の書き方). */
+  allKeyBindings: () => [string, string][]
+  /** 最近押したキー (古いものから. Emacs の書き方). */
+  recentKeys: () => string[]
   /** ミニバッファで, 文字を入力してもらいます (C-g でやめたら, 失敗). */
   readString: (prompt: string, initial: string) => Promise<string>
   /**
@@ -362,6 +380,30 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
       return host.whereIs(String(args[0]))
     case 'editor-command-names':
       return host.editorCommandNames()
+    case 'get-buffer-create':
+      return host.getBufferCreate(String(args[0]))
+    case 'get-buffer':
+      return host.getBuffer(String(args[0]))
+    case 'generate-new-buffer-name':
+      return host.generateNewBufferName(
+        String(args[0]),
+        typeof args[1] === 'string' ? args[1] : null,
+      )
+    case 'generate-new-buffer':
+      return host.generateNewBuffer(String(args[0]))
+    case 'other-window':
+      return host.otherWindow(typeof args[0] === 'number' ? args[0] : 1).then(() => null)
+    // 読み取り専用と前置引数は, 画面に無い (何もしない. 前置引数は無い)
+    case 'set-buffer-read-only':
+      return args[0] !== false && args[0] !== null
+    case 'current-prefix-arg':
+      return null
+    case 'key-binding':
+      return host.keyBinding(String(args[0]))
+    case 'all-key-bindings':
+      return host.allKeyBindings()
+    case 'recent-keys':
+      return host.recentKeys()
     case 'read-string':
       return host.readString(String(args[0]), String(args[1] ?? ''))
     case 'read-file-name':
@@ -400,11 +442,10 @@ export function performEditorRequest(host: LispHost, op: string, args: unknown[]
     case 'current-buffer':
       return host.bufferName()
     case 'set-buffer':
-      // バッファの切り替えは、画面のウィンドウが受け持つ. 今のバッファへの切り替えだけ、受ける
-      if (String(args[0]) !== host.bufferName()) {
-        throw new Error('set-buffer to another buffer is not supported')
-      }
-      return host.bufferName()
+      // 今のバッファへの切り替えは何もしない. ほかのバッファなら, 選んでいるウィンドウに出す
+      return String(args[0]) === host.bufferName()
+        ? host.bufferName()
+        : host.setBuffer(String(args[0]))
     case 'set-background-color':
       host.setBackgroundColor(String(args[0]))
       return null

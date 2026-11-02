@@ -310,7 +310,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **3. 消す, 切る, 貼る, 元に戻す**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の `describe-key` と `describe-bindings` の TypeScript 版は消した (`help.scm` を `loadup` で読み, 画面はキーの割り当て, 最近のキー, 修飾キー付きの `read-key` を渡す)】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
 
 **4. マーク, 前置引数, 実行**
 
@@ -584,11 +584,11 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
 | `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | TypeScript (`src/App.tsx`, `lisp/help.scm`) | 11 |
+| `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | Lisp (`lisp/help.scm`) | 11 |
 | `describe-copying` |  | help | `C-h C-c`, `<f1> C-c`, `<help> C-c` |  |  |  | 12 |
 | `describe-distribution` |  | help | `C-h C-o`, `<f1> C-o`, `<help> C-o` |  |  |  | 12 |
 | `describe-gnu-project` |  | help | `C-h g`, `<f1> g`, `<help> g` |  |  |  | 12 |
-| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | TypeScript (`src/lib/emacs.ts`, `lisp/help.scm`) | 11 |
+| `describe-key` | ◯ | help | `C-h k`, `<f1> k`, `<help> k` | 実装済み | `C-h k` | Lisp (`lisp/help.scm`) | 11 |
 | `describe-key-briefly` | ◯ | help | `C-h c`, `<f1> c`, `<help> c` | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |
 | `describe-no-warranty` |  | help | `C-h C-w`, `<f1> C-w`, `<help> C-w` |  |  |  | 12 |
 | `help-for-help` |  | help | `C-h ?`, `<f1> ?`, `C-h C-h`, `<f1> C-h` ほか 8 | 実装済み |  | Lisp (`lisp/help.scm`) | 済 |

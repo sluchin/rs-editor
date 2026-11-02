@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useRef, useState, KeyboardEvent } from 'react'
+import { MODIFIER_KEYS, eventKeyName, toEmacsKey } from '../lib/emacs'
 import { complete, type Completion } from '../lib/complete'
 import '../styles/Minibuffer.css'
 
@@ -153,8 +154,10 @@ export default function Minibuffer({
       e.preventDefault()
       if (isQuitKey(e)) {
         onCancel()
-      } else {
-        onQueryKey?.(e.key)
+      } else if (!MODIFIER_KEYS.includes(e.key)) {
+        // 修飾キーと一緒なら, Emacs の書き方 (`C-x`, `M-x`) で答える (describe-key が使う). 修飾キーだけなら, 次のキーを待つ
+        const modified = e.ctrlKey || e.altKey || e.metaKey
+        onQueryKey?.(modified ? toEmacsKey(eventKeyName(e.nativeEvent)) : e.key)
       }
     }
     return (

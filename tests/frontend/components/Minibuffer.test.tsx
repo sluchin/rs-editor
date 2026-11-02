@@ -97,6 +97,16 @@ describe('Minibuffer Component (問い)', () => {
     const input = view.container.querySelector('input') as HTMLInputElement
     fireEvent.keyDown(input, { key: 'y' })
     expect(onQueryKey).toHaveBeenCalledWith('y')
+    // 修飾キーと一緒なら, Emacs の書き方で知らせる. 修飾キーだけなら, 知らせない
+    fireEvent.keyDown(input, { key: 'x', ctrlKey: true })
+    expect(onQueryKey).toHaveBeenLastCalledWith('C-x')
+    fireEvent.keyDown(input, { key: 'x', altKey: true })
+    expect(onQueryKey).toHaveBeenLastCalledWith('M-x')
+    fireEvent.keyDown(input, { key: 'x', metaKey: true })
+    expect(onQueryKey).toHaveBeenLastCalledWith('s-x')
+    fireEvent.keyDown(input, { key: 'Control', ctrlKey: true })
+    fireEvent.keyDown(input, { key: 'Shift' })
+    expect(onQueryKey).toHaveBeenCalledTimes(4)
     fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
     fireEvent.keyDown(input, { key: ']', ctrlKey: true })
     fireEvent.keyDown(input, { key: 'Escape' })
@@ -104,7 +114,7 @@ describe('Minibuffer Component (問い)', () => {
     // 知らせる先がなくても, 落ちない
     view.rerender(<Minibuffer {...props} />)
     fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, { key: 'n' })
-    expect(onQueryKey).toHaveBeenCalledTimes(1)
+    expect(onQueryKey).toHaveBeenCalledTimes(4)
   })
 })
 

@@ -113,6 +113,23 @@ function fakeHost(text: string) {
     },
     whereIs: (command) => (command === 'find-file' ? ['C-x C-f'] : []),
     editorCommandNames: () => ['save-buffer'],
+    getBufferCreate: async (name) => {
+      state.calls.push(`get-buffer-create ${name}`)
+      return name
+    },
+    getBuffer: (name) => (name === '*scratch*' ? name : null),
+    generateNewBufferName: (name, ignore) => `${name}<2>${ignore ?? ''}`,
+    generateNewBuffer: async (name) => `${name}<2>`,
+    setBuffer: async (name) => {
+      state.calls.push(`set-buffer ${name}`)
+      return name
+    },
+    otherWindow: async (count) => {
+      state.calls.push(`other-window ${count}`)
+    },
+    keyBinding: (keys) => (keys === 'C-x' ? true : keys === 'C-f' ? 'forward-char' : false),
+    allKeyBindings: () => [['C-f', 'forward-char']],
+    recentKeys: () => ['C-f', 'C-x'],
     setBackgroundColor: (color) => {
       state.calls.push(`background ${color}`)
     },
@@ -215,6 +232,11 @@ describe('lisp', () => {
     expect(run('set-buffer-directory', '/home/u')).toBeNull()
     expect(run('where-is-internal', 'find-file')).toEqual(['C-x C-f'])
     expect(run('editor-command-names')).toEqual(['save-buffer'])
+    expect(run('key-binding', 'C-x')).toBe(true)
+    expect(run('key-binding', 'C-f')).toBe('forward-char')
+    expect(run('key-binding', 'C-z')).toBe(false)
+    expect(run('all-key-bindings')).toEqual([['C-f', 'forward-char']])
+    expect(run('recent-keys')).toEqual(['C-f', 'C-x'])
     expect(run('set-background-color', 'black')).toBeNull()
     expect(run('set-foreground-color', 'white')).toBeNull()
     expect(run('set-font', 'Mono', 14)).toBeNull()
@@ -266,7 +288,7 @@ describe('lisp', () => {
     ])
   })
 
-  it('今のバッファを Lisp の核に写し, 核での変更を返す (位置は文字で数え, 1 から)', () => {
+  it('今のバッファを Lisp の核に写し, 核での変更を返す (位置は文字で数え, 1 から)', async () => {
     const { host, state } = fakeHost('a😀b')
     state.point = 3
     state.mark = 1
@@ -285,9 +307,27 @@ describe('lisp', () => {
     // バッファの名前と, 同じバッファへの切り替え
     expect(run('current-buffer')).toBe('*scratch*')
     expect(run('set-buffer', '*scratch*')).toBe('*scratch*')
-    expect(() => run('set-buffer', 'other')).toThrow(
-      'set-buffer to another buffer is not supported',
-    )
+    // ほかのバッファへの切り替えは, 画面に頼む
+    expect(await run('set-buffer', 'other')).toBe('other')
+    expect(state.calls).toContain('set-buffer other')
+    // バッファを作る, 探す, 名前を作る
+    expect(await run('get-buffer-create', 'x')).toBe('x')
+    expect(state.calls).toContain('get-buffer-create x')
+    expect(run('get-buffer', '*scratch*')).toBe('*scratch*')
+    expect(run('get-buffer', 'none')).toBeNull()
+    expect(run('generate-new-buffer-name', 'x')).toBe('x<2>')
+    expect(run('generate-new-buffer-name', 'x', 'x')).toBe('x<2>x')
+    expect(await run('generate-new-buffer', 'x')).toBe('x<2>')
+    // ウィンドウを移る (数が無ければ 1)
+    expect(await run('other-window', 2)).toBeNull()
+    expect(await run('other-window')).toBeNull()
+    expect(state.calls).toContain('other-window 2')
+    expect(state.calls).toContain('other-window 1')
+    // 読み取り専用 (画面に無いので, 値を返すだけ) と, 前置引数 (無い)
+    expect(run('set-buffer-read-only', true)).toBe(true)
+    expect(run('set-buffer-read-only', false)).toBe(false)
+    expect(run('set-buffer-read-only', null)).toBe(false)
+    expect(run('current-prefix-arg')).toBeNull()
   })
 
   it('範囲を隠し, 隠したかを返す (位置は文字で数える)', () => {

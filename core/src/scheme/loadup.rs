@@ -13,6 +13,7 @@ pub const FILES: &[(&str, &str)] = &[
         "lisp/compile.scm",
         include_str!("../../../lisp/compile.scm"),
     ),
+    ("lisp/help.scm", include_str!("../../../lisp/help.scm")),
     ("lisp/dired.scm", include_str!("../../../lisp/dired.scm")),
     (
         "lisp/bookmark.scm",

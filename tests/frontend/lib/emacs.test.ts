@@ -8,7 +8,6 @@ import {
   emacsState,
   gotoLine,
   KEY_BINDINGS,
-  describeKeyField,
   goalColumnField,
   lastCommandField,
   markField,
@@ -17,6 +16,7 @@ import {
   quotedField,
   quotedChar,
   pageLines,
+  lookupKeyBinding,
   toEmacsKey,
   MAX_PREFIX_COUNT,
 } from '@/lib/emacs'
@@ -846,30 +846,14 @@ describe('キーボードマクロ', () => {
 })
 
 describe('キーの説明', () => {
-  it('C-h k の次のキーを, 実行せずに説明すること', () => {
-    const { press, text, message, view, run } = setup('|ab')
-    press('C-h k')
-    expect(message).toHaveBeenCalledWith('Describe the following key: ')
-    press('C-f')
-    expect(message).toHaveBeenLastCalledWith('C-f runs the command forward-char')
-    expect(text()).toBe('|ab')
-    press('C-h k C-x C-f')
-    expect(message).toHaveBeenLastCalledWith('C-x C-f runs the command find-file')
-    // 修飾キーだけは, 次のキーを待つ
-    run('describe-key')
-    press('Control')
-    expect(view.state.field(describeKeyField)).toBe(true)
-    press('a')
-    expect(message).toHaveBeenLastCalledWith('a runs the command self-insert-command')
-    press('C-h k C-z')
-    expect(message).toHaveBeenLastCalledWith('C-z is undefined')
-    press('C-h k M-j')
-    expect(message).toHaveBeenLastCalledWith('M-j is undefined')
-    press('C-h k')
-    view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', metaKey: true }))
-    expect(message).toHaveBeenLastCalledWith('s-q is undefined')
-    press('C-f')
-    expect(text()).toBe('a|b')
+  it('キーの並びの割り当てを引くこと (Lisp の割り当てが先. 続きがあれば true. 文字は自己挿入)', () => {
+    const lispKeys = [{ key: 'Ctrl-f', command: 'my-forward' }]
+    expect(lookupKeyBinding(lispKeys, 'C-f')).toBe('my-forward')
+    expect(lookupKeyBinding([], 'C-f')).toBe('forward-char')
+    expect(lookupKeyBinding([], 'C-x')).toBe(true)
+    expect(lookupKeyBinding([], 'C-x C-f')).toBe('find-file')
+    expect(lookupKeyBinding([], 'a')).toBe('self-insert-command')
+    expect(lookupKeyBinding([], 'C-z')).toBe(false)
   })
 
   it('CodeMirror のキーの書き方を, Emacs の書き方にすること', () => {

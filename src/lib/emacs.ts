@@ -109,21 +109,6 @@ export const goalColumnField = StateField.define<number | null>({
   },
 })
 
-/** 次に押すキーを説明するか (describe-key) を変える. */
-const describeKeyEffect = StateEffect.define<boolean>()
-
-/** 次に押すキーを, 実行せずに説明するなら `true` (`C-h k`). */
-export const describeKeyField = StateField.define<boolean>({
-  create: () => false,
-  // 変える変更があれば, その値
-  update(value, tr) {
-    for (const effect of tr.effects) {
-      if (effect.is(describeKeyEffect)) return effect.value
-    }
-    return value
-  },
-})
-
 /**
  * 次に押す文字を待つコマンド (`M-z` の文字, `C-x r s` のレジスタ) の, 名前と, 回数と, 押した文字.
  */
@@ -184,15 +169,7 @@ export const quotedField = StateField.define<QuotedState | null>({
  * @returns 拡張.
  */
 export function emacsState(): Extension {
-  return [
-    markField,
-    lastCommandField,
-    history(),
-    describeKeyField,
-    readCharField,
-    quotedField,
-    goalColumnField,
-  ]
+  return [markField, lastCommandField, history(), readCharField, quotedField, goalColumnField]
 }
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */
@@ -239,6 +216,25 @@ export function activeKeyBindings(
 }
 
 /**
+ * キーの並び (Emacs の書き方. `C-x C-f`) の割り当てを引きます (Emacs の `key-binding`).
+ *
+ * @param lispKeys - Lisp で割り当てたキー.
+ * @param keys - キーの並び.
+ * @returns コマンドの名前. 続きのキーがあれば `true`. 割り当てが無ければ `false`.
+ *   文字を 1 つ打つだけなら, `self-insert-command`.
+ */
+export function lookupKeyBinding(
+  lispKeys: readonly { key: string; command: string }[],
+  keys: string,
+): string | boolean {
+  const bindings = activeKeyBindings(lispKeys).map(([key, command]) => [toEmacsKey(key), command])
+  const found = bindings.find(([key]) => key === keys)
+  if (found) return found[1]
+  if (bindings.some(([key]) => key.startsWith(`${keys} `))) return true
+  return [...keys].length === 1 ? 'self-insert-command' : false
+}
+
+/**
  * CodeMirror のキーの書き方 (`Ctrl-x Ctrl-f`) を, Emacs の書き方 (`C-x C-f`) にします.
  *
  * @param keys - CodeMirror の書き方 (空白で区切ると, 続けて押すキー).
@@ -263,7 +259,7 @@ export function toEmacsKey(keys: string): string {
  * @param event - キーの事象.
  * @returns CodeMirror の書き方.
  */
-function eventKeyName(event: KeyboardEvent): string {
+export function eventKeyName(event: KeyboardEvent): string {
   const modifiers = [event.ctrlKey && 'Ctrl-', event.altKey && 'Alt-', event.metaKey && 'Meta-']
   return modifiers.filter(Boolean).join('') + event.key
 }
@@ -1191,12 +1187,6 @@ export function createCommands({
       return true
     },
 
-    // ヘルプ
-    'describe-key': (view) => {
-      view.dispatch({ effects: describeKeyEffect.of(true) })
-      message('Describe the following key: ')
-      return true
-    },
     'keyboard-quit': (view) => {
       view.dispatch({
         selection: EditorSelection.cursor(head(view)),
@@ -1336,6 +1326,19 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
   // ヘルプ
   ['Ctrl-h k', 'describe-key'],
   ['Ctrl-h b', 'describe-bindings'],
+  ['Ctrl-h v', 'describe-variable'],
+  ['Ctrl-h x', 'describe-command'],
+  ['Ctrl-h o', 'describe-symbol'],
+  ['Ctrl-h c', 'describe-key-briefly'],
+  ['Ctrl-h w', 'where-is'],
+  ['Ctrl-h l', 'view-lossage'],
+  ['Ctrl-h e', 'view-echo-area-messages'],
+  ['Ctrl-h s', 'describe-syntax'],
+  ['Ctrl-h ?', 'help-for-help'],
+  ['Ctrl-h Ctrl-h', 'help-for-help'],
+  ['Ctrl-h q', 'help-quit'],
+  ['Ctrl-h Ctrl-q', 'help-quick-toggle'],
+  ['Ctrl-h Ctrl-s', 'search-forward-help-for-help'],
   // 前置引数
   ['Ctrl-u', 'universal-argument'],
   ...Array.from({ length: 10 }, (_, d) => [`Alt-${d}`, 'digit-argument'] as const),
@@ -1381,7 +1384,7 @@ export const KEY_BINDINGS: readonly (readonly [key: string, command: string])[] 
 ]
 
 /** 修飾キーだけを押したときの, キーの名前. */
-const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
+export const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
 
 /** `C-q` の後に押すと, 文字として入れる, 文字でないキー (Emacs の RET は `^M` だが, 改行にする). */
 const QUOTED_KEYS: Record<string, string> = {
@@ -1498,11 +1501,6 @@ export function emacsKeymap(
       // 文字でないキーなら, 待つのを止めて, そのキーのコマンドを動かす
       view.dispatch({ effects: readCharEffect.of(null) })
     }
-    if (view.state.field(describeKeyField, false)) {
-      view.dispatch({ effects: describeKeyEffect.of(false) })
-      message(`${toEmacsKey(key)} runs the command ${name}`)
-      return true
-    }
     if (name === 'universal-argument') {
       // 数字を入れた後は, 数を変えない
       if (prefix.digits === '') prefix.count = Math.min((prefix.count ?? 1) * 4, MAX_PREFIX_COUNT)
@@ -1587,15 +1585,6 @@ export function emacsKeymap(
     // 最後に置く (割り当てのあるキーでは, コマンドを先に動かす)
     {
       any: (view, event) => {
-        if (view.state.field(describeKeyField, false)) {
-          // 修飾キーだけのときは, 次のキーを待つ
-          if (MODIFIER_KEYS.includes(event.key)) return false
-          view.dispatch({ effects: describeKeyEffect.of(false) })
-          const name = toEmacsKey(eventKeyName(event))
-          const plain = event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey
-          message(plain ? `${name} runs the command self-insert-command` : `${name} is undefined`)
-          return true
-        }
         if (view.state.field(readCharField, false)) {
           // 修飾キーだけのときは, 次のキーを待つ. 文字でなければ, 待つのを止める
           if (MODIFIER_KEYS.includes(event.key)) return false

@@ -8,7 +8,13 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { Text } from '@codemirror/state'
 import type { EditorHandle } from '../components/CodeEditor'
 import { backwardSexp, forwardSexp } from '../lib/bracketMatch'
-import { activeKeyBindings, toEmacsKey } from '../lib/emacs'
+import {
+  MODIFIER_KEYS,
+  activeKeyBindings,
+  eventKeyName,
+  lookupKeyBinding,
+  toEmacsKey,
+} from '../lib/emacs'
 import { type Buffer, generateBufferId, visitFile } from '../lib/buffer'
 import { checkHighlightRegexp, type Highlight } from '../lib/faces'
 import {
@@ -21,9 +27,13 @@ import {
   runHooks,
   runLispCommand,
 } from '../lib/lisp'
+import { windowIds } from '../lib/windows'
 import { setBackgroundColor, setFont, setForegroundColor } from '../lib/theme'
 import type { AppContext } from './useBuffers'
 import { type CommandSet, completeFile } from './useMinibuffer'
+
+/** 覚えておく最近のキーの数 (Emacs の `view-lossage` と同じ). */
+const RECENT_KEYS_SIZE = 300
 
 /**
  * Lisp の評価と, Lisp で作ったコマンドを作ります.
@@ -45,7 +55,9 @@ export function useLisp(
     editor,
     handles,
     windowBuffers,
+    layout,
     activeWindow,
+    selectWindow,
     setCurrentBufferId,
     updateCurrentBuffer,
     setCurrentText,
@@ -77,6 +89,19 @@ export function useLisp(
   const lispInput = useRef<{ resolve: (value: string) => void; reject: (err: Error) => void }>(null)
   // Lisp が待っている, 1 つのキーの答え (read-key)
   const lispKey = useRef<{ resolve: (key: string) => void; reject: (err: Error) => void }>(null)
+
+  // 最近押したキー (Emacs の書き方. 古いものから. `recent-keys`, `view-lossage`)
+  const recentKeys = useRef<string[]>([])
+  useEffect(() => {
+    const record = (event: KeyboardEvent) => {
+      if (MODIFIER_KEYS.includes(event.key)) return
+      recentKeys.current.push(toEmacsKey(eventKeyName(event)))
+      if (recentKeys.current.length > RECENT_KEYS_SIZE) recentKeys.current.shift()
+    }
+    // エディタが受ける前に残す (キーを処理したコマンドが, 伝わりを止めても残る)
+    window.addEventListener('keydown', record, true)
+    return () => window.removeEventListener('keydown', record, true)
+  }, [])
 
   /**
    * 評価の結果を出して, Lisp で作ったコマンドと, 割り当てたキーを覚えます.
@@ -200,6 +225,20 @@ export function useLisp(
       return { buffer, created: true }
     }
     /**
+     * 使われていないバッファの名前を返します (Emacs の `generate-new-buffer-name`).
+     *
+     * @param name - もとの名前.
+     * @param ignore - あいていると見なす名前.
+     * @returns `name`, `name<2>`, `name<3>`, ... のうち, 最初の使われていない名前.
+     */
+    const uniqueBufferName = (name: string, ignore: string | null): string => {
+      const used = (candidate: string) =>
+        candidate !== ignore && buffers.some((b) => b.name === candidate)
+      let candidate = name
+      for (let n = 2; used(candidate); n++) candidate = `${name}<${n}>`
+      return candidate
+    }
+    /**
      * 今のバッファの下線を, 変えます.
      *
      * @param change - 今の下線から, 新しい下線を作る関数.
@@ -293,6 +332,35 @@ export function useLisp(
           .filter(([, bound]) => bound === command)
           .map(([key]) => toEmacsKey(key)),
       editorCommandNames: () => [...handle().commandNames(), ...screenCommandNames.current],
+      getBufferCreate: async (name) => {
+        const { created } = getBufferCreate(name)
+        if (created) await waitRender()
+        return name
+      },
+      getBuffer: (name) => buffers.find((b) => b.name === name)?.name ?? null,
+      generateNewBufferName: (name, ignore) => uniqueBufferName(name, ignore),
+      generateNewBuffer: async (name) => {
+        const unique = uniqueBufferName(name, null)
+        getBufferCreate(unique)
+        await waitRender()
+        return unique
+      },
+      setBuffer: async (name) => {
+        const buffer = bufferNamed(name)
+        await showBuffer(buffer.id)
+        return name
+      },
+      otherWindow: async (count) => {
+        const ids = windowIds(layout)
+        if (ids.length < 2) return
+        const size = ids.length
+        selectWindow(ids[(((ids.indexOf(activeWindow) + count) % size) + size) % size])
+        await waitRender()
+      },
+      keyBinding: (keys) => lookupKeyBinding(lispKeys, keys),
+      allKeyBindings: () =>
+        activeKeyBindings(lispKeys).map(([key, command]) => [toEmacsKey(key), command]),
+      recentKeys: () => [...recentKeys.current],
       readString: (prompt, initial) =>
         new Promise((resolve, reject) => {
           lispInput.current = { resolve, reject }

@@ -2,7 +2,7 @@
 
 ;; Emacs の help.el と help-fns.el の残りに当たるもの (`describe-key`, `describe-variable`, `where-is` など).
 ;; `describe-function` は help-fns.scm. キーの割り当て (`key-binding`, `all-key-bindings`) と最近のキー (`recent-keys`) は,
-;; ターミナルのアプリが受け持つ.
+;; 画面 (Tauri とターミナルのアプリ) が受け持つ (`recent-keys` は, Tauri では最近押したキー 300 個).
 
 (define (help--variable-names)
   "Return the names of all variables, sorted."

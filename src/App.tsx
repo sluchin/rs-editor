@@ -12,7 +12,6 @@ import ProjectTree from './components/ProjectTree'
 import { type Buffer, headLines } from './lib/buffer'
 import { listDirectory } from './lib/fileOps'
 import { DIRED_MODE, majorMode } from './lib/modes'
-import { activeKeyBindings, toEmacsKey } from './lib/emacs'
 import type { KeyBinding } from './lib/lisp'
 import { windowRects } from './lib/windows'
 import { type CommandSet, type Submitters, useMinibuffer } from './hooks/useMinibuffer'
@@ -28,6 +27,10 @@ import './App.css'
  * バッファだけのキーの配列ごとに, 合わせた Lisp のキーと, 合わせたものを覚えます.
  */
 const mergedKeys = new WeakMap<KeyBinding[], { base: KeyBinding[]; merged: KeyBinding[] }>()
+
+/** ファイルを開いていて, 保存していないバッファなら `true` (Emacs は, ファイルのないバッファは聞かない). */
+const isUnsavedFile = (b: { filePath: string | null; modified: boolean }) =>
+  b.modified && b.filePath !== null
 
 /** 保存していないバッファがあるとき, 終わってよいか聞く文. */
 const CONFIRM_EXIT_PROMPT = 'Modified buffers exist; exit anyway? (yes or no) '
@@ -53,7 +56,6 @@ function App() {
     editor,
     currentBuffer,
     selectWindow,
-    createNewBuffer,
     killCurrentBuffer,
     handleEditorChange,
   } = bufs
@@ -76,7 +78,7 @@ function App() {
   // 保存していないバッファがあれば, 窓を閉じずに, 終わってよいか聞く
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested((event) => {
-      if (exitConfirmed.current || !buffersRef.current.some((b) => b.modified)) return
+      if (exitConfirmed.current || !buffersRef.current.some(isUnsavedFile)) return
       event.preventDefault()
       setPendingAction('confirm-exit')
       setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
@@ -90,7 +92,7 @@ function App() {
    * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消してよいか聞きます.
    */
   const handleKillBuffer = () => {
-    if (currentBuffer.modified) {
+    if (isUnsavedFile(currentBuffer)) {
       setPendingAction('kill-buffer')
       setMinibufferState({
         mode: 'input',
@@ -103,27 +105,11 @@ function App() {
   }
 
   /**
-   * キーの割り当ての一覧を, *Help* バッファに出します (前の *Help* は, 作り直す).
-   */
-  const handleDescribeBindings = () => {
-    const lines = activeKeyBindings(lispKeys).map(
-      ([key, command]) => `${toEmacsKey(key).padEnd(24)}${command}`,
-    )
-    const old = buffers.find((b) => b.name === '*Help*')
-    if (old) {
-      for (const handle of handles.current.values()) handle.forget(old.id)
-      bufs.setBuffers((prev) => prev.filter((b) => b.id !== old.id))
-    }
-    const header = `${'key'.padEnd(24)}binding\n${'---'.padEnd(24)}-------\n`
-    createNewBuffer('*Help*', null, header + lines.join('\n') + '\n')
-  }
-
-  /**
    * アプリを終わります (C-x C-c). 保存していないバッファがあれば, 終わってよいか聞きます.
    */
   const handleSaveBuffersKillTerminal = async () => {
     // 保存していないバッファがあれば, 終わってよいか聞く (Emacs と同じ)
-    if (buffers.some((b) => b.modified)) {
+    if (buffers.some(isUnsavedFile)) {
       setPendingAction('confirm-exit')
       setMinibufferState({ mode: 'input', prompt: CONFIRM_EXIT_PROMPT, input: '' })
       return
@@ -173,7 +159,6 @@ function App() {
   const appCommands: CommandSet = {
     actions: {
       'kill-buffer': handleKillBuffer,
-      'describe-bindings': handleDescribeBindings,
       'save-buffers-kill-terminal': () => void handleSaveBuffersKillTerminal(),
       'execute-extended-command': handleExecuteCommand,
       'goto-line': handleGotoLine,
