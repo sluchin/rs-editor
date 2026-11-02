@@ -92,7 +92,7 @@ function App() {
    * 選んでいるウィンドウのバッファを消します (C-x k). 保存していなければ, 消してよいか聞きます.
    */
   const handleKillBuffer = () => {
-    if (isUnsavedFile(currentBuffer)) {
+    if (currentBuffer.modified) {
       setPendingAction('kill-buffer')
       setMinibufferState({
         mode: 'input',

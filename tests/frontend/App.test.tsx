@@ -528,7 +528,7 @@ describe('App', () => {
     expect(editor.text()).toContain('*scratch*')
   })
 
-  it('C-x k は, 変更したファイルのバッファを消してよいか聞き, yes でだけ消す', async () => {
+  it('C-x k は, 変更したバッファを消してよいか聞き, yes でだけ消す', async () => {
     const editor = await setup()
     mocked.pathExists.mockResolvedValueOnce(true)
     mocked.readFile.mockResolvedValueOnce('x')
@@ -547,14 +547,9 @@ describe('App', () => {
     expect(editor.doc()).toContain(';; This buffer is for text that is not saved')
   })
 
-  it('ファイルのない *scratch* は, 変更しても, C-x k も C-x C-c も聞かない', async () => {
+  it('ファイルのない *scratch* は, 変更しても, C-x C-c では聞かない', async () => {
     const editor = await setup()
     await editor.type('changed')
-    editor.ctrlX('k', false)
-    expect(editor.text()).not.toContain('kill anyway')
-    expect(editor.doc()).toContain(';; This buffer is for text that is not saved')
-
-    await editor.type('again')
     await act(async () => editor.ctrlX('c'))
     expect(editor.text()).not.toContain('Modified buffers exist')
     expect(close).toHaveBeenCalled()
