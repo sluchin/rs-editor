@@ -35,9 +35,6 @@ const HELP: &str = include_str!("../../lisp/help.scm");
 const XREF: &str = include_str!("../../lisp/xref.scm");
 const INFO: &str = include_str!("../../lisp/info.scm");
 
-/// ブックマーク (Lisp).
-const BOOKMARK: &str = include_str!("../../lisp/bookmark.scm");
-
 /// ターミナルのエディタ.
 pub struct App {
     /// エディタを動かす窓口.
@@ -96,7 +93,6 @@ impl App {
         evaluator.eval_with(HELP, &host)?;
         evaluator.eval_with(XREF, &host)?;
         evaluator.eval_with(INFO, &host)?;
-        evaluator.eval_with(BOOKMARK, &host)?;
         let app = App {
             host,
             evaluator,

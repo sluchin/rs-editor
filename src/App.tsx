@@ -20,7 +20,6 @@ import { type AppContext, START_CURSOR, useBuffers } from './hooks/useBuffers'
 import { useDirectories } from './hooks/useDirectories'
 import { useFiles } from './hooks/useFiles'
 import { useSearch } from './hooks/useSearch'
-import { useBookmarks } from './hooks/useBookmarks'
 import { useLisp } from './hooks/useLisp'
 import './App.css'
 
@@ -62,7 +61,6 @@ function App() {
   const directories = useDirectories(ctx)
   const files = useFiles(ctx)
   const search = useSearch(ctx)
-  const bookmarks = useBookmarks(ctx)
   const lisp = useLisp(ctx, files.saveBuffer)
   const { lispKeys } = lisp
   // 最後に C-x r t で入れた文字 (次の既定)
@@ -221,7 +219,6 @@ function App() {
     ...bufs.windowCommands.actions,
     ...directories.commands.actions,
     ...search.commands.actions,
-    ...bookmarks.actions,
     ...lisp.commands.actions,
   }
   // Lisp の editor-command-names (C-h f の候補) に, 画面のコマンドの名前を渡す
@@ -233,7 +230,6 @@ function App() {
     ...bufs.windowCommands.submit,
     ...directories.commands.submit,
     ...search.commands.submit,
-    ...bookmarks.submit,
     ...lisp.commands.submit,
   }
 

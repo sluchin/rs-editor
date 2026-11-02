@@ -18,8 +18,6 @@ export type PendingAction =
   | 'replace-from'
   | 'replace-to'
   | 'string-rectangle'
-  | 'bookmark-set'
-  | 'bookmark-jump'
   | 'confirm-revert'
   | 'confirm-recover'
   | 'read-string'
@@ -34,8 +32,6 @@ const HISTORY_NAMES: Partial<Record<NonNullable<PendingAction>, string>> = {
   'replace-from': 'query-replace',
   'replace-to': 'query-replace',
   'string-rectangle': 'string-rectangle',
-  'bookmark-set': 'bookmark',
-  'bookmark-jump': 'bookmark',
   'kill-buffer': 'yes-or-no-p',
   'confirm-exit': 'yes-or-no-p',
   'confirm-revert': 'yes-or-no-p',

@@ -68,9 +68,6 @@ export function useBuffers(showMessage: (text: string) => void) {
       return handles.current.get(activeWindowRef.current)
     },
   }))
-  // バッファを出したら置く, カーソルの位置 (ブックマークへ移るとき)
-  const pendingPoint = useRef<number | null>(null)
-
   // 選んでいるウィンドウのバッファと, カーソルの位置
   const currentBufferId = windowBuffers[activeWindow]
   const cursor = cursors[activeWindow] ?? START_CURSOR
@@ -83,22 +80,6 @@ export function useBuffers(showMessage: (text: string) => void) {
       .then((dir) => setHomeDir(dir.endsWith('/') ? dir : dir + '/'))
       .catch(() => {})
   }, [])
-
-  // ブックマークへ移るときは, バッファを出してから, カーソルを置く
-  useEffect(() => {
-    if (pendingPoint.current === null) return
-    editor.current?.setCursor(pendingPoint.current)
-    pendingPoint.current = null
-  }, [currentBufferId, editor])
-
-  /**
-   * バッファを出したら置く, カーソルの位置を決めます (次にバッファを出したときに置く).
-   *
-   * @param pos - カーソルの位置.
-   */
-  const setPendingPoint = (pos: number) => {
-    pendingPoint.current = pos
-  }
 
   /**
    * ウィンドウを選びます.
@@ -298,7 +279,6 @@ export function useBuffers(showMessage: (text: string) => void) {
     cursor,
     currentBuffer,
     selectWindow,
-    setPendingPoint,
     setCurrentBufferId,
     updateCurrentBuffer,
     setCurrentText,

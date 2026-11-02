@@ -40,7 +40,6 @@ pub fn run() {
             commands::path_exists,
             commands::list_directory,
             commands::home_dir,
-            commands::bookmark_file_path,
             commands::backup_file,
             commands::delete_file,
             commands::file_newer_than,
