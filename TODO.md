@@ -239,7 +239,7 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
 - [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`。`read-file-name`、`find-file-noselect`、`pop-to-buffer-same-window` を使う)。
 - [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
       `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
-      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      `files--write-buffer` (バッファをファイルに書く。バックアップと自動保存のファイルは画面が受け持つ) を足した。
+      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      `files--write-buffer` (バッファをファイルに書く。バックアップと自動保存は核の `core/src/files.rs`) を足した。
       バッファを出す組み込みは、Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
 - [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
       組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。
@@ -250,9 +250,9 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
       進め方は、FUNCTIONS.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
       目標は、今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
       (1.1 から 1.11. 進み方は、FUNCTIONS.md の「実装の計画」)。
-      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。1.11 (今の画面 (Tauri) を核につなぐ) は、画面のコマンドを Lisp に移し終える段階 2 から 11 の後 (理由と、先につなぐ案は FUNCTIONS.md の「実装の計画」)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は済で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が済 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も済 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が済で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も済 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が済 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは FUNCTIONS.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が済で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
+      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。1.11 (今の画面 (Tauri) を核につなぐ) は済 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は済で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が済 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も済 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が済で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も済 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が済 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは FUNCTIONS.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が済で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
       速さが要るもの (`self-insert-command`、カーソルを動かすもの) は、動かして比べてから決める。
-- [ ] 読み出し専用のバッファ (`buffer-read-only`、`read-only-mode`、`toggle-read-only`) を核に入れる。画面 (Tauri) は、`set-buffer-read-only` でバッファを読み取り専用 (CodeMirror の `readOnly`。モードラインは `%%` と `%*`) にし、`*Messages*` は始めから読み取り専用。ただし、画面のコマンド (`C-k` など) は、まだ読み取り専用のバッファを書き換えられる (Emacs は `Buffer is read-only` のエラー)。核には、まだ無いので、`list-buffers` (`lisp/buff-menu.scm`) の一覧の 2 列目の `%` の印が出ない。
+- [x] 読み出し専用のバッファ (`buffer-read-only`、`read-only-mode`、`toggle-read-only`) を核に入れる (`Buffer::read_only`。書き換えると `Buffer is read-only` のエラー)。
 - [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は、組み込みのまま残す (Emacs と同じ)。
 
 ## Phase 17: ヘルプ (docstring と C-h f) と、ヘルプの多言語化
@@ -263,20 +263,18 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `define`、`define-command` の docstring (引数の後の文字列。本体が文字列だけなら、docstring でなく値) を覚える。
       `(documentation 'name)` と、変数の docstring (Emacs の `defvar` の 3 つ目。 `documentation-property`) も。
 - [ ] `define-syntax` の docstring。
-- [ ] 組み込みの関数 (Rust) と、画面のコマンド (TypeScript) の docstring を、1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
-      今は、`C-h f` (`describe-function`) や `C-h k` (`describe-key`) で `C-w` (`kill-region`) や `C-f` (`forward-char`) などを調べると、
-      `kill-region is an interactive built-in command.` のあと `Not documented.` と出る (画面の TypeScript のコマンドに docstring が無いため)。
+- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
+      画面のコマンド (TypeScript) は、核に移した (`docs/core_migration.md`) ので、コマンドは全て Lisp の docstring を持つ。
+      残るのは、Rust の組み込みの手続き (`car`、`insert`、`forward-char` など)。`C-h f` で調べると、`Not documented.` と出る。
       次の順で直す。
-  1. 画面のコマンドの docstring (英語) を、1 つの表 `src/lib/commandDocs.ts` (名前 → 文) に置く。文は、Emacs の docstring を `emacs -Q --batch` で書き出して作る
-     (`src/lib/elispKeywords.ts` と同じ作り方。`tools/emacs-commands/` に足す)。rs-editor で動きが違うコマンドは、違いを 1 行足す。
-  2. Lisp の `documentation` が、`editor-command-names` にある名前なら、画面に問い合わせて (新しい操作 `command-documentation`) 表の文を返す。
-     `lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。ターミナルのアプリ (`tui/`) のコマンドは Lisp なので、もう docstring がある。
+  1. 組み込みの手続きの docstring (英語) を、1 つの表 `core/src/scheme/builtin_docs.rs` (名前 → 文) に置く。
+     Emacs にある関数は、Emacs の docstring を `emacs -Q --batch` で書き出して作る (`tools/emacs-commands/` に足す)。rs-editor で動きが違うものは、違いを 1 行足す。
+  2. Lisp の `documentation` が、Lisp の docstring が無ければ、表の文を返す。`lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。
   3. `tools/po/update.py` が表も集め (`msgctxt` は `function:名前`)、`po/ja.po` に訳を足す。表の文も、Lisp の docstring と同じく `help-language` の訳で出る。
-  4. テスト: 画面のコマンドの名前が全て表にあること (`tests/frontend/lib/commandDocs.test.ts`)。無い名前を足すと失敗する。
-  5. コマンドを Lisp に移したら、表から消す (Phase 16)。Rust の組み込みの手続き (`car`、`insert` など) も、同じ方法で表 (`core/src/scheme/builtin_docs.rs`) にして集める。
+  4. テスト: 組み込みの名前 (`builtins::NAMES` など) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
 - [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`), 割り当てたキー (`where-is-internal`),
       引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
-      候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`) と、画面のコマンド (`editor-command-names`)。
+      候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。
 - [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。カーソルの所の名前を既定にする。
       docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は、Emacs と同じく置き換える。
       引数の形は、Emacs の書き方 (`&optional`) にする (今は、残りの引数で受けて `&rest ARGS`)。
@@ -290,7 +288,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
   - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り、各言語の PO に混ぜる道具 (`tools/po/update.py`。`npm run po:update`)。
     元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず、英語を出す。
     `npm run po:check` (`npm run check` で動く) で、作り直していない PO を見つける。
-  - [ ] Rust と TypeScript の docstring も集める (上の「1 か所に書く」の後)。
+  - [ ] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
   - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
     Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
   - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。

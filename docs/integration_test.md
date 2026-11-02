@@ -1,13 +1,13 @@
 # 結合試験仕様書
 
 rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確かめる試験の仕様です。
-単体試験 (`npm run test`、`cargo test --workspace`) では、画面と Lisp (`lisp/*.scm`) をつないだ動きを確かめられないため、この試験で補います。
+単体試験 (`npm run test`、`cargo test --workspace`) では、画面 (CodeMirror の描画、IME、マウス) と Rust の核をつないだ動きを確かめられないため、この試験で補います。
 
 ## 1. 目的と範囲
 
-- 目的は、TypeScript のコマンドを Lisp に移した機能 (Phase 16、17) が、実際のアプリで動くことを確かめること。
-- 範囲は、起動、バッファ、ヘルプ、`M-x grep`、`list-buffers`、dired、ブックマーク、ミニバッファの補完、`*Messages*` と `*Warnings*`。
-- 範囲外は、字下げ、検索、矩形など、Emacs の結果と自動で比べている機能 (`tests/frontend/lib/`、`core/tests/` が確かめる)。
+- 目的は、画面を Rust の核につなぎ替えた作り (`docs/core_migration.md`。画面は核の frame を描き、キーと文字を核に送るだけ) で、エディタが実際のアプリで動くことを確かめること。
+- 範囲は、起動、編集と表示 (キー、IME、マウス、ウィンドウ、スクロール、色付け)、ファイル (自動保存、バックアップ、フック)、バッファ、ヘルプ、`M-x grep`、`list-buffers`、dired、ブックマーク、ミニバッファの補完、`*Messages*` と `*Warnings*`、速さ。
+- 範囲外は、字下げ、移動、検索、矩形など、コマンドの結果を Emacs の結果と自動で比べている機能 (`core/tests/` が確かめる)。ここでは、画面に出ることだけを確かめる。
 
 ## 2. 試験の環境
 
@@ -89,7 +89,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | 番号 | 事前の状態 | 操作 | 期待する結果 |
 | --- | --- | --- | --- |
 | IT-040 | 起動直後 | `C-h k` `C-x C-f` | `*Help*` に `C-x C-f runs the command find-file` と、docstring が出る |
-| IT-041 | 同上 | `C-h k` `C-f` | `C-f runs the command forward-char` と出る。docstring は、まだ `Not documented.` (Phase 17 で直す) |
+| IT-041 | 同上 | `C-h k` `C-f` | `C-f runs the command forward-char` と、docstring (`Move point N characters forward …`) が出る |
 | IT-043 | 同上 | `C-h b` | `*Help*` にキーの割り当ての一覧が出る。`C-h b` と、Lisp の `global-set-key` で足したキーを含む |
 | IT-044 | 同上 | `C-h l` | 最近押した 300 キーまで出る。直前に押した `C-h` と `l` も含む |
 | IT-045 | 同上 | `C-h f` `find-file` RET | 定義したファイル (`files.scm`)、キー (`C-x C-f`)、引数の形、docstring が出る |
@@ -126,7 +126,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-072 | IT-070 の続き | 行を選んで RET (または `f`) | その行のバッファが出る |
 | IT-073 | IT-070 の続き | `o` | その行のバッファを、別の窓に出す (窓の操作が足りないときは、`TODO.md` の通り) |
 | IT-074 | IT-070 の続き | `q` | `*Buffer List*` の窓が閉じる |
-| IT-075 | `*Messages*` がある | `C-x C-b` | `*Messages*` の行の 2 列目に、読み取り専用の印 (`%`) が出ることを確かめる (出なければ、`TODO.md` の Phase 16 の項目の通り) |
+| IT-075 | `*Messages*` がある | `C-x C-b` | `*Messages*` の行の 2 列目に、読み取り専用の印 (`%`) が出る |
 
 ### 4.8 dired (`C-x d`)
 
@@ -178,6 +178,47 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-122 | 同上 | `M-:` `(define-command (hi) (message "hi"))` RET、`M-x` `hi` RET | `hi` が出る |
 | IT-123 | `*scratch*` | `(read-string "Name: ")` を `C-x C-e` で評価し、答えを入力 | ミニバッファで聞き、答えが返る。`C-g` で `Quit` |
 
+### 4.13 編集と表示
+
+| 番号 | 事前の状態 | 操作 | 期待する結果 |
+| --- | --- | --- | --- |
+| IT-130 | `a.txt` を開いた | 文字を打つ、`C-f`、`C-b`、`C-n`、`C-p`、`C-a`、`C-e`、`M-f`、`M-b` | 文字が入り、カーソルが Emacs と同じく動く。モードラインの行と列が変わる |
+| IT-131 | 同上 | `C-SPC` で印を付けて `C-n` で動き、`C-w`、`C-y`、`M-y` | 選んだ範囲に色が付き、切り取り、貼り付け、前に切ったものとの入れ替えができる |
+| IT-132 | 同上 | `C-/` を数回、`C-g` の後に `C-/` | 元に戻す。`C-g` の後は、やり直す |
+| IT-133 | 同上 | `C-s` `no` | 一致する所に移り、エコー領域に `I-search: no` と出る。`C-s` で次へ、RET で止める。`C-g` で元の位置に戻る |
+| IT-134 | 同上 | `M-%` `note` RET `memo` RET、`y` | 置き換えを聞き、`y` で置き換える |
+| IT-135 | 同上 | `C-x (`、`hello`、`C-x )`、`C-x e` | `hello` がもう一度入る |
+| IT-136 | 同上 | `C-x 2`、`C-x 3`、`C-x o`、`C-x 0`、`C-x 1` | ウィンドウが上下と左右に分かれ、移り、消える。それぞれにモードラインがある |
+| IT-137 | `C-x 2` で同じバッファを 2 つ出した | 片方で文字を打つ | もう片方にも、すぐ同じ文字が出る |
+| IT-138 | 100 行以上のファイルを開いた | `C-v`、`M-v`、`C-l` を 3 回、`M-r` を 3 回 | 1 画面ずつ動く。`C-l` で、カーソルの行が中、上、下に来る。`M-r` で、カーソルが中、上、下の行に動く |
+| IT-139 | 同上 | 本文をマウスで押す、ドラッグする | 押した所にカーソルが動く。ドラッグした範囲が選ばれる (`C-w` で切れる) |
+| IT-140 | 同上 | 日本語の入力 (IME) で `にほんご` を変換して確定する | 変換中の文字は出るが核には送らず、確定した `日本語` だけが入る。`C-/` で一度に消える |
+| IT-141 | `*scratch*` | 文字の貼り付け (Ctrl+Shift+V など、OS の貼り付け) | 貼り付けた文字が入る |
+| IT-142 | `.scm` のファイルを開いた | 見る | Emacs の scheme-mode と同じ色が付く。括弧の上で、対の括弧が強調される |
+| IT-143 | `*scratch*` | `M-x` `highlight-regexp` RET `foo` RET RET | `foo` に下線 (既定の face `hi-yellow`) が付く。`M-x` `unhighlight-regexp` で消える |
+| IT-144 | `.org` のファイルを開いた (`(require 'org)` を初期設定に書く) | 見出しで `TAB` | 見出しの下が閉じ、もう一度で開く。見出しの色が付く |
+| IT-145 | 読み取り専用のバッファ (`*Messages*`) | `C-k` | `Buffer is read-only: #<buffer *Messages*>` と出て、消えない |
+
+### 4.14 ファイル
+
+| 番号 | 事前の状態 | 操作 | 期待する結果 |
+| --- | --- | --- | --- |
+| IT-150 | `a.txt` を開いて 1 文字足した | 30 秒、何もしない | 画面下に `Auto-saving...done` と出る。`~/work/#a.txt#` ができ、足した文字を含む |
+| IT-151 | IT-150 の後 | `C-x C-s` | `~/work/a.txt~` (前の中身 `note`) ができ、`~/work/#a.txt#` が消える |
+| IT-152 | IT-151 の後 | もう一度足して `C-x C-s` | `~/work/a.txt~` は前のまま (訪れてから初めての保存だけ、バックアップを作る) |
+| IT-153 | `#a.txt#` が `a.txt` より新しい (IT-150 の後、保存せずに `C-x k` `yes`) | `C-x C-f` `~/work/a.txt` RET、`M-x` `recover-this-file` RET `yes` RET | 自動保存の中身に戻る |
+| IT-154 | 初期設定ファイルに `(add-hook 'find-file-hook (lambda () (message "opened %s" (buffer-name))))` | `C-x C-f` `~/work/a.txt` RET | `opened a.txt` と出る。開いているファイルをもう一度開いても出ない |
+| IT-155 | 初期設定ファイルに `(add-hook 'after-save-hook (lambda () (message "saved")))` | 書き換えて `C-x C-s` | `saved` と出る |
+| IT-156 | `a.txt` を開いた | 別のエディタで `a.txt` を書き換え、`M-x` `revert-buffer` RET `yes` RET | 新しい中身になる。`C-/` で元に戻せる |
+| IT-157 | サイドバーを出す (`F8`) | ファイルを押す | 選んでいるウィンドウに開く。今のファイルが強調される |
+
+### 4.15 速さ
+
+| 番号 | 事前の状態 | 操作 | 期待する結果 |
+| --- | --- | --- | --- |
+| IT-160 | 10 MB のファイル (`seq 1 1500000 > ~/work/big.txt`) | `C-x C-f` で開く | 数秒以内に開く |
+| IT-161 | IT-160 の後 | 文字を打ち続ける、`C-n` を押し続ける、`M->`、`M-<` | 打った文字とカーソルが遅れずに出る |
+
 ## 5. 結果の記録
 
 試験のたびに、次の表を `docs/integration_test_results/` に、日付 (`2026-11-02.md` など) の名前で作る。
@@ -194,8 +235,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 
 ## 7. 既知の違い (不合格にしない)
 
-- `C-h f`、`C-h k` で、画面の TypeScript のコマンド (`C-f` の `forward-char` など) は、docstring が `Not documented.` になる (`TODO.md` の Phase 17)。
-- 読み取り専用のバッファでも、画面のコマンド (`C-k` など) は書き換えられる (`TODO.md` の Phase 16)。
+- `C-h f` で、Rust の組み込みの手続き (`car`、`insert` など) は、docstring が `Not documented.` になる (`TODO.md` の Phase 17)。
 - `kill-buffer` を Lisp から名前付きで呼ぶと、聞かずに消す (書き換えたファイルのバッファならエラー)。
 - 古い JSON 形式のブックマークは、読み込まない。
 - dired には、`RET`、`n`、`p`、`^`、`g` などの専用のキーがまだ無い (一覧と `dired-jump` だけ)。

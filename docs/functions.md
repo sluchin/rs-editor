@@ -157,51 +157,51 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - **既定のキー**: `emacs -Q` の global-map のキー。global-map に無ければ, ほかのキーマップ (ミニバッファなど) のキーを, キーマップの名前と書く。
 - **rs-editor**: rs-editor にあるコマンドは「実装済み」と, rs-editor のキーを書く。
-- **実装**: rs-editor で書いた言語とファイル。今は, ほとんどを TypeScript (画面) で書いている。いずれ Lisp (`lisp/`) に移す (移したら「Lisp」になる)。Emacs の「C で書いたもの」「Lisp で書いたもの」は, Emacs の中での区別で, rs-editor での書き方とは別。
+- **実装**: rs-editor で書いた言語とファイル。コマンドは Lisp (`lisp/`) で書き, キーだけで動くもの (前置引数など) は Rust の核のコマンドループで扱う。Emacs の「C で書いたもの」「Lisp で書いたもの」は, Emacs の中での区別で, rs-editor での書き方とは別。
 - **Edwin**: MIT/GNU Scheme 12.1 の Edwin (Emacs に似たエディタ. `src/edwin` の `define-command`) にも, 同じ名前のコマンドがあれば ◯。名前の一覧は `tools/emacs-commands/edwin-commands.txt` (`tools/emacs-commands/edwin.sh` で作る)。
 - **計画**: 「エディタの基本のコマンド」の表だけにある。Lisp で書く段階の番号 (下の「実装の計画」の段階)。「済」は, 既に Lisp で書いたもの。計画は `tools/emacs-commands/plan.py` に書く。
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 20 個: Lisp 6 個, TypeScript 14 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 19 個: Lisp 19 個, Rust 0 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
-| `abort-minibuffers` |  | minibuffer-local-completion-map: `C-g`<br>minibuffer-local-isearch-map: `C-g`<br>minibuffer-local-map: `C-g` | 実装済み |  | TypeScript (`src/App.tsx`) |
-| `abort-recursive-edit` | ◯ | `C-]` | 実装済み | `C-]` | TypeScript (`src/App.tsx`) |
+| `abort-minibuffers` |  | minibuffer-local-completion-map: `C-g`<br>minibuffer-local-isearch-map: `C-g`<br>minibuffer-local-map: `C-g` |  |  |  |
+| `abort-recursive-edit` | ◯ | `C-]` | 実装済み | `C-]` | Lisp (`lisp/simple.scm`) |
 | `accelerate-menu` |  |  |  |  |  |
 | `add-name-to-file` |  |  |  |  |  |
-| `backward-char` | ◯ | `C-b` | 実装済み | `C-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `backward-char` | ◯ | `C-b` | 実装済み | `C-b`, `<left>` | Lisp (`lisp/simple.scm`) |
 | `base64-decode-region` |  |  |  |  |  |
 | `base64-encode-region` |  |  |  |  |  |
 | `base64url-encode-region` |  |  |  |  |  |
 | `beginning-of-line` | ◯ |  |  |  |  |
 | `buffer-enable-undo` |  |  |  |  |  |
-| `call-last-kbd-macro` | ◯ |  | 実装済み | `C-x e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `call-last-kbd-macro` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `capitalize-region` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
-| `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | Lisp (`lisp/simple.scm`) |
 | `chmod` |  |  |  |  |  |
 | `copy-file` | ◯ |  |  |  |  |
 | `decode-coding-region` |  |  |  |  |  |
 | `defining-kbd-macro` |  |  |  |  |  |
-| `delete-char` | ◯ | `C-d` | 実装済み | `C-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `delete-char` | ◯ | `C-d` | 実装済み | `C-d` | Lisp (`lisp/simple.scm`) |
 | `delete-frame` | ◯ | `C-x 5 0` |  |  |  |
 | `delete-other-windows-internal` |  |  |  |  |  |
 | `delete-process` |  |  |  |  |  |
 | `delete-region` | ◯ |  |  |  |  |
 | `do-auto-save` | ◯ |  |  |  |  |
-| `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
-| `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | Lisp (`lisp/simple.scm`) |
+| `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | Lisp (`lisp/simple.scm`) |
 | `encode-coding-region` |  |  |  |  |  |
-| `end-kbd-macro` | ◯ |  | 実装済み | `C-x )` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `end-kbd-macro` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `end-of-line` | ◯ |  |  |  |  |
 | `erase-buffer` |  |  |  |  |  |
 | `eval-buffer` |  |  |  |  |  |
 | `eval-region` | ◯ |  |  |  |  |
 | `exit-recursive-edit` | ◯ | `C-M-c` |  |  |  |
-| `forward-char` | ◯ | `C-f` | 実装済み | `C-f` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `forward-char` | ◯ | `C-f` | 実装済み | `C-f`, `<right>` | Lisp (`lisp/simple.scm`) |
 | `forward-line` |  |  |  |  |  |
-| `forward-word` | ◯ | `M-f`, `ESC <right>` | 実装済み | `M-f` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `forward-word` | ◯ | `M-f`, `ESC <right>` | 実装済み | `M-f` | Lisp (`lisp/simple.scm`) |
 | `garbage-collect` |  |  |  |  |  |
 | `goto-char` | ◯ | `M-g c` |  |  |  |
 | `handle-save-session` |  | special-event-map: `<save-session>` |  |  |  |
@@ -227,7 +227,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `modify-syntax-entry` |  |  |  |  |  |
 | `move-to-column` |  | `M-g TAB` |  |  |  |
 | `move-to-window-line` | ◯ |  |  |  |  |
-| `narrow-to-region` | ◯ | `C-x n n` | 実装済み |  | Lisp (`lisp/simple.scm`) |
+| `narrow-to-region` | ◯ | `C-x n n` | 実装済み | `C-x n n` | Lisp (`lisp/simple.scm`) |
 | `open-dribble-file` |  |  |  |  |  |
 | `open-termscript` |  |  |  |  |  |
 | `posix-search-backward` |  |  |  |  |  |
@@ -239,7 +239,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `recursive-edit` |  |  |  |  |  |
 | `redirect-debugging-output` |  |  |  |  |  |
 | `redraw-display` | ◯ |  |  |  |  |
-| `rename-buffer` | ◯ | `C-x x r` | 実装済み |  | Lisp (`lisp/simple.scm`) |
+| `rename-buffer` | ◯ | `C-x x r` | 実装済み | `C-x x r` | Lisp (`lisp/simple.scm`) |
 | `rename-file` | ◯ |  |  |  |  |
 | `replace-buffer-contents` |  |  |  |  |  |
 | `scroll-down` | ◯ | kmacro-step-edit-map: `M-v`, `<prior>`<br>multi-query-replace-map: `M-v`, `<prior>`<br>query-replace-map: `M-v`, `<prior>` |  |  |  |
@@ -256,35 +256,35 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `set-frame-height` |  |  |  |  |  |
 | `set-frame-width` |  |  |  |  |  |
 | `signal-process` |  |  |  |  |  |
-| `start-kbd-macro` | ◯ |  | 実装済み | `C-x (` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
+| `start-kbd-macro` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `suspend-emacs` |  |  |  |  |  |
 | `top-level` |  |  |  |  |  |
 | `transpose-regions` |  |  |  |  |  |
 | `unix-sync` |  |  |  |  |  |
 | `upcase-initials-region` |  |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
-| `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
-| `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) |
-| `widen` | ◯ | `C-x n w` | 実装済み |  | Lisp (`lisp/simple.scm`) |
+| `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | Lisp (`lisp/simple.scm`) |
+| `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | Lisp (`lisp/simple.scm`) |
+| `widen` | ◯ | `C-x n w` | 実装済み | `C-x n w` | Lisp (`lisp/simple.scm`) |
 | `write-region` | ◯ |  |  |  |  |
 | `x-menu-bar-open-internal` |  |  |  |  |  |
 | `x-print-frames-dialog` |  |  |  |  |  |
 
 ### 実装の計画 (エディタの基本のコマンドを Lisp で書く)
 
-エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと(そのため, 段階 1 で, エディタの核を Rust に作る)。下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。段階は番号の順に進める (1 は土台で, 2 以降の前提)。TypeScript で書いてあるコマンドは, Lisp に移したら TypeScript の方を消す。
+エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと(そのため, 段階 1 で, エディタの核を Rust に作る)。下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。段階は番号の順に進める (1 は土台で, 2 以降の前提)。画面 (Tauri) の TypeScript のコマンドは, 全て消した (画面は核の frame を描くだけ。`docs/core_migration.md`)。
 
-| 段階 | 内容 | コマンド | 新しく書く | TypeScript から移す |
+| 段階 | 内容 | コマンド | 新しく書く | Rust から移す |
 |---|---|---|---|---|
 | 1 | 土台: Rust のエディタの核 (ターミナルの ncurses でも動かすため) | - | - | - |
-| 2 | 動き | 10 | - | 10 |
-| 3 | 消す, 切る, 貼る, 元に戻す | 18 | - | 18 |
-| 4 | マーク, 前置引数, 実行 | 8 | - | 8 |
-| 5 | S 式, 段落, ページ | 14 | - | 14 |
-| 6 | 字下げ, 整形, コメント | 4 | - | 4 |
-| 7 | 検索, 置換, 強調 | 6 | - | 6 |
-| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 7 | 1 | 6 |
-| 9 | ファイル, バッファ, dired, ブックマーク, シェル | 1 | - | 1 |
-| 10 | ウィンドウ | 12 | 4 | 8 |
+| 2 | 動き | - | - | - |
+| 3 | 消す, 切る, 貼る, 元に戻す | - | - | - |
+| 4 | マーク, 前置引数, 実行 | - | - | - |
+| 5 | S 式, 段落, ページ | - | - | - |
+| 6 | 字下げ, 整形, コメント | - | - | - |
+| 7 | 検索, 置換, 強調 | - | - | - |
+| 8 | 矩形, レジスタ, キーボードマクロ, 略語 | 1 | 1 | - |
+| 9 | ファイル, バッファ, dired, ブックマーク, シェル | - | - | - |
+| 10 | ウィンドウ | 4 | 4 | - |
 | 11 | ヘルプ, xref, info | - | - | - |
 | 12 | 入れない | 23 | 23 | - |
 
@@ -299,34 +299,33 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - 【Rust の部品は済 (`core/src/search.rs`, `core/src/syntax.rs`). Lisp につなぐのは 1.9】1.6 探す: `search-forward`, `search-backward`, `re-search-forward`, `re-search-backward`, `looking-at`, `match-beginning`, `match-end` (Emacs の正規表現の書き方に合わせる)。構文: `scan-lists`, `scan-sexps`, `syntax-ppss`, `char-syntax` (`src/lib/syntax.ts` を Rust に移した)。どちらも `emacs -Q --batch` の結果と全ての位置で比べる (`tools/syntax/run.sh`)。
 - 【Rust の部品は済 (`core/src/window.rs`, `core/src/editor.rs`). Lisp につなぐのは 1.9】1.7 窓とバッファの一覧: `selected-window`, `split-window`, `delete-window`, `window-list`, `set-window-buffer`, `set-buffer`, `get-buffer`, `generate-new-buffer`, `with-current-buffer`, バッファごとの変数 (`make-local-variable`)。
 - 【前置引数の部品は済 (`Editor::prefix_arg`, `prefix_numeric_value`). `interactive` は 1.9】1.8 前置引数: `current-prefix-arg`, `prefix-numeric-value`。`define-command` に, 引数の読み方 (Emacs の `interactive`) を足す。
-- 【Rust は済 (`core/src/scheme/editor_host.rs`: `Editor` を直接動かす `EditorHost`. 63 個の組み込み). 今の画面 (Tauri) をつなぐのは 1.11】1.9 評価器を核につなぐ: 今の `Host` (画面に頼んで返事を待つ) をやめ, 評価器が核を直接動かす。画面に頼むのは, 描くこと, ミニバッファの入力, ファイルの選択だけにする (`Host` を小さくする)。
+- 【Rust は済 (`core/src/scheme/editor_host.rs`: `Editor` を直接動かす `EditorHost`. 63 個の組み込み). 画面 (Tauri) も 1.11 でつないだ】1.9 評価器を核につなぐ: 今の `Host` (画面に頼んで返事を待つ) をやめ, 評価器が核を直接動かす。画面に頼むのは, 描くこと, ミニバッファの入力, ファイルの選択だけにする (`Host` を小さくする)。
 - 【済 (`tui/`. 動いている: 移動, 編集, kill, yank, undo, 窓の分割, ファイルを開く, 保存, M-x, 終了。基本のコマンドは `lisp/simple.scm`)】1.10 ターミナルのアプリの骨組み (`tui/`. ncurses): 核の状態を描き, キーを核に渡す。カーソルを動かし, 文字を入れ, 保存できるところまで。
-- 【段階 2 から 11 の後】1.11 今の画面 (Tauri) を核につなぎ替える: 本文の持ち主を CodeMirror から核に移す。CodeMirror は表示と入力にする。今の画面のコマンド (`src/lib/emacs.ts` など. 約 85 個) は, CodeMirror の状態を直接書き換えているので, 段階 2 から 11 で Lisp に移し終えるまでは, 持ち主を移せない。移す前の動きは, `tests/frontend/` のテストで保つ。
-- 【つないだ (`core/src/scheme/mirror.rs`. 環境変数 `RSEDITOR_NO_CORE` で、これまでの動きに戻せる)】1.11 の前につなぐ案 (Tauri の画面を, 先に核の組み込みで動かす): 評価のあいだだけ, 画面のバッファを核に写し (スナップショット), 終わったら変更を画面に返す (`EditorHost` を `Bridge` の上で動かし, 本文の操作は核で, バッファの出し入れとウィンドウは画面に頼む). 探す, 構文, マークなどの組み込みが, 今の画面の Lisp (howm, org) でも使える。画面の往復が減る代わりに, 画面と核の本文の同期が要る。実際の画面での確かめが要るので, 段階 2 以降の Lisp が画面で要るようになったときに行う。
+- 【済 (`docs/core_migration.md`. 画面は `src-tauri/src/session.rs` の `Session` で核を動かし, frame を描く)】1.11 今の画面 (Tauri) を核につなぎ替える: 本文の持ち主を CodeMirror から核に移す。CodeMirror は表示と入力にする。画面の TypeScript のコマンドは全て消した。
 
 **2. 動き**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/test_motion.rs`. 392 通り). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後 (段階 1.11 の前の案)】行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/test_motion.rs`. 392 通り). 画面 (Tauri) の TypeScript 版は消した (1.11)】行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。
 
 **3. 消す, 切る, 貼る, 元に戻す**
 
-- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
+- 【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, `core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版は消した (1.11)】違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), `undo` が保存した状態に戻っても「変更なし」にならないこと。kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。
 
 **4. マーク, 前置引数, 実行**
 
-- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
+- 【Lisp 版とターミナルのアプリは済 (`lisp/simple.scm`, `tui/`). マークは `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`). `next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). `grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. 違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。
 
 **5. S 式, 段落, ページ**
 
-- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`insert-parentheses`、`move-past-close-and-reindent`、`count-lines-page` も済 (`move-past-close-and-reindent` は、scheme-mode の `{}` と `|sym (|` を含む本文の字下げだけ Emacs と違う)。絞り込みは、核に作った (`Buffer::narrow_to_region`、`widen`、`save-restriction`、`buffer-narrowed-p`。点、移動、検索、構文の走査、`buffer-string`、`erase-buffer`、窓の描画が、見える範囲だけを扱う。`goto-line` は、絞り込みの外の行なら絞り込みをやめる)。`narrow-to-region`、`widen`、`narrow-to-page`、`narrow-to-defun` は、Emacs と一致 (`core/tests/test_lisp.rs`、`core/tests/test_narrow.rs`)。違いが残るのは、段落、文、字下げ、整形の計算 (`forward-paragraph` など) が、絞り込みを見ずに本文の全体を読むこと、画面 (Tauri) がまだ絞り込めないこと。画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
+- 【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: 3 つのモードで, 50 通りのコマンドを全ての位置から, 対話的に). ページ (`forward-page`, `mark-page`) と入れ替え (`transpose-sexps`, `transpose-sentences`, `transpose-paragraphs`) も済 (`transpose-sexps` は, バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`insert-parentheses`、`move-past-close-and-reindent`、`count-lines-page` も済 (`move-past-close-and-reindent` は、scheme-mode の `{}` と `|sym (|` を含む本文の字下げだけ Emacs と違う)。絞り込みは、核に作った (`Buffer::narrow_to_region`、`widen`、`save-restriction`、`buffer-narrowed-p`。点、移動、検索、構文の走査、`buffer-string`、`erase-buffer`、窓の描画が、見える範囲だけを扱う。`goto-line` は、絞り込みの外の行なら絞り込みをやめる)。`narrow-to-region`、`widen`、`narrow-to-page`、`narrow-to-defun` は、Emacs と一致 (`core/tests/test_lisp.rs`、`core/tests/test_narrow.rs`)。違いが残るのは、段落、文、字下げ、整形の計算 (`forward-paragraph` など) が、絞り込みを見ずに本文の全体を読むこと、画面 (Tauri) がまだ絞り込めないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。
 
 **6. 字下げ, 整形, コメント**
 
-- 【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: `indent-for-tab-command`, `indent-region`, `indent-sexp`, `newline`, `indent-rigidly`, `tab-to-tab-stop`, `set-fill-prefix`, `fill-paragraph`, `comment-dwim`, `comment-line` を, 本文の全ての位置から. 日本語の折り (禁則) は Emacs と別の決まりで, `core/tests/test_fill.rs` で試す). 違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, `comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, `comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。画面 (Tauri) の TypeScript 版 (`src/lib/lispIndent.ts`, `src/lib/fill.ts`, `src/lib/comment.ts`) を消すのは, 画面をつないだ後】`TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。
+- 【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: `indent-for-tab-command`, `indent-region`, `indent-sexp`, `newline`, `indent-rigidly`, `tab-to-tab-stop`, `set-fill-prefix`, `fill-paragraph`, `comment-dwim`, `comment-line` を, 本文の全ての位置から. 日本語の折り (禁則) は Emacs と別の決まりで, `core/tests/test_fill.rs` で試す). 違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, `comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, `comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】`TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。
 
 **7. 検索, 置換, 強調**
 
-- 【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: `replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), `isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる)、`isearch-forward-thing-at-point` と `isearch-forward-symbol-at-point` (カーソルの所の物を初めの文字列にする。物は `region`、`symbol`、`sexp` で、`url` は無い。変数 `isearch-forward-thing-at-point` は、同じ名前の命令があるので `isearch-forward-thing-at-point-things`)。強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, 記号の検索 (`isearch-forward-symbol`) で空白や正規表現の特別な文字を打つこと, 空白を打つと, 続く空白の全てに合う (lax whitespace) 動きが無いこと, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, `\#` `\,` `\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, 強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
+- 【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: `replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), `isearch-forward` と `isearch-backward` と正規表現の版 (`core/tests/test_isearch.rs`: Emacs のコマンドを, キーの順に呼んだ結果と, 全ての位置から比べる)、`isearch-forward-thing-at-point` と `isearch-forward-symbol-at-point` (カーソルの所の物を初めの文字列にする。物は `region`、`symbol`、`sexp` で、`url` は無い。変数 `isearch-forward-thing-at-point` は、同じ名前の命令があるので `isearch-forward-thing-at-point-things`)。強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, 記号の検索 (`isearch-forward-symbol`) で空白や正規表現の特別な文字を打つこと, 空白を打つと, 続く空白の全てに合う (lax whitespace) 動きが無いこと, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, `\#` `\,` `\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, 強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。
 
 **8. 矩形, レジスタ, キーボードマクロ, 略語**
 
@@ -337,253 +336,253 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 - ファイルとバッファの残りのコマンド, `list-buffers`, dired, ブックマーク, `M-!`, `M-|`, `M-&`, バッファの複製。
 - `save-buffers-kill-terminal` は, アプリを終える頼みを `Host` に足してから移す。
-- 【シェルとバッファの命令は Lisp 版が済 (`lisp/simple.scm`, `lisp/files.scm`). `emacs -Q --batch` の結果と一致: `shell-command` と `shell-command-on-region` (出力のバッファ, 今のバッファに入れる, 領域の置き換え, エコー領域か別のバッファか, 終了コードのメッセージ), `clone-buffer` (本文, 点, マーク, 絞り込み), `not-modified`, 読み取り専用のバッファでの編集の失敗 (`insert`, `delete-char`, `kill-word`, `upcase-region` など) (`core/tests/test_edit.rs`). `async-shell-command`, `rename-buffer`, `rename-uniquely`, `read-only-mode`, `find-file-read-only`, `revert-buffer-quick`, `list-directory`, `clone-indirect-buffer-other-window` は 名前, ファイル, 問いが絡むので Rust で試す (`core/tests/test_simple_buffers.rs`, `core/tests/test_editor.rs`, `core/tests/test_buffer.rs`). 違いが残るのは, 非同期のシェルのコマンド (`&` で終わる命令と `async-shell-command`) を終わりまで動かしてから次を読むこと (プロセスのバッファ, 途中の出力, 止めることが無い), 標準エラーを別のバッファに分けられないこと (`error-buffer` は使わず, 出力に混ぜる), 領域が不連続のとき (`region-noncontiguous-p`) と `shell-command-dont-erase-buffer` が無いこと, `clone-indirect-buffer-other-window` が本文を共有する間接バッファではなく, 本文を写した双子のバッファになること, `clone-buffer` がメジャーモードとバッファごとの変数を写さないこと (モードが無い), `read-only-mode` がマイナーモードではなく命令で, 文字ごとの `read-only` の属性と `inhibit-read-only` と `view-mode` が無いこと, `list-directory` の一覧が `ls` の出力のままで (`ls -CF` の列の幅は端末の幅で決まる), `*Directory*` が help-mode でなく, 取り消しの記録を止めないこと, `revert-buffer-quick` が自動保存のファイルからの読み直し (前置引数) と `revert-buffer-quick-short-answers` に対応しないこと, `find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
+- 【シェルとバッファの命令は Lisp 版が済 (`lisp/simple.scm`, `lisp/files.scm`). `emacs -Q --batch` の結果と一致: `shell-command` と `shell-command-on-region` (出力のバッファ, 今のバッファに入れる, 領域の置き換え, エコー領域か別のバッファか, 終了コードのメッセージ), `clone-buffer` (本文, 点, マーク, 絞り込み), `not-modified`, 読み取り専用のバッファでの編集の失敗 (`insert`, `delete-char`, `kill-word`, `upcase-region` など) (`core/tests/test_edit.rs`). `async-shell-command`, `rename-buffer`, `rename-uniquely`, `read-only-mode`, `find-file-read-only`, `revert-buffer-quick`, `list-directory`, `clone-indirect-buffer-other-window` は 名前, ファイル, 問いが絡むので Rust で試す (`core/tests/test_simple_buffers.rs`, `core/tests/test_editor.rs`, `core/tests/test_buffer.rs`). 違いが残るのは, 非同期のシェルのコマンド (`&` で終わる命令と `async-shell-command`) を終わりまで動かしてから次を読むこと (プロセスのバッファ, 途中の出力, 止めることが無い), 標準エラーを別のバッファに分けられないこと (`error-buffer` は使わず, 出力に混ぜる), 領域が不連続のとき (`region-noncontiguous-p`) と `shell-command-dont-erase-buffer` が無いこと, `clone-indirect-buffer-other-window` が本文を共有する間接バッファではなく, 本文を写した双子のバッファになること, `clone-buffer` がメジャーモードとバッファごとの変数を写さないこと (モードが無い), `read-only-mode` がマイナーモードではなく命令で, 文字ごとの `read-only` の属性と `inhibit-read-only` と `view-mode` が無いこと, `list-directory` の一覧が `ls` の出力のままで (`ls -CF` の列の幅は端末の幅で決まる), `*Directory*` が help-mode でなく, 取り消しの記録を止めないこと, `revert-buffer-quick` が自動保存のファイルからの読み直し (前置引数) と `revert-buffer-quick-short-answers` に対応しないこと, `find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】
 
 **10. ウィンドウ**
 
-- 窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。【Lisp 版とターミナルのアプリは済 (`lisp/window.scm`, `lisp/simple.scm`, `core/src/window.rs`, `tui/`). バッチの Emacs には窓が 1 つしか無いので, `emacs -Q --batch` との比べは無く, Rust のテストで試す (`core/tests/test_window_commands.rs`, `core/tests/test_window.rs`, `core/tests/test_editor.rs`, `tui/tests/test_app.rs`). 窓の木に分ける割合を持たせ (`enlarge-window`, `shrink-window`, `balance-windows`, `fit-window-to-buffer` などが変える), 画面の大きさを核に知らせて (`Editor::set_screen_size`), 窓の大きさを行と桁で数える。違いが残るのは, 窓ごとの点 (`window-point`) と先頭の行 (`window-start`) が無く, 点はバッファごとなので, 同じバッファを出した窓では `scroll-other-window` が選んだ窓の点も動かすこと, `next-buffer` と `previous-buffer` が, 窓ごとの前のバッファの履歴ではなく, バッファの一覧の順に替えること, `quit-window` と `delete-windows-on` がバッファを後ろに回さないこと (`bury-buffer` が無い), 大きさを変えるときに, 隣の窓の最小の高さを守らず, 割合を 5% から 95% に収めるだけなこと, `fit-window-to-buffer` が高さだけを合わせること (幅, `fit-window-to-buffer-horizontally`, 最大の高さの変数が無い), `enlarge-window` が行の数で言った量にぴったり合わないことがある (割合から丸めるため) こと, `same-window-prefix`, `other-window-prefix`, `toggle-window-dedicated`, `window-toggle-side-windows` (窓を固定する, 横の窓) が無いこと, `move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
+- 窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。【Lisp 版とターミナルのアプリは済 (`lisp/window.scm`, `lisp/simple.scm`, `core/src/window.rs`, `tui/`). バッチの Emacs には窓が 1 つしか無いので, `emacs -Q --batch` との比べは無く, Rust のテストで試す (`core/tests/test_window_commands.rs`, `core/tests/test_window.rs`, `core/tests/test_editor.rs`, `tui/tests/test_app.rs`). 窓の木に分ける割合を持たせ (`enlarge-window`, `shrink-window`, `balance-windows`, `fit-window-to-buffer` などが変える), 画面の大きさを核に知らせて (`Editor::set_screen_size`), 窓の大きさを行と桁で数える。違いが残るのは, 窓ごとの点 (`window-point`) と先頭の行 (`window-start`) が無く, 点はバッファごとなので, 同じバッファを出した窓では `scroll-other-window` が選んだ窓の点も動かすこと, `next-buffer` と `previous-buffer` が, 窓ごとの前のバッファの履歴ではなく, バッファの一覧の順に替えること, `quit-window` と `delete-windows-on` がバッファを後ろに回さないこと (`bury-buffer` が無い), 大きさを変えるときに, 隣の窓の最小の高さを守らず, 割合を 5% から 95% に収めるだけなこと, `fit-window-to-buffer` が高さだけを合わせること (幅, `fit-window-to-buffer-horizontally`, 最大の高さの変数が無い), `enlarge-window` が行の数で言った量にぴったり合わないことがある (割合から丸めるため) こと, `same-window-prefix`, `other-window-prefix`, `toggle-window-dedicated`, `window-toggle-side-windows` (窓を固定する, 横の窓) が無いこと, `move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】
 
 **11. ヘルプ, xref, info**
 
-- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). `emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). `describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, `info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】
+- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). `emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). `describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, `info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。画面 (Tauri) の TypeScript 版は消した (1.11)】
 
 **12. 入れない**
 
 - rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。
 
-### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 234 個: Lisp 159 個, TypeScript 75 個. Edwin にもある: 135 個)
+### エディタの基本のコマンド (Lisp で書いたもの. 262 個. 実装済み 234 個: Lisp 234 個, Rust 0 個. Edwin にもある: 135 個)
 
 | コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |
 |---|---|---|---|---|---|---|---|
 | `analyze-text-conversion` |  | simple | `<text-conversion>` |  |  |  | 12 |
-| `append-next-kill` | ◯ | simple | `C-M-w` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `async-shell-command` |  | simple | `M-&` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `back-to-indentation` | ◯ | simple | `M-m` | 実装済み | `M-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `backward-kill-word` | ◯ | simple | `M-DEL`, `C-<backspace>` | 実装済み | `M-DEL` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `backward-word` | ◯ | simple | `M-b`, `ESC <left>` | 実装済み | `M-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `beginning-of-buffer` | ◯ | simple | `M-<`, `<begin>`, `C-<home>` | 実装済み | `M-<` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `clone-buffer` |  | simple | `C-x x n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `clone-indirect-buffer-other-window` |  | simple | `C-x 4 c` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `append-next-kill` | ◯ | simple | `C-M-w` | 実装済み | `C-M-w` | Lisp (`lisp/simple.scm`) | 済 |
+| `async-shell-command` |  | simple | `M-&` | 実装済み | `M-&` | Lisp (`lisp/simple.scm`) | 済 |
+| `back-to-indentation` | ◯ | simple | `M-m` | 実装済み | `M-m` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-kill-word` | ◯ | simple | `M-DEL`, `C-<backspace>` | 実装済み | `M-DEL` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-word` | ◯ | simple | `M-b`, `ESC <left>` | 実装済み | `M-b` | Lisp (`lisp/simple.scm`) | 済 |
+| `beginning-of-buffer` | ◯ | simple | `M-<`, `<begin>`, `C-<home>` | 実装済み | `M-<` | Lisp (`lisp/simple.scm`) | 済 |
+| `clone-buffer` |  | simple | `C-x x n` | 実装済み | `C-x x n` | Lisp (`lisp/simple.scm`) | 済 |
+| `clone-indirect-buffer-other-window` |  | simple | `C-x 4 c` | 実装済み | `C-x 4 c` | Lisp (`lisp/simple.scm`) | 済 |
 | `compose-mail` |  | simple | `C-x m` |  |  |  | 12 |
 | `compose-mail-other-frame` |  | simple | `C-x 5 m` |  |  |  | 12 |
 | `compose-mail-other-window` |  | simple | `C-x 4 m` |  |  |  | 12 |
-| `count-words-region` |  | simple | `M-=` | 実装済み | `M-=` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `cycle-spacing` |  | simple | `M-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `default-indent-new-line` |  | simple | `M-j`, `C-M-j` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `delete-backward-char` | ◯ | simple | `DEL` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `delete-blank-lines` | ◯ | simple | `C-x C-o` | 実装済み | `C-x C-o` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `delete-forward-char` |  | simple | `<deletechar>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `delete-horizontal-space` | ◯ | simple | `M-\` | 実装済み | `M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `delete-indentation` | ◯ | simple | `M-^` | 実装済み | `M-^` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
+| `count-words-region` |  | simple | `M-=` | 実装済み | `M-=` | Lisp (`lisp/simple.scm`) | 済 |
+| `cycle-spacing` |  | simple | `M-SPC` | 実装済み | `M-SPC` | Lisp (`lisp/simple.scm`) | 済 |
+| `default-indent-new-line` |  | simple | `M-j`, `C-M-j` | 実装済み | `M-j`, `C-M-j` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-backward-char` | ◯ | simple | `DEL` | 実装済み | `DEL` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-blank-lines` | ◯ | simple | `C-x C-o` | 実装済み | `C-x C-o` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-forward-char` |  | simple | `<deletechar>` | 実装済み | `<delete>` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-horizontal-space` | ◯ | simple | `M-\` | 実装済み | `M-\\` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-indentation` | ◯ | simple | `M-^` | 実装済み | `M-^` | Lisp (`lisp/simple.scm`) | 済 |
 | `digit-argument` | ◯ | simple | `C-0`, `C-1`, `C-2`, `C-3` ほか 16 | 実装済み | `M-0`, `M-1`, `M-2` ほか 7 | Lisp (`lisp/simple.scm`) | 済 |
-| `end-of-buffer` | ◯ | simple | `M->`, `C-<end>` | 実装済み | `M->` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `eval-expression` | ◯ | simple | `M-:`, `ESC M-:` | 実装済み | `M-:` | TypeScript (`src/hooks/useLisp.ts`, `lisp/simple.scm`) | 4 |
-| `exchange-point-and-mark` | ◯ | simple | `C-x C-x` | 実装済み | `C-x C-x` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `execute-extended-command` | ◯ | simple | `M-x`, `<menu>`, `<execute>` | 実装済み | `M-x` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 4 |
-| `execute-extended-command-for-buffer` |  | simple | `M-X` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `goto-line` | ◯ | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 2 |
+| `end-of-buffer` | ◯ | simple | `M->`, `C-<end>` | 実装済み | `M->` | Lisp (`lisp/simple.scm`) | 済 |
+| `eval-expression` | ◯ | simple | `M-:`, `ESC M-:` | 実装済み | `M-:` | Lisp (`lisp/simple.scm`) | 済 |
+| `exchange-point-and-mark` | ◯ | simple | `C-x C-x` | 実装済み | `C-x C-x` | Lisp (`lisp/simple.scm`) | 済 |
+| `execute-extended-command` | ◯ | simple | `M-x`, `<menu>`, `<execute>` | 実装済み | `M-x` | Lisp (`lisp/simple.scm`) | 済 |
+| `execute-extended-command-for-buffer` |  | simple | `M-X` | 実装済み | `M-X` | Lisp (`lisp/simple.scm`) | 済 |
+| `goto-line` | ◯ | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | Lisp (`lisp/simple.scm`) | 済 |
 | `goto-line-relative` |  | simple | `C-x n g` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `insert-buffer` | ◯ | simple | `C-x x i` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `insert-buffer` | ◯ | simple | `C-x x i` | 実装済み | `C-x x i` | Lisp (`lisp/simple.scm`) | 済 |
 | `keyboard-escape-quit` |  | simple | `ESC ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `keyboard-quit` | ◯ | simple | `C-g` | 実装済み | `C-g` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `kill-line` | ◯ | simple | `C-k`, `<deleteline>` | 実装済み | `C-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `kill-ring-save` |  | simple | `M-w`, `<copy>`, `C-<insert>`, `C-<insertchar>` | 実装済み | `M-w` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
+| `keyboard-quit` | ◯ | simple | `C-g` | 実装済み | `C-g` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-line` | ◯ | simple | `C-k`, `<deleteline>` | 実装済み | `C-k` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-ring-save` |  | simple | `M-w`, `<copy>`, `C-<insert>`, `C-<insertchar>` | 実装済み | `M-w` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-whole-line` |  | simple | `C-S-<backspace>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kill-word` | ◯ | simple | `M-d`, `C-<delete>` | 実装済み | `M-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `mark-whole-buffer` | ◯ | simple | `C-x h` | 実装済み | `C-x h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `mark-word` | ◯ | simple | `M-@` | 実装済み | `M-@` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
-| `move-beginning-of-line` |  | simple | `C-a`, `<home>` | 実装済み | `C-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `move-end-of-line` |  | simple | `C-e`, `<end>` | 実装済み | `C-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `newline` | ◯ | simple | `RET` | 実装済み | `RET`, `C-m` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
+| `kill-word` | ◯ | simple | `M-d`, `C-<delete>` | 実装済み | `M-d` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-whole-buffer` | ◯ | simple | `C-x h` | 実装済み | `C-x h` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-word` | ◯ | simple | `M-@` | 実装済み | `M-@` | Lisp (`lisp/simple.scm`) | 済 |
+| `move-beginning-of-line` |  | simple | `C-a`, `<home>` | 実装済み | `C-a`, `<home>` | Lisp (`lisp/simple.scm`) | 済 |
+| `move-end-of-line` |  | simple | `C-e`, `<end>` | 実装済み | `C-e`, `<end>` | Lisp (`lisp/simple.scm`) | 済 |
+| `negative-argument` | ◯ | simple | `C--`, `M--`, `C-M--` | 実装済み | `M--`, `C--` | Lisp (`lisp/simple.scm`) | 済 |
+| `newline` | ◯ | simple | `RET` | 実装済み | `RET`, `C-m` | Lisp (`lisp/simple.scm`) | 済 |
 | `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | Lisp (`lisp/compile.scm`) | 済 |
-| `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
+| `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n`, `<down>` | Lisp (`lisp/simple.scm`) | 済 |
+| `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | Lisp (`lisp/simple.scm`) | 済 |
 | `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 済 |
-| `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p`, `<up>` | Lisp (`lisp/simple.scm`) | 済 |
+| `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | Lisp (`lisp/simple.scm`) | 済 |
+| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み | `C-x M-:` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-fill-column` | ◯ | simple | `C-x f` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 2 |
-| `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 4 |
+| `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | Lisp (`lisp/simple.scm`) | 済 |
+| `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC`, `C-@` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-selective-display` |  | simple | `C-x $` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `shell-command` | ◯ | simple | `M-!` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `shell-command-on-region` | ◯ | simple | `M-\|` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `split-line` | ◯ | simple | `C-M-o` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `shell-command` | ◯ | simple | `M-!` | 実装済み | `M-!` | Lisp (`lisp/simple.scm`) | 済 |
+| `shell-command-on-region` | ◯ | simple | `M-\|` | 実装済み | `M-\|` | Lisp (`lisp/simple.scm`) | 済 |
+| `split-line` | ◯ | simple | `C-M-o` | 実装済み | `C-M-o` | Lisp (`lisp/simple.scm`) | 済 |
 | `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `transpose-lines` | ◯ | simple | `C-x C-t` | 実装済み | `C-x C-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `transpose-sexps` | ◯ | simple | `C-M-t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `transpose-words` | ◯ | simple | `M-t` | 実装済み | `M-t` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `undo` | ◯ | simple | `C-/`, `C-_`, `C-x u`, `<undo>` | 実装済み | `C-/`, `C-_`, `C-x u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | Lisp (`lisp/simple.scm`) | 済 |
+| `transpose-lines` | ◯ | simple | `C-x C-t` | 実装済み | `C-x C-t` | Lisp (`lisp/simple.scm`) | 済 |
+| `transpose-sexps` | ◯ | simple | `C-M-t` | 実装済み | `C-M-t` | Lisp (`lisp/simple.scm`) | 済 |
+| `transpose-words` | ◯ | simple | `M-t` | 実装済み | `M-t` | Lisp (`lisp/simple.scm`) | 済 |
+| `undo` | ◯ | simple | `C-/`, `C-_`, `C-x u`, `<undo>` | 実装済み | `C-/`, `C-_`, `C-x u` | Lisp (`lisp/simple.scm`) | 済 |
+| `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み | `C-M-_` | Lisp (`lisp/simple.scm`) | 済 |
 | `universal-argument` | ◯ | simple | `C-u` | 実装済み | `C-u` | Lisp (`lisp/simple.scm`) | 済 |
 | `what-cursor-position` | ◯ | simple | `C-x =` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `yank-pop` | ◯ | simple | `M-y` | 実装済み | `M-y` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
-| `zap-to-char` |  | simple | `M-z` | 実装済み | `M-z` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 3 |
+| `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | Lisp (`lisp/simple.scm`) | 済 |
+| `yank-pop` | ◯ | simple | `M-y` | 実装済み | `M-y` | Lisp (`lisp/simple.scm`) | 済 |
+| `zap-to-char` |  | simple | `M-z` | 実装済み | `M-z` | Lisp (`lisp/simple.scm`) | 済 |
 | `find-alternate-file` | ◯ | files | `C-x C-v` | 実装済み | `C-x C-v` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file` | ◯ | files | `<open>`, `C-x C-f` | 実装済み | `C-x C-f` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-other-frame` | ◯ | files | `C-x 5 f`, `C-x 5 C-f` |  |  |  | 12 |
-| `find-file-other-window` | ◯ | files | `C-x 4 f`, `C-x 4 C-f` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
-| `find-file-read-only` |  | files | `C-x C-r` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `find-file-other-window` | ◯ | files | `C-x 4 f`, `C-x 4 C-f` | 実装済み | `C-x 4 f`, `C-x 4 C-f` | Lisp (`lisp/files.scm`) | 済 |
+| `find-file-read-only` |  | files | `C-x C-r` | 実装済み | `C-x C-r` | Lisp (`lisp/files.scm`) | 済 |
 | `find-file-read-only-other-frame` |  | files | `C-x 5 r` |  |  |  | 12 |
-| `find-file-read-only-other-window` |  | files | `C-x 4 r` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `find-file-read-only-other-window` |  | files | `C-x 4 r` | 実装済み | `C-x 4 r` | Lisp (`lisp/files.scm`) | 済 |
 | `insert-file` | ◯ | files | `C-x i` | 実装済み | `C-x i` | Lisp (`lisp/files.scm`) | 済 |
-| `list-directory` | ◯ | files | `C-x C-d` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
-| `not-modified` | ◯ | files | `M-~` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
-| `rename-uniquely` |  | files | `C-x x u` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
-| `revert-buffer-quick` |  | files | `C-x x g` | 実装済み |  | Lisp (`lisp/files.scm`) | 済 |
+| `list-directory` | ◯ | files | `C-x C-d` | 実装済み | `C-x C-d` | Lisp (`lisp/files.scm`) | 済 |
+| `not-modified` | ◯ | files | `M-~` | 実装済み | `M-~` | Lisp (`lisp/files.scm`) | 済 |
+| `rename-uniquely` |  | files | `C-x x u` | 実装済み | `C-x x u` | Lisp (`lisp/files.scm`) | 済 |
+| `revert-buffer-quick` |  | files | `C-x x g` | 実装済み | `C-x x g` | Lisp (`lisp/files.scm`) | 済 |
 | `save-buffer` | ◯ | files | `C-x C-s` | 実装済み | `C-x C-s` | Lisp (`lisp/files.scm`) | 済 |
-| `save-buffers-kill-terminal` |  | files | `C-x C-c` | 実装済み | `C-x C-c` | TypeScript (`src/App.tsx`, `lisp/simple.scm`) | 9 |
+| `save-buffers-kill-terminal` |  | files | `C-x C-c` | 実装済み | `C-x C-c` | Lisp (`lisp/simple.scm`) | 済 |
 | `save-some-buffers` | ◯ | files | `C-x s` | 実装済み | `C-x s` | Lisp (`lisp/files.scm`) | 済 |
 | `write-file` | ◯ | files | `C-x C-w` | 実装済み | `C-x C-w` | Lisp (`lisp/files.scm`) | 済 |
-| `balance-windows` |  | window | `C-x +` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `beginning-of-buffer-other-window` |  | window | `M-<home>`, `M-<begin>`, `ESC <home>`, `ESC <begin>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `delete-other-windows` | ◯ | window | `C-x 1` | 実装済み | `C-x 1` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
-| `delete-window` | ◯ | window | `C-x 0` | 実装済み | `C-x 0` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
-| `delete-windows-on` |  | window | `C-x w 0` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `display-buffer` |  | window | `C-x 4 C-o` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `balance-windows` |  | window | `C-x +` | 実装済み | `C-x +` | Lisp (`lisp/window.scm`) | 済 |
+| `beginning-of-buffer-other-window` |  | window | `M-<home>`, `M-<begin>`, `ESC <home>`, `ESC <begin>` | 実装済み | `M-<home>` | Lisp (`lisp/window.scm`) | 済 |
+| `delete-other-windows` | ◯ | window | `C-x 1` | 実装済み | `C-x 1` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-window` | ◯ | window | `C-x 0` | 実装済み | `C-x 0` | Lisp (`lisp/simple.scm`) | 済 |
+| `delete-windows-on` |  | window | `C-x w 0` | 実装済み | `C-x w 0` | Lisp (`lisp/window.scm`) | 済 |
+| `display-buffer` |  | window | `C-x 4 C-o` | 実装済み | `C-x 4 C-o` | Lisp (`lisp/window.scm`) | 済 |
 | `display-buffer-other-frame` |  | window | `C-x 5 C-o` |  |  |  | 12 |
-| `end-of-buffer-other-window` |  | window | `M-<end>`, `ESC <end>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `enlarge-window` | ◯ | window | `C-x ^` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `enlarge-window-horizontally` | ◯ | window | `C-x }` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `fit-window-to-buffer` |  | window | `C-x w -` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `end-of-buffer-other-window` |  | window | `M-<end>`, `ESC <end>` | 実装済み | `M-<end>` | Lisp (`lisp/window.scm`) | 済 |
+| `enlarge-window` | ◯ | window | `C-x ^` | 実装済み | `C-x ^` | Lisp (`lisp/window.scm`) | 済 |
+| `enlarge-window-horizontally` | ◯ | window | `C-x }` | 実装済み | `C-x }` | Lisp (`lisp/window.scm`) | 済 |
+| `fit-window-to-buffer` |  | window | `C-x w -` | 実装済み | `C-x w -` | Lisp (`lisp/window.scm`) | 済 |
 | `handle-select-window` |  | window | `<select-window>` |  |  |  | 12 |
-| `kill-buffer-and-window` | ◯ | window | `C-x 4 0` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `move-to-window-line-top-bottom` |  | window | `M-r` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `next-buffer` |  | window | `C-x <right>`, `<XF86Forward>`, `C-x C-<right>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `other-window` | ◯ | window | `C-x o` | 実装済み | `C-x o` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
+| `kill-buffer-and-window` | ◯ | window | `C-x 4 0` | 実装済み | `C-x 4 0` | Lisp (`lisp/window.scm`) | 済 |
+| `move-to-window-line-top-bottom` |  | window | `M-r` | 実装済み | `M-r` | Lisp (`lisp/window.scm`) | 済 |
+| `next-buffer` |  | window | `C-x <right>`, `<XF86Forward>`, `C-x C-<right>` | 実装済み | `C-x <right>`, `C-x C-<right>` | Lisp (`lisp/window.scm`) | 済 |
+| `other-window` | ◯ | window | `C-x o` | 実装済み | `C-x o` | Lisp (`lisp/simple.scm`) | 済 |
 | `other-window-prefix` |  | window | `C-x 4 4` |  |  |  | 10 |
-| `previous-buffer` |  | window | `<XF86Back>`, `C-x <left>`, `C-x C-<left>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `quit-window` |  | window | `C-x w q` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `previous-buffer` |  | window | `<XF86Back>`, `C-x <left>`, `C-x C-<left>` | 実装済み | `C-x <left>`, `C-x C-<left>` | Lisp (`lisp/window.scm`) | 済 |
+| `quit-window` |  | window | `C-x w q` | 実装済み | `C-x w q` | Lisp (`lisp/window.scm`) | 済 |
 | `recenter-other-window` |  | window | `C-M-S-l` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `recenter-top-bottom` |  | window | `C-l` | 実装済み | `C-l` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
+| `recenter-top-bottom` |  | window | `C-l` | 実装済み | `C-l` | Lisp (`lisp/simple.scm`) | 済 |
 | `same-window-prefix` |  | window | `C-x 4 1` |  |  |  | 10 |
-| `scroll-down-command` |  | window | `M-v`, `<prior>` | 実装済み | `M-v` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
-| `scroll-other-window` | ◯ | window | `C-M-v`, `M-<next>`, `ESC <next>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `scroll-down-command` |  | window | `M-v`, `<prior>` | 実装済み | `M-v`, `<prior>` | Lisp (`lisp/simple.scm`) | 済 |
+| `scroll-other-window` | ◯ | window | `C-M-v`, `M-<next>`, `ESC <next>` | 実装済み | `C-M-v` | Lisp (`lisp/window.scm`) | 済 |
 | `scroll-other-window-down` | ◯ | window | `C-M-S-v`, `M-<prior>`, `ESC <prior>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `scroll-up-command` |  | window | `C-v`, `<next>` | 実装済み | `C-v` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 10 |
-| `shrink-window-horizontally` | ◯ | window | `C-x {` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `shrink-window-if-larger-than-buffer` | ◯ | window | `C-x -` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `split-root-window-below` |  | window | `C-x w 2` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `split-root-window-right` |  | window | `C-x w 3` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
-| `split-window-below` |  | window | `C-x 2` | 実装済み | `C-x 2` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
-| `split-window-right` |  | window | `C-x 3` | 実装済み | `C-x 3` | TypeScript (`src/hooks/useBuffers.ts`, `lisp/simple.scm`) | 10 |
+| `scroll-up-command` |  | window | `C-v`, `<next>` | 実装済み | `C-v`, `<next>` | Lisp (`lisp/simple.scm`) | 済 |
+| `shrink-window-horizontally` | ◯ | window | `C-x {` | 実装済み | `C-x {` | Lisp (`lisp/window.scm`) | 済 |
+| `shrink-window-if-larger-than-buffer` | ◯ | window | `C-x -` | 実装済み | `C-x -` | Lisp (`lisp/window.scm`) | 済 |
+| `split-root-window-below` |  | window | `C-x w 2` | 実装済み | `C-x w 2` | Lisp (`lisp/window.scm`) | 済 |
+| `split-root-window-right` |  | window | `C-x w 3` | 実装済み | `C-x w 3` | Lisp (`lisp/window.scm`) | 済 |
+| `split-window-below` |  | window | `C-x 2` | 実装済み | `C-x 2` | Lisp (`lisp/simple.scm`) | 済 |
+| `split-window-right` |  | window | `C-x 3` | 実装済み | `C-x 3` | Lisp (`lisp/simple.scm`) | 済 |
 | `switch-to-buffer` | ◯ | window | `C-x b` | 実装済み | `C-x b` | Lisp (`lisp/window.scm`) | 済 |
 | `switch-to-buffer-other-frame` | ◯ | window | `C-x 5 b` |  |  |  | 12 |
-| `switch-to-buffer-other-window` | ◯ | window | `C-x 4 b` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `switch-to-buffer-other-window` | ◯ | window | `C-x 4 b` | 実装済み | `C-x 4 b` | Lisp (`lisp/window.scm`) | 済 |
 | `toggle-window-dedicated` |  | window | `C-x w d` |  |  |  | 10 |
 | `window-toggle-side-windows` |  | window | `C-x w s` |  |  |  | 10 |
-| `complete-symbol` |  | bindings | `C-M-i` | 実装済み |  | Lisp (`lisp/minibuffer.scm`) | 済 |
+| `complete-symbol` |  | bindings | `C-M-i` | 実装済み | `C-M-i` | Lisp (`lisp/minibuffer.scm`) | 済 |
 | `ignore-preserving-kill-region` |  | bindings | `<mouse-movement>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `left-char` |  | bindings | `<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `left-word` |  | bindings | `C-<left>`, `M-<left>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `right-char` |  | bindings | `<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `right-word` |  | bindings | `C-<right>`, `M-<right>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-kill-sexp` | ◯ | lisp | `C-M-<delete>`, `ESC C-<delete>`, `C-M-<backspace>`, `ESC C-<backspace>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-list` | ◯ | lisp | `C-M-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-sexp` | ◯ | lisp | `C-M-b`, `C-M-<left>`, `ESC C-<left>` | 実装済み | `C-M-b` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `backward-up-list` | ◯ | lisp | `C-M-u`, `C-M-<up>`, `ESC C-<up>` | 実装済み | `C-M-u` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `beginning-of-defun` | ◯ | lisp | `C-M-a`, `C-M-<home>`, `ESC C-<home>` | 実装済み | `C-M-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `down-list` | ◯ | lisp | `C-M-d`, `C-M-<down>`, `ESC C-<down>` | 実装済み | `C-M-d` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `end-of-defun` | ◯ | lisp | `C-M-e`, `C-M-<end>`, `ESC C-<end>` | 実装済み | `C-M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `forward-list` | ◯ | lisp | `C-M-n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `forward-sexp` | ◯ | lisp | `C-M-f`, `C-M-<right>`, `ESC C-<right>` | 実装済み | `C-M-f` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `insert-parentheses` | ◯ | lisp | `M-(` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kill-sexp` | ◯ | lisp | `C-M-k` | 実装済み | `C-M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `move-past-close-and-reindent` | ◯ | lisp | `M-)` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `narrow-to-defun` |  | lisp | `C-x n d` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
-| `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
-| `indent-rigidly` | ◯ | indent | `C-x TAB` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `tab-to-tab-stop` |  | indent | `M-i` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-kill-sentence` | ◯ | paragraphs | `C-x DEL` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-paragraph` | ◯ | paragraphs | `M-{`, `C-<up>` | 実装済み | `M-{` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `backward-sentence` | ◯ | paragraphs | `M-a` | 実装済み | `M-a` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `forward-paragraph` | ◯ | paragraphs | `M-}`, `C-<down>` | 実装済み | `M-}` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `forward-sentence` | ◯ | paragraphs | `M-e` | 実装済み | `M-e` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 5 |
-| `mark-paragraph` | ◯ | paragraphs | `M-h` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `backward-page` | ◯ | page | `C-x [` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `count-lines-page` | ◯ | page | `C-x l` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `forward-page` | ◯ | page | `C-x ]` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `mark-page` | ◯ | page | `C-x C-p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `narrow-to-page` | ◯ | page | `C-x n p` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
-| `set-fill-prefix` | ◯ | fill | `C-x .` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | TypeScript (`src/lib/emacs.ts`, `lisp/simple.scm`) | 6 |
-| `comment-line` |  | newcomment | `C-x C-;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `comment-set-column` |  | newcomment | `C-x ;` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `occur` | ◯ | replace | `M-s o` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `query-replace` | ◯ | replace | `M-%` | 実装済み | `M-%` | TypeScript (`src/hooks/useSearch.ts`, `lisp/replace.scm`) | 7 |
-| `query-replace-regexp` | ◯ | replace | `C-M-%` | 実装済み | `C-M-%` | TypeScript (`src/hooks/useSearch.ts`, `lisp/replace.scm`) | 7 |
-| `isearch-backward` | ◯ | isearch | `C-r` | 実装済み | `C-r` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
-| `isearch-backward-regexp` | ◯ | isearch | `C-M-r` | 実装済み | `C-M-r` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
-| `isearch-forward` | ◯ | isearch | `C-s` | 実装済み | `C-s` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
-| `isearch-forward-regexp` | ◯ | isearch | `C-M-s` | 実装済み | `C-M-s` | TypeScript (`src/hooks/useSearch.ts`, `lisp/isearch.scm`) | 7 |
-| `isearch-forward-symbol` |  | isearch | `M-s _` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `isearch-forward-symbol-at-point` |  | isearch | `M-s .` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `isearch-forward-word` |  | isearch | `M-s w` | 実装済み |  | Lisp (`lisp/isearch.scm`) | 済 |
-| `clear-rectangle` | ◯ | rect | `C-x r c` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
-| `copy-rectangle-as-kill` |  | rect | `C-x r M-w` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
-| `delete-rectangle` | ◯ | rect | `C-x r d` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
-| `kill-rectangle` | ◯ | rect | `C-x r k` | 実装済み | `C-x r k` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
-| `open-rectangle` | ◯ | rect | `C-x r o` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
-| `rectangle-number-lines` |  | rect | `C-x r N` | 実装済み |  | Lisp (`lisp/rect.scm`) | 済 |
-| `string-rectangle` |  | rect | `C-x r t` | 実装済み | `C-x r t` | TypeScript (`src/App.tsx`, `lisp/rect.scm`) | 8 |
-| `yank-rectangle` | ◯ | rect | `C-x r y` | 実装済み | `C-x r y` | TypeScript (`src/lib/emacs.ts`, `lisp/rect.scm`) | 8 |
-| `copy-rectangle-to-register` |  | register | `C-x r r` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `copy-to-register` | ◯ | register | `C-x r s`, `C-x r x` | 実装済み | `C-x r s`, `C-x r x` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
-| `increment-register` | ◯ | register | `C-x r +` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `insert-register` | ◯ | register | `C-x r g`, `C-x r i` | 実装済み | `C-x r i`, `C-x r g` | TypeScript (`src/lib/emacs.ts`, `lisp/register.scm`) | 8 |
-| `jump-to-register` |  | register | `C-x r j` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `number-to-register` | ◯ | register | `C-x r n` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `point-to-register` | ◯ | register | `C-x r C-@`, `C-x r SPC`, `C-x r C-SPC` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `window-configuration-to-register` |  | register | `C-x r w` | 実装済み |  | Lisp (`lisp/register.scm`) | 済 |
-| `kmacro-end-and-call-macro` |  | kmacro | `C-x e` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-kill-sexp` | ◯ | lisp | `C-M-<delete>`, `ESC C-<delete>`, `C-M-<backspace>`, `ESC C-<backspace>` | 実装済み | `C-M-DEL` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-list` | ◯ | lisp | `C-M-p` | 実装済み | `C-M-p` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-sexp` | ◯ | lisp | `C-M-b`, `C-M-<left>`, `ESC C-<left>` | 実装済み | `C-M-b` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-up-list` | ◯ | lisp | `C-M-u`, `C-M-<up>`, `ESC C-<up>` | 実装済み | `C-M-u` | Lisp (`lisp/simple.scm`) | 済 |
+| `beginning-of-defun` | ◯ | lisp | `C-M-a`, `C-M-<home>`, `ESC C-<home>` | 実装済み | `C-M-a` | Lisp (`lisp/simple.scm`) | 済 |
+| `down-list` | ◯ | lisp | `C-M-d`, `C-M-<down>`, `ESC C-<down>` | 実装済み | `C-M-d` | Lisp (`lisp/simple.scm`) | 済 |
+| `end-of-defun` | ◯ | lisp | `C-M-e`, `C-M-<end>`, `ESC C-<end>` | 実装済み | `C-M-e` | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-list` | ◯ | lisp | `C-M-n` | 実装済み | `C-M-n` | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-sexp` | ◯ | lisp | `C-M-f`, `C-M-<right>`, `ESC C-<right>` | 実装済み | `C-M-f` | Lisp (`lisp/simple.scm`) | 済 |
+| `insert-parentheses` | ◯ | lisp | `M-(` | 実装済み | `M-(` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-sexp` | ◯ | lisp | `C-M-k` | 実装済み | `C-M-k` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-defun` | ◯ | lisp | `C-M-h` | 実装済み | `C-M-h` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-sexp` | ◯ | lisp | `C-M-@`, `C-M-SPC` | 実装済み | `C-M-SPC`, `C-M-@` | Lisp (`lisp/simple.scm`) | 済 |
+| `move-past-close-and-reindent` | ◯ | lisp | `M-)` | 実装済み | `M-)` | Lisp (`lisp/simple.scm`) | 済 |
+| `narrow-to-defun` |  | lisp | `C-x n d` | 実装済み | `C-x n d` | Lisp (`lisp/simple.scm`) | 済 |
+| `indent-for-tab-command` | ◯ | indent | `TAB` | 実装済み | `TAB`, `C-i` | Lisp (`lisp/simple.scm`) | 済 |
+| `indent-region` | ◯ | indent | `C-M-\` | 実装済み | `C-M-\\` | Lisp (`lisp/simple.scm`) | 済 |
+| `indent-rigidly` | ◯ | indent | `C-x TAB` | 実装済み | `C-x TAB` | Lisp (`lisp/simple.scm`) | 済 |
+| `tab-to-tab-stop` |  | indent | `M-i` | 実装済み | `M-i` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-kill-sentence` | ◯ | paragraphs | `C-x DEL` | 実装済み | `C-x DEL` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-paragraph` | ◯ | paragraphs | `M-{`, `C-<up>` | 実装済み | `M-{` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-sentence` | ◯ | paragraphs | `M-a` | 実装済み | `M-a` | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-paragraph` | ◯ | paragraphs | `M-}`, `C-<down>` | 実装済み | `M-}` | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-sentence` | ◯ | paragraphs | `M-e` | 実装済み | `M-e` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-sentence` | ◯ | paragraphs | `M-k` | 実装済み | `M-k` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-paragraph` | ◯ | paragraphs | `M-h` | 実装済み | `M-h` | Lisp (`lisp/simple.scm`) | 済 |
+| `backward-page` | ◯ | page | `C-x [` | 実装済み | `C-x [` | Lisp (`lisp/simple.scm`) | 済 |
+| `count-lines-page` | ◯ | page | `C-x l` | 実装済み | `C-x l` | Lisp (`lisp/simple.scm`) | 済 |
+| `forward-page` | ◯ | page | `C-x ]` | 実装済み | `C-x ]` | Lisp (`lisp/simple.scm`) | 済 |
+| `mark-page` | ◯ | page | `C-x C-p` | 実装済み | `C-x C-p` | Lisp (`lisp/simple.scm`) | 済 |
+| `narrow-to-page` | ◯ | page | `C-x n p` | 実装済み | `C-x n p` | Lisp (`lisp/simple.scm`) | 済 |
+| `fill-paragraph` | ◯ | fill | `M-q` | 実装済み | `M-q` | Lisp (`lisp/simple.scm`) | 済 |
+| `set-fill-prefix` | ◯ | fill | `C-x .` | 実装済み | `C-x .` | Lisp (`lisp/simple.scm`) | 済 |
+| `comment-dwim` |  | newcomment | `M-;` | 実装済み | `M-;` | Lisp (`lisp/simple.scm`) | 済 |
+| `comment-line` |  | newcomment | `C-x C-;` | 実装済み | `C-x C-;` | Lisp (`lisp/simple.scm`) | 済 |
+| `comment-set-column` |  | newcomment | `C-x ;` | 実装済み | `C-x ;` | Lisp (`lisp/simple.scm`) | 済 |
+| `occur` | ◯ | replace | `M-s o` | 実装済み | `M-s o` | Lisp (`lisp/replace.scm`) | 済 |
+| `query-replace` | ◯ | replace | `M-%` | 実装済み | `M-%` | Lisp (`lisp/replace.scm`) | 済 |
+| `query-replace-regexp` | ◯ | replace | `C-M-%` | 実装済み | `C-M-%` | Lisp (`lisp/replace.scm`) | 済 |
+| `isearch-backward` | ◯ | isearch | `C-r` | 実装済み | `C-r` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-backward-regexp` | ◯ | isearch | `C-M-r` | 実装済み | `C-M-r` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward` | ◯ | isearch | `C-s` | 実装済み | `C-s` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-regexp` | ◯ | isearch | `C-M-s` | 実装済み | `C-M-s` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-symbol` |  | isearch | `M-s _` | 実装済み | `M-s _` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-symbol-at-point` |  | isearch | `M-s .` | 実装済み | `M-s .` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-thing-at-point` |  | isearch | `M-s M-.` | 実装済み | `M-s M-.` | Lisp (`lisp/isearch.scm`) | 済 |
+| `isearch-forward-word` |  | isearch | `M-s w` | 実装済み | `M-s w` | Lisp (`lisp/isearch.scm`) | 済 |
+| `clear-rectangle` | ◯ | rect | `C-x r c` | 実装済み | `C-x r c` | Lisp (`lisp/rect.scm`) | 済 |
+| `copy-rectangle-as-kill` |  | rect | `C-x r M-w` | 実装済み | `C-x r M-w` | Lisp (`lisp/rect.scm`) | 済 |
+| `delete-rectangle` | ◯ | rect | `C-x r d` | 実装済み | `C-x r d` | Lisp (`lisp/rect.scm`) | 済 |
+| `kill-rectangle` | ◯ | rect | `C-x r k` | 実装済み | `C-x r k` | Lisp (`lisp/rect.scm`) | 済 |
+| `open-rectangle` | ◯ | rect | `C-x r o` | 実装済み | `C-x r o` | Lisp (`lisp/rect.scm`) | 済 |
+| `rectangle-number-lines` |  | rect | `C-x r N` | 実装済み | `C-x r N` | Lisp (`lisp/rect.scm`) | 済 |
+| `string-rectangle` |  | rect | `C-x r t` | 実装済み | `C-x r t` | Lisp (`lisp/rect.scm`) | 済 |
+| `yank-rectangle` | ◯ | rect | `C-x r y` | 実装済み | `C-x r y` | Lisp (`lisp/rect.scm`) | 済 |
+| `copy-rectangle-to-register` |  | register | `C-x r r` | 実装済み | `C-x r r` | Lisp (`lisp/register.scm`) | 済 |
+| `copy-to-register` | ◯ | register | `C-x r s`, `C-x r x` | 実装済み | `C-x r s`, `C-x r x` | Lisp (`lisp/register.scm`) | 済 |
+| `increment-register` | ◯ | register | `C-x r +` | 実装済み | `C-x r +` | Lisp (`lisp/register.scm`) | 済 |
+| `insert-register` | ◯ | register | `C-x r g`, `C-x r i` | 実装済み | `C-x r i`, `C-x r g` | Lisp (`lisp/register.scm`) | 済 |
+| `jump-to-register` |  | register | `C-x r j` | 実装済み | `C-x r j` | Lisp (`lisp/register.scm`) | 済 |
+| `number-to-register` | ◯ | register | `C-x r n` | 実装済み | `C-x r n` | Lisp (`lisp/register.scm`) | 済 |
+| `point-to-register` | ◯ | register | `C-x r C-@`, `C-x r SPC`, `C-x r C-SPC` | 実装済み | `C-x r SPC`, `C-x r C-SPC`, `C-x r C-@` | Lisp (`lisp/register.scm`) | 済 |
+| `window-configuration-to-register` |  | register | `C-x r w` | 実装済み | `C-x r w` | Lisp (`lisp/register.scm`) | 済 |
+| `kmacro-end-and-call-macro` |  | kmacro | `C-x e` | 実装済み | `C-x C-k e`, `C-x e` | Lisp (`lisp/simple.scm`) | 済 |
 | `kmacro-end-call-mouse` |  | kmacro | `S-<mouse-3>` |  |  |  | 8 |
-| `kmacro-end-macro` |  | kmacro | `C-x )` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kmacro-end-or-call-macro` |  | kmacro | `<f4>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kmacro-name-last-macro` |  | kmacro | `C-x C-k n` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kmacro-start-macro` |  | kmacro | `C-x (`, `C-x C-k s`, `C-x C-k C-s` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `kmacro-start-macro-or-insert-counter` |  | kmacro | `<f3>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
-| `abbrev-prefix-mark` | ◯ | abbrev | `M-'` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `add-global-abbrev` | ◯ | abbrev | `C-x a g` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `add-mode-abbrev` | ◯ | abbrev | `C-x a +`, `C-x a l`, `C-x a C-a` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `expand-abbrev` | ◯ | abbrev | `C-x '`, `C-x a '`, `C-x a e` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `inverse-add-global-abbrev` | ◯ | abbrev | `C-x a -`, `C-x a i g` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` | 実装済み |  | Lisp (`lisp/abbrev.scm`) | 済 |
-| `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み |  | Lisp (`lisp/dabbrev.scm`) | 済 |
-| `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | TypeScript (`src/lib/emacs.ts`, `lisp/dabbrev.scm`) | 8 |
+| `kmacro-end-macro` |  | kmacro | `C-x )` | 実装済み | `C-x )` | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-end-or-call-macro` |  | kmacro | `<f4>` | 実装済み | `<f4>` | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-name-last-macro` |  | kmacro | `C-x C-k n` | 実装済み | `C-x C-k n` | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-start-macro` |  | kmacro | `C-x (`, `C-x C-k s`, `C-x C-k C-s` | 実装済み | `C-x (`, `C-x C-k s`, `C-x C-k C-s` | Lisp (`lisp/simple.scm`) | 済 |
+| `kmacro-start-macro-or-insert-counter` |  | kmacro | `<f3>` | 実装済み | `<f3>` | Lisp (`lisp/simple.scm`) | 済 |
+| `abbrev-prefix-mark` | ◯ | abbrev | `M-'` | 実装済み | `M-'` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `add-global-abbrev` | ◯ | abbrev | `C-x a g` | 実装済み | `C-x a g` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `add-mode-abbrev` | ◯ | abbrev | `C-x a +`, `C-x a l`, `C-x a C-a` | 実装済み | `C-x a +`, `C-x a l`, `C-x a C-a` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `expand-abbrev` | ◯ | abbrev | `C-x '`, `C-x a '`, `C-x a e` | 実装済み | `C-x '`, `C-x a '`, `C-x a e` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `inverse-add-global-abbrev` | ◯ | abbrev | `C-x a -`, `C-x a i g` | 実装済み | `C-x a -`, `C-x a i g` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `inverse-add-mode-abbrev` | ◯ | abbrev | `C-x a i l` | 実装済み | `C-x a i l` | Lisp (`lisp/abbrev.scm`) | 済 |
+| `dabbrev-completion` |  | dabbrev | `C-M-/` | 実装済み | `C-M-/` | Lisp (`lisp/dabbrev.scm`) | 済 |
+| `dabbrev-expand` | ◯ | dabbrev | `M-/` | 実装済み | `M-/` | Lisp (`lisp/dabbrev.scm`) | 済 |
 | `list-buffers` | ◯ | buff-menu | `C-x C-b` | 実装済み | `C-x C-b` | Lisp (`lisp/buff-menu.scm`) | 済 |
 | `dired` | ◯ | dired | `C-x d` | 実装済み | `C-x d` | Lisp (`lisp/dired.scm`) | 済 |
-| `dired-jump` |  | dired | `C-x C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
-| `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
+| `dired-jump` |  | dired | `C-x C-j` | 実装済み | `C-x C-j` | Lisp (`lisp/dired.scm`) | 済 |
+| `dired-jump-other-window` |  | dired | `C-x 4 C-j` | 実装済み | `C-x 4 C-j` | Lisp (`lisp/dired.scm`) | 済 |
 | `dired-other-frame` | ◯ | dired | `C-x 5 d` |  |  |  | 12 |
 | `dired-other-tab` |  | dired | `C-x t d` |  |  |  | 12 |
-| `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み |  | Lisp (`lisp/dired.scm`) | 済 |
-| `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
+| `dired-other-window` | ◯ | dired | `C-x 4 d` | 実装済み | `C-x 4 d` | Lisp (`lisp/dired.scm`) | 済 |
+| `bookmark-bmenu-list` |  | bookmark | `C-x r l` | 実装済み | `C-x r l` | Lisp (`lisp/bookmark.scm`) | 済 |
 | `bookmark-jump` |  | bookmark | `C-x r b` | 実装済み | `C-x r b` | Lisp (`lisp/bookmark.scm`) | 済 |
 | `bookmark-set` |  | bookmark | `C-x r m` | 実装済み | `C-x r m` | Lisp (`lisp/bookmark.scm`) | 済 |
-| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み |  | Lisp (`lisp/bookmark.scm`) | 済 |
-| `xref-find-apropos` |  | xref | `C-M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `xref-find-definitions` |  | xref | `M-.` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
+| `bookmark-set-no-overwrite` |  | bookmark | `C-x r M` | 実装済み | `C-x r M` | Lisp (`lisp/bookmark.scm`) | 済 |
+| `xref-find-apropos` |  | xref | `C-M-.` | 実装済み | `C-M-.` | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-find-definitions` |  | xref | `M-.` | 実装済み | `M-.` | Lisp (`lisp/xref.scm`) | 済 |
 | `xref-find-definitions-other-frame` |  | xref | `C-x 5 .` |  |  |  | 12 |
-| `xref-find-definitions-other-window` |  | xref | `C-x 4 .` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `xref-find-references` |  | xref | `M-?` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `xref-go-back` |  | xref | `M-,` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `xref-go-forward` |  | xref | `C-M-,` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `highlight-lines-matching-regexp` |  | loaddefs | `M-s h l` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `highlight-phrase` |  | loaddefs | `M-s h p` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
-| `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み |  | Lisp (`lisp/replace.scm`) | 済 |
+| `xref-find-definitions-other-window` |  | xref | `C-x 4 .` | 実装済み | `C-x 4 .` | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-find-references` |  | xref | `M-?` | 実装済み | `M-?` | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-go-back` |  | xref | `M-,` | 実装済み | `M-,` | Lisp (`lisp/xref.scm`) | 済 |
+| `xref-go-forward` |  | xref | `C-M-,` | 実装済み | `C-M-,` | Lisp (`lisp/xref.scm`) | 済 |
+| `highlight-lines-matching-regexp` |  | loaddefs | `M-s h l` | 実装済み | `M-s h l` | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-phrase` |  | loaddefs | `M-s h p` | 実装済み | `M-s h p` | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-regexp` |  | loaddefs | `M-s h r` | 実装済み | `M-s h r` | Lisp (`lisp/replace.scm`) | 済 |
+| `highlight-symbol-at-point` |  | loaddefs | `M-s h .` | 実装済み | `M-s h .` | Lisp (`lisp/replace.scm`) | 済 |
+| `unhighlight-regexp` |  | loaddefs | `M-s h u` | 実装済み | `M-s h u` | Lisp (`lisp/replace.scm`) | 済 |
 | `describe-bindings` | ◯ | help | `C-h b`, `<f1> b`, `<help> b` | 実装済み | `C-h b` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-copying` |  | help | `C-h C-c`, `<f1> C-c`, `<help> C-c` |  |  |  | 12 |
 | `describe-distribution` |  | help | `C-h C-o`, `<f1> C-o`, `<help> C-o` |  |  |  | 12 |
@@ -606,16 +605,16 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `view-order-manuals` |  | help | `C-h RET`, `<f1> RET`, `<help> RET` |  |  |  | 12 |
 | `where-is` | ◯ | help | `C-h w`, `<f1> w`, `<help> w` | 実装済み | `C-h w` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-command` |  | help-fns | `C-h x`, `<f1> x`, `<help> x` | 実装済み | `C-h x` | Lisp (`lisp/help.scm`) | 済 |
-| `describe-function` | ◯ | help-fns | `C-h f`, `<f1> f`, `<help> f` | 実装済み | `C-h f` | Lisp (`lisp/help-fns.scm`) | 済 |
+| `describe-function` | ◯ | help-fns | `C-h f`, `<f1> f`, `<help> f` | 実装済み | `C-h f`, `C-h f` | Lisp (`lisp/help-fns.scm`) | 済 |
 | `describe-symbol` |  | help-fns | `C-h o`, `<f1> o`, `<help> o` | 実装済み | `C-h o` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-syntax` | ◯ | help-fns | `C-h s`, `<f1> s`, `<help> s` | 実装済み | `C-h s` | Lisp (`lisp/help.scm`) | 済 |
 | `describe-variable` | ◯ | help-fns | `C-h v`, `<f1> v`, `<help> v` | 実装済み | `C-h v` | Lisp (`lisp/help.scm`) | 済 |
-| `help-find-source` |  | help-fns | `C-h 4 s`, `<f1> 4 s`, `<help> 4 s` | 実装済み |  | Lisp (`lisp/xref.scm`) | 済 |
-| `Info-goto-emacs-command-node` |  | info | `C-h F`, `<f1> F`, `<help> F` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
-| `Info-goto-emacs-key-command-node` |  | info | `C-h K`, `<f1> K`, `<help> K` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
-| `info` | ◯ | info | `C-h i`, `<f1> i`, `<help> i` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
-| `info-display-manual` |  | info | `C-h R`, `<f1> R`, `<help> R` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
-| `info-emacs-manual` |  | info | `C-h r`, `<f1> r`, `<help> r` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
-| `info-other-window` |  | info | `C-h 4 i`, `<f1> 4 i`, `<help> 4 i` | 実装済み |  | Lisp (`lisp/info.scm`) | 済 |
+| `help-find-source` |  | help-fns | `C-h 4 s`, `<f1> 4 s`, `<help> 4 s` | 実装済み | `C-h 4 s` | Lisp (`lisp/xref.scm`) | 済 |
+| `Info-goto-emacs-command-node` |  | info | `C-h F`, `<f1> F`, `<help> F` | 実装済み | `C-h F` | Lisp (`lisp/info.scm`) | 済 |
+| `Info-goto-emacs-key-command-node` |  | info | `C-h K`, `<f1> K`, `<help> K` | 実装済み | `C-h K` | Lisp (`lisp/info.scm`) | 済 |
+| `info` | ◯ | info | `C-h i`, `<f1> i`, `<help> i` | 実装済み | `C-h i` | Lisp (`lisp/info.scm`) | 済 |
+| `info-display-manual` |  | info | `C-h R`, `<f1> R`, `<help> R` | 実装済み | `C-h R` | Lisp (`lisp/info.scm`) | 済 |
+| `info-emacs-manual` |  | info | `C-h r`, `<f1> r`, `<help> r` | 実装済み | `C-h r` | Lisp (`lisp/info.scm`) | 済 |
+| `info-other-window` |  | info | `C-h 4 i`, `<f1> 4 i`, `<help> 4 i` | 実装済み | `C-h 4 i` | Lisp (`lisp/info.scm`) | 済 |
 
 <!-- emacs-commands:end -->

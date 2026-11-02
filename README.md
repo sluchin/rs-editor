@@ -24,18 +24,19 @@
 ```text
 .
 ├── src/                      # React フロントエンド
-│   ├── components/          # エディタ、ミニバッファ、モードライン、プロジェクトのツリー
-│   ├── hooks/               # 機能ごとの状態とコマンド (ファイル、検索と置換、Lisp)
-│   ├── lib/                 # Emacs のコマンド (emacs.ts)、Lisp とのやり取り (lisp.ts) など
+│   ├── components/          # ウィンドウ、ミニバッファ、モードライン、プロジェクトのツリー
+│   ├── lib/                 # 核とのやり取り (session.ts)、バッファの本文 (docs.ts)、キーの名前 (keys.ts)、色分けなど
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── lib/theme.ts         # 色とフォント (set-background-color, set-frame-font)
-│   ├── App.tsx              # メインアプリケーション (フックのコマンドを、キーとミニバッファにつなぐ)
+│   ├── App.tsx              # メインアプリケーション (核の frame を描き、キーを核に送る)
 │   └── main.tsx             # エントリーポイント
 ├── src-tauri/               # Tauri バックエンド
 │   ├── src/
 │   │   ├── main.rs          # Tauri アプリのエントリーポイント
 │   │   ├── lib.rs           # アプリの起動と、コマンドの登録
-│   │   ├── commands.rs      # 画面から呼ぶコマンド (評価、ファイルの読み書き)
+│   │   ├── session.rs       # 画面のエディタ (核を動かし、frame を送る)
+│   │   ├── front.rs         # 画面への窓口 (session_input、frame のイベント)
+│   │   ├── commands.rs      # 画面から呼ぶコマンド (ファイル名の補完、プロジェクトの根)
 │   │   ├── logging.rs       # ログ
 │   │   ├── search.rs        # M-x grep (ディレクトリの下を探す) と、プロジェクトの根を探す
 │   │   └── scheme/          # Scheme インタプリタ
@@ -119,9 +120,9 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `target/release/` に出力されます。
 
-### 画面 (Tauri) の Lisp が使う核の組み込み
+### 画面 (Tauri) とエディタの核
 
-評価のあいだだけ、画面の今のバッファを Rust の核に写して、探す (`re-search-forward`、`looking-at`), マーク、構文 (`scan-lists`、`syntax-ppss`), 行と桁 (`forward-line`、`current-column`) などの新しい組み込みを、核で動かします。画面に頼む前と評価の終わりに、核での変更を画面に返します。`point`、`insert` など、これまでの操作と、バッファの出し入れは、これまでどおり画面が受け持ちます。不具合があれば、環境変数 `RSEDITOR_NO_CORE=1` で、これまでの動きに戻せます。
+エディタの本体 (バッファ、ウィンドウ、キーの割り当て、コマンド) は、Rust の核 (`core/`) と Lisp (`lisp/`) にあります。画面は、核が描く内容 (frame) を CodeMirror で出し、キーと文字を核に送るだけです (設計は `docs/core_migration.md`)。ターミナルのアプリ (`tui/`) と同じ核を使うので、キーとコマンドは画面とターミナルで同じです。
 
 ### ターミナルで動かす (ncurses)
 
@@ -446,16 +447,17 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 
 ### フロントエンド (React + TypeScript)
 
-- **CodeEditor.tsx** - エディタ (CodeMirror 6。Emacs のキーとコマンドで動かす)
-- **Minibuffer.tsx** - ミニバッファ (メッセージ、入力と補完、isearch、query-replace の問い)
-- **ModeLine.tsx** - モードライン (バッファの名前、変更、カーソルの位置、メジャーモード)
+- **App.tsx** - 核の frame を受けて、ウィンドウ、モードライン、ミニバッファを並べる。核に頼まれた画面の操作 (ミニバッファで聞く、`recenter`、色とフォントなど) をする
+- **WindowView.tsx** - ウィンドウ 1 つ (CodeMirror 6。本文を出すだけで、編集は核にキーと文字を送る。IME の確定した文字と、マウスで押した位置も送る)
+- **Minibuffer.tsx** - ミニバッファ (メッセージ、入力と補完、履歴、`read-key` の問い)
+- **ModeLine.tsx** - モードライン (核が作った文を出す)
 - **ProjectTree.tsx** - 左のサイドバーの、プロジェクトのファイルのツリー (`F8`。ディレクトリは、開いたときに読む)
-- **App.tsx** - 画面を出し、機能ごとのフックのコマンドを、キーと `M-x` とミニバッファにつなぐメインアプリコンポーネント
-- **hooks/** - 機能ごとの状態とコマンド: ミニバッファ (`useMinibuffer`)、バッファとウィンドウ (`useBuffers`)、ファイル (`useFiles`)、プロジェクトのツリー (`useDirectories`)、検索と置換 (`useSearch`)、評価と Lisp のコマンド (`useLisp`)
+- **lib/session.ts**、**lib/docs.ts** - 核との通信 (入力を送る、frame と頼みを受ける) と、バッファの本文 (変更だけを当てる)
 - **lib/theme.ts** - 色とフォント (CSS の変数。背景が暗いと `data-background-mode="dark"` にして、暗い背景の色分けを使う)
 
 ### バックエンド (Rust)
 
+- **session.rs** - 画面のエディタ (核のエディタ、評価器、コマンドループ。初期設定ファイルを読み、30 秒入力が無ければ自動保存する)
 - **Parser** - Scheme 式をトークン化して AST にパース
 - **Evaluator** - シンプルな環境/スコープシステムを使用して AST ノードを評価
 - **search.rs** - `M-x grep` (正規表現に大文字が無ければ、大文字と小文字を区別しない。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは探さない) と、プロジェクトの根 (`.git` のある所)
@@ -463,9 +465,9 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 
 ### 通信
 
-Tauri のコマンドシステムを使用して React から `eval_scheme` 関数を呼び出し、コード文字列を送信して結果/エラーを受け取ります。結果には、Lisp で作ったコマンドと、割り当てたキーも含みます。
+画面は、キー、確定した文字、マウスで押した位置、ウィンドウの高さを、Tauri のコマンド `session_input` で核に送ります。核は `session` のスレッドで入力を順に処理し、処理のたびに描く内容 (frame。本文は変更だけ) を `frame` のイベントで送ります。
 
-評価の途中のエディタの操作 (`insert` など) は、評価器が `editor-request` のイベントで画面に頼み、画面が操作をして `editor_reply` で返事をします。評価は別のスレッドで行い、返事を待ちます (5 秒で失敗にする。`read-string` は 1 時間)。バッファを出す操作 (`find-file`、`switch-to-buffer`) は、画面を描き直してから返事をします (続きの操作を、出したバッファで行うため)。Lisp で作ったコマンドは `run_lisp_command`、初期設定ファイルは `load_init` で評価します。
+画面にしかできない操作 (ミニバッファで聞く、`read-key`、ウィンドウの見えている行など) は、核が `editor-request` のイベントで画面に頼み、画面が `editor_reply` で返事をします (5 秒で失敗にする。ミニバッファの入力は 1 時間待つ)。
 
 ## ライセンス
 

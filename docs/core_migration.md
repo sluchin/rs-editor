@@ -4,6 +4,8 @@
 `docs/functions.md` の「実装の計画」の 1.11 に当たります。
 移し終えたら、結合試験 (`docs/integration_test.md`) を行います。
 
+段階 1 から 9 は済 (2026-11-03)。残りは、結合試験です。
+
 ## 1. 目的
 
 - 画面のコマンドを、ターミナルのアプリ (`tui/`) と同じ Lisp (`lisp/*.scm`) で動かす。TypeScript のコマンド (`src/lib/emacs.ts` など) は消す。

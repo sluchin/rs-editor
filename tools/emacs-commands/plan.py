@@ -24,22 +24,18 @@ STEPS = [
       '【Rust の部品は済 (`core/src/window.rs`, `core/src/editor.rs`). Lisp につなぐのは 1.9】1.7 窓とバッファの一覧: `selected-window`, `split-window`, `delete-window`, `window-list`, `set-window-buffer`, `set-buffer`, `get-buffer`, '
       '`generate-new-buffer`, `with-current-buffer`, バッファごとの変数 (`make-local-variable`)。',
       '【前置引数の部品は済 (`Editor::prefix_arg`, `prefix_numeric_value`). `interactive` は 1.9】1.8 前置引数: `current-prefix-arg`, `prefix-numeric-value`。`define-command` に, 引数の読み方 (Emacs の `interactive`) を足す。',
-      '【Rust は済 (`core/src/scheme/editor_host.rs`: `Editor` を直接動かす `EditorHost`. 63 個の組み込み). 今の画面 (Tauri) をつなぐのは 1.11】1.9 評価器を核につなぐ: 今の `Host` (画面に頼んで返事を待つ) をやめ, 評価器が核を直接動かす。画面に頼むのは, 描くこと, ミニバッファの入力, '
+      '【Rust は済 (`core/src/scheme/editor_host.rs`: `Editor` を直接動かす `EditorHost`. 63 個の組み込み). 画面 (Tauri) も 1.11 でつないだ】1.9 評価器を核につなぐ: 今の `Host` (画面に頼んで返事を待つ) をやめ, 評価器が核を直接動かす。画面に頼むのは, 描くこと, ミニバッファの入力, '
       'ファイルの選択だけにする (`Host` を小さくする)。',
       '【済 (`tui/`. 動いている: 移動, 編集, kill, yank, undo, 窓の分割, ファイルを開く, 保存, M-x, 終了。基本のコマンドは `lisp/simple.scm`)】1.10 ターミナルのアプリの骨組み (`tui/`. ncurses): 核の状態を描き, キーを核に渡す。カーソルを動かし, 文字を入れ, 保存できるところまで。',
-      '【段階 2 から 11 の後】1.11 今の画面 (Tauri) を核につなぎ替える: 本文の持ち主を CodeMirror から核に移す。CodeMirror は表示と入力にする。'
-      '今の画面のコマンド (`src/lib/emacs.ts` など. 約 85 個) は, CodeMirror の状態を直接書き換えているので, 段階 2 から 11 で Lisp に移し終えるまでは, 持ち主を移せない。'
-      '移す前の動きは, `tests/frontend/` のテストで保つ。',
-      '【つないだ (`core/src/scheme/mirror.rs`. 環境変数 `RSEDITOR_NO_CORE` で、これまでの動きに戻せる)】1.11 の前につなぐ案 (Tauri の画面を, 先に核の組み込みで動かす): 評価のあいだだけ, 画面のバッファを核に写し (スナップショット), 終わったら変更を画面に返す '
-      '(`EditorHost` を `Bridge` の上で動かし, 本文の操作は核で, バッファの出し入れとウィンドウは画面に頼む). 探す, 構文, マークなどの組み込みが, 今の画面の Lisp (howm, org) でも使える。'
-      '画面の往復が減る代わりに, 画面と核の本文の同期が要る。実際の画面での確かめが要るので, 段階 2 以降の Lisp が画面で要るようになったときに行う。']),
+      '【済 (`docs/core_migration.md`. 画面は `src-tauri/src/session.rs` の `Session` で核を動かし, frame を描く)】1.11 今の画面 (Tauri) を核につなぎ替える: 本文の持ち主を CodeMirror から核に移す。'
+      'CodeMirror は表示と入力にする。画面の TypeScript のコマンドは全て消した。']),
     (2, '動き',
      ['【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と, 本文の全ての位置で一致 (`core/tests/test_motion.rs`. 392 通り). '
-      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後 (段階 1.11 の前の案)】'
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】'
       '行, 単語, バッファの端, 左右の移動。核の上の Lisp で書く。カーソルを動かすので, 速さを比べてから Lisp に移す。']),
     (3, '消す, 切る, 貼る, 元に戻す',
      ['【Lisp 版は済 (`lisp/simple.scm`). `emacs -Q --batch` の結果と一致 (`core/tests/test_edit.rs`: 57 通りのコマンドを 7 種類の本文の全ての位置から, '
-      '`core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】'
+      '`core/tests/test_undo.rs`: undo と undo-redo の 10 通りの場面). 画面 (Tauri) の TypeScript 版は消した (1.11)】'
       '違いが残るのは, `default-indent-new-line` (字下げは段階 6), `quoted-insert` (1 文字を表すキーだけ), `cycle-spacing` (最初の呼び出しだけを Emacs と比べた), '
       '`undo` が保存した状態に戻っても「変更なし」にならないこと。'
       'kill-ring を使うコマンドと, 空白と改行を整えるコマンド, 入れ替え, `undo`。']),
@@ -48,7 +44,7 @@ STEPS = [
       '`next-error`, `previous-error`, `first-error`, `compile-goto-error`, `grep` は `lisp/compile.scm` (`core/tests/test_compile.rs`). '
       '`grep` は外のコマンドを使わず Lisp の `rust-grep` で探し, `*grep*` と `*xref*` の `ファイル:行:行の文字` の行をたどる. '
       '違いが残るのは, 前置引数で進む数を言えないことと, compilation-mode が無いこと (`compile` はまだ無い), ターミナルのアプリでは `local-set-key` が何もせず `*grep*` で `RET` が `compile-goto-error` にならないこと。'
-      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】'
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】'
       'マークとリージョン, 前置引数 (`C-u`, `M-数字`), `M-x`, `M-X`, `M-:`, `C-x M-:`, `C-g`, 表示の切り替え (`truncate-lines`, `selective-display`)。']),
     (5, 'S 式, 段落, ページ',
      ['【式, defun, 段落, 文は済 (`lisp/simple.scm`, 計算は `core/src/sexp.rs` と `core/src/paragraph.rs`). `emacs -Q --batch` の結果と一致 '
@@ -57,7 +53,7 @@ STEPS = [
       '絞り込みは、核に作った (`Buffer::narrow_to_region`、`widen`、`save-restriction`、`buffer-narrowed-p`。点、移動、検索、構文の走査、`buffer-string`、`erase-buffer`、窓の描画が、見える範囲だけを扱う。`goto-line` は、絞り込みの外の行なら絞り込みをやめる)。'
       '`narrow-to-region`、`widen`、`narrow-to-page`、`narrow-to-defun` は、Emacs と一致 (`core/tests/test_lisp.rs`、`core/tests/test_narrow.rs`)。'
       '違いが残るのは、段落、文、字下げ、整形の計算 (`forward-paragraph` など) が、絞り込みを見ずに本文の全体を読むこと、画面 (Tauri) がまだ絞り込めないこと。'
-      '画面 (Tauri) の TypeScript 版 (`src/lib/sexp.ts`, `src/lib/paragraph.ts`) を消すのは, 画面をつないだ後】'
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】'
       '括弧の移動と消去 (`C-M-f` など), defun, 文と段落, ページ。構文表 (段階 1.6) を使う。']),
     (6, '字下げ, 整形, コメント',
      ['【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). '
@@ -66,7 +62,7 @@ STEPS = [
       '違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, '
       '`comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, '
       '`comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。'
-      '画面 (Tauri) の TypeScript 版 (`src/lib/lispIndent.ts`, `src/lib/fill.ts`, `src/lib/comment.ts`) を消すのは, 画面をつないだ後】'
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】'
       '`TAB`, `C-M-\\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。'
       'エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。']),
     (7, '検索, 置換, 強調',
@@ -76,7 +72,7 @@ STEPS = [
       '強調 (`highlight-regexp`, `unhighlight-regexp`, `highlight-phrase`, `highlight-symbol-at-point`, `highlight-lines-matching-regexp`) は, 核が正規表現を持ち (`Buffer::highlights`), '
       'ターミナルは下線で描く (`core/tests/test_highlight.rs`). 違いが残るのは, 記号の検索 (`isearch-forward-symbol`) で空白や正規表現の特別な文字を打つこと, 空白を打つと, 続く空白の全てに合う (lax whitespace) 動きが無いこと, isearch が, 別のキーで終えたときに, そのキーのコマンドを動かさないこと, '
       '`\\#` `\\,` `\\?` の置き換えと, 置き換えの取り消し (`u`, `^`) と, 編集 (`e`) が無いこと, `occur` が *Occur* の色と, 複数のバッファを扱わないこと, '
-      '強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版 (`src/hooks/useSearch.ts`) を消すのは, 画面をつないだ後】'
+      '強調の色の名前を聞かないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】'
       'isearch, `query-replace`, `occur`, `highlight-regexp`。検索の状態を核に持つ (描き方は, 画面ごと)。']),
     (8, '矩形, レジスタ, キーボードマクロ, 略語',
      ['矩形 (`C-x r`), レジスタ, キーボードマクロ (`F3`, `F4`, `C-x (`), 略語と `M-/`。',
@@ -114,7 +110,7 @@ STEPS = [
       '`list-directory` の一覧が `ls` の出力のままで (`ls -CF` の列の幅は端末の幅で決まる), `*Directory*` が help-mode でなく, 取り消しの記録を止めないこと, '
       '`revert-buffer-quick` が自動保存のファイルからの読み直し (前置引数) と `revert-buffer-quick-short-answers` に対応しないこと, '
       '`find-file-read-only` がワイルドカードを展開しないことと, `rename-buffer` が空白で始まる名前に乱数を付けないこと。'
-      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】']),
     (10, 'ウィンドウ',
      ['窓の分割, 削除, 移動, 大きさ, スクロール, 別の窓に出すコマンド。窓の木 (`src/lib/windows.ts`) は, 段階 1.7 で核に移したものを使う。'
       '【Lisp 版とターミナルのアプリは済 (`lisp/window.scm`, `lisp/simple.scm`, `core/src/window.rs`, `tui/`). '
@@ -126,7 +122,7 @@ STEPS = [
       '`enlarge-window` が行の数で言った量にぴったり合わないことがある (割合から丸めるため) こと, '
       '`same-window-prefix`, `other-window-prefix`, `toggle-window-dedicated`, `window-toggle-side-windows` (窓を固定する, 横の窓) が無いこと, '
       '`move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。'
-      '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
+      '画面 (Tauri) の TypeScript 版は消した (1.11)】']),
     (11, 'ヘルプ, xref, info',
      ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。'
      '【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). '
@@ -134,7 +130,7 @@ STEPS = [
      '`describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。'
      '違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, '
      '`info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。'
-     '画面 (Tauri) の TypeScript 版を消すのは, 画面をつないだ後】']),
+     '画面 (Tauri) の TypeScript 版は消した (1.11)】']),
     (12, '入れない',
      ['rs-editor に当たる機能が無いので, 入れない。メール, フレーム (複数の窓枠), 日本語入力以外のテキスト変換, Emacs の案内の文書。']),
 ]

@@ -6,7 +6,6 @@
 
 出力のディレクトリには, run.sh が作ったファイルを置く.
   q-*             emacs -Q (既定のコマンドとキー)
-  rs-editor.json  rs-editor のコマンドとキー
 """
 
 import json
@@ -100,19 +99,12 @@ def default_keys_cell(command, keys):
 
 def rs_editor(root, out):
     """rs-editor のコマンド -> (キー (Emacs の書き方), 実装したファイル (リポジトリからのパス))."""
-    data = json.loads((out / 'rs-editor.json').read_text())
     keys = defaultdict(list)
-    for key, command in data['keys']:
-        keys[command].append(key)
     places = defaultdict(list)
-    # エディタのコマンド (createCommands)
-    for name in data['commands']:
-        places[name].append('src/lib/emacs.ts')
-    # 画面のコマンド (ファイル, バッファ, 評価など. useMinibuffer.ts は, 入力の履歴の名前で, コマンドでない)
-    hooks = [p for p in sorted((root / 'src' / 'hooks').glob('*.ts')) if p.name != 'useMinibuffer.ts']
-    for path in hooks + [root / 'src' / 'App.tsx']:
-        for name in sorted(screen_commands(path.read_text())):
-            places[name].append(str(path.relative_to(root)))
+    # 核の既定のキー (core/src/keymap.rs の DEFAULT)
+    keymap = (root / 'core' / 'src' / 'keymap.rs').read_text()
+    for key, name in re.findall(r'^\s+\("([^"]+)", "([^"]+)"\),', keymap, re.M):
+        keys[name].append(key)
     # Lisp で書いたコマンド (define-command)
     for path in sorted((root / 'lisp').glob('*.scm')):
         for name in sorted(set(re.findall(r"^\(define-command \(([^\s()]+)", path.read_text(), re.M))):
@@ -123,27 +115,19 @@ def rs_editor(root, out):
         text = (root / file).read_text()
         for key, name in re.findall(r"^\(global-set-key \"([^\"]+)\" '([^\s()]+)\)", text, re.M):
             keys[name].append(key)
-    # キーだけで動くもの (前置引数. キーを受ける所で扱う)
+    # キーだけで動くもの (前置引数, 文字の入力など. コマンドループ (Rust) で扱う)
     for name in keys:
         if not places[name]:
-            places[name].append('src/lib/emacs.ts')
+            places[name].append('core/src/command_loop.rs')
     names = set(places) | set(keys)
     return {n: (keys.get(n, []), places.get(n, [])) for n in names}
 
 
-def screen_commands(text):
-    """画面のコマンドの名前 (`'name': ` の形と, `actions: {` の中の `name: ` の形)."""
-    names = set(re.findall(r"^\s+'([a-z][a-z0-9*-]*)': ", text, re.M))
-    for block in re.findall(r"^(\s*)actions: \{\n(.*?)^\1\}", text, re.M | re.S):
-        names |= set(re.findall(r"^\s+([a-z][a-z0-9]*): ", block[1], re.M))
-    return names
-
-
 def place_cell(places):
-    """実装したファイル (Lisp か TypeScript か). 無ければ, 空."""
+    """実装したファイル (Lisp か Rust か). 無ければ, 空."""
     if not places:
         return ''
-    language = 'Lisp' if all(p.endswith('.scm') for p in places) else 'TypeScript'
+    language = 'Lisp' if all(p.endswith('.scm') for p in places) else 'Rust'
     return f'{language} ({", ".join(code(p) for p in places)})'
 
 
@@ -160,7 +144,7 @@ def plan_cell(command, library, places):
 
 def plan_lines(essential, all_commands, rs):
     """実装の計画 (段階の一覧と, 段階ごとの内容)."""
-    counts = {number: [0, 0, 0] for number, _, _ in plan.STEPS}  # 全部, 新しく書く, TypeScript から移す
+    counts = {number: [0, 0, 0] for number, _, _ in plan.STEPS}  # 全部, 新しく書く, Rust から移す
     for c in essential:
         cell = plan_cell(c, all_commands[c], rs[c][1] if c in rs else [])
         if cell == '済':
@@ -172,9 +156,9 @@ def plan_lines(essential, all_commands, rs):
                  '(そのため, 段階 1 で, エディタの核を Rust に作る)。'
                  '下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。'
                  '段階は番号の順に進める (1 は土台で, 2 以降の前提)。'
-                 'TypeScript で書いてあるコマンドは, Lisp に移したら TypeScript の方を消す。')
+                 '画面 (Tauri) の TypeScript のコマンドは, 全て消した (画面は核の frame を描くだけ。`docs/core_migration.md`)。')
     lines.append('')
-    lines.append('| 段階 | 内容 | コマンド | 新しく書く | TypeScript から移す |')
+    lines.append('| 段階 | 内容 | コマンド | 新しく書く | Rust から移す |')
     lines.append('|---|---|---|---|---|')
     for number, title, _ in plan.STEPS:
         total, new, move = counts[number]
@@ -201,10 +185,10 @@ def main():
     essential_implemented = sum(1 for c in essential if c in rs)
 
     def languages(names):
-        """実装済みのうち, Lisp と TypeScript の数."""
+        """実装済みのうち, Lisp と Rust の数."""
         cells = [place_cell(rs[c][1]) for c in names if c in rs]
         lisp = sum(1 for cell in cells if cell.startswith('Lisp'))
-        return f'Lisp {lisp} 個, TypeScript {len(cells) - lisp} 個'
+        return f'Lisp {lisp} 個, Rust {len(cells) - lisp} 個'
 
 
     lines = [BEGIN, '']
@@ -216,8 +200,8 @@ def main():
     w('')
     w('- **既定のキー**: `emacs -Q` の global-map のキー。global-map に無ければ, ほかのキーマップ (ミニバッファなど) のキーを, キーマップの名前と書く。')
     w('- **rs-editor**: rs-editor にあるコマンドは「実装済み」と, rs-editor のキーを書く。')
-    w('- **実装**: rs-editor で書いた言語とファイル。今は, ほとんどを TypeScript (画面) で書いている。'
-      'いずれ Lisp (`lisp/`) に移す (移したら「Lisp」になる)。Emacs の「C で書いたもの」「Lisp で書いたもの」は, '
+    w('- **実装**: rs-editor で書いた言語とファイル。コマンドは Lisp (`lisp/`) で書き, '
+      'キーだけで動くもの (前置引数など) は Rust の核のコマンドループで扱う。Emacs の「C で書いたもの」「Lisp で書いたもの」は, '
       'Emacs の中での区別で, rs-editor での書き方とは別。')
     w('- **Edwin**: MIT/GNU Scheme 12.1 の Edwin (Emacs に似たエディタ. `src/edwin` の `define-command`) にも, 同じ名前のコマンドがあれば ◯。'
       '名前の一覧は `tools/emacs-commands/edwin-commands.txt` (`tools/emacs-commands/edwin.sh` で作る)。')
