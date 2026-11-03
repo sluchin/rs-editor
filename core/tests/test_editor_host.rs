@@ -821,7 +821,11 @@ fn test_string_match() {
 
 #[test]
 fn test_major_mode_variable_follows_the_dialect() {
-    assert_eq!(run_last("major-mode"), "fundamental-mode");
+    assert_eq!(run_last("major-mode"), "lisp-interaction-mode");
+    assert_eq!(
+        run_last("(set-syntax-dialect 'fundamental) major-mode"),
+        "fundamental-mode"
+    );
     assert_eq!(
         run_last("(set-syntax-dialect 'elisp) major-mode"),
         "emacs-lisp-mode"
@@ -829,5 +833,19 @@ fn test_major_mode_variable_follows_the_dialect() {
     assert_eq!(
         run_last("(set-syntax-dialect 'scheme) major-mode"),
         "scheme-mode"
+    );
+}
+
+#[test]
+fn test_major_mode_name_override() {
+    // 始めの *scratch* は lisp-interaction-mode. 方言を決めると、方言の名前に戻る
+    assert_eq!(run_last("(major-mode-name)"), "lisp-interaction-mode");
+    assert_eq!(
+        run_last("(set-major-mode-name 'text-mode) major-mode"),
+        "text-mode"
+    );
+    assert_eq!(
+        run_last("(set-major-mode-name 'text-mode) (set-syntax-dialect 'fundamental) major-mode"),
+        "fundamental-mode"
     );
 }

@@ -5,7 +5,8 @@
 
 (define auto-mode-alist
   '(("\\.el$" elisp)
-    ("\\.(scm|ss|sld|sls|rkt)$" scheme))
+    ("\\.(scm|ss|sld|sls|rkt)$" scheme)
+    ("\\.(txt|text)$" text-mode))
   "List of (REGEXP DIALECT) to choose the syntax dialect (major mode) of a visited file.
 The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental.")
 
@@ -15,7 +16,9 @@ See `auto-mode-alist'."
   (let ((file (buffer-file-name)))
     (let loop ((modes auto-mode-alist))
       (cond ((or (not file) (null? modes)) (set-syntax-dialect 'fundamental))
-            ((regexp-match (car (car modes)) file) (set-syntax-dialect (cadr (car modes))))
+            ((regexp-match (car (car modes)) file)
+             (set-syntax-dialect (if (equal? (cadr (car modes)) 'text-mode) 'fundamental (cadr (car modes))))
+             (if (equal? (cadr (car modes)) 'text-mode) (set-major-mode-name 'text-mode)))
             (else (loop (cdr modes)))))))
 
 (define (find-buffer-visiting filename)

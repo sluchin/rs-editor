@@ -98,6 +98,8 @@ pub struct Buffer {
     pub(crate) string_match: Option<(Groups, Groups)>,
     /// 構文の方言 (メジャーモードに当たる).
     dialect: Dialect,
+    /// `major-mode` の名前 (方言だけでは決まらないモード: text-mode など). 無ければ方言から決める.
+    pub(crate) mode_name: Option<String>,
     /// マーカー (位置を覚えておいて, 本文を書き換えると, 位置を追う. 解いたものは `None`).
     markers: Vec<Option<usize>>,
     /// 最後の区切りを入れたときのカーソル (Emacs の `point_before_last_command_or_undo`).
@@ -163,6 +165,11 @@ impl Buffer {
             match_data: Vec::new(),
             string_match: None,
             dialect: Dialect::Fundamental,
+            mode_name: if name == crate::editor::SCRATCH {
+                Some("lisp-interaction-mode".to_string())
+            } else {
+                None
+            },
             markers: Vec::new(),
             point_at_boundary: None,
             deactivate_requested: false,
@@ -357,6 +364,7 @@ impl Buffer {
     /// 構文の方言を決めます.
     pub fn set_dialect(&mut self, dialect: Dialect) {
         self.dialect = dialect;
+        self.mode_name = None;
     }
 
     /// バッファの名前を変えます (呼ぶのは `Editor::rename_buffer`. 他のバッファとの重なりは調べない).

@@ -11,3 +11,7 @@
   (princ (format "%s\n" (try (lambda () (undefined-fn 1)))))
   (princ (format "%S\n" (condition-case e (search-forward "q") (search-failed (cdr e)))))
   (princ (format "%S\n" (condition-case e (error "x") (error (error-message-string e))))))
+(princ (format "%S\n" (condition-case e (insert-file-contents "nonexist") (file-missing (list (car e) (cadr e) (caddr e))))))
+(princ (format "%S\n" (condition-case e (insert-file-contents "nonexist") (file-missing (error-message-string e)))))
+(princ (format "%S\n" (condition-case e (load "nonexist-zz") (file-missing (cdr e)))))
+(princ (format "%S\n" (condition-case e (load "nonexist-zz") (file-missing (error-message-string e)))))

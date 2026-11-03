@@ -1316,6 +1316,18 @@ impl<U: Host> EditorHost<U> {
                 }
                 .to_string(),
             ),
+            "major-mode-name" => Value::Symbol(b.mode_name.clone().unwrap_or_else(|| {
+                match b.dialect() {
+                    Dialect::Fundamental => "fundamental-mode",
+                    Dialect::Elisp => "emacs-lisp-mode",
+                    Dialect::Scheme => "scheme-mode",
+                }
+                .to_string()
+            })),
+            "set-major-mode-name" => {
+                b.mode_name = Some(name(op, args, 0)?.to_string());
+                Value::Nil
+            }
             "set-syntax-dialect" => {
                 b.set_dialect(match name(op, args, 0)? {
                     "fundamental" => Dialect::Fundamental,

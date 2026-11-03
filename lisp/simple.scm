@@ -2547,6 +2547,18 @@ A word that is not a key name stands for the keys of its characters.  The result
   (set-syntax-dialect 'scheme)
   #f)
 
+(define-command (text-mode)
+  "Major mode for editing text written for humans to read."
+  (set-syntax-dialect 'fundamental)
+  (set-major-mode-name 'text-mode)
+  #f)
+
+(define-command (lisp-interaction-mode)
+  "Major mode for typing and evaluating Lisp forms."
+  (set-syntax-dialect 'elisp)
+  (set-major-mode-name 'lisp-interaction-mode)
+  #f)
+
 (define (string-match regexp string . rest)
   "Return the index of the start of the first match for REGEXP in STRING, or nil.
 Searching starts at START (the optional third argument).  The match data is

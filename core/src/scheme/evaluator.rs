@@ -527,13 +527,7 @@ impl<'a> Machine<'a> {
         let value = eval_atom(expr, env);
         match (&value, expr) {
             (Err(_), Value::Symbol(name)) if name == "major-mode" => {
-                let dialect = self.host.call("syntax-dialect", vec![])?.to_display();
-                let mode = match dialect.as_str() {
-                    "elisp" => "emacs-lisp-mode",
-                    "scheme" => "scheme-mode",
-                    _ => "fundamental-mode",
-                };
-                Ok(Value::Symbol(mode.to_string()))
+                self.host.call("major-mode-name", vec![])
             }
             _ => value,
         }
@@ -1316,6 +1310,22 @@ fn error_data(kind: &str, message: String) -> Vec<Value> {
                 .and_then(|p| p.strip_suffix('"'))
                 .unwrap_or(&pattern);
             vec![Value::String(pattern.to_string())]
+        }
+        "file-missing" => {
+            // "Opening input file: 理由, パス" か "Cannot open load file: 名前" を, Emacs の 3 つのデータにする
+            let parts = message
+                .split_once(": ")
+                .map(|(what, rest)| match rest.split_once(", ") {
+                    Some((reason, path)) => (what, reason, path),
+                    None => (what, "No such file or directory", rest),
+                });
+            match parts {
+                Some((what, reason, path)) => [what, reason, path]
+                    .iter()
+                    .map(|s| Value::String(s.to_string()))
+                    .collect(),
+                None => vec![Value::String(message)],
+            }
         }
         "void-variable" | "void-function" => {
             let name = [

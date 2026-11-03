@@ -7608,6 +7608,16 @@ msgid "Major mode for editing Scheme code."
 msgstr "Scheme のコードを編集するメジャーモード."
 
 #: lisp/simple.scm
+msgctxt "function:text-mode"
+msgid "Major mode for editing text written for humans to read."
+msgstr "人が読む文章を編集するメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:lisp-interaction-mode"
+msgid "Major mode for typing and evaluating Lisp forms."
+msgstr "Lisp の式を入力して評価するメジャーモード."
+
+#: lisp/simple.scm
 msgctxt "function:string-match"
 msgid ""
 "Return the index of the start of the first match for REGEXP in STRING, or nil.\n"

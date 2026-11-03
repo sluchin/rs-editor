@@ -170,6 +170,21 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Symbol's function definition is void: undefined-fn",
         ),
         (
+            "(error \"Opening input file: No such file or directory, /x/y\")",
+            "(\"Opening input file\" \"No such file or directory\" \"/x/y\")",
+            "Opening input file: No such file or directory, /x/y",
+        ),
+        (
+            "(error \"Cannot open load file: zz\")",
+            "(\"Cannot open load file\" \"No such file or directory\" \"zz\")",
+            "Cannot open load file: No such file or directory, zz",
+        ),
+        (
+            "(error \"Opening input file\")",
+            "(\"Opening input file\")",
+            "Opening input file",
+        ),
+        (
             "(error \"Unbound variable\")",
             "(\"Unbound variable\")",
             "Unbound variable",

@@ -1482,6 +1482,14 @@ fn format(args: &[Value]) -> Result<String, String> {
 fn error_text(items: &[Value]) -> String {
     let kind = items.first().map(Value::to_display).unwrap_or_default();
     let data = items.get(1);
+    if let ("file-missing", [_, what, reason, path]) = (kind.as_str(), items) {
+        return format!(
+            "{}: {}, {}",
+            what.to_display(),
+            reason.to_display(),
+            path.to_display()
+        );
+    }
     match (kind.as_str(), data) {
         ("end-of-buffer", None) => "End of buffer".to_string(),
         ("beginning-of-buffer", None) => "Beginning of buffer".to_string(),

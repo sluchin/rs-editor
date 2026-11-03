@@ -632,6 +632,7 @@ fn test_editor_settings() {
             ),
             "buffer-file-name".to_string(),
             "set-syntax-dialect fundamental".to_string(),
+            "set-major-mode-name text-mode".to_string(),
             "buffer-name".to_string(),
             "set-buffer \"/home/a.txt\"".to_string(),
             "pop-to-buffer-same-window \"/home/a.txt\"".to_string(),

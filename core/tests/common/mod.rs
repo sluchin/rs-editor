@@ -465,7 +465,7 @@ impl Host for FakeEditor {
                 }
                 Value::Nil
             }
-            "set-syntax-dialect" => Value::Nil,
+            "set-syntax-dialect" | "set-major-mode-name" => Value::Nil,
             "rename-buffer" => {
                 // 同じ名前があれば, 番号を付ける
                 let base = text(&args[0]);
