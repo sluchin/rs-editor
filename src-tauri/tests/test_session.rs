@@ -148,8 +148,8 @@ fn test_messages_questions_and_screen_requests() {
         .text();
     assert_eq!(messages, "one\n");
     // 失敗はエコー領域と *Messages* に出す
-    assert!(session.eval("(car '())").is_err());
-    assert!(last(&front).message.starts_with("car"));
+    assert!(session.eval("(car 1)").is_err());
+    assert!(last(&front).message.starts_with("Wrong type argument"));
     // 問いの前に描く. 答えを返す
     front
         .answers
@@ -348,7 +348,7 @@ fn test_init_file_and_run() {
     session.load_init(None);
     session.load_init(Some(&dir.path().join("none.scm")));
     // 失敗は, エコー領域と *Warnings* に出す
-    std::fs::write(&init, "(car '())").unwrap();
+    std::fs::write(&init, "(car 1)").unwrap();
     session.load_init(Some(&init));
     session.handle(Input::Redraw);
     assert!(last(&front).message.contains("init.scm"));

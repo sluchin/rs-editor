@@ -609,7 +609,7 @@ fn test_evaluator_reports_the_errors() {
         ("(point 1)", "point expects 0 arguments, given 1"),
         ("(modulo 1 0)", "modulo: division by zero"),
         ("(zero? 'a)", "Wrong type argument: number-or-marker-p, a"),
-        ("(car '())", "car expects a non-empty list"),
+        ("(car 1)", "Wrong type argument: listp, 1"),
         ("(cons 1 2)", "cons expects a list as the second argument"),
         ("(length 1)", "Wrong type argument: sequencep, 1"),
         ("(list-ref '(1) 1)", "list-ref: index out of range"),
@@ -836,8 +836,8 @@ fn test_condition_case() {
         "\"boom 3\""
     );
     assert_eq!(
-        eval("(condition-case e (car '()) ((quit error) e))"),
-        "(error \"car expects a non-empty list\")"
+        eval("(condition-case e (car 1) ((quit error) e))"),
+        "(wrong-type-argument listp 1)"
     );
     // 条件: 当てはまる処理だけ. scan-error は Scan error:, quit は Quit
     let scan = "(error \"Scan error: \\\"Unbalanced parentheses\\\", 1, 2\")";

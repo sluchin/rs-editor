@@ -158,6 +158,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-47 | `47-error-data` | エラーのデータ (`(cdr e)`): `error` はメッセージ、`end-of-buffer` などは空、`search-failed` は探した文字列、`void-variable` と `void-function` は記号、`file-missing` は 3 つの文字列、`wrong-type-argument` は述語 (`number-or-marker-p`、`listp`、`stringp` など) と値、`args-out-of-range` は対象 (バッファか文字列) と位置。`error-message-string` |
 | E-48 | `48-dired-add` | dired でコピー、名前の変更、ディレクトリの作成の後の行の並び (Emacs は点の行の前に足し、並べ直さない) |
 | E-49 | `49-regexp-syntax` | 正規表現の書き方: `\s-`、`\w`、`\_<`、`\<`、`\b`、`\{n,m\}`、`[[:alpha:]]`、後方参照、`\(?:`、非貪欲、`[]a]`、`^` と `$`、特別でない括弧と波括弧と縦線 |
+| E-50 | `50-args-range` | 範囲外の位置: `buffer-substring`、`delete-region`、`kill-region`、`upcase-region`、`narrow-to-region` に 1 より小さい位置や本文の外の位置 (引数の順のまま報せる)、`string-search` の始め、`goto-char` は丸める、`car` と `cdr` の nil |
 
 ## 5. 比べない違い
 
@@ -169,7 +170,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
-| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47)。`wrong-type-argument` の述語は、算術と比較 (`number-or-marker-p`)、`abs` (`numberp`)、位置と数 (`integer-or-marker-p`)、`car` と `member` など (`listp`)、並び (`sequencep`)、文字列 (`stringp`)、添え字 (`integerp`) だけ合わせた。`args-out-of-range` は、範囲を取る編集 (`buffer-substring`、`delete-region`、`narrow-to-region`)、`substring`、`string-match`、`delete-char` の第 2 引数を合わせた (バッファは `#<buffer 名前>` の記号)。ほかの範囲外 (`list-ref`、`string-search` など) は、メッセージの文字列 1 つ。`(car '())` は Emacs では nil だが、rs-editor は失敗にする。位置が 1 より小さいと、rs-editor は 1 に丸めて失敗にしない (Emacs は範囲外) |
+| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47、E-50)。`wrong-type-argument` の述語は、算術と比較 (`number-or-marker-p`)、`abs` (`numberp`)、位置と数 (`integer-or-marker-p`)、`car` と `member` など (`listp`)、並び (`sequencep`)、文字列 (`stringp`)、添え字 (`integerp`) だけ合わせた。`args-out-of-range` は、範囲を取る編集、`substring`、`string-match`、`string-search`、`delete-char` の第 2 引数を合わせた (バッファは `#<buffer 名前>` の記号)。`list-ref` など、Emacs に無い手続きの範囲外は、メッセージの文字列 1 つ |
 | dired の一覧の並び | コピー、名前の変更、ディレクトリの作成の後の並びは合わせた (試験 E-48。一覧は作り直し、前の並びに戻して、新しい行を点の行の前に置く)。日付や大きさは比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 

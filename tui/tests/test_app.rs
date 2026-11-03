@@ -242,7 +242,7 @@ fn test_lisp_key_bindings_and_eval() {
     fx.press("C-c g");
     assert_eq!(fx.text(), "hello");
     assert_eq!(fx.app.eval("(+ 1 2)").unwrap(), "3");
-    assert!(fx.app.eval("(car '())").is_err());
+    assert!(fx.app.eval("(car 1)").is_err());
     // this-command を数にするコマンドでも、前のコマンドは名前になる
     fx.app
         .eval("(define-command (weird) (set! this-command 5))")

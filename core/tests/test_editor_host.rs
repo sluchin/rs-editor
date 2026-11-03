@@ -657,8 +657,8 @@ fn test_showing_buffers_in_windows() {
 fn test_special_forms_restore_state() {
     // 本体が失敗しても戻す
     assert_eq!(
-        run_last("(get-buffer-create \"x\") (with-current-buffer \"x\" (car '())) (buffer-name)"),
-        "ERR car expects a non-empty list"
+        run_last("(get-buffer-create \"x\") (with-current-buffer \"x\" (car 1)) (buffer-name)"),
+        "ERR Wrong type argument: listp, 1"
     );
     assert_eq!(
         run_last("(get-buffer-create \"x\") (list (save-excursion (set-buffer \"x\") (goto-char 1) 1) (buffer-name) (point))"),
@@ -854,4 +854,34 @@ fn test_major_mode_name_override() {
         run_last("(set-major-mode-name 'text-mode) (set-syntax-dialect 'fundamental) major-mode"),
         "fundamental-mode"
     );
+}
+
+#[test]
+fn test_region_positions_out_of_range() {
+    // 1 より小さい位置と、本文の外の位置は範囲外 (引数の順のまま). goto-char は丸める
+    let cases = [
+        (
+            "(buffer-substring 0 2)",
+            "ERR Args out of range: #<buffer *scratch*>, 0, 2",
+        ),
+        (
+            "(buffer-substring 5 0)",
+            "ERR Args out of range: #<buffer *scratch*>, 5, 0",
+        ),
+        (
+            "(delete-region 0 2)",
+            "ERR Args out of range: #<buffer *scratch*>, 0, 2",
+        ),
+        (
+            "(kill-region 0 2)",
+            "ERR Args out of range: #<buffer *scratch*>, 0, 2",
+        ),
+        ("(narrow-to-region 0 2)", "ERR Args out of range: 0, 2"),
+        ("(narrow-to-region 9 1)", "ERR Args out of range: 9, 1"),
+        ("(insert \"abc\") (buffer-substring 3 1)", "\"ab\""),
+        ("(goto-char 0) (point)", "1"),
+    ];
+    for (code, want) in cases {
+        assert_eq!(run_last(code), want, "{code}");
+    }
 }

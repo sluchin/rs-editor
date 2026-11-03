@@ -51,12 +51,12 @@ fn test_passing_and_failing_tests() {
   :tags '(quick)
   (should (= (+ 1 1) 2))
   (should-not (string=? "a" "b"))
-  (should (equal (should-error (car '())) '(error "car expects a non-empty list")))
-  (should-error (car '()) :type 'wrong-type-argument))
+  (should (equal (should-error (car 1)) '(error "Wrong type argument: listp, 1")))
+  (should-error (car 1) :type 'wrong-type-argument))
 (ert-deftest fail-test () (should (equal (+ 1 1) 3)))
 (ert-deftest fail-not-test () (should-not (+ 1 1)))
 (ert-deftest no-error-test () (should-error (+ 1 2)))
-(ert-deftest error-test () (car '()))
+(ert-deftest error-test () (car 1))
 (ert-deftest special-test () (should (and #t #f)))
 (ert-deftest expected-failure-test () :expected-result :failed (should #f))
 (ert-deftest unexpected-pass-test () :expected-result :failed (should #t))
@@ -85,7 +85,7 @@ Test no-error-test condition:
      ((should-error (+ 1 2)) :form (+ 1 2) :value 3 :fail-reason "did not signal an error"))
    FAILED  4/13  no-error-test (T sec)
 Test error-test condition:
-    (error "car expects a non-empty list")
+    (error "Wrong type argument: listp, 1")
    FAILED  5/13  error-test (T sec)
 Test special-test condition:
     (ert-test-failed
@@ -209,18 +209,17 @@ fn test_errors() {
     }
     // 引数の評価が失敗する should, :tags の評価が失敗する
     assert_eq!(
-        ev.eval("(should (= 1 (car '())))").unwrap_err(),
-        "car expects a non-empty list"
+        ev.eval("(should (= 1 (car 1)))").unwrap_err(),
+        "Wrong type argument: listp, 1"
     );
     assert_eq!(
-        ev.eval("(ert-deftest t2 () :tags (car '()) 1)")
-            .unwrap_err(),
-        "car expects a non-empty list"
+        ev.eval("(ert-deftest t2 () :tags (car 1) 1)").unwrap_err(),
+        "Wrong type argument: listp, 1"
     );
     assert_eq!(
-        ev.eval("(ert-deftest t3 () :expected-result (car '()))")
+        ev.eval("(ert-deftest t3 () :expected-result (car 1))")
             .unwrap_err(),
-        "car expects a non-empty list"
+        "Wrong type argument: listp, 1"
     );
     // require しなくても使える
     assert_eq!(
@@ -239,15 +238,15 @@ fn test_unwind_protect() {
     );
     // 本体が失敗しても, 後始末をして, 失敗を返す
     assert_eq!(
-        ev.eval("(unwind-protect (car '()) (set! log '(done)))")
+        ev.eval("(unwind-protect (car 1) (set! log '(done)))")
             .unwrap_err(),
-        "car expects a non-empty list"
+        "Wrong type argument: listp, 1"
     );
     assert_eq!(ev.eval("log").unwrap(), "(done)");
     // 後始末の失敗
     assert_eq!(
-        ev.eval("(unwind-protect 1 (car '()))").unwrap_err(),
-        "car expects a non-empty list"
+        ev.eval("(unwind-protect 1 (car 1))").unwrap_err(),
+        "Wrong type argument: listp, 1"
     );
 }
 

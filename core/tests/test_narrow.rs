@@ -355,16 +355,16 @@ fn test_save_restriction_form() {
     assert_eq!(
         eval(
             text,
-            "(narrow-to-region 4 7) (save-restriction (widen) (car '())) (buffer-narrowed-p)"
+            "(narrow-to-region 4 7) (save-restriction (widen) (car 1)) (buffer-narrowed-p)"
         ),
-        "error: car expects a non-empty list"
+        "error: Wrong type argument: listp, 1"
     );
     assert_eq!(
         eval(
             text,
-            "(narrow-to-region 4 7) (unwind-protect (save-restriction (widen) (car '())) #t) 1"
+            "(narrow-to-region 4 7) (unwind-protect (save-restriction (widen) (car 1)) #t) 1"
         ),
-        "error: car expects a non-empty list"
+        "error: Wrong type argument: listp, 1"
     );
     // 値は, 本体の最後の値
     assert_eq!(eval(text, "(save-restriction 1 2)"), "2");

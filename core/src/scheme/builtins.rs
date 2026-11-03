@@ -259,7 +259,12 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                     // 配列は写さない (cdr でたどるループが, 長さの 2 乗にならないように)
                     Value::List(items.tail())
                 }),
-                Value::List(_) => Err(format!("{} expects a non-empty list", name)),
+                // Emacs と同じく, 空のリスト (と nil) の car と cdr は nil
+                Value::List(_) | Value::Boolean(false) | Value::Nil => Ok(if name == "car" {
+                    Value::Boolean(false)
+                } else {
+                    Value::List(Vec::new().into())
+                }),
                 other => Err(wrong_type("listp", &other)),
             }
         }
@@ -524,14 +529,15 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             }
             let needle = string(name, &args[0])?;
             let haystack = string(name, &args[1])?;
+            let chars: Vec<char> = haystack.chars().collect();
+            // 始めが範囲の外なら, Emacs と同じく (args-out-of-range START)
             let start = match args.get(2) {
+                Some(Value::Number(n)) if *n < 0.0 || *n > chars.len() as f64 => {
+                    return Err(format!("Args out of range: {}", args[2]));
+                }
                 Some(start) => index(name, start)?,
                 None => 0,
             };
-            let chars: Vec<char> = haystack.chars().collect();
-            if start > chars.len() {
-                return Err("string-search: index out of range".to_string());
-            }
             let rest: String = chars[start..].iter().collect();
             Ok(match rest.find(needle) {
                 Some(found) => Value::Number((start + rest[..found].chars().count()) as f64),

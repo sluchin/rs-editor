@@ -298,11 +298,11 @@ fn test_load() {
         format!("{}: Unclosed list", broken.display())
     );
     let failing = dir.path().join("failing.sl");
-    fs::write(&failing, "(car '())").unwrap();
+    fs::write(&failing, "(car 1)").unwrap();
     assert_eq!(
         ev.eval(&format!("(load {})", quoted(&failing)))
             .unwrap_err(),
-        format!("{}: car expects a non-empty list", failing.display())
+        format!("{}: Wrong type argument: listp, 1", failing.display())
     );
     // 失敗の後は, 読み込んでいるファイルのディレクトリを忘れる
     assert_eq!(
@@ -529,7 +529,11 @@ fn test_strings() {
     );
     assert_eq!(
         eval_err("(string-search \"a\" \"a\" 2)"),
-        "string-search: index out of range"
+        "Args out of range: 2"
+    );
+    assert_eq!(
+        eval_err("(string-search \"a\" \"a\" -1)"),
+        "Args out of range: -1"
     );
     assert_eq!(
         eval_err("(string-search \"a\")"),
@@ -572,9 +576,10 @@ fn test_cxr() {
         eval("(cadr '(1 2 3)) (cddr '(1 2 3)) (caddr '(1 2 3)) (caar '((1) 2)) (cdar '((1 2) 3))"),
         "2\n(3)\n3\n1\n(2)"
     );
+    // 足りなければ, Emacs と同じく nil
     assert_eq!(
-        eval_err("(caddr '(1 2))"),
-        "caddr expects a list with enough elements"
+        eval("(caddr '(1 2)) (cdr '()) (car '()) (car #f) (cdr #f)"),
+        "#f\n()\n#f\n#f\n()"
     );
 }
 
@@ -860,8 +865,8 @@ fn test_read_with_defaults() {
             "Wrong type argument: stringp, 1",
         ),
         (
-            "(completing-read \"a\" '(\"b\") (lambda (x) (car '())))",
-            "car expects a non-empty list",
+            "(completing-read \"a\" '(\"b\") (lambda (x) (car 1)))",
+            "Wrong type argument: listp, 1",
         ),
         (
             "(completing-read \"a\" '(()))",
@@ -919,8 +924,8 @@ fn test_hooks() {
             "Unbound variable: nothing",
         ),
         (
-            "(add-hook 'h2 (lambda () (car '()))) (run-hooks 'h2)",
-            "car expects a non-empty list",
+            "(add-hook 'h2 (lambda () (car 1))) (run-hooks 'h2)",
+            "Wrong type argument: listp, 1",
         ),
     ] {
         assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);

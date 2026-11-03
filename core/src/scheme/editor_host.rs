@@ -263,6 +263,27 @@ fn pos(op: &str, args: &[Value], i: usize) -> Result<usize, String> {
     number(op, args, i).map(|n| (n as i64 - 1).max(0) as usize)
 }
 
+/// 範囲の 2 つの位置の引数 (1 から数える) を, 小さい順に, 0 から数える位置にします.
+/// `limit` (0 から数える, 始めと終わり) の外なら, Emacs と同じく `args-out-of-range`
+/// (引数の順のまま. `buffer` があれば, バッファの名前を添える).
+fn region(
+    buffer: Option<&str>,
+    limit: (usize, usize),
+    op: &str,
+    args: &[Value],
+    i: usize,
+) -> Result<(usize, usize), String> {
+    let (a, b) = (int(op, args, i)?, int(op, args, i + 1)?);
+    let (from, to) = (a.min(b), a.max(b));
+    if from < limit.0 as i64 + 1 || to > limit.1 as i64 + 1 {
+        return Err(match buffer {
+            Some(name) => format!("Args out of range: #<buffer {name}>, {a}, {b}"),
+            None => format!("Args out of range: {a}, {b}"),
+        });
+    }
+    Ok((from as usize - 1, to as usize - 1))
+}
+
 /// 省ける位置の引数.
 fn pos_opt(op: &str, args: &[Value], i: usize) -> Result<Option<usize>, String> {
     match args.get(i) {
@@ -760,7 +781,13 @@ impl<U: Host> EditorHost<U> {
                 }));
             }
             "kill-region" => {
-                let (from, to) = (pos(op, args, 0)?, pos(op, args, 1)?);
+                let (from, to) = region(
+                    Some(ed.current_buffer_name()),
+                    (ed.current_buffer().begv(), ed.current_buffer().zv()),
+                    op,
+                    args,
+                    0,
+                )?;
                 let killed = ed.current_buffer_mut().delete_region(from, to)?;
                 ed.kill_ring.kill_new(&killed, false);
                 return Ok(Some(Value::Nil));
@@ -806,7 +833,8 @@ impl<U: Host> EditorHost<U> {
                 Value::Nil
             }
             "delete-region" => {
-                b.delete_region(pos(op, args, 0)?, pos(op, args, 1)?)?;
+                let (from, to) = region(Some(b.name()), (b.begv(), b.zv()), op, args, 0)?;
+                b.delete_region(from, to)?;
                 Value::Nil
             }
             "erase-buffer" => {
@@ -817,7 +845,10 @@ impl<U: Host> EditorHost<U> {
                 Value::Nil
             }
             "buffer-string" => Value::String(b.visible_text()),
-            "buffer-substring" => Value::String(b.substring(pos(op, args, 0)?, pos(op, args, 1)?)?),
+            "buffer-substring" => {
+                let (from, to) = region(Some(b.name()), (b.begv(), b.zv()), op, args, 0)?;
+                Value::String(b.substring(from, to)?)
+            }
             "buffer-name" => Value::String(b.name().to_string()),
             "buffer-size" => Value::Number(b.len() as f64),
             "set-buffer-modified-p" => {
@@ -870,8 +901,7 @@ impl<U: Host> EditorHost<U> {
                 let case = Case::parse(text(op, args, 0)?).ok_or_else(|| {
                     format!("{op}: unknown case {}", text(op, args, 0).unwrap_or(""))
                 })?;
-                let (from, to) = (pos(op, args, 1)?, pos(op, args, 2)?);
-                let (from, to) = if from <= to { (from, to) } else { (to, from) };
+                let (from, to) = region(Some(b.name()), (b.begv(), b.zv()), op, args, 1)?;
                 let source = Source::from_buffer(b, b.dialect());
                 let converted = casefiddle::convert(&b.substring(from, to)?, case, |i| {
                     source.class_of(from + i) == Class::Word
@@ -1117,7 +1147,8 @@ impl<U: Host> EditorHost<U> {
                 Value::Nil
             }
             "narrow-to-region" => {
-                b.narrow_to_region(pos(op, args, 0)?, pos(op, args, 1)?)?;
+                let (from, to) = region(None, (0, b.len()), op, args, 0)?;
+                b.narrow_to_region(from, to)?;
                 Value::Nil
             }
             "widen" => {
