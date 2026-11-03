@@ -202,7 +202,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("window-body-height", &[], 0),
     ("move-to-window-line", &[Kind::Number], 0),
     ("recenter", &[], 0),
-    ("kill-emacs", &[], 0),
+    ("kill-emacs", &[Kind::Any], 0),
     ("toggle-project-tree", &[], 0),
 ];
 

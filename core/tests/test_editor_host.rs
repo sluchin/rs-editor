@@ -550,9 +550,12 @@ fn test_files() {
         eval("(with-current-buffer \"p.txt\" (syntax-dialect))"),
         "fundamental"
     );
+    // UTF-8 でないファイルは, 開けない
+    let bad = dir.path().join("bad.bin");
+    std::fs::write(&bad, [0xff, 0xfe]).unwrap();
     assert!(eval(&format!(
         "(find-file-noselect {})",
-        quoted(dir.path().to_str().unwrap())
+        quoted(bad.to_str().unwrap())
     ))
     .starts_with("ERR "));
     // 同じ名前の別のファイルには, 番号を付ける

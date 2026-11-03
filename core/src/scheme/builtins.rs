@@ -110,6 +110,10 @@ pub const NAMES: &[&str] = &[
     "buffer-substring",
     "buffer-name",
     "message",
+    "princ",
+    "prin1",
+    "print",
+    "terpri",
     "call-interactively",
     "command-execute",
     "global-set-key",
@@ -573,6 +577,15 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             };
             Ok(Value::List(pieces.into_iter().map(Value::String).collect()))
         }
+        // (buffer-name BUFFER): バッファの名前 (バッファは名前で表すので, 生きているバッファなら, 同じ名前. 無ければ #f)
+        "buffer-name" if !args.is_empty() => {
+            let [buffer] = fixed::<1>(name, args)?;
+            let buffer = Value::String(string(name, &buffer)?.to_string());
+            Ok(match machine.host.call("buffer-list", vec![])? {
+                Value::List(names) if names.contains(&buffer) => buffer,
+                _ => Value::Boolean(false),
+            })
+        }
         "point" | "point-min" | "point-max" | "buffer-string" | "buffer-name" => {
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
@@ -600,6 +613,24 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             machine.evaluator.log_message(&text);
             machine.host.call(name, vec![Value::String(text.clone())])?;
             Ok(Value::String(text))
+        }
+        "terpri" => {
+            fixed::<0>(name, args)?;
+            write_output(machine, "\n")?;
+            Ok(Value::Boolean(true))
+        }
+        "princ" | "prin1" | "print" => {
+            let [value] = fixed::<1>(name, args)?;
+            let text = print_string(&value, name != "princ");
+            write_output(
+                machine,
+                &if name == "print" {
+                    format!("\n{text}\n")
+                } else {
+                    text
+                },
+            )?;
+            Ok(value)
         }
         "call-interactively" | "command-execute" => match fixed::<1>(name, args)? {
             [Value::Symbol(command) | Value::String(command)] => machine.call_command(&command),
@@ -1339,6 +1370,29 @@ fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
 /// # Returns
 ///
 /// 作った文字列. 書式が文字列でない, 値が足りない, 使えない指定がある場合は [`Err`].
+/// 標準出力に書く (バッチモードは標準出力. 画面のエディタは, エコー領域).
+fn write_output(machine: &mut Machine, text: &str) -> Result<(), String> {
+    machine
+        .host
+        .call("standard-output", vec![Value::String(text.to_string())])
+        .map(|_| ())
+}
+
+/// 値の出力の文字 (`prin1` は文字列を引用符で囲み, `princ` は囲まない).
+fn print_string(value: &Value, quoted: bool) -> String {
+    match value {
+        Value::String(s) if quoted => {
+            format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
+        }
+        Value::String(s) => s.clone(),
+        Value::List(items) => {
+            let parts: Vec<String> = items.iter().map(|v| print_string(v, quoted)).collect();
+            format!("({})", parts.join(" "))
+        }
+        other => other.to_string(),
+    }
+}
+
 fn format(args: &[Value]) -> Result<String, String> {
     let Some((template, values)) = args.split_first() else {
         return Err("format expects a format string".to_string());

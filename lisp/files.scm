@@ -28,11 +28,11 @@ See `auto-mode-alist'."
   "Read file FILENAME into a buffer and return the buffer.
 If a buffer exists visiting FILENAME, return that one.  A new buffer is named after the file,
 its syntax dialect is chosen by `set-auto-mode', and `find-file-hook' runs in it.
-If FILENAME does not exist, the new buffer is empty and visits it."
+If FILENAME does not exist, the new buffer is empty and visits it.
+If FILENAME is a directory, return a Dired buffer (`dired-noselect')."
   (let ((file (expand-file-name filename)))
-    (when (file-directory? file)
-      (error (format "%s is a directory" file)))
-    (or (find-buffer-visiting file)
+    (or (and (file-directory? file) (dired-noselect file))
+        (find-buffer-visiting file)
         (let ((name (generate-new-buffer (file-name-nondirectory file))))
           (with-current-buffer name
             (if (file-exists? file)
@@ -138,7 +138,10 @@ into it, and ask before overwriting an existing file."
   "Auto-save all buffers that need it.
 This writes the modified file-visiting buffers to their auto save files (#NAME#),
 and prints \"Auto-saving...done\" if anything was saved."
-  (files--do-auto-save))
+  (when (> (files--do-auto-save) 0)
+    (message "Auto-saving...")
+    (message "Auto-saving...done"))
+  #f)
 
 (define-command (set-visited-file-name . args)
   "Change the name of the file visited in the current buffer to FILENAME.
@@ -157,6 +160,20 @@ Interactively, read FILENAME in the minibuffer; the initial input is the current
         (unless (equal? base (buffer-name))
           (rename-buffer base #t)))
       (set-buffer-modified-p #t))))
+
+(define mode-require-final-newline #t
+  "Non-#f means a file-visiting buffer gets a final newline when it is saved (if it is not empty).")
+
+(define (files--require-final-newline)
+  "Add a newline at the end of the current buffer unless it is empty or already ends with one."
+  (when mode-require-final-newline
+    (save-excursion
+      (save-restriction
+        (widen)
+        (let ((end (point-max)))
+          (when (and (> end 1) (not (equal? (buffer-substring (- end 1) end) "\n")))
+            (goto-char end)
+            (insert "\n")))))))
 
 (define (make-backup-file-name file)
   "Return the backup file name of FILE (FILE~)."
@@ -187,6 +204,7 @@ and run `after-save-hook'.  If the buffer visits no file, read a file name."
   (cond ((not (buffer-file-name)) (files--write-file (read-file-name "Save file: ")))
         ((buffer-modified-p)
          (backup-buffer)
+         (files--require-final-newline)
          (write-region #f #f (buffer-file-name) #f #t)
          (delete-auto-save-file-if-necessary)
          (run-hooks 'after-save-hook))

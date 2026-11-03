@@ -194,7 +194,7 @@ fn test_exit_flows() {
     fx.feed("y");
     fx.press("C-x C-c");
     assert!(fx.app.quit());
-    assert_eq!(std::fs::read_to_string(&path).unwrap(), "xe");
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "xe\n");
     // 保存せずに、終わらない
     let mut fx = Fixture::sized(12, 30, &[path.to_str().unwrap().to_string()]).unwrap();
     fx.press("x");

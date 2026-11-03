@@ -331,8 +331,13 @@ fn test_opening_files_from_the_arguments() {
         vec!["*scratch*", "a.txt", "b.txt"]
     );
     // 開けないものは、始められない
+    let bad = dir.path().join("bad.bin");
+    std::fs::write(&bad, [0xff, 0xfe]).unwrap();
+    let bad_arg = [bad.to_str().unwrap().to_string()];
+    assert!(Fixture::sized(12, 30, &bad_arg).is_err());
+    // ディレクトリは、dired で開く
     let dir_arg = [dir.path().to_str().unwrap().to_string()];
-    assert!(Fixture::sized(12, 30, &dir_arg).is_err());
+    assert!(Fixture::sized(12, 30, &dir_arg).is_ok());
 }
 
 #[test]

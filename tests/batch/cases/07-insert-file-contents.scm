@@ -5,4 +5,4 @@
     (princ (format "%s %d\n" (file-name-nondirectory (car r)) (cadr r))))
   (princ (format "%d|%s\n" (point) (buffer-string)))
   (princ (format "%s\n" (if (buffer-modified-p) "modified" "clean")))
-  (princ (format "%s\n" (condition-case e (insert-file-contents "none.txt") (error (cadr e))))))
+  (princ (format "%s\n" (condition-case e (insert-file-contents "none.txt") (error (error-message-string e))))))

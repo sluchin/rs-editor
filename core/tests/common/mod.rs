@@ -628,6 +628,9 @@ impl Host for FakeEditor {
                 }
                 other => return Err(format!("Undefined command: {}", other)),
             },
+            // 偽のエディタは, マークと絞り込みを持たない (save-excursion は, 点を覚える)
+            "point-marker" | "restriction-save" => return Err(format!("{op} is not supported")),
+            "widen" => Value::Nil,
             _ => panic!("unknown op {}", op),
         })
     }

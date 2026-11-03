@@ -22,6 +22,7 @@
     "pretest": "vite build",
     "test": "vitest run",
     "test:rust": "cargo test --workspace",
+    "test:batch": "tests/batch/run.sh",
     "test:scheme": "cargo test -p rseditor-core --test lisp_ert_test -- --nocapture",
     "test:all": "npm run test && npm run test:rust",
     "coverage:fe": "vitest run --coverage",

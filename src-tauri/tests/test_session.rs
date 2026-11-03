@@ -244,9 +244,11 @@ fn test_find_file_and_read_key_in_a_macro() {
     });
     assert_eq!(text(&session), "note");
     assert_eq!(last(&front).windows[0].buffer, "a.txt");
-    // 開けないファイルは, エコー領域に出す
+    // 開けないファイル (UTF-8 でない) は, エコー領域に出す
+    let bad = dir.path().join("bad.bin");
+    std::fs::write(&bad, [0xff, 0xfe]).unwrap();
     session.handle(Input::FindFile {
-        path: "/".to_string(),
+        path: bad.to_string_lossy().into_owned(),
     });
     assert!(!last(&front).message.is_empty());
     // マクロの中の read-key は, マクロのキーを読む

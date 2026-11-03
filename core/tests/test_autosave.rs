@@ -114,12 +114,12 @@ fn test_backup_once_and_delete_the_auto_save_file() {
     ));
     assert!(!std::path::Path::new(&fresh_backup).exists());
     eval("(insert \"2\") (save-buffer)");
-    assert_eq!(fs::read_to_string(&fresh_backup).unwrap(), "1");
+    assert_eq!(fs::read_to_string(&fresh_backup).unwrap(), "1\n");
     // do-auto-save は, Lisp からも呼べる
     eval("(insert \"3\") (do-auto-save) (do-auto-save)");
     assert_eq!(
         fs::read_to_string(auto_save_file_name(fresh.to_str().unwrap())).unwrap(),
-        "123"
+        "123\n"
     );
     // バッファの訪れるファイルを外す
     eval("(files--set-buffer-file-name #f)");

@@ -199,7 +199,8 @@ fn test_save_buffer() {
     // 書き換えていれば, 書く
     visit(&editor, &path, "new", true);
     ev.run_command("save-buffer", &editor).unwrap();
-    assert_eq!(fs::read_to_string(&path).unwrap(), "new");
+    // Emacs と同じく, 最後に改行を足して保存する
+    assert_eq!(fs::read_to_string(&path).unwrap(), "new\n");
     assert_eq!(editor.message(), format!("Wrote {}", path));
     assert!(!editor.buffer().modified);
 
@@ -216,10 +217,10 @@ fn test_save_buffer() {
         ]
     );
     assert_eq!(editor.message(), "Canceled");
-    assert_eq!(fs::read_to_string(&path).unwrap(), "new");
+    assert_eq!(fs::read_to_string(&path).unwrap(), "new\n");
     answer(&editor, &[&path, "y"]);
     ev.run_command("save-buffer", &editor).unwrap();
-    assert_eq!(fs::read_to_string(&path).unwrap(), "scratch");
+    assert_eq!(fs::read_to_string(&path).unwrap(), "scratch\n");
     assert_eq!(editor.buffer().file, Some(path.clone()));
 }
 
@@ -236,14 +237,14 @@ fn test_write_file() {
         answer(&editor, &[target]);
         ev.run_command("write-file", &editor).unwrap();
         assert_eq!(prompts(&editor), vec!["Write file: "]);
-        assert_eq!(fs::read_to_string(target).unwrap(), "text");
+        assert_eq!(fs::read_to_string(target).unwrap(), "text\n");
     }
     // 引数で渡す
     editor.with_buffer(|b| b.text = "more".chars().collect());
     answer(&editor, &["y"]);
     ev.eval_with(&format!("(write-file {:?})", other), &editor)
         .unwrap();
-    assert_eq!(fs::read_to_string(&other).unwrap(), "more");
+    assert_eq!(fs::read_to_string(&other).unwrap(), "more\n");
 }
 
 #[test]

@@ -730,7 +730,8 @@ msgid ""
 "Read file FILENAME into a buffer and return the buffer.\n"
 "If a buffer exists visiting FILENAME, return that one.  A new buffer is named after the file,\n"
 "its syntax dialect is chosen by `set-auto-mode', and `find-file-hook' runs in it.\n"
-"If FILENAME does not exist, the new buffer is empty and visits it."
+"If FILENAME does not exist, the new buffer is empty and visits it.\n"
+"If FILENAME is a directory, return a Dired buffer (`dired-noselect')."
 msgstr ""
 
 #: lisp/files.scm
@@ -816,6 +817,16 @@ msgstr ""
 #: lisp/files.scm
 msgctxt "function:files--set-visited-file-name"
 msgid "Make the current buffer visit FILENAME (see `set-visited-file-name')."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "variable:mode-require-final-newline"
+msgid "Non-#f means a file-visiting buffer gets a final newline when it is saved (if it is not empty)."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:files--require-final-newline"
+msgid "Add a newline at the end of the current buffer unless it is empty or already ends with one."
 msgstr ""
 
 #: lisp/files.scm
@@ -6315,6 +6326,11 @@ msgid ""
 "Change whether the current buffer is read-only.\n"
 "With no argument (or `toggle'), toggle it.  With a positive argument, make the buffer read-only;\n"
 "with zero or a negative argument, make it writable."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "variable:noninteractive"
+msgid "Non-nil means this editor is running in batch mode (--batch), without a screen or a keyboard."
 msgstr ""
 
 #: lisp/subr.scm

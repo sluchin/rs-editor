@@ -2,6 +2,9 @@
 
 ;; Emacs の subr.el に当たるもの. 起動のときに, 始めに読む (core/src/scheme/loadup.rs).
 
+(define noninteractive #f
+  "Non-nil means this editor is running in batch mode (--batch), without a screen or a keyboard.")
+
 (define (y-or-n-p prompt)
   "Ask the user a y or n question, and return #t if the answer is y.
 PROMPT is followed by \"(y or n) \". y or SPC means yes, and n or DEL means no.

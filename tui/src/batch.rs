@@ -1,0 +1,230 @@
+//! バッチモード (`rseditor-tui --batch`): Emacs の `emacs --batch` と同じく、画面を使わずに、引数の順に動かす.
+//!
+//! 引数は左から順に処理する.
+//!
+//! - `-l FILE`、`--load FILE`、`--script FILE`: ファイルを読む.
+//! - `--eval EXPR`、`--eval=EXPR`: 式を評価する.
+//! - `-f FUNC`、`--funcall FUNC`: 引数の無い関数 (コマンド) を呼ぶ.
+//! - `FILE`: ファイルを訪れる (`find-file`).
+//!
+//! `princ` などは標準出力に、`message` は標準エラー出力に書く. `(kill-emacs N)` で終了コード N (既定は 0)、
+//! 捕まえなかったエラーは標準エラー出力に出して終了コード 255 で終わる.
+
+use std::io::{BufRead, Write};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+
+use rseditor_core::editor::Editor;
+use rseditor_core::scheme::editor_host::EditorHost;
+use rseditor_core::scheme::evaluator::Evaluator;
+use rseditor_core::scheme::host::Host;
+use rseditor_core::scheme::value::Value;
+
+/// 捕まえなかったエラーで終わるときの終了コード (Emacs と同じ).
+pub const ERROR_STATUS: i32 = 255;
+
+/// バッチモードの入出力.
+pub struct Io {
+    /// 標準出力 (`princ` など).
+    pub out: Box<dyn Write + Send>,
+    /// 標準エラー出力 (`message` とエラー).
+    pub err: Box<dyn Write + Send>,
+    /// 標準入力 (`read-string` など).
+    pub input: Box<dyn BufRead + Send>,
+}
+
+/// 画面の代わりに、標準入出力で答えるもの.
+struct BatchUi {
+    /// 標準エラー出力.
+    err: Mutex<Box<dyn Write + Send>>,
+    /// 標準入力.
+    input: Mutex<Box<dyn BufRead + Send>>,
+    /// 標準出力に書いた後で、まだ改行を出していないか (Emacs は、次の `message` の前に、標準エラー出力に改行を出す).
+    need_newline: Arc<AtomicBool>,
+    /// `kill-emacs` の終了コード.
+    exit: Arc<Mutex<Option<i32>>>,
+}
+
+impl BatchUi {
+    /// 標準入力から 1 行読む (改行は除く).
+    fn read_line(&self) -> Result<String, String> {
+        let mut line = String::new();
+        match self.input.lock().unwrap().read_line(&mut line) {
+            Ok(0) | Err(_) => Err("Error reading from stdin".to_string()),
+            Ok(_) => Ok(line.trim_end_matches(['\n', '\r']).to_string()),
+        }
+    }
+}
+
+impl Host for BatchUi {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+        match op {
+            "message" => {
+                if let Some(Value::String(text)) = args.first() {
+                    let mut err = self.err.lock().unwrap();
+                    if self.need_newline.swap(false, Ordering::Relaxed) {
+                        let _ = writeln!(err);
+                    }
+                    let _ = writeln!(err, "{text}");
+                    let _ = err.flush();
+                }
+                Ok(Value::Nil)
+            }
+            "read-string" | "read-file-name" | "completing-read" => {
+                self.read_line().map(Value::String)
+            }
+            "read-key" => self.read_line().map(|line| {
+                Value::String(line.chars().next().map(String::from).unwrap_or_default())
+            }),
+            "kill-emacs" => {
+                let code = match args.first() {
+                    Some(Value::Number(n)) => *n as i32,
+                    _ => 0,
+                };
+                *self.exit.lock().unwrap() = Some(code);
+                // 後ろを評価しないために、失敗にする (呼んだ側が、終了コードを見分ける)
+                Err("kill-emacs".to_string())
+            }
+            "editor-command-names" => Ok(Value::List(Vec::new().into())),
+            // 色, 下線, 隠すこと: バッチモードでは何もしない
+            "highlight-regexp"
+            | "unhighlight-regexp"
+            | "outline-flag-region"
+            | "set-buffer-directory"
+            | "set-background-color"
+            | "set-foreground-color"
+            | "set-font" => Ok(Value::Nil),
+            "outline-invisible-p" => Ok(Value::Boolean(false)),
+            other => Err(format!("The batch mode does not support {other}")),
+        }
+    }
+}
+
+/// 引数を 1 つ処理する.
+enum Step {
+    /// 評価する Scheme.
+    Eval(String),
+    /// 読むファイル.
+    Load(String),
+}
+
+/// 引数を、動かす順の手順にする.
+///
+/// # Errors
+///
+/// 知らない引数のとき、引数が足りないとき.
+fn parse(args: &[String]) -> Result<Vec<Step>, String> {
+    let mut steps = Vec::new();
+    let mut args = args.iter();
+    while let Some(arg) = args.next() {
+        let mut value = |option: &str| {
+            args.next()
+                .cloned()
+                .ok_or_else(|| format!("Option `{option}' requires an argument"))
+        };
+        match arg.as_str() {
+            "--batch" | "-batch" => {}
+            "-l" | "--load" | "--script" => steps.push(Step::Load(value(arg)?)),
+            "--eval" | "-eval" | "--execute" | "-execute" => steps.push(Step::Eval(value(arg)?)),
+            "-f" | "--funcall" | "-funcall" => {
+                steps.push(Step::Eval(format!("({})", value(arg)?)));
+            }
+            _ => {
+                if let Some(expr) = arg.strip_prefix("--eval=") {
+                    steps.push(Step::Eval(expr.to_string()));
+                } else if let Some(file) = arg.strip_prefix("--load=") {
+                    steps.push(Step::Load(file.to_string()));
+                } else if let Some(func) = arg.strip_prefix("--funcall=") {
+                    steps.push(Step::Eval(format!("({func})")));
+                } else if arg.starts_with('-') && arg.len() > 1 {
+                    return Err(format!("Unknown option `{arg}'"));
+                } else {
+                    steps.push(Step::Eval(format!(
+                        "(find-file {})",
+                        Value::String(arg.clone())
+                    )));
+                }
+            }
+        }
+    }
+    Ok(steps)
+}
+
+/// バッチモードで動かします.
+///
+/// # Arguments
+///
+/// * `args` - コマンドラインの引数 (実行ファイルの名前は除く).
+/// * `io` - 標準入出力.
+///
+/// # Returns
+///
+/// 終了コード.
+pub fn run(args: &[String], io: Io) -> i32 {
+    let Io { out, err, input } = io;
+    let out = Arc::new(Mutex::new(out));
+    let err = Arc::new(Mutex::new(err));
+    let exit = Arc::new(Mutex::new(None));
+    let need_newline = Arc::new(AtomicBool::new(false));
+    let fail = |text: &str| {
+        let _ = writeln!(err.lock().unwrap(), "{text}");
+        ERROR_STATUS
+    };
+    let steps = match parse(args) {
+        Ok(steps) => steps,
+        Err(error) => return fail(&error),
+    };
+    let ui = BatchUi {
+        err: Mutex::new(Box::new(Shared(err.clone()))),
+        input: Mutex::new(input),
+        need_newline: need_newline.clone(),
+        exit: exit.clone(),
+    };
+    let host = EditorHost::new(Editor::new(), ui);
+    let writer = out.clone();
+    let wrote = need_newline.clone();
+    host.set_output(Box::new(move |text| {
+        wrote.store(true, Ordering::Relaxed);
+        let mut out = writer.lock().unwrap();
+        let _ = out.write_all(text.as_bytes());
+        let _ = out.flush();
+    }));
+    let evaluator = Evaluator::new();
+    // 相対パスは、起動したディレクトリから (Emacs の default-directory)
+    if let Ok(dir) = std::env::current_dir() {
+        evaluator.set_default_directory(dir);
+    }
+    let result = evaluator
+        .load_editor_files(&host)
+        .and_then(|()| evaluator.eval_with("(set! noninteractive #t)", &host))
+        .and_then(|_| {
+            steps.iter().try_for_each(|step| {
+                let code = match step {
+                    Step::Eval(code) => code.clone(),
+                    Step::Load(file) => std::fs::read_to_string(file).map_err(|_| {
+                        format!("Cannot open load file: No such file or directory, {file}")
+                    })?,
+                };
+                evaluator.eval_with(&code, &host).map(|_| ())
+            })
+        });
+    let killed = *exit.lock().unwrap();
+    match (killed, result) {
+        (Some(code), _) => code,
+        (None, Ok(())) => 0,
+        (None, Err(error)) => fail(&error),
+    }
+}
+
+/// 共有した出力先に書く.
+struct Shared(Arc<Mutex<Box<dyn Write + Send>>>);
+
+impl Write for Shared {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.lock().unwrap().flush()
+    }
+}

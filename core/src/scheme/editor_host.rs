@@ -36,7 +36,12 @@ pub struct EditorHost<U: Host> {
     ui: U,
     /// 作った正規表現 (正規表現, 大文字と小文字を区別しないか).
     patterns: Mutex<HashMap<(String, bool, bool, Dialect), Pattern>>,
+    /// `princ` などの出力先 (無ければ, エコー領域に出す. バッチモードは標準出力).
+    output: Mutex<Option<Output>>,
 }
+
+/// `princ` などの出力先.
+pub type Output = Box<dyn Fn(&str) + Send + Sync>;
 
 impl<U: Host> EditorHost<U> {
     /// エディタと, 画面の要る操作を受けるものから作ります.
@@ -51,7 +56,14 @@ impl<U: Host> EditorHost<U> {
             editor,
             ui,
             patterns: Mutex::new(HashMap::new()),
+            output: Mutex::new(None),
         }
+    }
+
+    /// `princ`, `prin1`, `print`, `terpri` の出力先を決めます (バッチモードは標準出力).
+    /// 決めなければ, エコー領域 (`message`) に出す. 決めると、バッチモードとして、`write-region` が `Wrote ...` を出さない (Emacs と同じ).
+    pub fn set_output(&self, output: Output) {
+        *self.output.lock().unwrap() = Some(output);
     }
 
     /// エディタ (描くときや, キーを処理するときに使う).
@@ -92,6 +104,20 @@ impl<U: Host> EditorHost<U> {
 
 impl<U: Host> Host for EditorHost<U> {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+        if op == "standard-output" {
+            let Some(Value::String(text)) = args.first() else {
+                return Err("standard-output expects a string".to_string());
+            };
+            return match &*self.output.lock().unwrap() {
+                Some(output) => {
+                    output(text);
+                    Ok(Value::Nil)
+                }
+                None => self
+                    .ui
+                    .call("message", vec![Value::String(text.trim_end().to_string())]),
+            };
+        }
         let outcome = {
             let mut editor = self.editor.lock().unwrap();
             self.dispatch(&mut editor, op, &args)?
@@ -608,7 +634,10 @@ impl<U: Host> EditorHost<U> {
                     append,
                     visit.as_deref(),
                 )?;
-                // Emacs は, 訪れるファイルの名前を出す
+                // Emacs は, 訪れるファイルの名前を出す (バッチモードでは出さない)
+                if self.output.lock().unwrap().is_some() {
+                    return Ok(Some(Outcome::Value(Value::Nil)));
+                }
                 return Ok(Some(Outcome::Message(
                     format!("Wrote {}", visit.unwrap_or(path)),
                     Value::Nil,
@@ -631,16 +660,8 @@ impl<U: Host> EditorHost<U> {
                 ed.current_buffer_mut().set_backed_up(flag);
                 Value::Nil
             }
-            "do-auto-save" => {
-                // 書いたものがあれば, Emacs と同じく知らせる
-                if files::auto_save(ed) > 0 {
-                    return Ok(Some(Outcome::Message(
-                        "Auto-saving...done".to_string(),
-                        Value::Nil,
-                    )));
-                }
-                Value::Nil
-            }
+            // 書いたバッファの数を返す (知らせるのは, Lisp の do-auto-save)
+            "do-auto-save" => Value::Number(files::auto_save(ed) as f64),
             "push-mark" => {
                 let name = ed.current_buffer_name().to_string();
                 let b = ed.current_buffer_mut();

@@ -2,7 +2,7 @@
 # Emacs のバッチモードと rs-editor のバッチモードで同じ試験を動かし、結果を比べる.
 #
 # 使い方: tests/batch/run.sh [-e] [-k] [-v] [-l] [試験の名前の一部...]
-#   -e  標準エラー出力 (message など) も比べる (既定は標準出力と終了コードと作ったファイル)
+#   -e  標準エラー出力 (message など。標準出力とは別に比べる) も比べる (既定は標準出力と終了コードと作ったファイル)
 #   -k  作業用のディレクトリを消さずに残す
 #   -v  失敗したときだけでなく、全ての出力を出す
 #   -l  試験の一覧を出して終わる
@@ -16,6 +16,9 @@
 #   a.txt (old)、multi.txt (line1 line2 line3)、sub/ (空のディレクトリ)
 # 作業用のディレクトリの名前は、比べる前に @T@ に置き換える. Emacs 30 が標準出力に出す「Error: ...」の行は、比べない.
 set -u
+# メッセージの言語をそろえる (Emacs はロケールでエラーの文を訳す)
+LC_ALL=C
+export LC_ALL
 
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
@@ -67,12 +70,13 @@ run() {
   fixture "$dir"
   (
     cd "$dir" || exit 2
-    if [ "$stderr" = 1 ]; then
-      "$@" < /dev/null 2>&1
-    else
-      "$@" < /dev/null 2>/dev/null
-    fi
+    # 標準出力と標準エラー出力は、別々に書く (Emacs は標準出力を溜めてから出すので、混ぜると順序が合わない)
+    "$@" < /dev/null 2> "$dir.err"
     echo "== status: $?"
+    if [ "$stderr" = 1 ]; then
+      echo "== stderr"
+      cat "$dir.err"
+    fi
     echo "== files"
     find . -type f | LC_ALL=C sort | while read -r f; do
       echo "--- $f"

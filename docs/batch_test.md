@@ -20,7 +20,7 @@ Emacs のバッチモード (`emacs --batch`) と rs-editor のバッチモー�
    - 終了コード。
    - 動かした後のディレクトリのファイル (名前と中身)。バックアップ (`名前~`) と自動保存 (`#名前#`) もここで比べる。
 4. 作業用のディレクトリは、リポジトリの `target/` の下に作る。Emacs は `/tmp` の下のファイルをバックアップしないため。ディレクトリの名前は、比べる前に `@T@` に置き換える。
-5. `-e` を付けると、標準エラー出力 (`message` の出力など) も比べる。
+5. `-e` を付けると、標準エラー出力 (`message` の出力など) も比べる。標準出力とは別に比べる (Emacs は標準出力を溜めてから出すので、混ぜると順序が合わない)。
 
 ### 2.1 初期ファイル
 
@@ -46,7 +46,7 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 
 ## 3. rs-editor のバッチモードの仕様
 
-試験が前提にする、rs-editor のバッチモード (`rseditor-tui --batch`) の仕様です。Emacs と同じ動きにする。
+試験が前提にする、rs-editor のバッチモード (`rseditor-tui --batch`。実装は `tui/src/batch.rs`) の仕様です。Emacs と同じ動きにする。
 
 | 項目 | 仕様 |
 | --- | --- |
@@ -62,6 +62,8 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | 終了 | `(kill-emacs N)` で終了コード N。全部評価し終えたら 0 |
 | エラー | 捕まえなかったエラーは標準エラー出力に出し、終了コード 255 |
 | 変数 | `noninteractive` が真 |
+| 相対パス | 起動したディレクトリを基にする (Emacs の `default-directory`) |
+| `write-region` | `Wrote ...` のメッセージを出さない (Emacs の `noninteractive` と同じ) |
 
 ## 4. 試験項目
 
@@ -87,12 +89,12 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | B-06 | `06-find-file-new` | 無いファイルを開くと、空のバッファがそのファイルを訪れ、書き換えていないこと |
 | B-07 | `07-insert-file-contents` | 返す値 (ファイルの名前と文字数)、`point` が入れた文字の前に残ること、書き換えたことになること、無いファイルのエラー |
 | B-08 | `08-write-region` | 全体、範囲、文字列、足す (APPEND)、VISIT (書き換えていないことになり、バッファがファイルを訪れる) |
-| B-09 | `09-save-backup` | `save-buffer` で書き換えていないことになる。初めの保存でだけ `名前~` を作る。新しいファイルは、初めの保存では作らず、2 度目の保存で作る |
+| B-09 | `09-save-backup` | `save-buffer` で書き換えていないことになる。初めの保存でだけ `名前~` を作る。新しいファイルは、初めの保存では作らず、2 度目の保存で作る。最後が改行でないバッファは、保存するときに改行を足す (`mode-require-final-newline`) |
 | B-10 | `10-write-file` | `write-file` でバッファの名前が変わる。`set-visited-file-name` で名前が変わり、書き換えたことになる。`basic-save-buffer` で書く |
 | B-11 | `11-copy-file` | 写す。既にあるとエラー (メッセージも比べる)。`OK-IF-ALREADY-EXISTS` で置き換える。元が無いとエラー |
 | B-12 | `12-auto-save` | `do-auto-save` で `#名前#` ができる。`save-buffer` で消える |
 | B-13 | `13-hooks` | `find-file-hook` と `after-save-hook` が、動く順と、そのときの現在のバッファで動く。既に開いたファイルを開き直しても、`find-file-hook` が動かない |
-| B-17 | `17-find-file-directory` | ディレクトリを `find-file-noselect` したときの動き (Emacs は dired のバッファを返す。今の rs-editor は「is a directory」のエラー。既知の差) |
+| B-17 | `17-find-file-directory` | ディレクトリを `find-file-noselect` すると、dired のバッファを返す |
 
 ### 4.4 名前と文字列
 
@@ -127,7 +129,8 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | 正規表現 | rs-editor は Rust の正規表現。試験は、両方で同じ結果になる式だけ使う |
 | メジャーモード | `major-mode` の名前が違う (`emacs-lisp-mode` と `elisp`)。試験しない |
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
-| 標準エラー出力 | 既定では比べない (`-e` で比べる)。Emacs の `Wrote ...` などのメッセージを、rs-editor が出すかは別に決める |
+| 標準エラー出力 | 既定では比べない (`-e` で比べる) |
+| メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 
 ## 6. 試験の足し方

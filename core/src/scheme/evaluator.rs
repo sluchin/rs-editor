@@ -61,6 +61,8 @@ pub struct Evaluator {
     symbol_files: Mutex<HashMap<String, String>>,
     /// `message` が出した文 (Emacs の `*Messages*`). 古いものから.
     message_log: Mutex<Vec<String>>,
+    /// 相対パスの基のディレクトリ (Emacs の `default-directory`. 無ければ, ホームディレクトリ).
+    default_directory: Mutex<Option<std::path::PathBuf>>,
 }
 
 impl Default for Evaluator {
@@ -121,6 +123,7 @@ impl Evaluator {
             variable_docs: Mutex::new(HashMap::new()),
             symbol_files: Mutex::new(HashMap::new()),
             message_log: Mutex::new(Vec::new()),
+            default_directory: Mutex::new(None),
         };
         // M-x ert
         let mut machine = Machine::new(&evaluator, &NoHost);
@@ -222,6 +225,15 @@ impl Evaluator {
         self.run(host, |machine| {
             machine.call_command(name).map(|value| value.to_string())
         })
+    }
+
+    /// 相対パスの基のディレクトリを決めます (バッチモードは, 起動したディレクトリ. 決めなければ, ホームディレクトリ).
+    ///
+    /// # Arguments
+    ///
+    /// * `dir` - ディレクトリ.
+    pub fn set_default_directory(&self, dir: std::path::PathBuf) {
+        *self.default_directory.lock().unwrap() = Some(dir);
     }
 
     /// Lisp で作ったコマンドの名前を返します.
@@ -464,8 +476,14 @@ impl<'a> Machine<'a> {
     /// 絶対パス.
     pub(crate) fn expand_file_name(&self, path: &str) -> String {
         let home = dirs::home_dir().unwrap_or_default();
-        let base = self.load_dirs.last().unwrap_or(&home);
-        system::expand_file_name(path, base, &home)
+        let default = self.evaluator.default_directory.lock().unwrap().clone();
+        let base = self
+            .load_dirs
+            .last()
+            .cloned()
+            .or(default)
+            .unwrap_or_else(|| home.clone());
+        system::expand_file_name(path, &base, &home)
             .to_string_lossy()
             .into_owned()
     }
