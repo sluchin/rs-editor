@@ -275,6 +275,22 @@ impl Pattern {
 }
 
 impl Pattern {
+    /// 文字列の, 文字の位置 `start` から後ろで最初に合う所の, 全ての括弧の範囲 (文字の位置). 括弧が合わなければ `None`.
+    pub fn captures_from(&self, text: &str, start: usize) -> Option<Vec<Option<(usize, usize)>>> {
+        let offset = text
+            .char_indices()
+            .nth(start)
+            .map_or(text.len(), |(offset, _)| offset);
+        let char_at = |byte: usize| text[..byte].chars().count();
+        let captures = self.regex.captures_from_pos(text, offset).ok()??;
+        Some(
+            captures
+                .iter()
+                .map(|group| group.map(|m| (char_at(m.start()), char_at(m.end()))))
+                .collect(),
+        )
+    }
+
     /// 文字列の中の, 合った所の範囲 (文字の位置). `group` が 0 でなければ, その括弧の範囲.
     pub fn spans(&self, text: &str, group: usize) -> Vec<(usize, usize)> {
         let char_at = |byte: usize| text[..byte].chars().count();

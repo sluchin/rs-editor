@@ -511,7 +511,7 @@ impl<'a> Machine<'a> {
     pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, String> {
         // リストでない式は, その場で値にする (式を写さない)
         if !matches!(expr, Value::List(_)) {
-            return eval_atom(expr, env);
+            return self.atom(expr, env);
         }
         if self.depth >= MAX_DEPTH {
             return Err("Too deep recursion".to_string());
@@ -520,6 +520,23 @@ impl<'a> Machine<'a> {
         let result = self.eval_tail(expr.clone(), env.clone());
         self.depth -= 1;
         result
+    }
+
+    /// リストでない式の値. 変数 `major-mode` は, 定義が無ければ, 今のバッファの構文の方言から決める (Emacs の名前で).
+    fn atom(&self, expr: &Value, env: &Env) -> Result<Value, String> {
+        let value = eval_atom(expr, env);
+        match (&value, expr) {
+            (Err(_), Value::Symbol(name)) if name == "major-mode" => {
+                let dialect = self.host.call("syntax-dialect", vec![])?.to_display();
+                let mode = match dialect.as_str() {
+                    "elisp" => "emacs-lisp-mode",
+                    "scheme" => "scheme-mode",
+                    _ => "fundamental-mode",
+                };
+                Ok(Value::Symbol(mode.to_string()))
+            }
+            _ => value,
+        }
     }
 
     /// 式を評価します. 末尾の式は, ここで繰り返して評価します (深さを使わない).
@@ -536,7 +553,7 @@ impl<'a> Machine<'a> {
         loop {
             let items = match &expr {
                 Value::List(items) if !items.is_empty() => items.clone(),
-                atom => return eval_atom(atom, &env),
+                atom => return self.atom(atom, &env),
             };
             let special = match &items[0] {
                 Value::Symbol(op) => self.special_form(op, &items[1..], &env)?,
@@ -545,6 +562,12 @@ impl<'a> Machine<'a> {
             let step = match special {
                 Some(step) => step,
                 None => {
+                    // 呼ぶ手続きの記号が無いのは, void-function
+                    if let Value::Symbol(name) = &items[0] {
+                        if env.get(name).is_none() {
+                            return Err(format!("Symbol's function definition is void: {name}"));
+                        }
+                    }
                     let procedure = self.eval(&items[0], &env)?;
                     let args = self.eval_all(&items[1..], &env)?;
                     self.apply_step(procedure, args)?
@@ -889,10 +912,9 @@ impl<'a> Machine<'a> {
                             };
                             // 変数には, (error "メッセージ") を束ねる
                             let inner = env.child();
-                            let data = vec![
-                                Value::Symbol(error_kind(&message).to_string()),
-                                Value::String(message),
-                            ];
+                            let kind = error_kind(&message);
+                            let mut data = vec![Value::Symbol(kind.to_string())];
+                            data.extend(error_data(kind, message));
                             // 変数が nil (`(condition-case nil ...)`) なら, 束ねない
                             if let Value::Symbol(var) = var {
                                 inner.define(var, Value::List(data.into()));
@@ -1276,6 +1298,40 @@ fn error_kind(message: &str) -> &'static str {
         .iter()
         .find(|(prefix, _)| message.starts_with(prefix))
         .map_or("error", |(_, kind)| kind)
+}
+
+/// 失敗のメッセージから, Emacs のエラーのデータ (`(car e)` の後ろ) を作る.
+///
+/// 種類ごとに Emacs と同じ形にする: `error` はメッセージ, `search-failed` は探した文字列,
+/// `void-variable` と `void-function` は記号, `end-of-buffer` などは空. ほかは, メッセージ.
+fn error_data(kind: &str, message: String) -> Vec<Value> {
+    let after = |prefix: &str| message.strip_prefix(prefix).map(str::to_string);
+    match kind {
+        "end-of-buffer" | "beginning-of-buffer" | "arith-error" | "quit" => Vec::new(),
+        "search-failed" => {
+            let pattern = after("Search failed: ").unwrap_or_default();
+            // 探した文字列は, 引用符で囲んである
+            let pattern = pattern
+                .strip_prefix('"')
+                .and_then(|p| p.strip_suffix('"'))
+                .unwrap_or(&pattern);
+            vec![Value::String(pattern.to_string())]
+        }
+        "void-variable" | "void-function" => {
+            let name = [
+                "Unbound variable: ",
+                "Symbol's value as variable is void: ",
+                "Symbol's function definition is void: ",
+            ]
+            .iter()
+            .find_map(|prefix| after(prefix));
+            match name {
+                Some(name) => vec![Value::Symbol(name)],
+                None => vec![Value::String(message)],
+            }
+        }
+        _ => vec![Value::String(message)],
+    }
 }
 
 /// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.

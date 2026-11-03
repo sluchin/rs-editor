@@ -9,6 +9,9 @@ use ropey::Rope;
 use crate::scheme::builtins::char_width;
 use crate::syntax::Dialect;
 
+/// 括弧ごとの合った範囲 (文字の位置). 合わなかった括弧は `None`.
+pub type Groups = Vec<Option<(usize, usize)>>;
+
 /// タブの幅 (Emacs の `tab-width` の始めの値).
 pub const TAB_WIDTH: usize = 8;
 
@@ -90,6 +93,9 @@ pub struct Buffer {
     undo: Vec<UndoEntry>,
     /// 最後に合った所 (全体と, 括弧ごと. Emacs の `match-data`). 位置は文字の位置.
     pub(crate) match_data: Vec<Option<(usize, usize)>>,
+    /// 文字列に `string-match` した結果の括弧の範囲 (文字の位置. 0 から)と, そのときの `match_data`. 後で本文を探して
+    /// `match_data` が変われば, 文字列の結果は古い.
+    pub(crate) string_match: Option<(Groups, Groups)>,
     /// 構文の方言 (メジャーモードに当たる).
     dialect: Dialect,
     /// マーカー (位置を覚えておいて, 本文を書き換えると, 位置を追う. 解いたものは `None`).
@@ -155,6 +161,7 @@ impl Buffer {
             file: None,
             undo: Vec::new(),
             match_data: Vec::new(),
+            string_match: None,
             dialect: Dialect::Fundamental,
             markers: Vec::new(),
             point_at_boundary: None,
@@ -332,6 +339,14 @@ impl Buffer {
     /// ファイルのパスを決めます.
     pub fn set_file(&mut self, file: Option<String>) {
         self.file = file;
+    }
+
+    /// 文字列に `string-match` した結果 (括弧の範囲. 文字の位置は 0 から). 後で本文を探して `match_data` が変わっていれば `None`.
+    pub fn string_match_data(&self) -> Option<&[Option<(usize, usize)>]> {
+        self.string_match
+            .as_ref()
+            .filter(|(_, snapshot)| *snapshot == self.match_data)
+            .map(|(data, _)| data.as_slice())
     }
 
     /// 構文の方言 (Fundamental, emacs-lisp-mode, scheme-mode に当たる).

@@ -259,10 +259,63 @@ When FILE-NAME is given, jump to its line in Dired."
               (forward-line 1)
               (loop next)))))))
 
-(define (dired--relist marks)
-  "List the directory again, then put MARKS (a list of (NAME MARK)) back."
-  (let ((name (dired-get-filename #t)))
+(define (dired--anchor skip)
+  "Return the name of the first file at or after the current line that is not in SKIP, or #f.
+Emacs inserts a new entry before this line."
+  (save-excursion
+    (goto-char (line-beginning-position))
+    (let loop ()
+      (if (eobp)
+          #f
+          (let ((name (and (dired--filename-start)
+                           (buffer-substring (dired--filename-start) (line-end-position)))))
+            (if (and name (not (member name skip)))
+                name
+                (begin (forward-line 1) (loop))))))))
+
+(define (dired--names)
+  "Return the names of the files in the current Dired buffer, in the order of the lines."
+  (save-excursion
+    (goto-char (point-min))
+    (let loop ((names '()))
+      (if (eobp)
+          (reverse names)
+          (let ((start (dired--filename-start)))
+            (let ((next (if start (cons (buffer-substring start (line-end-position)) names) names)))
+              (forward-line 1)
+              (loop next)))))))
+
+(define (dired--order order anchor new)
+  "Return ORDER (a list of names) with NEW put before ANCHOR (or at the end if ANCHOR is not in it)."
+  (let ((rest (filter (lambda (name) (not (member name new))) order)))
+    (if (and anchor (member anchor rest))
+        (apply append (map (lambda (name) (if (equal? name anchor) (append new (list name)) (list name))) rest))
+        (append rest new))))
+
+(define (dired--reorder order)
+  "Move the lines of the files in ORDER, one after another, to the end of the buffer.
+Names the listing does not have are skipped.  Emacs keeps the order of the lines
+and inserts a new entry at point, instead of sorting the names again."
+  (for-each (lambda (name)
+              (when (dired--goto-file name)
+                (let* ((start (line-beginning-position))
+                       (end (min (point-max) (+ (line-end-position) 1)))
+                       (text (buffer-substring start end)))
+                  (delete-region start end)
+                  (goto-char (point-max))
+                  (insert text))))
+            order)
+  (set-buffer-modified-p #f))
+
+(define (dired--relist marks . place)
+  "List the directory again, keep the order of the lines, then put MARKS (a list of (NAME MARK)) back.
+PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR."
+  (let ((name (dired-get-filename #t))
+        (order (dired--names)))
     (dired--revert)
+    (dired--reorder (if (pair? place)
+                        (dired--order order (car place) (cadr place))
+                        order))
     (for-each (lambda (entry)
                 (when (dired--goto-file (car entry))
                   (dired--mark-line (cadr entry))))
@@ -315,11 +368,12 @@ When FILE-NAME is given, jump to its line in Dired."
         (string-append target "/" name)
         target)))
 
-(define (dired--transfer verb prompt operate keep-mark)
+(define (dired--transfer verb prompt operate keep-mark rename-p)
   "Copy or move the marked (or current) files.  OPERATE takes the source and the target."
   (let* ((dir (dired--directory))
          (names (dired--marked-or-current))
          (marks (dired--marks))
+         (anchor (dired--anchor (if rename-p names (list))))
          (name (car names))
          (target (dired--target dir name (format prompt (if (= (length names) 1) name (format "%d files" (length names)))))))
     (let loop ((rest names) (done 0))
@@ -329,13 +383,23 @@ When FILE-NAME is given, jump to its line in Dired."
                  (if (= (length names) 1) target (string-append target "/" (car rest))))
         (loop (cdr rest) (+ done 1))))
     (message "%s: %d file%s done" verb (length names) (if (= (length names) 1) "" "s"))
-    (dired--relist (keep-mark marks names (dired--base-name target)))
+    (let ((new (dired--base-name target)))
+      (dired--relist (keep-mark marks names new)
+                     anchor
+                     (if (and (= (length names) 1)
+                              (equal? (dired--directory-file-name (or (file-name-directory target) ""))
+                                      (dired--directory-file-name dir)))
+                         (list new)
+                         (list)))
+      ;; Emacs moves point to the renamed file
+      (if rename-p (dired--goto-file new)))
     #f))
 
 (define-command (dired-do-copy . args)
   "Copy all marked (or next ARG) files, or copy the current file."
   (dired--transfer "Copy" "Copy %s to: " (lambda (from to) (copy-file from to))
-                   (lambda (marks names new) (cons (list new "C") (dired--others marks names)))))
+                   (lambda (marks names new) (cons (list new "C") (dired--others marks names)))
+                   #f))
 
 (define-command (dired-do-rename . args)
   "Rename all marked (or next ARG) files, or rename the current file."
@@ -343,7 +407,8 @@ When FILE-NAME is given, jump to its line in Dired."
                    (lambda (marks names new)
                      (map (lambda (entry)
                             (if (member (car entry) names) (list new (cadr entry)) entry))
-                          marks))))
+                          marks))
+                   #t))
 
 (define-command (dired-create-directory . args)
   "Create a directory called DIRECTORY."
@@ -352,8 +417,13 @@ When FILE-NAME is given, jump to its line in Dired."
                                        (read-file-name "Create directory: " (string-append dir "/"))
                                        (car args))
                                    dir)))
-    (make-directory target)
-    (dired--relist (dired--marks)))
+    (let ((anchor (dired--anchor (list))))
+      (make-directory target)
+      (dired--relist (dired--marks) anchor
+                     (if (equal? (dired--directory-file-name (or (file-name-directory target) ""))
+                                 (dired--directory-file-name dir))
+                         (list (dired--base-name target))
+                         (list)))))
   #f)
 
 (define-command (dired-do-redisplay . args)

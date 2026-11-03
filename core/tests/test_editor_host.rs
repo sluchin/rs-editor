@@ -797,3 +797,37 @@ fn test_indent_sexp_stops_at_an_unfinished_list() {
         );
     }
 }
+
+#[test]
+fn test_string_match() {
+    let cases = [
+        ("(string-match--op \"b+\" \"aabbbcc\" 0 #f #f)", "2"),
+        ("(string-match--op \"b+\" \"aabbbcc\" 0 #f #f) (list (match-beginning 0) (match-end 0) (match-data))", "(2 5 (2 5))"),
+        ("(string-match--op \"\\\\(a\\\\)\\\\(x\\\\)?\" \"za\" 0 #f #f) (list (match-string 1 \"za\") (match-string 2 \"za\") (match-data) (match-beginning 2))", "(\"a\" #f (1 2 1 2 #f #f) #f)"),
+        ("(string-match--op \"z\" \"zz\" 1 #f #f)", "1"),
+        ("(string-match--op \"q\" \"zz\" 0 #f #f)", "#f"),
+        ("(insert \"abc\") (goto-char 1) (search-forward \"b\") (string-match--op \"c\" \"c\" 0 #f #t) (match-beginning 0)", "2"),
+        ("(string-match--op \"\u{e9}+\" \"caf\u{e9}\u{e9}\" 0 #f #f)", "3"),
+        ("(string-match--op \"A\" \"a\" 0 #t #f)", "0"),
+        ("(string-match--op \"A\" \"a\" 0 #f #f)", "#f"),
+        ("(string-match--op \"a\" \"b\" 5 #f #f)", "ERR Args out of range"),
+        ("(string-match--op \"\\\\(\" \"b\" 0 #f #f)", "ERR Invalid regexp: Parsing error at position 1: Opening parenthesis without closing parenthesis"),
+        ("(string-match--op \"b\" \"abc\" 0 #f #f) (insert \"xb\") (goto-char 1) (search-forward \"x\") (match-beginning 0)", "1"),
+    ];
+    for (code, want) in cases {
+        assert_eq!(run_last(code), want, "{code}");
+    }
+}
+
+#[test]
+fn test_major_mode_variable_follows_the_dialect() {
+    assert_eq!(run_last("major-mode"), "fundamental-mode");
+    assert_eq!(
+        run_last("(set-syntax-dialect 'elisp) major-mode"),
+        "emacs-lisp-mode"
+    );
+    assert_eq!(
+        run_last("(set-syntax-dialect 'scheme) major-mode"),
+        "scheme-mode"
+    );
+}

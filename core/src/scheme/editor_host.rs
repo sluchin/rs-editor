@@ -219,6 +219,16 @@ fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, St
 }
 
 /// 位置があれば, 位置の値. 無ければ nil.
+/// 直前に合った所を見る: 文字列を探した後は文字列の中の位置 (0 から), 本文を探した後はバッファの位置 (1 から).
+type Position = fn(usize) -> Value;
+
+fn match_view(b: &Buffer) -> (&[Option<(usize, usize)>], Position) {
+    match b.string_match_data() {
+        Some(data) => (data, |p| Value::Number(p as f64)),
+        None => (b.match_data(), at),
+    }
+}
+
 fn at_opt(pos: Option<usize>) -> Value {
     pos.map_or_else(nil, at)
 }
@@ -902,20 +912,55 @@ impl<U: Host> EditorHost<U> {
             }
             "match-beginning" | "match-end" => {
                 let n = int(op, args, 0)?.max(0) as usize;
-                let group = b.match_data().get(n).copied().flatten();
-                at_opt(group.map(|(s, e)| if op == "match-beginning" { s } else { e }))
+                // 文字列を探した後は, 文字列の中の位置 (0 から)
+                let (data, to_value) = match_view(b);
+                let group = data.get(n).copied().flatten();
+                group
+                    .map(|(s, e)| if op == "match-beginning" { s } else { e })
+                    .map_or_else(nil, to_value)
             }
-            "match-data" => Value::List(
-                b.match_data()
-                    .iter()
-                    .flat_map(|m| match m {
-                        Some((s, e)) => [at(*s), at(*e)],
-                        None => [nil(), nil()],
-                    })
-                    .collect(),
-            ),
+            "match-data" => {
+                let (data, to_value) = match_view(b);
+                let mut items = Vec::new();
+                for group in data {
+                    let (start, end) =
+                        group.map_or((nil(), nil()), |(s, e)| (to_value(s), to_value(e)));
+                    items.push(start);
+                    items.push(end);
+                }
+                Value::List(items.into())
+            }
+            "string-match--op" => {
+                // (string-match REGEXP STRING START FOLD INHIBIT-MODIFY): 最初に合う所の位置 (0 から). 無ければ nil
+                let fold = args.get(3).is_some_and(|v| v.is_non_nil());
+                let pattern = self.pattern(text(op, args, 0)?, true, fold, b.dialect())?;
+                let string = text(op, args, 1)?;
+                let start = int(op, args, 2)?.max(0) as usize;
+                if start > string.chars().count() {
+                    return Err("Args out of range".to_string());
+                }
+                match pattern.captures_from(string, start) {
+                    Some(data) => {
+                        let first = data[0].map_or(0, |(s, _)| s);
+                        if !args.get(4).is_some_and(Value::is_non_nil) {
+                            b.string_match = Some((data, b.match_data.clone()));
+                        }
+                        Value::Number(first as f64)
+                    }
+                    None => nil(),
+                }
+            }
             "match-string" => {
                 let n = int(op, args, 0)?.max(0) as usize;
+                // (match-string N STRING): 文字列を探した後は, その文字列の部分
+                if let Some(Value::String(string)) = args.get(1) {
+                    let group = b
+                        .string_match_data()
+                        .and_then(|d| d.get(n).copied().flatten());
+                    return Ok(Some(group.map_or_else(nil, |(s, e)| {
+                        Value::String(string.chars().skip(s).take(e - s).collect())
+                    })));
+                }
                 match b.match_data().get(n).copied().flatten() {
                     Some((s, e)) => Value::String(b.substring(s, e)?),
                     None => nil(),

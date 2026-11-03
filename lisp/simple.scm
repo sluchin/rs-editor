@@ -2531,3 +2531,31 @@ A word that is not a key name stands for the keys of its characters.  The result
                           (loop (+ i 1) (cons (substring word i (+ i 1)) acc))
                           (reverse acc)))))
               (split-string keys))))
+
+(define-command (fundamental-mode)
+  "Major mode not specialized for anything in particular."
+  (set-syntax-dialect 'fundamental)
+  #f)
+
+(define-command (emacs-lisp-mode)
+  "Major mode for editing Lisp code to run in Emacs."
+  (set-syntax-dialect 'elisp)
+  #f)
+
+(define-command (scheme-mode)
+  "Major mode for editing Scheme code."
+  (set-syntax-dialect 'scheme)
+  #f)
+
+(define (string-match regexp string . rest)
+  "Return the index of the start of the first match for REGEXP in STRING, or nil.
+Searching starts at START (the optional third argument).  The match data is
+set, unless INHIBIT-MODIFY (the fourth argument) is non-nil."
+  (string-match--op regexp string (if (pair? rest) (or (car rest) 0) 0)
+                    case-fold-search
+                    (and (pair? rest) (pair? (cdr rest)) (cadr rest))))
+
+(define (string-match-p regexp string . rest)
+  "Like `string-match', but do not change the match data."
+  (string-match--op regexp string (if (pair? rest) (or (car rest) 0) 0)
+                    case-fold-search #t))

@@ -7,7 +7,7 @@ Emacs のバッチモード (`emacs --batch`) と rs-editor のバッチモー�
 
 - 目的は、rs-editor の核が、Emacs と同じ結果を返すことを、自動で確かめること。
 - 範囲は、バッファの編集、検索、kill と narrowing、バッファの操作、ファイルを開くこと、書くこと、保存、バックアップ、自動保存、フック、ファイル名と文字列の関数、終了コード、コマンドラインの引数。
-- 範囲外は、画面に出ること (`docs/integration_test.md` が確かめる)、Emacs の正規表現の細かい違い (rs-editor は Rust の正規表現)、メジャーモード (`major-mode` の名前が違う)。
+- 範囲外は、画面に出ること (`docs/integration_test.md` が確かめる)、Emacs の正規表現の細かい違い (rs-editor は Rust の正規表現。Emacs の書き方への変換で多くは合わせる)、メジャーモードの一部 (`*scratch*` の `lisp-interaction-mode` と、`.txt` の `text-mode`)。
 
 ## 2. 試験の方法
 
@@ -153,19 +153,23 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-42 | `42-dired-keys` | dired のキー: `n`、`p`、`d`、`m`、`u`、`U`、`x`、`D`、`C`、`R`、`+`。印、ファイルの有無、知らせ (`Deleting...`、`Copy: 1 of 1`、`1 mark removed`) |
 | E-43 | `43-prompts` | 標準入力 (`43-prompts.in`) から読む `read-string`、`completing-read`、`read-file-name`、`yes-or-no-p`、`y-or-n-p`。標準出力のプロンプト、聞き直しのベルと知らせ、入力が尽きたときのエラー |
 | E-44 | `44-error-kinds` | エラーの種類 (`(car e)`) と、種類の名前の `condition-case` の節。`end-of-buffer`、`search-failed`、`args-out-of-range`、`arith-error` など |
+| E-45 | `45-major-mode` | `major-mode` の名前 (`fundamental-mode`、`emacs-lisp-mode`、`.el` を開いたとき)、`emacs-lisp-mode` などのコマンド |
+| E-46 | `46-string-match` | `string-match`、`string-match-p`、文字列の `match-beginning`、`match-end`、`match-data`、`match-string N STRING`、開始位置、`case-fold-search`、範囲外 |
+| E-47 | `47-error-data` | エラーのデータ (`(cdr e)`): `error` はメッセージ、`end-of-buffer` などは空、`search-failed` は探した文字列、`void-variable` と `void-function` は記号。`error-message-string` |
+| E-48 | `48-dired-add` | dired でコピー、名前の変更、ディレクトリの作成の後の行の並び (Emacs は点の行の前に足し、並べ直さない) |
 
 ## 5. 比べない違い
 
 | 項目 | 理由 |
 | --- | --- |
 | 言語 | Emacs は Emacs Lisp、rs-editor は Scheme。試験は言語ごとに書く (`nil` と `#f`、`defun` と `define` など)。真偽は `"t"` や `"nil"` の文字にして出す |
-| 正規表現 | rs-editor は Rust の正規表現。試験は、両方で同じ結果になる式だけ使う |
-| メジャーモード | `major-mode` の名前が違う (`emacs-lisp-mode` と `elisp`)。試験しない |
+| 正規表現 | rs-editor は Rust の正規表現 (Emacs の書き方を変換して使う)。`string-match` は Emacs の書き方で動く (試験 E-46) が、構文クラス (`\s-` など) や後方参照の細かい違いは残る。試験は、両方で同じ結果になる式だけ使う |
+| メジャーモード | `major-mode` の名前は合わせた (試験 E-45)。`*scratch*` の `lisp-interaction-mode` と `.txt` の `text-mode` は無い。試験しない |
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
-| エラーのデータ | `(car e)` の種類は同じ (メッセージから決める)。`(cdr e)` は、Emacs が種類ごとのデータ (`search-failed` は探した文字列など) を持つのに対し、rs-editor はメッセージの文字列 1 つ。試験は `error-message-string` で比べる |
-| dired の一覧の並び | ファイルを足した後の並びが違う。Emacs は 1 行だけ足し (並びは位置による)、rs-editor は一覧を作り直す (名前の順。印は引き継ぐ)。試験は、名前を並べ替えて比べる。日付や大きさも比べない |
+| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47)。`wrong-type-argument` や `file-missing` のデータ (型の名前、ファイルの名前) は、メッセージの文字列 1 つ |
+| dired の一覧の並び | コピー、名前の変更、ディレクトリの作成の後の並びは合わせた (試験 E-48。一覧は作り直し、前の並びに戻して、新しい行を点の行の前に置く)。日付や大きさは比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 
 ## 6. 試験の足し方

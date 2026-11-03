@@ -46,7 +46,12 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("match-beginning", &[Kind::Number], 1),
     ("match-end", &[Kind::Number], 1),
     ("match-data", &[], 0),
-    ("match-string", &[Kind::Number], 1),
+    ("match-string", &[Kind::Number, Kind::Any], 1),
+    (
+        "string-match--op",
+        &[Kind::Text, Kind::Text, Kind::Number, Kind::Any, Kind::Any],
+        5,
+    ),
     ("set-match-data", &[Kind::Any], 1),
     ("highlighted-regexps", &[], 0),
     (
@@ -232,6 +237,7 @@ pub const NAMES: &[&str] = &[
     "match-end",
     "match-data",
     "match-string",
+    "string-match--op",
     "set-match-data",
     "highlighted-regexps",
     "match-substitute-replacement",

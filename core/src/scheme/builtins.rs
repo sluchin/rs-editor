@@ -500,7 +500,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // (condition-case の変数の) (error "メッセージ") か, メッセージの文字列から, メッセージを取り出す
             let [value] = fixed::<1>(name, args)?;
             let message = match &value {
-                Value::List(items) => items[1].to_display(),
+                Value::List(items) => error_text(items),
                 other => other.to_display(),
             };
             if name == "error-message-string" {
@@ -1468,4 +1468,39 @@ fn format(args: &[Value]) -> Result<String, String> {
         }
     }
     Ok(result)
+}
+
+/// `condition-case` の変数 (種類とデータ) から, Emacs の `error-message-string` と同じ文を作る.
+///
+/// # Arguments
+///
+/// * `items` - 種類の記号と, その後ろのデータ.
+///
+/// # Returns
+///
+/// メッセージ.
+fn error_text(items: &[Value]) -> String {
+    let kind = items.first().map(Value::to_display).unwrap_or_default();
+    let data = items.get(1);
+    match (kind.as_str(), data) {
+        ("end-of-buffer", None) => "End of buffer".to_string(),
+        ("beginning-of-buffer", None) => "Beginning of buffer".to_string(),
+        ("arith-error", None) => "Arithmetic error".to_string(),
+        ("quit", None) => "Quit".to_string(),
+        ("search-failed", Some(pattern)) => format!("Search failed: {pattern}"),
+        ("void-variable", Some(symbol @ Value::Symbol(_))) => {
+            format!(
+                "Symbol's value as variable is void: {}",
+                symbol.to_display()
+            )
+        }
+        ("void-function", Some(symbol @ Value::Symbol(_))) => {
+            format!(
+                "Symbol's function definition is void: {}",
+                symbol.to_display()
+            )
+        }
+        (_, Some(data)) => data.to_display(),
+        (_, None) => kind,
+    }
 }

@@ -907,9 +907,43 @@ msgid "Return a list of (NAME MARK) of the marked lines."
 msgstr "印の付いた行の (名前 印) の並びを返す."
 
 #: lisp/dired.scm
+msgctxt "function:dired--anchor"
+msgid ""
+"Return the name of the first file at or after the current line that is not in SKIP, or #f.\n"
+"Emacs inserts a new entry before this line."
+msgstr ""
+"現在の行か, それより後ろの, SKIP に無い最初のファイルの名前. 無ければ #f.\n"
+"Emacs は, この行の前に新しい項目を足す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--names"
+msgid "Return the names of the files in the current Dired buffer, in the order of the lines."
+msgstr "現在の Dired バッファのファイルの名前を, 行の順に返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--order"
+msgid "Return ORDER (a list of names) with NEW put before ANCHOR (or at the end if ANCHOR is not in it)."
+msgstr "ORDER (名前の並び) の ANCHOR の前に NEW を置いた並びを返す (ANCHOR が無ければ, 最後に置く)."
+
+#: lisp/dired.scm
+msgctxt "function:dired--reorder"
+msgid ""
+"Move the lines of the files in ORDER, one after another, to the end of the buffer.\n"
+"Names the listing does not have are skipped.  Emacs keeps the order of the lines\n"
+"and inserts a new entry at point, instead of sorting the names again."
+msgstr ""
+"ORDER のファイルの行を, 順にバッファの最後へ移す.\n"
+"一覧に無い名前は飛ばす.  Emacs は, 名前を並べ直さず, 行の順を保って,\n"
+"点の所に新しい項目を足す."
+
+#: lisp/dired.scm
 msgctxt "function:dired--relist"
-msgid "List the directory again, then put MARKS (a list of (NAME MARK)) back."
-msgstr "ディレクトリの一覧を作り直し, MARKS ((名前 印) の並び) の印を戻す."
+msgid ""
+"List the directory again, keep the order of the lines, then put MARKS (a list of (NAME MARK)) back.\n"
+"PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR."
+msgstr ""
+"ディレクトリの一覧を作り直し, 行の順を保って, MARKS ((名前 印) の並び) の印を戻す.\n"
+"PLACE は (ANCHOR NAMES): NAMES の行を, ANCHOR の行の前に置く."
 
 #: lisp/dired.scm
 msgctxt "function:dired--delete"
@@ -7557,6 +7591,37 @@ msgid ""
 msgstr ""
 "KEYS (\"C-x C-f foo RET\" など, キーの名前の文字列) を, キーの並びにする.\n"
 "キーの名前でない語は, その文字のキーの並びになる. 結果は execute-kbd-macro に渡せる."
+
+#: lisp/simple.scm
+msgctxt "function:fundamental-mode"
+msgid "Major mode not specialized for anything in particular."
+msgstr "特定の用途に特化していないメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:emacs-lisp-mode"
+msgid "Major mode for editing Lisp code to run in Emacs."
+msgstr "Emacs で動かす Lisp のコードを編集するメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:scheme-mode"
+msgid "Major mode for editing Scheme code."
+msgstr "Scheme のコードを編集するメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:string-match"
+msgid ""
+"Return the index of the start of the first match for REGEXP in STRING, or nil.\n"
+"Searching starts at START (the optional third argument).  The match data is\n"
+"set, unless INHIBIT-MODIFY (the fourth argument) is non-nil."
+msgstr ""
+"STRING の中で REGEXP に最初に合う所の先頭の位置を返す. 無ければ nil.\n"
+"探し始めるのは START (省略できる 3 つ目の引数)から.  INHIBIT-MODIFY (4 つ目の\n"
+"引数)が nil でなければ, マッチデータを変えない."
+
+#: lisp/simple.scm
+msgctxt "function:string-match-p"
+msgid "Like `string-match', but do not change the match data."
+msgstr "`string-match' と同じだが, マッチデータを変えない."
 
 #: lisp/sort.scm
 msgctxt "function:sort--split-lines"

@@ -1,0 +1,8 @@
+(with-current-buffer (generate-new-buffer "b") (princ (format "%s\n" major-mode)))
+(write-region "(a b)\n" nil "x.el")
+(find-file "x.el")
+(princ (format "%s %s\n" major-mode (buffer-name)))
+(emacs-lisp-mode)
+(princ (format "%s\n" major-mode))
+(fundamental-mode)
+(princ (format "%s\n" major-mode))

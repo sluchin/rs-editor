@@ -75,7 +75,7 @@ fn unknown_operator_is_an_error() {
     let eval = Evaluator::new();
     assert_eq!(
         eval.eval("(unknown-op 1 2)").unwrap_err(),
-        "Unbound variable: unknown-op"
+        "Symbol's function definition is void: unknown-op"
     );
 }
 
@@ -132,4 +132,67 @@ fn condition_case_tells_the_kind_of_the_error() {
     assert!(eval
         .eval("(condition-case nil (/ 1 0) (end-of-buffer 1))")
         .is_err());
+}
+
+#[test]
+fn condition_case_binds_the_emacs_data_of_each_kind() {
+    let eval = Evaluator::new();
+    // (cdr e) は、種類ごとの Emacs のデータ. error-message-string は、それから文を作る
+    for (code, data, text) in [
+        ("(error \"boom %d\" 3)", "(\"boom 3\")", "boom 3"),
+        ("(error \"End of buffer\")", "()", "End of buffer"),
+        (
+            "(error \"Beginning of buffer\")",
+            "()",
+            "Beginning of buffer",
+        ),
+        ("(/ 1 0)", "()", "Arithmetic error"),
+        ("(error \"Quit\")", "()", "Quit"),
+        (
+            "(error \"Search failed: \\\"zz\\\"\")",
+            "(\"zz\")",
+            "Search failed: \"zz\"",
+        ),
+        (
+            "(error \"Search failed: zz\")",
+            "(\"zz\")",
+            "Search failed: \"zz\"",
+        ),
+        ("(error \"Search failed\")", "(\"\")", "Search failed: \"\""),
+        (
+            "undefined-var",
+            "(undefined-var)",
+            "Symbol's value as variable is void: undefined-var",
+        ),
+        (
+            "(undefined-fn 1)",
+            "(undefined-fn)",
+            "Symbol's function definition is void: undefined-fn",
+        ),
+        (
+            "(error \"Unbound variable\")",
+            "(\"Unbound variable\")",
+            "Unbound variable",
+        ),
+        (
+            "(error \"Symbol's value as variable is void: v\")",
+            "(v)",
+            "Symbol's value as variable is void: v",
+        ),
+    ] {
+        let code_data = format!("(condition-case e {code} ((error quit) (cdr e)))");
+        assert_eq!(eval.eval(&code_data).unwrap(), data, "{code}");
+        let code_text =
+            format!("(condition-case e {code} ((error quit) (error-message-string e)))");
+        assert_eq!(
+            eval.eval(&code_text).unwrap(),
+            format!("{text:?}").replace("\\'", "'"),
+            "{code}"
+        );
+    }
+    // メッセージを持たない変数 (種類だけ) でも、文になる
+    assert_eq!(
+        eval.eval("(error-message-string '(error))").unwrap(),
+        "\"error\""
+    );
 }
