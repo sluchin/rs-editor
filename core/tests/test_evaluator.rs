@@ -218,6 +218,27 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Wrong type argument: p, )",
         ),
         (
+            "(error \"Args out of range: #<buffer b>, 1, 99\")",
+            "(#<buffer b> 1 99)",
+            "Args out of range: #<buffer b>, 1, 99",
+        ),
+        (
+            "(substring \"a, \\\"b\\\"\" 9)",
+            "(\"a, \\\"b\\\"\" 9 nil)",
+            "Args out of range: \"a, \\\"b\\\"\", 9, nil",
+        ),
+        (
+            "(error \"Args out of range: \\\"x\\\"\")",
+            "(\"x\")",
+            "Args out of range: \"x\"",
+        ),
+        (
+            "(error \"Args out of range: @@\")",
+            "(\"@@\")",
+            "Args out of range: \"@@\"",
+        ),
+        ("(error \"Args out of range\")", "()", "Args out of range"),
+        (
             "(error \"Unbound variable\")",
             "(\"Unbound variable\")",
             "Unbound variable",

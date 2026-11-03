@@ -622,8 +622,14 @@ fn test_evaluator_reports_the_errors() {
         ("(assoc 1 '(1))", "assoc expects a list of lists"),
         ("(string-length 1)", "Wrong type argument: stringp, 1"),
         ("(substring \"a\")", "substring expects 2 or 3 arguments"),
-        ("(substring \"abc\" 2 1)", "substring: index out of range"),
-        ("(substring \"abc\" 0 9)", "substring: index out of range"),
+        (
+            "(substring \"abc\" 2 1)",
+            "Args out of range: \"abc\", 2, 1",
+        ),
+        (
+            "(substring \"abc\" 0 9)",
+            "Args out of range: \"abc\", 0, 9",
+        ),
         ("(symbol->string \"a\")", "symbol->string expects a symbol"),
         ("(format)", "format expects a format string"),
         ("(format \"%s\")", "format: not enough arguments"),

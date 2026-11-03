@@ -1311,6 +1311,24 @@ fn error_data(kind: &str, message: String) -> Vec<Value> {
                 .unwrap_or(&pattern);
             vec![Value::String(pattern.to_string())]
         }
+        "args-out-of-range" => match after("Args out of range: ") {
+            // "Args out of range: 値, 値, ..." を, 値 (読み直す. バッファは `#<buffer 名前>` の記号) にする
+            Some(rest) => split_data(&rest)
+                .iter()
+                .map(|part| {
+                    if part.starts_with("#<") {
+                        Value::Symbol(part.to_string())
+                    } else {
+                        crate::scheme::parser::Parser::new(part)
+                            .parse_first()
+                            .ok()
+                            .flatten()
+                            .unwrap_or_else(|| Value::String(part.to_string()))
+                    }
+                })
+                .collect(),
+            None => Vec::new(),
+        },
         "wrong-type-argument" => {
             // "Wrong type argument: 述語, 値" を, 述語の記号と, 値 (読み直す) にする
             let parsed = after("Wrong type argument: ").and_then(|rest| {
@@ -1353,6 +1371,28 @@ fn error_data(kind: &str, message: String) -> Vec<Value> {
         }
         _ => vec![Value::String(message)],
     }
+}
+
+/// エラーのメッセージのデータ ("値, 値, ...") を, 文字列の外の ", " で分けます.
+fn split_data(text: &str) -> Vec<String> {
+    let mut parts = vec![String::new()];
+    let (mut in_string, mut escaped) = (false, false);
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if !in_string && c == ',' && chars.peek() == Some(&' ') {
+            chars.next();
+            parts.push(String::new());
+            continue;
+        }
+        if in_string && !escaped && c == '"' {
+            in_string = false;
+        } else if !in_string && c == '"' {
+            in_string = true;
+        }
+        escaped = in_string && !escaped && c == '\\';
+        parts.last_mut().unwrap().push(c);
+    }
+    parts
 }
 
 /// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.

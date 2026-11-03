@@ -243,15 +243,7 @@ fn test_against_emacs() {
                                 text,
                                 pos,
                             );
-                            // Emacs の範囲外のエラーは, バッファと位置を添える. こちらは, 添えない
                             let mut expected = expected.clone();
-                            if expected[0] == "error"
-                                && expected[1]
-                                    .as_str()
-                                    .is_some_and(|m| m.starts_with("Args out of range"))
-                            {
-                                expected[1] = json!("Args out of range");
-                            }
                             // Emacs の試験のバッファの名前は, こちらの `*scratch*`
                             if expected[0] == "error" {
                                 expected[1] = json!(expected[1]

@@ -468,7 +468,7 @@ Interactively, N is the prefix argument, and KILLFLAG is true if there is a pref
     (if kill
         (let ((target (+ (point) n)))
           (if (or (< target (point-min)) (> target (point-max)))
-              (error "Args out of range")
+              (error "Args out of range: #<buffer %s>, %d, %d" (buffer-name) (point) target)
               (simple--kill (point) target)))
         (simple--delete-char n))
     #f))

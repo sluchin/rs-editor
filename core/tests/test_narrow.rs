@@ -61,7 +61,7 @@ fn test_narrow_and_widen() {
     assert_eq!(buffer.text(), "ab\ncde\n\nf");
     assert_eq!(
         buffer.narrow_to_region(0, 10),
-        Err("Args out of range".to_string())
+        Err("Args out of range: 1, 11".to_string())
     );
     buffer.widen();
     assert!(!buffer.narrowed());
@@ -136,9 +136,12 @@ fn test_editing_is_limited_to_the_accessible_part() {
     let mut buffer = narrowed();
     assert_eq!(
         buffer.delete_region(0, 4),
-        Err("Args out of range".to_string())
+        Err("Args out of range: #<buffer n>, 1, 5".to_string())
     );
-    assert_eq!(buffer.substring(3, 8), Err("Args out of range".to_string()));
+    assert_eq!(
+        buffer.substring(3, 8),
+        Err("Args out of range: #<buffer n>, 4, 9".to_string())
+    );
     assert_eq!(
         buffer.insert_at(2, "x"),
         Err("Args out of range".to_string())
@@ -297,7 +300,7 @@ fn test_lisp_primitives() {
     );
     assert_eq!(
         eval(text, "(narrow-to-region 8 99)"),
-        "error: Args out of range"
+        "error: Args out of range: 8, 99"
     );
     // 絞り込んだ所の外の式は, 走査しない (括弧が合わない)
     assert_eq!(

@@ -453,7 +453,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 None => chars.len(),
             };
             if start > end || end > chars.len() {
-                return Err("substring: index out of range".to_string());
+                let end = args.get(2).map_or("nil".to_string(), |v| v.to_string());
+                return Err(format!(
+                    "Args out of range: {}, {}, {end}",
+                    args[0], args[1]
+                ));
             }
             Ok(Value::String(chars[start..end].iter().collect()))
         }
@@ -1515,6 +1519,13 @@ fn format(args: &[Value]) -> Result<String, String> {
 fn error_text(items: &[Value]) -> String {
     let kind = items.first().map(Value::to_display).unwrap_or_default();
     let data = items.get(1);
+    if let ("args-out-of-range", [_, rest @ ..]) = (kind.as_str(), items) {
+        if rest.is_empty() {
+            return "Args out of range".to_string();
+        }
+        let parts: Vec<String> = rest.iter().map(|v| v.to_string()).collect();
+        return format!("Args out of range: {}", parts.join(", "));
+    }
     if let ("wrong-type-argument", [_, predicate, value]) = (kind.as_str(), items) {
         return wrong_type(&predicate.to_display(), value);
     }

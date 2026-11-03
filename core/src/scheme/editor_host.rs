@@ -944,7 +944,7 @@ impl<U: Host> EditorHost<U> {
                 let string = text(op, args, 1)?;
                 let start = int(op, args, 2)?.max(0) as usize;
                 if start > string.chars().count() {
-                    return Err("Args out of range".to_string());
+                    return Err(format!("Args out of range: {}, {start}", args[1]));
                 }
                 match pattern.captures_from(string, start) {
                     Some(data) => {

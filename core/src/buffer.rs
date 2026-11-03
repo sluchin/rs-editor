@@ -439,7 +439,7 @@ impl Buffer {
     pub fn narrow_to_region(&mut self, from: usize, to: usize) -> Result<(), String> {
         let (from, to) = if from <= to { (from, to) } else { (to, from) };
         if to > self.len() {
-            return Err("Args out of range".to_string());
+            return Err(format!("Args out of range: {}, {}", from + 1, to + 1));
         }
         self.restriction = Some((from, to));
         self.point = self.point.clamp(from, to);
@@ -512,7 +512,12 @@ impl Buffer {
     fn range(&self, from: usize, to: usize) -> Result<(usize, usize), String> {
         let (from, to) = if from <= to { (from, to) } else { (to, from) };
         if from < self.begv() || to > self.zv() {
-            return Err("Args out of range".to_string());
+            return Err(format!(
+                "Args out of range: #<buffer {}>, {}, {}",
+                self.name,
+                from + 1,
+                to + 1
+            ));
         }
         Ok((from, to))
     }

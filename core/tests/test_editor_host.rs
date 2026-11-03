@@ -60,8 +60,14 @@ const CASES: &[(&str, &str)] = &[
     ),
     (r##"(goto-char 99)"##, r##"10"##),
     (r##"(goto-char 0)"##, r##"1"##),
-    (r##"(delete-region 1 99)"##, r##"ERR Args out of range"##),
-    (r##"(buffer-substring 1 99)"##, r##"ERR Args out of range"##),
+    (
+        r##"(delete-region 1 99)"##,
+        r##"ERR Args out of range: #<buffer *scratch*>, 1, 99"##,
+    ),
+    (
+        r##"(buffer-substring 1 99)"##,
+        r##"ERR Args out of range: #<buffer *scratch*>, 1, 99"##,
+    ),
     (r##"(buffer-substring 3 1)"##, r##""ab""##),
     (
         r##"(list (char-after) (char-after 3) (char-after 99) (char-before) (char-before 2))"##,
@@ -810,7 +816,7 @@ fn test_string_match() {
         ("(string-match--op \"\u{e9}+\" \"caf\u{e9}\u{e9}\" 0 #f #f)", "3"),
         ("(string-match--op \"A\" \"a\" 0 #t #f)", "0"),
         ("(string-match--op \"A\" \"a\" 0 #f #f)", "#f"),
-        ("(string-match--op \"a\" \"b\" 5 #f #f)", "ERR Args out of range"),
+        ("(string-match--op \"a\" \"b\" 5 #f #f)", "ERR Args out of range: \"b\", 5"),
         ("(string-match--op \"\\\\(\" \"b\" 0 #f #f)", "ERR Invalid regexp: Parsing error at position 1: Opening parenthesis without closing parenthesis"),
         ("(string-match--op \"b\" \"abc\" 0 #f #f) (insert \"xb\") (goto-char 1) (search-forward \"x\") (match-beginning 0)", "1"),
     ];

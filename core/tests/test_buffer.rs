@@ -33,7 +33,10 @@ fn test_substring_and_chars() {
     // 始めと終わりは逆でもよい
     assert_eq!(buffer.substring(6, 3).unwrap(), "cde");
     assert_eq!(buffer.substring(9, 9).unwrap(), "");
-    assert_eq!(buffer.substring(0, 99).unwrap_err(), "Args out of range");
+    assert_eq!(
+        buffer.substring(0, 99).unwrap_err(),
+        "Args out of range: #<buffer lines>, 1, 100"
+    );
     assert_eq!(buffer.char_after(0), Some('a'));
     assert_eq!(buffer.char_after(2), Some('\n'));
     assert_eq!(buffer.char_after(9), None);
@@ -240,7 +243,7 @@ fn test_delete_region() {
     assert_eq!(buffer.undo_list().len(), before);
     assert_eq!(
         buffer.delete_region(0, 99).unwrap_err(),
-        "Args out of range"
+        "Args out of range: #<buffer d>, 1, 100"
     );
     // 消した範囲より前のカーソルは動かない
     buffer.set_point(0);
@@ -405,7 +408,7 @@ fn test_primitive_undo_errors_and_boundaries() {
     let entry = UndoEntry::Insert { pos: 10, len: 2 };
     assert_eq!(
         buffer.primitive_undo(&[entry]).unwrap_err(),
-        "Args out of range"
+        "Args out of range: #<buffer u>, 11, 13"
     );
     let entry = UndoEntry::Delete {
         pos: 10,
