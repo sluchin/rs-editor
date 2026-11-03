@@ -1,0 +1,8 @@
+(with-current-buffer (generate-new-buffer "t")
+  (insert "AB")
+  (goto-char 2)
+  (let ((r (insert-file-contents "multi.txt")))
+    (princ (format "%s %d\n" (file-name-nondirectory (car r)) (cadr r))))
+  (princ (format "%d|%s\n" (point) (buffer-string)))
+  (princ (format "%s\n" (if (buffer-modified-p) "modified" "clean")))
+  (princ (format "%s\n" (condition-case e (insert-file-contents "none.txt") (file-missing (cadr e))))))

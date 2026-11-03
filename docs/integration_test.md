@@ -213,6 +213,10 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-157 | サイドバーを出す (`F8`) | ファイルを押す | 選んでいるウィンドウに開く。今のファイルが強調される |
 | IT-158 | `~/work/new.txt` が無い | `C-x C-f` `~/work/new.txt` RET、文字を足して `C-x C-s`、もう一度足して `C-x C-s` | 初めの保存では `~/work/new.txt~` はできず、2 度目の保存でできる (Emacs と同じ) |
 | IT-159 | `*scratch*` に文字を足した | `C-x C-w` `~/work/w.txt` RET | `~/work/w.txt` に書かれ、バッファの名前が `w.txt` になる |
+| IT-160 | `*scratch*` で、リージョンを選んだ | `M-x` `write-region` RET `~/work/r.txt` RET。もう一度同じ操作をして `no` RET | リージョンだけが書かれる。2 度目は `File ... already exists; overwrite anyway? (yes or no)` と聞き、`no` なら書かない |
+| IT-161 | `~/work/a.txt` がある | `M-x` `copy-file` RET `~/work/a.txt` RET `~/work/sub/` RET (ディレクトリ) | `~/work/sub/a.txt` に写る |
+| IT-162 | `~/work/a.txt` を開いた | `M-x` `set-visited-file-name` RET `~/work/v.txt` RET、`M-x` `basic-save-buffer` RET | バッファの名前が `v.txt` になり、`~/work/v.txt` に書かれる |
+| IT-163 | ファイルを開いて書き換えた | `M-x` `do-auto-save` RET | `Auto-saving...done` と出て、`#名前#` ができる |
 
 ### 4.15 速さ
 

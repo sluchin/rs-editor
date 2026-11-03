@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 19 個: Lisp 19 個, Rust 0 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 22 個: Lisp 22 個, Rust 0 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -181,7 +181,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `capitalize-region` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `capitalize-word` | ◯ | `M-c` | 実装済み | `M-c` | Lisp (`lisp/simple.scm`) |
 | `chmod` |  |  |  |  |  |
-| `copy-file` | ◯ |  |  |  |  |
+| `copy-file` | ◯ |  | 実装済み |  | Lisp (`lisp/files.scm`) |
 | `decode-coding-region` |  |  |  |  |  |
 | `defining-kbd-macro` |  |  |  |  |  |
 | `delete-char` | ◯ | `C-d` | 実装済み | `C-d` | Lisp (`lisp/simple.scm`) |
@@ -189,7 +189,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `delete-other-windows-internal` |  |  |  |  |  |
 | `delete-process` |  |  |  |  |  |
 | `delete-region` | ◯ |  |  |  |  |
-| `do-auto-save` | ◯ |  |  |  |  |
+| `do-auto-save` | ◯ |  | 実装済み |  | Lisp (`lisp/files.scm`) |
 | `downcase-region` | ◯ | `C-x C-l` | 実装済み | `C-x C-l` | Lisp (`lisp/simple.scm`) |
 | `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | Lisp (`lisp/simple.scm`) |
 | `encode-coding-region` |  |  |  |  |  |
@@ -265,7 +265,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `upcase-region` | ◯ | `C-x C-u` | 実装済み | `C-x C-u` | Lisp (`lisp/simple.scm`) |
 | `upcase-word` | ◯ | `M-u` | 実装済み | `M-u` | Lisp (`lisp/simple.scm`) |
 | `widen` | ◯ | `C-x n w` | 実装済み | `C-x n w` | Lisp (`lisp/simple.scm`) |
-| `write-region` | ◯ |  |  |  |  |
+| `write-region` | ◯ |  | 実装済み |  | Lisp (`lisp/files.scm`) |
 | `x-menu-bar-open-internal` |  |  |  |  |  |
 | `x-print-frames-dialog` |  |  |  |  |  |
 

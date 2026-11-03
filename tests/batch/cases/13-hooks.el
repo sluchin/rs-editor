@@ -1,0 +1,7 @@
+(add-hook 'find-file-hook (lambda () (princ (format "find-file-hook %s\n" (buffer-name)))))
+(add-hook 'after-save-hook (lambda () (princ (format "after-save-hook %s\n" (buffer-name)))))
+(with-current-buffer (find-file-noselect "a.txt")
+  (insert "x")
+  (save-buffer))
+(with-current-buffer (find-file-noselect "a.txt")
+  (princ "reuse\n"))

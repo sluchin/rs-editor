@@ -1,0 +1,8 @@
+(let ((a (generate-new-buffer "foo")) (b (generate-new-buffer "foo")))
+  (princ (format "%s %s\n" (buffer-name a) (buffer-name b)))
+  (princ (format "%s\n" (generate-new-buffer-name "foo")))
+  (with-current-buffer b (rename-buffer "bar") (princ (format "%s\n" (buffer-name))))
+  (princ (format "%s\n" (if (member "bar" (map buffer-name (buffer-list))) "listed" "missing")))
+  (kill-buffer a)
+  (princ (format "%s\n" (if (member "foo" (map buffer-name (buffer-list))) "listed" "missing")))
+  (princ (format "%s\n" (condition-case e (with-current-buffer b (get-buffer-create "dup") (rename-buffer "dup") "ok") (error "error")))))

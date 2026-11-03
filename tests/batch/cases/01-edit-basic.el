@@ -1,0 +1,11 @@
+(let ((b (generate-new-buffer "t")))
+  (with-current-buffer b
+    (insert "hello world")
+    (princ (format "%d %d %d\n" (point) (point-min) (point-max)))
+    (goto-char 7)
+    (princ (format "%s|%s\n" (buffer-substring (point) (1+ (point))) (buffer-substring (1- (point)) (point))))
+    (princ (format "%s\n" (buffer-substring 1 6)))
+    (delete-region 1 7)
+    (princ (format "%s|%d\n" (buffer-string) (buffer-size)))
+    (erase-buffer)
+    (princ (format "%d\n" (buffer-size)))))

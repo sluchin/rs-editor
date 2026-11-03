@@ -137,6 +137,89 @@ fn test_auto_save_skips_the_files_it_cannot_write() {
     assert_eq!(auto_save(&mut editor), 0);
 }
 
+/// ミニバッファの問いに, 順に答える偽物.
+struct Answers(std::sync::Mutex<Vec<&'static str>>);
+
+impl Host for Answers {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+        match op {
+            "message" => Ok(Value::Nil),
+            "read-string" | "read-file-name" => {
+                Ok(Value::String(self.0.lock().unwrap().remove(0).to_string()))
+            }
+            _ => Err(format!("ui: {op}")),
+        }
+    }
+}
+
+#[test]
+fn test_the_commands_of_the_builtins() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = |name: &str| dir.path().join(name).to_str().unwrap().to_string();
+    let (a, b) = (path("a.txt"), path("b.txt"));
+    fs::write(&a, "a\n").unwrap();
+    let ev = Evaluator::new();
+    let run = |answers: Vec<&'static str>, code: &str, command: &str| {
+        let host = EditorHost::new(Editor::new(), Answers(std::sync::Mutex::new(answers)));
+        ev.eval_with(code, &host).unwrap();
+        let result = ev.run_command(command, &host);
+        (result, host)
+    };
+    // M-x write-region: リージョンを書く. 既にあるファイルは, 聞いてから書き換える
+    let leak = |s: String| -> &'static str { Box::leak(s.into_boxed_str()) };
+    let region = "(insert \"hello\") (set-mark 2) (goto-char 4)";
+    let (result, _) = run(vec![leak(b.clone())], region, "write-region");
+    assert!(result.is_ok());
+    assert_eq!(fs::read_to_string(&b).unwrap(), "el");
+    let (result, _) = run(vec![leak(b.clone()), "no"], region, "write-region");
+    assert_eq!(result, Err(format!("File already exists: {b}")));
+    let (result, _) = run(
+        vec![leak(b.clone()), "yes"],
+        "(insert \"xyz\") (set-mark 1)",
+        "write-region",
+    );
+    assert!(result.is_ok());
+    assert_eq!(fs::read_to_string(&b).unwrap(), "xyz");
+    // M-x copy-file: ディレクトリに写すと, 同じ名前のファイルにする
+    let sub = path("sub");
+    fs::create_dir(&sub).unwrap();
+    let (result, _) = run(vec![leak(a.clone()), leak(sub.clone())], "", "copy-file");
+    assert!(result.is_ok());
+    assert_eq!(fs::read_to_string(format!("{sub}/a.txt")).unwrap(), "a\n");
+    let (result, _) = run(
+        vec![leak(a.clone()), leak(b.clone()), "no"],
+        "",
+        "copy-file",
+    );
+    assert_eq!(result, Err(format!("File already exists: {b}")));
+    let (result, _) = run(
+        vec![leak(a.clone()), leak(b.clone()), "yes"],
+        "",
+        "copy-file",
+    );
+    assert!(result.is_ok());
+    assert_eq!(fs::read_to_string(&b).unwrap(), "a\n");
+    // M-x set-visited-file-name: バッファの名前も変わり, 書き換えたことになる
+    let open = format!("(switch-to-buffer (find-file-noselect {a:?}))");
+    let (result, host) = run(vec![leak(path("c.txt"))], &open, "set-visited-file-name");
+    assert!(result.is_ok());
+    let eval = |code: &str| ev.eval_with(code, &host).unwrap();
+    assert_eq!(eval("(buffer-name)"), "\"c.txt\"");
+    assert_eq!(eval("(buffer-modified-p)"), "#t");
+    // M-x basic-save-buffer, M-x do-auto-save
+    assert!(ev.run_command("basic-save-buffer", &host).is_ok());
+    assert_eq!(fs::read_to_string(path("c.txt")).unwrap(), "a\n");
+    eval("(insert \"1\")");
+    assert!(ev.run_command("do-auto-save", &host).is_ok());
+    assert_eq!(fs::read_to_string(path("#c.txt#")).unwrap(), "1a\n");
+    // 2 度読んでも, 組み込みを呼ぶ
+    eval(include_str!("../../lisp/files.scm"));
+    eval(&format!("(write-region \"x\" #f {b:?})"));
+    assert_eq!(fs::read_to_string(&b).unwrap(), "x");
+    eval(&format!("(copy-file {a:?} {b:?} #t) (do-auto-save)"));
+    assert_eq!(fs::read_to_string(&b).unwrap(), "a\n");
+}
+
 #[test]
 fn test_copy_file() {
     let dir = tempfile::tempdir().unwrap();

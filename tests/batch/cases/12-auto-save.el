@@ -1,0 +1,7 @@
+(with-current-buffer (find-file-noselect "a.txt")
+  (auto-save-mode 1)
+  (insert "edit")
+  (do-auto-save)
+  (princ (format "%s\n" (if (file-exists-p "#a.txt#") "auto-saved" "none")))
+  (save-buffer)
+  (princ (format "%s\n" (if (file-exists-p "#a.txt#") "auto-saved" "none"))))

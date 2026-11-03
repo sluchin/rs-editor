@@ -766,11 +766,56 @@ msgid ""
 msgstr ""
 
 #: lisp/files.scm
+msgctxt "function:files--confirm-overwrite"
+msgid "Signal an error unless FILE does not exist or the user agrees to ACTION it anyway."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:write-region"
+msgid ""
+"Write current region into specified file.\n"
+"When called from a program, requires three arguments: START, END and FILENAME.\n"
+"START and END are normally buffer positions specifying the part of the buffer to write.\n"
+"If START is #f, that means to write the whole buffer.  If START is a string, then output\n"
+"that string to the file instead of any buffer contents; END is ignored.\n"
+"Optional fourth argument APPEND if non-#f means append to existing file contents (if any).\n"
+"Optional fifth argument VISIT, if #t or a string, means set the last-save-file-modtime of\n"
+"buffer to this file's modtime and mark buffer not modified; if a string, the buffer visits\n"
+"that file name.\n"
+"Interactively, write the region to a file read in the minibuffer, asking before overwriting\n"
+"an existing file."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:copy-file"
+msgid ""
+"Copy FILE to NEWNAME.  Both args must be strings.\n"
+"Signal a `file-already-exists' error if file NEWNAME already exists, unless a third argument\n"
+"OK-IF-ALREADY-EXISTS is supplied and non-#f.\n"
+"Interactively, read FILE and NEWNAME in the minibuffer; if NEWNAME is a directory, copy FILE\n"
+"into it, and ask before overwriting an existing file."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:do-auto-save"
+msgid ""
+"Auto-save all buffers that need it.\n"
+"This writes the modified file-visiting buffers to their auto save files (#NAME#),\n"
+"and prints \"Auto-saving...done\" if anything was saved."
+msgstr ""
+
+#: lisp/files.scm
 msgctxt "function:set-visited-file-name"
 msgid ""
 "Change the name of the file visited in the current buffer to FILENAME.\n"
 "The buffer is renamed after the file, and marked as modified (the new file is not saved yet).\n"
-"If FILENAME is #f, the buffer visits no file."
+"If FILENAME is #f, the buffer visits no file.\n"
+"Interactively, read FILENAME in the minibuffer; the initial input is the current file."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:files--set-visited-file-name"
+msgid "Make the current buffer visit FILENAME (see `set-visited-file-name')."
 msgstr ""
 
 #: lisp/files.scm

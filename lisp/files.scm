@@ -86,10 +86,70 @@ Interactively, read FILENAME in the minibuffer with file name completion."
   (insert-file-contents (if (null? args) (read-file-name "Insert file: ") (car args)))
   #f)
 
-(define (set-visited-file-name filename . args)
+;;; Commands of the builtins (Emacs の C のコマンド). 組み込みは, files--NAME で呼ぶ
+;; 2 度読んでも, 組み込みを指したままにする (2 度目の write-region などは, ここのコマンド)
+(define files--write-region (if (commandp 'write-region) files--write-region write-region))
+(define files--copy-file (if (commandp 'copy-file) files--copy-file copy-file))
+(define files--do-auto-save (if (commandp 'do-auto-save) files--do-auto-save do-auto-save))
+
+(define (files--confirm-overwrite file action)
+  "Signal an error unless FILE does not exist or the user agrees to ACTION it anyway."
+  (when (and (file-exists? file)
+             (not (yes-or-no-p (format "File %s already exists; %s anyway? " file action))))
+    (error (format "File already exists: %s" file))))
+
+(define-command (write-region . args)
+  "Write current region into specified file.
+When called from a program, requires three arguments: START, END and FILENAME.
+START and END are normally buffer positions specifying the part of the buffer to write.
+If START is #f, that means to write the whole buffer.  If START is a string, then output
+that string to the file instead of any buffer contents; END is ignored.
+Optional fourth argument APPEND if non-#f means append to existing file contents (if any).
+Optional fifth argument VISIT, if #t or a string, means set the last-save-file-modtime of
+buffer to this file's modtime and mark buffer not modified; if a string, the buffer visits
+that file name.
+Interactively, write the region to a file read in the minibuffer, asking before overwriting
+an existing file."
+  (if (null? args)
+      (let ((start (region-beginning))
+            (end (region-end))
+            (file (read-file-name "Write region to file: ")))
+        (files--confirm-overwrite file "overwrite")
+        (files--write-region start end file))
+      (apply files--write-region args)))
+
+(define-command (copy-file . args)
+  "Copy FILE to NEWNAME.  Both args must be strings.
+Signal a `file-already-exists' error if file NEWNAME already exists, unless a third argument
+OK-IF-ALREADY-EXISTS is supplied and non-#f.
+Interactively, read FILE and NEWNAME in the minibuffer; if NEWNAME is a directory, copy FILE
+into it, and ask before overwriting an existing file."
+  (if (null? args)
+      (let* ((file (read-file-name "Copy file: "))
+             (newname (read-file-name (format "Copy %s to file: " file)))
+             (target (if (file-directory? newname)
+                         (expand-file-name (file-name-nondirectory file) newname)
+                         newname)))
+        (files--confirm-overwrite target "copy to it")
+        (files--copy-file file target #t))
+      (apply files--copy-file args)))
+
+(define-command (do-auto-save . args)
+  "Auto-save all buffers that need it.
+This writes the modified file-visiting buffers to their auto save files (#NAME#),
+and prints \"Auto-saving...done\" if anything was saved."
+  (files--do-auto-save))
+
+(define-command (set-visited-file-name . args)
   "Change the name of the file visited in the current buffer to FILENAME.
 The buffer is renamed after the file, and marked as modified (the new file is not saved yet).
-If FILENAME is #f, the buffer visits no file."
+If FILENAME is #f, the buffer visits no file.
+Interactively, read FILENAME in the minibuffer; the initial input is the current file."
+  (files--set-visited-file-name
+   (if (null? args) (read-file-name "Set visited file name: " (or (buffer-file-name) "")) (car args))))
+
+(define (files--set-visited-file-name filename)
+  "Make the current buffer visit FILENAME (see `set-visited-file-name')."
   (let ((file (and filename (expand-file-name filename))))
     (files--set-buffer-file-name file)
     (when file
@@ -120,7 +180,7 @@ backup file name (`make-backup-file-name').  Nothing is done if the file does no
     (when (and auto (file-exists? auto))
       (delete-file auto))))
 
-(define (basic-save-buffer . args)
+(define-command (basic-save-buffer . args)
   "Save the current buffer in its visited file, if it has been modified.
 Make a backup first (`backup-buffer'), delete the auto save file after writing,
 and run `after-save-hook'.  If the buffer visits no file, read a file name."

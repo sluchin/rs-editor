@@ -1,0 +1,6 @@
+(princ (format "%s|%s\n" (file-name-nondirectory "/a/b/c.txt") (file-name-directory "/a/b/c.txt")))
+(princ (format "%s\n" (if (file-name-directory "c.txt") "dir" "nodir")))
+(princ (format "%s\n" (expand-file-name "x" "/tmp")))
+(princ (format "%s\n" (expand-file-name "../y" "/tmp/z")))
+(princ (format "%s|%s|%s\n" (string-trim "  a b  ") (mapconcat #'identity (split-string "a,b,c" ",") "-") (format "%5d|%-3s|%s" 42 "x" '(1 2))))
+(princ (format "%s\n" (string-match "b+" "aabbb")))
