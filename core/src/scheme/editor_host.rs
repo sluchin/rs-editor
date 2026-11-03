@@ -474,6 +474,7 @@ impl<U: Host> EditorHost<U> {
                     .collect(),
             ),
             "kbd-macro-defining-p" => Value::Boolean(ed.kbd_macro.defining()),
+            "kill-ring-length" => Value::Number(ed.kill_ring.len() as f64),
             "current-kill" => {
                 let n = int(op, args, 0)?;
                 let keep = args.get(1).is_some_and(Value::is_non_nil);

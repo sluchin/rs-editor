@@ -267,6 +267,11 @@ msgid "Length of the context strings recorded around a bookmark's position."
 msgstr "ブックマークの位置の前後に覚える, 文字列の長さ."
 
 #: lisp/bookmark.scm
+msgctxt "variable:bookmark-save-flag"
+msgid "If non-nil, `bookmark-set' and the other changes save the bookmarks to `bookmark-default-file'."
+msgstr "空でなければ, ブックマークを変えたときに bookmark-default-file に保存する."
+
+#: lisp/bookmark.scm
 msgctxt "variable:bookmark-alist"
 msgid ""
 "Association list of bookmarks.\n"
@@ -6198,11 +6203,12 @@ msgstr ""
 msgctxt "function:yank-pop"
 msgid ""
 "Replace the text just yanked with the previous kill in the kill ring.\n"
-"With an argument N, use the Nth previous kill.  Signal an error if the previous\n"
-"command was not a yank."
+"With an argument N, use the Nth previous kill.  If the previous\n"
+"command was not a yank, read a kill from the kill ring in the minibuffer."
 msgstr ""
 "今貼った本文を, kill-ring の一つ前の kill に替える.\n"
-"引数 N があれば, N 個前の kill を使う. 前のコマンドが yank でなければ, エラーにする."
+"引数 N があれば, N 個前の kill を使う. 前のコマンドが yank でなければ, kill-ring の中から\n"
+"ミニバッファで選んで入れる."
 
 #: lisp/simple.scm
 msgctxt "function:insert-buffer"
@@ -7339,6 +7345,53 @@ msgstr ""
 "文字列 STRING の中の, 正規表現 REGEXP に合う所を全部 REP に置き換える.\n"
 "REP は文字列 (\\& と \\N が使える) か, 合った文字を渡して呼ぶ関数.\n"
 "置き換えた新しい文字列を返す."
+
+#: lisp/simple.scm
+msgctxt "function:search-forward-regexp"
+msgid "Search forward from point for a regular expression.  Same as `re-search-forward'."
+msgstr "点から後ろへ, 正規表現を探す. re-search-forward と同じ."
+
+#: lisp/simple.scm
+msgctxt "function:search-backward-regexp"
+msgid "Search backward from point for a regular expression.  Same as `re-search-backward'."
+msgstr "点から前へ, 正規表現を探す. re-search-backward と同じ."
+
+#: lisp/simple.scm
+msgctxt "function:word-search-regexp"
+msgid ""
+"Return a regexp which matches the words of STRING, whatever the punctuation between them.\n"
+"Unless LAX is non-nil, the regexp also needs word boundaries at its ends."
+msgstr ""
+"STRING の単語に合う正規表現を返す. 単語の間の句読点は問わない.\n"
+"LAX が空でなければ, 両端に単語の境界を要らない."
+
+#: lisp/simple.scm
+msgctxt "function:word-search-forward"
+msgid ""
+"Search forward for STRING as a sequence of words, whatever the punctuation between them.\n"
+"The other arguments are those of `search-forward'."
+msgstr ""
+"STRING を単語の並びとして後ろへ探す. 単語の間の句読点は問わない.\n"
+"他の引数は search-forward と同じ."
+
+#: lisp/simple.scm
+msgctxt "function:word-search-backward"
+msgid ""
+"Search backward for STRING as a sequence of words, whatever the punctuation between them.\n"
+"The other arguments are those of `search-backward'."
+msgstr ""
+"STRING を単語の並びとして前へ探す. 単語の間の句読点は問わない.\n"
+"他の引数は search-backward と同じ."
+
+#: lisp/simple.scm
+msgctxt "function:line-number-at-pos"
+msgid ""
+"Return the line number of POSITION (default: the point), counting from the start of the\n"
+"accessible part of the buffer.  If the second argument ABSOLUTE is non-nil, count from the\n"
+"start of the whole buffer."
+msgstr ""
+"POSITION (既定は点) の行の番号を返す. 見える範囲の始めから数える.\n"
+"ABSOLUTE が空でなければ, バッファ全体の始めから数える."
 
 #: lisp/sort.scm
 msgctxt "function:sort--split-lines"

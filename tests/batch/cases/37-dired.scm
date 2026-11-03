@@ -1,0 +1,12 @@
+(define (has text) (save-excursion (goto-char (point-min)) (if (re-search-forward text #f #t) "t" "nil")))
+(let ((buf (dired-noselect "sub")))
+  (with-current-buffer buf
+    (princ (format "%s\n" (buffer-name)))
+    (princ (format "%s\n" (has "\\.\\.")))))
+(write-region "x" #f "sub/file1")
+(write-region "yy" #f "sub/file2")
+(kill-buffer "sub")
+(with-current-buffer (dired-noselect "sub")
+  (princ (format "%s %s\n" (has "file1") (has "file2")))
+  (princ (format "%s\n" (has "file3"))))
+(princ (format "%s\n" (if (eq (dired-noselect "sub") (dired-noselect "sub/")) 1 0)))

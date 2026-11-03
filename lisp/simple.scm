@@ -702,7 +702,9 @@ The definition was started by start-kbd-macro.  The macro is now available for u
 call-last-kbd-macro.  With numeric arg, repeat the macro now that many times, counting the
 definition just completed as the first repetition.  An argument of zero means repeat until error."
   (simple--end-kbd-macro)
-  (let ((n (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args))))
+  (let ((n (cond ((null? args) (prefix-numeric-value (current-prefix-arg)))
+                 ((car args) (prefix-numeric-value (car args)))
+                 (else 1))))
     (cond ((= n 0) (execute-kbd-macro (last-kbd-macro) 0))
           ((> n 1) (execute-kbd-macro (last-kbd-macro) (- n 1)))))
   #f)
@@ -748,7 +750,10 @@ value without incrementing."
         (begin
           (insert (format kmacro-counter-format kmacro-counter))
           (set! kmacro-last-counter kmacro-counter)
-          (set! kmacro-counter (+ kmacro-counter (prefix-numeric-value arg))))))
+          (set! kmacro-counter (+ kmacro-counter (prefix-numeric-value arg)))
+          ;; 実行中のキーボードマクロでなければ, 新しい値を知らせる
+          (message "New macro counter value: %s (%d)"
+                   (format kmacro-counter-format kmacro-counter) kmacro-counter))))
   #f)
 
 (define-command (kmacro-start-macro-or-insert-counter . args)
@@ -912,10 +917,20 @@ With a number N, insert the Nth most recent kill; with -, the second most recent
 
 (define-command (yank-pop . args)
   "Replace the text just yanked with the previous kill in the kill ring.
-With an argument N, use the Nth previous kill.  Signal an error if the previous
-command was not a yank."
+With an argument N, use the Nth previous kill.  If the previous
+command was not a yank, read a kill from the kill ring in the minibuffer."
   (if (not (equal? last-command 'yank))
-      (error "Previous command was not a yank")
+      ;; 直前が yank でなければ, kill-ring から選んで入れる (Emacs 28 以降と同じ)
+      (let ((count (kill-ring-length)))
+        (if (= count 0) (error "Kill ring is empty"))
+        (let ((choice (completing-read "Yank from kill-ring: "
+                                       (let loop ((i 0) (items '()))
+                                         (if (< i count)
+                                             (loop (+ i 1) (cons (current-kill i #t) items))
+                                             (reverse items))))))
+          (push-mark (point))
+          (insert-for-yank choice)
+          #f))
       (let ((n (simple--arg args)))
         (set! this-command 'yank)
         (let ((before (< (point) (mark))))
@@ -2322,7 +2337,11 @@ to END and the greater of them is not at the start of a line."
 Called from Lisp with START and END, it saves the text between them."
   (let ((start (if (null? args) (region-beginning) (car args)))
         (end (if (null? args) (region-end) (cadr args))))
-    (kill-new (buffer-substring (min start end) (max start end)))
+    (let ((text (buffer-substring (min start end) (max start end))))
+      ;; 前のコマンドが kill なら, その kill につなぐ
+      (if (equal? last-command 'kill-region)
+          (kill-append text (< end start))
+          (kill-new text)))
     #f))
 
 (define-command (insert-char . args)
@@ -2437,3 +2456,46 @@ Return a new string containing the replacements."
                 (unless (and empty (eobp)) (loop)))))
           (buffer-string))
       (kill-buffer work))))
+
+(define (search-forward-regexp . args)
+  "Search forward from point for a regular expression.  Same as `re-search-forward'."
+  (apply re-search-forward args))
+
+(define (search-backward-regexp . args)
+  "Search backward from point for a regular expression.  Same as `re-search-backward'."
+  (apply re-search-backward args))
+
+(define (word-search-regexp string . lax)
+  "Return a regexp which matches the words of STRING, whatever the punctuation between them.
+Unless LAX is non-nil, the regexp also needs word boundaries at its ends."
+  (let ((words (split-string (replace-regexp-in-string "[^[:alnum:]]" " " string))))
+    (if (null? words)
+        ""
+        (string-append
+         (if (null? lax) "\\b" "")
+         (apply string-append
+                (cons (regexp-quote (car words))
+                      (map (lambda (w) (string-append "\\W+" (regexp-quote w))) (cdr words))))
+         (if (null? lax) "\\b" "")))))
+
+(define (word-search-forward string . args)
+  "Search forward for STRING as a sequence of words, whatever the punctuation between them.
+The other arguments are those of `search-forward'."
+  (apply re-search-forward (word-search-regexp string) args))
+
+(define (word-search-backward string . args)
+  "Search backward for STRING as a sequence of words, whatever the punctuation between them.
+The other arguments are those of `search-backward'."
+  (apply re-search-backward (word-search-regexp string) args))
+
+(define (line-number-at-pos . args)
+  "Return the line number of POSITION (default: the point), counting from the start of the
+accessible part of the buffer.  If the second argument ABSOLUTE is non-nil, count from the
+start of the whole buffer."
+  (let ((pos (if (and (pair? args) (car args)) (car args) (point)))
+        (absolute (and (pair? args) (pair? (cdr args)) (cadr args))))
+    (save-excursion
+      (save-restriction
+        (if absolute (widen))
+        (goto-char pos)
+        (+ 1 (count-lines (point-min) (line-beginning-position)))))))

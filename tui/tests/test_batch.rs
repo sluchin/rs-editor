@@ -278,3 +278,73 @@ fn test_do_auto_save_tells_what_it_did() {
         "xold\n"
     );
 }
+
+#[test]
+fn test_yank_pop_after_a_non_yank_reads_a_kill() {
+    let (status, out, _) = batch(
+        &[
+            "--eval",
+            "(begin (kill-new \"first\") (kill-new \"second\") (with-current-buffer (generate-new-buffer \"b\") (yank-pop) (princ (buffer-string))))",
+        ],
+        "first\n",
+    );
+    assert_eq!((status, out.as_str()), (0, "first"));
+    // 空のキルリング
+    let (status, _, err) = batch(
+        &[
+            "--eval",
+            "(with-current-buffer (generate-new-buffer \"b\") (yank-pop))",
+        ],
+        "",
+    );
+    assert_eq!(
+        (status, err.as_str()),
+        (ERROR_STATUS, "Kill ring is empty\n")
+    );
+}
+
+#[test]
+fn test_copy_region_as_kill_appends_after_a_kill() {
+    let (_, out, _) = batch(
+        &[
+            "--eval",
+            "(with-current-buffer (generate-new-buffer \"b\") (insert \"abc def\") (copy-region-as-kill 1 4) (set! last-command 'kill-region) (copy-region-as-kill 8 5) (princ (current-kill 0)))",
+        ],
+        "",
+    );
+    assert_eq!(out, "defabc");
+}
+
+#[test]
+fn test_search_helpers_and_bookmarks() {
+    let (_, out, _) = batch(
+        &[
+            "--eval",
+            "(with-current-buffer (generate-new-buffer \"b\") (insert \"Foo, bar\\nbaz qux\") (goto-char 1) (princ (list (word-search-forward \"bar baz\") (line-number-at-pos) (search-forward-regexp \"q.x\") (word-search-backward \"foo\") (line-number-at-pos 10) (line-number-at-pos 10 #t) (word-search-regexp \"\") (word-search-regexp \"a b\" #t))))",
+        ],
+        "",
+    );
+    assert_eq!(out, "(13 2 17 1 2 2  a\\W+b)");
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("a.txt");
+    std::fs::write(&file, "text\n").unwrap();
+    let eval = format!(
+        "(begin (set! bookmark-save-flag #f) (find-file \"{}\") (bookmark-set \"one\") (princ (if (assoc \"one\" bookmark-alist) 1 0)))",
+        file.display()
+    );
+    let (_, out, _) = batch(&["--eval", &eval], "");
+    assert_eq!(out, "1");
+}
+
+#[test]
+fn test_kmacro_counter_and_end_macro_without_argument() {
+    let (_, out, err) = batch(
+        &[
+            "--eval",
+            "(with-current-buffer (generate-new-buffer \"b\") (kmacro-insert-counter 2) (kmacro-insert-counter '(4)) (kmacro-start-macro #f) (kmacro-end-macro #f) (princ (buffer-string)))",
+        ],
+        "",
+    );
+    assert_eq!(out, "00");
+    assert!(err.contains("New macro counter value: 2 (2)"), "{err}");
+}

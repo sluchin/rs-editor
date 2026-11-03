@@ -15,7 +15,6 @@
   (kill-line 2)
   (princ (format "%S|%d\n" (buffer-string) (point)))
   (princ (format "%S\n" (current-kill 0)))
-  (setq last-command nil)
   (erase-buffer)
   (insert "abc def")
   (copy-region-as-kill 1 4)

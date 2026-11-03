@@ -1,0 +1,8 @@
+(with-current-buffer (generate-new-buffer "b")
+  (kill-new "first")
+  (kill-new "second")
+  (yank)
+  (princ (format "%S\n" (buffer-string)))
+  (setq last-command 'yank)
+  (yank-pop)
+  (princ (format "%S\n" (buffer-string))))

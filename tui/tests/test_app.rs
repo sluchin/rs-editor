@@ -54,7 +54,7 @@ fn test_errors_are_shown_in_the_echo_area() {
     fx.press("C-g");
     assert_eq!(fx.app.message(), "Quit");
     fx.press("M-y");
-    assert_eq!(fx.app.message(), "Previous command was not a yank");
+    assert_eq!(fx.app.message(), "Kill ring is empty");
     fx.press("C-w");
     assert_eq!(
         fx.app.message(),

@@ -141,6 +141,11 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-31 | `31-transpose-indent` | `transpose-lines`、`current-indentation`、`back-to-indentation`、`indent-rigidly`、`indent-to`、`indent-line-to`、`indent-region` (COLUMN つき)、`delete-trailing-whitespace` |
 | E-32 | `32-sexp` | `forward-sexp`、`backward-sexp`、`up-list`、`down-list`、`backward-up-list`、`kill-sexp`、`transpose-sexps`、行き過ぎのエラー |
 | E-33 | `33-narrow-widen` | `narrow-to-region` 中の `point-min` と `point-max`、範囲外へのエラー、`save-restriction`、`widen` |
+| E-34 | `34-yank-pop` | `yank` の後の `yank-pop` (キルリングを回す) |
+| E-35 | `35-bookmarks` | `bookmark-set`、`bookmark-jump` (別のバッファから)、未登録の名前のエラー、`bookmark-set-no-overwrite` |
+| E-36 | `36-kmacro` | `kmacro-insert-counter` (カウンターと知らせ)、`kmacro-start-macro`、`kmacro-end-macro` |
+| E-37 | `37-dired` | `dired-noselect` (バッファの名前、`..`、ファイルの一覧、同じ場所なら同じバッファ) |
+| E-38 | `38-search-funcs` | `search-forward` と `search-backward` (大文字小文字、COUNT、BOUND、NOERROR)、`re-search-*`、`search-forward-regexp`、`word-search-forward`、`line-number-at-pos` |
 
 ## 5. 比べない違い
 
@@ -152,6 +157,13 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
+| `yank-pop` (前が `yank` でないとき) | Emacs はプロンプト「Yank from kill-ring: 」を標準出力に出して読む。rs-editor のバッチモードは、プロンプトを標準出力に出さない (`read-string` などすべて同じ)。入力を標準入力から読むところは同じ |
+| エラーの種類 | Emacs Lisp は型付きのエラー (`(car e)` が `end-of-file` など)。Scheme の `condition-case` は型を持たず, `error-message-string` で文を比べる |
+| `while` | Scheme に `while` が無いため、繰り返しの試験 (29 番) は `.scm` を手で書く |
+| `isearch` | 対話のコマンド (キーを読む) なので、バッチモードでは動かせない。同じ検索の関数 (38 番) で比べる |
+| `execute-kbd-macro` | キーを打つ処理は画面側にあり、バッチモードには無い (「The batch mode does not support execute-kbd-macro」)。簡単には直せない。マクロの再生と記録の試験は、カウンターだけ |
+| `last-kbd-macro` | Emacs は変数、rs-editor は関数 |
+| dired の操作 | 印をつける、消す、名前を変えるなどは、キーを読むコマンド。一覧のバッファの中身だけ比べる (日付や大きさは違うので比べない) |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 
 ## 6. 試験の足し方

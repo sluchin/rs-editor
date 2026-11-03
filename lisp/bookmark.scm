@@ -10,6 +10,9 @@
 (define bookmark-search-size 16
   "Length of the context strings recorded around a bookmark's position.")
 
+(define bookmark-save-flag 1
+  "If non-nil, `bookmark-set' and the other changes save the bookmarks to `bookmark-default-file'.")
+
 (define bookmark-alist '()
   "Association list of bookmarks.
 Each element is (NAME (filename FILE) (front-context-string STRING)
@@ -53,7 +56,7 @@ and anything else to signal an error if the name is taken."
               (map (lambda (old) (if (equal? (car old) name) record old)) bookmark-alist)
               (cons record bookmark-alist)))
     (set! bookmark-current-bookmark name)
-    (bookmark-save)))
+    (if bookmark-save-flag (bookmark-save))))
 
 (define (bookmark--make-record name)
   "Return the bookmark NAME for the point of the current buffer."

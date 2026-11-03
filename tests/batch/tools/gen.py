@@ -22,6 +22,8 @@ def convert(text):
             part = re.sub(r"(?<![\w\-#'])nil(?![\w\-])", '#f', part)
             part = re.sub(r'(?<![\w\-#\'])t(?![\w\-])', '#t', part)
             part = part.replace('(setq ', '(set! ').replace('(progn ', '(begin ')
+            part = re.sub(r'\(defun ([\w\-]+) \(', r'(define (\1 ', part)
+            part = re.sub(r'^\(require [^\n]*\n', '', part)
             # 文字の記法 ?a は, 1 文字の文字列にする
             part = re.sub(r'(?<![\w\-<>=/!*+])\?(\\.|[^\s()\\])', lambda m: '"' + m.group(1) + '"', part)
             out.append(part)

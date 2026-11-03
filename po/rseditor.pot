@@ -208,6 +208,11 @@ msgid "Length of the context strings recorded around a bookmark's position."
 msgstr ""
 
 #: lisp/bookmark.scm
+msgctxt "variable:bookmark-save-flag"
+msgid "If non-nil, `bookmark-set' and the other changes save the bookmarks to `bookmark-default-file'."
+msgstr ""
+
+#: lisp/bookmark.scm
 msgctxt "variable:bookmark-alist"
 msgid ""
 "Association list of bookmarks.\n"
@@ -5517,8 +5522,8 @@ msgstr ""
 msgctxt "function:yank-pop"
 msgid ""
 "Replace the text just yanked with the previous kill in the kill ring.\n"
-"With an argument N, use the Nth previous kill.  Signal an error if the previous\n"
-"command was not a yank."
+"With an argument N, use the Nth previous kill.  If the previous\n"
+"command was not a yank, read a kill from the kill ring in the minibuffer."
 msgstr ""
 
 #: lisp/simple.scm
@@ -6472,6 +6477,45 @@ msgid ""
 "Replace all matches for REGEXP with REP in STRING.\n"
 "REP is a string (which may use \\& and \\N), or a function called with the matched text.\n"
 "Return a new string containing the replacements."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:search-forward-regexp"
+msgid "Search forward from point for a regular expression.  Same as `re-search-forward'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:search-backward-regexp"
+msgid "Search backward from point for a regular expression.  Same as `re-search-backward'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:word-search-regexp"
+msgid ""
+"Return a regexp which matches the words of STRING, whatever the punctuation between them.\n"
+"Unless LAX is non-nil, the regexp also needs word boundaries at its ends."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:word-search-forward"
+msgid ""
+"Search forward for STRING as a sequence of words, whatever the punctuation between them.\n"
+"The other arguments are those of `search-forward'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:word-search-backward"
+msgid ""
+"Search backward for STRING as a sequence of words, whatever the punctuation between them.\n"
+"The other arguments are those of `search-backward'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:line-number-at-pos"
+msgid ""
+"Return the line number of POSITION (default: the point), counting from the start of the\n"
+"accessible part of the buffer.  If the second argument ABSOLUTE is non-nil, count from the\n"
+"start of the whole buffer."
 msgstr ""
 
 #: lisp/sort.scm
