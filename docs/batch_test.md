@@ -149,6 +149,8 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-38 | `38-search-funcs` | `search-forward` と `search-backward` (大文字小文字、COUNT、BOUND、NOERROR)、`re-search-*`、`search-forward-regexp`、`word-search-forward`、`line-number-at-pos` |
 | E-39 | `39-kbd-macro` | `execute-kbd-macro` (`kbd` のキー、回数)、文字キーの挿入、`M-f` などの編集キー、マクロの中の `C-x (` と `C-x )` (マクロを動かしている間は終えない)、`last-kbd-macro` |
 | E-40 | `40-kbd-macro-errors` | マクロの中のキーが失敗したとき (エラーの文、そこで止まる)、回数 0 (失敗するまで繰り返す)、空のマクロ |
+| E-41 | `41-isearch` | `execute-kbd-macro` で打つ `C-s`、`C-r`、`C-M-s`、`DEL`、`C-g`、`RET`。位置、失敗したときのベル (標準出力の `^G`)、`I-search: ...` の知らせ、大文字小文字、行き過ぎ |
+| E-42 | `42-dired-keys` | dired のキー: `n`、`p`、`d`、`m`、`u`、`U`、`x`、`D`、`C`、`R`、`+`。印、ファイルの有無、知らせ (`Deleting...`、`Copy: 1 of 1`、`1 mark removed`) |
 
 ## 5. 比べない違い
 
@@ -163,8 +165,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `yank-pop` (前が `yank` でないとき) | Emacs はプロンプト「Yank from kill-ring: 」を標準出力に出して読む。rs-editor のバッチモードは、プロンプトを標準出力に出さない (`read-string` などすべて同じ)。入力を標準入力から読むところは同じ |
 | エラーの種類 | Emacs Lisp は型付きのエラー (`(car e)` が `end-of-file` など)。Scheme の `condition-case` は型を持たず, `error-message-string` で文を比べる |
 | `while` | Scheme に `while` が無いため、繰り返しの試験 (29 番) は `.scm` を手で書く |
-| `isearch` | 対話のコマンド (キーを読む) なので、バッチモードでは動かせない。同じ検索の関数 (38 番) で比べる |
-| dired の操作 | 印をつける、消す、名前を変えるなどは、キーを読むコマンド。一覧のバッファの中身だけ比べる (日付や大きさは違うので比べない) |
+| dired の一覧の並び | ファイルを足した後の並びが違う。Emacs は 1 行だけ足し (並びは位置による)、rs-editor は一覧を作り直す (名前の順。印は引き継ぐ)。試験は、名前を並べ替えて比べる。日付や大きさも比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 
 ## 6. 試験の足し方

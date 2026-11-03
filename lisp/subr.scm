@@ -66,3 +66,17 @@ a debug warning is only added to the buffer, the other levels also show it in an
     (unless (eq? level 'debug)
       (display-buffer "*Warnings*"))
     #f))
+
+(define (concat . strings)
+  "Concatenate all the argument strings and make the result a new string."
+  (apply string-append strings))
+
+(define (mapconcat function sequence . separator)
+  "Apply FUNCTION to each element of SEQUENCE, and concatenate the results as strings.
+In between each pair of results, stick in SEPARATOR (default: the empty string)."
+  (let ((sep (if (null? separator) "" (car separator))))
+    (string-join (map function sequence) sep)))
+
+(define (string< a b)
+  "Return #t if the first string is less than the second (compared by character code)."
+  (string<? a b))

@@ -710,6 +710,141 @@ msgctxt "function:dired--revert"
 msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
 msgstr ""
 
+#: lisp/dired.scm
+msgctxt "variable:dired--filename-regexp"
+msgid "Regexp that ends the date of an `ls -al' line, so that the file name follows it."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--filename-start"
+msgid "Return the position of the file name on the current line, or #f if the line has no file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-get-filename"
+msgid "Return the name of the file on the current line, or #f.  With LOCALP non-nil, without the directory."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--directory"
+msgid "Return the directory of the current Dired buffer."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-next-line"
+msgid "Move down lines then position at the file name."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-previous-line"
+msgid "Move up lines then position at the file name."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-line"
+msgid "Put the mark CHAR in the first column of the current line, if it lists a file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark"
+msgid "Mark the file at point in the Dired buffer, then move to the next line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-file-deletion"
+msgid "In Dired, flag the current line's file for deletion, then move to the next line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-unmark"
+msgid "Unmark the file at point in the Dired buffer, then move to the next line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked"
+msgid "Return the file names (without the directory) of the lines marked with CHAR."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-unmark-all-marks"
+msgid "Remove all marks from all files in the Dired buffer."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--marks"
+msgid "Return a list of (NAME MARK) of the marked lines."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--relist"
+msgid "List the directory again, then put MARKS (a list of (NAME MARK)) back."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--delete"
+msgid "Ask, then delete the files NAMES (names in the directory of the current Dired buffer)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-flagged-delete"
+msgid "In Dired, delete the files flagged for deletion."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked-or-current"
+msgid "Return the files marked with `*', or the current file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-delete"
+msgid "Delete all marked (or next ARG) files."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--target"
+msgid "Read the target for NAME with PROMPT.  Return its absolute name (inside the directory if it is one)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--transfer"
+msgid "Copy or move the marked (or current) files.  OPERATE takes the source and the target."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-copy"
+msgid "Copy all marked (or next ARG) files, or copy the current file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-rename"
+msgid "Rename all marked (or next ARG) files, or rename the current file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-create-directory"
+msgid "Create a directory called DIRECTORY."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-redisplay"
+msgid "Redisplay the Dired buffer, keeping the marks."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-find-file"
+msgid "In Dired, visit the file or directory named on this line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-up-directory"
+msgid "Run Dired on the parent directory of the current directory."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--set-keys"
+msgid "Give the current Dired buffer its keys."
+msgstr ""
+
 #: lisp/files.scm
 msgctxt "variable:auto-mode-alist"
 msgid ""
@@ -6628,6 +6763,23 @@ msgid ""
 "TYPE is a symbol or a list of symbols that says what the warning is about.\n"
 "MESSAGE is the text.  The optional LEVEL (a symbol: debug, warning or error) is warning by default;\n"
 "a debug warning is only added to the buffer, the other levels also show it in another window."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:concat"
+msgid "Concatenate all the argument strings and make the result a new string."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:mapconcat"
+msgid ""
+"Apply FUNCTION to each element of SEQUENCE, and concatenate the results as strings.\n"
+"In between each pair of results, stick in SEPARATOR (default: the empty string)."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:string<"
+msgid "Return #t if the first string is less than the second (compared by character code)."
 msgstr ""
 
 #: lisp/window.scm

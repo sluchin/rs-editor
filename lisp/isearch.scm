@@ -92,8 +92,11 @@
       (if isearch--success
           (set! isearch--other-end (if isearch--forward (match-beginning 0) (match-end 0)))))
     (if (not isearch--success)
-        ;; 失敗したら, 前の成功の所へ戻る
-        (goto-char (list-ref (car isearch--cmds) 1)))))
+        (begin
+          ;; 前は成功していたのに失敗したら, ベルを鳴らす
+          (if (list-ref (car isearch--cmds) 2) (ding))
+          ;; 失敗したら, 前の成功の所へ戻る
+          (goto-char (list-ref (car isearch--cmds) 1))))))
 
 (define (isearch--search-and-update)
   (when (or isearch--success isearch--regexp)
@@ -140,7 +143,7 @@
       (set! isearch--success #t)
       (if (and isearch--success (equal? (point) isearch--other-end) (not isearch--just-started))
           (if (if isearch--forward (eobp) (bobp))
-              (set! isearch--success #f)
+              (begin (set! isearch--success #f) (ding))
               (begin
                 (if isearch--forward (forward-char 1) (backward-char 1))
                 (isearch--search)))
@@ -186,7 +189,8 @@
   (isearch--search-and-update))
 
 (define (isearch--delete-char)
-  (if (not (null? (cdr isearch--cmds)))
+  (if (null? (cdr isearch--cmds))
+      (ding)
       (isearch--pop-state)))
 
 (define (isearch--yank-word)
@@ -211,7 +215,7 @@
   (if (and (not (= (point) isearch--opoint)) (not (use-region-p)))
       (begin
         (push-mark isearch--opoint)
-        (message "Mark saved where search started"))))
+        (if (not executing-kbd-macro) (message "Mark saved where search started")))))
 
 (define (isearch--exit)
   (if (equal? isearch--string "")
@@ -295,7 +299,11 @@ Another key exits the search, and is ignored."
              (set! isearch--regexp (not isearch--regexp))
              (isearch--search-and-update)
              (loop))
-            ((isearch--printing-key key) (isearch--add (isearch--printing-key key)) (loop))
+            ((isearch--printing-key key)
+             ;; バッチモードでは, 文字を打つたびに, 探す前の状態で, 文字列を知らせる (Emacs と同じ)
+             (if noninteractive (message "%s" (string-append (isearch--prompt) (isearch--printing-key key))))
+             (isearch--add (isearch--printing-key key))
+             (loop))
             (else (isearch--done #f))))))
 
 (define-command (isearch-forward . args)

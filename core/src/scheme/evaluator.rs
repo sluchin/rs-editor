@@ -861,6 +861,18 @@ impl<'a> Machine<'a> {
                 }
                 _ => return Err(format!("{} expects a test", op)),
             },
+            "while" => match args {
+                // (while TEST BODY...): TEST が真の間, BODY を繰り返す (Emacs Lisp の while). 値は偽
+                [test, body @ ..] => {
+                    while self.eval(test, env)?.is_true() {
+                        for form in body {
+                            self.eval(form, env)?;
+                        }
+                    }
+                    Step::Done(Value::Nil)
+                }
+                _ => return Err("while expects a test".to_string()),
+            },
             "condition-case" => match args {
                 [Value::Symbol(var), body, handlers @ ..] => match self.eval(body, env) {
                     Ok(value) => Step::Done(value),

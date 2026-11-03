@@ -141,6 +141,7 @@ pub const NAMES: &[&str] = &[
     "outline-invisible-p",
     "set-background-color",
     "set-foreground-color",
+    "ding",
     "set-frame-font",
     "set-face-attribute",
     // ヘルプ (ほかは help.rs)
@@ -856,6 +857,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 args[4] = Value::String(machine.expand_file_name(visit));
             }
             machine.host.call(name, args)
+        }
+        "ding" => {
+            // (ding): ベルを鳴らす. 鳴らせない画面なら, 何もしない
+            let _ = machine.host.call(name, vec![]);
+            Ok(Value::Nil)
         }
         "set-frame-font" => {
             let [font] = fixed::<1>(name, args)?;

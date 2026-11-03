@@ -32,6 +32,8 @@ pub const NAMES: &[&str] = &[
     "make-temp-file",
     "delete-file",
     "copy-file",
+    "rename-file",
+    "directory-files",
     "delete-directory",
     "directory-files-recursively",
     "grep-files",
@@ -153,6 +155,62 @@ pub(crate) fn call(
             std::fs::remove_file(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
             Ok(Value::Nil)
         }),
+        "rename-file" => {
+            // (rename-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
+            let (from, to, ok) = match args.as_slice() {
+                [from, to] => (from, to, false),
+                [from, to, ok] => (from, to, ok.is_true()),
+                _ => return Some(Err("rename-file expects 2 or 3 arguments".to_string())),
+            };
+            (|| {
+                let from = expand_args(machine, name, std::slice::from_ref(from))?;
+                let to = expand_args(machine, name, std::slice::from_ref(to))?;
+                if !ok && to.exists() {
+                    return Err(format!("File already exists: {}", to.display()));
+                }
+                std::fs::rename(&from, &to)
+                    .map(|()| Value::Nil)
+                    .map_err(|e| format!("{}: {}", from.display(), e))
+            })()
+        }
+        "directory-files" => {
+            // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真なら, ディレクトリを付ける. MATCH は正規表現
+            if !(1..=3).contains(&args.len()) {
+                return Some(Err("directory-files expects 1 to 3 arguments".to_string()));
+            }
+            (|| {
+                let dir = expand_args(machine, name, &args[..1])?;
+                let full = args.get(1).is_some_and(Value::is_true);
+                let pattern = match args.get(2) {
+                    Some(Value::String(pattern)) => Some(
+                        regex::Regex::new(pattern).map_err(|e| format!("Invalid regexp: {e}"))?,
+                    ),
+                    _ => None,
+                };
+                let entries = std::fs::read_dir(&dir)
+                    .map_err(|e| format!("Opening directory: {}, {}", e, dir.display()))?;
+                let mut names = vec![".".to_string(), "..".to_string()];
+                names.extend(
+                    entries
+                        .filter_map(Result::ok)
+                        .map(|entry| entry.file_name().to_string_lossy().into_owned()),
+                );
+                names.sort();
+                Ok(Value::List(
+                    names
+                        .into_iter()
+                        .filter(|name| pattern.as_ref().is_none_or(|re| re.is_match(name)))
+                        .map(|name| {
+                            Value::String(if full {
+                                path_string(&dir.join(&name))
+                            } else {
+                                name
+                            })
+                        })
+                        .collect(),
+                ))
+            })()
+        }
         "copy-file" => {
             // (copy-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
             let (from, to, ok) = match args.as_slice() {

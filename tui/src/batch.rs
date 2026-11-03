@@ -38,6 +38,8 @@ pub struct Io {
 
 /// 画面の代わりに、標準入出力で答えるもの.
 struct BatchUi {
+    /// 標準出力 (ベル).
+    out: Mutex<Box<dyn Write + Send>>,
     /// 標準エラー出力.
     err: Mutex<Box<dyn Write + Send>>,
     /// 標準入力.
@@ -54,6 +56,8 @@ struct BatchUi {
     error: Mutex<Option<String>>,
     /// キーを処理するコマンドループ.
     commands: Mutex<Weak<CommandLoop<BatchUi>>>,
+    /// 最後に失敗したマクロの, 終えた繰り返しの数とエラーの文 (捕まえなかったエラーに, 前置きを付けるため).
+    failure: Arc<Mutex<Option<(usize, String)>>>,
 }
 
 impl LoopUi for BatchUi {
@@ -167,6 +171,9 @@ impl BatchUi {
             .global()
             .define("executing-kbd-macro", before);
         let error = self.error.lock().unwrap().take();
+        if let Some(error) = &error {
+            *self.failure.lock().unwrap() = Some((round.saturating_sub(1), error.clone()));
+        }
         error.map_or(Ok(()), Err)
     }
 
@@ -214,6 +221,14 @@ impl Host for BatchUi {
                 };
                 self.execute_keys(&key_names(args.first()), count)
                     .map(|()| Value::Nil)
+            }
+            "ding" => {
+                // Emacs のバッチモードは, ベルの文字を標準出力に出す
+                self.need_newline.store(true, Ordering::Relaxed);
+                let mut out = self.out.lock().unwrap();
+                let _ = out.write_all(b"\x07");
+                let _ = out.flush();
+                Ok(Value::Nil)
             }
             "kill-emacs" => {
                 let code = match args.first() {
@@ -305,6 +320,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
     let err = Arc::new(Mutex::new(err));
     let exit = Arc::new(Mutex::new(None));
     let need_newline = Arc::new(AtomicBool::new(false));
+    let failure = Arc::new(Mutex::new(None));
     let fail = |text: &str| {
         let _ = writeln!(err.lock().unwrap(), "{text}");
         ERROR_STATUS
@@ -314,6 +330,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
         Err(error) => return fail(&error),
     };
     let ui = BatchUi {
+        out: Mutex::new(Box::new(Shared(out.clone()))),
         err: Mutex::new(Box::new(Shared(err.clone()))),
         input: Mutex::new(input),
         need_newline: need_newline.clone(),
@@ -322,6 +339,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
         stopped: AtomicBool::new(false),
         error: Mutex::new(None),
         commands: Mutex::new(Weak::new()),
+        failure: failure.clone(),
     };
     let host = EditorHost::new(Editor::new(), ui);
     let writer = out.clone();
@@ -357,7 +375,16 @@ pub fn run(args: &[String], io: Io) -> i32 {
     match (killed, result) {
         (Some(code), _) => code,
         (None, Ok(())) => 0,
-        (None, Err(error)) => fail(&error),
+        (None, Err(error)) => {
+            // マクロの中のコマンドの失敗を捕まえなかったときは, Emacs と同じく, 繰り返しの数を前置きにする
+            let failed = failure.lock().unwrap().take();
+            match failed {
+                Some((done, text)) if text == error => {
+                    fail(&format!("After {done} kbd macro iterations: {error}"))
+                }
+                _ => fail(&error),
+            }
+        }
     }
 }
 

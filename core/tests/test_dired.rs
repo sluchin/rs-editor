@@ -235,3 +235,42 @@ fn test_dired_jump_goes_to_the_line_of_the_file_and_up_a_level() {
     assert_eq!(host.editor().current_buffer_name(), "/");
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn test_directory_files_rename_file_and_while() {
+    let (ev, host) = setup();
+    let dir = temp_dir("files");
+    let d = dir.display();
+    let run = |code: &str| ev.eval_with(code, &host);
+    // . と .. を含み, 名前の順
+    assert_eq!(
+        run(&format!("(directory-files \"{d}\")")).unwrap(),
+        r#"("." ".." "a.txt" "sub")"#
+    );
+    assert_eq!(
+        run(&format!("(directory-files \"{d}\" #t \"^a\")")).unwrap(),
+        format!("(\"{d}/a.txt\")")
+    );
+    assert!(run(&format!("(directory-files \"{d}/none\")")).is_err());
+    assert!(run(&format!("(directory-files \"{d}\" #f \"(\")")).is_err());
+    assert!(run("(directory-files)").is_err());
+    // rename-file: 既にあれば失敗. 3 つ目が真なら置き換える
+    std::fs::write(dir.join("b.txt"), "b").unwrap();
+    run(&format!("(rename-file \"{d}/a.txt\" \"{d}/c.txt\")")).unwrap();
+    assert!(!dir.join("a.txt").exists() && dir.join("c.txt").exists());
+    assert!(run(&format!("(rename-file \"{d}/b.txt\" \"{d}/c.txt\")")).is_err());
+    run(&format!("(rename-file \"{d}/b.txt\" \"{d}/c.txt\" #t)")).unwrap();
+    assert_eq!(std::fs::read_to_string(dir.join("c.txt")).unwrap(), "b");
+    assert!(run(&format!("(rename-file \"{d}/none\" \"{d}/x\")")).is_err());
+    assert!(run("(rename-file \"a\")").is_err());
+    // while
+    assert_eq!(
+        run("(let ((i 0) (sum 0)) (while (< i 4) (set! sum (+ sum i)) (set! i (+ i 1))) sum)")
+            .unwrap(),
+        "6"
+    );
+    assert_eq!(run("(while #f 1)").unwrap(), "nil");
+    assert!(run("(while)").is_err());
+    // ding: 鳴らせない画面でも失敗しない
+    assert_eq!(run("(ding)").unwrap(), "nil");
+}

@@ -410,3 +410,55 @@ fn test_macro_messages_and_end_key_are_quiet_while_executing() {
     assert_eq!(out, "#f");
     assert_eq!(err, "Defining kbd macro...\n");
 }
+
+#[test]
+fn test_ding_writes_the_bell_to_standard_output() {
+    let (_, out, err) = batch(&["--eval", "(begin (ding) (message \"m\"))"], "");
+    assert_eq!(out, "\u{7}");
+    // 標準出力に出した後の message は、改行から始まる
+    assert_eq!(err, "\nm\n");
+}
+
+#[test]
+fn test_uncaught_macro_failure_tells_the_iterations() {
+    let make = "(switch-to-buffer (generate-new-buffer \"b\"))";
+    let (status, _, err) = batch(
+        &[
+            "--eval",
+            &format!("(begin {make} (execute-kbd-macro (kbd \"x C-f\") 2))"),
+        ],
+        "",
+    );
+    assert_eq!(status, ERROR_STATUS);
+    assert_eq!(err, "After 0 kbd macro iterations: End of buffer\n");
+    // 捕まえた失敗の後の, 別のエラーには付けない
+    let code = format!(
+        "(begin {make} (condition-case e (execute-kbd-macro (kbd \"C-f\")) (error 1)) (error \"other\"))"
+    );
+    let (_, _, err) = batch(&["--eval", &code], "");
+    assert_eq!(err, "other\n");
+}
+
+#[test]
+fn test_dired_keys_delete_copy_rename_and_create() {
+    let dir = tempfile::tempdir().unwrap();
+    for name in ["f1", "f2", "f3"] {
+        std::fs::write(dir.path().join(name), name).unwrap();
+    }
+    let d = dir.path().display();
+    let code = format!(
+        concat!(
+            "(begin (switch-to-buffer (dired-noselect \"{}\"))",
+            " (execute-kbd-macro (kbd \"d x y e s RET\"))",
+            " (execute-kbd-macro (kbd \"+ n e w RET\"))",
+            " (execute-kbd-macro (kbd \"C f 9 RET\"))",
+            " (execute-kbd-macro (kbd \"R f 8 RET\"))",
+            " (execute-kbd-macro (kbd \"m U u g\"))",
+            " (princ (directory-files \"{}\")))",
+        ),
+        d, d
+    );
+    let (status, out, _) = batch(&["--eval", &code], "");
+    assert_eq!(status, 0);
+    assert_eq!(out, "(. .. f3 f8 f9 new)");
+}
