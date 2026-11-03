@@ -315,7 +315,7 @@ fn test_list_procedures() {
         "(b 2)\n#f"
     );
     assert_eq!(eval("(member 2 '(1 2 3)) (member 9 '(1))"), "(2 3)\n#f");
-    assert_eq!(eval_err("(member 1 2)"), "member expects lists");
+    assert_eq!(eval_err("(member 1 2)"), "Wrong type argument: listp, 2");
     assert_eq!(eval("()"), "()");
 }
 
@@ -562,10 +562,13 @@ fn test_evaluator_reports_the_errors() {
         ("(1 2)", "Not a procedure: 1"),
         ("undefined", "Unbound variable: undefined"),
         ("(-)", "- expects at least one argument"),
-        ("(- \"a\")", "- expects numbers"),
-        ("(* 2 #t)", "* expects numbers"),
+        (
+            "(- \"a\")",
+            "Wrong type argument: number-or-marker-p, \"a\"",
+        ),
+        ("(* 2 #t)", "Wrong type argument: number-or-marker-p, #t"),
         ("(/ 1)", "/ expects at least two arguments"),
-        ("(/ #f 1)", "/ expects numbers"),
+        ("(/ #f 1)", "Wrong type argument: number-or-marker-p, #f"),
         ("(quote 1 2)", "quote expects 1 argument"),
         ("(if 1)", "if expects 2 or 3 arguments"),
         ("(define)", "define expects a name and a value"),
@@ -598,29 +601,26 @@ fn test_evaluator_reports_the_errors() {
             "(define (f a . r) a) (f)",
             "f expects at least 1 arguments, given 0",
         ),
-        ("(< 'a)", "< expects numbers"),
+        ("(< 'a)", "Wrong type argument: number-or-marker-p, a"),
         ("(<)", "< expects at least one argument"),
         ("(max)", "max expects at least one argument"),
         ("(abs 1 2)", "abs expects 1 argument, given 2"),
         ("(eq? 1)", "eq? expects 2 arguments, given 1"),
         ("(point 1)", "point expects 0 arguments, given 1"),
         ("(modulo 1 0)", "modulo: division by zero"),
-        ("(zero? 'a)", "zero? expects numbers"),
+        ("(zero? 'a)", "Wrong type argument: number-or-marker-p, a"),
         ("(car '())", "car expects a non-empty list"),
         ("(cons 1 2)", "cons expects a list as the second argument"),
-        ("(length 1)", "length expects lists"),
+        ("(length 1)", "Wrong type argument: sequencep, 1"),
         ("(list-ref '(1) 1)", "list-ref: index out of range"),
-        (
-            "(list-ref '(1) -1)",
-            "list-ref expects a non-negative integer index",
-        ),
+        ("(list-ref '(1) -1)", "Wrong type argument: integerp, -1"),
         ("(map car)", "map expects a procedure and lists"),
         ("(map)", "map expects a procedure and lists"),
-        ("(map car 1)", "map expects lists"),
+        ("(map car 1)", "Wrong type argument: sequencep, 1"),
         ("(apply)", "apply expects a procedure and a list"),
         ("(apply +)", "apply expects a procedure and a list"),
         ("(assoc 1 '(1))", "assoc expects a list of lists"),
-        ("(string-length 1)", "string-length expects strings"),
+        ("(string-length 1)", "Wrong type argument: stringp, 1"),
         ("(substring \"a\")", "substring expects 2 or 3 arguments"),
         ("(substring \"abc\" 2 1)", "substring: index out of range"),
         ("(substring \"abc\" 0 9)", "substring: index out of range"),
@@ -629,11 +629,20 @@ fn test_evaluator_reports_the_errors() {
         ("(format \"%s\")", "format: not enough arguments"),
         ("(format \"%q\" 1)", "format: invalid directive"),
         ("(format \"%\")", "format: not enough arguments"),
-        ("(format \"%d\" \"a\")", "format expects numbers"),
-        ("(goto-char \"a\")", "goto-char expects numbers"),
-        ("(delete-region 1 \"a\")", "delete-region expects numbers"),
-        ("(insert 1)", "insert expects strings"),
-        ("(message 1)", "format expects strings"),
+        (
+            "(format \"%d\" \"a\")",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
+        ),
+        (
+            "(goto-char \"a\")",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
+        ),
+        (
+            "(delete-region 1 \"a\")",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
+        ),
+        ("(insert 1)", "Wrong type argument: stringp, 1"),
+        ("(message 1)", "Wrong type argument: stringp, 1"),
         (
             "(call-interactively 1)",
             "call-interactively expects a command name",
@@ -643,10 +652,10 @@ fn test_evaluator_reports_the_errors() {
             "global-set-key expects a key and a command name",
         ),
         ("(even? 1.5)", "even? expects an integer"),
-        ("(filter car 1)", "filter expects lists"),
+        ("(filter car 1)", "Wrong type argument: sequencep, 1"),
         (
             "(filter (lambda (x) (car x)) '(1))",
-            "car expects a non-empty list",
+            "Wrong type argument: listp, 1",
         ),
     ];
     for (code, expected) in cases {

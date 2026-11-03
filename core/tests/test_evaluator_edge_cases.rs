@@ -148,7 +148,10 @@ mod evaluator_edge_cases {
 
     #[test]
     fn test_operator_with_wrong_type_errors() {
-        assert_eq!(eval_err("(+ \"hello\" 1)"), "+ expects numbers");
+        assert_eq!(
+            eval_err("(+ \"hello\" 1)"),
+            "Wrong type argument: number-or-marker-p, \"hello\""
+        );
     }
 
     #[test]

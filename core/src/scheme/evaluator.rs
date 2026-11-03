@@ -1311,6 +1311,17 @@ fn error_data(kind: &str, message: String) -> Vec<Value> {
                 .unwrap_or(&pattern);
             vec![Value::String(pattern.to_string())]
         }
+        "wrong-type-argument" => {
+            // "Wrong type argument: 述語, 値" を, 述語の記号と, 値 (読み直す) にする
+            let parsed = after("Wrong type argument: ").and_then(|rest| {
+                let (predicate, value) = rest.split_once(", ")?;
+                let value = crate::scheme::parser::Parser::new(value)
+                    .parse_first()
+                    .ok()??;
+                Some(vec![Value::Symbol(predicate.to_string()), value])
+            });
+            parsed.unwrap_or_else(|| vec![Value::String(message)])
+        }
         "file-missing" => {
             // "Opening input file: 理由, パス" か "Cannot open load file: 名前" を, Emacs の 3 つのデータにする
             let parts = message

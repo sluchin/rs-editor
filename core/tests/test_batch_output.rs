@@ -89,7 +89,7 @@ fn test_buffer_name_takes_a_buffer() {
     assert_eq!(eval("(buffer-name \"none\")"), "#f");
     assert_eq!(
         ev.eval_with("(buffer-name 1)", &host),
-        Err("buffer-name expects strings".to_string())
+        Err("Wrong type argument: stringp, 1".to_string())
     );
     assert_eq!(
         ev.eval_with("(buffer-name \"a\" \"b\")", &host),

@@ -212,7 +212,7 @@ fn test_files() {
         .starts_with(&blocked.display().to_string()));
     assert_eq!(
         eval_err("(write-file-string \"/tmp/x\" 1)"),
-        "write-file-string expects strings"
+        "Wrong type argument: stringp, 1"
     );
     assert_eq!(
         eval_err("(directory-files-recursively \"/\" \"(\")"),
@@ -254,7 +254,7 @@ fn test_expand_file_name() {
     );
     assert_eq!(
         eval_err("(expand-file-name 1)"),
-        "expand-file-name expects strings"
+        "Wrong type argument: stringp, 1"
     );
 }
 
@@ -298,7 +298,7 @@ fn test_load() {
         format!("{}: Unclosed list", broken.display())
     );
     let failing = dir.path().join("failing.sl");
-    fs::write(&failing, "(car 1)").unwrap();
+    fs::write(&failing, "(car '())").unwrap();
     assert_eq!(
         ev.eval(&format!("(load {})", quoted(&failing)))
             .unwrap_err(),
@@ -514,7 +514,7 @@ fn test_grep() {
     );
     assert_eq!(
         eval_err("(rust-grep \"a\" '(1))"),
-        "rust-grep expects strings"
+        "Wrong type argument: stringp, 1"
     );
 }
 
@@ -546,7 +546,7 @@ fn test_strings() {
     );
     assert_eq!(
         eval_err("(string-join '(1))"),
-        "string-join expects strings"
+        "Wrong type argument: stringp, 1"
     );
     assert_eq!(
         eval_err("(string-join)"),
@@ -589,7 +589,10 @@ fn test_sort() {
         eval("(sort '((1 a) (0 b) (1 c) (0 d)) (lambda (x y) (< (car x) (car y))))"),
         "((0 b) (0 d) (1 a) (1 c))"
     );
-    assert_eq!(eval_err("(sort '(1 a) <)"), "< expects numbers");
+    assert_eq!(
+        eval_err("(sort '(1 a) <)"),
+        "Wrong type argument: number-or-marker-p, a"
+    );
 }
 
 #[test]
@@ -669,15 +672,15 @@ fn test_editor_settings() {
         ),
         (
             "(set-face-attribute 'default #f :family 1)",
-            "set-face-attribute expects strings",
+            "Wrong type argument: stringp, 1",
         ),
         (
             "(set-face-attribute 'default #f :height \"a\")",
-            "set-face-attribute expects numbers",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
         ),
         (
             "(set-face-attribute 'default #f :foreground 1)",
-            "set-face-attribute expects strings",
+            "Wrong type argument: stringp, 1",
         ),
         (
             "(local-set-key 1 'a)",
@@ -685,13 +688,13 @@ fn test_editor_settings() {
         ),
         ("(local-set-key \"\" 'a)", "Invalid key: \"\""),
         ("(read-string)", "read-string expects 1 to 5 arguments"),
-        ("(read-string 1)", "read-string expects strings"),
-        ("(read-string \"a\" 1)", "read-string expects strings"),
+        ("(read-string 1)", "Wrong type argument: stringp, 1"),
+        ("(read-string \"a\" 1)", "Wrong type argument: stringp, 1"),
         (
             "(pop-to-buffer-same-window 1)",
-            "pop-to-buffer-same-window expects strings",
+            "Wrong type argument: stringp, 1",
         ),
-        ("(find-file 1)", "expand-file-name expects strings"),
+        ("(find-file 1)", "Wrong type argument: stringp, 1"),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
     }
@@ -769,7 +772,7 @@ fn test_buffer_operations() {
         ),
         (
             "(window--display-buffer \"b\" \"x\")",
-            "display-buffer expects numbers",
+            "Wrong type argument: integer-or-marker-p, \"x\"",
         ),
         (
             "(unhighlight-regexp 1)",
@@ -779,9 +782,9 @@ fn test_buffer_operations() {
             "(buffer-file-name \"a\" \"b\")",
             "buffer-file-name expects 0 or 1 arguments",
         ),
-        ("(kill-buffer 1)", "kill-buffer expects strings"),
+        ("(kill-buffer 1)", "Wrong type argument: stringp, 1"),
         ("(key-binding)", "key-binding expects 1 argument, given 0"),
-        ("(key-binding 1)", "key-binding expects strings"),
+        ("(key-binding 1)", "Wrong type argument: stringp, 1"),
         (
             "(all-key-bindings 1)",
             "all-key-bindings expects 0 arguments, given 1",
@@ -848,13 +851,16 @@ fn test_read_with_defaults() {
         vec!["alpha", "beta"]
     );
     for (code, error) in [
-        ("(read-string \"a\" #f #f 1)", "read-string expects strings"),
         (
-            "(completing-read \"a\" '(\"b\") #f #f #f #f '(1))",
-            "completing-read expects strings",
+            "(read-string \"a\" #f #f 1)",
+            "Wrong type argument: stringp, 1",
         ),
         (
-            "(completing-read \"a\" '(\"b\") (lambda (x) (car 1)))",
+            "(completing-read \"a\" '(\"b\") #f #f #f #f '(1))",
+            "Wrong type argument: stringp, 1",
+        ),
+        (
+            "(completing-read \"a\" '(\"b\") (lambda (x) (car '())))",
             "car expects a non-empty list",
         ),
         (
@@ -913,7 +919,7 @@ fn test_hooks() {
             "Unbound variable: nothing",
         ),
         (
-            "(add-hook 'h2 (lambda () (car 1))) (run-hooks 'h2)",
+            "(add-hook 'h2 (lambda () (car '()))) (run-hooks 'h2)",
             "car expects a non-empty list",
         ),
     ] {
@@ -954,17 +960,17 @@ fn test_org_editor_operations() {
         ),
         (
             "(outline-flag-region 1 \"a\" #t)",
-            "outline-flag-region expects numbers",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
         ),
         (
             "(outline-invisible-p \"a\")",
-            "outline-invisible-p expects numbers",
+            "Wrong type argument: integer-or-marker-p, \"a\"",
         ),
         (
             "(outline-invisible-p 1 2)",
             "outline-invisible-p expects 0 or 1 arguments",
         ),
-        ("(string-width 1)", "string-width expects strings"),
+        ("(string-width 1)", "Wrong type argument: stringp, 1"),
     ] {
         assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error, "{}", code);
     }
@@ -1004,7 +1010,7 @@ fn test_browse_url() {
     );
     assert_eq!(
         ev.eval("(browse-url 1)").unwrap_err(),
-        "browse-url expects strings"
+        "Wrong type argument: stringp, 1"
     );
     assert_eq!(
         ev.eval("(set! browse-url-generic-program 1) (browse-url \"x\")")
@@ -1057,7 +1063,7 @@ fn test_read_file_name() {
             "(read-file-name)",
             "read-file-name expects 1 to 6 arguments",
         ),
-        ("(read-file-name 1)", "read-file-name expects strings"),
+        ("(read-file-name 1)", "Wrong type argument: stringp, 1"),
     ] {
         assert_eq!(ev.eval_with(code, &editor).unwrap_err(), error, "{}", code);
     }
@@ -1119,6 +1125,6 @@ fn test_call_shell_command() {
     );
     assert_eq!(
         ev.eval("(call-shell-command 1 #f #f)").unwrap_err(),
-        "call-shell-command expects strings"
+        "Wrong type argument: stringp, 1"
     );
 }

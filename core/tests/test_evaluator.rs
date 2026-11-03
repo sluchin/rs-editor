@@ -185,6 +185,39 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Opening input file",
         ),
         (
+            "(+ 1 \"a\")",
+            "(number-or-marker-p \"a\")",
+            "Wrong type argument: number-or-marker-p, \"a\"",
+        ),
+        ("(abs 'a)", "(numberp a)", "Wrong type argument: numberp, a"),
+        ("(car 1)", "(listp 1)", "Wrong type argument: listp, 1"),
+        (
+            "(length 1)",
+            "(sequencep 1)",
+            "Wrong type argument: sequencep, 1",
+        ),
+        ("(member 1 2)", "(listp 2)", "Wrong type argument: listp, 2"),
+        (
+            "(string-length 1)",
+            "(stringp 1)",
+            "Wrong type argument: stringp, 1",
+        ),
+        (
+            "(list-ref '(1) \"a\")",
+            "(integerp \"a\")",
+            "Wrong type argument: integerp, \"a\"",
+        ),
+        (
+            "(error \"Wrong type argument: odd\")",
+            "(\"Wrong type argument: odd\")",
+            "Wrong type argument: odd",
+        ),
+        (
+            "(error \"Wrong type argument: p, )\")",
+            "(\"Wrong type argument: p, )\")",
+            "Wrong type argument: p, )",
+        ),
+        (
             "(error \"Unbound variable\")",
             "(\"Unbound variable\")",
             "Unbound variable",

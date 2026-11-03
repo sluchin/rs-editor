@@ -366,11 +366,11 @@ fn test_wrong_argument_types_at_the_host() {
     let bad = |op: &str, args: Vec<Value>| host.call(op, args).unwrap_err();
     assert_eq!(
         bad("goto-char", vec![Value::String("x".into())]),
-        "goto-char expects a number"
+        "Wrong type argument: integer-or-marker-p, \"x\""
     );
     assert_eq!(
         bad("kill-new", vec![Value::Number(1.0)]),
-        "kill-new expects a string"
+        "Wrong type argument: stringp, 1"
     );
     assert_eq!(
         bad("set-syntax-dialect", vec![Value::Number(1.0)]),

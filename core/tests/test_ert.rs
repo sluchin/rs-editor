@@ -51,12 +51,12 @@ fn test_passing_and_failing_tests() {
   :tags '(quick)
   (should (= (+ 1 1) 2))
   (should-not (string=? "a" "b"))
-  (should (equal (should-error (car 1)) '(error "car expects a non-empty list")))
-  (should-error (car 1) :type 'wrong-type-argument))
+  (should (equal (should-error (car '())) '(error "car expects a non-empty list")))
+  (should-error (car '()) :type 'wrong-type-argument))
 (ert-deftest fail-test () (should (equal (+ 1 1) 3)))
 (ert-deftest fail-not-test () (should-not (+ 1 1)))
 (ert-deftest no-error-test () (should-error (+ 1 2)))
-(ert-deftest error-test () (car 1))
+(ert-deftest error-test () (car '()))
 (ert-deftest special-test () (should (and #t #f)))
 (ert-deftest expected-failure-test () :expected-result :failed (should #f))
 (ert-deftest unexpected-pass-test () :expected-result :failed (should #t))
@@ -209,15 +209,16 @@ fn test_errors() {
     }
     // 引数の評価が失敗する should, :tags の評価が失敗する
     assert_eq!(
-        ev.eval("(should (= 1 (car 1)))").unwrap_err(),
+        ev.eval("(should (= 1 (car '())))").unwrap_err(),
         "car expects a non-empty list"
     );
     assert_eq!(
-        ev.eval("(ert-deftest t2 () :tags (car 1) 1)").unwrap_err(),
+        ev.eval("(ert-deftest t2 () :tags (car '()) 1)")
+            .unwrap_err(),
         "car expects a non-empty list"
     );
     assert_eq!(
-        ev.eval("(ert-deftest t3 () :expected-result (car 1))")
+        ev.eval("(ert-deftest t3 () :expected-result (car '()))")
             .unwrap_err(),
         "car expects a non-empty list"
     );
@@ -238,14 +239,14 @@ fn test_unwind_protect() {
     );
     // 本体が失敗しても, 後始末をして, 失敗を返す
     assert_eq!(
-        ev.eval("(unwind-protect (car 1) (set! log '(done)))")
+        ev.eval("(unwind-protect (car '()) (set! log '(done)))")
             .unwrap_err(),
         "car expects a non-empty list"
     );
     assert_eq!(ev.eval("log").unwrap(), "(done)");
     // 後始末の失敗
     assert_eq!(
-        ev.eval("(unwind-protect 1 (car 1))").unwrap_err(),
+        ev.eval("(unwind-protect 1 (car '()))").unwrap_err(),
         "car expects a non-empty list"
     );
 }
@@ -284,12 +285,12 @@ fn test_temp_files() {
             "(make-temp-file)",
             "make-temp-file expects 1 or 2 arguments",
         ),
-        ("(make-temp-file 1)", "make-temp-file expects strings"),
+        ("(make-temp-file 1)", "Wrong type argument: stringp, 1"),
         (
             "(delete-directory)",
             "delete-directory expects 1 or 2 arguments",
         ),
-        ("(delete-directory 1)", "delete-directory expects strings"),
+        ("(delete-directory 1)", "Wrong type argument: stringp, 1"),
     ] {
         assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);
     }

@@ -352,14 +352,14 @@ fn test_save_restriction_form() {
     assert_eq!(
         eval(
             text,
-            "(narrow-to-region 4 7) (save-restriction (widen) (car 1)) (buffer-narrowed-p)"
+            "(narrow-to-region 4 7) (save-restriction (widen) (car '())) (buffer-narrowed-p)"
         ),
         "error: car expects a non-empty list"
     );
     assert_eq!(
         eval(
             text,
-            "(narrow-to-region 4 7) (unwind-protect (save-restriction (widen) (car 1)) #t) 1"
+            "(narrow-to-region 4 7) (unwind-protect (save-restriction (widen) (car '())) #t) 1"
         ),
         "error: car expects a non-empty list"
     );

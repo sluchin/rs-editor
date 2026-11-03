@@ -155,7 +155,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-44 | `44-error-kinds` | エラーの種類 (`(car e)`) と、種類の名前の `condition-case` の節。`end-of-buffer`、`search-failed`、`args-out-of-range`、`arith-error` など |
 | E-45 | `45-major-mode` | `major-mode` の名前 (`fundamental-mode`、`emacs-lisp-mode`、`.el` を開いたとき)、`emacs-lisp-mode` などのコマンド |
 | E-46 | `46-string-match` | `string-match`、`string-match-p`、文字列の `match-beginning`、`match-end`、`match-data`、`match-string N STRING`、開始位置、`case-fold-search`、範囲外 |
-| E-47 | `47-error-data` | エラーのデータ (`(cdr e)`): `error` はメッセージ、`end-of-buffer` などは空、`search-failed` は探した文字列、`void-variable` と `void-function` は記号。`error-message-string` |
+| E-47 | `47-error-data` | エラーのデータ (`(cdr e)`): `error` はメッセージ、`end-of-buffer` などは空、`search-failed` は探した文字列、`void-variable` と `void-function` は記号、`file-missing` は 3 つの文字列、`wrong-type-argument` は述語 (`number-or-marker-p`、`listp`、`stringp` など) と値。`error-message-string` |
 | E-48 | `48-dired-add` | dired でコピー、名前の変更、ディレクトリの作成の後の行の並び (Emacs は点の行の前に足し、並べ直さない) |
 | E-49 | `49-regexp-syntax` | 正規表現の書き方: `\s-`、`\w`、`\_<`、`\<`、`\b`、`\{n,m\}`、`[[:alpha:]]`、後方参照、`\(?:`、非貪欲、`[]a]`、`^` と `$`、特別でない括弧と波括弧と縦線 |
 
@@ -169,7 +169,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
-| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47。`file-missing` の 3 つのデータも)。`wrong-type-argument` (型の述語と値) と `args-out-of-range` (対象と位置) のデータは、メッセージの文字列 1 つ |
+| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47)。`wrong-type-argument` の述語は、算術と比較 (`number-or-marker-p`)、`abs` (`numberp`)、位置と数 (`integer-or-marker-p`)、`car` と `member` など (`listp`)、並び (`sequencep`)、文字列 (`stringp`)、添え字 (`integerp`) だけ合わせた。`args-out-of-range` (対象と位置) は、メッセージの文字列 1 つ。`(car '())` は Emacs では nil だが、rs-editor は失敗にする |
 | dired の一覧の並び | コピー、名前の変更、ディレクトリの作成の後の並びは合わせた (試験 E-48。一覧は作り直し、前の並びに戻して、新しい行を点の行の前に置く)。日付や大きさは比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 

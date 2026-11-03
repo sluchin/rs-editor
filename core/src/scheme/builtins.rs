@@ -259,7 +259,8 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                     // 配列は写さない (cdr でたどるループが, 長さの 2 乗にならないように)
                     Value::List(items.tail())
                 }),
-                _ => Err(format!("{} expects a non-empty list", name)),
+                Value::List(_) => Err(format!("{} expects a non-empty list", name)),
+                other => Err(wrong_type("listp", &other)),
             }
         }
         "caar" | "cadr" | "cdar" | "cddr" | "caddr" => {
@@ -387,7 +388,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         "member" => {
             let [key, v] = fixed::<2>(name, args)?;
             let Value::List(items) = v else {
-                return Err(format!("{} expects lists", name));
+                return Err(wrong_type(list_predicate(name), &v));
             };
             Ok(match items.iter().position(|item| *item == key) {
                 Some(i) => Value::List(items.drop_front(i)),
@@ -1276,7 +1277,39 @@ fn arity_error(name: &str, expected: usize, given: usize) -> String {
 pub(crate) fn number(name: &str, v: &Value) -> Result<f64, String> {
     match v {
         Value::Number(n) => Ok(*n),
-        _ => Err(format!("{} expects numbers", name)),
+        _ => Err(wrong_type(number_predicate(name), v)),
+    }
+}
+
+/// Emacs の `wrong-type-argument` の失敗の内容 (`Wrong type argument: 述語, 値`).
+///
+/// # Arguments
+///
+/// * `predicate` - 合わなかった述語の名前 (`listp`, `stringp` など).
+/// * `value` - 渡された値.
+///
+/// # Returns
+///
+/// 失敗の内容.
+pub(crate) fn wrong_type(predicate: &str, value: &Value) -> String {
+    format!("Wrong type argument: {predicate}, {value}")
+}
+
+/// 手続きが数を求める述語の名前 (Emacs と同じ): 算術と比較は `number-or-marker-p`, `abs` は `numberp`, ほかは位置などの `integer-or-marker-p`.
+fn number_predicate(name: &str) -> &'static str {
+    match name {
+        "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "=" | "min" | "max" | "zero?"
+        | "zerop" | "modulo" | "mod" | "1+" | "1-" => "number-or-marker-p",
+        "abs" => "numberp",
+        _ => "integer-or-marker-p",
+    }
+}
+
+/// 手続きがリストを求める述語の名前 (Emacs と同じ): リストだけを取るものは `listp`, 並び全体を取るものは `sequencep`.
+fn list_predicate(name: &str) -> &'static str {
+    match name {
+        "member" | "memq" | "assoc" | "assq" | "apply" | "nth" | "car" | "cdr" => "listp",
+        _ => "sequencep",
     }
 }
 
@@ -1304,10 +1337,10 @@ fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, String> {
 /// # Returns
 ///
 /// 添え字. 0 以上の整数でない場合は [`Err`].
-pub(crate) fn index(name: &str, v: &Value) -> Result<usize, String> {
+pub(crate) fn index(_name: &str, v: &Value) -> Result<usize, String> {
     match v {
         Value::Number(n) if *n >= 0.0 && n.fract() == 0.0 => Ok(*n as usize),
-        _ => Err(format!("{} expects a non-negative integer index", name)),
+        _ => Err(wrong_type("integerp", v)),
     }
 }
 
@@ -1321,10 +1354,10 @@ pub(crate) fn index(name: &str, v: &Value) -> Result<usize, String> {
 /// # Returns
 ///
 /// 文字列. 文字列でない場合は [`Err`].
-pub(crate) fn string<'v>(name: &str, v: &'v Value) -> Result<&'v str, String> {
+pub(crate) fn string<'v>(_name: &str, v: &'v Value) -> Result<&'v str, String> {
     match v {
         Value::String(s) => Ok(s),
-        _ => Err(format!("{} expects strings", name)),
+        _ => Err(wrong_type("stringp", v)),
     }
 }
 
@@ -1362,7 +1395,7 @@ fn optional_buffer(name: &str, args: Vec<Value>) -> Result<Vec<Value>, String> {
 fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
     match v {
         Value::List(items) => Ok(items),
-        _ => Err(format!("{} expects lists", name)),
+        _ => Err(wrong_type(list_predicate(name), v)),
     }
 }
 
@@ -1482,6 +1515,9 @@ fn format(args: &[Value]) -> Result<String, String> {
 fn error_text(items: &[Value]) -> String {
     let kind = items.first().map(Value::to_display).unwrap_or_default();
     let data = items.get(1);
+    if let ("wrong-type-argument", [_, predicate, value]) = (kind.as_str(), items) {
+        return wrong_type(&predicate.to_display(), value);
+    }
     if let ("file-missing", [_, what, reason, path]) = (kind.as_str(), items) {
         return format!(
             "{}: {}, {}",

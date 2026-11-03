@@ -15,6 +15,7 @@ use crate::editor::{prefix_numeric_value, Editor, PrefixArg, GLOBAL_MARK_RING_MA
 use crate::files;
 use crate::indent::{self, Config as IndentConfig, Plan};
 use crate::paragraph::{forward_paragraph, forward_sentence};
+use crate::scheme::builtins;
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::search::{CharSet, Pattern};
@@ -234,10 +235,13 @@ fn at_opt(pos: Option<usize>) -> Value {
 }
 
 /// 引数の数を取り出します.
-fn number(op: &str, args: &[Value], i: usize) -> Result<f64, String> {
+fn number(_op: &str, args: &[Value], i: usize) -> Result<f64, String> {
     match args.get(i) {
         Some(Value::Number(n)) => Ok(*n),
-        _ => Err(format!("{op} expects a number")),
+        other => Err(builtins::wrong_type(
+            "integer-or-marker-p",
+            other.unwrap_or(&Value::Nil),
+        )),
     }
 }
 
@@ -268,10 +272,13 @@ fn pos_opt(op: &str, args: &[Value], i: usize) -> Result<Option<usize>, String> 
 }
 
 /// 文字列の引数.
-fn text<'a>(op: &str, args: &'a [Value], i: usize) -> Result<&'a str, String> {
+fn text<'a>(_op: &str, args: &'a [Value], i: usize) -> Result<&'a str, String> {
     match args.get(i) {
         Some(Value::String(s)) => Ok(s),
-        _ => Err(format!("{op} expects a string")),
+        other => Err(builtins::wrong_type(
+            "stringp",
+            other.unwrap_or(&Value::Nil),
+        )),
     }
 }
 
