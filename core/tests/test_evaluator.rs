@@ -102,3 +102,34 @@ fn remembers_definitions_between_evaluations() {
     assert_eq!(eval.eval("(define x 10)").unwrap(), "x");
     assert_eq!(eval.eval("(* x 2)").unwrap(), "20");
 }
+
+#[test]
+fn condition_case_tells_the_kind_of_the_error() {
+    let eval = Evaluator::new();
+    // (car e) は、エラーの種類. 知らないメッセージは error
+    for (code, kind) in [
+        ("(/ 1 0)", "arith-error"),
+        ("(modulo 1 0)", "arith-error"),
+        ("zzz", "void-variable"),
+        ("(error \"End of buffer\")", "end-of-buffer"),
+        ("(error \"Search failed: \\\"x\\\"\")", "search-failed"),
+        ("(error \"boom\")", "error"),
+    ] {
+        let code = format!("(condition-case e {code} (error (car e)))");
+        assert_eq!(eval.eval(&code).unwrap(), kind, "{code}");
+    }
+    // 種類の名前の節と、変数が nil の節
+    assert_eq!(
+        eval.eval("(condition-case e (/ 1 0) (end-of-buffer 1) (arith-error 2))")
+            .unwrap(),
+        "2"
+    );
+    assert_eq!(
+        eval.eval("(condition-case nil (/ 1 0) (error 3))").unwrap(),
+        "3"
+    );
+    // 合わない節は通り抜ける
+    assert!(eval
+        .eval("(condition-case nil (/ 1 0) (end-of-buffer 1))")
+        .is_err());
+}

@@ -10,6 +10,7 @@
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
+# 標準入力は cases/NAME.in (あれば). 無ければ空.
 # 試験は cases/NAME.el (Emacs Lisp) と cases/NAME.scm (Scheme) の対. どちらも空のディレクトリで動かし、
 #   標準出力、終了コード、動かした後のディレクトリのファイル (名前と中身) を比べる.
 # 動かす前に、作業用のディレクトリに次のファイルを置く.
@@ -75,7 +76,7 @@ run() {
   (
     cd "$dir" || exit 2
     # 標準出力と標準エラー出力は、別々に書く (Emacs は標準出力を溜めてから出すので、混ぜると順序が合わない)
-    "$@" < /dev/null 2> "$dir.err"
+    "$@" < "${input:-/dev/null}" 2> "$dir.err"
     echo "== status: $?"
     if [ "$stderr" = 1 ]; then
       echo "== stderr"
@@ -86,7 +87,7 @@ run() {
       echo "--- $f"
       cat "$f"
     done
-  ) | sed "s|$dir|@T@|g" | sed -e ":a;N;\$!ba;s/\\n\\nError: .*\\n== status:/\\n== status:/" > "$dir.out"
+  ) | sed "s|$dir|@T@|g" | sed -e ":a;N;\$!ba;s/\\n\\nError: .*\\n== status:/\\n== status:/;s/\\nError: .*\\n== status:/== status:/" > "$dir.out"
 }
 
 emacs_cmd() { timeout 60 "$EMACS" -Q --batch --eval '(setq create-lockfiles nil)' "$@"; }
@@ -119,6 +120,9 @@ for name in $names; do
       run "$e" emacs_cmd --script "$case_dir/s.el"
       run "$r" rs_cmd --script "$case_dir/s.scm" ;;
     *)
+      # 標準入力は、cases/NAME.in があればそれ (無ければ空)
+      input=/dev/null
+      [ -f "$here/cases/$name.in" ] && input="$here/cases/$name.in"
       run "$e" emacs_cmd -l "$here/cases/$name.el"
       if [ -f "$here/cases/$name.scm" ]; then
         run "$r" rs_cmd -l "$here/cases/$name.scm"
@@ -126,6 +130,7 @@ for name in $names; do
         echo "SKIP  $name (cases/$name.scm が無い)"; skip=$((skip + 1)); continue
       fi ;;
   esac
+  input=/dev/null
   if diff -u "$e.out" "$r.out" > "$case_dir/diff" 2>&1; then
     echo "PASS  $name"; pass=$((pass + 1))
     [ "$verbose" = 1 ] && sed 's/^/    /' "$e.out"

@@ -58,7 +58,7 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | 引数 `FILE` | FILE を訪れ、現在のバッファにする (`find-file`) |
 | 初期設定ファイル | 読まない |
 | 出力 | `princ`、`prin1`、`print`、`terpri` は標準出力。`message` は標準エラー出力 (改行を付ける) |
-| 入力 | `read-string` などは、打ったことにするキー (`execute-kbd-macro`) が先、無ければ標準入力から読む (試験では空) |
+| 入力 | `read-string` などは、打ったことにするキー (`execute-kbd-macro`) が先、無ければ標準入力から読む (試験では空。`cases/NAME.in` があれば、それ)。標準入力から読むときは、プロンプトを標準出力に出す |
 | キーのコマンド | `execute-kbd-macro` で打ったキーを、その場でコマンドループ (`CommandLoop`) に渡して動かす。動かしている間、`executing-kbd-macro` が真。コマンドが失敗したら、そこで止めてエラーにする。コマンドは、現在のバッファでなく、`switch-to-buffer` したバッファで動く |
 | 終了 | `(kill-emacs N)` で終了コード N。全部評価し終えたら 0 |
 | エラー | 捕まえなかったエラーは標準エラー出力に出し、終了コード 255 |
@@ -151,6 +151,8 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-40 | `40-kbd-macro-errors` | マクロの中のキーが失敗したとき (エラーの文、そこで止まる)、回数 0 (失敗するまで繰り返す)、空のマクロ |
 | E-41 | `41-isearch` | `execute-kbd-macro` で打つ `C-s`、`C-r`、`C-M-s`、`DEL`、`C-g`、`RET`。位置、失敗したときのベル (標準出力の `^G`)、`I-search: ...` の知らせ、大文字小文字、行き過ぎ |
 | E-42 | `42-dired-keys` | dired のキー: `n`、`p`、`d`、`m`、`u`、`U`、`x`、`D`、`C`、`R`、`+`。印、ファイルの有無、知らせ (`Deleting...`、`Copy: 1 of 1`、`1 mark removed`) |
+| E-43 | `43-prompts` | 標準入力 (`43-prompts.in`) から読む `read-string`、`completing-read`、`read-file-name`、`yes-or-no-p`、`y-or-n-p`。標準出力のプロンプト、聞き直しのベルと知らせ、入力が尽きたときのエラー |
+| E-44 | `44-error-kinds` | エラーの種類 (`(car e)`) と、種類の名前の `condition-case` の節。`end-of-buffer`、`search-failed`、`args-out-of-range`、`arith-error` など |
 
 ## 5. 比べない違い
 
@@ -162,15 +164,14 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
-| `yank-pop` (前が `yank` でないとき) | Emacs はプロンプト「Yank from kill-ring: 」を標準出力に出して読む。rs-editor のバッチモードは、プロンプトを標準出力に出さない (`read-string` などすべて同じ)。入力を標準入力から読むところは同じ |
-| エラーの種類 | Emacs Lisp は型付きのエラー (`(car e)` が `end-of-file` など)。Scheme の `condition-case` は型を持たず, `error-message-string` で文を比べる |
-| `while` | Scheme に `while` が無いため、繰り返しの試験 (29 番) は `.scm` を手で書く |
+| エラーのデータ | `(car e)` の種類は同じ (メッセージから決める)。`(cdr e)` は、Emacs が種類ごとのデータ (`search-failed` は探した文字列など) を持つのに対し、rs-editor はメッセージの文字列 1 つ。試験は `error-message-string` で比べる |
 | dired の一覧の並び | ファイルを足した後の並びが違う。Emacs は 1 行だけ足し (並びは位置による)、rs-editor は一覧を作り直す (名前の順。印は引き継ぐ)。試験は、名前を並べ替えて比べる。日付や大きさも比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 
 ## 6. 試験の足し方
 
-1. `tests/batch/cases/NN-name.el` と `NN-name.scm` を、同じ出力になるように書く。20 番より後ろは、`.el` を書いて `tests/batch/tools/gen.py NN-name` で `.scm` を作る (`nil` と `t`、`setq`、`progn`、文字の記法 `?a` を変える)。Scheme に無い書き方 (`while` など) は、`.scm` を手で直し、先頭に `;;; hand-written` と書くと、作り直さない。
+1. `tests/batch/cases/NN-name.el` と `NN-name.scm` を、同じ出力になるように書く。20 番より後ろは、`.el` を書いて `tests/batch/tools/gen.py NN-name` で `.scm` を作る (`nil` と `t`、`setq`、`progn`、文字の記法 `?a` を変える)。Scheme に無い書き方は、`.scm` を手で直し、先頭に `;;; hand-written` と書くと、作り直さない。
 2. 出力は `(princ (format "...\n" ...))` で出す。真偽は文字にする。エラーは `condition-case` で捕まえ、メッセージを出す。
-3. ファイルの中身は、動かした後のディレクトリの比較で見る。わざわざ出さなくてよい。
-4. この文書の 4 章の表に、行を足す。
+3. 標準入力が要る試験は、`cases/NN-name.in` を置く。
+4. ファイルの中身は、動かした後のディレクトリの比較で見る。わざわざ出さなくてよい。
+5. この文書の 4 章の表に、行を足す。

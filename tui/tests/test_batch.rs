@@ -167,11 +167,14 @@ fn test_reading_from_stdin() {
         ],
         "one\r\ntwo\nthree\nxyz\n\n",
     );
-    assert_eq!(out, "(one two three)(x )");
+    assert_eq!(out, "a: f: c: (one two three)kk(x )");
     let (status, _, err) = batch(&["--eval", "(read-string \"a: \")"], "");
     assert_eq!(
         (status, err.as_str()),
-        (ERROR_STATUS, "Error reading from stdin\n")
+        (
+            ERROR_STATUS,
+            "End of file during parsing: Error reading from stdin\n"
+        )
     );
 }
 
@@ -288,7 +291,7 @@ fn test_yank_pop_after_a_non_yank_reads_a_kill() {
         ],
         "first\n",
     );
-    assert_eq!((status, out.as_str()), (0, "first"));
+    assert_eq!((status, out.as_str()), (0, "Yank from kill-ring: first"));
     // 空のキルリング
     let (status, _, err) = batch(
         &[
@@ -377,7 +380,7 @@ fn test_typed_keys_are_read_by_commands() {
         " (princ got))",
     );
     // 最後の read-string は、キーが尽きたので標準入力から
-    assert_eq!(out_of(code, "tail\n"), "(tail a cd x)");
+    assert_eq!(out_of(code, "tail\n"), "p: (tail a cd x)");
 }
 
 #[test]

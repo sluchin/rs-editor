@@ -874,25 +874,33 @@ impl<'a> Machine<'a> {
                 _ => return Err("while expects a test".to_string()),
             },
             "condition-case" => match args {
-                [Value::Symbol(var), body, handlers @ ..] => match self.eval(body, env) {
-                    Ok(value) => Step::Done(value),
-                    Err(message) => {
-                        let handler = handlers.iter().find_map(|handler| match handler {
-                            Value::List(items) => {
-                                handles(&items[0], &message).then(|| items[1..].to_vec())
+                [var @ (Value::Symbol(_) | Value::Boolean(false)), body, handlers @ ..] => {
+                    match self.eval(body, env) {
+                        Ok(value) => Step::Done(value),
+                        Err(message) => {
+                            let handler = handlers.iter().find_map(|handler| match handler {
+                                Value::List(items) => {
+                                    handles(&items[0], &message).then(|| items[1..].to_vec())
+                                }
+                                _ => None,
+                            });
+                            let Some(body) = handler else {
+                                return Err(message);
+                            };
+                            // 変数には, (error "メッセージ") を束ねる
+                            let inner = env.child();
+                            let data = vec![
+                                Value::Symbol(error_kind(&message).to_string()),
+                                Value::String(message),
+                            ];
+                            // 変数が nil (`(condition-case nil ...)`) なら, 束ねない
+                            if let Value::Symbol(var) = var {
+                                inner.define(var, Value::List(data.into()));
                             }
-                            _ => None,
-                        });
-                        let Some(body) = handler else {
-                            return Err(message);
-                        };
-                        // 変数には, (error "メッセージ") を束ねる
-                        let inner = env.child();
-                        let data = vec![Value::Symbol("error".to_string()), Value::String(message)];
-                        inner.define(var, Value::List(data.into()));
-                        self.sequence(&body, &inner)?
+                            self.sequence(&body, &inner)?
+                        }
                     }
-                },
+                }
                 _ => return Err("condition-case expects a variable and a body form".to_string()),
             },
             "unwind-protect" => match args {
@@ -1239,6 +1247,37 @@ fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, 
 
 /// `condition-case` の条件 (記号か記号のリスト) が, 失敗のメッセージを受けるか.
 ///
+/// 失敗のメッセージから, Emacs のエラーの種類 (`condition-case` の節と `(car e)` の記号) を決める. 知らなければ `error`.
+fn error_kind(message: &str) -> &'static str {
+    const PREFIXES: &[(&str, &str)] = &[
+        ("Scan error:", "scan-error"),
+        ("End of buffer", "end-of-buffer"),
+        ("Beginning of buffer", "beginning-of-buffer"),
+        ("Search failed", "search-failed"),
+        ("Args out of range", "args-out-of-range"),
+        ("Buffer is read-only", "buffer-read-only"),
+        ("Text is read-only", "text-read-only"),
+        ("Wrong type argument", "wrong-type-argument"),
+        ("Unbound variable", "void-variable"),
+        ("Symbol's value as variable is void", "void-variable"),
+        ("Symbol's function definition is void", "void-function"),
+        ("/ expects non-zero numbers", "arith-error"),
+        ("Invalid regexp", "invalid-regexp"),
+        ("End of file during parsing", "end-of-file"),
+        ("Opening input file", "file-missing"),
+        ("Cannot open load file", "file-missing"),
+        ("File already exists", "file-already-exists"),
+        ("Quit", "quit"),
+    ];
+    if message.ends_with("division by zero") {
+        return "arith-error";
+    }
+    PREFIXES
+        .iter()
+        .find(|(prefix, _)| message.starts_with(prefix))
+        .map_or("error", |(_, kind)| kind)
+}
+
 /// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.
 /// `error` と `t` は, `quit` 以外の全て. `user-error` は, `scan-error` と `quit` 以外の全て.
 fn handles(conditions: &Value, message: &str) -> bool {
@@ -1255,7 +1294,9 @@ fn handles(conditions: &Value, message: &str) -> bool {
     };
     let scan = message.starts_with("Scan error:");
     let quit = message == "Quit";
+    let kind = error_kind(message);
     names.iter().any(|name| match *name {
+        name if name == kind && kind != "error" => true,
         "scan-error" => scan,
         "quit" => quit,
         "user-error" => !scan && !quit,

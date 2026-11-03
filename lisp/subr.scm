@@ -23,6 +23,11 @@ Other answers ask again."
     (let ((answer (string-trim (read-string ask))))
       (cond ((equal? answer "yes") #t)
             ((equal? answer "no") #f)
+            (noninteractive
+             ;; バッチモードは, ベルと知らせで促し, 同じプロンプトで聞き直す (Emacs と同じ)
+             (ding)
+             (message "Please answer yes or no.")
+             (loop ask))
             (else (loop (string-append "Please answer yes or no.  " prompt "(yes or no) ")))))))
 
 (define (file-name-directory filename)
@@ -80,3 +85,7 @@ In between each pair of results, stick in SEPARATOR (default: the empty string).
 (define (string< a b)
   "Return #t if the first string is less than the second (compared by character code)."
   (string<? a b))
+
+(define (funcall function . arguments)
+  "Call FUNCTION with the remaining arguments."
+  (apply function arguments))

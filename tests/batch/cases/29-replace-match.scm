@@ -1,4 +1,3 @@
-;;; hand-written: Scheme には while が無いので、名前つきの let にした (gen.py は作り直さない)
 (with-current-buffer (generate-new-buffer "b")
   (insert "foo bar foo baz")
   (goto-char 1)
@@ -11,7 +10,7 @@
   (princ (format "%s\n" (if (looking-at "foo") "yes" "no")))
   (princ (format "%s\n" (if (looking-at "bar") "yes" "no")))
   (goto-char 1)
-  (let loop () (when (search-forward "foo" #f #t) (replace-match "Q") (loop)))
+  (while (search-forward "foo" #f #t) (replace-match "Q"))
   (princ (format "%s\n" (buffer-string)))
   (goto-char 1)
   (princ (format "%s\n" (if (looking-back "x" 1) "yes" "no")))

@@ -5,4 +5,7 @@
   (princ (format "%S\n" (buffer-string)))
   (setq last-command 'yank)
   (yank-pop)
-  (princ (format "%S\n" (buffer-string))))
+  (princ (format "%S\n" (buffer-string)))
+  (setq last-command nil)
+  (yank-pop)
+  (princ "not reached\n"))

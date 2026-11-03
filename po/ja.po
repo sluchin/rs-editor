@@ -7680,6 +7680,11 @@ msgctxt "function:string<"
 msgid "Return #t if the first string is less than the second (compared by character code)."
 msgstr "最初の文字列が 2 番目より小さければ #t を返す (文字コードで比べる)."
 
+#: lisp/subr.scm
+msgctxt "function:funcall"
+msgid "Call FUNCTION with the remaining arguments."
+msgstr "FUNCTION を, 残りの引数で呼ぶ."
+
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"
 msgid "Return the name of a buffer other than the current one, or #f if there is none."

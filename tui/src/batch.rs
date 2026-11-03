@@ -108,6 +108,18 @@ fn char_key(c: char) -> String {
 }
 
 impl BatchUi {
+    /// 標準入力から読む前に、プロンプトを標準出力に出す (Emacs と同じ).
+    fn show_prompt(&self, args: &[Value]) {
+        if let Some(Value::String(prompt)) = args.first() {
+            if !prompt.is_empty() {
+                self.need_newline.store(true, Ordering::Relaxed);
+                let mut out = self.out.lock().unwrap();
+                let _ = out.write_all(prompt.as_bytes());
+                let _ = out.flush();
+            }
+        }
+    }
+
     /// 打ったことにするキーを、改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
     fn read_typed_line(&self) -> Option<String> {
         let mut keys = self.keys.lock().unwrap();
@@ -181,7 +193,9 @@ impl BatchUi {
     fn read_line(&self) -> Result<String, String> {
         let mut line = String::new();
         match self.input.lock().unwrap().read_line(&mut line) {
-            Ok(0) | Err(_) => Err("Error reading from stdin".to_string()),
+            Ok(0) | Err(_) => {
+                Err("End of file during parsing: Error reading from stdin".to_string())
+            }
             Ok(_) => Ok(line.trim_end_matches(['\n', '\r']).to_string()),
         }
     }
@@ -203,15 +217,21 @@ impl Host for BatchUi {
             }
             "read-string" | "read-file-name" | "completing-read" => match self.read_typed_line() {
                 Some(line) => Ok(Value::String(line)),
-                None => self.read_line().map(Value::String),
+                None => {
+                    self.show_prompt(&args);
+                    self.read_line().map(Value::String)
+                }
             },
             "read-key" => {
                 let typed = self.keys.lock().unwrap().pop_front();
                 match typed {
                     Some(key) => Ok(Value::String(read_key_name(&key))),
-                    None => self.read_line().map(|line| {
-                        Value::String(line.chars().next().map(String::from).unwrap_or_default())
-                    }),
+                    None => {
+                        self.show_prompt(&args);
+                        self.read_line().map(|line| {
+                            Value::String(line.chars().next().map(String::from).unwrap_or_default())
+                        })
+                    }
                 }
             }
             "execute-kbd-macro" => {
