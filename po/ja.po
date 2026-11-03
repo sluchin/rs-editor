@@ -5962,6 +5962,21 @@ msgstr ""
 "引数 N があれば, 今の行から N 行を kill する. 負なら前向きで, 前の改行も kill する. 0 なら, 改行を除いて kill する."
 
 #: lisp/simple.scm
+msgctxt "variable:last-kbd-macro"
+msgid "Last kbd macro defined, as a list of key names (nil if none)."
+msgstr "最後に定義したキーボードマクロ (キーの名前の並び. 無ければ空)."
+
+#: lisp/simple.scm
+msgctxt "variable:executing-kbd-macro"
+msgid "Non-nil while a keyboard macro is executing."
+msgstr "キーボードマクロを動かしている間は, 空でない."
+
+#: lisp/simple.scm
+msgctxt "function:simple--end-kbd-macro"
+msgid "Finish defining a keyboard macro and remember it in `last-kbd-macro'."
+msgstr "キーボードマクロの定義を終え, last-kbd-macro に覚える."
+
+#: lisp/simple.scm
 msgctxt "function:start-kbd-macro"
 msgid ""
 "Record subsequent keyboard input, defining a keyboard macro.\n"
@@ -7392,6 +7407,21 @@ msgid ""
 msgstr ""
 "POSITION (既定は点) の行の番号を返す. 見える範囲の始めから数える.\n"
 "ABSOLUTE が空でなければ, バッファ全体の始めから数える."
+
+#: lisp/simple.scm
+msgctxt "function:kbd--key-p"
+msgid "Return true if WORD is one key name such as C-x, M-x, RET or <f1>."
+msgstr "WORD が, C-x, M-x, RET, <f1> などの 1 つのキーの名前なら真."
+
+#: lisp/simple.scm
+msgctxt "function:kbd"
+msgid ""
+"Convert KEYS (a string of key names, such as \"C-x C-f foo RET\") to a list of keys.\n"
+"A word that is not a key name stands for the keys of its characters.  The result is what\n"
+"`execute-kbd-macro' takes."
+msgstr ""
+"KEYS (\"C-x C-f foo RET\" など, キーの名前の文字列) を, キーの並びにする.\n"
+"キーの名前でない語は, その文字のキーの並びになる. 結果は execute-kbd-macro に渡せる."
 
 #: lisp/sort.scm
 msgctxt "function:sort--split-lines"

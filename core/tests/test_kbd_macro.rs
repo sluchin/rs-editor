@@ -61,13 +61,13 @@ fn test_kbd_macro_operations() {
     let ev = Evaluator::new();
     let run = |code: &str| ev.eval_with(code, &host);
     assert_eq!(run("(kbd-macro-defining-p)").unwrap(), "#f");
-    assert_eq!(run("(last-kbd-macro)").unwrap(), "()");
+    assert_eq!(run("(kbd-macro-last)").unwrap(), "()");
     run("(start-kbd-macro)").unwrap();
     assert_eq!(run("(kbd-macro-defining-p)").unwrap(), "#t");
     host.editor().kbd_macro.record("a");
     host.editor().kbd_macro.begin_command();
     run("(end-kbd-macro)").unwrap();
-    assert_eq!(run("(last-kbd-macro)").unwrap(), r#"("a")"#);
+    assert_eq!(run("(kbd-macro-last)").unwrap(), r#"("a")"#);
     assert!(run("(end-kbd-macro)").is_err());
     // 動かすのは画面: キーの並びと回数を渡す
     run(r#"(execute-kbd-macro '("a") 3)"#).unwrap();

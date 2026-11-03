@@ -10,11 +10,14 @@
 //! `princ` などは標準出力に、`message` は標準エラー出力に書く. `(kill-emacs N)` で終了コード N (既定は 0)、
 //! 捕まえなかったエラーは標準エラー出力に出して終了コード 255 で終わる.
 
+use std::collections::VecDeque;
 use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
+use rseditor_core::command_loop::{read_key_name, CommandLoop, LoopUi};
 use rseditor_core::editor::Editor;
+use rseditor_core::keymap::Keymap;
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
@@ -43,9 +46,130 @@ struct BatchUi {
     need_newline: Arc<AtomicBool>,
     /// `kill-emacs` の終了コード.
     exit: Arc<Mutex<Option<i32>>>,
+    /// 打ったことにするキー (`execute-kbd-macro`. `read-key` などが先に読む).
+    keys: Mutex<VecDeque<String>>,
+    /// キーのコマンドが失敗したか (失敗したら, 後のキーは捨てる).
+    stopped: AtomicBool,
+    /// キーのコマンドが失敗したときの, エラーの文.
+    error: Mutex<Option<String>>,
+    /// キーを処理するコマンドループ.
+    commands: Mutex<Weak<CommandLoop<BatchUi>>>,
+}
+
+impl LoopUi for BatchUi {
+    fn say(&self, text: &str) {
+        // 失敗したコマンドのエラーの文だけ覚える (他のエコー領域の表示は, バッチモードでは要らない)
+        if self.stopped.load(Ordering::Relaxed) && !text.is_empty() {
+            self.error
+                .lock()
+                .unwrap()
+                .get_or_insert_with(|| text.to_string());
+        }
+    }
+
+    fn stop_macro(&self) {
+        self.stopped.store(true, Ordering::Relaxed);
+        self.keys.lock().unwrap().clear();
+    }
+
+    fn set_display(&self, _truncate_lines: bool, _selective_display: Option<usize>) {}
+}
+
+/// `execute-kbd-macro` の引数 (キーの名前の並び, または文字列) を、キーの名前の並びにする.
+fn key_names(keys: Option<&Value>) -> Vec<String> {
+    match keys {
+        Some(Value::List(items)) => items
+            .iter()
+            .filter_map(|item| match item {
+                Value::String(key) => Some(key.clone()),
+                _ => None,
+            })
+            .collect(),
+        Some(Value::String(text)) => text.chars().map(char_key).collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// 1 文字を、キーの名前にする (制御文字は `C-a` など).
+fn char_key(c: char) -> String {
+    match c {
+        '\r' => "RET".to_string(),
+        '\t' => "TAB".to_string(),
+        '\u{1b}' => "ESC".to_string(),
+        '\u{7f}' => "DEL".to_string(),
+        ' ' => "SPC".to_string(),
+        c if (c as u32) < 32 => format!("C-{}", char::from(c as u8 + 96)),
+        c => c.to_string(),
+    }
 }
 
 impl BatchUi {
+    /// 打ったことにするキーを、改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
+    fn read_typed_line(&self) -> Option<String> {
+        let mut keys = self.keys.lock().unwrap();
+        keys.front()?;
+        let mut line = String::new();
+        while let Some(key) = keys.pop_front() {
+            match key.as_str() {
+                "RET" => break,
+                "SPC" => line.push(' '),
+                "DEL" => {
+                    line.pop();
+                }
+                other if other.chars().count() == 1 => line.push_str(other),
+                _ => {}
+            }
+        }
+        Some(line)
+    }
+
+    /// キーを打ったことにして, そのコマンドを動かす (`COUNT` 回. 0 なら失敗するまで).
+    fn execute_keys(&self, keys: &[String], count: usize) -> Result<(), String> {
+        let commands = self
+            .commands
+            .lock()
+            .unwrap()
+            .upgrade()
+            .ok_or_else(|| "The batch mode has no command loop".to_string())?;
+        self.stopped.store(false, Ordering::Relaxed);
+        *self.error.lock().unwrap() = None;
+        let before = commands.variable("executing-kbd-macro");
+        commands
+            .evaluator()
+            .global()
+            .define("executing-kbd-macro", Value::Boolean(true));
+        commands.host().editor().executing_kbd_macro = true;
+        // 入れ子のマクロが, 外側の残りのキーを読まないように, 自分のキーが尽きるまで
+        let base = self.keys.lock().unwrap().len();
+        let mut round = 0;
+        while !keys.is_empty() && (count == 0 || round < count) {
+            round += 1;
+            {
+                let mut queue = self.keys.lock().unwrap();
+                for key in keys.iter().rev() {
+                    queue.push_front(key.clone());
+                }
+            }
+            while self.keys.lock().unwrap().len() > base {
+                let key = self.keys.lock().unwrap().pop_front().unwrap_or_default();
+                commands.handle_key(&key);
+                if self.stopped.load(Ordering::Relaxed) {
+                    break;
+                }
+            }
+            if self.stopped.load(Ordering::Relaxed) {
+                break;
+            }
+        }
+        commands.host().editor().executing_kbd_macro = false;
+        commands
+            .evaluator()
+            .global()
+            .define("executing-kbd-macro", before);
+        let error = self.error.lock().unwrap().take();
+        error.map_or(Ok(()), Err)
+    }
+
     /// 標準入力から 1 行読む (改行は除く).
     fn read_line(&self) -> Result<String, String> {
         let mut line = String::new();
@@ -70,12 +194,27 @@ impl Host for BatchUi {
                 }
                 Ok(Value::Nil)
             }
-            "read-string" | "read-file-name" | "completing-read" => {
-                self.read_line().map(Value::String)
+            "read-string" | "read-file-name" | "completing-read" => match self.read_typed_line() {
+                Some(line) => Ok(Value::String(line)),
+                None => self.read_line().map(Value::String),
+            },
+            "read-key" => {
+                let typed = self.keys.lock().unwrap().pop_front();
+                match typed {
+                    Some(key) => Ok(Value::String(read_key_name(&key))),
+                    None => self.read_line().map(|line| {
+                        Value::String(line.chars().next().map(String::from).unwrap_or_default())
+                    }),
+                }
             }
-            "read-key" => self.read_line().map(|line| {
-                Value::String(line.chars().next().map(String::from).unwrap_or_default())
-            }),
+            "execute-kbd-macro" => {
+                let count = match args.get(1) {
+                    Some(Value::Number(n)) => *n as usize,
+                    _ => 1,
+                };
+                self.execute_keys(&key_names(args.first()), count)
+                    .map(|()| Value::Nil)
+            }
             "kill-emacs" => {
                 let code = match args.first() {
                     Some(Value::Number(n)) => *n as i32,
@@ -179,6 +318,10 @@ pub fn run(args: &[String], io: Io) -> i32 {
         input: Mutex::new(input),
         need_newline: need_newline.clone(),
         exit: exit.clone(),
+        keys: Mutex::new(VecDeque::new()),
+        stopped: AtomicBool::new(false),
+        error: Mutex::new(None),
+        commands: Mutex::new(Weak::new()),
     };
     let host = EditorHost::new(Editor::new(), ui);
     let writer = out.clone();
@@ -194,10 +337,12 @@ pub fn run(args: &[String], io: Io) -> i32 {
     if let Ok(dir) = std::env::current_dir() {
         evaluator.set_default_directory(dir);
     }
-    let result = evaluator
-        .load_editor_files(&host)
-        .and_then(|()| evaluator.eval_with("(set! noninteractive #t)", &host))
-        .and_then(|_| {
+    let keymap = Arc::new(Mutex::new(Keymap::default()));
+    let result = CommandLoop::new(host, evaluator, keymap)
+        .map(Arc::new)
+        .and_then(|commands| {
+            *commands.host().ui().commands.lock().unwrap() = Arc::downgrade(&commands);
+            commands.eval("(set! noninteractive #t)")?;
             steps.iter().try_for_each(|step| {
                 let code = match step {
                     Step::Eval(code) => code.clone(),
@@ -205,7 +350,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
                         format!("Cannot open load file: No such file or directory, {file}")
                     })?,
                 };
-                evaluator.eval_with(&code, &host).map(|_| ())
+                commands.eval(&code).map(|_| ())
             })
         });
     let killed = *exit.lock().unwrap();

@@ -5327,6 +5327,21 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:last-kbd-macro"
+msgid "Last kbd macro defined, as a list of key names (nil if none)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:executing-kbd-macro"
+msgid "Non-nil while a keyboard macro is executing."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--end-kbd-macro"
+msgid "Finish defining a keyboard macro and remember it in `last-kbd-macro'."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:start-kbd-macro"
 msgid ""
 "Record subsequent keyboard input, defining a keyboard macro.\n"
@@ -6516,6 +6531,19 @@ msgid ""
 "Return the line number of POSITION (default: the point), counting from the start of the\n"
 "accessible part of the buffer.  If the second argument ABSOLUTE is non-nil, count from the\n"
 "start of the whole buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kbd--key-p"
+msgid "Return true if WORD is one key name such as C-x, M-x, RET or <f1>."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:kbd"
+msgid ""
+"Convert KEYS (a string of key names, such as \"C-x C-f foo RET\") to a list of keys.\n"
+"A word that is not a key name stands for the keys of its characters.  The result is what\n"
+"`execute-kbd-macro' takes."
 msgstr ""
 
 #: lisp/sort.scm

@@ -41,6 +41,11 @@ pub struct KeyBinding {
     pub command: String,
 }
 
+thread_local! {
+    /// このスレッドが, 評価の最中か.
+    static IN_EVALUATION: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
 /// 評価器. 定義と, Lisp で作ったコマンドとキーの割り当てを, 覚えています.
 pub struct Evaluator {
     /// 一番外側の環境 (組み込みの手続きと, `define` した変数).
@@ -404,12 +409,17 @@ impl Evaluator {
         host: &dyn Host,
         task: impl FnOnce(&mut Machine) -> Result<T, String> + Send,
     ) -> Result<T, String> {
+        // 評価の中から呼ばれたとき (`execute-kbd-macro` が打ったキーのコマンドなど) は, ロックも新しいスレッドも要らない
+        if IN_EVALUATION.with(std::cell::Cell::get) {
+            return task(&mut Machine::new(self, host));
+        }
         // 前の評価が失敗 (panic) していても, 続ける
         let _running = self.running.lock().unwrap_or_else(|e| e.into_inner());
         std::thread::scope(|scope| {
             std::thread::Builder::new()
                 .stack_size(STACK_SIZE)
                 .spawn_scoped(scope, || {
+                    IN_EVALUATION.with(|flag| flag.set(true));
                     let result = task(&mut Machine::new(self, host));
                     // 評価で作った, 環境と手続きの輪を切る (放すと深く入れ子になるので, 大きなスタックで)
                     self.global.collect();

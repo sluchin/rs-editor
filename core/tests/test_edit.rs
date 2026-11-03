@@ -187,67 +187,95 @@ type Row = (String, Vec<Json>, Vec<Json>, Json, String, Vec<Json>);
 fn test_against_emacs() {
     let table: Vec<Row> = serde_json::from_str(include_str!("edit.json")).unwrap();
     assert!(table.len() > 300);
-    let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), FakeUi::default());
-    ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/register.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/abbrev.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/minibuffer.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/dabbrev.scm"), &host)
-        .unwrap();
-    {
-        let mut editor = host.editor();
-        editor.get_buffer_create("other").load("OTHER");
-        editor.set_buffer("*scratch*").unwrap();
-    }
-    let mut failures = Vec::new();
-    for (name, steps, seeds, mark, text, results) in &table {
-        // ONLY=名前 で, 名前に含む手順だけ試す
-        if std::env::var("ONLY").is_ok_and(|only| !name.contains(&only)) {
-            continue;
+    // 手順を何本かのスレッドに分けて動かす (手順ごとに独立しているので, 本数だけ速くなる)
+    let setup = || {
+        let ev = Evaluator::new();
+        let host = EditorHost::new(Editor::new(), FakeUi::default());
+        ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/register.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/abbrev.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/minibuffer.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/dabbrev.scm"), &host)
+            .unwrap();
+        {
+            let mut editor = host.editor();
+            editor.get_buffer_create("other").load("OTHER");
+            editor.set_buffer("*scratch*").unwrap();
         }
-        for (pos, expected) in results.iter().enumerate() {
-            let actual = run(
-                &ev,
-                &host,
-                steps,
-                seeds,
-                mark.as_u64().map(|m| m as usize),
-                text,
-                pos,
-            );
-            // Emacs の範囲外のエラーは, バッファと位置を添える. こちらは, 添えない
-            let mut expected = expected.clone();
-            if expected[0] == "error"
-                && expected[1]
-                    .as_str()
-                    .is_some_and(|m| m.starts_with("Args out of range"))
-            {
-                expected[1] = json!("Args out of range");
-            }
-            // Emacs の試験のバッファの名前は, こちらの `*scratch*`
-            if expected[0] == "error" {
-                expected[1] = json!(expected[1]
-                    .as_str()
-                    .unwrap()
-                    .replace("#<buffer  *temp*>", "#<buffer *scratch*>"));
-            }
-            if actual != expected {
-                failures.push(format!(
-                    "{name} {} {text:?} at {pos}: expected {expected}, got {actual}",
-                    json!(steps.iter().map(|s| s[1].clone()).collect::<Vec<_>>())
-                ));
-            }
-        }
-    }
+        (ev, host)
+    };
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let failures: Vec<String> = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker| {
+                let (table, setup) = (&table, &setup);
+                scope.spawn(move || {
+                    let (ev, host) = setup();
+                    let mut failures = Vec::new();
+                    // レジスタは手順をまたいで残る (Emacs で記録した結果もそう) ので, レジスタの手順は, 1 本のスレッドで順に動かす
+                    let rows = table.iter().enumerate().filter(|(i, row)| {
+                        if row.0.contains("register") {
+                            worker == 0
+                        } else {
+                            i % workers == worker
+                        }
+                    });
+                    for (_, (name, steps, seeds, mark, text, results)) in rows {
+                        // ONLY=名前 で, 名前に含む手順だけ試す
+                        if std::env::var("ONLY").is_ok_and(|only| !name.contains(&only)) {
+                            continue;
+                        }
+                        for (pos, expected) in results.iter().enumerate() {
+                            let actual = run(
+                                &ev,
+                                &host,
+                                steps,
+                                seeds,
+                                mark.as_u64().map(|m| m as usize),
+                                text,
+                                pos,
+                            );
+                            // Emacs の範囲外のエラーは, バッファと位置を添える. こちらは, 添えない
+                            let mut expected = expected.clone();
+                            if expected[0] == "error"
+                                && expected[1]
+                                    .as_str()
+                                    .is_some_and(|m| m.starts_with("Args out of range"))
+                            {
+                                expected[1] = json!("Args out of range");
+                            }
+                            // Emacs の試験のバッファの名前は, こちらの `*scratch*`
+                            if expected[0] == "error" {
+                                expected[1] = json!(expected[1]
+                                    .as_str()
+                                    .unwrap()
+                                    .replace("#<buffer  *temp*>", "#<buffer *scratch*>"));
+                            }
+                            if actual != expected {
+                                failures.push(format!(
+                            "{name} {} {text:?} at {pos}: expected {expected}, got {actual}",
+                            json!(steps.iter().map(|s| s[1].clone()).collect::<Vec<_>>())
+                        ));
+                            }
+                        }
+                    }
+                    failures
+                })
+            })
+            .collect();
+        handles
+            .into_iter()
+            .flat_map(|handle| handle.join().unwrap())
+            .collect()
+    });
     let mut summary = std::collections::BTreeMap::new();
     for f in &failures {
         let key = f.split(" at ").next().unwrap();

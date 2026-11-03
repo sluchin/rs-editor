@@ -348,3 +348,65 @@ fn test_kmacro_counter_and_end_macro_without_argument() {
     assert_eq!(out, "00");
     assert!(err.contains("New macro counter value: 2 (2)"), "{err}");
 }
+
+/// 1 つの式を動かして, 標準出力を返す.
+fn out_of(code: &str, input: &str) -> String {
+    batch(&["--eval", code], input).1
+}
+
+#[test]
+fn test_execute_kbd_macro_types_keys() {
+    // キーの並び (kbd) と文字列と回数. 制御文字と RET, TAB, ESC, DEL, 空白は, キーの名前になる
+    let code = concat!(
+        "(begin (switch-to-buffer (generate-new-buffer \"b\")) (insert \"one\\ntwo\\n\") (goto-char 1)",
+        " (execute-kbd-macro (kbd \"C-e ! C-n C-a\"))",
+        " (execute-kbd-macro \"ab\u{7f}c d\r\u{1}\t\") (execute-kbd-macro (kbd \"?\") 2)",
+        " (execute-kbd-macro (kbd \"\") 3) (execute-kbd-macro 5) (execute-kbd-macro (list \"x\" 5) \"once\") (execute-kbd-macro \"\u{1b}\")",
+        " (princ (list (buffer-string) (point) executing-kbd-macro)))",
+    );
+    assert_eq!(out_of(code, ""), "(one!\nac d\n   ??xtwo\n 17 #f)");
+}
+
+#[test]
+fn test_typed_keys_are_read_by_commands() {
+    let code = concat!(
+        "(begin (define got '()) (define-command (kk) (set! got (cons (read-key \"k\") got)))",
+        " (define-command (rr) (set! got (cons (read-string \"p: \") got)))",
+        " (global-set-key \"C-c k\" 'kk) (global-set-key \"C-c r\" 'rr)",
+        " (execute-kbd-macro (kbd \"C-c k x C-c r a b DEL SPC c d C-a RET C-c r\"))",
+        " (princ got))",
+    );
+    // 最後の read-string は、キーが尽きたので標準入力から
+    assert_eq!(out_of(code, "tail\n"), "(tail a cd x)");
+}
+
+#[test]
+fn test_failing_key_stops_the_macro() {
+    let code = "(begin (switch-to-buffer (generate-new-buffer \"b\")) (execute-kbd-macro (kbd \"x C-f y\")) (princ \"no\"))";
+    let (status, out, err) = batch(&["--eval", code], "");
+    assert_eq!((status, out.as_str()), (ERROR_STATUS, ""));
+    assert!(err.contains("End of buffer"), "{err}");
+    // 0 回は, 失敗するまで繰り返す
+    let code = "(begin (switch-to-buffer (generate-new-buffer \"b\")) (insert \"ab\") (goto-char 1) (princ (condition-case e (execute-kbd-macro (kbd \"C-f x\") 0) (error (error-message-string e)))) (princ (buffer-string)))";
+    assert_eq!(out_of(code, ""), "End of bufferaxbx");
+}
+
+#[test]
+fn test_macro_messages_and_end_key_are_quiet_while_executing() {
+    let code = concat!(
+        "(begin (switch-to-buffer (generate-new-buffer \"b\")) (insert \"a\")",
+        " (execute-kbd-macro (kbd \"C-SPC C-x ( Z C-x )\"))",
+        " (princ (list (buffer-string) (kbd-macro-defining-p) last-kbd-macro)))",
+    );
+    let (_, out, err) = batch(&["--eval", code], "");
+    assert_eq!(out, "(aZ #t #f)");
+    assert_eq!(err, "");
+    // マクロを動かしている間の end-kbd-macro は、何も知らせない
+    let code = concat!(
+        "(begin (define-command (ee) (end-kbd-macro)) (global-set-key \"C-c e\" 'ee)",
+        " (start-kbd-macro) (execute-kbd-macro (kbd \"C-c e\")) (princ (kbd-macro-defining-p)))",
+    );
+    let (_, out, err) = batch(&["--eval", code], "");
+    assert_eq!(out, "#f");
+    assert_eq!(err, "Defining kbd macro...\n");
+}

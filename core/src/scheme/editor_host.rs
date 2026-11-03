@@ -457,15 +457,22 @@ impl<U: Host> EditorHost<U> {
             "start-kbd-macro" => {
                 ed.kbd_macro
                     .start(args.first().is_some_and(Value::is_non_nil))?;
+                // マクロを動かしている間は, 知らせない (Emacs と同じ)
+                if ed.executing_kbd_macro {
+                    return Ok(Some(Outcome::Value(Value::Nil)));
+                }
                 let text = "Defining kbd macro...".to_string();
                 return Ok(Some(Outcome::Message(text, Value::Nil)));
             }
             "end-kbd-macro" => {
                 ed.kbd_macro.end()?;
+                if ed.executing_kbd_macro {
+                    return Ok(Some(Outcome::Value(Value::Nil)));
+                }
                 let text = "Keyboard macro defined".to_string();
                 return Ok(Some(Outcome::Message(text, Value::Nil)));
             }
-            "last-kbd-macro" => Value::List(
+            "kbd-macro-last" => Value::List(
                 ed.kbd_macro
                     .last()
                     .iter()
@@ -680,7 +687,7 @@ impl<U: Host> EditorHost<U> {
                     ed.global_mark_ring.truncate(GLOBAL_MARK_RING_MAX);
                 }
                 // 第 2 引数 (NOMSG) が無ければ, Emacs は "Mark set" と出す
-                if !args.get(1).is_some_and(Value::is_non_nil) {
+                if !args.get(1).is_some_and(Value::is_non_nil) && !ed.executing_kbd_macro {
                     return Ok(Some(Outcome::Message("Mark set".to_string(), Value::Nil)));
                 }
                 Value::Nil

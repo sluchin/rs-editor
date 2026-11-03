@@ -687,7 +687,19 @@ backward, also killing the preceding newline.  With 0, kill the line without its
 ;;; Keyboard macros
 
 (define simple--start-kbd-macro start-kbd-macro)
-(define simple--end-kbd-macro end-kbd-macro)
+(define last-kbd-macro #f
+  "Last kbd macro defined, as a list of key names (nil if none).")
+
+(define executing-kbd-macro #f
+  "Non-nil while a keyboard macro is executing.")
+
+(define simple--end-kbd-macro-op end-kbd-macro)
+
+(define (simple--end-kbd-macro)
+  "Finish defining a keyboard macro and remember it in `last-kbd-macro'."
+  (simple--end-kbd-macro-op)
+  (let ((keys (kbd-macro-last)))
+    (set! last-kbd-macro (if (null? keys) #f keys))))
 
 (define-command (start-kbd-macro . args)
   "Record subsequent keyboard input, defining a keyboard macro.
@@ -705,18 +717,18 @@ definition just completed as the first repetition.  An argument of zero means re
   (let ((n (cond ((null? args) (prefix-numeric-value (current-prefix-arg)))
                  ((car args) (prefix-numeric-value (car args)))
                  (else 1))))
-    (cond ((= n 0) (execute-kbd-macro (last-kbd-macro) 0))
-          ((> n 1) (execute-kbd-macro (last-kbd-macro) (- n 1)))))
+    (cond ((= n 0) (execute-kbd-macro last-kbd-macro 0))
+          ((> n 1) (execute-kbd-macro last-kbd-macro (- n 1)))))
   #f)
 
 (define-command (call-last-kbd-macro . args)
   "Call the last keyboard macro that you defined.
 A prefix argument serves as a repeat count.  Zero means repeat until error."
   (if (kbd-macro-defining-p)
-      (begin (simple--end-kbd-macro) (execute-kbd-macro (last-kbd-macro) 1))
-      (if (null? (last-kbd-macro))
+      (begin (simple--end-kbd-macro) (execute-kbd-macro last-kbd-macro 1))
+      (if (not last-kbd-macro)
           (error "No kbd macro has been defined")
-          (execute-kbd-macro (last-kbd-macro)
+          (execute-kbd-macro last-kbd-macro
                              (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))))
   #f)
 
@@ -767,20 +779,22 @@ value without incrementing."
   "Finish defining a keyboard macro.
 With numeric arg, repeat the macro now that many times, counting the definition just
 completed as the first repetition.  An argument of zero means repeat until error."
-  (if (not (kbd-macro-defining-p))
-      (error "Not defining keyboard macro")
-      (begin
-        (end-kbd-macro (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
-        (if (null? (last-kbd-macro)) (message "Ignore empty macro"))))
+  ;; マクロを動かしている間は, マクロを終えるキーを無視する (Emacs と同じ)
+  (when (not executing-kbd-macro)
+    (if (not (kbd-macro-defining-p))
+        (error "Not defining keyboard macro")
+        (begin
+          (end-kbd-macro (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
+          (if (not last-kbd-macro) (message "Ignore empty macro")))))
   #f)
 
 (define-command (kmacro-end-and-call-macro . args)
   "Call the last keyboard macro, ending the definition first if one is in progress.
 A prefix argument serves as a repeat count; zero means repeat until error."
   (if (kbd-macro-defining-p) (kmacro-end-macro 1))
-  (if (null? (last-kbd-macro))
+  (if (not last-kbd-macro)
       (error "No kbd macro has been defined")
-      (execute-kbd-macro (last-kbd-macro)
+      (execute-kbd-macro last-kbd-macro
                          (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args))))
   #f)
 
@@ -793,14 +807,14 @@ A prefix argument serves as a repeat count; zero means repeat until error."
 
 (define-command (kmacro-name-last-macro . args)
   "Assign a name to the last keyboard macro defined."
-  (if (null? (last-kbd-macro))
+  (if (not last-kbd-macro)
       (error "No keyboard macro defined")
       (let ((name (if (null? args) (read-string "Name for last kbd macro: ") (car args))))
         (if (equal? name "")
             (error "No command name given")
             (eval (list 'define-command (list (string->symbol name))
                         "Keyboard macro."
-                        (list 'execute-kbd-macro (list 'quote (last-kbd-macro)) 1)
+                        (list 'execute-kbd-macro (list 'quote last-kbd-macro) 1)
                         #f)))))
   #f)
 
@@ -2499,3 +2513,21 @@ start of the whole buffer."
         (if absolute (widen))
         (goto-char pos)
         (+ 1 (count-lines (point-min) (line-beginning-position)))))))
+
+(define (kbd--key-p word)
+  "Return true if WORD is one key name such as C-x, M-x, RET or <f1>."
+  (regexp-match "^(?:[CMSsHA]-)*(?:RET|TAB|SPC|ESC|DEL|LFD|NUL|<[^>]+>|.)$" word))
+
+(define (kbd keys)
+  "Convert KEYS (a string of key names, such as \"C-x C-f foo RET\") to a list of keys.
+A word that is not a key name stands for the keys of its characters.  The result is what
+`execute-kbd-macro' takes."
+  (apply append
+         (map (lambda (word)
+                (if (kbd--key-p word)
+                    (list word)
+                    (let loop ((i 0) (acc '()))
+                      (if (< i (string-length word))
+                          (loop (+ i 1) (cons (substring word i (+ i 1)) acc))
+                          (reverse acc)))))
+              (split-string keys))))

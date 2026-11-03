@@ -52,6 +52,8 @@ pub struct Editor {
     pub kill_ring: KillRing,
     /// キーボードマクロ.
     pub kbd_macro: KbdMacro,
+    /// キーボードマクロを動かしているか (`executing-kbd-macro`. 動かしている間は, "Mark set" などを知らせない).
+    pub executing_kbd_macro: bool,
     /// 前置引数.
     pub prefix_arg: Option<PrefixArg>,
     /// バッファをまたぐマークの履歴 (Emacs の `global-mark-ring`. 新しいものが先. バッファの名前と, そのバッファのマーカー).
@@ -96,6 +98,7 @@ impl Editor {
             screen: (24, 80),
             kill_ring: KillRing::new(),
             kbd_macro: KbdMacro::default(),
+            executing_kbd_macro: false,
             prefix_arg: None,
             global_mark_ring: Vec::new(),
             window_configurations: Vec::new(),

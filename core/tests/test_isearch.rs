@@ -87,33 +87,53 @@ fn run(ev: &Evaluator, host: &EditorHost<FakeUi>, row: &Row, pos: usize) -> Json
 fn test_against_emacs() {
     let table: Vec<Row> = serde_json::from_str(include_str!("isearch.json")).unwrap();
     assert!(table.len() > 100);
-    let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), FakeUi::default());
-    ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/isearch.scm"), &host)
-        .unwrap();
-    host.editor().set_buffer("*scratch*").unwrap();
-    let mut failures = Vec::new();
-    for row in &table {
-        if std::env::var("ONLY").is_ok_and(|only| !row.0.contains(&only)) {
-            continue;
-        }
-        for (pos, expected) in row.3.iter().enumerate() {
-            if expected[0] == "skip" {
-                continue;
-            }
-            let actual = run(&ev, &host, row, pos);
-            if &actual != expected {
-                failures.push(format!(
-                    "{} {:?} {:?} at {pos}: expected {expected}, got {actual}",
-                    row.0, row.1, row.2
-                ));
-            }
-        }
-    }
+    // 手順を何本かのスレッドに分けて動かす (手順ごとに独立しているので, 本数だけ速くなる)
+    let setup = || {
+        let ev = Evaluator::new();
+        let host = EditorHost::new(Editor::new(), FakeUi::default());
+        ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/replace.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/isearch.scm"), &host)
+            .unwrap();
+        host.editor().set_buffer("*scratch*").unwrap();
+        (ev, host)
+    };
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let failures: Vec<String> = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker| {
+                let (table, setup) = (&table, &setup);
+                scope.spawn(move || {
+                    let (ev, host) = setup();
+                    let mut failures = Vec::new();
+                    for row in table.iter().skip(worker).step_by(workers) {
+                        if std::env::var("ONLY").is_ok_and(|only| !row.0.contains(&only)) {
+                            continue;
+                        }
+                        for (pos, expected) in row.3.iter().enumerate() {
+                            if expected[0] == "skip" {
+                                continue;
+                            }
+                            let actual = run(&ev, &host, row, pos);
+                            if &actual != expected {
+                                failures.push(format!(
+                                    "{} {:?} {:?} at {pos}: expected {expected}, got {actual}",
+                                    row.0, row.1, row.2
+                                ));
+                            }
+                        }
+                    }
+                    failures
+                })
+            })
+            .collect();
+        handles
+            .into_iter()
+            .flat_map(|handle| handle.join().unwrap())
+            .collect()
+    });
     let mut summary = std::collections::BTreeMap::new();
     for f in &failures {
         let key = f.split(" at ").next().unwrap();

@@ -58,7 +58,8 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | 引数 `FILE` | FILE を訪れ、現在のバッファにする (`find-file`) |
 | 初期設定ファイル | 読まない |
 | 出力 | `princ`、`prin1`、`print`、`terpri` は標準出力。`message` は標準エラー出力 (改行を付ける) |
-| 入力 | `read-string` などは標準入力から読む (試験では空) |
+| 入力 | `read-string` などは、打ったことにするキー (`execute-kbd-macro`) が先、無ければ標準入力から読む (試験では空) |
+| キーのコマンド | `execute-kbd-macro` で打ったキーを、その場でコマンドループ (`CommandLoop`) に渡して動かす。動かしている間、`executing-kbd-macro` が真。コマンドが失敗したら、そこで止めてエラーにする。コマンドは、現在のバッファでなく、`switch-to-buffer` したバッファで動く |
 | 終了 | `(kill-emacs N)` で終了コード N。全部評価し終えたら 0 |
 | エラー | 捕まえなかったエラーは標準エラー出力に出し、終了コード 255 |
 | 変数 | `noninteractive` が真 |
@@ -146,6 +147,8 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-36 | `36-kmacro` | `kmacro-insert-counter` (カウンターと知らせ)、`kmacro-start-macro`、`kmacro-end-macro` |
 | E-37 | `37-dired` | `dired-noselect` (バッファの名前、`..`、ファイルの一覧、同じ場所なら同じバッファ) |
 | E-38 | `38-search-funcs` | `search-forward` と `search-backward` (大文字小文字、COUNT、BOUND、NOERROR)、`re-search-*`、`search-forward-regexp`、`word-search-forward`、`line-number-at-pos` |
+| E-39 | `39-kbd-macro` | `execute-kbd-macro` (`kbd` のキー、回数)、文字キーの挿入、`M-f` などの編集キー、マクロの中の `C-x (` と `C-x )` (マクロを動かしている間は終えない)、`last-kbd-macro` |
+| E-40 | `40-kbd-macro-errors` | マクロの中のキーが失敗したとき (エラーの文、そこで止まる)、回数 0 (失敗するまで繰り返す)、空のマクロ |
 
 ## 5. 比べない違い
 
@@ -161,8 +164,6 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | エラーの種類 | Emacs Lisp は型付きのエラー (`(car e)` が `end-of-file` など)。Scheme の `condition-case` は型を持たず, `error-message-string` で文を比べる |
 | `while` | Scheme に `while` が無いため、繰り返しの試験 (29 番) は `.scm` を手で書く |
 | `isearch` | 対話のコマンド (キーを読む) なので、バッチモードでは動かせない。同じ検索の関数 (38 番) で比べる |
-| `execute-kbd-macro` | キーを打つ処理は画面側にあり、バッチモードには無い (「The batch mode does not support execute-kbd-macro」)。簡単には直せない。マクロの再生と記録の試験は、カウンターだけ |
-| `last-kbd-macro` | Emacs は変数、rs-editor は関数 |
 | dired の操作 | 印をつける、消す、名前を変えるなどは、キーを読むコマンド。一覧のバッファの中身だけ比べる (日付や大きさは違うので比べない) |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 

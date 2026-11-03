@@ -146,47 +146,69 @@ type Row = (String, Vec<Json>, Vec<Json>, Json, String, Vec<Json>);
 fn test_against_emacs() {
     let table: Vec<Row> = serde_json::from_str(include_str!("lisp.json")).unwrap();
     assert!(table.len() > 1000);
-    let ev = Evaluator::new();
-    let host = EditorHost::new(Editor::new(), FakeUi::default());
-    ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
-        .unwrap();
-    ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
-        .unwrap();
-    {
-        host.editor().set_buffer("*scratch*").unwrap();
-    }
-    let mut failures = Vec::new();
-    for (name, steps, _seeds, mark, text, results) in &table {
-        if std::env::var("ONLY").is_ok_and(|only| !name.contains(&only)) {
-            continue;
+    // 手順を何本かのスレッドに分けて動かす (手順ごとに独立しているので, 本数だけ速くなる)
+    let setup = || {
+        let ev = Evaluator::new();
+        let host = EditorHost::new(Editor::new(), FakeUi::default());
+        ev.eval_with(include_str!("../../lisp/simple.scm"), &host)
+            .unwrap();
+        ev.eval_with(include_str!("../../lisp/rect.scm"), &host)
+            .unwrap();
+        {
+            host.editor().set_buffer("*scratch*").unwrap();
         }
-        let (mode, _) = name.split_once(':').unwrap();
-        let dialect = match mode {
-            "emacs-lisp-mode" => Dialect::Elisp,
-            "scheme-mode" => Dialect::Scheme,
-            _ => Dialect::Fundamental,
-        };
-        for (pos, expected) in results.iter().enumerate() {
-            if std::env::var("TRACE").is_ok() {
-                eprintln!("TRACE {name} {text:?} {pos} {steps:?} {mark}");
-            }
-            let actual = run(
-                &ev,
-                &host,
-                steps,
-                mark.as_u64().map(|m| m as usize),
-                (dialect, !name.ends_with("/notabs")),
-                text,
-                pos,
-            );
-            if &actual != expected {
-                failures.push(format!(
-                    "{name} {} {text:?} at {pos}: expected {expected}, got {actual}",
-                    json!(steps.iter().map(|s| s[1].clone()).collect::<Vec<_>>())
-                ));
-            }
-        }
-    }
+        (ev, host)
+    };
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let failures: Vec<String> = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..workers)
+            .map(|worker| {
+                let (table, setup) = (&table, &setup);
+                scope.spawn(move || {
+                    let (ev, host) = setup();
+                    let mut failures = Vec::new();
+                    for (name, steps, _seeds, mark, text, results) in
+                        table.iter().skip(worker).step_by(workers)
+                    {
+                        if std::env::var("ONLY").is_ok_and(|only| !name.contains(&only)) {
+                            continue;
+                        }
+                        let (mode, _) = name.split_once(':').unwrap();
+                        let dialect = match mode {
+                            "emacs-lisp-mode" => Dialect::Elisp,
+                            "scheme-mode" => Dialect::Scheme,
+                            _ => Dialect::Fundamental,
+                        };
+                        for (pos, expected) in results.iter().enumerate() {
+                            if std::env::var("TRACE").is_ok() {
+                                eprintln!("TRACE {name} {text:?} {pos} {steps:?} {mark}");
+                            }
+                            let actual = run(
+                                &ev,
+                                &host,
+                                steps,
+                                mark.as_u64().map(|m| m as usize),
+                                (dialect, !name.ends_with("/notabs")),
+                                text,
+                                pos,
+                            );
+                            if &actual != expected {
+                                failures.push(format!(
+                            "{name} {} {text:?} at {pos}: expected {expected}, got {actual}",
+                            json!(steps.iter().map(|s| s[1].clone()).collect::<Vec<_>>())
+                        ));
+                            }
+                        }
+                    }
+                    failures
+                })
+            })
+            .collect();
+        handles
+            .into_iter()
+            .flat_map(|handle| handle.join().unwrap())
+            .collect()
+    });
     let mut summary = std::collections::BTreeMap::new();
     for f in &failures {
         let key = f.split(" at ").next().unwrap();

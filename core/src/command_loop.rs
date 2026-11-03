@@ -34,7 +34,7 @@ pub struct CommandLoop<U: Host + LoopUi> {
     /// キーの割り当て.
     keymap: Arc<Mutex<Keymap>>,
     /// 読んでいる途中のキー (`C-x` など).
-    pending: Vec<String>,
+    pending: Mutex<Vec<String>>,
 }
 
 /// コマンドの名前の記号.
@@ -83,7 +83,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             host,
             evaluator,
             keymap,
-            pending: Vec::new(),
+            pending: Mutex::new(Vec::new()),
         })
     }
 
@@ -104,7 +104,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 続きのキーを待っていなければ `true` (新しいコマンドの始め).
     pub fn at_command_start(&self) -> bool {
-        self.pending.is_empty()
+        self.pending.lock().unwrap().is_empty()
     }
 
     /// Scheme を評価します (初期設定ファイルを読むときなど).
@@ -131,7 +131,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 前置引数を読んでいる間 (`universal-argument-map`) のキーなら, 受けるコマンドの名前を返します.
     fn prefix_command(&self, key: &str) -> Option<&'static str> {
-        if !self.pending.is_empty()
+        if !self.pending.lock().unwrap().is_empty()
             || self.variable("universal-argument-mode") == Value::Boolean(false)
         {
             return None;
@@ -182,9 +182,9 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     }
 
     /// キーを 1 つ処理します.
-    pub fn handle_key(&mut self, key: &str) {
-        if key == "C-g" && !self.pending.is_empty() {
-            self.pending.clear();
+    pub fn handle_key(&self, key: &str) {
+        if key == "C-g" && !self.pending.lock().unwrap().is_empty() {
+            self.pending.lock().unwrap().clear();
             self.say("Quit");
             return;
         }
@@ -195,21 +195,21 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             self.execute(command);
             return;
         }
-        self.pending.push(key.to_string());
+        self.pending.lock().unwrap().push(key.to_string());
         // Lisp で割り当てたキーが先
         self.sync_lisp_keys();
         let lookup = self.lookup_pending();
         match lookup {
             Lookup::Prefix => {
-                let shown = self.pending.join(" ");
+                let shown = self.pending.lock().unwrap().join(" ");
                 self.say(&format!("{shown}-"));
             }
             Lookup::Command(command) => {
-                self.pending.clear();
+                self.pending.lock().unwrap().clear();
                 self.execute(&command);
             }
             Lookup::Unbound => {
-                let keys = std::mem::take(&mut self.pending);
+                let keys = std::mem::take(&mut *self.pending.lock().unwrap());
                 match (keys.as_slice(), printable(key)) {
                     ([_], Some(c)) => self.self_insert(&c.to_string()),
                     _ => self.say(&format!("{} is undefined", keys.join(" "))),
@@ -226,19 +226,20 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             for (keys, command) in &local {
                 keymap.bind(keys, command);
             }
-            let found = keymap.lookup(&self.pending);
+            let found = keymap.lookup(&self.pending.lock().unwrap());
             if found != Lookup::Unbound {
                 return found;
             }
         }
-        self.keymap.lock().unwrap().lookup(&self.pending)
+        self.keymap
+            .lock()
+            .unwrap()
+            .lookup(&self.pending.lock().unwrap())
     }
 
     /// 文字を入れます (前置引数の数だけ繰り返す). 画面の IME で確定した文字も, ここから入れる.
-    pub fn self_insert(&mut self, text: &str) {
-        if !self.pending.is_empty() {
-            self.pending.clear();
-        }
+    pub fn self_insert(&self, text: &str) {
+        self.pending.lock().unwrap().clear();
         self.say("");
         self.take_prefix();
         let count = prefix_numeric_value(self.host.editor().prefix_arg).max(1);
@@ -264,7 +265,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     }
 
     /// コマンドを動かします (キーから, または `M-x` から).
-    pub fn execute(&mut self, command: &str) {
+    pub fn execute(&self, command: &str) {
         self.say("");
         self.take_prefix();
         self.host
@@ -283,7 +284,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     }
 
     /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.
-    fn finish(&mut self, command: &str, outcome: Result<(), String>) {
+    fn finish(&self, command: &str, outcome: Result<(), String>) {
         if let Err(error) = outcome {
             // マクロは, 失敗したところで止める
             self.host.ui().stop_macro();
