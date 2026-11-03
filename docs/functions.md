@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 22 個: Lisp 22 個, Rust 0 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 25 個: Lisp 25 個, Rust 0 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -175,7 +175,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `base64-decode-region` |  |  |  |  |  |
 | `base64-encode-region` |  |  |  |  |  |
 | `base64url-encode-region` |  |  |  |  |  |
-| `beginning-of-line` | ◯ |  |  |  |  |
+| `beginning-of-line` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `buffer-enable-undo` |  |  |  |  |  |
 | `call-last-kbd-macro` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `capitalize-region` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
@@ -194,7 +194,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `downcase-word` | ◯ | `M-l` | 実装済み | `M-l` | Lisp (`lisp/simple.scm`) |
 | `encode-coding-region` |  |  |  |  |  |
 | `end-kbd-macro` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
-| `end-of-line` | ◯ |  |  |  |  |
+| `end-of-line` | ◯ |  | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `erase-buffer` |  |  |  |  |  |
 | `eval-buffer` |  |  |  |  |  |
 | `eval-region` | ◯ |  |  |  |  |
@@ -209,7 +209,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `iconify-frame` |  |  |  |  |  |
 | `indent-to` |  |  |  |  |  |
 | `indent-to-column` |  |  |  |  |  |
-| `insert-char` |  | `C-x 8 RET` |  |  |  |
+| `insert-char` |  | `C-x 8 RET` | 実装済み |  | Lisp (`lisp/simple.scm`) |
 | `kill-buffer` | ◯ | `C-x k` | 実装済み | `C-x k` | Lisp (`lisp/window.scm`) |
 | `kill-emacs` |  |  |  |  |  |
 | `kill-local-variable` | ◯ |  |  |  |  |

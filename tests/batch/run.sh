@@ -46,10 +46,14 @@ if [ $# -gt 0 ]; then
 fi
 
 command -v "$EMACS" >/dev/null || { echo "emacs が見つかりません ($EMACS)" >&2; exit 2; }
-if [ ! -x "$RSEDITOR" ]; then
-  echo "rseditor-tui を作ります" >&2
+# 既定の実行ファイルは、いつも作り直す (カバレッジの計測が、計測つきのものに置き換えることがある)
+if [ "$RSEDITOR" = "$root/target/debug/rseditor-tui" ]; then
   (cd "$root" && cargo build -q -p rseditor-tui) || exit 2
 fi
+[ -x "$RSEDITOR" ] || { echo "rseditor-tui が見つかりません ($RSEDITOR)" >&2; exit 2; }
+# 計測つきの実行ファイルが、作業用のディレクトリにファイルを書かないようにする
+LLVM_PROFILE_FILE=/dev/null
+export LLVM_PROFILE_FILE
 # Emacs は /tmp の下のファイルをバックアップしないので、リポジトリの target の下で動かす
 mkdir -p "$root/target"
 tmp=$(mktemp -d "$root/target/batch-test.XXXXXX")

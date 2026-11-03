@@ -150,3 +150,21 @@ Push the mark if going to the location moves point, unless called in succession.
                (goto-char (marker-position (list-ref value 3))))))
           (else (error "Register doesn’t contain a buffer position or configuration")))
     #f))
+
+(define-command (prepend-to-register . args)
+  "Prepend the region between START and END to REGISTER.
+If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after prepending."
+  (let* ((keyboard (null? args))
+         (register (if keyboard (register--read "Prepend to register: ") (car args)))
+         (start (if keyboard (region-beginning) (cadr args)))
+         (end (if keyboard (region-end) (caddr args)))
+         (delete (if keyboard (current-prefix-arg) (and (> (length args) 3) (list-ref args 3))))
+         (value (get-register register))
+         (text (buffer-substring start end)))
+    (set-register register
+                  (cond ((not value) text)
+                        ((string? value) (string-append text value))
+                        (else (error "Register does not contain text"))))
+    (set-deactivate-mark #t)
+    (when delete (delete-region start end))
+    #f))

@@ -5166,6 +5166,15 @@ msgstr ""
 "REGISTER に入れた位置へ行く. 構成が入っていれば, それを戻す.\n"
 "位置へ行くとポイントが動くときは, 続けて呼んだ場合を除き, マークを積む."
 
+#: lisp/register.scm
+msgctxt "function:prepend-to-register"
+msgid ""
+"Prepend the region between START and END to REGISTER.\n"
+"If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after prepending."
+msgstr ""
+"リージョン START から END を, レジスタ REGISTER の前に足す.\n"
+"DELETE-FLAG が真 (対話的には, 前置引数がある) なら, 足した後でリージョンを消す."
+
 #: lisp/replace.scm
 msgctxt "variable:case-replace"
 msgid "Non-nil means `query-replace' should preserve case in replacements."
@@ -5351,6 +5360,44 @@ msgstr "点にあるシンボルの出現を, それぞれ強調する."
 msgctxt "function:highlight-lines-matching-regexp"
 msgid "Highlight the lines that match REGEXP."
 msgstr "REGEXP に一致する行を強調する."
+
+#: lisp/replace.scm
+msgctxt "function:replace--line-bounds"
+msgid "Return (START END) with default values: from point to the end of the buffer."
+msgstr "(START END) を返す. 省略したときは, カーソルからバッファの終わりまで."
+
+#: lisp/replace.scm
+msgctxt "function:flush-lines"
+msgid ""
+"Delete lines containing matches for REGEXP.\n"
+"When called from Lisp, delete lines between START and END (default: from point to the end of the\n"
+"buffer).  If a match is split across lines, all the lines it lies in are deleted.\n"
+"Return the number of deleted matching lines."
+msgstr ""
+"正規表現 REGEXP に合う行を消す.\n"
+"Lisp から呼ぶと, START から END の間 (省略すると, カーソルからバッファの終わりまで) の行を消す.\n"
+"合う所が複数の行にまたがれば, またがった行を全部消す.\n"
+"消した行の数を返す."
+
+#: lisp/replace.scm
+msgctxt "function:keep-lines"
+msgid ""
+"Delete all lines except those containing matches for REGEXP.\n"
+"When called from Lisp, operate between START and END (default: from point to the end of the\n"
+"buffer).  Start at the next line when point is not at the beginning of a line."
+msgstr ""
+"正規表現 REGEXP に合う行以外を全部消す.\n"
+"Lisp から呼ぶと, START から END の間 (省略すると, カーソルからバッファの終わりまで) で行う.\n"
+"カーソルが行の始めでなければ, 次の行から始める."
+
+#: lisp/replace.scm
+msgctxt "function:how-many"
+msgid ""
+"Print and return number of matches for REGEXP following point.\n"
+"When called from Lisp, count between START and END (default: from point to the end of the buffer)."
+msgstr ""
+"カーソルより後ろで, 正規表現 REGEXP に合う所の数を返す.\n"
+"Lisp から呼ぶと, START から END の間 (省略すると, カーソルからバッファの終わりまで) で数える."
 
 #: lisp/simple.scm
 msgctxt "variable:last-command"
@@ -5687,10 +5734,10 @@ msgstr ""
 msgctxt "function:indent-region"
 msgid ""
 "Indent each nonblank line in the region (the lines from START to END).\n"
-"Without arguments, the region is used."
+"Without arguments, the region is used.  With a third argument COLUMN, indent every nonblank line to COLUMN."
 msgstr ""
-"リージョン (START から END までの行) の空でない行を, それぞれ字下げする.\n"
-"引数を省くと, リージョンを使う."
+"リージョン (START から END の行) の, 空でない行を字下げする.\n"
+"引数が無ければ, リージョンを使う. 3 つ目の引数 COLUMN があれば, 空でない行を全部 COLUMN に字下げする."
 
 #: lisp/simple.scm
 msgctxt "function:indent-sexp"
@@ -5724,6 +5771,15 @@ msgstr ""
 msgctxt "function:fill-paragraph"
 msgid "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
 msgstr "点の所か, 次の段落を詰める (Lisp のバッファでは, コメントの段落)."
+
+#: lisp/simple.scm
+msgctxt "function:fill-region"
+msgid ""
+"Fill each of the paragraphs in the region.\n"
+"Called from Lisp with FROM and TO, fill the paragraphs between them."
+msgstr ""
+"リージョンの段落を, それぞれ詰める.\n"
+"Lisp から呼ぶと, FROM から TO の間の段落を詰める."
 
 #: lisp/simple.scm
 msgctxt "variable:comment-column"
@@ -5867,8 +5923,12 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:kill-ring-save"
-msgid "Save the text between point and the mark in the kill ring, without killing it."
-msgstr "点とマークの間の本文を, kill せずに kill-ring に入れる."
+msgid ""
+"Save the region in the kill ring, without killing it.\n"
+"Called from Lisp with START and END, save the text between them."
+msgstr ""
+"リージョンを kill-ring に保存する (消さない).\n"
+"Lisp から START と END を渡すと, その間の文字を保存する."
 
 #: lisp/simple.scm
 msgctxt "function:kill-line"
@@ -7149,6 +7209,180 @@ msgstr ""
 "今のバッファを読み取り専用にするかを変える.\n"
 "引数が無い (か `toggle') なら, 切り替える. 正の引数なら読み取り専用に,\n"
 "0 か負の引数なら書き込めるようにする."
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-line"
+msgid ""
+"Move point to beginning of current line.\n"
+"With argument N not nil or 1, move forward N - 1 lines first.\n"
+"If point reaches the beginning or end of buffer, it stops there."
+msgstr ""
+"カーソルを今の行の始めに動かす.\n"
+"引数 N が nil か 1 でなければ, 先に N - 1 行進む.\n"
+"バッファの始めか終わりに着いたら, そこで止まる."
+
+#: lisp/simple.scm
+msgctxt "function:end-of-line"
+msgid ""
+"Move point to end of current line.\n"
+"With argument N not nil or 1, move forward N - 1 lines first.\n"
+"If point reaches the beginning or end of buffer, it stops there."
+msgstr ""
+"カーソルを今の行の終わりに動かす.\n"
+"引数 N が nil か 1 でなければ, 先に N - 1 行進む.\n"
+"バッファの始めか終わりに着いたら, そこで止まる."
+
+#: lisp/simple.scm
+msgctxt "function:count-lines"
+msgid ""
+"Return number of lines between START and END.\n"
+"This is usually the number of newlines between them, but can be one more if START is not equal\n"
+"to END and the greater of them is not at the start of a line."
+msgstr ""
+"START と END の間の行数を返す.\n"
+"普通は間の改行の数だが, START と END が違い, 大きい方が行の始めになければ, 1 つ多くなる."
+
+#: lisp/simple.scm
+msgctxt "function:copy-region-as-kill"
+msgid ""
+"Save the region as if killed, but don't kill it.\n"
+"Called from Lisp with START and END, it saves the text between them."
+msgstr ""
+"リージョンを kill したことにして保存する (消さない).\n"
+"Lisp から START と END を渡すと, その間の文字を保存する."
+
+#: lisp/simple.scm
+msgctxt "function:insert-char"
+msgid ""
+"Insert COUNT copies of CHARACTER (a character code or a string of one character).\n"
+"COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
+msgstr ""
+"文字 CHARACTER (文字コードか, 1 文字の文字列) を COUNT 個入れる.\n"
+"COUNT の既定は 1. 対話的には, ミニバッファで文字を聞く. COUNT は前置引数."
+
+#: lisp/simple.scm
+msgctxt "function:indent-to"
+msgid ""
+"Indent from point with tabs and spaces until COLUMN is reached.\n"
+"Optional second argument MINIMUM says always do at least MINIMUM spaces even if that goes past COLUMN.\n"
+"Return the column where point ends up."
+msgstr ""
+"カーソルから, タブと空白で, 桁 COLUMN まで字下げする.\n"
+"2 つ目の引数 MINIMUM は, COLUMN を過ぎても, 少なくとも MINIMUM 個の空白を入れる.\n"
+"字下げした後の桁を返す."
+
+#: lisp/simple.scm
+msgctxt "function:current-indentation"
+msgid ""
+"Return the indentation of the current line.\n"
+"This is the horizontal position of the character following any initial whitespace."
+msgstr ""
+"今の行の字下げを返す.\n"
+"行の始めの空白の後の, 最初の文字の水平の位置."
+
+#: lisp/simple.scm
+msgctxt "function:indent-line-to"
+msgid ""
+"Indent current line to COLUMN.\n"
+"This function removes or adds spaces and tabs at beginning of line only if necessary."
+msgstr ""
+"今の行を桁 COLUMN に字下げする.\n"
+"行の始めの空白とタブを, 必要なときだけ足したり消したりする."
+
+#: lisp/simple.scm
+msgctxt "function:looking-back"
+msgid ""
+"Return true if text before point matches regular expression REGEXP.\n"
+"Optional second argument LIMIT bounds the search; the match may not start before it."
+msgstr ""
+"カーソルの前の文字が, 正規表現 REGEXP に合うなら真を返す.\n"
+"2 つ目の引数 LIMIT で探す範囲を限る. 合う所は, LIMIT より前から始まってはいけない."
+
+#: lisp/simple.scm
+msgctxt "function:copy-marker"
+msgid "Return a new marker pointing at the same place as POSITION (a buffer position)."
+msgstr "POSITION (バッファの位置) と同じ所を指す, 新しいマーカーを返す."
+
+#: lisp/simple.scm
+msgctxt "function:set-marker"
+msgid ""
+"Position MARKER before character number POSITION in the current buffer.\n"
+"Return MARKER."
+msgstr ""
+"マーカー MARKER を, 今のバッファの POSITION 番目の文字の前に置く.\n"
+"MARKER を返す."
+
+#: lisp/simple.scm
+msgctxt "function:buffer-enable-undo"
+msgid "Start keeping undo information for the buffer.  Every buffer keeps it here, so this does nothing."
+msgstr "バッファの元に戻す情報を取り始める. ここでは全てのバッファが取っているので, 何もしない."
+
+#: lisp/simple.scm
+msgctxt "function:delete-trailing-whitespace"
+msgid ""
+"Delete trailing whitespace between START and END.\n"
+"If called interactively, START and END are the start/end of the region if the mark is active,\n"
+"or of the buffer's accessible portion if the mark is inactive.\n"
+"When END is not given, also delete trailing empty lines at the end of the buffer."
+msgstr ""
+"START から END の間の, 行末の空白を消す.\n"
+"対話的に呼ぶと, マークが有効ならリージョンが, 無効ならバッファの見える範囲が START と END になる.\n"
+"END を渡さなければ, バッファの終わりの空行も消す."
+
+#: lisp/simple.scm
+msgctxt "function:replace-regexp-in-string"
+msgid ""
+"Replace all matches for REGEXP with REP in STRING.\n"
+"REP is a string (which may use \\& and \\N), or a function called with the matched text.\n"
+"Return a new string containing the replacements."
+msgstr ""
+"文字列 STRING の中の, 正規表現 REGEXP に合う所を全部 REP に置き換える.\n"
+"REP は文字列 (\\& と \\N が使える) か, 合った文字を渡して呼ぶ関数.\n"
+"置き換えた新しい文字列を返す."
+
+#: lisp/sort.scm
+msgctxt "function:sort--split-lines"
+msgid "Return the lines of TEXT (without their newlines).  A final newline does not start a new line."
+msgstr "文字列 TEXT の行 (改行は除く) を返す. 最後の改行は, 新しい行を始めない."
+
+#: lisp/sort.scm
+msgctxt "function:sort--join-lines"
+msgid "Return LINES joined with newlines, with a final newline if FINAL-NEWLINE."
+msgstr "行 LINES を改行でつないだ文字列を返す. FINAL-NEWLINE が真なら, 最後に改行を付ける."
+
+#: lisp/sort.scm
+msgctxt "function:sort--replace-region"
+msgid "Replace the text between BEG and END with TEXT, keeping point where it was."
+msgstr "BEG から END の文字を TEXT に置き換える. カーソルは元の所に残す."
+
+#: lisp/sort.scm
+msgctxt "function:sort-lines"
+msgid ""
+"Sort lines in region alphabetically; REVERSE non-nil means descending order.\n"
+"Called from a program, there are three arguments: REVERSE, BEG and END (the region to sort)."
+msgstr ""
+"リージョンの行を, 文字の順に並べ替える. REVERSE が nil でなければ, 降順.\n"
+"プログラムから呼ぶときは, REVERSE, BEG, END (並べ替えるリージョン) の 3 つの引数を渡す."
+
+#: lisp/sort.scm
+msgctxt "function:reverse-region"
+msgid ""
+"Reverse the order of lines in a region.\n"
+"From a program takes two point or marker arguments, BEG and END."
+msgstr ""
+"リージョンの行の順序を逆にする.\n"
+"プログラムから呼ぶときは, 位置かマーカーの引数 BEG と END を渡す."
+
+#: lisp/sort.scm
+msgctxt "function:delete-duplicate-lines"
+msgid ""
+"Delete all but one copy of any identical lines in the region.\n"
+"Optional REVERSE keeps the last copy; ADJACENT deletes only adjacent duplicates;\n"
+"KEEP-BLANKS keeps blank lines.  Return the number of deleted lines."
+msgstr ""
+"リージョンの同じ行を 1 つだけ残して消す.\n"
+"REVERSE を渡すと, 最後の行を残す. ADJACENT は, 隣り合う行だけを消す.\n"
+"KEEP-BLANKS は, 空行を残す. 消した行の数を返す."
 
 #: lisp/subr.scm
 msgctxt "variable:noninteractive"

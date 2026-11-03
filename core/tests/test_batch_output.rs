@@ -170,3 +170,25 @@ fn test_find_file_noselect_of_a_directory_is_a_dired_buffer() {
         .unwrap();
     assert!(name.contains(dir.path().file_name().unwrap().to_str().unwrap()));
 }
+
+#[test]
+fn test_set_marker_and_format_s() {
+    let (ev, host, _) = setup();
+    ev.load_editor_files(&host).unwrap();
+    let eval = |code: &str| {
+        let out = ev.eval_with(code, &host).unwrap();
+        out.lines().last().unwrap_or("").to_string()
+    };
+    eval("(insert \"abcdef\")");
+    // マーカーを動かす. 解いたマーカーは動かせない
+    assert_eq!(eval("(define m (copy-marker 2)) (marker-position m)"), "2");
+    assert_eq!(eval("(marker-position (set-marker m 5))"), "5");
+    eval("(goto-char 1) (insert \"XX\")");
+    assert_eq!(eval("(marker-position m)"), "7");
+    assert_eq!(eval("(marker-set 99 1)"), "#f");
+    // %S は, prin1 と同じ (改行はそのまま. 引用符と \ は \ を付ける)
+    assert_eq!(
+        eval("(format \"%S|%S|%S\" \"a\\nb\" \"q\\\"\" '(\"x\" 1))"),
+        "\"\\\"a\\nb\\\"|\\\"q\\\\\\\"\\\"|(\\\"x\\\" 1)\""
+    );
+}

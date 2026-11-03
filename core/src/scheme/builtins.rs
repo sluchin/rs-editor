@@ -1430,7 +1430,7 @@ fn format(args: &[Value]) -> Result<String, String> {
             .ok_or_else(|| "format: not enough arguments".to_string())?;
         let (text, numeric) = match directive {
             Some('s') => (value.to_display(), false),
-            Some('S') => (value.to_string(), false),
+            Some('S') => (print_string(value, true), false),
             Some('d') => (format!("{}", number("format", value)?.trunc() as i64), true),
             Some('o') => (
                 format!("{:o}", number("format", value)?.trunc() as i64),

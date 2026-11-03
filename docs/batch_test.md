@@ -121,6 +121,27 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 | C-04 | `cli-visit-file` | `FILE` を訪れ、バッファの名前と中身が分かる |
 | C-05 | `cli-script` | `--script` で読む |
 
+### 4.7 編集のコマンド
+
+Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル、マーク、キルリング、レジスタ) が同じことを確かめる。
+
+| ID | 試験 | 確かめること |
+| --- | --- | --- |
+| E-20 | `20-motion` | `forward-char`、`forward-line` の戻り値、`forward-word`、`beginning-of-line`、`end-of-line` (引数つき)、`line-beginning-position`、`count-lines`、`move-to-column`、`bobp` と `eobp` |
+| E-21 | `21-delete-insert` | `delete-horizontal-space`、`just-one-space`、`delete-char`、`newline`、`open-line`、`delete-blank-lines`、`delete-indentation`、`insert-char` |
+| E-22 | `22-case-words` | `upcase-region`、`capitalize-region`、`upcase-word`、`kill-word`、`backward-kill-word`、`transpose-words`、`transpose-chars` |
+| E-23 | `23-kill-lines` | `kill-line` (引数つき)、`kill-whole-line`、`yank`、`current-kill`、`copy-region-as-kill`、`zap-to-char` |
+| E-24 | `24-marks` | `set-mark`、`region-beginning`、`exchange-point-and-mark`、`push-mark`、`pop-mark`、`mark-whole-buffer`、`mark-word`、`kill-ring-save` (範囲の引数)、マーカーの移動 |
+| E-25 | `25-registers` | `copy-to-register`、`insert-register`、`point-to-register`、`number-to-register`、`increment-register`、`append-to-register`、`prepend-to-register` |
+| E-26 | `26-rectangles` | `extract-rectangle`、`delete-rectangle`、`kill-rectangle`、`yank-rectangle`、`string-rectangle`、`open-rectangle`、`clear-rectangle` |
+| E-27 | `27-paragraphs-fill` | `forward-paragraph`、`backward-paragraph`、`fill-paragraph`、`fill-region`、`set-fill-column`、`mark-paragraph` |
+| E-28 | `28-sort-lines` | `sort-lines` (昇順と降順)、`reverse-region`、`flush-lines`、`keep-lines`、`how-many`、`delete-duplicate-lines` |
+| E-29 | `29-replace-match` | `match-beginning`、`match-end`、`match-string`、`replace-match`、`looking-at`、`looking-back`、`replace-string`、`replace-regexp`、`replace-regexp-in-string`、`regexp-quote` |
+| E-30 | `30-undo` | `undo-boundary` と `undo` の組 |
+| E-31 | `31-transpose-indent` | `transpose-lines`、`current-indentation`、`back-to-indentation`、`indent-rigidly`、`indent-to`、`indent-line-to`、`indent-region` (COLUMN つき)、`delete-trailing-whitespace` |
+| E-32 | `32-sexp` | `forward-sexp`、`backward-sexp`、`up-list`、`down-list`、`backward-up-list`、`kill-sexp`、`transpose-sexps`、行き過ぎのエラー |
+| E-33 | `33-narrow-widen` | `narrow-to-region` 中の `point-min` と `point-max`、範囲外へのエラー、`save-restriction`、`widen` |
+
 ## 5. 比べない違い
 
 | 項目 | 理由 |
@@ -135,7 +156,7 @@ EMACS=/opt/emacs/bin/emacs RSEDITOR=./target/release/rseditor-tui tests/batch/ru
 
 ## 6. 試験の足し方
 
-1. `tests/batch/cases/NN-name.el` と `NN-name.scm` を、同じ出力になるように書く。
+1. `tests/batch/cases/NN-name.el` と `NN-name.scm` を、同じ出力になるように書く。20 番より後ろは、`.el` を書いて `tests/batch/tools/gen.py NN-name` で `.scm` を作る (`nil` と `t`、`setq`、`progn`、文字の記法 `?a` を変える)。Scheme に無い書き方 (`while` など) は、`.scm` を手で直し、先頭に `;;; hand-written` と書くと、作り直さない。
 2. 出力は `(princ (format "...\n" ...))` で出す。真偽は文字にする。エラーは `condition-case` で捕まえ、メッセージを出す。
 3. ファイルの中身は、動かした後のディレクトリの比較で見る。わざわざ出さなくてよい。
 4. この文書の 4 章の表に、行を足す。

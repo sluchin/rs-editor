@@ -1049,6 +1049,9 @@ impl<U: Host> EditorHost<U> {
             }
             "point-marker" => Value::Number(b.marker_new(b.point()) as f64),
             "marker-position" => at_opt(b.marker_position(int(op, args, 0)?.max(0) as usize)),
+            "marker-set" => {
+                Value::Boolean(b.marker_set(int(op, args, 0)?.max(0) as usize, pos(op, args, 1)?))
+            }
             "marker-release" => {
                 b.marker_release(int(op, args, 0)?.max(0) as usize);
                 Value::Nil

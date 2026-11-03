@@ -922,6 +922,22 @@ impl Buffer {
         self.markers.get(id).copied().flatten()
     }
 
+    /// マーカーの位置を変えます (Emacs の `set-marker`). 解いたマーカーや, 無いマーカーは変えない.
+    ///
+    /// # Returns
+    ///
+    /// 変えたら `true`.
+    pub fn marker_set(&mut self, id: usize, pos: usize) -> bool {
+        let pos = pos.min(self.len());
+        match self.markers.get_mut(id) {
+            Some(slot @ Some(_)) => {
+                *slot = Some(pos);
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// マーカーを解きます.
     pub fn marker_release(&mut self, id: usize) {
         if let Some(slot) = self.markers.get_mut(id) {

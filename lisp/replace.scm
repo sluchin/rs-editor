@@ -89,7 +89,6 @@ DELIMITED means match only whole words.  START and END (or #f) bound the replace
         (begin
           (if start (goto-char (if backward (max start end) (min start end))))
           (push-mark (point))
-          (message "Mark set")
           (let loop ()
             (let ((data (and keep-going (can-continue) (next-match))))
               (when data
@@ -407,6 +406,83 @@ With #t, or with a prefix argument interactively, remove all of it."
          (face (if (and (pair? args) (pair? (cdr args))) (cadr args) (hi-lock--next-face))))
     (hi-lock--highlight (string-append "^.*\\(?:" regexp "\\).*$") face)
     regexp))
+
+;;; Deleting and counting the lines that match
+
+(define (replace--line-bounds start end)
+  "Return (START END) with default values: from point to the end of the buffer."
+  (list (or start (point)) (or end (point-max))))
+
+(define-command (flush-lines . args)
+  "Delete lines containing matches for REGEXP.
+When called from Lisp, delete lines between START and END (default: from point to the end of the
+buffer).  If a match is split across lines, all the lines it lies in are deleted.
+Return the number of deleted matching lines."
+  (let* ((interactive (null? args))
+         (regexp (if interactive (read-string "Flush lines containing match for regexp: ") (car args)))
+         (bounds (replace--line-bounds (and (pair? (cdr args)) (cadr args))
+                                       (and (pair? (cdr args)) (pair? (cddr args)) (caddr args))))
+         (tail (- (point-max) (cadr bounds))))
+    (let ((count
+           (save-excursion
+             (goto-char (car bounds))
+             (let loop ((count 0))
+               (if (and (< (point) (- (point-max) tail))
+                        (re-search-forward regexp (- (point-max) tail) #t))
+                   (begin
+                     (delete-region (save-excursion (goto-char (match-beginning 0)) (line-beginning-position))
+                                    (begin (forward-line 1) (point)))
+                     (loop (+ count 1)))
+                   count)))))
+      (if interactive
+          (message (format "Deleted %d matching line%s" count (if (= count 1) "" "s"))))
+      count)))
+
+(define-command (keep-lines . args)
+  "Delete all lines except those containing matches for REGEXP.
+When called from Lisp, operate between START and END (default: from point to the end of the
+buffer).  Start at the next line when point is not at the beginning of a line."
+  (let* ((interactive (null? args))
+         (regexp (if interactive (read-string "Keep lines containing match for regexp: ") (car args)))
+         (bounds (replace--line-bounds (and (pair? (cdr args)) (cadr args))
+                                       (and (pair? (cdr args)) (pair? (cddr args)) (caddr args))))
+         (tail (- (point-max) (cadr bounds))))
+    (save-excursion
+      (goto-char (car bounds))
+      (unless (bolp) (forward-line 1))
+      (let loop ((start (point)))
+        (when (< (point) (- (point-max) tail))
+          (if (not (re-search-forward regexp (- (point-max) tail) #t))
+              (delete-region start (- (point-max) tail))
+              (let ((end (save-excursion (goto-char (match-beginning 0)) (line-beginning-position))))
+                (when (< start end)
+                  (delete-region start end))
+                (let ((next (save-excursion (forward-line 1) (point))))
+                  (if (and (< (point) (- (point-max) tail)) (= (match-beginning 0) (match-end 0)))
+                      (forward-char 1))
+                  (loop next)))))))
+    #f))
+
+(define-command (how-many . args)
+  "Print and return number of matches for REGEXP following point.
+When called from Lisp, count between START and END (default: from point to the end of the buffer)."
+  (let* ((interactive (null? args))
+         (regexp (if interactive (read-string "How many matches for regexp: ") (car args)))
+         (bounds (replace--line-bounds (and (pair? (cdr args)) (cadr args))
+                                       (and (pair? (cdr args)) (pair? (cddr args)) (caddr args))))
+         (count
+          (save-excursion
+            (goto-char (car bounds))
+            (let loop ((count 0))
+              (let ((before (point)))
+                (if (and (< (point) (cadr bounds)) (re-search-forward regexp (cadr bounds) #t))
+                    (if (= before (point))
+                        (begin (forward-char 1) (loop count))
+                        (loop (+ count 1)))
+                    count))))))
+    (if interactive
+        (message (format "%d occurrence%s" count (if (= count 1) "" "s"))))
+    count))
 
 (provide 'replace)
 

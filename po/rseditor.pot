@@ -4658,6 +4658,13 @@ msgid ""
 "Push the mark if going to the location moves point, unless called in succession."
 msgstr ""
 
+#: lisp/register.scm
+msgctxt "function:prepend-to-register"
+msgid ""
+"Prepend the region between START and END to REGISTER.\n"
+"If DELETE-FLAG is true (interactively, with a prefix argument), delete the region after prepending."
+msgstr ""
+
 #: lisp/replace.scm
 msgctxt "variable:case-replace"
 msgid "Non-nil means `query-replace' should preserve case in replacements."
@@ -4824,6 +4831,35 @@ msgstr ""
 #: lisp/replace.scm
 msgctxt "function:highlight-lines-matching-regexp"
 msgid "Highlight the lines that match REGEXP."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--line-bounds"
+msgid "Return (START END) with default values: from point to the end of the buffer."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:flush-lines"
+msgid ""
+"Delete lines containing matches for REGEXP.\n"
+"When called from Lisp, delete lines between START and END (default: from point to the end of the\n"
+"buffer).  If a match is split across lines, all the lines it lies in are deleted.\n"
+"Return the number of deleted matching lines."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:keep-lines"
+msgid ""
+"Delete all lines except those containing matches for REGEXP.\n"
+"When called from Lisp, operate between START and END (default: from point to the end of the\n"
+"buffer).  Start at the next line when point is not at the beginning of a line."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:how-many"
+msgid ""
+"Print and return number of matches for REGEXP following point.\n"
+"When called from Lisp, count between START and END (default: from point to the end of the buffer)."
 msgstr ""
 
 #: lisp/simple.scm
@@ -5100,7 +5136,7 @@ msgstr ""
 msgctxt "function:indent-region"
 msgid ""
 "Indent each nonblank line in the region (the lines from START to END).\n"
-"Without arguments, the region is used."
+"Without arguments, the region is used.  With a third argument COLUMN, indent every nonblank line to COLUMN."
 msgstr ""
 
 #: lisp/simple.scm
@@ -5130,6 +5166,13 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:fill-paragraph"
 msgid "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:fill-region"
+msgid ""
+"Fill each of the paragraphs in the region.\n"
+"Called from Lisp with FROM and TO, fill the paragraphs between them."
 msgstr ""
 
 #: lisp/simple.scm
@@ -5252,7 +5295,9 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:kill-ring-save"
-msgid "Save the text between point and the mark in the kill ring, without killing it."
+msgid ""
+"Save the region in the kill ring, without killing it.\n"
+"Called from Lisp with START and END, save the text between them."
 msgstr ""
 
 #: lisp/simple.scm
@@ -6326,6 +6371,144 @@ msgid ""
 "Change whether the current buffer is read-only.\n"
 "With no argument (or `toggle'), toggle it.  With a positive argument, make the buffer read-only;\n"
 "with zero or a negative argument, make it writable."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:beginning-of-line"
+msgid ""
+"Move point to beginning of current line.\n"
+"With argument N not nil or 1, move forward N - 1 lines first.\n"
+"If point reaches the beginning or end of buffer, it stops there."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:end-of-line"
+msgid ""
+"Move point to end of current line.\n"
+"With argument N not nil or 1, move forward N - 1 lines first.\n"
+"If point reaches the beginning or end of buffer, it stops there."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:count-lines"
+msgid ""
+"Return number of lines between START and END.\n"
+"This is usually the number of newlines between them, but can be one more if START is not equal\n"
+"to END and the greater of them is not at the start of a line."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:copy-region-as-kill"
+msgid ""
+"Save the region as if killed, but don't kill it.\n"
+"Called from Lisp with START and END, it saves the text between them."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:insert-char"
+msgid ""
+"Insert COUNT copies of CHARACTER (a character code or a string of one character).\n"
+"COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-to"
+msgid ""
+"Indent from point with tabs and spaces until COLUMN is reached.\n"
+"Optional second argument MINIMUM says always do at least MINIMUM spaces even if that goes past COLUMN.\n"
+"Return the column where point ends up."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:current-indentation"
+msgid ""
+"Return the indentation of the current line.\n"
+"This is the horizontal position of the character following any initial whitespace."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:indent-line-to"
+msgid ""
+"Indent current line to COLUMN.\n"
+"This function removes or adds spaces and tabs at beginning of line only if necessary."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:looking-back"
+msgid ""
+"Return true if text before point matches regular expression REGEXP.\n"
+"Optional second argument LIMIT bounds the search; the match may not start before it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:copy-marker"
+msgid "Return a new marker pointing at the same place as POSITION (a buffer position)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-marker"
+msgid ""
+"Position MARKER before character number POSITION in the current buffer.\n"
+"Return MARKER."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:buffer-enable-undo"
+msgid "Start keeping undo information for the buffer.  Every buffer keeps it here, so this does nothing."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:delete-trailing-whitespace"
+msgid ""
+"Delete trailing whitespace between START and END.\n"
+"If called interactively, START and END are the start/end of the region if the mark is active,\n"
+"or of the buffer's accessible portion if the mark is inactive.\n"
+"When END is not given, also delete trailing empty lines at the end of the buffer."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:replace-regexp-in-string"
+msgid ""
+"Replace all matches for REGEXP with REP in STRING.\n"
+"REP is a string (which may use \\& and \\N), or a function called with the matched text.\n"
+"Return a new string containing the replacements."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:sort--split-lines"
+msgid "Return the lines of TEXT (without their newlines).  A final newline does not start a new line."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:sort--join-lines"
+msgid "Return LINES joined with newlines, with a final newline if FINAL-NEWLINE."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:sort--replace-region"
+msgid "Replace the text between BEG and END with TEXT, keeping point where it was."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:sort-lines"
+msgid ""
+"Sort lines in region alphabetically; REVERSE non-nil means descending order.\n"
+"Called from a program, there are three arguments: REVERSE, BEG and END (the region to sort)."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:reverse-region"
+msgid ""
+"Reverse the order of lines in a region.\n"
+"From a program takes two point or marker arguments, BEG and END."
+msgstr ""
+
+#: lisp/sort.scm
+msgctxt "function:delete-duplicate-lines"
+msgid ""
+"Delete all but one copy of any identical lines in the region.\n"
+"Optional REVERSE keeps the last copy; ADJACENT deletes only adjacent duplicates;\n"
+"KEEP-BLANKS keeps blank lines.  Return the number of deleted lines."
 msgstr ""
 
 #: lisp/subr.scm

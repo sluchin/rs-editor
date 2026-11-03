@@ -327,13 +327,26 @@ Elsewhere, move to the next indent point of the previous line (indent-relative).
 
 (define-command (indent-region . args)
   "Indent each nonblank line in the region (the lines from START to END).
-Without arguments, the region is used."
-  (if (null? args)
-      (indent-region (region-beginning) (region-end))
-      (begin
-        (indent-region-op (car args) (cadr args) indent-tabs-mode)
-        (set-deactivate-mark #t)
-        (message "Indenting region...done"))))
+Without arguments, the region is used.  With a third argument COLUMN, indent every nonblank line to COLUMN."
+  (cond ((null? args) (indent-region (region-beginning) (region-end)))
+        ((and (pair? (cddr args)) (caddr args))
+         ;; COLUMN: 空でない行を, 全て COLUMN に字下げする
+         (let ((column (prefix-numeric-value (caddr args)))
+               (tail (- (point-max) (max (car args) (cadr args)))))
+           (save-excursion
+             (goto-char (min (car args) (cadr args)))
+             (unless (bolp) (forward-line 1))
+             (let loop ()
+               (when (< (point) (- (point-max) tail))
+                 (delete-region (point) (begin (skip-chars-forward " \t") (point)))
+                 (unless (eolp) (indent-to column 0))
+                 (forward-line 1)
+                 (loop))))
+           (set-deactivate-mark #t)))
+        (else
+         (indent-region-op (car args) (cadr args) indent-tabs-mode)
+         (set-deactivate-mark #t)
+         (message "Indenting region...done"))))
 
 (define-command (indent-sexp . args)
   "Indent each line of the list starting just after point (Lisp buffers only)."
@@ -387,6 +400,24 @@ At the beginning of a line, cancel the fill prefix."
 (define-command (fill-paragraph . args)
   "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
   (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
+
+(define-command (fill-region . args)
+  "Fill each of the paragraphs in the region.
+Called from Lisp with FROM and TO, fill the paragraphs between them."
+  (let* ((from (min (if (null? args) (region-beginning) (car args))
+                    (if (null? args) (region-end) (cadr args))))
+         (to (max (if (null? args) (region-beginning) (car args))
+                  (if (null? args) (region-end) (cadr args))))
+         (tail (- (point-max) to)))
+    (save-excursion
+      (goto-char from)
+      (let loop ()
+        (skip-chars-forward "\n \t")
+        (when (< (point) (- (point-max) tail))
+          (fill-paragraph-op fill-column fill-prefix indent-tabs-mode)
+          (forward-paragraph)
+          (loop))))
+    #f))
 
 (define comment-column 40
   "Column to indent a comment to.")
@@ -593,9 +624,12 @@ The killed text is saved in the kill ring."
       (simple--kill (car args) (cadr args))))
 
 (define-command (kill-ring-save . args)
-  "Save the text between point and the mark in the kill ring, without killing it."
-  (kill-new (buffer-substring (region-beginning) (region-end)))
-  (set-deactivate-mark #t))
+  "Save the region in the kill ring, without killing it.
+Called from Lisp with START and END, save the text between them."
+  (let ((start (if (null? args) (region-beginning) (car args)))
+        (end (if (null? args) (region-end) (cadr args))))
+    (kill-new (buffer-substring (min start end) (max start end)))
+    (set-deactivate-mark #t)))
 
 (define-command (kill-line . args)
   "Kill the rest of the line; if there are no nonblanks there, kill through the newline.
@@ -2254,3 +2288,152 @@ with zero or a negative argument, make it writable."
     (if interactive
         (message (if on "Read-Only mode enabled in current buffer" "Read-Only mode disabled in current buffer")))
     on))
+
+;;; Builtins of Emacs (C) and small helpers
+
+(define-command (beginning-of-line . args)
+  "Move point to beginning of current line.
+With argument N not nil or 1, move forward N - 1 lines first.
+If point reaches the beginning or end of buffer, it stops there."
+  (forward-line (- (simple--arg args) 1))
+  (goto-char (line-beginning-position))
+  #f)
+
+(define-command (end-of-line . args)
+  "Move point to end of current line.
+With argument N not nil or 1, move forward N - 1 lines first.
+If point reaches the beginning or end of buffer, it stops there."
+  (forward-line (- (simple--arg args) 1))
+  (goto-char (line-end-position))
+  #f)
+
+(define (count-lines start end . rest)
+  "Return number of lines between START and END.
+This is usually the number of newlines between them, but can be one more if START is not equal
+to END and the greater of them is not at the start of a line."
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      (goto-char (point-min))
+      (- (buffer-size) (forward-line (buffer-size))))))
+
+(define-command (copy-region-as-kill . args)
+  "Save the region as if killed, but don't kill it.
+Called from Lisp with START and END, it saves the text between them."
+  (let ((start (if (null? args) (region-beginning) (car args)))
+        (end (if (null? args) (region-end) (cadr args))))
+    (kill-new (buffer-substring (min start end) (max start end)))
+    #f))
+
+(define-command (insert-char . args)
+  "Insert COUNT copies of CHARACTER (a character code or a string of one character).
+COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
+  (let* ((char (if (null? args) (substring (read-string "Insert character: ") 0 1) (car args)))
+         (count (cond ((and (pair? args) (pair? (cdr args))) (cadr args))
+                      ((null? args) (prefix-numeric-value (current-prefix-arg)))
+                      (else 1)))
+         (text (if (number? char) (char-to-string char) char)))
+    (let loop ((i 0))
+      (when (< i count)
+        (insert text)
+        (loop (+ i 1))))
+    #f))
+
+(define (indent-to column . rest)
+  "Indent from point with tabs and spaces until COLUMN is reached.
+Optional second argument MINIMUM says always do at least MINIMUM spaces even if that goes past COLUMN.
+Return the column where point ends up."
+  (let ((target (max column (+ (current-column) (if (pair? rest) (car rest) 0)))))
+    (simple--indent-to target)
+    target))
+
+(define (current-indentation)
+  "Return the indentation of the current line.
+This is the horizontal position of the character following any initial whitespace."
+  (save-excursion
+    (back-to-indentation)
+    (current-column)))
+
+(define (indent-line-to column)
+  "Indent current line to COLUMN.
+This function removes or adds spaces and tabs at beginning of line only if necessary."
+  (back-to-indentation)
+  (let ((current (current-column)))
+    (cond ((< current column)
+           (when (>= (- column (* (quotient current 8) 8)) 8)
+             (delete-region (point) (begin (skip-chars-backward " ") (point))))
+           (indent-to column))
+          ((> current column)
+           (delete-region (begin (move-to-column column #t) (point))
+                          (begin (back-to-indentation) (point)))))
+    #f))
+
+(define (looking-back regexp . rest)
+  "Return true if text before point matches regular expression REGEXP.
+Optional second argument LIMIT bounds the search; the match may not start before it."
+  (let ((end (point))
+        (start (max (if (pair? rest) (car rest) (point-min)) (point-min))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region start end)
+        (goto-char start)
+        (and (re-search-forward (string-append "\\(?:" regexp "\\)\\'") end #t) #t)))))
+
+(define (copy-marker position . rest)
+  "Return a new marker pointing at the same place as POSITION (a buffer position)."
+  (save-excursion
+    (goto-char position)
+    (point-marker)))
+
+(define (set-marker marker position . rest)
+  "Position MARKER before character number POSITION in the current buffer.
+Return MARKER."
+  (marker-set marker position)
+  marker)
+
+(define (buffer-enable-undo . rest)
+  "Start keeping undo information for the buffer.  Every buffer keeps it here, so this does nothing."
+  #f)
+
+(define-command (delete-trailing-whitespace . args)
+  "Delete trailing whitespace between START and END.
+If called interactively, START and END are the start/end of the region if the mark is active,
+or of the buffer's accessible portion if the mark is inactive.
+When END is not given, also delete trailing empty lines at the end of the buffer."
+  (let* ((region (and (null? args) (use-region-p)))
+         (start (cond ((pair? args) (car args)) (region (region-beginning)) (else #f)))
+         (end (cond ((and (pair? args) (pair? (cdr args))) (cadr args)) (region (region-end)) (else #f)))
+         (tail (and end (- (point-max) end))))
+    (save-excursion
+      (goto-char (or start (point-min)))
+      (let loop ()
+        (when (re-search-forward "[ \t]+$" (and tail (- (point-max) tail)) #t)
+          (replace-match "")
+          (loop)))
+      (unless end
+        (goto-char (point-max))
+        (when (and (> (point) (point-min)) (equal? (buffer-substring (- (point) 1) (point)) "\n"))
+          (skip-chars-backward "\n")
+          (when (< (point) (- (point-max) 1))
+            (delete-region (+ (point) 1) (point-max))))))
+    #f))
+
+(define (replace-regexp-in-string regexp rep string . rest)
+  "Replace all matches for REGEXP with REP in STRING.
+REP is a string (which may use \\& and \\N), or a function called with the matched text.
+Return a new string containing the replacements."
+  (let ((work (generate-new-buffer " *replace*")))
+    (unwind-protect
+        (with-current-buffer work
+          (insert string)
+          (goto-char (point-min))
+          (let loop ()
+            (when (and (<= (point) (point-max)) (re-search-forward regexp #f #t))
+              (let ((empty (= (match-beginning 0) (match-end 0))))
+                (if (procedure? rep)
+                    (replace-match (rep (match-string 0)) #t #t)
+                    (replace-match rep))
+                (if (and empty (not (eobp))) (forward-char 1))
+                (unless (and empty (eobp)) (loop)))))
+          (buffer-string))
+      (kill-buffer work))))
