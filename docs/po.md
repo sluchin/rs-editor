@@ -19,7 +19,7 @@ PO の 1 つの項目は、次の形です。
 #: lisp/org.scm
 msgctxt "function:org-cycle"
 msgid "Move to the next table field, cycle the heading, or indent."
-msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (TAB)。"
+msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (TAB)."
 ```
 
 - `msgctxt` は `function:名前` (関数とコマンド) か `variable:名前` (変数)。
@@ -79,10 +79,10 @@ po/ja.po: 534 translated, 0 fuzzy, 0 untranslated
 
 訳の書き方:
 
-- 文の終わりは「。」、文の中の区切りは「,」にします (`po/ja.po` の、ほかの訳に合わせる)。
+- 文の終わりは「.」、文の中の区切りは「,」にします (`po/ja.po` の、ほかの訳に合わせる)。
 - 引数の名前 (`ITEMS` など) は、英語のまま残します。
 - 改行の位置は、英語と同じでなくてもかまいません。
-- コマンドの訳には、キーを添えてもかまいません (`"今の木を浅くする (M-S-左)。"`)。
+- コマンドの訳には、キーを添えてもかまいません (`"今の木を浅くする (M-S-左)."`)。
 
 ### 4. 確かめる
 
