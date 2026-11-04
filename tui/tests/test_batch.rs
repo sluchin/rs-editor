@@ -62,7 +62,7 @@ fn test_eval_in_order() {
 #[test]
 fn test_noninteractive_is_true() {
     let (_, out, _) = batch(&["-batch", "--eval", "(princ noninteractive)"], "");
-    assert_eq!(out, "#t");
+    assert_eq!(out, "t");
 }
 
 #[test]
@@ -225,7 +225,7 @@ fn test_screen_operations_are_ignored_or_refused() {
         ],
         "",
     );
-    assert_eq!((status, out.as_str()), (0, "(#f ())"));
+    assert_eq!((status, out.as_str()), (0, "(nil nil)"));
     let (status, _, err) = batch(&["--eval", "(recenter)"], "");
     assert_eq!(status, ERROR_STATUS);
     assert_eq!(err, "The batch mode does not support recenter\n");
@@ -367,7 +367,7 @@ fn test_execute_kbd_macro_types_keys() {
         " (execute-kbd-macro (kbd \"\") 3) (execute-kbd-macro 5) (execute-kbd-macro (list \"x\" 5) \"once\") (execute-kbd-macro \"\u{1b}\")",
         " (princ (list (buffer-string) (point) executing-kbd-macro)))",
     );
-    assert_eq!(out_of(code, ""), "(one!\nac d\n   ??xtwo\n 17 #f)");
+    assert_eq!(out_of(code, ""), "(one!\nac d\n   ??xtwo\n 17 nil)");
 }
 
 #[test]
@@ -402,7 +402,7 @@ fn test_macro_messages_and_end_key_are_quiet_while_executing() {
         " (princ (list (buffer-string) (kbd-macro-defining-p) last-kbd-macro)))",
     );
     let (_, out, err) = batch(&["--eval", code], "");
-    assert_eq!(out, "(aZ #t #f)");
+    assert_eq!(out, "(aZ t nil)");
     assert_eq!(err, "");
     // マクロを動かしている間の end-kbd-macro は、何も知らせない
     let code = concat!(
@@ -410,7 +410,7 @@ fn test_macro_messages_and_end_key_are_quiet_while_executing() {
         " (start-kbd-macro) (execute-kbd-macro (kbd \"C-c e\")) (princ (kbd-macro-defining-p)))",
     );
     let (_, out, err) = batch(&["--eval", code], "");
-    assert_eq!(out, "#f");
+    assert_eq!(out, "nil");
     assert_eq!(err, "Defining kbd macro...\n");
 }
 

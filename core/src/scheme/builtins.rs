@@ -59,6 +59,7 @@ pub const NAMES: &[&str] = &[
     "reverse",
     "list-ref",
     "null?",
+    "null",
     "pair?",
     "list?",
     "map",
@@ -75,6 +76,7 @@ pub const NAMES: &[&str] = &[
     "string-append",
     "substring",
     "string=?",
+    "string=",
     "string<?",
     "string-upcase",
     "string-downcase",
@@ -232,10 +234,13 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 (_, v) => number(name, v)? == 0.0,
             }))
         }
-        "not" | "boolean?" | "symbol?" | "string?" | "procedure?" | "null?" | "pair?" | "list?" => {
+        "not" | "null" | "boolean?" | "symbol?" | "string?" | "procedure?" | "null?" | "pair?"
+        | "list?" => {
             let [v] = fixed::<1>(name, args)?;
             Ok(Value::Boolean(match name {
                 "not" => !v.is_true(),
+                // Emacs の null: nil (偽と空のリスト) だけ真
+                "null" => !v.is_non_nil(),
                 "boolean?" => matches!(v, Value::Boolean(_)),
                 "symbol?" => matches!(v, Value::Symbol(_)),
                 "string?" => matches!(v, Value::String(_)),
@@ -466,10 +471,10 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             }
             Ok(Value::String(chars[start..end].iter().collect()))
         }
-        "string=?" | "string<?" => {
+        "string=?" | "string=" | "string<?" => {
             let [a, b] = fixed::<2>(name, args)?;
             let (a, b) = (string(name, &a)?, string(name, &b)?);
-            Ok(Value::Boolean(if name == "string=?" {
+            Ok(Value::Boolean(if name != "string<?" {
                 a == b
             } else {
                 a < b
@@ -1434,6 +1439,10 @@ fn print_string(value: &Value, quoted: bool) -> String {
             format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
         }
         Value::String(s) => s.clone(),
+        // Emacs の書き方: 偽と空のリストは nil, 真は t
+        Value::Boolean(false) | Value::Nil => "nil".to_string(),
+        Value::Boolean(true) => "t".to_string(),
+        Value::List(items) if items.is_empty() => "nil".to_string(),
         Value::List(items) => {
             let parts: Vec<String> = items.iter().map(|v| print_string(v, quoted)).collect();
             format!("({})", parts.join(" "))
@@ -1478,7 +1487,7 @@ fn format(args: &[Value]) -> Result<String, String> {
             .next()
             .ok_or_else(|| "format: not enough arguments".to_string())?;
         let (text, numeric) = match directive {
-            Some('s') => (value.to_display(), false),
+            Some('s') => (print_string(value, false), false),
             Some('S') => (print_string(value, true), false),
             Some('d') => (format!("{}", number("format", value)?.trunc() as i64), true),
             Some('o') => (

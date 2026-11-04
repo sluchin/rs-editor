@@ -347,7 +347,7 @@ fn test_string_procedures() {
     );
     assert_eq!(
         eval("(format \"%s=%S %d%% %s\" \"a\" \"b\" 3.7 '(1 \"x\"))"),
-        "\"a=\\\"b\\\" 3% (1 \\\"x\\\")\""
+        "\"a=\\\"b\\\" 3% (1 x)\""
     );
     // 幅と旗 (期待値は Emacs の結果)
     assert_eq!(
@@ -865,4 +865,28 @@ fn test_condition_case() {
     );
     // メッセージの文字列からも取り出せる
     assert_eq!(eval("(scan-error-reason \"plain\")"), "\"plain\"");
+}
+
+#[test]
+fn test_format_prints_nil_and_t_like_emacs() {
+    let eval = |code: &str| Evaluator::new().eval(code).unwrap();
+    // format と princ は Emacs の書き方: 偽と空のリストは nil, 真は t. 入れ子の文字列は, %s で引用符なし
+    assert_eq!(eval("(format \"%S %S %S\" #f #t '())"), "\"nil t nil\"");
+    assert_eq!(
+        eval("(format \"%s\" (list 1 #f \"a\" #t '()))"),
+        "\"(1 nil a t nil)\""
+    );
+    assert_eq!(
+        eval("(format \"%S\" (list 1 #f \"a\"))"),
+        "\"(1 nil \\\"a\\\")\""
+    );
+    // null と string=
+    assert_eq!(
+        eval("(list (null #f) (null '()) (null 0) (null '(1)))"),
+        "(#t #t #f #f)"
+    );
+    assert_eq!(
+        eval("(list (string= \"a\" \"a\") (string= \"a\" \"b\"))"),
+        "(#t #f)"
+    );
 }

@@ -159,12 +159,13 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-48 | `48-dired-add` | dired でコピー、名前の変更、ディレクトリの作成の後の行の並び (Emacs は点の行の前に足し、並べ直さない) |
 | E-49 | `49-regexp-syntax` | 正規表現の書き方: `\s-`、`\w`、`\_<`、`\<`、`\b`、`\{n,m\}`、`[[:alpha:]]`、後方参照、`\(?:`、非貪欲、`[]a]`、`^` と `$`、特別でない括弧と波括弧と縦線 |
 | E-50 | `50-args-range` | 範囲外の位置: `buffer-substring`、`delete-region`、`kill-region`、`upcase-region`、`narrow-to-region` に 1 より小さい位置や本文の外の位置 (引数の順のまま報せる)、`string-search` の始め、`goto-char` は丸める、`car` と `cdr` の nil |
+| E-51 | `51-nil-printing` | `format`、`princ`、`prin1`、`print`、`message` の `nil` と `t` (偽と空のリストは `nil`、真は `t`。入れ子のリストの中も、`%s` では文字列に引用符を付けない)、`null`、`string=` |
 
 ## 5. 比べない違い
 
 | 項目 | 理由 |
 | --- | --- |
-| 言語 | Emacs は Emacs Lisp、rs-editor は Scheme。試験は言語ごとに書く (`nil` と `#f`、`defun` と `define` など)。真偽は `"t"` や `"nil"` の文字にして出す |
+| 言語 | Emacs は Emacs Lisp、rs-editor は Scheme。試験は言語ごとに書く (`nil` と `#f`、`defun` と `define` など)。出力は `format` と `princ` で `nil` と `t` になる (E-51) ので、そのまま比べる。評価の結果 (ミニバッファに出す値) は Scheme の `#t` と `#f` |
 | 正規表現 | rs-editor は Rust の正規表現で、Emacs の書き方を変換して使う (試験 E-46、E-49)。合わないのは、番号付きの括弧 `\(?2:` (エラーにする) と、構文表の細かい違い (`\s.` が句読点と見る字など) |
 | メジャーモード | `major-mode` の名前は合わせた (試験 E-45。`*scratch*` は `lisp-interaction-mode`、`.txt` は `text-mode`)。`*scratch*` の構文は Fundamental のまま (Emacs は Lisp)。モードごとのキーやフックは比べない |
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
