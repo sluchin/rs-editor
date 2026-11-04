@@ -1261,8 +1261,6 @@ fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, 
         .collect()
 }
 
-/// `condition-case` の条件 (記号か記号のリスト) が, 失敗のメッセージを受けるか.
-///
 /// 失敗のメッセージから, Emacs のエラーの種類 (`condition-case` の節と `(car e)` の記号) を決める. 知らなければ `error`.
 fn error_kind(message: &str) -> &'static str {
     const PREFIXES: &[(&str, &str)] = &[
@@ -1395,6 +1393,8 @@ fn split_data(text: &str) -> Vec<String> {
     parts
 }
 
+/// `condition-case` の条件 (記号か記号のリスト) が, 失敗のメッセージを受けるか.
+///
 /// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.
 /// `error` と `t` は, `quit` 以外の全て. `user-error` は, `scan-error` と `quit` 以外の全て.
 fn handles(conditions: &Value, message: &str) -> bool {

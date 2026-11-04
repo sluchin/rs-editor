@@ -1414,16 +1414,6 @@ fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
     }
 }
 
-/// `format` の文字列を作ります. `%s` (文字列は引用符なし), `%S` (書いたとおり), `%d` (整数), `%o`, `%x`, `%X`, `%%` を使えます.
-/// `%` の後ろに, 旗 `-` (左に寄せる) と `0` (0 で埋める) と, 幅を付けられます (`%3d`, `%-4s`, `%03d`).
-///
-/// # Arguments
-///
-/// * `args` - 書式の文字列と, 埋め込む値.
-///
-/// # Returns
-///
-/// 作った文字列. 書式が文字列でない, 値が足りない, 使えない指定がある場合は [`Err`].
 /// 標準出力に書く (バッチモードは標準出力. 画面のエディタは, エコー領域).
 fn write_output(machine: &mut Machine, text: &str) -> Result<(), String> {
     machine
@@ -1451,7 +1441,16 @@ fn print_string(value: &Value, quoted: bool) -> String {
     }
 }
 
-/// `format`: 書式 (`%s` `%S` `%d` `%o` `%x` `%%`) に値を当てはめた文字列.
+/// `format` の文字列を作ります. `%s` (文字列は引用符なし), `%S` (書いたとおり), `%d` (整数), `%o`, `%x`, `%X`, `%%` を使えます.
+/// `%` の後ろに, 旗 `-` (左に寄せる) と `0` (0 で埋める) と, 幅を付けられます (`%3d`, `%-4s`, `%03d`).
+///
+/// # Arguments
+///
+/// * `args` - 書式の文字列と, 埋め込む値.
+///
+/// # Returns
+///
+/// 作った文字列. 書式が文字列でない, 値が足りない, 使えない指定がある場合は [`Err`].
 fn format(args: &[Value]) -> Result<String, String> {
     let Some((template, values)) = args.split_first() else {
         return Err("format expects a format string".to_string());
