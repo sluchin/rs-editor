@@ -614,6 +614,15 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 - [ ] 画面 (Tauri) でも `*Messages*` バッファでメッセージの記録を見られるようにするか検討する。ターミナルのアプリは `view-echo-area-messages` (`C-h e`) で見られる。
 - [ ] w3m のように、Web のページをエディタの中で見る機能を、Tauri の webview で作れるか検討する。
 
+### バッチモードの Emacs との違い (レビューから)
+
+- [ ] エラーを、種類とデータを持つ型にする。今は文字列で、`error_kind` が文の書き出しで種類を決めるため、`(error "Quitting soon")` が `quit` 節に捕まり、`(error "Search failed: %s" "x")` が `search-failed` になる (Emacs は `error`)。`signal` も、種類とデータをそのまま渡せるようにする。
+- [ ] `string-match` の結果を、バッファごとでなく 1 つにする (Emacs のマッチデータと同じ)。今はバッファごとで、バッファを切り替えると `match-string` が別のデータを読む。本文の結果が前と同じ範囲だと、古い文字列の結果を新しいものと見なす。
+- [ ] `string-match` の負の START を、文字列の末尾から数える (今は 0)。
+- [ ] `execute-kbd-macro` の回数の 0 (と負の数) を、Emacs と同じに扱う。止まらないマクロを止められるようにする。
+- [ ] 開発用の依存 `markdownlint-cli2` を 0.24 に上げ、`npm audit` の `js-yaml` と `katex` の警告を無くす (破壊的な変更なので、markdownlint の結果が変わらないか確かめる)。
+- [ ] 評価を回さないロックの `lock().unwrap()` (core に約 50 か所) も、panic のあとで続けられるようにするか検討する。
+
 ### 済んだもの
 
 - [x] ERT (Emacs Lisp のテストの仕組み) と同じことを Scheme でできるようにする (`ert-deftest`, `should`, `should-not`)。
