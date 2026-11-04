@@ -34,7 +34,8 @@
     "check": "npm run format:check && npm run lint:all && npm run test:all",
     "doc:fe": "typedoc --entryPointStrategy expand ./src --out build/docs/fe",
     "doc:be": "CARGO_TARGET_DIR=target/doc_build cargo doc --workspace --no-deps && rm -rf build/docs/be && mkdir -p build/docs/be && cp -r target/doc_build/doc/* build/docs/be/",
-    "doc": "npm run doc:fe && npm run doc:be",
+    "doc:index": "mkdir -p build/docs && cp docs/html/index.html build/docs/index.html",
+    "doc": "npm run doc:fe && npm run doc:be && npm run doc:index",
     "format:markdown": "markdownlint-cli2 --fix",
     "format:markdown:check": "markdownlint-cli2"
   },

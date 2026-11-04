@@ -162,7 +162,7 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      # docs/html/fe (TypeDoc) と docs/html/be (cargo doc) を作る. トップページは docs/html/index.html.
+      # build/docs/fe (TypeDoc) と build/docs/be (cargo doc) を作る. トップページは docs/html/index.html (build/docs/index.html に写す).
       - name: Build documentation
         run: npm run doc
 
