@@ -219,10 +219,10 @@ fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, St
     }
 }
 
-/// 位置があれば, 位置の値. 無ければ nil.
-/// 直前に合った所を見る: 文字列を探した後は文字列の中の位置 (0 から), 本文を探した後はバッファの位置 (1 から).
+/// 位置の数を Lisp の値にする関数.
 type Position = fn(usize) -> Value;
 
+/// 直前に合った所を見る: 文字列を探した後は文字列の中の位置 (0 から), 本文を探した後はバッファの位置 (1 から).
 fn match_view(b: &Buffer) -> (&[Option<(usize, usize)>], Position) {
     match b.string_match_data() {
         Some(data) => (data, |p| Value::Number(p as f64)),
@@ -230,6 +230,7 @@ fn match_view(b: &Buffer) -> (&[Option<(usize, usize)>], Position) {
     }
 }
 
+/// 位置があれば, 位置の値. 無ければ nil.
 fn at_opt(pos: Option<usize>) -> Value {
     pos.map_or_else(nil, at)
 }

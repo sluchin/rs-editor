@@ -1451,6 +1451,7 @@ fn print_string(value: &Value, quoted: bool) -> String {
     }
 }
 
+/// `format`: 書式 (`%s` `%S` `%d` `%o` `%x` `%%`) に値を当てはめた文字列.
 fn format(args: &[Value]) -> Result<String, String> {
     let Some((template, values)) = args.split_first() else {
         return Err("format expects a format string".to_string());

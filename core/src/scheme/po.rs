@@ -30,8 +30,11 @@ struct Entry {
 /// 読んでいる所 (続きの `"..."` の行を, どこに足すか).
 #[derive(Clone, Copy)]
 enum Field {
+    /// `msgctxt`.
     Ctxt,
+    /// `msgid`.
     Id,
+    /// `msgstr`.
     Text,
 }
 
