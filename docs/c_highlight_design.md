@@ -8,7 +8,7 @@
 - そのため、字句の解析は、核 (`core/`、Rust) に置きます。TypeScript (CodeMirror の `StreamLanguage`) では、TUI で使えないためです。
 - 手本は Emacs 30 の `c-mode` / `c++-mode` の font-lock です。Emacs の既定は `font-lock-maximum-decoration` が `t` (最も詳しい段階) です。
 - 言語ごとの違いは、データ (`LanguageSpec`、3.1) にして、言語を足せる形にします。
-- 範囲外: 字下げ (`c-indent`)、構文木。C と C++ 以外の言語は、3.4 (Lisp) と 3.5 (Rust) で足しました。
+- 範囲外: 字下げ (`c-indent`)、構文木。C と C++ 以外の言語は、3.4 (Lisp)、3.5 (Rust)、3.6 (TypeScript) にあります。
 
 ### 段階
 
@@ -21,12 +21,12 @@
 
 ## 2. 現状
 
-- 色は、Scheme と Elisp だけで、核の `core/src/highlight/lisp.rs` が字句に分けます (設計は 3.4)。Tauri と TUI の両方に、同じ色が付きます。(以前は、CodeMirror の `StreamLanguage` で付けていたため、Tauri だけでした。)
-- `highlight-regexp` は、正規表現と face をバッファに持ちます。TUI (`tui/src/ncurses_screen.rs`) は、下線 (`A_UNDERLINE`) を引くだけで、色は使っていません (`start_color` と `init_pair` を使っていません)。
+- 色は、核の `core/src/highlight/` が字句に分けて付けます。言語は C、C++、Rust、TypeScript、Scheme、Emacs Lisp です。Tauri と TUI の両方に、同じ色が付きます。
+- TUI (`tui/src/ncurses_screen.rs`) は、字句の種類ごとに ncurses の色の対を作ります (8 色と 256 色。5 章)。`highlight-regexp` で強調した所は、下線 (`A_UNDERLINE`) を引きます。
 - メジャーモードの判定は、核の 1 か所です。
   - `lisp/files.scm` の `auto-mode-alist` と `set-auto-mode` が、ファイルの名前と、1 行目の `-*- mode: NAME -*-` から、バッファの方言 (`Dialect`。Fundamental、Elisp、Scheme) と、`major-mode` の名前を決めます。方言は、構文表 (`core/src/syntax.rs`)、字下げ、段落の区切りに使います。
   - `core/src/mode.rs` の `Buffer::mode_info` が、モードラインの名前と、括弧の読み方 (`scheme` / `elisp` / なし)、字下げのタブとタブの幅 (ファイルの変数 `indent-tabs-mode` `tab-width`) を返します。Tauri の画面は `BufferFrame.mode` で受け取り、TUI のモードラインも同じ名前を使います。
-  - 画面の `src/lib/modes.ts` は、消しました。
+  - 画面には、モードを決める処理を置きません。
 
 ## 3. 方針の中心: 核が「範囲と種類」を返す
 
@@ -77,7 +77,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 - 比べ方: `emacs -Q --batch` で、`c-mode` の `font-lock-ensure` を実行して、各文字の face を範囲にして、rs-editor の `token-spans` と比べます (`tests/c-highlight/`。`npm run test:c-highlight`)。宣言の名前の色 (関数、変数、型、ラベル) も比べます。ただし、ファイルの名前に `lexical` が付くケースは、C++ の、宣言の名前を扱わない構文 (テンプレート、名前空間、クラスなど) を含むため、字句だけで決まる種類 (コメント、文字列、キーワード、プリプロセッサ) に絞ります。範囲の前後の改行は、含めません。
 - C++ の生の文字列 `R"x(...)x"` (`R` `LR` `uR` `UR` `u8R` の接頭辞): 色が付くのは `(` から `)` までで、引用符と区切りの `x` は付きません。区切りの書き方が正しくなければ (空白、括弧、`\`、引用符を含む、または 16 文字より長い)、普通の文字列です。閉じなければ、`(` の次から本文の終わりまでが文字列です。
 - C++ の数値の区切り (`1'000'000`) は、数値の一部で、文字定数ではありません。
-- キーワードと型の表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` (`c-mode` で読んだ値) から取りました。
+- キーワードと型の表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` (`c-mode` で読んだ値) から取っています。
 
 ### 3.3 宣言の名前 (段階 3)
 
@@ -108,10 +108,10 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 - `core/src/highlight/lisp.rs` が、行ごとに、字句を 1 つずつ読みます (状態は、行をまたいで覚えます。字句は、行をまたぎません)。`tokenize(Language::Scheme | Language::Elisp, text)` が呼びます。C と C++ の字句の表 (`LanguageSpec`) は使わないので、`Language::spec()` は `None` を返します。
 - 色を付けるのは、Emacs の `scheme-font-lock-keywords-2` と `lisp-el-font-lock-keywords-2` と同じ所です: コメント、文字列、`(` の直後の特別な形 (`define`、`defun`、`if` など)、特別な形で定義する名前 (関数、変数、型)、`:key` などの印。`car` などの関数と、数には付けません。Emacs Lisp では、文字列の中の正規表現のグループ (`\\(`)、キーの名前 (`\\[command]`)、要らない `\`、`` `name' ``、閉じた括弧の後ろに続く引数 (見落としやすい。警告の色) にも、付けます。
-- 種類は、C と同じ `TokenKind` に、`Builtin` (`:key`)、`Warning`、`RegexpGroup` を足しました。コメントの区切り (`;`) は、コメントと同じ種類です (色が同じ)。
+- 種類は、C と同じ `TokenKind` に、`Builtin` (`:key`)、`Warning`、`RegexpGroup` を加えたものです。コメントの区切り (`;`) は、コメントと同じ種類です (色が同じ)。
 - 言語は、構文の方言 (`Buffer::dialect`) で決まります (`emacs-lisp-mode` は Emacs Lisp、`scheme-mode` は Scheme)。`*scratch*` の `lisp-interaction-mode` は、Scheme を評価するので、Scheme です (モード名から決め、コマンドは方言も Scheme にします)。
 - 比べ方: `tests/lisp-highlight/` (`npm run test:lisp-highlight`)。`emacs -Q --batch` で、`scheme-mode` と `emacs-lisp-mode` の `font-lock-ensure` を実行し、`token-spans` と比べます。範囲は行をまたがず、色を付けない文字と改行は含みません。
-- 画面の `src/lib/lispMode.ts` と `src/lib/elispKeywords.ts` (CodeMirror の `StreamLanguage`) は、核に移したので、消しました。
+- Lisp の色付けは核だけで行います (画面の CodeMirror には、Lisp の字句解析器を置きません)。
 
 ### 3.5 Rust
 
@@ -135,7 +135,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 ## 4. 言語とモードの結び付け
 
 - 方言 (`Dialect`) は、Lisp の構文表、字下げ、段落、コメントに使われていて、`Fundamental` でなければ Lisp として扱う箇所が多くあります。そのため、C は方言を増やさず、`text-mode` と同じく、方言は `Fundamental` のままで、`major-mode` の名前 (`Buffer::mode_name`) を `c-mode` にします。`Buffer::highlight_language()` が、この名前から言語を決めます。
-- 核の `auto-mode-alist` (`lisp/files.scm`) に、`.c` と `.h` (`c-mode`)、`.cc` `.hh` `.cpp` `.hpp` `.cxx` `.hxx` `.c++` `.h++` `.ii` と、大文字の `.C` `.H` など (`c++-mode`) を足しました。コマンド `c-mode` と `c++-mode` は `lisp/simple.scm` にあります。Emacs は `.h` を内容で C か C++ に決めますが、ここでは C にします。
+- 核の `auto-mode-alist` (`lisp/files.scm`) に、`.c` と `.h` (`c-mode`)、`.cc` `.hh` `.cpp` `.hpp` `.cxx` `.hxx` `.c++` `.h++` `.ii` と、大文字の `.C` `.H` など (`c++-mode`) があります。コマンド `c-mode` と `c++-mode` は `lisp/simple.scm` にあります。Emacs は `.h` を内容で C か C++ に決めますが、ここでは C にします。
 - Scheme からは、`(token-spans)` が、バッファの字句を `(始まり 終わり 種類)` の並びで返します (位置は 1 から。終わりは含まない)。比較の試験が使います。
 - モードラインの名前 (`C`、`C++`) は、核の `mode_info` が決めます (画面と TUI で同じ)。`language` は `null` のままで、色は核の字句で付けます。
 - 既存の `highlight-regexp` は、そのまま残します。ハイライトは、「字句の種類」の層と、「`highlight-regexp`」の層の 2 つです。後者が上に重なります (Emacs の hi-lock と同じ)。
@@ -167,7 +167,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 1. **範囲**: 段階 1 は C だけ、段階 2 で C++ を足す。
 2. **数値の色**: Emacs に合わせて、既定は色なし。
-3. **モード判定**: 段階 1 は、核の `auto-mode-alist` と方言に C と C++ を足した。画面の `modes.ts` との二重の判定は、核の `mode_info` に一本化した。
+3. **モード判定**: 核の `auto-mode-alist` と `mode_info` の 1 か所で決める (画面では判定しない)。
 4. **TUI の色**: 8 色を既定にして、256 色以上の端末では Emacs に近い色を使う。
 
 ## 8. 実装の順序

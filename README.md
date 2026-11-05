@@ -4,7 +4,7 @@
 
 ## 機能
 
-- 📝 **コードエディタ** - CodeMirror 6 の上で、Emacs のキー操作で Scheme コードを書く (キーの一覧は [KEYBINDINGS.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md))
+- 📝 **コードエディタ** - CodeMirror 6 の上で、Emacs のキー操作で Scheme コードを書く (キーの一覧は [keybindings.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md))
 - ⚙️ **Scheme インタプリタ** - Rust ベースの Scheme 処理系:
   - 特別な形: `quote` (`'`)、`if`、`define`、`set!`、`lambda`、`begin`、`let` (名前付きも)、`let*`、`letrec`、`cond`、`case`、`and`、`or`、`when`、`unless`
   - 数: `+`、`-`、`*`、`/`、`=`、`<`、`>`、`<=`、`>=`、`abs`、`min`、`max`、`quotient`、`remainder`、`modulo` など
@@ -15,6 +15,7 @@
 - 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み、`M-x howm` でメニューを出す (「howm」)
 - 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み、`.org` のファイルを開くと Org mode になる (「Org mode」)
 - 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
+- 🎨 **色付け** - C、C++、Rust、TypeScript、Scheme、Emacs Lisp を、Emacs の font-lock と同じ範囲で色付けする (核の `core/src/highlight/`。画面とターミナルのアプリで同じ。設計は [c_highlight_design.md](docs/c_highlight_design.md))。メジャーモードは、ファイルの名前と 1 行目の `-*- mode: NAME -*-` で決まる
 - 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
 - 📊 **出力表示** - 評価結果とエラーメッセージを表示
@@ -78,7 +79,7 @@
 
 ### 前提条件
 
-Docker を使わないときの、道具とパッケージの一覧は [setup.md](https://github.com/sluchin/rs-editor/blob/main/setup.md) です。
+Docker を使わないときの、道具とパッケージの一覧は [setup.md](docs/setup.md) です。
 
 - Node.js 18 以上
 - Rust 1.70 以上
@@ -326,7 +327,7 @@ Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-a
 
 ### Org mode
 
-`lisp/org.scm` は、Emacs の Org mode (org 9.7.11) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/org.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'org)` と書くと、`.org` のファイルを開いたとき Org mode になります (`M-x org-mode` でも)。変数の名前と既定の値は Emacs と同じです (`(set! org-directory "~/org")`、`(set! org-agenda-files '("~/org"))`、`(set! org-todo-keywords '((sequence "TODO" "WAIT" "|" "DONE")))` など)。キーは [KEYBINDINGS.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md) の「Org mode」にあります。
+`lisp/org.scm` は、Emacs の Org mode (org 9.7.11) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/org.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'org)` と書くと、`.org` のファイルを開いたとき Org mode になります (`M-x org-mode` でも)。変数の名前と既定の値は Emacs と同じです (`(set! org-directory "~/org")`、`(set! org-agenda-files '("~/org"))`、`(set! org-todo-keywords '((sequence "TODO" "WAIT" "|" "DONE")))` など)。キーは [keybindings.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md) の「Org mode」にあります。
 
 - 見出し: `TAB` (見出しごとに FOLDED → CHILDREN → SUBTREE)、`S-TAB` (全体)、`#+STARTUP: overview` など。作る (`M-RET`、`C-RET`)、深さ (`M-左右`、`M-S-左右`)、動かす (`M-上下`)。
 - TODO と優先度とタグ: `C-c C-t` (`(t)` などのキーがあれば、キーで選ぶ)、`S-左右`、`S-上下`、`C-c ,`、`C-c C-q`。`org-log-done` で CLOSED を書き、繰り返し (`+1w`、`++1m`、`.+1d`) の予定は日付を進めます。
@@ -351,13 +352,13 @@ Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-e
 
 ### ヘルプ (C-h f) と、翻訳
 
-`C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [PO.md](https://github.com/sluchin/rs-editor/blob/main/docs/po.md) にあります。
+`C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [po.md](https://github.com/sluchin/rs-editor/blob/main/docs/po.md) にあります。
 
 howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (`cargo test -p rseditor-core --test lisp_ert_test`) で、`tests/lisp/*.scm` を全て走らせます。
 
 ## キーバインド
 
-rs-editor は Emacs スタイルのキーバインドをサポートしています。詳細は [KEYBINDINGS.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md) を参照してください。今後の実装計画や未対応の項目については [TODO.md](https://github.com/sluchin/rs-editor/blob/main/TODO.md) を参照してください。
+rs-editor は Emacs スタイルのキーバインドをサポートしています。詳細は [keybindings.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md) を参照してください。今後の実装計画や未対応の項目については [TODO.md](https://github.com/sluchin/rs-editor/blob/main/TODO.md) を参照してください。
 
 ### よく使うショートカット
 

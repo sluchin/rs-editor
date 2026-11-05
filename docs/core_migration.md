@@ -2,9 +2,8 @@
 
 画面 (Tauri) の TypeScript のコマンドを Lisp に移すために、本文の持ち主を CodeMirror から Rust の核 (`core/`) に移す設計です。
 `docs/functions.md` の「実装の計画」の 1.11 に当たります。
-移し終えたら、結合試験 (`docs/integration_test.md`) を行います。
 
-段階 1 から 9 は済 (2026-11-03)。残りは、結合試験です。
+段階 1 から 8 は済 (2026-11-03)。段階 9 の結合試験は、`docs/integration_test.md` の手順で行います。この文書は、移したときの設計の記録です。2 章は、移す前の作りです。
 
 ## 1. 目的
 
@@ -12,9 +11,9 @@
 - 画面とターミナルのアプリで、コマンドの動き (前置引数、`last-command`、マーク、undo、kill-ring) を同じにする。
 - `mirror.rs` (評価のたびに本文の全体を写す仕組み) をやめ、Lisp が核の上で直接動くようにする。
 
-## 2. 今の作り
+## 2. 移す前の作り
 
-| 部分 | 今の持ち主 | 内容 |
+| 部分 | 移す前の持ち主 | 内容 |
 | --- | --- | --- |
 | 本文、カーソル、マーク、undo | CodeMirror (`src/components/CodeEditor.tsx`) | バッファごとに `EditorState`。`Buffer.doc` は CodeMirror の `Text` |
 | バッファの一覧、ウィンドウ | `src/hooks/useBuffers.ts`、`src/lib/windows.ts` | React の状態 |
@@ -33,14 +32,14 @@ Lisp のコマンド (`lisp/simple.scm` など) は、このコマンドルー�
 │ キーと文字の入力 (IME を含む)                │ ──key──▶ │ コマンドループ (core::command_loop)                │
 │ CodeMirror: 表示、色分け、スクロール          │          │   キーの割り当て (core::keymap)                   │
 │ ミニバッファ: 入力の欄、補完の候補             │ ◀─frame─ │   評価器 + EditorHost (核の Editor を直接動かす)   │
-│ モードライン、サイドバー、色とフォント          │ ◀─ask─── │   画面に頼む操作 (TauriUi: 問い、メッセージ、表示) │
+│ モードライン、サイドバー、色とフォント          │ ◀─ask─── │   画面に頼む操作 (SessionUi: 問い、メッセージ、表示)│
 └──────────────────────────────────────────────┘          └──────────────────────────────────────────────────┘
 ```
 
 - 本文、カーソル、マーク、undo、kill-ring、バッファ、ウィンドウ、前置引数は、全て核 (`core::editor::Editor`) が持つ。
 - キーは、全て Rust のコマンドループに送る。コマンドループは、キーを引いて (Lisp の `global-set-key`、`local-set-key` も含む)、コマンドを Lisp で動かす。
 - 動かした後、Rust は「描く内容」(frame) を画面に送る。画面は、それを CodeMirror とモードラインに映すだけにする。
-- 問い (`read-string`、`completing-read`、`read-key`、`yes-or-no-p`) とメッセージは、これまでどおり画面のミニバッファで行う (`UiHost` の代わりの `TauriUi`)。
+- 問い (`read-string`、`completing-read`、`read-key`、`yes-or-no-p`) とメッセージは、画面のミニバッファで行う (`SessionUi`)。
 
 ## 4. 部品
 
@@ -53,7 +52,7 @@ Lisp のコマンド (`lisp/simple.scm` など) は、このコマンドルー�
 | 描く内容 | `core/src/frame.rs` | ウィンドウの分け方、各ウィンドウのバッファ、カーソル、リージョン、色付け (`highlight-regexp`、`outline`)、モードラインの文字、エコー領域。本文は、前に送った版からの変更 (位置、消す長さ、入れる文字) だけを送る |
 | 本文の変更の記録 | `core/src/buffer.rs` | バッファに版の番号と、前の frame からの変更の一覧を持たせる (undo の記録とは別) |
 | Tauri のつなぎ | `src-tauri/src/session.rs` | アプリに 1 つの `Session` (Editor、評価器、コマンドループ)。Tauri のコマンド `key_event`、`insert_text`、`mouse_point`、`resize`、`frame` |
-| 画面に頼む操作 | `src-tauri/src/tauri_ui.rs` | `trait Ui` の画面版。問いとメッセージは、今の `Bridge` (`editor-request`、`editor_reply`) を使う |
+| 画面に頼む操作 | `src-tauri/src/session.rs` (`SessionUi`) と `src-tauri/src/front.rs` | `LoopUi` の画面版。問いとメッセージを画面に頼む |
 
 ### 4.2 画面 (TypeScript) に残すもの
 
@@ -81,7 +80,7 @@ Emacs の結果と全ての位置で比べている試験 (`tests/frontend/lib/m
 
 ### 5.2 スクロールとウィンドウの大きさ
 
-- スクロールは CodeMirror に任せ、カーソルが見えるようにする。`recenter` (`C-l`)、`scroll-up-command` (`C-v`)、`move-to-window-line` (`M-r`) は、画面に頼む操作にする (`TauriUi`)。
+- スクロールは CodeMirror に任せ、カーソルが見えるようにする。`recenter` (`C-l`)、`scroll-up-command` (`C-v`)、`move-to-window-line` (`M-r`) は、画面に頼む操作にする (`SessionUi`)。
 - 画面は、各ウィンドウの見えている行の数を `resize` で Rust に送る (`window-body-height` に使う)。
 
 ### 5.3 マウス
@@ -108,7 +107,7 @@ Emacs の結果と全ての位置で比べている試験 (`tests/frontend/lib/m
 | 1 | キーの割り当てとコマンドループを `core/` に移す (`trait Ui`)。ターミナルのアプリは、それを使う | `cargo test --workspace` (ターミナルのアプリの動きは変わらない) |
 | 2 | frame と、本文の変更の記録を作る。Tauri に `Session` と `key_event`、`insert_text`、`frame` を作る | Rust の試験で、キーから frame までを確かめる。大きなファイルで速さを測る |
 | 3 | 画面を frame で描くようにする。キーと文字を Rust に送る。CodeMirror の編集のコマンドを外す | 文字を打つ、移動する、`C-x C-f`、`C-x C-s` が画面で動く |
-| 4 | ミニバッファ、問い、メッセージ、補完を `TauriUi` につなぐ | `M-x`、`C-x b`、`yes-or-no-p` が動く |
+| 4 | ミニバッファ、問い、メッセージ、補完を `SessionUi` につなぐ | `M-x`、`C-x b`、`yes-or-no-p` が動く |
 | 5 | ウィンドウ、モードライン、スクロール、マウス、色付け、IME | `C-x 2`、`C-x o`、`C-l`、`C-v`、日本語の入力が動く |
 | 6 | 自動保存、バックアップ、初期設定ファイル、フック、サイドバー | `~/.rseditor` が読める。`#名前#` と `名前~` ができる |
 | 7 | TypeScript のコマンドと、使わなくなった部品と試験を消す。`mirror.rs` と `RSEDITOR_NO_CORE` を消す | `npm run check`。カバレッジは TypeScript も Rust も 100% |

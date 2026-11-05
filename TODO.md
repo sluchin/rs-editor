@@ -306,7 +306,7 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを�
 
 今は、エディタのコマンド (`find-file`、`forward-word` など) を、ほとんど TypeScript (画面) で書いている。
 Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScript) は小さくし、コマンドは Lisp (`lisp/`) で書くようにする。
-どのコマンドを、どこで書いているかは、FUNCTIONS.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
+どのコマンドを、どこで書いているかは、docs/functions.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
 
 - [x] 起動のときに読む、既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`、`files.el` などに当たる) を決める (`lisp/` に置き、アプリに入れる)。
       `core/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`、`lisp/window.scm`、`lisp/files.scm`、`lisp/help-fns.scm`) を、ビルドのときに埋め込み、評価器を作るときに評価する。
@@ -321,14 +321,14 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
 - [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
       `kill-buffer` は、Emacs で C の関数なので、組み込みのまま残す。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル、文字、行、マーク、窓、バッファなど。 Emacs の C の関数に当たるもの)。
-- [ ] Emacs で Lisp で書いたコマンド (FUNCTIONS.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
-      進め方は、FUNCTIONS.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
+- [ ] Emacs で Lisp で書いたコマンド (docs/functions.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
+      進め方は、docs/functions.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
       目標は、今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
-      (1.1 から 1.11. 進み方は、FUNCTIONS.md の「実装の計画」)。
-      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。1.11 (今の画面 (Tauri) を核につなぐ) は済 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は済で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が済 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も済 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が済で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も済 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が済 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは FUNCTIONS.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が済で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
+      (1.1 から 1.11. 進み方は、docs/functions.md の「実装の計画」)。
+      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。1.11 (今の画面 (Tauri) を核につなぐ) は済 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は済で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が済 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も済 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が済で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も済 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が済 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは docs/functions.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が済で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
       速さが要るもの (`self-insert-command`、カーソルを動かすもの) は、動かして比べてから決める。
 - [x] 読み出し専用のバッファ (`buffer-read-only`、`read-only-mode`、`toggle-read-only`) を核に入れる (`Buffer::read_only`。書き換えると `Buffer is read-only` のエラー)。
-- [ ] Emacs で C で書いたコマンド (FUNCTIONS.md の「組み込みのコマンド」) は、組み込みのまま残す (Emacs と同じ)。
+- [ ] Emacs で C で書いたコマンド (docs/functions.md の「組み込みのコマンド」) は、組み込みのまま残す (Emacs と同じ)。
 
 ## Phase 17: ヘルプ (docstring と C-h f) と、ヘルプの多言語化
 
@@ -482,7 +482,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 - [x] `C-x C-r` (find-file-read-only), `C-x C-q` (read-only-mode)。
 - [x] `C-x C-d` (list-directory), `C-x C-j` (dired-jump), `C-x 4 d` (dired-other-window)。
-- [ ] dired の中のキー (KEYBINDINGS.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+` など)。
+- [ ] dired の中のキー (docs/keybindings.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+` など)。
 - [ ] `auto-revert-mode` (ファイルが書き換わったら読み直す)。
 - [x] 保存するときに、ファイルが外で書き換わっていないか確かめる (`verify-visited-file-modtime`、`set-visited-file-modtime`。Emacs の「X has changed since visited or saved.  Save anyway?」)。
 - [x] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」。書き換えの入口 `ensure_writable` が `file-supersession-threat` のエラーを返し、`EditorHost` が聞いてやり直す)。

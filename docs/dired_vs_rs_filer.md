@@ -1,9 +1,9 @@
 # Dired と rs-filer のキーの違い
 
-Emacs 30 の dired の既定のキーと、rs-filer のキーを比べて、違うものを洗い出しました。
+Emacs 30 の dired の既定のキーと、rs-filer のキーを比べて、違うものをまとめます。
 
-- dired: `emacs -Q` の `dired-mode-map` と、グローバルのキー（Emacs 30.2）。一覧は [KEYBINDINGS.md](keybindings.md) の「Dired」。
-- rs-filer: `../rs-filer/src/features/keybindings/keymap.ts` の `DEFAULT_BINDINGS`（rs-filer 0.3.3）。rs-filer の `KEYBINDINGS.md` には、`C-n` / `C-p`（上下）と `<` / `>`（列の幅）が書かれていない。
+- dired: `emacs -Q` の `dired-mode-map` と、グローバルのキー（Emacs 30.2）。一覧は [keybindings.md](keybindings.md) の「Dired」。
+- rs-filer: `../rs-filer/src/features/keybindings/keymap.ts` の `DEFAULT_BINDINGS`（rs-filer 0.3.3）。rs-filer の `docs/keybindings.md` には、`C-n` / `C-p`（上下）と `<` / `>`（列の幅）が書かれていない。
 
 rs-filer は 2 つのペインを持つファイラ（xyzzy のファイラが手本）で、dired は 1 つのバッファです。そのため、同じキーでも、働きが大きく違うものがあります。
 
