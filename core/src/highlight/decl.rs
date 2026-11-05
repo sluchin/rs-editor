@@ -4,8 +4,11 @@
 //! 型の並びと宣言子 (名前、`*`、`[]`、`()`、`:`、`=`) の形に合えば宣言として、合わなければ式として読み飛ばします.
 //!
 //! 扱う形: 変数 (複数、配列、初期化、ビットフィールド)、関数の宣言と定義、関数ポインタ、引数、`typedef`、
-//! `struct` `union` `enum` (`class`) の名前と本体、ラベルと `goto`. 扱わない形: C++ のテンプレート、名前空間 (`::`)、
-//! クラスの継承とメソッド、ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`).
+//! `struct` `union` `enum` (`class`) の名前と本体、ラベルと `goto`.
+//!
+//! C++ では、さらに、修飾した名前 (`std::string`。`::` の前は定数の色)、`namespace` の名前、`enum class`、クラスの継承、
+//! コンストラクタとデストラクタ、メソッドの定義 (`void A::f()`)、`using 名前 = 型;`、テンプレートの引数と仮引数を読みます.
+//! 扱わない形: 演算子の関数 (`operator+`)、`typename T::x`、ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`).
 
 use super::{Class, LanguageSpec, Span, Tok, TokenKind};
 
@@ -63,12 +66,13 @@ pub(super) fn declarations(spec: &LanguageSpec, chars: &[char], toks: &[Tok]) ->
         .collect();
     let mut parser = Parser {
         spec,
+        cpp: spec.is_keyword("namespace"),
         chars,
         toks,
         words,
         out: Vec::new(),
     };
-    parser.scan(0, false);
+    parser.scan(0, false, false);
     parser.out
 }
 
@@ -76,6 +80,8 @@ pub(super) fn declarations(spec: &LanguageSpec, chars: &[char], toks: &[Tok]) ->
 struct Parser<'a> {
     /// 言語の表.
     spec: &'a LanguageSpec,
+    /// C++ か (修飾した名前、テンプレート、クラスの本体を読む).
+    cpp: bool,
     /// 本文.
     chars: &'a [char],
     /// コードの字句.
@@ -138,6 +144,68 @@ impl Parser<'_> {
         });
     }
 
+    /// 位置 `j` の名前から続く、修飾した名前 (`a::b::c`) の、最後の名前の位置 (修飾が無ければ `j`).
+    fn chain_end(&self, mut j: usize) -> usize {
+        while self.cpp
+            && self.punct(j + 1) == ':'
+            && self.punct(j + 2) == ':'
+            && self.is_name(j + 3)
+        {
+            j += 3;
+        }
+        j
+    }
+
+    /// 修飾した名前 (`first` から `last`) に色を付けます. `::` の前は定数の色、最後は `kind`.
+    fn name_chain(&mut self, first: usize, last: usize, kind: TokenKind) {
+        let mut k = first;
+        while k < last {
+            self.name(k, TokenKind::Constant);
+            k += 3;
+        }
+        self.name(last, kind);
+    }
+
+    /// 位置 `open` の `<` から、対応する `>` の次までの位置 (文の終わりや括弧の外れに先に着けば `None`).
+    fn angle_end(&self, open: usize) -> Option<usize> {
+        let mut depth = 0usize;
+        for k in open..self.toks.len() {
+            match self.punct(k) {
+                '<' => depth += 1,
+                '>' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(k + 1);
+                    }
+                }
+                ';' | '{' | '}' | ')' => return None,
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// テンプレートの引数 (`<` の位置から `close` の前まで) の名前に、型の色を付けます.
+    fn angle_args(&mut self, open: usize, close: usize) {
+        let mut k = open + 1;
+        while k < close {
+            if self.is_name(k) {
+                // Emacs は、`::` の前の名前と、`<` が続く名前だけに色を付ける (`Foo<Bar>` の `Bar` には付けない)
+                let last = self.chain_end(k);
+                let mut q = k;
+                while q < last {
+                    self.name(q, TokenKind::Constant);
+                    q += 3;
+                }
+                if self.punct(last + 1) == '<' {
+                    self.name(last, TokenKind::Type);
+                }
+                k = last;
+            }
+            k += 1;
+        }
+    }
+
     /// 位置 `j` の開き括弧から、対応する閉じ括弧の次までの位置 (閉じなければ、字句の終わり).
     fn skip_balanced(&self, j: usize) -> usize {
         let mut depth = 0usize;
@@ -177,7 +245,7 @@ impl Parser<'_> {
     /// # Returns
     ///
     /// 読み終えた位置.
-    fn scan(&mut self, mut i: usize, stop: bool) -> usize {
+    fn scan(&mut self, mut i: usize, stop: bool, in_class: bool) -> usize {
         let mut start = true;
         let mut depth = 0usize;
         let mut case = false;
@@ -186,6 +254,12 @@ impl Parser<'_> {
                 if let Some(next) = self.try_decl(i) {
                     i = next;
                     continue;
+                }
+                if depth == 0 {
+                    if let Some(next) = self.constructor(i, in_class) {
+                        i = next;
+                        continue;
+                    }
                 }
                 if self.is_name(i) && self.punct(i + 1) == ':' && self.punct(i + 2) != ':' {
                     self.name(i, TokenKind::Constant);
@@ -214,6 +288,24 @@ impl Parser<'_> {
                 _ => match self.words[i].as_str() {
                     "goto" if self.is_name(i + 1) => self.name(i + 1, TokenKind::Constant),
                     "else" | "do" => start = true,
+                    "namespace" if self.cpp && self.is_name(i + 1) => {
+                        self.name(i + 1, TokenKind::Constant);
+                    }
+                    "using" if self.cpp && self.is_name(i + 1) && self.punct(i + 2) == '=' => {
+                        self.name(i + 1, TokenKind::Type);
+                        // `using Vec = std::vector<int>;` の、右辺の型
+                        let mark = self.out.len();
+                        if self.type_specifier(i + 3, true).is_none() {
+                            self.out.truncate(mark);
+                        }
+                    }
+                    "template" if self.cpp && self.punct(i + 1) == '<' => {
+                        if let Some(close) = self.angle_end(i + 1) {
+                            self.template_params(i + 1, close);
+                            i = close - 1;
+                            start = true;
+                        }
+                    }
                     "case" => case = true,
                     "for" if self.punct(i + 1) == '(' => {
                         // `for (int i = 0; ...)` の、初めの式
@@ -226,6 +318,98 @@ impl Parser<'_> {
             i += 1;
         }
         i
+    }
+
+    /// `template <typename T, class U>` の仮引数の名前 (`typename` と `class` の次) に、型の色を付けます.
+    fn template_params(&mut self, open: usize, close: usize) {
+        for k in open + 2..close {
+            if !self.is_name(k) {
+                continue;
+            }
+            if matches!(self.words[k - 1].as_str(), "typename" | "class") {
+                self.name(k, TokenKind::Type);
+            } else if self.spec.is_type(&self.words[k - 1])
+                && matches!(self.punct(k + 1), ',' | '>' | '=')
+            {
+                // 型でない仮引数 `int N`
+                self.name(k, TokenKind::VariableName);
+            }
+        }
+    }
+
+    /// 型の無い関数の宣言と定義 (C++ のコンストラクタとデストラクタ) を読みます. クラスの本体の中か、修飾した名前
+    /// (`A::A(int x) : v(x) {}`) の、`(` が続くときだけです.
+    ///
+    /// # Returns
+    ///
+    /// 宣言の次の位置 (定義なら、本体の `{` の位置). 宣言でなければ `None`.
+    fn constructor(&mut self, i: usize, in_class: bool) -> Option<usize> {
+        if !self.cpp {
+            return None;
+        }
+        let mut j = i;
+        while self.is_specifier(j) {
+            j += 1;
+        }
+        j += usize::from(self.punct(j) == '~');
+        if !self.is_name(j) {
+            return None;
+        }
+        let mut last = self.chain_end(j);
+        // 修飾したデストラクタ `A::~A()`
+        let tilde = self.punct(last + 1) == ':'
+            && self.punct(last + 2) == ':'
+            && self.punct(last + 3) == '~'
+            && self.is_name(last + 4);
+        let name = if tilde { last + 4 } else { last };
+        if self.punct(name + 1) != '(' || !(in_class || name > j) {
+            return None;
+        }
+        let mark = self.out.len();
+        if tilde {
+            self.name_chain(j, last, TokenKind::Constant);
+            last = name;
+            self.name(last, TokenKind::FunctionName);
+        } else {
+            self.name_chain(j, last, TokenKind::FunctionName);
+        }
+        let end = self.function_tail(last + 1);
+        if end.is_none() {
+            self.out.truncate(mark);
+        }
+        end
+    }
+
+    /// 関数の引数の並び (`(` の位置から) と、後ろの `const` など、初期化子の並び (`: v(x)`)、`= default` を読みます.
+    ///
+    /// # Returns
+    ///
+    /// `;` の次の位置 (定義なら、本体の `{` の位置).
+    fn function_tail(&mut self, open: usize) -> Option<usize> {
+        let mut j = self.params(open)?;
+        j = self.after_params(j);
+        if self.punct(j) == '=' {
+            j = self.skip_expr(j + 1, &[';']);
+        }
+        match self.punct(j) {
+            ';' => Some(j + 1),
+            '{' => Some(j),
+            _ => None,
+        }
+    }
+
+    /// 引数の並びの後ろの、`const` や `__attribute__((...))`、コンストラクタの初期化子の並び (`: v(x)`) を、読み飛ばします.
+    fn after_params(&self, mut j: usize) -> usize {
+        while self.is_keyword(j) {
+            j += 1;
+            if self.punct(j) == '(' {
+                j = self.skip_balanced(j);
+            }
+        }
+        if self.cpp && self.punct(j) == ':' && self.punct(j + 1) != ':' {
+            j = self.skip_expr(j + 1, &['{', ';']);
+        }
+        j
     }
 
     /// 位置 `i` から宣言を読みます. 宣言でなければ、見つけた名前を捨てます.
@@ -262,9 +446,28 @@ impl Parser<'_> {
                 // 本文の終わりで、`;` が無い
                 '\0' if j >= self.toks.len() => return Some(j),
                 '{' if function => return Some(j),
+                // C++ の `for (auto x : v)`
+                ')' if self.cpp => return Some(j),
                 _ => return None,
             }
         }
+    }
+
+    /// 継承の並び (`:` の次から `{` か `;` の前まで) の名前に、型の色を付けます.
+    ///
+    /// # Returns
+    ///
+    /// `{` か `;` の位置 (本文の終わりでもよい).
+    fn bases(&mut self, mut j: usize) -> usize {
+        while j < self.toks.len() && !matches!(self.punct(j), '{' | ';') {
+            if self.is_name(j) {
+                let last = self.chain_end(j);
+                self.name_chain(j, last, TokenKind::Type);
+                j = last;
+            }
+            j += 1;
+        }
+        j
     }
 
     /// 型 (前に付く語、組み込みの型、`struct 名前 { ... }`、型の名前) を読みます.
@@ -297,25 +500,47 @@ impl Parser<'_> {
             } else if self.is_aggregate(j) {
                 let tag = self.words[j].clone();
                 j += 1;
+                // C++ の `enum class E`
+                if self.cpp && tag == "enum" && matches!(self.words[j].as_str(), "class" | "struct")
+                {
+                    j += 1;
+                }
                 let named = self.is_name(j);
                 if named {
                     self.name(j, TokenKind::Type);
                     j += 1;
                 }
+                if self.cpp && named && self.punct(j) == ':' {
+                    j = self.bases(j + 1);
+                }
                 if self.punct(j) == '{' {
                     j = if tag == "enum" {
                         self.enum_body(j + 1)
                     } else {
-                        self.scan(j + 1, true)
+                        self.scan(j + 1, true, self.cpp)
                     };
                 } else if !named {
                     return None;
                 }
                 seen = true;
-            } else if !seen && self.is_name(j) && self.type_follows(j + 1, bare) {
-                self.name(j, TokenKind::Type);
+            } else if !seen && self.is_name(j) {
+                let last = self.chain_end(j);
+                // C++ のテンプレートの引数 `vector<int>`
+                let angle = if self.cpp && self.punct(last + 1) == '<' {
+                    self.angle_end(last + 1)
+                } else {
+                    None
+                };
+                let after = angle.unwrap_or(last + 1);
+                if !self.type_follows(after, bare) {
+                    break;
+                }
+                self.name_chain(j, last, TokenKind::Type);
+                if let Some(close) = angle {
+                    self.angle_args(last + 1, close);
+                }
                 seen = true;
-                j += 1;
+                j = after;
             } else {
                 break;
             }
@@ -323,12 +548,12 @@ impl Parser<'_> {
         seen.then_some((j, typedef))
     }
 
-    /// 位置 `j` が、型の名前の次に来られる字句か.
+    /// 位置 `j` が、型の名前の次に来られる字句か (`bare` は、引数と `using` の右辺のように、型だけで終われる場合).
     fn type_follows(&self, j: usize, bare: bool) -> bool {
         self.is_name(j)
             || self.is_specifier(j)
             || matches!(self.punct(j), '*' | '&')
-            || (bare && matches!(self.punct(j), ',' | ')'))
+            || (bare && matches!(self.punct(j), ',' | ')' | ';'))
     }
 
     /// 宣言子 (`*` と、名前、`[]`、`()`、`:`、`= 初期値`) を読みます.
@@ -363,11 +588,13 @@ impl Parser<'_> {
                 j = self.params(j)?;
             }
         } else if self.is_name(j) {
-            let name = j;
-            j += 1;
+            let first = j;
+            let name = self.chain_end(j);
+            j = name + 1;
             if self.punct(j) == '(' {
                 function = true;
-                self.name(
+                self.name_chain(
+                    first,
                     name,
                     if typedef {
                         TokenKind::Type
@@ -376,15 +603,10 @@ impl Parser<'_> {
                     },
                 );
                 j = self.params(j)?;
-                // `const` や `__attribute__((...))` など
-                while self.is_keyword(j) {
-                    j += 1;
-                    if self.punct(j) == '(' {
-                        j = self.skip_balanced(j);
-                    }
-                }
+                j = self.after_params(j);
             } else {
-                self.name(
+                self.name_chain(
+                    first,
                     name,
                     if typedef {
                         TokenKind::Type
