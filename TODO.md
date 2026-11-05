@@ -13,7 +13,7 @@
 
 ## 優先度つきの進め方
 
-未完了 (`- [ ]`) は 148 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+未完了 (`- [ ]`) は 147 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に (P0 は済んだ)、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -680,9 +680,8 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 
 ### Org mode
 
-- [x] org-lint: Org の文書の書き方の誤りを一覧にする (`lisp/org-lint.scm`。`M-x org-lint` で `*Org Lint*` に出し、`RET` でその行に移る)。Phase 19 (Scheme のコードの lint) とは別のもの。行を種類に分けて調べ、`tests/org-lint/run.sh` で Emacs の org-lint の結果と比べる。移したチェッカー: misplaced-heading、duplicate-custom-id、duplicate-name、duplicate-target、duplicate-footnote-definition、orphaned-affiliated-keywords、obsolete-affiliated-keywords、deprecated-export-blocks、missing-language-in-src-block、missing-backend-in-export-block、deprecated-category-setup、special-property-in-properties-drawer、obsolete-properties-drawer、invalid-effort-property、invalid-id-property、undefined-footnote-reference、unreferenced-footnote-definition、invalid-keyword-syntax、invalid-block、misplaced-planning-info、incomplete-drawer、indented-diary-sexp、quote-section、spurious-colons。
-- [ ] org-lint の残りのチェッカー (`org-lint-unsupported-checkers`): リンク (`invalid-fuzzy-link`、`invalid-id-link` など)、日時 (`timestamp-syntax`、`planning-inactive`、`mismatched-planning-repeaters`)、項目 (`item-number`)、Babel の引数、引用 (`org-cite`) など。構文木 (リンク、日時、項目) を作ってから。
-- [ ] 画面を使わない実行 (`rseditor-tui --batch`) で `(org-mode)` を呼ぶと、`highlight-regexp` の正規表現に先読み (`(?=`) があり、Rust の `regex` が読めずに失敗する (`org-font-lock-keywords`)。先読みを使わない書き方にするか、`fancy-regex` を使う。
+- [x] org-lint: Org の文書の書き方の誤りを一覧にする (`lisp/org-lint.scm`。`M-x org-lint` で `*Org Lint*` に出し、`RET` でその行に移る)。Phase 19 (Scheme のコードの lint) とは別のもの。行を種類に分けて調べ、`tests/org-lint/run.sh` で Emacs の org-lint の結果と比べる。移したチェッカー: misplaced-heading、duplicate-custom-id、duplicate-name、duplicate-target、duplicate-footnote-definition、orphaned-affiliated-keywords、obsolete-affiliated-keywords、deprecated-export-blocks、missing-language-in-src-block、missing-backend-in-export-block、deprecated-category-setup、special-property-in-properties-drawer、obsolete-properties-drawer、invalid-effort-property、invalid-id-property、undefined-footnote-reference、unreferenced-footnote-definition、invalid-keyword-syntax、invalid-block、misplaced-planning-info、incomplete-drawer、indented-diary-sexp、quote-section、spurious-colons、invalid-custom-id-link、invalid-fuzzy-link、trailing-bracket-after-link、unclosed-brackets-in-link-description、link-to-local-file、file-application、percent-encoding-link-escape、deprecated-header-syntax、non-existent-setupfile-parameter、wrong-include-link-parameter (INCLUDE の `::` の後の検索の部分は確かめない)、obsolete-include-markup、planning-inactive (計 36)。
+- [ ] org-lint の残りのチェッカー 23 個 (`org-lint-unsupported-checkers`): 日時 (`timestamp-syntax` (曜日が言語で変わる)、`mismatched-planning-repeaters`)、項目 (`item-number`)、`invalid-id-link` (org-id)、Babel (`wrong-header-argument`、`wrong-header-value`、`empty-header-argument`、`named-result`、`invalid-babel-call-block`、`suspicious-language-in-src-block`)、引用 (`org-cite`)、書き出しの設定 (`unknown-options-item`、`misspelled-export-option`、`invalid-macro-argument-and-template`)、ほか。構文木 (日時、項目) や、Babel と ox の情報を作ってから。
 
 ### 作りと画面
 

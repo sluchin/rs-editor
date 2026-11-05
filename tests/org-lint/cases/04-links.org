@@ -1,0 +1,26 @@
+#+TITLE: Links
+
+* Target heading
+:PROPERTIES:
+:CUSTOM_ID: here
+:END:
+Some text <<mytarget>> and more.
+
+#+NAME: named
+#+BEGIN_SRC emacs-lisp
+(+ 1 2)
+#+END_SRC
+
+* Links
+[[#here][ok custom]] [[#missing][bad custom]]
+[[*Target heading][ok heading]] [[*No such heading][bad heading]]
+[[mytarget][ok target]] [[nowhere][bad fuzzy]] [[named][ok name]]
+[[Target heading][fuzzy to heading]] [[target heading][case]]
+[[file:nonexistent.txt][missing file]] [[file:00-clean.org][existing]]
+[[./nonexistent.png]] [[/no/such/file]] [[~/no-such-file-here]]
+[[https://example.com][web]] [[mailto:a@b.c]] [[id:abc][id link]]
+[[http://x.y/a%20b]] [[a%2Fb][odd escape]] [[file:a%20b][ok escape]]
+[[file+sys:foo.pdf]] [[file+emacs:foo.org]]
+[[https://example.com][desc [with] brackets]] [[https://example.com][open [bracket]]
+[[https://example.com]]] extra
+[[https://example.com][file:img.png]] [[file:nonexistent.png][in desc]]

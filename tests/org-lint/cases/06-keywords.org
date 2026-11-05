@@ -1,0 +1,21 @@
+#+PROPERTY: cache yes
+#+PROPERTY: header-args :tangle no
+#+PROPERTY: var x=1
+#+SETUPFILE: missing-setup.org
+#+SETUPFILE: "quoted-missing.org"
+#+SETUPFILE: https://example.com/x.org
+#+SETUPFILE: 00-clean.org
+#+INCLUDE: "00-clean.org" HTML
+#+INCLUDE: 00-clean.org src emacs-lisp
+#+INCLUDE: missing.org
+
+* Heading
+:PROPERTIES:
+:cache: yes
+:header-args: :results output
+:dir: /tmp
+:END:
+* Plan one
+SCHEDULED: [2024-01-01 月]
+* Plan two
+DEADLINE: [2024-01-02 火]
