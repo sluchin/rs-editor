@@ -148,6 +148,8 @@ pub struct Highlight {
     pub group: usize,
     /// 大文字と小文字を区別しないか.
     pub fold: bool,
+    /// 正規表現が, Emacs の書き方でなく, 画面の JavaScript と同じ書き方 (Rust の `regex` と同じ) か.
+    pub js: bool,
 }
 
 impl Buffer {

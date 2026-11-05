@@ -960,7 +960,7 @@ fn test_org_editor_operations() {
     for (code, error) in [
         (
             "(highlight-regexp)",
-            "highlight-regexp expects 1 to 3 arguments",
+            "highlight-regexp expects 1 to 4 arguments",
         ),
         (
             "(highlight-regexp \"a\" 1)",

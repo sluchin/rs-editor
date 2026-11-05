@@ -106,6 +106,7 @@ fn test_frame_of_windows_marks_and_hidden_buffers() {
         face: "hi-yellow".to_string(),
         group: 0,
         fold: true,
+        js: false,
     });
     // 出していないバッファは, 本文を送らない
     let frame = frames.build(&mut editor, "");

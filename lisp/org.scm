@@ -445,7 +445,7 @@ Later ones are drawn over earlier ones."
 (define (org-fontify)
   "Highlight the buffer."
   (unhighlight-regexp #t)
-  (for-each (lambda (k) (highlight-regexp (car k) (cadr k) (caddr k))) (org-font-lock-keywords)))
+  (for-each (lambda (k) (highlight-regexp (car k) (cadr k) (caddr k) #t)) (org-font-lock-keywords)))
 
 ;;; Org mode
 
@@ -2652,7 +2652,7 @@ ROWS is a list of (LINE ENTRY); ENTRY is #f for a heading line."
               ("f" org-agenda-later) ("b" org-agenda-earlier) ("." org-agenda-goto-today)
               ("r" org-agenda-redo) ("g" org-agenda-redo) ("t" org-agenda-todo) ("q" org-agenda-quit)))
   (unhighlight-regexp #t)
-  (for-each (lambda (k) (highlight-regexp (car k) (cadr k) (caddr k)))
+  (for-each (lambda (k) (highlight-regexp (car k) (cadr k) (caddr k) #t))
             (append
              (list '("^(?:Week|Day|\\d+-days?)-agenda.*|^Global list of TODO.*|^Headlines with TAGS match.*|^Search words.*" "org-agenda-structure" 0)
                    '("^[A-Z][a-z]+ +\\d+ [A-Z][a-z]+ \\d{4}(?: W\\d{2})?$" "org-agenda-date" 0)

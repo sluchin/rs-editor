@@ -257,6 +257,11 @@ impl Pattern {
         Self::compile(&translate(pattern, dialect)?, case_fold)
     }
 
+    /// Emacs の書き方でなく, JavaScript と同じ書き方 (Rust の `regex` と同じ. 先読みもよい) から作ります.
+    pub fn from_rust(pattern: &str, case_fold: bool) -> Result<Self, Error> {
+        Self::compile(pattern, case_fold)
+    }
+
     /// 文字そのものを探す正規表現を作ります (Emacs の `search-forward` の文字).
     pub fn literal(text: &str, case_fold: bool) -> Self {
         // 文字をエスケープした正規表現は, 必ず作れる
@@ -312,7 +317,12 @@ impl Buffer {
         let text = self.line_text(line);
         let mut spans = Vec::new();
         for h in self.highlights() {
-            if let Ok(pattern) = Pattern::new(&h.regexp, h.fold, self.dialect()) {
+            let pattern = if h.js {
+                Pattern::from_rust(&h.regexp, h.fold)
+            } else {
+                Pattern::new(&h.regexp, h.fold, self.dialect())
+            };
+            if let Ok(pattern) = pattern {
                 spans.extend(pattern.spans(&text, h.group));
             }
         }

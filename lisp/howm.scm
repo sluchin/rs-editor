@@ -657,9 +657,9 @@ This is added to `after-save-hook'."
   "Underline links, dates, keywords and the regexps in EXTRA again."
   (let ((keywords (howm-keywords)))
     (unhighlight-regexp #t)
-    (for-each highlight-regexp (append howm-highlight-regexps extra))
+    (for-each (lambda (r) (highlight-regexp r #f #f #t)) (append howm-highlight-regexps extra))
     (unless (null? keywords)
-      (highlight-regexp (howm-keyword-regexp keywords)))))
+      (highlight-regexp (howm-keyword-regexp keywords) #f #f #t))))
 
 ;;; 一覧 (*howmS*)
 

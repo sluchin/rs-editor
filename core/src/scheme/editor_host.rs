@@ -1187,12 +1187,18 @@ impl<U: Host> EditorHost<U> {
                 let group = int_or(op, args, 2, 0)?.max(0) as usize;
                 // 正規表現に大文字が無ければ, 大文字と小文字を区別しない (hi-lock と同じ)
                 let fold = regexp == regexp.to_lowercase();
-                Pattern::new(&regexp, fold, b.dialect())?;
+                let js = matches!(args.get(3), Some(Value::Boolean(true)));
+                if js {
+                    Pattern::from_rust(&regexp, fold)?;
+                } else {
+                    Pattern::new(&regexp, fold, b.dialect())?;
+                }
                 b.add_highlight(crate::buffer::Highlight {
                     regexp,
                     face,
                     group,
                     fold,
+                    js,
                 });
                 Value::Nil
             }

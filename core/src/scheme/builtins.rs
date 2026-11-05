@@ -764,9 +764,10 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             Ok(Value::Nil)
         }
         "highlight-regexp" => {
-            // (highlight-regexp REGEXP [FACE [SUBEXP]]): FACE は記号か文字列, SUBEXP は括弧の番号
-            if args.is_empty() || args.len() > 3 {
-                return Err("highlight-regexp expects 1 to 3 arguments"
+            // (highlight-regexp REGEXP [FACE [SUBEXP [JS]]]): FACE は記号か文字列, SUBEXP は括弧の番号,
+            // JS が non-nil なら, REGEXP は Emacs の書き方でなく, 画面の JavaScript と同じ書き方
+            if args.is_empty() || args.len() > 4 {
+                return Err("highlight-regexp expects 1 to 4 arguments"
                     .to_string()
                     .into());
             }
@@ -784,9 +785,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 Some(v) if v.is_non_nil() => Value::Number(index(name, v)? as f64),
                 _ => Value::Nil,
             };
-            machine
-                .host
-                .call(name, vec![Value::String(regexp), face, group])?;
+            let mut call_args = vec![Value::String(regexp), face, group];
+            if let Some(js) = args.get(3) {
+                call_args.push(Value::Boolean(js.is_non_nil()));
+            }
+            machine.host.call(name, call_args)?;
             Ok(Value::Nil)
         }
         "outline-flag-region" => {

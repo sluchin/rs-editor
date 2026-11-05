@@ -115,3 +115,25 @@ fn test_hi_lock_commands() {
     host.editor().current_buffer_mut().set_point(1);
     assert!(ev.eval_with("(highlight-symbol-at-point)", &host).is_err());
 }
+
+#[test]
+fn test_highlight_regexp_in_the_javascript_syntax() {
+    let (ev, host) = setup("a-b a_b ab");
+    // Emacs の書き方では, `[\s\-.]` は逆順の範囲になって失敗する
+    let js = r#"(?:^|[\s\-.])(a)(?=[-_])"#;
+    assert!(ev
+        .eval_with(&format!("(highlight-regexp {js:?})"), &host)
+        .is_err());
+    // 4 つ目の引数が non-nil なら, JavaScript と同じ書き方 (先読みもよい)
+    ev.eval_with(&format!("(highlight-regexp {js:?} 'hi-green 1 #t)"), &host)
+        .unwrap();
+    let editor = host.editor();
+    let buffer = editor.current_buffer();
+    assert!(buffer.highlights()[0].js);
+    assert_eq!(buffer.highlighted_spans(0), vec![(0, 1), (4, 5)]);
+    drop(editor);
+    // 誤った正規表現は, この書き方でも失敗にする
+    assert!(ev
+        .eval_with(r#"(highlight-regexp "(" #f #f #t)"#, &host)
+        .is_err());
+}
