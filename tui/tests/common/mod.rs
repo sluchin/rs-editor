@@ -30,6 +30,15 @@ impl Screen for FakeScreen {
     fn read_key(&mut self) -> Option<String> {
         self.keys.lock().unwrap().pop_front()
     }
+
+    fn interrupted(&mut self) -> bool {
+        let mut keys = self.keys.lock().unwrap();
+        let pressed = keys.front().is_some_and(|key| key == "C-g");
+        if pressed {
+            keys.pop_front();
+        }
+        pressed
+    }
 }
 
 /// 偽の画面を使うエディタと、キーの入れ口、描いた画面.

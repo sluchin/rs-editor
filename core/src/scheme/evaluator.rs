@@ -26,6 +26,7 @@ const MESSAGE_LOG_MAX: usize = 1000;
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
 use crate::scheme::value::{Lambda, Value};
+use crate::sync::LockExt;
 
 /// 評価の入れ子の深さの上限.
 pub const MAX_DEPTH: usize = 10_000;
@@ -245,7 +246,7 @@ impl Evaluator {
     ///
     /// * `dir` - ディレクトリ.
     pub fn set_default_directory(&self, dir: std::path::PathBuf) {
-        *self.default_directory.lock().unwrap() = Some(dir);
+        *self.default_directory.lock_recover() = Some(dir);
     }
 
     /// `define-error`: 種類の, 受ける条件と説明を決めます.
@@ -257,8 +258,7 @@ impl Evaluator {
     /// * `description` - 説明 (エラーの文の始め).
     pub(crate) fn define_error(&self, kind: &str, conditions: Vec<String>, description: &str) {
         self.error_kinds
-            .lock()
-            .unwrap()
+            .lock_recover()
             .insert(kind.to_string(), (conditions, description.to_string()));
     }
 
@@ -268,7 +268,7 @@ impl Evaluator {
     ///
     /// 名前 (作った順).
     pub fn commands(&self) -> Vec<String> {
-        self.commands.lock().unwrap().clone()
+        self.commands.lock_recover().clone()
     }
 
     /// Lisp で割り当てたキーを返します.
@@ -277,7 +277,7 @@ impl Evaluator {
     ///
     /// 割り当て (割り当てた順).
     pub fn key_bindings(&self) -> Vec<KeyBinding> {
-        self.keys.lock().unwrap().clone()
+        self.keys.lock_recover().clone()
     }
 
     /// 評価で作って, まだ放していない環境の数を返します (評価のあとに, 環境を放したかを確かめる).
@@ -308,7 +308,7 @@ impl Evaluator {
     ///
     /// docstring. 無ければ [`None`].
     pub(crate) fn variable_documentation(&self, name: &str) -> Option<String> {
-        self.variable_docs.lock().unwrap().get(name).cloned()
+        self.variable_docs.lock_recover().get(name).cloned()
     }
 
     /// `message` が出した文を覚えます (空の文は覚えない. 1000 行を超えたら古いものを捨てる).
@@ -320,7 +320,7 @@ impl Evaluator {
         if text.is_empty() {
             return;
         }
-        let mut log = self.message_log.lock().unwrap();
+        let mut log = self.message_log.lock_recover();
         log.push(text.to_string());
         if log.len() > MESSAGE_LOG_MAX {
             log.remove(0);
@@ -329,7 +329,7 @@ impl Evaluator {
 
     /// `message` が出した文を返します (古いものから).
     pub(crate) fn message_log(&self) -> Vec<String> {
-        self.message_log.lock().unwrap().clone()
+        self.message_log.lock_recover().clone()
     }
 
     /// 名前を定義したファイルを返します.
@@ -342,7 +342,7 @@ impl Evaluator {
     ///
     /// ファイル (起動のときに読む Lisp は `lisp/` からのパス, `load` したものは絶対パス). 分からなければ [`None`].
     pub(crate) fn symbol_file(&self, name: &str) -> Option<String> {
-        self.symbol_files.lock().unwrap().get(name).cloned()
+        self.symbol_files.lock_recover().get(name).cloned()
     }
 
     /// 機能を覚えます (Emacs の `provide`. 覚えていれば, 何もしない).
@@ -351,7 +351,7 @@ impl Evaluator {
     ///
     /// * `feature` - 機能の名前.
     pub(crate) fn provide(&self, feature: &str) {
-        let mut features = self.features.lock().unwrap();
+        let mut features = self.features.lock_recover();
         if !features.iter().any(|f| f == feature) {
             features.push(feature.to_string());
         }
@@ -367,7 +367,7 @@ impl Evaluator {
     ///
     /// `provide` していれば `true`.
     pub(crate) fn featurep(&self, feature: &str) -> bool {
-        self.features.lock().unwrap().iter().any(|f| f == feature)
+        self.features.lock_recover().iter().any(|f| f == feature)
     }
 
     /// `ert-deftest` で定義したテストを返します.
@@ -376,7 +376,7 @@ impl Evaluator {
     ///
     /// テスト (定義した順. 書き換えられる).
     pub(crate) fn tests(&self) -> MutexGuard<'_, Vec<ErtTest>> {
-        self.tests.lock().unwrap()
+        self.tests.lock_recover()
     }
 
     /// コマンドとして覚えます (覚えていれば, 何もしない).
@@ -385,7 +385,7 @@ impl Evaluator {
     ///
     /// * `name` - コマンドの名前.
     pub(crate) fn add_command(&self, name: &str) {
-        let mut commands = self.commands.lock().unwrap();
+        let mut commands = self.commands.lock_recover();
         if !commands.iter().any(|c| c == name) {
             commands.push(name.to_string());
         }
@@ -401,7 +401,7 @@ impl Evaluator {
     ///
     /// Lisp で作ったコマンドなら `true`.
     pub(crate) fn is_command(&self, name: &str) -> bool {
-        self.commands.lock().unwrap().iter().any(|c| c == name)
+        self.commands.lock_recover().iter().any(|c| c == name)
     }
 
     /// キーを割り当てます (同じキーの割り当ては, 置き換える).
@@ -410,7 +410,7 @@ impl Evaluator {
     ///
     /// * `binding` - 割り当て.
     pub(crate) fn set_key(&self, binding: KeyBinding) {
-        let mut keys = self.keys.lock().unwrap();
+        let mut keys = self.keys.lock_recover();
         keys.retain(|k| k.key != binding.key);
         keys.push(binding);
     }
@@ -435,7 +435,7 @@ impl Evaluator {
             return task(&mut Machine::new(self, host));
         }
         // 前の評価が失敗 (panic) していても, 続ける
-        let _running = self.running.lock().unwrap_or_else(|e| e.into_inner());
+        let _running = self.running.lock_recover();
         std::thread::scope(|scope| {
             std::thread::Builder::new()
                 .stack_size(STACK_SIZE)
@@ -506,13 +506,7 @@ impl<'a> Machine<'a> {
     ///
     /// 種類とデータからエラーを作ります (`define-error` で決めた種類は, その条件と説明を使う).
     pub(crate) fn make_error(&self, kind: &str, data: Vec<Value>) -> Error {
-        let defined = self
-            .evaluator
-            .error_kinds
-            .lock()
-            .unwrap()
-            .get(kind)
-            .cloned();
+        let defined = self.evaluator.error_kinds.lock_recover().get(kind).cloned();
         match defined {
             Some((conditions, description)) => {
                 Error::signal(kind, data, conditions, Some(&description))
@@ -524,7 +518,7 @@ impl<'a> Machine<'a> {
     /// 絶対パス.
     pub(crate) fn expand_file_name(&self, path: &str) -> String {
         let home = dirs::home_dir().unwrap_or_default();
-        let default = self.evaluator.default_directory.lock().unwrap().clone();
+        let default = self.evaluator.default_directory.lock_recover().clone();
         let base = self
             .load_dirs
             .last()
@@ -989,8 +983,7 @@ impl<'a> Machine<'a> {
             if env.same(&self.evaluator.global) {
                 self.evaluator
                     .symbol_files
-                    .lock()
-                    .unwrap()
+                    .lock_recover()
                     .insert(name.clone(), file.clone());
             }
         }
@@ -1019,8 +1012,7 @@ impl<'a> Machine<'a> {
                     };
                     self.evaluator
                         .variable_docs
-                        .lock()
-                        .unwrap()
+                        .lock_recover()
                         .insert(name.clone(), doc.clone());
                 }
                 let value = match rest.first() {

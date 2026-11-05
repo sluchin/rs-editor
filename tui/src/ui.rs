@@ -16,6 +16,7 @@ use crate::screen::Screen;
 use rseditor_core::command_loop::LoopUi;
 pub use rseditor_core::command_loop::{printable, read_key_name};
 use rseditor_core::keymap::{Keymap, Lookup};
+use rseditor_core::sync::LockExt;
 
 /// 画面とその状態.
 pub struct UiState {
@@ -45,6 +46,14 @@ const RECENT_KEYS_MAX: usize = 300;
 impl UiState {
     /// 打ったことにするキーを 1 つ取ります (繰り返すマクロは, 尽きたら始めから).
     pub fn pop_macro_key(&mut self) -> Option<String> {
+        // 打ったことにするキーが残っている間は、キーを押したか確かめる (`C-g` で止める. Emacs は `quit`)
+        if (!self.macro_keys.is_empty() || !self.macro_loop.is_empty()) && self.screen.interrupted()
+        {
+            self.stop_macro();
+            self.message = "Quit".to_string();
+            self.executing_macro = false;
+            return None;
+        }
         if self.macro_keys.is_empty() && !self.macro_loop.is_empty() {
             self.macro_keys = self.macro_loop.iter().cloned().collect();
         }
@@ -66,7 +75,7 @@ impl UiState {
 ///
 /// キーと, 画面から読んだなら `true`. 入力が終わっていれば `None`.
 pub fn next_key(state: &Mutex<UiState>) -> Option<(String, bool)> {
-    let mut state = state.lock().unwrap();
+    let mut state = state.lock_recover();
     if let Some(key) = state.pop_macro_key() {
         return Some((key, false));
     }
@@ -114,12 +123,12 @@ impl UiHost {
 
     /// 状態を借ります.
     fn state(&self) -> MutexGuard<'_, UiState> {
-        self.state.lock().unwrap()
+        self.state.lock_recover()
     }
 
     /// 画面を描きます. 入力を読んでいるときは、ミニバッファを出す.
     fn draw(&self, minibuffer: Option<&Minibuffer>) {
-        let mut editor = self.editor.lock().unwrap();
+        let mut editor = self.editor.lock_recover();
         let mut state = self.state();
         let (rows, cols) = state.screen.size();
         editor.set_screen_size(rows, cols);
@@ -142,7 +151,7 @@ impl UiHost {
         let (key, from_screen) = next_key(&self.state).ok_or_else(|| Error::bare("quit"))?;
         if from_screen {
             // 画面から読んだキーは, マクロを覚えているなら覚える
-            self.editor.lock().unwrap().kbd_macro.record(&key);
+            self.editor.lock_recover().kbd_macro.record(&key);
         }
         Ok(key)
     }
@@ -349,12 +358,12 @@ impl Host for UiHost {
             }
             "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
             "window-body-height" => {
-                let editor = self.editor.lock().unwrap();
+                let editor = self.editor.lock_recover();
                 let state = self.state();
                 Ok(Value::Number(body_height(&editor, &state) as f64))
             }
             "move-to-window-line" => {
-                let mut editor = self.editor.lock().unwrap();
+                let mut editor = self.editor.lock_recover();
                 let state = self.state();
                 let height = body_height(&editor, &state);
                 let top = state
@@ -377,7 +386,7 @@ impl Host for UiHost {
                 Ok(Value::Number((line - top.min(line)) as f64))
             }
             "recenter" => {
-                let editor = self.editor.lock().unwrap();
+                let editor = self.editor.lock_recover();
                 let mut state = self.state();
                 let rows = state.screen.size().0;
                 let line = editor
@@ -394,13 +403,13 @@ impl Host for UiHost {
                 Ok(Value::Nil)
             }
             "where-is-internal" => {
-                let keys = self.keymap.lock().unwrap().keys_for(&text(&args, 0));
+                let keys = self.keymap.lock_recover().keys_for(&text(&args, 0));
                 Ok(Value::List(keys.into_iter().map(Value::String).collect()))
             }
             // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
             "key-binding" => {
                 let keys: Vec<String> = text(&args, 0).split(' ').map(str::to_string).collect();
-                Ok(match self.keymap.lock().unwrap().lookup(&keys) {
+                Ok(match self.keymap.lock_recover().lookup(&keys) {
                     Lookup::Command(command) => Value::String(command),
                     Lookup::Prefix => Value::Boolean(true),
                     Lookup::Unbound => Value::Boolean(false),
@@ -409,8 +418,7 @@ impl Host for UiHost {
             // 全ての割り当て: (キー コマンド) のリスト
             "all-key-bindings" => Ok(Value::List(
                 self.keymap
-                    .lock()
-                    .unwrap()
+                    .lock_recover()
                     .bindings()
                     .into_iter()
                     .map(|(keys, command)| {

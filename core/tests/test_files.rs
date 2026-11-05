@@ -225,6 +225,39 @@ fn test_save_buffer() {
 }
 
 #[test]
+fn test_save_buffer_asks_when_the_file_changed_on_disk() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("a.txt").to_string_lossy().to_string();
+    fs::write(&path, "disk\n").unwrap();
+    let ev = Evaluator::new();
+    let editor = FakeEditor::new();
+    visit(&editor, &path, "new", true);
+    *editor.file_changed.lock().unwrap() = true;
+    // 訪れてから外で書き換わっていれば、確かめる。答えが yes でなければ、書かない
+    answer(&editor, &["no"]);
+    let error = ev.run_command("save-buffer", &editor).unwrap_err();
+    assert!(error.to_string().contains("Save not confirmed"), "{error}");
+    assert_eq!(
+        prompts(&editor),
+        vec!["a.txt has changed since visited or saved.  Save anyway? (yes or no) "]
+    );
+    assert_eq!(fs::read_to_string(&path).unwrap(), "disk\n");
+    assert!(editor.buffer().modified);
+    // yes なら書く。書いたら、外の書き換えは気にしない
+    answer(&editor, &["yes"]);
+    ev.run_command("save-buffer", &editor).unwrap();
+    assert_eq!(fs::read_to_string(&path).unwrap(), "new\n");
+    // ファイルが無くなっていれば、確かめずに書く
+    fs::remove_file(&path).unwrap();
+    visit(&editor, &path, "again", true);
+    *editor.file_changed.lock().unwrap() = true;
+    answer(&editor, &[]);
+    ev.run_command("save-buffer", &editor).unwrap();
+    assert!(prompts(&editor).is_empty());
+    assert_eq!(fs::read_to_string(&path).unwrap(), "again\n");
+}
+
+#[test]
 fn test_write_file() {
     let dir = tempdir().unwrap();
     let path = dir.path().join("a.txt").to_string_lossy().to_string();

@@ -19,6 +19,7 @@ use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
+use rseditor_core::sync::LockExt;
 use rseditor_core::syntax::Dialect;
 use serde::Deserialize;
 
@@ -45,6 +46,10 @@ pub trait Front: Send + Sync {
     ///
     /// 画面が失敗を返したとき (`C-g` でやめたときは `Quit`).
     fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, Error>;
+
+    /// 画面で `C-g` を押したか (押していれば、押したことを忘れて `true`).
+    /// 入力の列で `C-g` が順番を待っている間も、キーボードマクロの繰り返しを止めるため.
+    fn interrupted(&self) -> bool;
 }
 
 /// 画面からの入力.
@@ -137,13 +142,13 @@ fn strings(items: impl IntoIterator<Item = String>) -> Value {
 impl<F: Front> SessionUi<F> {
     /// 状態を借ります.
     fn state(&self) -> MutexGuard<'_, State> {
-        self.state.lock().unwrap()
+        self.state.lock_recover()
     }
 
     /// 描く内容を作って, 画面に送ります.
     pub fn send_frame(&self) {
         let frame = {
-            let mut editor = self.editor.lock().unwrap();
+            let mut editor = self.editor.lock_recover();
             let mut state = self.state();
             let message = state.message.clone();
             state.frames.build(&mut editor, &message)
@@ -155,13 +160,13 @@ impl<F: Front> SessionUi<F> {
     fn show_message(&self, message: &str) {
         self.state().message = message.to_string();
         if !message.is_empty() {
-            append_message(&mut self.editor.lock().unwrap(), message);
+            append_message(&mut self.editor.lock_recover(), message);
         }
     }
 
     /// 選んでいるウィンドウの, 見えている行の数 (知らなければ 20).
     fn body_height(&self) -> usize {
-        let selected = self.editor.lock().unwrap().selected_window();
+        let selected = self.editor.lock_recover().selected_window();
         self.state()
             .heights
             .iter()
@@ -173,7 +178,7 @@ impl<F: Front> SessionUi<F> {
     /// 一番上の行は, 画面に聞きます (`window-top-line`).
     fn move_to_window_line(&self, row: Option<&Value>) -> Result<Value, Error> {
         let height = self.body_height();
-        let window = self.editor.lock().unwrap().selected_window();
+        let window = self.editor.lock_recover().selected_window();
         self.send_frame();
         let top = match self
             .front
@@ -188,7 +193,7 @@ impl<F: Front> SessionUi<F> {
             _ => height / 2,
         }
         .min(height.saturating_sub(1));
-        let mut editor = self.editor.lock().unwrap();
+        let mut editor = self.editor.lock_recover();
         let buffer = editor.current_buffer_mut();
         let last = buffer.line_count().saturating_sub(1);
         let line = (top + row).min(last);
@@ -198,8 +203,23 @@ impl<F: Front> SessionUi<F> {
     }
 
     /// キーボードマクロのキーを 1 つ取ります (繰り返すマクロは, 尽きたら始めから).
+    /// `C-g` を押したことを忘れます.
+    fn clear_interrupt(&self) {
+        self.front.interrupted();
+    }
+
+    /// 打ったことにするキーが残っている間に `C-g` を押したら、マクロを止めて `None` を返します.
     fn pop_macro_key(&self) -> Option<String> {
         let mut state = self.state();
+        if (!state.macro_keys.is_empty() || !state.macro_loop.is_empty())
+            && self.front.interrupted()
+        {
+            state.macro_keys.clear();
+            state.macro_loop.clear();
+            state.message = "Quit".to_string();
+            state.executing_macro = false;
+            return None;
+        }
         if state.macro_keys.is_empty() && !state.macro_loop.is_empty() {
             state.macro_keys = state.macro_loop.iter().cloned().collect();
         }
@@ -250,7 +270,7 @@ impl<F: Front> Host for SessionUi<F> {
                         self.send_frame();
                         let key = text(&[self.front.request(op, args)?], 0);
                         self.note_key(&key);
-                        self.editor.lock().unwrap().kbd_macro.record(&key);
+                        self.editor.lock_recover().kbd_macro.record(&key);
                         key
                     }
                 };
@@ -291,11 +311,11 @@ impl<F: Front> Host for SessionUi<F> {
             "window-body-height" => Ok(Value::Number(self.body_height() as f64)),
             "move-to-window-line" => self.move_to_window_line(args.first()),
             "where-is-internal" => Ok(strings(
-                self.keymap.lock().unwrap().keys_for(&text(&args, 0)),
+                self.keymap.lock_recover().keys_for(&text(&args, 0)),
             )),
             "key-binding" => {
                 let keys: Vec<String> = text(&args, 0).split(' ').map(str::to_string).collect();
-                Ok(match self.keymap.lock().unwrap().lookup(&keys) {
+                Ok(match self.keymap.lock_recover().lookup(&keys) {
                     Lookup::Command(command) => Value::String(command),
                     Lookup::Prefix => Value::Boolean(true),
                     Lookup::Unbound => Value::Boolean(false),
@@ -303,8 +323,7 @@ impl<F: Front> Host for SessionUi<F> {
             }
             "all-key-bindings" => Ok(Value::List(
                 self.keymap
-                    .lock()
-                    .unwrap()
+                    .lock_recover()
                     .bindings()
                     .into_iter()
                     .map(|(keys, command)| strings([keys, command]))
@@ -478,6 +497,10 @@ impl<F: Front> Session<F> {
 
     /// キーを 1 つ処理します (キーボードマクロを覚えているなら, 覚える).
     fn key(&mut self, key: &str) {
+        // `C-g` の順番が来たので、押したことを忘れる (マクロを止めたあとも、残さない)
+        if key == "C-g" {
+            self.host().ui().clear_interrupt();
+        }
         let from_macro = self.host().ui().state().executing_macro;
         if self.commands.at_command_start() {
             self.host().editor().kbd_macro.begin_command();
@@ -486,6 +509,10 @@ impl<F: Front> Session<F> {
             self.host().editor().kbd_macro.record(key);
         }
         self.commands.handle_key(key);
+        // 画面から読んだキーが 300 個になったら, 自動保存する (Emacs の `auto-save-interval`)
+        if !from_macro && rseditor_core::files::note_key(&mut self.host().editor()) {
+            self.auto_save();
+        }
     }
 }
 

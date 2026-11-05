@@ -20,11 +20,18 @@ struct FakeFront {
     requests: Mutex<Vec<String>>,
     /// 問いの答え (無ければ Quit).
     answers: Mutex<VecDeque<Value>>,
+    /// `C-g` を押したか (`interrupted` が、1 度だけ真を返す).
+    interrupt: std::sync::atomic::AtomicBool,
 }
 
 impl Front for FakeFront {
     fn frame(&self, frame: &Frame) {
         self.frames.lock().unwrap().push(frame.clone());
+    }
+
+    fn interrupted(&self) -> bool {
+        self.interrupt
+            .swap(false, std::sync::atomic::Ordering::SeqCst)
     }
 
     fn request(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
@@ -234,6 +241,31 @@ fn test_keys_bindings_heights_and_macros() {
 }
 
 #[test]
+fn test_c_g_stops_a_macro_that_never_fails() {
+    let (mut session, front) = setup();
+    session.eval("(erase-buffer)").unwrap();
+    // 失敗しないマクロを、失敗するまで繰り返す。繰り返している間に C-g を押すと、止める
+    front
+        .interrupt
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    session.eval("(execute-kbd-macro '(\"x\") 0)").unwrap();
+    key(&mut session, "a");
+    assert_eq!(text(&session), "a");
+    assert_eq!(last(&front).message, "Quit");
+    // 止めたあとは、続けて打てる
+    key(&mut session, "b");
+    assert_eq!(text(&session), "ab");
+    // C-g の順番が来たら、押したことは忘れる (次のマクロを、止めない)
+    front
+        .interrupt
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    key(&mut session, "C-g");
+    session.eval("(execute-kbd-macro '(\"c\") 2)").unwrap();
+    key(&mut session, "C-e");
+    assert_eq!(text(&session), "abcc");
+}
+
+#[test]
 fn test_find_file_and_read_key_in_a_macro() {
     let (mut session, front) = setup();
     let dir = tempfile::tempdir().unwrap();
@@ -372,6 +404,27 @@ fn test_init_file_and_run() {
     let frames = front.frames.lock().unwrap();
     assert_eq!(frames.len(), 2);
     assert!(frames[1].buffers[0].changes[0].insert == "x");
+}
+
+#[test]
+fn test_auto_save_every_300_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("a.txt");
+    let path = file.to_string_lossy().into_owned();
+    std::fs::write(&file, "hi\n").unwrap();
+    let (mut session, front) = setup();
+    session.eval(&format!("(find-file {path:?})")).unwrap();
+    let auto = dir.path().join("#a.txt#");
+    // 299 個目までは書かない
+    key(&mut session, "x");
+    for _ in 1..299 {
+        key(&mut session, "C-f");
+    }
+    assert!(!auto.exists());
+    // 300 個目で書く
+    key(&mut session, "C-b");
+    assert_eq!(std::fs::read_to_string(&auto).unwrap(), "xhi\n");
+    assert_eq!(last(&front).message, "Auto-saving...done");
 }
 
 #[test]

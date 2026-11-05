@@ -98,6 +98,25 @@ impl Screen for NcursesScreen {
         refresh();
     }
 
+    fn interrupted(&mut self) -> bool {
+        timeout(0);
+        let code = get_wch();
+        timeout(-1);
+        match code {
+            Some(WchResult::Char(7)) => true,
+            // ほかのキーは、次に読めるように戻す
+            Some(WchResult::Char(code)) => {
+                unget_wch(code);
+                false
+            }
+            Some(WchResult::KeyCode(code)) => {
+                ungetch(code);
+                false
+            }
+            None => false,
+        }
+    }
+
     fn read_key(&mut self) -> Option<String> {
         loop {
             let code = get_wch()?;

@@ -2,6 +2,7 @@
 //! 画面からの入力は, Tauri のコマンド [`session_input`] で受け, エディタのスレッド ([`session::run`]) に渡します.
 
 use rseditor_core::error::Error;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 
 use rseditor_core::frame::Frame;
@@ -11,6 +12,7 @@ use crate::commands::{init_file_path, EDITOR_REQUEST_EVENT};
 use crate::scheme::host::Bridge;
 use crate::scheme::value::Value;
 use crate::session::{self, Front, Input};
+use rseditor_core::sync::LockExt;
 
 /// 描く内容を送るイベントの名前.
 pub const FRAME_EVENT: &str = "frame";
@@ -21,6 +23,8 @@ pub struct TauriFront {
     app: AppHandle,
     /// 返事を待つ仕組み.
     bridge: Arc<Bridge>,
+    /// `C-g` を押したのに、まだ処理していないか (`Inputs` と同じもの).
+    interrupt: Arc<AtomicBool>,
 }
 
 impl Front for TauriFront {
@@ -37,11 +41,19 @@ impl Front for TauriFront {
                 .map_err(|e| e.to_string())
         })
     }
+
+    fn interrupted(&self) -> bool {
+        self.interrupt.swap(false, Ordering::SeqCst)
+    }
 }
 
 /// エディタのスレッドへの入力の送り口 (初めの入力で, スレッドを作る).
 #[derive(Default)]
-pub struct Inputs(Mutex<Option<mpsc::Sender<Input>>>);
+pub struct Inputs(
+    Mutex<Option<mpsc::Sender<Input>>>,
+    /// `C-g` を受けたとき、順番を待たずに知らせる旗 (キーボードマクロの繰り返しを止める).
+    Arc<AtomicBool>,
+);
 
 /// 画面からの入力を, エディタに渡します. 初めの入力のときに, エディタのスレッドを作ります
 /// (画面がイベントを受け始めてから, 初期設定ファイルを読み, 描くため).
@@ -56,12 +68,17 @@ pub fn session_input(
     bridge: State<'_, Arc<Bridge>>,
     inputs: State<'_, Inputs>,
 ) -> Result<(), String> {
-    let mut sender = inputs.0.lock().unwrap();
+    // `C-g` は、前のキーを処理している間（繰り返すマクロなど）にも、エディタに知らせる
+    if matches!(&input, Input::Key { key } if key == "C-g") {
+        inputs.1.store(true, Ordering::SeqCst);
+    }
+    let mut sender = inputs.0.lock_recover();
     if sender.is_none() {
         let (tx, rx) = mpsc::channel();
         let front = Arc::new(TauriFront {
             app,
             bridge: Arc::clone(&bridge),
+            interrupt: Arc::clone(&inputs.1),
         });
         std::thread::Builder::new()
             .name("session".to_string())

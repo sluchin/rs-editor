@@ -53,6 +53,8 @@ pub struct FakeEditor {
     pub displayed: Mutex<Vec<(String, Option<usize>)>>,
     /// command で動かしたコマンドの名前.
     pub commands: Mutex<Vec<String>>,
+    /// 訪れてから、ファイルが外で書き換わったことにするか (`verify-visited-file-modtime` が偽を返す).
+    pub file_changed: Mutex<bool>,
 }
 
 impl FakeEditor {
@@ -463,6 +465,11 @@ impl Host for FakeEditor {
                 if let Some(file) = file {
                     self.name_after_file(&file);
                 }
+                Value::Nil
+            }
+            "verify-visited-file-modtime" => Value::Boolean(!*self.file_changed.lock().unwrap()),
+            "set-visited-file-modtime" => {
+                *self.file_changed.lock().unwrap() = false;
                 Value::Nil
             }
             "set-syntax-dialect" | "set-major-mode-name" => Value::Nil,

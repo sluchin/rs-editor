@@ -23,6 +23,7 @@ use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
+use rseditor_core::sync::LockExt;
 
 /// 捕まえなかったエラーで終わるときの終了コード (Emacs と同じ).
 pub const ERROR_STATUS: i32 = 255;
@@ -66,15 +67,14 @@ impl LoopUi for BatchUi {
         // 失敗したコマンドのエラーの文だけ覚える (他のエコー領域の表示は, バッチモードでは要らない)
         if self.stopped.load(Ordering::Relaxed) && !text.is_empty() {
             self.error
-                .lock()
-                .unwrap()
+                .lock_recover()
                 .get_or_insert_with(|| text.to_string());
         }
     }
 
     fn stop_macro(&self) {
         self.stopped.store(true, Ordering::Relaxed);
-        self.keys.lock().unwrap().clear();
+        self.keys.lock_recover().clear();
     }
 
     fn set_display(&self, _truncate_lines: bool, _selective_display: Option<usize>) {}
@@ -114,7 +114,7 @@ impl BatchUi {
         if let Some(Value::String(prompt)) = args.first() {
             if !prompt.is_empty() {
                 self.need_newline.store(true, Ordering::Relaxed);
-                let mut out = self.out.lock().unwrap();
+                let mut out = self.out.lock_recover();
                 let _ = out.write_all(prompt.as_bytes());
                 let _ = out.flush();
             }
@@ -123,7 +123,7 @@ impl BatchUi {
 
     /// 打ったことにするキーを、改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
     fn read_typed_line(&self) -> Option<String> {
-        let mut keys = self.keys.lock().unwrap();
+        let mut keys = self.keys.lock_recover();
         keys.front()?;
         let mut line = String::new();
         while let Some(key) = keys.pop_front() {
@@ -144,12 +144,11 @@ impl BatchUi {
     fn execute_keys(&self, keys: &[String], count: usize) -> Result<(), Error> {
         let commands = self
             .commands
-            .lock()
-            .unwrap()
+            .lock_recover()
             .upgrade()
             .ok_or_else(|| "The batch mode has no command loop".to_string())?;
         self.stopped.store(false, Ordering::Relaxed);
-        *self.error.lock().unwrap() = None;
+        *self.error.lock_recover() = None;
         let before = commands.variable("executing-kbd-macro");
         commands
             .evaluator()
@@ -157,18 +156,18 @@ impl BatchUi {
             .define("executing-kbd-macro", Value::Boolean(true));
         commands.host().editor().executing_kbd_macro = true;
         // 入れ子のマクロが, 外側の残りのキーを読まないように, 自分のキーが尽きるまで
-        let base = self.keys.lock().unwrap().len();
+        let base = self.keys.lock_recover().len();
         let mut round = 0;
         while !keys.is_empty() && (count == 0 || round < count) {
             round += 1;
             {
-                let mut queue = self.keys.lock().unwrap();
+                let mut queue = self.keys.lock_recover();
                 for key in keys.iter().rev() {
                     queue.push_front(key.clone());
                 }
             }
-            while self.keys.lock().unwrap().len() > base {
-                let key = self.keys.lock().unwrap().pop_front().unwrap_or_default();
+            while self.keys.lock_recover().len() > base {
+                let key = self.keys.lock_recover().pop_front().unwrap_or_default();
                 commands.handle_key(&key);
                 if self.stopped.load(Ordering::Relaxed) {
                     break;
@@ -183,9 +182,9 @@ impl BatchUi {
             .evaluator()
             .global()
             .define("executing-kbd-macro", before);
-        let error = self.error.lock().unwrap().take();
+        let error = self.error.lock_recover().take();
         if let Some(error) = &error {
-            *self.failure.lock().unwrap() = Some((round.saturating_sub(1), error.clone()));
+            *self.failure.lock_recover() = Some((round.saturating_sub(1), error.clone()));
         }
         error.map_or(Ok(()), |e| Err(Error::plain(e)))
     }
@@ -193,7 +192,7 @@ impl BatchUi {
     /// 標準入力から 1 行読む (改行は除く).
     fn read_line(&self) -> Result<String, Error> {
         let mut line = String::new();
-        match self.input.lock().unwrap().read_line(&mut line) {
+        match self.input.lock_recover().read_line(&mut line) {
             Ok(0) | Err(_) => Err(Error::strings("end-of-file", &["Error reading from stdin"])),
             Ok(_) => Ok(line.trim_end_matches(['\n', '\r']).to_string()),
         }
@@ -205,7 +204,7 @@ impl Host for BatchUi {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
-                    let mut err = self.err.lock().unwrap();
+                    let mut err = self.err.lock_recover();
                     if self.need_newline.swap(false, Ordering::Relaxed) {
                         let _ = writeln!(err);
                     }
@@ -222,7 +221,7 @@ impl Host for BatchUi {
                 }
             },
             "read-key" => {
-                let typed = self.keys.lock().unwrap().pop_front();
+                let typed = self.keys.lock_recover().pop_front();
                 match typed {
                     Some(key) => Ok(Value::String(read_key_name(&key))),
                     None => {
@@ -244,7 +243,7 @@ impl Host for BatchUi {
             "ding" => {
                 // Emacs のバッチモードは, ベルの文字を標準出力に出す
                 self.need_newline.store(true, Ordering::Relaxed);
-                let mut out = self.out.lock().unwrap();
+                let mut out = self.out.lock_recover();
                 let _ = out.write_all(b"\x07");
                 let _ = out.flush();
                 Ok(Value::Nil)
@@ -254,7 +253,7 @@ impl Host for BatchUi {
                     Some(Value::Number(n)) => *n as i32,
                     _ => 0,
                 };
-                *self.exit.lock().unwrap() = Some(code);
+                *self.exit.lock_recover() = Some(code);
                 // 後ろを評価しないために、失敗にする (呼んだ側が、終了コードを見分ける)
                 Err("kill-emacs".to_string().into())
             }
@@ -341,7 +340,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
     let need_newline = Arc::new(AtomicBool::new(false));
     let failure = Arc::new(Mutex::new(None));
     let fail = |text: &str| {
-        let _ = writeln!(err.lock().unwrap(), "{text}");
+        let _ = writeln!(err.lock_recover(), "{text}");
         ERROR_STATUS
     };
     let steps = match parse(args) {
@@ -365,7 +364,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
     let wrote = need_newline.clone();
     host.set_output(Box::new(move |text| {
         wrote.store(true, Ordering::Relaxed);
-        let mut out = writer.lock().unwrap();
+        let mut out = writer.lock_recover();
         let _ = out.write_all(text.as_bytes());
         let _ = out.flush();
     }));
@@ -378,7 +377,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
     let result = CommandLoop::new(host, evaluator, keymap)
         .map(Arc::new)
         .and_then(|commands| {
-            *commands.host().ui().commands.lock().unwrap() = Arc::downgrade(&commands);
+            *commands.host().ui().commands.lock_recover() = Arc::downgrade(&commands);
             commands.eval("(set! noninteractive #t)")?;
             steps.iter().try_for_each(|step| {
                 let code = match step {
@@ -390,13 +389,13 @@ pub fn run(args: &[String], io: Io) -> i32 {
                 commands.eval(&code).map(|_| ())
             })
         });
-    let killed = *exit.lock().unwrap();
+    let killed = *exit.lock_recover();
     match (killed, result) {
         (Some(code), _) => code,
         (None, Ok(())) => 0,
         (None, Err(error)) => {
             // マクロの中のコマンドの失敗を捕まえなかったときは, Emacs と同じく, 繰り返しの数を前置きにする
-            let failed = failure.lock().unwrap().take();
+            let failed = failure.lock_recover().take();
             match failed {
                 Some((done, text)) if text == error.message() => {
                     fail(&format!("After {done} kbd macro iterations: {error}"))
@@ -412,10 +411,10 @@ struct Shared(Arc<Mutex<Box<dyn Write + Send>>>);
 
 impl Write for Shared {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.0.lock().unwrap().write(buf)
+        self.0.lock_recover().write(buf)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        self.0.lock().unwrap().flush()
+        self.0.lock_recover().flush()
     }
 }

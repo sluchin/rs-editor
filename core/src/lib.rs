@@ -25,5 +25,6 @@ pub mod replace;
 pub mod scheme;
 pub mod search;
 pub mod sexp;
+pub mod sync;
 pub mod syntax;
 pub mod window;

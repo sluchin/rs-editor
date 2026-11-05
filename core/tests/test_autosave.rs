@@ -4,7 +4,9 @@ use std::fs;
 
 use rseditor_core::buffer::Buffer;
 use rseditor_core::editor::Editor;
-use rseditor_core::files::{auto_save, auto_save_file_name, insert_file_contents};
+use rseditor_core::files::{
+    auto_save, auto_save_file_name, insert_file_contents, note_key, AUTO_SAVE_INTERVAL,
+};
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
@@ -250,4 +252,17 @@ fn test_copy_file() {
         ev.eval("(copy-file \"a\")").map_err(|e| e.to_string()),
         Err("copy-file expects 2 or 3 arguments".to_string())
     );
+}
+
+#[test]
+fn test_note_key_asks_for_an_auto_save_every_interval() {
+    let mut editor = Editor::new();
+    for _ in 1..AUTO_SAVE_INTERVAL {
+        assert!(!note_key(&mut editor));
+    }
+    assert!(note_key(&mut editor));
+    // 自動保存すると、数え直す
+    auto_save(&mut editor);
+    assert_eq!(editor.keys_since_auto_save, 0);
+    assert!(!note_key(&mut editor));
 }

@@ -895,3 +895,47 @@ fn test_region_positions_out_of_range() {
         assert_eq!(run_last(code), want, "{code}");
     }
 }
+
+#[test]
+fn test_visited_file_modtime() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("m.txt");
+    std::fs::write(&path, "disk\n").unwrap();
+    let p = quoted(path.to_str().unwrap());
+    let (ev, host) = setup();
+    let eval = |code: &str| {
+        ev.eval_with(code, &host)
+            .map(|out| out.lines().last().unwrap_or("").to_string())
+            .unwrap_or_else(|e| format!("ERR {e}"))
+    };
+    // ファイルを訪れていないバッファは、同じとする
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+    eval(&format!("(set-buffer (find-file-noselect {p}))"));
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+    // 外で書き換わった (更新時刻が変わった) ら，偽。確かめる問いは、画面に頼む (ここでは、頼めない)
+    let later = std::time::SystemTime::now() + std::time::Duration::from_secs(60);
+    let touch = || {
+        std::fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(later)
+            .unwrap();
+    };
+    touch();
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#f");
+    eval("(insert \"x\")");
+    assert_eq!(eval("(basic-save-buffer)"), "ERR ui: read-string");
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "disk\n");
+    // 今の更新時刻を覚えれば、同じになる。書けば、書いたあとの更新時刻を覚える
+    eval("(set-visited-file-modtime)");
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+    eval("(basic-save-buffer)");
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "xdisk\n");
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+    // 別の名前を訪れるときは、前のファイルの更新時刻と比べない
+    touch();
+    let other = quoted(dir.path().join("o.txt").to_str().unwrap());
+    eval(&format!("(files--set-buffer-file-name {other})"));
+    assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+}

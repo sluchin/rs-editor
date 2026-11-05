@@ -131,6 +131,8 @@ pub struct Buffer {
     backed_up: bool,
     /// 最後に自動保存した本文の版.
     auto_saved_version: u64,
+    /// 訪れたとき、または最後に保存したときの、ファイルの更新時刻 (Emacs の `visited-file-modtime`. 無ければ `None`).
+    visited_modtime: Option<std::time::SystemTime>,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -186,6 +188,7 @@ impl Buffer {
             change_bytes: 0,
             backed_up: false,
             auto_saved_version: 0,
+            visited_modtime: None,
         }
     }
 
@@ -217,6 +220,16 @@ impl Buffer {
     /// 最後に自動保存した本文の版.
     pub fn auto_saved_version(&self) -> u64 {
         self.auto_saved_version
+    }
+
+    /// 訪れたとき、または最後に保存したときの、ファイルの更新時刻.
+    pub fn visited_modtime(&self) -> Option<std::time::SystemTime> {
+        self.visited_modtime
+    }
+
+    /// ファイルの更新時刻を覚えます (`None` なら、覚えていないことにする).
+    pub fn set_visited_modtime(&mut self, modtime: Option<std::time::SystemTime>) {
+        self.visited_modtime = modtime;
     }
 
     /// 自動保存した本文の版を覚えます.

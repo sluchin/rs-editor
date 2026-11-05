@@ -1165,3 +1165,41 @@ fn test_info_keys() {
         "Couldn't find documentation for forward-char"
     );
 }
+
+#[test]
+fn test_auto_save_every_300_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("a.txt");
+    std::fs::write(&file, "hi\n").unwrap();
+    let mut fx = Fixture::sized(12, 30, &[file.to_string_lossy().into_owned()]).unwrap();
+    let auto = dir.path().join("#a.txt#");
+    // 画面から読んだ 300 個のキーの、1 個目で本文を書き換え、あとは動くだけ
+    fx.feed("x");
+    for _ in 1..299 {
+        fx.feed("C-f");
+    }
+    fx.app.run();
+    assert!(!auto.exists());
+    fx.feed("C-b");
+    fx.app.run();
+    assert_eq!(std::fs::read_to_string(&auto).unwrap(), "xhi\n");
+    assert_eq!(fx.app.message(), "Auto-saving...done");
+    // 書いたら、数え直す
+    assert_eq!(fx.app.host().editor().keys_since_auto_save, 0);
+}
+
+#[test]
+fn test_c_g_stops_a_macro_that_never_fails() {
+    let mut fx = Fixture::new();
+    // 失敗しないマクロを、失敗するまで繰り返す。画面で C-g を押していれば、止める
+    fx.app.eval("(execute-kbd-macro '(\"x\") 0)").unwrap();
+    fx.feed("C-g");
+    fx.app.run();
+    assert_eq!(fx.text(), "");
+    assert_eq!(fx.app.message(), "Quit");
+    // C-g 以外のキーは、読まずに残す
+    fx.app.eval("(execute-kbd-macro '(\"y\") 2)").unwrap();
+    fx.feed("a");
+    fx.app.run();
+    assert_eq!(fx.text(), "yya");
+}

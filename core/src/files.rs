@@ -24,12 +24,33 @@ pub fn auto_save_file_name(path: &str) -> String {
     format!("{dir}#{base}#")
 }
 
+/// ファイルの更新時刻 (ファイルが無いときは `None`).
+fn modtime(path: &str) -> Option<std::time::SystemTime> {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
+/// バッファが訪れているファイルの更新時刻が、訪れたとき（最後に保存したとき）と同じか (Emacs の `verify-visited-file-modtime`).
+/// ファイルを訪れていないバッファと、更新時刻を覚えていないバッファは、同じとする.
+pub fn verify_visited_file_modtime(buffer: &Buffer) -> bool {
+    match (buffer.file(), buffer.visited_modtime()) {
+        (Some(path), Some(recorded)) => modtime(path) == Some(recorded),
+        _ => true,
+    }
+}
+
+/// 訪れているファイルの今の更新時刻を覚えます (Emacs の `set-visited-file-modtime`).
+pub fn set_visited_file_modtime(buffer: &mut Buffer) {
+    let time = buffer.file().and_then(modtime);
+    buffer.set_visited_modtime(time);
+}
+
 /// バッファがファイルを訪れることにします. 書き換えていないことにし, バックアップを作り直せるようにします.
 fn visit(buffer: &mut Buffer, path: &str) {
     if buffer.file() != Some(path) {
         buffer.set_backed_up(false);
     }
     buffer.set_file(Some(path.to_string()));
+    buffer.set_visited_modtime(modtime(path));
     buffer.set_modified(false);
     let version = buffer.version();
     buffer.set_auto_saved_version(version);
@@ -121,6 +142,23 @@ pub fn write_region(
     Ok(())
 }
 
+/// 自動保存するまでのキーの数 (Emacs の `auto-save-interval`).
+pub const AUTO_SAVE_INTERVAL: usize = 300;
+
+/// 画面から読んだキーを 1 つ数えます (キーボードマクロのキーは数えない. Emacs の `num_nonmacro_input_events` と同じ).
+///
+/// # Arguments
+///
+/// * `editor` - エディタ.
+///
+/// # Returns
+///
+/// 前に自動保存してから `AUTO_SAVE_INTERVAL` 個のキーを読んだら `true` (呼び出し側が `auto_save` を呼ぶ).
+pub fn note_key(editor: &mut Editor) -> bool {
+    editor.keys_since_auto_save += 1;
+    editor.keys_since_auto_save >= AUTO_SAVE_INTERVAL
+}
+
 /// 前に自動保存してから書き換えた, ファイルのバッファを, 自動保存のファイルに書きます (Emacs の `do-auto-save`).
 ///
 /// # Arguments
@@ -131,6 +169,7 @@ pub fn write_region(
 ///
 /// 書いたバッファの数 (書けなかったものは, 数えない. 次の機会に, また書く).
 pub fn auto_save(editor: &mut Editor) -> usize {
+    editor.keys_since_auto_save = 0;
     let mut saved = 0;
     for name in editor.buffer_list() {
         let buffer = editor.get_buffer_mut(&name).unwrap();

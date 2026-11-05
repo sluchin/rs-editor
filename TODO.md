@@ -13,17 +13,14 @@
 
 ## 優先度つきの進め方
 
-未完了 (`- [ ]`) は 150 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
-決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
+未完了 (`- [ ]`) は 147 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+決め方は、(1) 固まる・データを失う・落ちるものを先に (P0 は済んだ)、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
-### P0: 固まる、データを失う、落ちる (先にやる。どれも小〜中)
+### P0: 固まる、データを失う、落ちる (済んだ)
 
-- キーボードマクロを `C-g` で止める (Phase 20「バッチモードの Emacs との違い」)。`execute-kbd-macro` の回数 0 は、失敗するまで繰り返すので、失敗しないマクロは止められず、固まる。小〜中。
-- 保存するときに、ファイルが外で書き換わっていないか確かめる (Phase 13「ファイル」の `supersession`)。確かめないと、外の変更を黙って上書きする。中。
-- 自動保存を、300 回のキー入力ごとにも行う (Phase 12 の `auto-save-interval`)。30 秒止まらずに打ち続けると、保存されない。小。
-- `lock().unwrap()` (core に約 50 か所) が、panic のあとで続けられるか検討する (Phase 20)。1 つの panic で全体が止まらないようにする。小〜中。
-- `yes-or-no-p` で、`yes` と `no` のほかの答えを、聞き直す (Phase 13「ミニバッファと補完」)。今は `no` とするので、確認の質問を誤って拒否する。小。
+- 済んだ: キーボードマクロを `C-g` で止める、保存前に外の書き換えを確かめる、300 回のキーごとの自動保存、`lock().unwrap()` の panic 対策、`yes-or-no-p` の聞き直し (これは前から済んでいた)。
+- 残りの 2 つは、P1 の「ファイル・バッファ」に移した (編集のときの確かめ、ターミナルの 30 秒の自動保存)。
 
 ### P1: 毎日の編集で、Emacs と違って困るもの (次にやる)
 
@@ -47,7 +44,7 @@
 - コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - キーの無いコマンドのうち `untabify`、`tabify` (Phase 13「削除・編集」)。小。
 - クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
-- ファイル・バッファ: 同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
+- ファイル・バッファ: 外で書き換わったファイルを初めて書き換えるときの確かめ (`supersession`)、ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
 - dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 13)。大。毎日使うなら、P1 の最後に進める。
 - Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 13)。小。
 - Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 13「Lisp」)。小〜中。
@@ -248,7 +245,8 @@
 - [ ] `C-x i` (insert-file): Emacs は、入れた文字の終わりにマークを置く (リージョンは選ばない)。今は、置かない。
 - [ ] `C-x s` (save-some-buffers): Emacs の問いは、`C-r` (バッファを見る), `C-f`、`d` (違いを見る), `C-h` も受ける。
       バッファの名前とファイルの名前が違えば、両方を出す。
-- [ ] 自動保存: Emacs は、300 回キーを押すごとにも保存する (`auto-save-interval`)。今は、書き換えが 30 秒止まったときだけ。
+- [x] 自動保存: Emacs は、300 回キーを押すごとにも保存する (`auto-save-interval`)。今は、書き換えが 30 秒止まったときだけ。
+- [ ] ターミナルのアプリは、入力が 30 秒止まったときの自動保存が無い (300 回キーを押すごとの自動保存だけ。ncurses のキーの読み取りが待ち続けるため)。
       バッファを消すときと、Emacs を終えるときの扱い (`delete-auto-save-files`) も、まだ。
 - [ ] バックアップ: Emacs は、前の版の名前を変えて `名前~` にする (`backup-by-copying` が `nil`)。今は、写す。
 - [ ] `recover-this-file`: Emacs の問いは、`diff` (違いを見る) も受け、自動保存のファイルの一覧を見せる。
@@ -486,7 +484,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `C-x C-d` (list-directory), `C-x C-j` (dired-jump), `C-x 4 d` (dired-other-window)。
 - [ ] dired の中のキー (KEYBINDINGS.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+` など)。
 - [ ] `auto-revert-mode` (ファイルが書き換わったら読み直す)。
-- [ ] 保存するときに、ファイルが外で書き換わっていないか確かめる (`supersession`. 「changed on disk; really edit the buffer?」)。
+- [x] 保存するときに、ファイルが外で書き換わっていないか確かめる (`verify-visited-file-modtime`、`set-visited-file-modtime`。Emacs の「X has changed since visited or saved.  Save anyway?」)。
+- [ ] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」)。
 - [ ] ファイルの錠 (`.#名前`。`create-lockfiles`)。
 - [ ] `recover-session` (前のセッションの自動保存から、まとめて読み直す), `recentf-open` (最近のファイル)。
 - [ ] `append-to-file`, `rename-visited-file`。
@@ -525,7 +524,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] `M-r` / `M-s` (previous-matching-history-element など): 入力の履歴を正規表現で探す。
 - [ ] `M-n` の既定の値 (future history)。`C-x C-f` なら、カーソルの所のファイルの名前など。
 - [ ] `*Completions*` バッファで選ぶ (`M-v`、`M-<up>`、`M-<down>`、`RET`)。補完のスタイル (`partial-completion` の `f-f` など)。
-- [ ] `yes-or-no-p` で、`yes` と `no` のほかの答えには、聞き直す (「Please answer yes or no.」)。今は、`no` とする。
+- [x] `yes-or-no-p` で、`yes` と `no` のほかの答えには、聞き直す (「Please answer yes or no.」)。今は、`no` とする。
 - [ ] `M-ESC ESC` (keyboard-escape-quit), 再帰編集 (`C-M-c`)。
 - [ ] `M-X` (execute-extended-command-for-buffer), `M-x` で、コマンドのキーを知らせる (「You can run the command ... with C-x ...」)。
 - [ ] `C-u M-x` などの、前置引数を付けたコマンドの実行。
@@ -691,10 +690,10 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 
 ### バッチモードの Emacs との違い (レビューから)
 
-- [ ] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、Emacs と同じく、失敗するまで繰り返す。画面のアプリ (Tauri) とターミナルのアプリは、繰り返している間、キー入力を見ないので、失敗しないマクロを止められない (Emacs は、繰り返しの間に `C-g` を見る)。
+- [x] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、失敗するまで繰り返す。繰り返している間に `C-g` を押すと、止める (画面のアプリは、`session_input` が `C-g` を旗で知らせる。ターミナルのアプリは、`Screen::interrupted` で、待たずに確かめる)。
 - [ ] 引数の数の違いを、`wrong-number-of-arguments` (データは手続きと個数) にする。今は種類が `error` で、メッセージは `car expects 1 argument, given 2`。
 - [ ] `list-ref` など、Emacs に無い手続きの範囲外を、`args-out-of-range` にする (今は種類が `error`)。
-- [ ] 評価を回さないロックの `lock().unwrap()` (core に約 50 か所) も、panic のあとで続けられるようにするか検討する。
+- [x] ロックの `lock().unwrap()` を、panic のあとでも続けられるようにする (`core/src/sync.rs` の `LockExt::lock_recover`)。評価の panic で poisoned になったロックで、以後のキーが全て失敗することは無くなった。
 - [ ] 開発用の依存の `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (今は `markdownlint-cli2@0.23.3` と、`markdown-it` の `overrides` で、high は 0 件)。
 
 ### 済んだもの

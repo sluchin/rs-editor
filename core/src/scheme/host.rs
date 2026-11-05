@@ -12,6 +12,7 @@ use std::time::Duration;
 use serde::Serialize;
 
 use crate::scheme::value::Value;
+use crate::sync::LockExt;
 
 /// ミニバッファの入力 (`read-string`) を待つ長さ (人が入力するので, 長くする).
 pub const READ_TIMEOUT: Duration = Duration::from_secs(60 * 60);
@@ -98,7 +99,7 @@ impl Bridge {
     ) -> Result<Value, Error> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (sender, receiver) = mpsc::channel();
-        self.pending.lock().unwrap().insert(id, sender);
+        self.pending.lock_recover().insert(id, sender);
         let sent = send(EditorRequest {
             id,
             op: op.to_string(),
@@ -118,7 +119,7 @@ impl Bridge {
                 .recv_timeout(timeout)
                 .unwrap_or_else(|_| Err(format!("The editor did not answer ({})", op)))
         });
-        self.pending.lock().unwrap().remove(&id);
+        self.pending.lock_recover().remove(&id);
         answer.map_err(screen_error)
     }
 
@@ -134,7 +135,7 @@ impl Bridge {
     ///
     /// 待っている頼みがあれば `true`.
     pub fn reply(&self, id: u64, value: serde_json::Value, error: Option<String>) -> bool {
-        let Some(sender) = self.pending.lock().unwrap().remove(&id) else {
+        let Some(sender) = self.pending.lock_recover().remove(&id) else {
             return false;
         };
         // 待つのをやめていても (時間切れ), かまわない

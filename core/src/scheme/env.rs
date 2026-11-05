@@ -8,6 +8,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, Weak};
 
 use crate::scheme::value::Value;
+use crate::sync::LockExt;
 
 /// 環境. 複製しても, 同じ環境を指します.
 #[derive(Clone, Default)]
@@ -52,13 +53,13 @@ impl Env {
     ///
     /// 環境.
     pub fn child(&self) -> Self {
-        let registry = self.0.lock().unwrap().registry.clone();
+        let registry = self.0.lock_recover().registry.clone();
         let env = Env(Arc::new(Mutex::new(Frame {
             vars: HashMap::new(),
             parent: Some(self.clone()),
             registry: registry.clone(),
         })));
-        let mut registry = registry.lock().unwrap();
+        let mut registry = registry.lock_recover();
         // 放した環境は, 覚えている数が倍になるたびに除く (長い評価でも, 増え続けないように)
         if registry.frames.len() >= registry.prune_at.max(PRUNE_AT) {
             registry.frames.retain(|frame| frame.strong_count() > 0);
@@ -78,14 +79,14 @@ impl Env {
             if !reached.insert(Arc::as_ptr(&env.0)) {
                 continue;
             }
-            let frame = env.0.lock().unwrap();
+            let frame = env.0.lock_recover();
             for value in frame.vars.values() {
                 push_envs(value, &mut pending);
             }
             pending.extend(frame.parent.clone());
         }
-        let registry = self.0.lock().unwrap().registry.clone();
-        let frames = std::mem::take(&mut registry.lock().unwrap().frames);
+        let registry = self.0.lock_recover().registry.clone();
+        let frames = std::mem::take(&mut registry.lock_recover().frames);
         let mut kept = Vec::new();
         for weak in frames {
             let Some(frame) = weak.upgrade() else {
@@ -95,11 +96,11 @@ impl Env {
                 kept.push(weak);
             } else {
                 // 消した値は, 環境のロックを外してから放す (放す環境が, ロックを取るため)
-                let vars = std::mem::take(&mut frame.lock().unwrap().vars);
+                let vars = std::mem::take(&mut frame.lock_recover().vars);
                 drop(vars);
             }
         }
-        let mut registry = registry.lock().unwrap();
+        let mut registry = registry.lock_recover();
         registry.prune_at = kept.len() * 2;
         registry.frames = kept;
     }
@@ -110,8 +111,8 @@ impl Env {
     ///
     /// 環境の数.
     pub fn live_frames(&self) -> usize {
-        let registry = self.0.lock().unwrap().registry.clone();
-        let registry = registry.lock().unwrap();
+        let registry = self.0.lock_recover().registry.clone();
+        let registry = registry.lock_recover();
         registry
             .frames
             .iter()
@@ -121,8 +122,8 @@ impl Env {
 
     /// 一番外側の環境が覚えている環境の数 (放した環境も, 掃除するまでは数える).
     pub fn registered_frames(&self) -> usize {
-        let registry = self.0.lock().unwrap().registry.clone();
-        let registry = registry.lock().unwrap();
+        let registry = self.0.lock_recover().registry.clone();
+        let registry = registry.lock_recover();
         registry.frames.len()
     }
 
@@ -142,7 +143,7 @@ impl Env {
     ///
     /// 値. なければ `None`.
     pub fn get(&self, name: &str) -> Option<Value> {
-        let frame = self.0.lock().unwrap();
+        let frame = self.0.lock_recover();
         match frame.vars.get(name) {
             Some(value) => Some(value.clone()),
             None => frame.parent.as_ref()?.get(name),
@@ -155,7 +156,7 @@ impl Env {
     ///
     /// 名前 (名前の順).
     pub fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.0.lock().unwrap().vars.keys().cloned().collect();
+        let mut names: Vec<String> = self.0.lock_recover().vars.keys().cloned().collect();
         names.sort();
         names
     }
@@ -180,7 +181,7 @@ impl Env {
     /// * `name` - 変数の名前.
     /// * `value` - 値.
     pub fn define(&self, name: &str, value: Value) {
-        self.0.lock().unwrap().vars.insert(name.to_string(), value);
+        self.0.lock_recover().vars.insert(name.to_string(), value);
     }
 
     /// 変数の値を変えます (外側へたどって探す).
@@ -194,7 +195,7 @@ impl Env {
     ///
     /// 変数があれば `true`.
     pub fn set(&self, name: &str, value: Value) -> bool {
-        let mut frame = self.0.lock().unwrap();
+        let mut frame = self.0.lock_recover();
         if let Some(slot) = frame.vars.get_mut(name) {
             *slot = value;
             return true;

@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use rseditor_core::command_loop::CommandLoop;
 use rseditor_core::editor::Editor;
+use rseditor_core::files;
 use rseditor_core::keymap::Keymap;
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
@@ -14,6 +15,7 @@ use rseditor_core::scheme::value::Value;
 use crate::render::{render_with, Display};
 use crate::screen::Screen;
 use crate::ui::{next_key, UiHost, UiState};
+use rseditor_core::sync::LockExt;
 
 /// ターミナルのエディタ.
 pub struct App {
@@ -79,18 +81,18 @@ impl App {
 
     /// 終わるか.
     pub fn quit(&self) -> bool {
-        self.state.lock().unwrap().quit
+        self.state.lock_recover().quit
     }
 
     /// エコー領域の文字.
     pub fn message(&self) -> String {
-        self.state.lock().unwrap().message.clone()
+        self.state.lock_recover().message.clone()
     }
 
     /// 画面を描きます.
     pub fn draw(&self) {
         let mut editor = self.host().editor();
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock_recover();
         let (rows, cols) = state.screen.size();
         editor.set_screen_size(rows, cols);
         let message = state.message.clone();
@@ -121,6 +123,10 @@ impl App {
                         self.host().editor().kbd_macro.record(&key);
                     }
                     self.handle_key(&key);
+                    // 画面から読んだキーが 300 個になったら, 自動保存する (Emacs の `auto-save-interval`)
+                    if from_screen && files::note_key(&mut self.host().editor()) {
+                        self.auto_save();
+                    }
                 }
                 None => break,
             }
@@ -133,11 +139,19 @@ impl App {
     /// キーボードマクロのキーが残っていれば, 全て処理します (`run` は, キーを読むときに同じ順で処理する).
     pub fn flush_macro(&mut self) {
         loop {
-            let key = self.state.lock().unwrap().pop_macro_key();
+            let key = self.state.lock_recover().pop_macro_key();
             match key {
                 Some(key) => self.handle_key(&key),
                 None => break,
             }
+        }
+    }
+
+    /// 書き換えたファイルのバッファを, 自動保存のファイル (`#名前#`) に書きます (Emacs の `do-auto-save`).
+    /// 書いたら, "Auto-saving...done" と出します.
+    pub fn auto_save(&mut self) {
+        if files::auto_save(&mut self.host().editor()) > 0 {
+            self.state.lock_recover().message = "Auto-saving...done".to_string();
         }
     }
 

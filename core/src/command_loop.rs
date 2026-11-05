@@ -13,6 +13,7 @@ use crate::scheme::editor_host::EditorHost;
 use crate::scheme::evaluator::Evaluator;
 use crate::scheme::host::Host;
 use crate::scheme::value::Value;
+use crate::sync::LockExt;
 
 /// コマンドループが画面に頼むこと.
 pub trait LoopUi {
@@ -105,7 +106,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 続きのキーを待っていなければ `true` (新しいコマンドの始め).
     pub fn at_command_start(&self) -> bool {
-        self.pending.lock().unwrap().is_empty()
+        self.pending.lock_recover().is_empty()
     }
 
     /// Scheme を評価します (初期設定ファイルを読むときなど).
@@ -132,7 +133,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 前置引数を読んでいる間 (`universal-argument-map`) のキーなら, 受けるコマンドの名前を返します.
     fn prefix_command(&self, key: &str) -> Option<&'static str> {
-        if !self.pending.lock().unwrap().is_empty()
+        if !self.pending.lock_recover().is_empty()
             || self.variable("universal-argument-mode") == Value::Boolean(false)
         {
             return None;
@@ -176,7 +177,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// Lisp で割り当てたキー (`global-set-key`) を, キーの割り当てに写します.
     pub fn sync_lisp_keys(&self) {
-        let mut keymap = self.keymap.lock().unwrap();
+        let mut keymap = self.keymap.lock_recover();
         for binding in self.evaluator.key_bindings() {
             keymap.bind(&from_codemirror(&binding.key), &binding.command);
         }
@@ -184,8 +185,8 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// キーを 1 つ処理します.
     pub fn handle_key(&self, key: &str) {
-        if key == "C-g" && !self.pending.lock().unwrap().is_empty() {
-            self.pending.lock().unwrap().clear();
+        if key == "C-g" && !self.pending.lock_recover().is_empty() {
+            self.pending.lock_recover().clear();
             self.say("Quit");
             return;
         }
@@ -196,21 +197,21 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             self.execute(command);
             return;
         }
-        self.pending.lock().unwrap().push(key.to_string());
+        self.pending.lock_recover().push(key.to_string());
         // Lisp で割り当てたキーが先
         self.sync_lisp_keys();
         let lookup = self.lookup_pending();
         match lookup {
             Lookup::Prefix => {
-                let shown = self.pending.lock().unwrap().join(" ");
+                let shown = self.pending.lock_recover().join(" ");
                 self.say(&format!("{shown}-"));
             }
             Lookup::Command(command) => {
-                self.pending.lock().unwrap().clear();
+                self.pending.lock_recover().clear();
                 self.execute(&command);
             }
             Lookup::Unbound => {
-                let keys = std::mem::take(&mut *self.pending.lock().unwrap());
+                let keys = std::mem::take(&mut *self.pending.lock_recover());
                 match (keys.as_slice(), printable(key)) {
                     ([_], Some(c)) => self.self_insert(&c.to_string()),
                     _ => self.say(&format!("{} is undefined", keys.join(" "))),
@@ -227,20 +228,19 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             for (keys, command) in &local {
                 keymap.bind(keys, command);
             }
-            let found = keymap.lookup(&self.pending.lock().unwrap());
+            let found = keymap.lookup(&self.pending.lock_recover());
             if found != Lookup::Unbound {
                 return found;
             }
         }
         self.keymap
-            .lock()
-            .unwrap()
-            .lookup(&self.pending.lock().unwrap())
+            .lock_recover()
+            .lookup(&self.pending.lock_recover())
     }
 
     /// 文字を入れます (前置引数の数だけ繰り返す). 画面の IME で確定した文字も, ここから入れる.
     pub fn self_insert(&self, text: &str) {
-        self.pending.lock().unwrap().clear();
+        self.pending.lock_recover().clear();
         self.say("");
         self.take_prefix();
         let count = prefix_numeric_value(self.host.editor().prefix_arg).max(1);

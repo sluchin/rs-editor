@@ -23,6 +23,7 @@ use crate::search::{CharSet, Pattern};
 use crate::sexp::{
     beginning_of_defun, end_of_defun_scanning, forward_sexp, mark_defun, up_list, MotionError,
 };
+use crate::sync::LockExt;
 use crate::syntax::{class_of_designator, syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
 use crate::{comment, fill, replace};
@@ -65,12 +66,12 @@ impl<U: Host> EditorHost<U> {
     /// `princ`, `prin1`, `print`, `terpri` の出力先を決めます (バッチモードは標準出力).
     /// 決めなければ, エコー領域 (`message`) に出す. 決めると、バッチモードとして、`write-region` が `Wrote ...` を出さない (Emacs と同じ).
     pub fn set_output(&self, output: Output) {
-        *self.output.lock().unwrap() = Some(output);
+        *self.output.lock_recover() = Some(output);
     }
 
     /// エディタ (描くときや, キーを処理するときに使う).
     pub fn editor(&self) -> MutexGuard<'_, Editor> {
-        self.editor.lock().unwrap()
+        self.editor.lock_recover()
     }
 
     /// 画面の要る操作を受けるもの.
@@ -86,7 +87,7 @@ impl<U: Host> EditorHost<U> {
         fold: bool,
         dialect: Dialect,
     ) -> Result<Pattern, Error> {
-        let mut cache = self.patterns.lock().unwrap();
+        let mut cache = self.patterns.lock_recover();
         let key = (text.to_string(), regexp, fold, dialect);
         if let Some(p) = cache.get(&key) {
             return Ok(p.clone());
@@ -110,7 +111,7 @@ impl<U: Host> Host for EditorHost<U> {
             let Some(Value::String(text)) = args.first() else {
                 return Err("standard-output expects a string".to_string().into());
             };
-            return match &*self.output.lock().unwrap() {
+            return match &*self.output.lock_recover() {
                 Some(output) => {
                     output(text);
                     Ok(Value::Nil)
@@ -121,7 +122,7 @@ impl<U: Host> Host for EditorHost<U> {
             };
         }
         let outcome = {
-            let mut editor = self.editor.lock().unwrap();
+            let mut editor = self.editor.lock_recover();
             self.dispatch(&mut editor, op, &args)?
         };
         match outcome {
@@ -687,7 +688,7 @@ impl<U: Host> EditorHost<U> {
                     visit.as_deref(),
                 )?;
                 // Emacs は, 訪れるファイルの名前を出す (バッチモードでは出さない)
-                if self.output.lock().unwrap().is_some() {
+                if self.output.lock_recover().is_some() {
                     return Ok(Some(Outcome::Value(Value::Nil)));
                 }
                 return Ok(Some(Outcome::Message(
@@ -702,8 +703,17 @@ impl<U: Host> EditorHost<U> {
                 let b = ed.current_buffer_mut();
                 if b.file() != file.as_deref() {
                     b.set_backed_up(false);
+                    // 別のファイルの更新時刻とは、比べない
+                    b.set_visited_modtime(None);
                 }
                 b.set_file(file);
+                Value::Nil
+            }
+            "verify-visited-file-modtime" => {
+                Value::Boolean(files::verify_visited_file_modtime(ed.current_buffer()))
+            }
+            "set-visited-file-modtime" => {
+                files::set_visited_file_modtime(ed.current_buffer_mut());
                 Value::Nil
             }
             "files--buffer-backed-up-p" => Value::Boolean(ed.current_buffer().backed_up()),
