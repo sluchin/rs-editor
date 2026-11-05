@@ -385,34 +385,37 @@ fn test_token_styles_and_color_pairs() {
     use rseditor_core::highlight::TokenKind;
     use rseditor_tui::screen::{token_pair, token_style, TokenStyle};
     // 暗い背景の Emacs (8 色) に合わせる. 数値には色が無い
-    assert_eq!(token_style(TokenKind::Number), None);
+    assert_eq!(token_style(TokenKind::Number, 8), None);
     assert_eq!(
-        token_style(TokenKind::Keyword),
+        token_style(TokenKind::Keyword, 8),
         Some(TokenStyle {
             color: 6,
             bold: true
         })
     );
     assert_eq!(
-        token_style(TokenKind::Comment),
-        token_style(TokenKind::CommentDelimiter)
+        token_style(TokenKind::Comment, 8),
+        token_style(TokenKind::CommentDelimiter, 8)
     );
     assert_eq!(
-        token_style(TokenKind::String),
-        token_style(TokenKind::DocComment)
+        token_style(TokenKind::String, 8),
+        token_style(TokenKind::DocComment, 8)
     );
-    assert_eq!(token_style(TokenKind::Constant).map(|s| s.color), Some(5));
     assert_eq!(
-        token_style(TokenKind::Preprocessor).map(|s| s.color),
+        token_style(TokenKind::Constant, 8).map(|s| s.color),
+        Some(5)
+    );
+    assert_eq!(
+        token_style(TokenKind::Preprocessor, 8).map(|s| s.color),
         Some(4)
     );
     // 関数の名前は青の太字 (プリプロセッサと同じ), 変数の名前は黄の太字
     assert_eq!(
-        token_style(TokenKind::FunctionName),
-        token_style(TokenKind::Preprocessor)
+        token_style(TokenKind::FunctionName, 8),
+        token_style(TokenKind::Preprocessor, 8)
     );
     assert_eq!(
-        token_style(TokenKind::VariableName),
+        token_style(TokenKind::VariableName, 8),
         Some(TokenStyle {
             color: 3,
             bold: true
@@ -420,18 +423,18 @@ fn test_token_styles_and_color_pairs() {
     );
     // 組み込みの名前はプリプロセッサと同じ青の太字, 警告は赤の太字, 正規表現のグループは文字列と同じ緑の太字
     assert_eq!(
-        token_style(TokenKind::Builtin),
-        token_style(TokenKind::Preprocessor)
+        token_style(TokenKind::Builtin, 8),
+        token_style(TokenKind::Preprocessor, 8)
     );
     assert_eq!(
-        token_style(TokenKind::Warning),
+        token_style(TokenKind::Warning, 8),
         Some(TokenStyle {
             color: 1,
             bold: true
         })
     );
     assert_eq!(
-        token_style(TokenKind::RegexpGroup),
+        token_style(TokenKind::RegexpGroup, 8),
         Some(TokenStyle {
             color: 2,
             bold: true
@@ -439,21 +442,57 @@ fn test_token_styles_and_color_pairs() {
     );
     // JSDoc のタグはコメントと同じ色, 型は青, 値は黄の太字
     assert_eq!(
-        token_style(TokenKind::DocTag),
-        token_style(TokenKind::Comment)
+        token_style(TokenKind::DocTag, 8),
+        token_style(TokenKind::Comment, 8)
     );
     assert_eq!(
-        token_style(TokenKind::DocType),
+        token_style(TokenKind::DocType, 8),
         Some(TokenStyle {
             color: 4,
             bold: false
         })
     );
     assert_eq!(
-        token_style(TokenKind::DocValue),
-        token_style(TokenKind::VariableName)
+        token_style(TokenKind::DocValue, 8),
+        token_style(TokenKind::VariableName, 8)
     );
     // 対の番号は、1 から、種類ごとに違う
     let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
     assert_eq!(pairs, (1..=17).collect::<Vec<i16>>());
+}
+
+#[test]
+fn test_token_styles_in_256_colors() {
+    use rseditor_core::highlight::TokenKind;
+    use rseditor_tui::screen::{token_style, RICH_COLORS};
+    // 数値には色が無い
+    assert_eq!(token_style(TokenKind::Number, RICH_COLORS), None);
+    // 8 色より多くても 256 色に満たなければ、8 色の色を使う
+    assert_eq!(
+        token_style(TokenKind::Keyword, 16),
+        token_style(TokenKind::Keyword, 8)
+    );
+    // 全ての種類 (数値以外) が、8 以上の番号の色を持つ
+    for kind in TokenKind::ALL {
+        if kind != TokenKind::Number {
+            let style = token_style(kind, RICH_COLORS).unwrap();
+            assert!(style.color >= 16, "{kind:?}");
+        }
+    }
+    let color = |kind| token_style(kind, RICH_COLORS).unwrap().color;
+    // Emacs の顔の色: コメントは chocolate1, 文字列は LightSalmon, キーワードは Cyan1
+    assert_eq!(color(TokenKind::Comment), 208);
+    assert_eq!(color(TokenKind::CommentDelimiter), 208);
+    assert_eq!(color(TokenKind::String), 216);
+    assert_eq!(color(TokenKind::DocComment), 216);
+    assert_eq!(color(TokenKind::Keyword), 51);
+    // 警告と正規表現のグループだけが太字
+    for kind in TokenKind::ALL {
+        let bold = token_style(kind, RICH_COLORS).is_some_and(|s| s.bold);
+        assert_eq!(
+            bold,
+            matches!(kind, TokenKind::Warning | TokenKind::RegexpGroup),
+            "{kind:?}"
+        );
+    }
 }

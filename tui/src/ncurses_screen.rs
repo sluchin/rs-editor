@@ -10,6 +10,8 @@ use crate::screen::{token_pair, token_style, Frame, Screen};
 pub struct NcursesScreen {
     /// 色を使えるか (端末が色に対応していて、色の対を作れたか).
     colors: bool,
+    /// 端末が使える色の数.
+    palette: i32,
 }
 
 impl NcursesScreen {
@@ -22,8 +24,10 @@ impl NcursesScreen {
         noecho();
         keypad(stdscr(), true);
         set_escdelay(25);
+        let colors = Self::start_colors();
         NcursesScreen {
-            colors: Self::start_colors(),
+            colors,
+            palette: if colors { COLORS() } else { 0 },
         }
     }
 
@@ -39,8 +43,9 @@ impl NcursesScreen {
         start_color();
         // 端末の背景の色を、そのまま使う
         use_default_colors();
+        let palette = COLORS();
         for kind in TokenKind::ALL {
-            if let Some(style) = token_style(kind) {
+            if let Some(style) = token_style(kind, palette) {
                 init_pair(token_pair(kind), style.color, -1);
             }
         }
@@ -115,7 +120,7 @@ impl Screen for NcursesScreen {
                 let style = cell
                     .token
                     .filter(|_| self.colors)
-                    .and_then(|kind| token_style(kind).map(|style| (kind, style)));
+                    .and_then(|kind| token_style(kind, self.palette).map(|style| (kind, style)));
                 if let Some((kind, style)) = style {
                     attron(COLOR_PAIR(token_pair(kind)));
                     if style.bold {

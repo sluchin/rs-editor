@@ -153,7 +153,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 - 画面のマス (`tui/src/screen.rs` の `Cell`) に、字句の種類 (`token`) を持たせます。`tui/src/render.rs` が、`Buffer::line_token_spans` から、折り返しと幅の広い文字を考えて、マスごとの種類を決めます。
 - 種類から色への表は、`tui/src/screen.rs` の `token_style` と `token_pair` の 1 か所です。ncurses の描画 (`tui/src/ncurses_screen.rs`) が、起動のときに `start_color` と `use_default_colors` と `init_pair` を呼び、マスごとに色の対を付けます。端末が色に対応していなければ (`has_colors` が偽)、色を付けません。`highlight-regexp` の下線は、そのままです。
-- 色は、8 色の端末で、暗い背景の Emacs の font-lock の色に合わせます (コメントは黄、文字列とドキュメントと型は緑、キーワードはシアンの太字、定数はマゼンタ、プリプロセッサは青の太字)。256 色の端末で Emacs に近い色にするのは、後で足します。
+- 色は、8 色の端末で、暗い背景の Emacs の font-lock の色に合わせます (コメントは黄、文字列とドキュメントと型は緑、キーワードはシアンの太字、定数はマゼンタ、プリプロセッサは青の太字)。256 色以上の端末では、Emacs の顔の色 (chocolate1、LightSalmon、Cyan1 など) に近い xterm の色を使います (太字は警告と正規表現のグループだけ)。
 
 ## 6. テストと 100% カバレッジ
 
@@ -168,7 +168,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 1. **範囲**: 段階 1 は C だけ、段階 2 で C++ を足す。
 2. **数値の色**: Emacs に合わせて、既定は色なし。
 3. **モード判定**: 段階 1 は、核の `auto-mode-alist` と方言に C と C++ を足した。画面の `modes.ts` との二重の判定は、核の `mode_info` に一本化した。
-4. **TUI の色**: 8 色を既定にして、256 色は後で足す。
+4. **TUI の色**: 8 色を既定にして、256 色以上の端末では Emacs に近い色を使う。
 
 ## 8. 実装の順序
 

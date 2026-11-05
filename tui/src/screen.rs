@@ -15,7 +15,7 @@ pub struct Cell {
     pub token: Option<TokenKind>,
 }
 
-/// 字句の色 (ncurses の色の番号: 0 黒, 1 赤, 2 緑, 3 黄, 4 青, 5 マゼンタ, 6 シアン, 7 白).
+/// 字句の色 (ncurses の色の番号: 0 黒, 1 赤, 2 緑, 3 黄, 4 青, 5 マゼンタ, 6 シアン, 7 白. 8 以上は xterm の 256 色).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TokenStyle {
     /// 前景の色の番号.
@@ -32,15 +32,27 @@ pub fn token_pair(kind: TokenKind) -> i16 {
         .map_or(0, |i| i as i16 + 1)
 }
 
-/// 字句の種類の色. 8 色の端末で、暗い背景の Emacs の font-lock の色に合わせる
-/// (コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ, プリプロセッサと関数の名前と組み込みの名前は青の太字,
-/// 変数の名前は黄の太字, 警告は赤の太字, 正規表現のグループは緑の太字.
-/// JSDoc のタグはコメントと同じ黄, 型は青, 値は黄の太字).
+/// 256 色の端末で、色の番号をこの数以上持っていれば、Emacs に近い色を使う.
+pub const RICH_COLORS: i32 = 256;
+
+/// 字句の種類の色. 暗い背景の Emacs の font-lock の色に合わせる.
+///
+/// 8 色の端末では、コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ,
+/// プリプロセッサと関数の名前と組み込みの名前は青の太字, 変数の名前は黄の太字, 警告は赤の太字,
+/// 正規表現のグループは緑の太字 (JSDoc のタグはコメントと同じ黄, 型は青, 値は黄の太字).
+/// 256 色以上の端末では、Emacs の色 (chocolate1, LightSalmon, Cyan1 など) に近い xterm の色を使う.
+///
+/// # Arguments
+///
+/// * `colors` - 端末が使える色の数.
 ///
 /// # Returns
 ///
 /// 色 (数値のように、色を付けない種類は `None`).
-pub fn token_style(kind: TokenKind) -> Option<TokenStyle> {
+pub fn token_style(kind: TokenKind, colors: i32) -> Option<TokenStyle> {
+    if colors >= RICH_COLORS {
+        return rich_style(kind);
+    }
     let (color, bold) = match kind {
         TokenKind::Comment | TokenKind::CommentDelimiter | TokenKind::DocTag => (3, false),
         TokenKind::DocComment | TokenKind::String | TokenKind::Type => (2, false),
@@ -51,6 +63,37 @@ pub fn token_style(kind: TokenKind) -> Option<TokenStyle> {
         TokenKind::RegexpGroup => (2, true),
         TokenKind::VariableName | TokenKind::DocValue => (3, true),
         TokenKind::DocType => (4, false),
+        TokenKind::Number => return None,
+    };
+    Some(TokenStyle { color, bold })
+}
+
+/// 256 色の端末の字句の色 (Emacs の顔の色に近い xterm の番号).
+fn rich_style(kind: TokenKind) -> Option<TokenStyle> {
+    let (color, bold) = match kind {
+        // chocolate1
+        TokenKind::Comment | TokenKind::CommentDelimiter => (208, false),
+        // LightSalmon
+        TokenKind::DocComment | TokenKind::String => (216, false),
+        // Cyan1
+        TokenKind::Keyword => (51, false),
+        // PaleGreen
+        TokenKind::Type => (120, false),
+        // Aquamarine
+        TokenKind::Constant => (122, false),
+        // LightSteelBlue
+        TokenKind::Preprocessor | TokenKind::Builtin => (152, false),
+        // LightSkyBlue
+        TokenKind::FunctionName => (117, false),
+        // LightGoldenrod
+        TokenKind::VariableName => (222, false),
+        // Pink1
+        TokenKind::Warning => (217, true),
+        TokenKind::RegexpGroup => (216, true),
+        // slate gray, steel blue, dark goldenrod
+        TokenKind::DocTag => (103, false),
+        TokenKind::DocType => (67, false),
+        TokenKind::DocValue => (94, false),
         TokenKind::Number => return None,
     };
     Some(TokenStyle { color, bold })

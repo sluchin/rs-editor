@@ -691,7 +691,7 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 - [x] Rust のシンタックスハイライト (`rust-mode`。`.rs`)。核の `core/src/highlight/rust.rs` が、rust-lang/rust-mode の font-lock (正規表現の並びと、先に付いた色を上書きしない決まり) を移し、Tauri と TUI の両方に色を付ける。コメント、ドキュメントのコメント、入れ子のブロックコメント、文字列、生の文字列、文字とライフタイム、キーワード、組み込みの型、`unsafe`、マクロ、属性、`fn` `struct` `enum` `mod` `use` の次の名前、`?` が、rust-mode と一致する。比較は `tests/rust-highlight/run.sh` (`npm run test:rust-highlight`。`RUST_MODE_DIR` に rust-mode の clone を指定する)。
 - [x] TypeScript のシンタックスハイライト (`typescript-mode`。`.ts` `.tsx` `.mts` `.cts`)。核の `core/src/highlight/typescript.rs` が、emacs-typescript/typescript-mode の font-lock (正規表現と、括弧を読む規則。コメント、文字列、テンプレートリテラルの `${}`、正規表現のリテラル、キーワード、型、定数、`class` `interface` `type` `enum` の名前、`const` の名前、引数、関数の呼び出し、デコレータ、JSDoc) を同じ順で移し、Tauri と TUI の両方に色を付ける。比較は `tests/ts-highlight/run.sh` (`npm run test:ts-highlight`。`TS_MODE_DIR` に typescript-mode の clone を指定する。Emacs の結果は `expected/` に入れてある)。`.js` と `.jsx` は、Emacs が組み込みの `js-mode` (規則が違う) で開くので含めない。
 - [x] メジャーモードの判定を、核に一本化した (`auto-mode-alist` と、1 行目の `-*- mode: ... -*-` は `lisp/files.scm`。モードラインの名前、括弧の読み方、字下げは `core/src/mode.rs` の `Buffer::mode_info`。画面は `BufferFrame.mode` で受け取り、`src/lib/modes.ts` は消した。TUI のモードラインも同じ名前 (`Lisp Interaction`、`ELisp/d`、`Text` など) を出す)。
-- [ ] TUI の字句の色を、256 色の端末で、Emacs に近い色にする (今は 8 色)。
+- [x] TUI の字句の色を、256 色の端末で、Emacs に近い色にする。
 
 ### 作りと画面
 
