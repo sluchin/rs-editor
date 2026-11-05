@@ -23,7 +23,7 @@
     "test": "vitest run",
     "test:rust": "cargo test --workspace",
     "test:batch": "tests/batch/run.sh",
-    "test:scheme": "cargo test -p rseditor-core --test lisp_ert_test -- --nocapture",
+    "test:scheme": "cargo test -p rseditor-core --test test_lisp_ert -- --nocapture",
     "test:all": "npm run test && npm run test:rust",
     "coverage:fe": "vitest run --coverage",
     "coverage:be": "cargo tarpaulin --workspace --skip-clean --engine llvm --fail-under 100 --out Html",
@@ -65,12 +65,17 @@
     "eslint-plugin-react-refresh": "^0.5",
     "globals": "^17",
     "jsdom": "^30",
+    "markdownlint-cli2": "^0.23.3",
     "prettier": "^3",
     "typedoc": "^0.28.20",
     "typescript": "^6",
     "typescript-eslint": "^8",
     "vite": "^8.3.5",
-    "vitest": "^4.1.12",
-    "markdownlint-cli2": "^0.17.2"
+    "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "markdownlint-cli2": {
+      "markdown-it": "15.0.3"
+    }
   }
 }
