@@ -155,10 +155,10 @@ fn test_functions() {
 
 #[test]
 fn test_function_pointers_and_typedefs() {
-    // 関数ポインタの変数は、関数の名前の色 (Emacs と同じ)
+    // 関数ポインタの変数は、関数の名前の色. 引数の無い `(**fq)` は、変数の名前の色 (Emacs と同じ)
     assert_eq!(
         names("int (*fp)(int, int); int (**fq);"),
-        expect(&[("fp", "function-name"), ("fq", "function-name")])
+        expect(&[("fp", "function-name"), ("fq", "variable-name")])
     );
     // `typedef` で作る名前は、型の色
     assert_eq!(
@@ -512,5 +512,86 @@ fn test_cpp_namespace_using_and_templates() {
             ("x", "variable-name"),
             ("i", "variable-name"),
         ])
+    );
+}
+
+#[test]
+fn test_cpp_operator_functions() {
+    // 色が付くのは、演算子の記号 (クラスの中). クラスの外 `A::operator+` は、`::` の前の名前だけ
+    assert_eq!(
+        cpp("struct V { V operator+(const V &o) const; int operator()(int a); V &operator[](int i); bool operator<<(int q) { return q; } };"),
+        expect(&[
+            ("V", "type"),
+            ("V", "type"),
+            ("+", "function-name"),
+            ("V", "type"),
+            ("o", "variable-name"),
+            ("(", "function-name"),
+            (")", "function-name"),
+            ("a", "variable-name"),
+            ("V", "type"),
+            ("[", "function-name"),
+            ("]", "function-name"),
+            ("i", "variable-name"),
+            ("<", "function-name"),
+            ("<", "function-name"),
+            ("q", "variable-name"),
+        ])
+    );
+    assert_eq!(
+        cpp("V V::operator+(const V &o) const { return o; }"),
+        expect(&[
+            ("V", "type"),
+            ("V", "constant"),
+            ("V", "type"),
+            ("o", "variable-name"),
+        ])
+    );
+    // 記号の無い `operator` は、宣言ではない
+    assert_eq!(cpp("operator ;"), vec![]);
+}
+
+#[test]
+fn test_cpp_typename_and_array_references() {
+    assert_eq!(
+        cpp("void f(typename T::value_type x); typename T::x y;"),
+        expect(&[
+            ("f", "function-name"),
+            ("T", "constant"),
+            ("value_type", "type"),
+            ("x", "variable-name"),
+            ("T", "constant"),
+            ("x", "type"),
+            ("y", "variable-name"),
+        ])
+    );
+    assert_eq!(
+        cpp("int (*pa)[4]; int (&ra)[4] = arr; typedef int (*Fn)(int); typedef int (&Arr)[4]; typedef int (*PA)[4];"),
+        expect(&[
+            ("pa", "variable-name"),
+            ("ra", "variable-name"),
+            ("Fn", "type"),
+            ("PA", "type"),
+        ])
+    );
+}
+
+#[test]
+fn test_cpp_declarations_in_conditions() {
+    assert_eq!(
+        cpp("void k() { if (int x = f()) { } if (auto it = m.find(key); it != m.end()) { } while (Node *n = next()) { } switch (int s = g()) { } }"),
+        expect(&[
+            ("k", "function-name"),
+            ("x", "variable-name"),
+            ("it", "variable-name"),
+            ("Node", "type"),
+            ("n", "variable-name"),
+            ("s", "variable-name"),
+        ])
+    );
+    // 宣言でない条件は、色を付けない (`a * b == c` の `==` は初期値ではない)
+    assert_eq!(
+        cpp("void k() { if (a * b == c) { } if (x == y) { } if (int z) { } if (int w = 1 { } }"),
+        expect(&[("k", "function-name")])
     );
 }

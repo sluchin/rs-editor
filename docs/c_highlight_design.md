@@ -98,7 +98,11 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
   - コンストラクタとデストラクタ (クラスの本体の中の、型の無い `D(int x)` と `~D()`)、クラスの外の定義 `D::D()` `D::~D()` `void D::f()`、初期化子の並び `: v(x)`、`= default` `= 0`。
   - `template <typename T, int N>` の仮引数 (`T` は型の色、`N` は変数の名前の色)。
   - 範囲 `for (auto x : v)` の `x`。
-- 扱わない形: 演算子の関数 (`operator+`)、`typename T::x`、`T (&arr)[N]` のような、配列への参照、ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`)、`if` の条件の中の宣言。これらは、Emacs と色が違うことがあります。
+  - 演算子の関数: クラスの中の `V operator+(...)` は、演算子の記号 (`+` `==` `()` `[]` `<<`) が関数の名前の色です。クラスの外の `V::operator+` は、`::` の前の名前だけに色が付きます (Emacs と同じ)。
+  - `typename T::value_type x` (`T` は定数の色、`value_type` は型の色)。
+  - 配列へのポインタと参照 `int (*p)[4]` `int (&r)[4]` の名前は、変数の名前の色です (関数ポインタ `(*f)(int)` は、関数の名前の色)。
+  - `if` `while` `switch` の条件の中の宣言 `if (auto it = m.find(k); ...)`。変数に初期値が付く形だけです。
+- 扱わない形: ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`) は、Emacs も色を付けないので同じです。変換演算子 `operator bool()` と、`operator new` の名前は読みません。
 
 ### 3.4 Scheme と Emacs Lisp
 

@@ -8,7 +8,7 @@
 //!
 //! C++ では、さらに、修飾した名前 (`std::string`。`::` の前は定数の色)、`namespace` の名前、`enum class`、クラスの継承、
 //! コンストラクタとデストラクタ、メソッドの定義 (`void A::f()`)、`using 名前 = 型;`、テンプレートの引数と仮引数を読みます.
-//! 扱わない形: 演算子の関数 (`operator+`)、`typename T::x`、ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`).
+//! 演算子の関数 (`operator+`)、`typename T::x`、配列へのポインタと参照 `int (&a)[4]`、`if` `while` `switch` の条件の中の宣言も読みます.
 
 use super::{Class, LanguageSpec, Span, Tok, TokenKind};
 
@@ -306,6 +306,13 @@ impl Parser<'_> {
                             start = true;
                         }
                     }
+                    "if" | "while" | "switch" if self.cpp && self.punct(i + 1) == '(' => {
+                        if let Some(end) = self.condition(i + 1) {
+                            i = end;
+                            start = self.punct(end) == ';';
+                            continue;
+                        }
+                    }
                     "case" => case = true,
                     "for" if self.punct(i + 1) == '(' => {
                         // `for (int i = 0; ...)` の、初めの式
@@ -485,6 +492,9 @@ impl Parser<'_> {
                 // C++ の `auto x = ...;` は、`auto` が型の代わり
                 seen |= self.words[j] == "auto";
                 j += 1;
+            } else if self.cpp && self.is_word_in(j, &["typename"]) && self.is_name(j + 1) {
+                // `typename T::value_type x` の `typename`
+                j += 1;
             } else if self.is_word_in(j, ATTRIBUTES) && self.punct(j + 1) == '(' {
                 j = self.skip_balanced(j + 1);
             } else if self.is_word_in(j, TYPE_OF) && self.punct(j + 1) == '(' {
@@ -552,6 +562,7 @@ impl Parser<'_> {
     fn type_follows(&self, j: usize, bare: bool) -> bool {
         self.is_name(j)
             || self.is_specifier(j)
+            || (self.cpp && self.is_word_in(j, &["operator"]))
             || matches!(self.punct(j), '*' | '&')
             || (bare && matches!(self.punct(j), ',' | ')' | ';'))
     }
@@ -566,32 +577,73 @@ impl Parser<'_> {
             j += 1;
         }
         let mut function = false;
-        if self.punct(j) == '(' && self.punct(j + 1) == '*' {
-            // 関数ポインタ `(*名前)(引数)`
+        let op = if self.cpp && self.is_word_in(j, &["operator"]) {
+            self.operator_symbols(j)
+                .filter(|&end| self.punct(end) == '(')
+        } else {
+            None
+        };
+        let open = j;
+        if self.punct(j) == '(' && matches!(self.punct(j + 1), '*' | '&') {
+            // 関数ポインタ `(*名前)(引数)` と、配列へのポインタと参照 `(*名前)[4]`
             let mut k = j + 1;
-            while self.punct(k) == '*' {
+            while matches!(self.punct(k), '*' | '&') {
                 k += 1;
             }
             if !self.is_name(k) || self.punct(k + 1) != ')' {
                 return None;
             }
-            self.name(
-                k,
-                if typedef {
-                    TokenKind::Type
-                } else {
-                    TokenKind::FunctionName
-                },
-            );
             j = k + 2;
-            if self.punct(j) == '(' {
-                j = self.params(j)?;
+            let call = self.punct(j) == '(';
+            // Emacs は、`typedef int (&A)[4];` の `A` に色を付けない
+            if !(typedef && !call && self.punct(open + 1) == '&') {
+                self.name(
+                    k,
+                    if typedef {
+                        TokenKind::Type
+                    } else if call {
+                        TokenKind::FunctionName
+                    } else {
+                        TokenKind::VariableName
+                    },
+                );
             }
+            if call {
+                j = self.params(j)?;
+            } else {
+                while self.punct(j) == '[' {
+                    j = self.skip_balanced(j);
+                }
+            }
+        } else if let Some(end) = op {
+            // 演算子の関数 `operator+(...)`. 色が付くのは、演算子の記号
+            function = true;
+            for k in j + 1..end {
+                self.name(k, TokenKind::FunctionName);
+            }
+            j = self.params(end)?;
+            j = self.after_params(j);
         } else if self.is_name(j) {
             let first = j;
             let name = self.chain_end(j);
             j = name + 1;
-            if self.punct(j) == '(' {
+            let qualified = if self.cpp
+                && self.punct(j) == ':'
+                && self.punct(j + 1) == ':'
+                && self.is_word_in(j + 2, &["operator"])
+            {
+                self.operator_symbols(j + 2)
+                    .filter(|&end| self.punct(end) == '(')
+            } else {
+                None
+            };
+            if let Some(end) = qualified {
+                // `A::operator+(...)`. `::` の前は定数の色で、演算子の記号には色が付かない
+                function = true;
+                self.name_chain(first, name, TokenKind::Constant);
+                j = self.params(end)?;
+                j = self.after_params(j);
+            } else if self.punct(j) == '(' {
                 function = true;
                 self.name_chain(
                     first,
@@ -628,6 +680,50 @@ impl Parser<'_> {
             j = self.skip_expr(j + 1, &[',', ';']);
         }
         Some((j, function))
+    }
+
+    /// 位置 `op` の `operator` の次から続く、演算子の記号 (`+` `==` `()` `[]` `<<`) の次の位置 (記号が無ければ `None`).
+    fn operator_symbols(&self, op: usize) -> Option<usize> {
+        let first = op + 1;
+        if matches!(
+            (self.punct(first), self.punct(first + 1)),
+            ('(', ')') | ('[', ']')
+        ) {
+            return Some(first + 2);
+        }
+        let mut k = first;
+        while !matches!(self.punct(k), '\0' | '(' | ')' | ';' | '{' | '}') {
+            k += 1;
+        }
+        (k > first).then_some(k)
+    }
+
+    /// `if` `while` `switch` の `(` の位置 `open` から、条件の中の宣言 (`if (int x = f())`、`if (auto it = m.find(k); ...)`) を読みます.
+    /// 変数に初期値が付く形 (`=` が 1 つ) だけです.
+    ///
+    /// # Returns
+    ///
+    /// 宣言の次の位置 (`)` か `;`). 宣言でなければ `None`.
+    fn condition(&mut self, open: usize) -> Option<usize> {
+        let mark = self.out.len();
+        let end = self.condition_declaration(open + 1);
+        if end.is_none() {
+            self.out.truncate(mark);
+        }
+        end
+    }
+
+    /// `condition` の本体 (宣言が読めなければ、色を捨てるのは呼び出し側).
+    fn condition_declaration(&mut self, start: usize) -> Option<usize> {
+        let (mut j, _) = self.type_specifier(start, false)?;
+        while matches!(self.punct(j), '*' | '&') || self.is_specifier(j) {
+            j += 1;
+        }
+        if !self.is_name(j) || self.punct(j + 1) != '=' || self.punct(j + 2) == '=' {
+            return None;
+        }
+        let (end, _) = self.declarator(j, false)?;
+        matches!(self.punct(end), ')' | ';').then_some(end)
     }
 
     /// 引数の並び (`(` の位置から) を読みます.
