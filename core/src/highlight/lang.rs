@@ -12,6 +12,8 @@ pub enum Language {
     Cpp,
     /// Rust (`rust-mode`. 解析は `rust.rs`).
     Rust,
+    /// TypeScript (`typescript-mode`. 解析は `typescript.rs`).
+    TypeScript,
     /// Scheme (`scheme-mode`. 解析は `lisp.rs`).
     Scheme,
     /// Emacs Lisp (`emacs-lisp-mode`. 解析は `lisp.rs`).
@@ -221,16 +223,17 @@ impl Language {
         match self {
             Language::C => Some(&C),
             Language::Cpp => Some(&CPP),
-            Language::Rust | Language::Scheme | Language::Elisp => None,
+            Language::Rust | Language::TypeScript | Language::Scheme | Language::Elisp => None,
         }
     }
 
-    /// `major-mode` の名前から、言語を決めます (C、C++、Rust、`lisp-interaction-mode` の Scheme. それ以外は `None`. Lisp の他のモードは、構文の方言で決まる).
+    /// `major-mode` の名前から、言語を決めます (C、C++、Rust、TypeScript、`lisp-interaction-mode` の Scheme. それ以外は `None`. Lisp の他のモードは、構文の方言で決まる).
     pub fn from_mode_name(name: &str) -> Option<Language> {
         match name {
             "c-mode" => Some(Language::C),
             "c++-mode" => Some(Language::Cpp),
             "rust-mode" => Some(Language::Rust),
+            "typescript-mode" => Some(Language::TypeScript),
             // `*scratch*` は、Scheme を評価する
             "lisp-interaction-mode" => Some(Language::Scheme),
             _ => None,

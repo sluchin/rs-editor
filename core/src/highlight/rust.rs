@@ -14,6 +14,7 @@ use std::sync::OnceLock;
 
 use regex::Regex;
 
+use super::paint::{Fill, Painter};
 use super::{Span, TokenKind};
 
 /// キーワード (rust-mode の `rust-keywords`).
@@ -83,15 +84,6 @@ const UC_IDENT: &str = r"\p{Lu}[\w$\u{80}-\u{10FFFF}]*";
 
 /// 空白 (Emacs の `[[:space:]]`. rust-mode の構文表では、改行は空白ではない).
 const SPACE: &str = r"[ \t\x0c]";
-
-/// 規則 1 つの、色を付け方.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Fill {
-    /// 範囲に 1 文字でも色が付いていれば、付けない (font-lock の `override` が `nil`).
-    Whole,
-    /// 色の付いていない文字にだけ付ける (`keep`).
-    Gaps,
-}
 
 /// 正規表現の規則 1 つ.
 struct Rule {
@@ -251,36 +243,8 @@ fn path_regexes() -> &'static (Regex, Regex) {
     })
 }
 
-/// 文字ごとの種類.
-struct Painter {
-    /// 本文の文字.
-    chars: Vec<char>,
-    /// 文字ごとの種類 (色が付かなければ `None`).
-    kinds: Vec<Option<TokenKind>>,
-}
-
+/// Rust の構文を読む (コメント、文字列、文字、生の文字列).
 impl Painter {
-    /// 文字の位置 `i` (本文の外は `'\0'`).
-    fn at(&self, i: usize) -> char {
-        self.chars.get(i).copied().unwrap_or('\0')
-    }
-
-    /// `from` から `to` の前まで、`kind` にします (`Gaps` は、色の付いていない文字だけ. `Whole` は、1 文字も付いていなければ全体).
-    fn paint(&mut self, from: usize, to: usize, kind: TokenKind, fill: Fill) {
-        let range = from..to.min(self.chars.len());
-        match fill {
-            Fill::Whole if self.kinds[range.clone()].iter().all(Option::is_none) => {
-                self.kinds[range].fill(Some(kind));
-            }
-            Fill::Whole => {}
-            Fill::Gaps => {
-                for slot in &mut self.kinds[range] {
-                    slot.get_or_insert(kind);
-                }
-            }
-        }
-    }
-
     /// コメントと文字列と文字を読んで、種類を決めます (構文表と、`rust-syntax-propertize` に当たる).
     fn syntax(&mut self) {
         let mut i = 0;
@@ -428,7 +392,12 @@ impl Painter {
             let rest = &text[whole.end()..];
             let after = rest.trim_start_matches([' ', '\t', '\x0c']);
             if !after.starts_with('<') {
-                self.paint(offsets[m.start()], offsets[m.end()], kind, Fill::Whole);
+                self.paint(
+                    offsets[m.start()],
+                    offsets[m.end()],
+                    Some(kind),
+                    Fill::Whole,
+                );
             }
         }
     }
@@ -440,23 +409,24 @@ impl Painter {
 ///
 /// 範囲の並び (始まりの順. 重ならない. 行をまたがない. 続く同じ種類の範囲は、1 つにする).
 pub(super) fn tokenize(text: &str) -> Vec<Span> {
-    let chars: Vec<char> = text.chars().collect();
     // 正規表現の位置 (バイト) から、文字の位置へ
     let mut offsets = vec![0; text.len() + 1];
+    let mut painter = Painter::new(text);
     for (n, (byte, c)) in text.char_indices().enumerate() {
         offsets[byte..byte + c.len_utf8()].fill(n);
     }
-    offsets[text.len()] = chars.len();
-    let mut painter = Painter {
-        kinds: vec![None; chars.len()],
-        chars,
-    };
+    offsets[text.len()] = painter.chars.len();
     painter.syntax();
     let (upper, lower) = path_regexes();
     for (index, rule) in rules().iter().enumerate() {
         for caps in rule.re.captures_iter(text) {
             if let Some(m) = caps.get(rule.group) {
-                painter.paint(offsets[m.start()], offsets[m.end()], rule.kind, rule.fill);
+                painter.paint(
+                    offsets[m.start()],
+                    offsets[m.end()],
+                    Some(rule.kind),
+                    rule.fill,
+                );
             }
         }
         // `Foo::` と `foo::` は、`'foo` (ライフタイム) の規則の前に当てる
@@ -465,28 +435,8 @@ pub(super) fn tokenize(text: &str) -> Vec<Span> {
             painter.paths(lower, TokenKind::Constant, &offsets, text);
         }
     }
-    spans(&painter)
+    painter.spans()
 }
 
 /// `Foo::` と `foo::` の規則を当てる位置 (`rules` の中の、型を推論する束縛の規則の番号).
 const LIFETIME_BEFORE: usize = 12;
-
-/// 文字ごとの種類から、範囲の並びを作ります (改行で切る).
-fn spans(painter: &Painter) -> Vec<Span> {
-    let mut spans: Vec<Span> = Vec::new();
-    for (i, kind) in painter.kinds.iter().enumerate() {
-        let Some(kind) = *kind else { continue };
-        if painter.chars[i] == '\n' {
-            continue;
-        }
-        match spans.last_mut() {
-            Some(last) if last.end == i && last.kind == kind => last.end = i + 1,
-            _ => spans.push(Span {
-                start: i,
-                end: i + 1,
-                kind,
-            }),
-        }
-    }
-    spans
-}

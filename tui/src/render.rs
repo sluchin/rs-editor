@@ -163,6 +163,7 @@ fn mode_line(buffer: &Buffer, width: usize) -> String {
         (Some(Language::C), _) => "C",
         (Some(Language::Cpp), _) => "C++",
         (Some(Language::Rust), _) => "Rust",
+        (Some(Language::TypeScript), _) => "TypeScript",
         (_, Dialect::Fundamental) => "Fundamental",
         (_, Dialect::Elisp) => "ELisp",
         (_, Dialect::Scheme) => "Scheme",

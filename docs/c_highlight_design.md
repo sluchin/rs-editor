@@ -118,6 +118,16 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 - 比べ方: `tests/rust-highlight/` (`RUST_MODE_DIR=<rust-mode の clone> npm run test:rust-highlight`)。rust-mode は Emacs の組み込みではないので、clone を `-L` で読みます。
 - 扱わない形: rust-mode の `rust-string-interpolation` の斜体 (種類は文字列と同じ)、`rust-ampersand-face` (既定の色)。
 
+### 3.6 TypeScript
+
+- `core/src/highlight/typescript.rs` が、emacs-typescript/typescript-mode (`typescript--font-lock-keywords-4`) の規則を、同じ順に当てます。Rust (3.5) と同じ `paint.rs` (文字ごとの種類。`nil` / `keep` / `t` の上書きの決まり) を使います。`Language::spec()` は `None` です。
+- 構文を先に読みます: `//` と `/* */` (入れ子にしない)、`'` `"` `` ` `` の文字列 (行をまたぐ)、正規表現のリテラル `/.../` (`typescript-syntax-propertize` と同じ見分け方: `=([{,:;|&!` と `return` の後ろ、行の始め)、先頭の `#!`。
+- 括弧を読む規則も移しました: `const` `let` `var` の名前 (`{a: b}` と `[a, b]` の分割代入を含む。探すのは行の終わりまで)、`function` とメソッドとアロー関数の引数、ジェネリクス `Foo<T>` の型、`{ class: 1 }` のキーのキーワードの色を消す規則。Emacs が、行の終わりまでしか探さない所は、同じにしています。
+- 種類は、`DocTag` `DocType` `DocValue` を足しました (JSDoc の `@param` `{string}` と名前。typescript-mode の `typescript-jsdoc-tag` `-type` `-value`。色は固定: SlateGray, SteelBlue, gold4)。`/**` のコメントの中だけです。
+- 比べ方: `tests/ts-highlight/` (`TS_MODE_DIR=<typescript-mode の clone> npm run test:ts-highlight`)。Emacs の結果は `tests/ts-highlight/expected/` に入れてあり (`run.sh -u` で書き直す)、`core/tests/test_highlight_typescript.rs` が、Emacs が無くても比べる。
+- 扱わない形: `class` の framework の宣言 (Dojo, ExtJS, Prototype。typescript-mode の `typescript-enabled-frameworks`)。Emacs が `scan-error` で止まる入力 (閉じ括弧だけがあるアロー関数など) は、引数を探すのをやめるだけです。
+- `.js` と `.jsx` は含めません。Emacs は、これらを組み込みの `js-mode` で開き、font-lock の規則が違うためです (`.ts` `.tsx` `.mts` `.cts` だけが `typescript-mode`)。
+
 ## 4. 言語とモードの結び付け
 
 - 方言 (`Dialect`) は、Lisp の構文表、字下げ、段落、コメントに使われていて、`Fundamental` でなければ Lisp として扱う箇所が多くあります。そのため、C は方言を増やさず、`text-mode` と同じく、方言は `Fundamental` のままで、`major-mode` の名前 (`Buffer::mode_name`) を `c-mode` にします。`Buffer::highlight_language()` が、この名前から言語を決めます。

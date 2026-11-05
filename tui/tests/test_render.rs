@@ -96,6 +96,8 @@ fn test_mode_names_and_the_file_dialects() {
     let cpp = dir.path().join("d.cpp");
     let rs = dir.path().join("e.rs");
     std::fs::write(&rs, "fn e() {}").unwrap();
+    let ts = dir.path().join("f.ts");
+    std::fs::write(&ts, "let f = 1;").unwrap();
     std::fs::write(&el, "(a)").unwrap();
     std::fs::write(&scm, "(b)").unwrap();
     std::fs::write(&c, "int c;").unwrap();
@@ -106,8 +108,14 @@ fn test_mode_names_and_the_file_dialects() {
         c.to_str().unwrap().to_string(),
         cpp.to_str().unwrap().to_string(),
         rs.to_str().unwrap().to_string(),
+        ts.to_str().unwrap().to_string(),
     ];
     let fx = Fixture::sized(12, 50, &files).unwrap();
+    fx.app.draw();
+    assert!(fx.screen()[10].contains("(TypeScript)"));
+    fx.app.host().editor().set_buffer("e.rs").unwrap();
+    let w = fx.app.host().editor().selected_window();
+    fx.app.host().editor().set_window_buffer(w, "e.rs").unwrap();
     fx.app.draw();
     assert!(fx.screen()[10].contains("(Rust)"));
     fx.app.host().editor().set_buffer("d.cpp").unwrap();
@@ -427,7 +435,23 @@ fn test_token_styles_and_color_pairs() {
             bold: true
         })
     );
+    // JSDoc のタグはコメントと同じ色, 型は青, 値は黄の太字
+    assert_eq!(
+        token_style(TokenKind::DocTag),
+        token_style(TokenKind::Comment)
+    );
+    assert_eq!(
+        token_style(TokenKind::DocType),
+        Some(TokenStyle {
+            color: 4,
+            bold: false
+        })
+    );
+    assert_eq!(
+        token_style(TokenKind::DocValue),
+        token_style(TokenKind::VariableName)
+    );
     // 対の番号は、1 から、種類ごとに違う
     let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
-    assert_eq!(pairs, (1..=14).collect::<Vec<i16>>());
+    assert_eq!(pairs, (1..=17).collect::<Vec<i16>>());
 }
