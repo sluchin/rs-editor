@@ -3122,6 +3122,59 @@ msgstr ""
 "ポイントの前の記号を補完する.\n"
 "Scheme の評価器で定義されている名前で補完する."
 
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-add-checker"
+msgid ""
+"Add a new checker for the linter.\n"
+"NAME is a unique symbol, SUMMARY is a short description, and FUN is called with the scanned buffer\n"
+"and returns a list of (POSITION MESSAGE).  The optional PROPS are the trust level (low or high, or #f)\n"
+"and the list of categories."
+msgstr ""
+"org-lint のチェッカーを足す.\n"
+"NAME は他と重ならないシンボル, SUMMARY は短い説明, FUN は調べたバッファを受け取り (POSITION MESSAGE) の並びを返す.\n"
+"省略できる PROPS は, 信頼度 (low か high か #f) と, 分類の並び."
+
+#: lisp/org-lint.scm
+msgctxt "variable:org-lint-buffer-name"
+msgid "Name of the buffer that shows the reports of `org-lint'."
+msgstr "`org-lint' の報告を出すバッファの名前."
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-reports"
+msgid ""
+"Check the current Org buffer for syntax mistakes, and return the reports.\n"
+"With a list of checker names (symbols) as the argument, run only those checkers.\n"
+"Each report is (ID (LINE TRUST DESCRIPTION CHECKER)), sorted by line."
+msgstr ""
+"今の Org のバッファの書き方の誤りを調べ, 報告を返す.\n"
+"引数にチェッカーの名前 (シンボル) の並びを渡すと, それだけを動かす.\n"
+"報告は (ID (LINE TRUST DESCRIPTION CHECKER)) で, 行の順."
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint"
+msgid ""
+"Check the current Org buffer for syntax mistakes.\n"
+"Show the reports in the *Org Lint* buffer; RET there moves to the line of the report.\n"
+"With a list of checker names (symbols) as the argument, run only those checkers and return the reports."
+msgstr ""
+"今の Org のバッファの書き方の誤りを調べる.\n"
+"報告を *Org Lint* のバッファに出す. そこで RET を押すと, 報告の行に移る.\n"
+"引数にチェッカーの名前 (シンボル) の並びを渡すと, それだけを動かして報告を返す."
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-goto"
+msgid "Move to the line of the report at point."
+msgstr "ポイントの所の報告の行に移る."
+
+#: lisp/org-lint.scm
+msgctxt "variable:org-lint-unsupported-checkers"
+msgid ""
+"Checkers of Emacs's org-lint that are not ported.\n"
+"They need the syntax tree (links, timestamps, items), the exporter, Babel, org-id or org-cite."
+msgstr ""
+"移していない, Emacs の org-lint のチェッカー.\n"
+"構文木 (リンク, 日時, 項目), 書き出し, Babel, org-id, org-cite が要る."
+
 #: lisp/org.scm
 msgctxt "variable:org-directory"
 msgid "Directory where Org files are kept."

@@ -2839,6 +2839,48 @@ msgid ""
 "Complete with the names defined in the Scheme evaluator."
 msgstr ""
 
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-add-checker"
+msgid ""
+"Add a new checker for the linter.\n"
+"NAME is a unique symbol, SUMMARY is a short description, and FUN is called with the scanned buffer\n"
+"and returns a list of (POSITION MESSAGE).  The optional PROPS are the trust level (low or high, or #f)\n"
+"and the list of categories."
+msgstr ""
+
+#: lisp/org-lint.scm
+msgctxt "variable:org-lint-buffer-name"
+msgid "Name of the buffer that shows the reports of `org-lint'."
+msgstr ""
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-reports"
+msgid ""
+"Check the current Org buffer for syntax mistakes, and return the reports.\n"
+"With a list of checker names (symbols) as the argument, run only those checkers.\n"
+"Each report is (ID (LINE TRUST DESCRIPTION CHECKER)), sorted by line."
+msgstr ""
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint"
+msgid ""
+"Check the current Org buffer for syntax mistakes.\n"
+"Show the reports in the *Org Lint* buffer; RET there moves to the line of the report.\n"
+"With a list of checker names (symbols) as the argument, run only those checkers and return the reports."
+msgstr ""
+
+#: lisp/org-lint.scm
+msgctxt "function:org-lint-goto"
+msgid "Move to the line of the report at point."
+msgstr ""
+
+#: lisp/org-lint.scm
+msgctxt "variable:org-lint-unsupported-checkers"
+msgid ""
+"Checkers of Emacs's org-lint that are not ported.\n"
+"They need the syntax tree (links, timestamps, items), the exporter, Babel, org-id or org-cite."
+msgstr ""
+
 #: lisp/org.scm
 msgctxt "variable:org-directory"
 msgid "Directory where Org files are kept."

@@ -133,6 +133,8 @@ pub struct Buffer {
     auto_saved_version: u64,
     /// 訪れたとき、または最後に保存したときの、ファイルの更新時刻 (Emacs の `visited-file-modtime`. 無ければ `None`).
     visited_modtime: Option<std::time::SystemTime>,
+    /// 外で書き換わったファイルを、書き換えてよいと答えたか (保存、読み直し、訪れ直しで偽に戻る).
+    supersession_ok: bool,
 }
 
 /// 強調する正規表現 (Emacs の hi-lock).
@@ -189,6 +191,7 @@ impl Buffer {
             backed_up: false,
             auto_saved_version: 0,
             visited_modtime: None,
+            supersession_ok: false,
         }
     }
 
@@ -230,6 +233,7 @@ impl Buffer {
     /// ファイルの更新時刻を覚えます (`None` なら、覚えていないことにする).
     pub fn set_visited_modtime(&mut self, modtime: Option<std::time::SystemTime>) {
         self.visited_modtime = modtime;
+        self.supersession_ok = false;
     }
 
     /// 自動保存した本文の版を覚えます.
@@ -410,13 +414,38 @@ impl Buffer {
     /// 読み取り専用のとき.
     pub fn ensure_writable(&self) -> Result<(), Error> {
         if self.read_only {
-            Err(Error::new(
+            return Err(Error::new(
                 "buffer-read-only",
                 vec![Value::Symbol(format!("#<buffer {}>", self.name))],
-            ))
-        } else {
-            Ok(())
+            ));
         }
+        // 書き換えていないバッファを、初めて書き換えるとき、訪れてからファイルが外で書き換わっていれば、知らせる
+        if !self.modified && !self.supersession_ok {
+            if let Some(path) = self.changed_on_disk() {
+                return Err(Error::new(
+                    "file-supersession-threat",
+                    vec![
+                        Value::String("File changed on disk".to_string()),
+                        Value::String(path.to_string()),
+                    ],
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    /// 訪れているファイルが、訪れてから (最後に保存してから) 外で書き換わっていれば、そのパス.
+    /// ファイルが無いとき、更新時刻を覚えていないときは、`None`.
+    pub fn changed_on_disk(&self) -> Option<&str> {
+        let path = self.file.as_deref()?;
+        let recorded = self.visited_modtime?;
+        let now = std::fs::metadata(path).and_then(|m| m.modified()).ok()?;
+        (now != recorded).then_some(path)
+    }
+
+    /// 外で書き換わったファイルを、書き換えてよいと答えたことにします (保存、読み直しなどで、忘れる).
+    pub fn allow_supersession(&mut self) {
+        self.supersession_ok = true;
     }
 
     /// 書き換えたか.
@@ -427,6 +456,9 @@ impl Buffer {
     /// 書き換えたかを決めます (保存したときは `false`).
     pub fn set_modified(&mut self, modified: bool) {
         self.modified = modified;
+        if !modified {
+            self.supersession_ok = false;
+        }
     }
 
     /// 本文の長さ (文字の数. Emacs の `buffer-size`).

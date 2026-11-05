@@ -54,6 +54,9 @@ const KINDS: &[(&str, &str, &[&str])] = &[
     ("end-of-file", "End of file during parsing", &["error"]),
     ("file-error", "File error", &["error"]),
     ("file-missing", "File is missing", &["file-error", "error"]),
+    ("file-supersession", "", &["file-error", "error"]),
+    // 外で書き換わったファイルのバッファを、初めて書き換えようとした (EditorHost が受けて、使う人に聞く. 受けなかったときのために、文を持つ)
+    ("file-supersession-threat", "", &["file-error", "error"]),
     (
         "file-already-exists",
         "File already exists",

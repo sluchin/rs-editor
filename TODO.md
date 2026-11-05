@@ -13,14 +13,14 @@
 
 ## 優先度つきの進め方
 
-未完了 (`- [ ]`) は 147 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+未完了 (`- [ ]`) は 148 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に (P0 は済んだ)、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
 ### P0: 固まる、データを失う、落ちる (済んだ)
 
 - 済んだ: キーボードマクロを `C-g` で止める、保存前に外の書き換えを確かめる、300 回のキーごとの自動保存、`lock().unwrap()` の panic 対策、`yes-or-no-p` の聞き直し (これは前から済んでいた)。
-- 残りの 2 つは、P1 の「ファイル・バッファ」に移した (編集のときの確かめ、ターミナルの 30 秒の自動保存)。
+- 残りの 2 つのうち、編集のときの確かめ (`ask-user-about-supersession-threat`) は済んだ。ターミナルの 30 秒の自動保存は、P1 の「ファイル・バッファ」に移した。
 
 ### P1: 毎日の編集で、Emacs と違って困るもの (次にやる)
 
@@ -44,7 +44,7 @@
 - コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - キーの無いコマンドのうち `untabify`、`tabify` (Phase 13「削除・編集」)。小。
 - クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
-- ファイル・バッファ: 外で書き換わったファイルを初めて書き換えるときの確かめ (`supersession`)、ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
+- ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
 - dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 13)。大。毎日使うなら、P1 の最後に進める。
 - Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 13)。小。
 - Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 13「Lisp」)。小〜中。
@@ -76,7 +76,7 @@
 - フレームとタブ (`C-x 5 ...`、`C-x t ...`)、`C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 13)。中〜大。
 - 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--user`、`--no-desktop`、`--dump-file` など (Phase 15)。先の機能 (server、`-nw`) を決めてから。
 - Scheme のインタプリタを、独立したクレートにする (Phase 20)。大。
-- 画面 (Tauri) の `*Messages*`、Web のページを見る機能、org-lint (Phase 20)。調べてから決める。
+- 画面 (Tauri) の `*Messages*`、Web のページを見る機能 (Phase 20)。調べてから決める。
 - `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (Phase 20)。待つ。
 
 ### 整理 (進める前に直す)
@@ -485,7 +485,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] dired の中のキー (KEYBINDINGS.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+` など)。
 - [ ] `auto-revert-mode` (ファイルが書き換わったら読み直す)。
 - [x] 保存するときに、ファイルが外で書き換わっていないか確かめる (`verify-visited-file-modtime`、`set-visited-file-modtime`。Emacs の「X has changed since visited or saved.  Save anyway?」)。
-- [ ] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」)。
+- [x] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」。書き換えの入口 `ensure_writable` が `file-supersession-threat` のエラーを返し、`EditorHost` が聞いてやり直す)。
 - [ ] ファイルの錠 (`.#名前`。`create-lockfiles`)。
 - [ ] `recover-session` (前のセッションの自動保存から、まとめて読み直す), `recentf-open` (最近のファイル)。
 - [ ] `append-to-file`, `rename-visited-file`。
@@ -680,7 +680,9 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 
 ### Org mode
 
-- [ ] org-lint: Org の文書の書き方の誤り (リンク先が無い、日付の形が違う、など) を一覧にする。Phase 19 (Scheme のコードの lint) とは別のもの。
+- [x] org-lint: Org の文書の書き方の誤りを一覧にする (`lisp/org-lint.scm`。`M-x org-lint` で `*Org Lint*` に出し、`RET` でその行に移る)。Phase 19 (Scheme のコードの lint) とは別のもの。行を種類に分けて調べ、`tests/org-lint/run.sh` で Emacs の org-lint の結果と比べる。移したチェッカー: misplaced-heading、duplicate-custom-id、duplicate-name、duplicate-target、duplicate-footnote-definition、orphaned-affiliated-keywords、obsolete-affiliated-keywords、deprecated-export-blocks、missing-language-in-src-block、missing-backend-in-export-block、deprecated-category-setup、special-property-in-properties-drawer、obsolete-properties-drawer、invalid-effort-property、invalid-id-property、undefined-footnote-reference、unreferenced-footnote-definition、invalid-keyword-syntax、invalid-block、misplaced-planning-info、incomplete-drawer、indented-diary-sexp、quote-section、spurious-colons。
+- [ ] org-lint の残りのチェッカー (`org-lint-unsupported-checkers`): リンク (`invalid-fuzzy-link`、`invalid-id-link` など)、日時 (`timestamp-syntax`、`planning-inactive`、`mismatched-planning-repeaters`)、項目 (`item-number`)、Babel の引数、引用 (`org-cite`) など。構文木 (リンク、日時、項目) を作ってから。
+- [ ] 画面を使わない実行 (`rseditor-tui --batch`) で `(org-mode)` を呼ぶと、`highlight-regexp` の正規表現に先読み (`(?=`) があり、Rust の `regex` が読めずに失敗する (`org-font-lock-keywords`)。先読みを使わない書き方にするか、`fancy-regex` を使う。
 
 ### 作りと画面
 

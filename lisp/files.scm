@@ -289,8 +289,9 @@ Point stays at the same character, and the change can be undone."
                      (yes-or-no-p (if (buffer-modified-p)
                                       (format "Discard edits and reread from %s? " file)
                                       (format "Revert buffer from file %s? " file))))
-             (files--set-buffer-text (read-file-string file) #f)
-             (set-visited-file-modtime))
+             ;; 先に更新時刻を覚える (書き換えるときの、外で書き換わったかの確かめを、通すため)
+             (set-visited-file-modtime)
+             (files--set-buffer-text (read-file-string file) #f))
            (message "")))))
 
 (define-command (revert-buffer-quick . args)

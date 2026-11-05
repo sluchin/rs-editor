@@ -12,6 +12,10 @@ use rseditor_core::scheme::value::Value;
 #[derive(Default)]
 struct FakeUi {
     messages: Mutex<Vec<String>>,
+    /// `read-key` の答え (前から使う. 無ければ失敗).
+    keys: Mutex<Vec<String>>,
+    /// `read-key` で出した問い.
+    prompts: Mutex<Vec<String>>,
 }
 
 impl Host for FakeUi {
@@ -22,6 +26,13 @@ impl Host for FakeUi {
             };
             self.messages.lock().unwrap().push(text.clone());
             return Ok(Value::Nil);
+        }
+        if op == "read-key" && !self.keys.lock().unwrap().is_empty() {
+            let Value::String(prompt) = &args[0] else {
+                panic!("not a string")
+            };
+            self.prompts.lock().unwrap().push(prompt.clone());
+            return Ok(Value::String(self.keys.lock().unwrap().remove(0)));
         }
         Err(format!("ui: {op}").into())
     }
@@ -922,9 +933,9 @@ fn test_visited_file_modtime() {
             .set_modified(later)
             .unwrap();
     };
+    eval("(insert \"x\")");
     touch();
     assert_eq!(eval("(verify-visited-file-modtime)"), "#f");
-    eval("(insert \"x\")");
     assert_eq!(eval("(basic-save-buffer)"), "ERR ui: read-string");
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "disk\n");
     // 今の更新時刻を覚えれば、同じになる。書けば、書いたあとの更新時刻を覚える
@@ -938,4 +949,130 @@ fn test_visited_file_modtime() {
     let other = quoted(dir.path().join("o.txt").to_str().unwrap());
     eval(&format!("(files--set-buffer-file-name {other})"));
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
+}
+
+/// 外で書き換わったファイルを訪れたエディタ. 更新時刻を進めて、書き換えたことにする.
+fn stale_file(
+    text: &str,
+) -> (
+    tempfile::TempDir,
+    std::path::PathBuf,
+    Evaluator,
+    EditorHost<FakeUi>,
+) {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("s.txt");
+    std::fs::write(&path, text).unwrap();
+    let (ev, host) = setup();
+    ev.eval_with(
+        &format!(
+            "(set-buffer (find-file-noselect {}))",
+            quoted(path.to_str().unwrap())
+        ),
+        &host,
+    )
+    .unwrap();
+    std::fs::File::options()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(60))
+        .unwrap();
+    (dir, path, ev, host)
+}
+
+#[test]
+fn test_editing_a_file_changed_on_disk_asks_first() {
+    let (_dir, path, ev, host) = stale_file("disk\n");
+    let eval = |code: &str| {
+        ev.eval_with(code, &host)
+            .map(|out| out.lines().last().unwrap_or("").to_string())
+            .unwrap_or_else(|e| format!("ERR {e}"))
+    };
+    let keys = |keys: &[&str]| {
+        *host.ui().keys.lock().unwrap() = keys.iter().map(|k| k.to_string()).collect();
+        host.ui().prompts.lock().unwrap().clear();
+    };
+    let name = path.to_str().unwrap().to_string();
+    // n: 書き換えない。? や C-h は説明を出して聞き直し、ほかのキーも聞き直す
+    keys(&["?", "C-h", "q", "n"]);
+    assert_eq!(
+        eval("(insert \"x\")"),
+        format!("ERR File changed on disk: {name}")
+    );
+    assert_eq!(eval("(buffer-string)"), "\"disk\\n\"");
+    assert_eq!(host.ui().prompts.lock().unwrap().len(), 4);
+    assert_eq!(
+        host.ui().prompts.lock().unwrap()[0],
+        "s.txt changed on disk; really edit the buffer? (y, n, r or C-h) "
+    );
+    // condition-case で受けられる (file-supersession は file-error の仲間)
+    keys(&["n"]);
+    assert_eq!(
+        eval("(condition-case e (insert \"x\") (file-error (car e)))"),
+        "file-supersession"
+    );
+    // y: 書き換える。続きの書き換えは、聞かない
+    keys(&["y"]);
+    assert_eq!(
+        eval("(insert \"x\") (insert \"y\") (buffer-string)"),
+        "\"xydisk\\n\""
+    );
+    assert_eq!(host.ui().prompts.lock().unwrap().len(), 1);
+    assert_eq!(
+        host.ui().messages.lock().unwrap().last().unwrap(),
+        "File on disk now will become a backup file if you save these changes."
+    );
+}
+
+#[test]
+fn test_editing_a_file_changed_on_disk_can_revert_it() {
+    let (_dir, path, ev, host) = stale_file("disk\n");
+    let eval = |code: &str| {
+        ev.eval_with(code, &host)
+            .map(|out| out.lines().last().unwrap_or("").to_string())
+            .unwrap_or_else(|e| format!("ERR {e}"))
+    };
+    std::fs::write(&path, "newer\n").unwrap();
+    std::fs::File::options()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(120))
+        .unwrap();
+    // r: ファイルを読み直して、書き換えは取り消す
+    *host.ui().keys.lock().unwrap() = vec!["r".to_string()];
+    let name = path.to_str().unwrap();
+    assert_eq!(eval("(insert \"x\")"), format!("ERR File reverted: {name}"));
+    assert_eq!(
+        eval("(list (buffer-string) (buffer-modified-p))"),
+        "(\"newer\\n\" #f)"
+    );
+    // 読み直したあとは、聞かずに書き換えられる
+    assert_eq!(eval("(insert \"x\") (buffer-string)"), "\"xnewer\\n\"");
+    // 読み直せない (ファイルを読めない) ときは、失敗する
+    let (_dir2, path2, ev2, host2) = stale_file("a\n");
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(&path2, std::fs::Permissions::from_mode(0o000)).unwrap();
+    // 管理者は、読めてしまう
+    if std::fs::read_to_string(&path2).is_err() {
+        *host2.ui().keys.lock().unwrap() = vec!["r".to_string()];
+        let error = ev2.eval_with("(insert \"x\")", &host2).unwrap_err();
+        assert!(error.to_string().contains("Permission denied"), "{error}");
+    }
+}
+
+#[test]
+fn test_editing_a_file_changed_on_disk_in_batch_mode() {
+    let (_dir, _path, ev, host) = stale_file("disk\n");
+    host.set_output(Box::new(|_| {}));
+    let result = ev.eval_with("(insert \"x\")", &host);
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Cannot resolve conflict in batch mode"
+    );
+    assert_eq!(
+        host.ui().messages.lock().unwrap().last().unwrap(),
+        "s.txt changed on disk; really edit the buffer? (y, n, r or C-h) "
+    );
 }

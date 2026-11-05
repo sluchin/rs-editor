@@ -121,9 +121,18 @@ impl<U: Host> Host for EditorHost<U> {
                     .call("message", vec![Value::String(text.trim_end().to_string())]),
             };
         }
-        let outcome = {
-            let mut editor = self.editor.lock_recover();
-            self.dispatch(&mut editor, op, &args)?
+        let outcome = loop {
+            let result = {
+                let mut editor = self.editor.lock_recover();
+                self.dispatch(&mut editor, op, &args)
+            };
+            match result {
+                // 外で書き換わったファイルのバッファを、初めて書き換えるときは、聞いてから (yes なら) やり直す
+                Err(error) if error.kind() == "file-supersession-threat" => {
+                    self.resolve_supersession(&error)?;
+                }
+                result => break result?,
+            }
         };
         match outcome {
             Some(Outcome::Value(value)) => Ok(value),
@@ -134,6 +143,83 @@ impl<U: Host> Host for EditorHost<U> {
             }
             // 受け持たない操作は, 画面に頼む
             None => self.ui.call(op, args),
+        }
+    }
+}
+
+impl<U: Host> EditorHost<U> {
+    /// 外で書き換わったファイルのバッファを書き換えてよいか、使う人に聞きます (Emacs の `ask-user-about-supersession-threat`).
+    ///
+    /// # Errors
+    ///
+    /// `n` と答えたとき (`file-supersession`), `r` と答えて読み直したとき (`file-supersession`),
+    /// バッチモードのとき, 答えるキーを読めないとき.
+    fn resolve_supersession(&self, threat: &Error) -> Result<(), Error> {
+        #[rustfmt::skip]
+        let path = match threat.data().get(1) { Some(Value::String(path)) => path.clone(), _ => String::new() };
+        let name = path.rsplit('/').next().unwrap_or(&path);
+        let prompt = format!("{name} changed on disk; really edit the buffer? (y, n, r or C-h) ");
+        if self.output.lock_recover().is_some() {
+            self.ui.call("message", vec![Value::String(prompt)])?;
+            return Err(Error::plain("Cannot resolve conflict in batch mode"));
+        }
+        let supersession = |reason: &str| {
+            Error::new(
+                "file-supersession",
+                vec![
+                    Value::String(reason.to_string()),
+                    Value::String(path.clone()),
+                ],
+            )
+        };
+        loop {
+            let key = self
+                .ui
+                .call("read-key", vec![Value::String(prompt.clone())])?;
+            match key {
+                Value::String(key) if key == "y" => {
+                    let mut editor = self.editor.lock_recover();
+                    let buffer = editor.current_buffer_mut();
+                    buffer.allow_supersession();
+                    // 保存すると、今のファイルは、バックアップになる
+                    buffer.set_backed_up(false);
+                    drop(editor);
+                    return self
+                        .ui
+                        .call(
+                            "message",
+                            vec![Value::String(
+                            "File on disk now will become a backup file if you save these changes."
+                                .to_string(),
+                        )],
+                        )
+                        .map(|_| ());
+                }
+                Value::String(key) if key == "n" => {
+                    return Err(supersession("File changed on disk"))
+                }
+                Value::String(key) if key == "r" => {
+                    let text =
+                        std::fs::read_to_string(&path).map_err(|e| Error::open_input(&e, &path))?;
+                    let mut editor = self.editor.lock_recover();
+                    let buffer = editor.current_buffer_mut();
+                    // 読み直すのは、確かめずに (更新時刻を合わせてから)
+                    files::set_visited_file_modtime(buffer);
+                    replace_text(buffer, &text);
+                    buffer.set_modified(false);
+                    return Err(supersession("File reverted"));
+                }
+                Value::String(key) if key == "?" || key == "C-h" => {
+                    self.ui.call(
+                        "message",
+                        vec![Value::String(
+                            "y: edit the buffer anyway, n: do not edit, r: revert the buffer from the file"
+                                .to_string(),
+                        )],
+                    )?;
+                }
+                _ => {}
+            }
         }
     }
 }

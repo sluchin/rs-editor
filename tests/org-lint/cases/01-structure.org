@@ -1,0 +1,38 @@
+#+TITLE: Structure
+#+CATEGORY: one
+#+CATEGORY: two
+
+* Heading 1
+** Heading 2** Oops heading 3
+Paragraph** Oops heading
+** Heading 4
+:PROPERTIES:
+:CUSTOM_ID: a
+:END:
+** Heading 5 :a::b:
+:PROPERTIES:
+:CUSTOM_ID: a
+:EFFORT: abc
+:ID: x::y
+:TODO: foo
+:END:
+#+NAME: dup
+#+BEGIN_SRC
+code
+#+END_SRC
+#+NAME: dup
+#+BEGIN_SRC emacs-lisp
+code
+#+END_SRC
+#+BEGIN_EXPORT
+x
+#+END_EXPORT
+#+BEGIN_HTML
+x
+#+END_HTML
+* QUOTE Section
+* Heading with <<tgt>> and <<tgt>>
+[fn:1] First
+[fn:1] Duplicate
+[fn:2] Unused
+Reference[fn:3] and [fn:1].
