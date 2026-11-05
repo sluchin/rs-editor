@@ -41,3 +41,6 @@ __pycache__/
 # API ドキュメントの出力 (npm run doc. GitHub Pages に出す). トップページ (index.html) だけ管理する
 /docs/html/*
 !/docs/html/index.html
+
+# LLVM のカバレッジ計測 (cargo tarpaulin) の生データ
+*.profraw
