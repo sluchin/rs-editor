@@ -349,3 +349,168 @@ fn test_define_names() {
         expect(&[("K", "function-name"), ("z", "variable-name")])
     );
 }
+
+/// C++ の宣言の名前.
+fn cpp(text: &str) -> Vec<(String, &'static str)> {
+    names_in(Language::Cpp, text)
+}
+
+#[test]
+fn test_cpp_qualified_names_and_template_arguments() {
+    // `::` の前は定数の色
+    assert_eq!(
+        cpp("std::string name; ns::Type value, *ptr;"),
+        expect(&[
+            ("std", "constant"),
+            ("string", "type"),
+            ("name", "variable-name"),
+            ("ns", "constant"),
+            ("Type", "type"),
+            ("value", "variable-name"),
+            ("ptr", "variable-name"),
+        ])
+    );
+    // テンプレートの引数: `::` の前と、`<` が続く名前だけに色を付ける (Emacs と同じ)
+    assert_eq!(
+        cpp("const std::vector<int> &r = g(); Foo<Bar> m; std::map<std::string, int> t; std::vector<std::vector<int>> grid;"),
+        expect(&[
+            ("std", "constant"),
+            ("vector", "type"),
+            ("r", "variable-name"),
+            ("Foo", "type"),
+            ("m", "variable-name"),
+            ("std", "constant"),
+            ("map", "type"),
+            ("std", "constant"),
+            ("t", "variable-name"),
+            ("std", "constant"),
+            ("vector", "type"),
+            ("std", "constant"),
+            ("vector", "type"),
+            ("grid", "variable-name"),
+        ])
+    );
+    // `<` が閉じなければ、テンプレートの引数ではない (式の `a < b`)
+    assert_eq!(cpp("a < b; x < (y; z"), vec![]);
+    assert_eq!(cpp("a < b"), vec![]);
+    // C では、`::` も `<` も、特別ではない
+    assert_eq!(names("std::string name;"), vec![]);
+}
+
+#[test]
+fn test_cpp_classes_and_members() {
+    let text = "enum class E { A }; enum class F : int { B }; enum struct G;\n\
+        class D : public Base, private ns::Other {\n\
+        public:\n\
+          D(int x);\n\
+          explicit D(double d) : v(d), w{1} { }\n\
+          D() = default;\n\
+          virtual ~D() { f(1); }\n\
+          virtual void run() const override = 0;\n\
+          int get() const { g(2); return v; }\n\
+        };\n";
+    assert_eq!(
+        cpp(text),
+        expect(&[
+            ("E", "type"),
+            ("A", "variable-name"),
+            ("F", "type"),
+            ("B", "variable-name"),
+            ("G", "type"),
+            ("D", "type"),
+            ("Base", "type"),
+            ("ns", "constant"),
+            ("Other", "type"),
+            ("D", "function-name"),
+            ("x", "variable-name"),
+            ("D", "function-name"),
+            ("d", "variable-name"),
+            ("D", "function-name"),
+            ("D", "function-name"),
+            ("run", "function-name"),
+            ("get", "function-name"),
+        ])
+    );
+    // 本体の中の関数の呼び出しには、色を付けない. クラスの外の、型の無い呼び出しにも
+    assert_eq!(
+        cpp("foo(1); class A { void f() { g(1); } };"),
+        expect(&[("A", "type"), ("f", "function-name")])
+    );
+    // C では、型の無い宣言を読まない
+    assert_eq!(names("struct s { foo(int x); };"), expect(&[("s", "type")]));
+    // コンストラクタの形が崩れていれば、読まない
+    assert_eq!(
+        cpp("class A { A(int x) junk ; B(; ~ 1; };"),
+        expect(&[("A", "type")])
+    );
+}
+
+#[test]
+fn test_cpp_out_of_class_definitions() {
+    assert_eq!(
+        cpp("void D::run() const { }\nint D::count = 0;\nD::D(double d) : v(1) { }\nD::~D() { }\nint D::get(int i) const { return v; }\n"),
+        expect(&[
+            ("D", "constant"),
+            ("run", "function-name"),
+            ("D", "constant"),
+            ("count", "variable-name"),
+            ("D", "constant"),
+            ("D", "function-name"),
+            ("d", "variable-name"),
+            ("D", "constant"),
+            ("D", "function-name"),
+            ("D", "constant"),
+            ("get", "function-name"),
+            ("i", "variable-name"),
+        ])
+    );
+    // 修飾した名前の呼び出しは、ファイルの先頭でだけ、宣言と読む. 関数の中では読まない
+    assert_eq!(
+        cpp("void f() { a::b(c); }"),
+        expect(&[("f", "function-name")])
+    );
+}
+
+#[test]
+fn test_cpp_namespace_using_and_templates() {
+    assert_eq!(
+        cpp("namespace ns { int inner; }\nusing namespace std;\nusing Vec = std::vector<int>;\nusing Bad = 3;\nusing 1 = x;\n"),
+        expect(&[
+            ("ns", "constant"),
+            ("inner", "variable-name"),
+            ("std", "constant"),
+            ("Vec", "type"),
+            ("std", "constant"),
+            ("vector", "type"),
+            ("Bad", "type"),
+        ])
+    );
+    assert_eq!(
+        cpp("template <typename T, class U, int N, int M = 3, Foo F> struct S { T t; };\ntemplate <typename T> T identity(T v) { return v; }\n"),
+        expect(&[
+            ("T", "type"),
+            ("U", "type"),
+            ("N", "variable-name"),
+            ("M", "variable-name"),
+            ("S", "type"),
+            ("T", "type"),
+            ("t", "variable-name"),
+            ("T", "type"),
+            ("T", "type"),
+            ("identity", "function-name"),
+            ("T", "type"),
+            ("v", "variable-name"),
+        ])
+    );
+    // 閉じない `template <` は、読み飛ばす
+    assert_eq!(cpp("template < int x;"), vec![]);
+    // 範囲 for
+    assert_eq!(
+        cpp("void f() { for (auto x : v) { y = x; } for (int i = 0; i < n; i++) { } }"),
+        expect(&[
+            ("f", "function-name"),
+            ("x", "variable-name"),
+            ("i", "variable-name"),
+        ])
+    );
+}

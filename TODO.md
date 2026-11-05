@@ -685,8 +685,11 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 - [x] C のシンタックスハイライト (核の Rust で字句に分け、画面 (Tauri) と TUI (ncurses) の両方に色を付ける。設計は `docs/c_highlight_design.md`)。`core/src/highlight/` が本文を字句 (コメント、コメントの区切り、`/** */`、文字列、キーワード、型、定数、プリプロセッサ、数値) に分け、`c-mode` (`.c` と `.h`) のバッファは `Buffer::token_spans` で取れる。Emacs 30 の `c-mode` の font-lock と、`tests/c-highlight/run.sh` (`npm run test:c-highlight`) で比べる。
 - [x] C++ のシンタックスハイライト (`c++-mode`。`.cc` `.cpp` `.hpp` など。キーワードと型の表、生の文字列 `R"x(...)x"`、数値の区切り `1'000`。Emacs 30 の `c++-mode` と、`tests/c-highlight/run.sh` で比べる。`docs/c_highlight_design.md` の段階 2)。
 - [x] C と C++ のハイライトの、宣言の名前 (関数の名前、変数の名前、型の名前、ラベル、`#define` の名前。Emacs の cc-mode の宣言の推測の、よく使う形。`core/src/highlight/decl.rs`。Emacs と `tests/c-highlight/run.sh` で比べる。`docs/c_highlight_design.md` の段階 3)。
-- [ ] C++ の宣言の名前の、残りの形 (テンプレート、名前空間と `::`、クラスの継承とメソッド、`enum class`、ファイルの先頭の型の無い関数の呼び出し)。
-- [ ] シンタックスハイライトの、再解析の効率化 (今は、本文を書き換えるたびに、全体を読み直す。行ごとの状態を覚えて、変わった行から先だけを読み直す) (同じ文書の段階 4)。
+- [ ] C++ の宣言の名前の、残りの形 (演算子の関数、`typename T::x`、配列への参照、ファイルの先頭の型の無い関数の呼び出し)。
+- [ ] シンタックスハイライトの、再解析の効率化 (1.2 MB、3.5 万行の C のファイルの全体の解析が、デバッグビルドで 0.4 秒弱なので、遅くなってから) (今は、本文を書き換えるたびに、全体を読み直す。行ごとの状態を覚えて、変わった行から先だけを読み直す) (同じ文書の段階 4)。
+- [ ] Elisp と Scheme の色付けを、画面の CodeMirror の `StreamLanguage` (`src/lib/lispMode.ts`、`src/lib/elispKeywords.ts`) から、核の `core/src/highlight/` に移す (今は Tauri だけに色が付く。核に移すと TUI でも付き、画面は核の字句の色 (`BufferFrame.tokens`) を使うだけになる)。色の決まり (特別な形、定義する名前、`:key`、Emacs Lisp の文字列の中の正規表現のグループなど) は今の `lispMode.ts` と同じにして、`emacs -Q --batch` との 1 文字ずつの比較は、`tests/c-highlight/` と同じ形の試験にする。`lispMode.ts` と `elispKeywords.ts` と、そのテストは、移したあとに消す。
+- [ ] Rust のシンタックスハイライト (`rust-mode`。`.rs`)。核の `core/src/highlight/` に言語として足し、Tauri と TUI の両方に色を付ける。手本にする Emacs のモードは、組み込みではない (`rust-mode` は外のパッケージ、`rust-ts-mode` は tree-sitter の文法が要る) ため、先に決める。字句 (コメント、ドキュメントのコメント `///` `//!`、入れ子のブロックコメント、文字列、生の文字列 `r#"..."#`、文字とライフタイム `'a`、キーワード、組み込みの型、マクロ `name!`、属性 `#[...]`) から始め、宣言の名前は、そのあとにする。
+- [ ] TypeScript のシンタックスハイライト (`typescript-mode`。`.ts` `.tsx`。JavaScript の `.js` `.jsx` も同じ字句なので、まとめて扱うかを決める)。核の `core/src/highlight/` に言語として足し、Tauri と TUI の両方に色を付ける。手本にする Emacs のモードは、Emacs 30 の組み込みでは `typescript-ts-mode` (tree-sitter の文法が要る) だけなので、Rust と同じく、先に決める。字句 (コメント、ドキュメントのコメント `/** */`、文字列、テンプレートリテラル `` `...${x}...` `` (入れ子)、正規表現のリテラル `/.../g`、キーワード、組み込みの型、数値) から始め、宣言の名前は、そのあとにする。
 - [ ] メジャーモードの判定を、核に一本化する (今は、核の `auto-mode-alist` (`lisp/files.scm`) と、画面の `src/lib/modes.ts` の 2 か所にある)。
 - [ ] TUI の字句の色を、256 色の端末で、Emacs に近い色にする (今は 8 色)。
 
