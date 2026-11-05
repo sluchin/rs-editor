@@ -209,3 +209,11 @@
 .code-editor-container .cm-tok-preprocessor {
   color: var(--font-lock-builtin);
 }
+
+.code-editor-container .cm-tok-function-name {
+  color: var(--font-lock-function-name);
+}
+
+.code-editor-container .cm-tok-variable-name {
+  color: var(--font-lock-variable-name);
+}

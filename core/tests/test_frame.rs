@@ -166,7 +166,8 @@ fn test_frame_sends_syntax_tokens_for_shown_buffers_in_utf16() {
             (0, 3, "comment-delimiter"),
             (3, 5, "comment"),
             (5, 8, "comment-delimiter"),
-            (9, 12, "type")
+            (9, 12, "type"),
+            (13, 14, "variable-name")
         ]
     );
 }

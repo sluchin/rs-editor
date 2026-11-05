@@ -27,8 +27,15 @@ fn tokens(items: &[(&str, &'static str)]) -> Vec<(String, &'static str)> {
 #[test]
 fn test_tables_are_sorted_for_binary_search() {
     let spec = Language::C.spec();
-    for table in [spec.keywords, spec.types, spec.constants] {
-        assert!(table.windows(2).all(|w| w[0] < w[1]), "{table:?}");
+    for language in [Language::C, Language::Cpp] {
+        let spec = language.spec();
+        for table in [spec.keywords, spec.types, spec.constants] {
+            assert!(table.windows(2).all(|w| w[0] < w[1]), "{table:?}");
+        }
+        // 型と定数は、キーワードでもある
+        for word in spec.types.iter().chain(spec.constants) {
+            assert!(spec.is_keyword(word), "{word}");
+        }
     }
     assert!(spec.is_keyword("while") && !spec.is_keyword("whilst"));
     assert!(spec.is_type("int") && !spec.is_type("size_t"));
@@ -38,6 +45,7 @@ fn test_tables_are_sorted_for_binary_search() {
 #[test]
 fn test_language_from_mode_name() {
     assert_eq!(Language::from_mode_name("c-mode"), Some(Language::C));
+    assert_eq!(Language::from_mode_name("c++-mode"), Some(Language::Cpp));
     assert_eq!(Language::from_mode_name("text-mode"), None);
 }
 
@@ -53,6 +61,8 @@ fn test_kind_names() {
         TokenKind::Constant,
         TokenKind::Preprocessor,
         TokenKind::Number,
+        TokenKind::FunctionName,
+        TokenKind::VariableName,
     ]
     .iter()
     .map(|k| k.name())
@@ -68,7 +78,9 @@ fn test_kind_names() {
             "type",
             "constant",
             "preprocessor",
-            "number"
+            "number",
+            "function-name",
+            "variable-name"
         ]
     );
 }
@@ -80,6 +92,7 @@ fn test_keywords_types_and_constants() {
         tokens(&[
             ("static", "keyword"),
             ("int", "type"),
+            ("x", "variable-name"),
             ("NULL", "constant"),
             ("return", "keyword"),
             ("sizeof", "keyword"),
@@ -88,6 +101,102 @@ fn test_keywords_types_and_constants() {
     );
     // 語の一部では、色を付けない. `$` は語の文字
     assert_eq!(lex("integer int_x $if if$"), vec![]);
+}
+
+/// C++ として字句に分けて、(本文の中の文字列, 種類の名前) の並びにする.
+fn lex_cpp(text: &str) -> Vec<(String, &'static str)> {
+    let chars: Vec<char> = text.chars().collect();
+    tokenize(Language::Cpp, text)
+        .iter()
+        .map(|s| (chars[s.start..s.end].iter().collect(), s.kind.name()))
+        .collect()
+}
+
+#[test]
+fn test_cpp_keywords_types_and_constants() {
+    assert_eq!(
+        lex_cpp("class A final : public B { bool b = nullptr; char8_t c; }; and not_eq"),
+        tokens(&[
+            ("class", "keyword"),
+            ("final", "keyword"),
+            ("public", "keyword"),
+            ("bool", "type"),
+            ("b", "variable-name"),
+            ("nullptr", "constant"),
+            ("char8_t", "type"),
+            ("c", "variable-name"),
+            ("and", "keyword"),
+            ("not_eq", "keyword"),
+        ])
+    );
+    // C では、C++ のキーワードではない
+    assert_eq!(lex("class bool nullptr"), vec![]);
+}
+
+#[test]
+fn test_cpp_raw_strings() {
+    // 色が付くのは `(` から `)` まで. 区切りと引用符は除く
+    assert_eq!(
+        lex_cpp(r#"R"(a "b" \)" u8R"x(c)x" LR"(d)" uR"(e)" UR"(f)""#),
+        tokens(&[
+            (r#"(a "b" \)"#, "string"),
+            ("(c)", "string"),
+            ("(d)", "string"),
+            ("(e)", "string"),
+            ("(f)", "string"),
+        ])
+    );
+    // 行をまたぐ. `)` の後が区切りと引用符でなければ、終わりではない
+    assert_eq!(
+        lex_cpp("R\"x(l1\n)y\" l2)x\" int"),
+        tokens(&[("(l1\n)y\" l2)", "string"), ("int", "type")])
+    );
+    // 閉じなければ、`(` の次から本文の終わりまで
+    assert_eq!(lex_cpp("R\"(open\nint"), tokens(&[("open\nint", "string")]));
+    // 区切りが正しくなければ、普通の文字列
+    assert_eq!(
+        lex_cpp("R\"a b(x)a b\""),
+        tokens(&[("\"a b(x)a b\"", "string")])
+    );
+    assert_eq!(lex_cpp("R\"a)b(x)\"")[0].0, "\"a)b(x)\"");
+    assert_eq!(lex_cpp("R\"a\\b(x)\"")[0].0, "\"a\\b(x)\"");
+    assert_eq!(lex_cpp("R\"a\"b(x)\"")[0].0, "\"a\"");
+    assert_eq!(
+        lex_cpp("R\"abcdefghijklmnopq(x)abcdefghijklmnopq\"")[0]
+            .0
+            .chars()
+            .next(),
+        Some('"')
+    );
+    assert_eq!(lex_cpp("R\"abc")[0].0, "abc");
+    // 16 文字の区切りは使える
+    assert_eq!(
+        lex_cpp("R\"abcdefghijklmnop(x)abcdefghijklmnop\"")[0].0,
+        "(x)"
+    );
+    // R の後が引用符でなければ、ただの語. 別の語の後ろの R も
+    assert_eq!(lex_cpp("R + FR\"x\""), tokens(&[("\"x\"", "string")]));
+    // C では、生の文字列ではない
+    assert_eq!(lex("R\"(x)\""), tokens(&[("\"(x)\"", "string")]));
+}
+
+#[test]
+fn test_cpp_digit_separators() {
+    assert_eq!(
+        lex_cpp("1'000'000 0x1'F 'a'"),
+        tokens(&[
+            ("1'000'000", "number"),
+            ("0x1'F", "number"),
+            ("'a'", "string"),
+        ])
+    );
+    // 区切りは、数字の間だけ
+    assert_eq!(
+        lex_cpp("1' x"),
+        tokens(&[("1", "number"), (" x", "string")])
+    );
+    // C では、区切りではない
+    assert_eq!(lex("1'0"), tokens(&[("1", "number"), ("0", "string")]));
 }
 
 #[test]
@@ -223,7 +332,11 @@ fn test_preprocessor_directives() {
     // 行頭の空白も、指示の色
     assert_eq!(
         lex("  # define X 1"),
-        tokens(&[("  # define", "preprocessor"), ("1", "number")])
+        tokens(&[
+            ("  # define", "preprocessor"),
+            ("X", "variable-name"),
+            ("1", "number")
+        ])
     );
     // < が閉じない #include
     assert_eq!(
@@ -237,7 +350,11 @@ fn test_preprocessor_directives() {
     // 行の継続で、指示は続く. 次の行の先頭の # は、指示ではない
     assert_eq!(
         lex("#define A \\\n  # B\nint"),
-        tokens(&[("#define", "preprocessor"), ("int", "type")])
+        tokens(&[
+            ("#define", "preprocessor"),
+            ("A", "variable-name"),
+            ("int", "type")
+        ])
     );
     // 指示は、行の終わりで終わる (次の行の < は、#include の < ではない)
     assert_eq!(
@@ -333,7 +450,7 @@ fn test_buffer_spans_follow_the_major_mode_and_the_text() {
         Some(Language::C)
     );
     let first = host.editor().current_buffer().token_spans();
-    assert_eq!(first.len(), 1);
+    assert_eq!(first.len(), 2);
     // 本文が同じなら、同じ結果を使い回す
     let again = host.editor().current_buffer().token_spans();
     assert!(Arc::ptr_eq(&first, &again));
@@ -342,7 +459,14 @@ fn test_buffer_spans_follow_the_major_mode_and_the_text() {
         .unwrap();
     let edited = host.editor().current_buffer().token_spans();
     assert!(!Arc::ptr_eq(&first, &edited));
-    assert_eq!(edited.len(), 2);
+    assert_eq!(edited.len(), 4);
+    // C++ に替えると、C++ の表を使う
+    ev.eval_with("(c++-mode)", &host).unwrap();
+    assert_eq!(
+        host.editor().current_buffer().highlight_language(),
+        Some(Language::Cpp)
+    );
+    assert_eq!(host.editor().current_buffer().token_spans().len(), 4);
     // 別のモードに替えると、色が付かない
     ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host.editor().current_buffer().token_spans().is_empty());
@@ -355,7 +479,7 @@ fn test_token_spans_procedure() {
     // 位置は 1 から数える. 終わりは含まない
     assert_eq!(
         ev.eval_with("(token-spans)", &host).unwrap(),
-        "((1 4 type) (8 11 comment-delimiter) (11 12 comment))"
+        "((1 4 type) (5 6 variable-name) (8 11 comment-delimiter) (11 12 comment))"
     );
     assert_eq!(ev.eval_with("major-mode", &host).unwrap(), "c-mode");
 }
@@ -366,6 +490,12 @@ fn test_set_auto_mode_chooses_c_mode_for_c_files() {
     for (file, mode) in [
         ("/tmp/a.c", "c-mode"),
         ("/tmp/a.h", "c-mode"),
+        ("/tmp/a.cpp", "c++-mode"),
+        ("/tmp/a.cc", "c++-mode"),
+        ("/tmp/a.hpp", "c++-mode"),
+        ("/tmp/a.c++", "c++-mode"),
+        ("/tmp/a.CPP", "c++-mode"),
+        ("/tmp/a.ii", "c++-mode"),
         ("/tmp/a.txt", "text-mode"),
         ("/tmp/a.scm", "scheme-mode"),
         ("/tmp/a.el", "emacs-lisp-mode"),
@@ -396,11 +526,21 @@ fn test_line_token_spans_are_clipped_to_the_line() {
     // 行の中の位置. 複数行のコメントは、行の終わりと始めで切る (本文は 1 行目が 'x'、2 行目が 'y')
     assert_eq!(
         buffer.line_token_spans(0),
-        vec![(0, 3, Type), (7, 10, CommentDelimiter), (10, 11, Comment)]
+        vec![
+            (0, 3, Type),
+            (4, 5, VariableName),
+            (7, 10, CommentDelimiter),
+            (10, 11, Comment)
+        ]
     );
     assert_eq!(
         buffer.line_token_spans(1),
-        vec![(0, 1, Comment), (1, 4, CommentDelimiter), (5, 9, Type)]
+        vec![
+            (0, 1, Comment),
+            (1, 4, CommentDelimiter),
+            (5, 9, Type),
+            (10, 11, VariableName)
+        ]
     );
     // 最後の空の行と、本文の外の行
     assert!(buffer.line_token_spans(2).is_empty());

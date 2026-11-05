@@ -93,15 +93,23 @@ fn test_mode_names_and_the_file_dialects() {
     let el = dir.path().join("a.el");
     let scm = dir.path().join("b.scm");
     let c = dir.path().join("c.c");
+    let cpp = dir.path().join("d.cpp");
     std::fs::write(&el, "(a)").unwrap();
     std::fs::write(&scm, "(b)").unwrap();
     std::fs::write(&c, "int c;").unwrap();
+    std::fs::write(&cpp, "int d;").unwrap();
     let files = [
         el.to_str().unwrap().to_string(),
         scm.to_str().unwrap().to_string(),
         c.to_str().unwrap().to_string(),
+        cpp.to_str().unwrap().to_string(),
     ];
     let fx = Fixture::sized(12, 50, &files).unwrap();
+    fx.app.draw();
+    assert!(fx.screen()[10].contains("(C++)"));
+    fx.app.host().editor().set_buffer("c.c").unwrap();
+    let w = fx.app.host().editor().selected_window();
+    fx.app.host().editor().set_window_buffer(w, "c.c").unwrap();
     fx.app.draw();
     assert!(fx.screen()[10].contains("(C)"));
     fx.app.host().editor().set_buffer("b.scm").unwrap();
@@ -321,6 +329,7 @@ fn token_letters(text: &str, rows: usize, cols: usize, row: usize) -> String {
             Some(TokenKind::Keyword) => 'k',
             Some(TokenKind::Type) => 't',
             Some(TokenKind::Preprocessor) => 'p',
+            Some(TokenKind::VariableName) => 'v',
             Some(_) => '?',
         })
         .collect()
@@ -330,7 +339,7 @@ fn token_letters(text: &str, rows: usize, cols: usize, row: usize) -> String {
 fn test_cells_carry_the_syntax_token_kinds() {
     assert_eq!(
         token_letters("int x; // hi\nreturn \"s\";", 6, 30, 0),
-        "ttt....dddcc"
+        "ttt.v..dddcc"
     );
     assert_eq!(
         token_letters("int x; // hi\nreturn \"s\";", 6, 30, 1),
@@ -339,7 +348,7 @@ fn test_cells_carry_the_syntax_token_kinds() {
     // 複数行のコメントは、次の行も
     assert_eq!(token_letters("/* a\nb */ int", 6, 30, 1), "cddd.ttt");
     // 折り返した行と、幅の広い文字の 2 マス目も、同じ種類
-    assert_eq!(token_letters("int あ; /* い */", 6, 8, 0), "ttt.....");
+    assert_eq!(token_letters("int あ; /* い */", 6, 8, 0), "ttt.vv..");
     // 言語が無ければ、種類は無い
     let mut editor = Editor::new();
     editor.current_buffer_mut().insert("int x;");
@@ -374,7 +383,19 @@ fn test_token_styles_and_color_pairs() {
         token_style(TokenKind::Preprocessor).map(|s| s.color),
         Some(4)
     );
+    // 関数の名前は青の太字 (プリプロセッサと同じ), 変数の名前は黄の太字
+    assert_eq!(
+        token_style(TokenKind::FunctionName),
+        token_style(TokenKind::Preprocessor)
+    );
+    assert_eq!(
+        token_style(TokenKind::VariableName),
+        Some(TokenStyle {
+            color: 3,
+            bold: true
+        })
+    );
     // 対の番号は、1 から、種類ごとに違う
     let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
-    assert_eq!(pairs, (1..=9).collect::<Vec<i16>>());
+    assert_eq!(pairs, (1..=11).collect::<Vec<i16>>());
 }

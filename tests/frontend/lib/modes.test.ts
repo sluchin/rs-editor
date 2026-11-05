@@ -107,6 +107,16 @@ describe('majorMode', () => {
       tabWidth: 8,
     })
     expect(majorMode('a.h', '/tmp/a.h', '').name).toBe('C')
+    // C++
+    expect(majorMode('a.cpp', '/tmp/a.cpp', 'int x;')).toEqual({
+      name: 'C++',
+      language: null,
+      indentTabs: true,
+      tabWidth: 8,
+    })
+    expect(majorMode('a.hpp', '/tmp/a.hpp', '').name).toBe('C++')
+    expect(majorMode('a.c++', '/tmp/a.c++', '').name).toBe('C++')
+    expect(majorMode('a.txt', '/tmp/a.txt', '// -*- mode: c++ -*-').name).toBe('C++')
     expect(majorMode('a.txt', '/tmp/a.txt', '/* -*- mode: c -*- */').name).toBe('C')
     expect(majorMode('a.scm', '/tmp/a.scm', '; -*- mode: fundamental -*-').name).toBe('Fundamental')
     expect(majorMode('a', '/tmp/a', '-*- mode: lisp-data; tab-width: 4 -*-')).toEqual({

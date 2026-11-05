@@ -26,7 +26,7 @@ int three;
 #pragma once
 #line 10 "x.c"
 #
-int after;
+return after;
    #define INDENTED 1
 int x = 1; /* # not a directive */
 int y = 2;

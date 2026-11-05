@@ -1,16 +1,11 @@
 ;;; Emacs の c-mode の font-lock の結果を, 範囲ごとに, 始まり, 終わり, 種類の順に, タブで区切って出す.
-;;; 位置は 1 から数え, 終わりは含まない. 種類は rs-editor の `token-spans' と同じ名前. 字句だけで決まる種類に絞る
-;;; (宣言の名前の色と, 組み込みでない型と定数の名前は出さない). 範囲の前後の改行は, 含めない (dump.scm も同じ).
+;;; 位置は 1 から数え, 終わりは含まない. 種類は rs-editor の `token-spans' と同じ名前 (宣言の名前も含む).
+;;; 範囲の前後の改行は, 含めない (dump.scm も同じ).
+;;; ファイルの名前に "lexical" が付くものは, 字句だけで決まる種類に絞る (型, 定数, 関数と変数の名前は出さない).
+;;; C++ の, 宣言の名前を扱わない構文 (テンプレート, 名前空間, クラスなど) を含むケースに使う.
 (setq enable-local-variables nil)
 (require 'cc-mode)
-(defun dump--word-at (pos)
-  "POS を含む語."
-  (save-excursion
-    (goto-char pos)
-    (skip-chars-backward "[:alnum:]_$")
-    (let ((start (point)))
-      (skip-chars-forward "[:alnum:]_$")
-      (buffer-substring-no-properties start (point)))))
+(defconst dump--lexical (string-match-p "lexical" (buffer-file-name)))
 (defun dump--kind (pos)
   "POS の文字の種類 (無ければ nil)."
   (let ((face (get-text-property pos 'face)))
@@ -22,13 +17,13 @@
       ('font-lock-string-face 'string)
       ('font-lock-keyword-face 'keyword)
       ('font-lock-preprocessor-face 'preprocessor)
-      ('font-lock-type-face
-       (and (eq 0 (string-match c-primitive-type-key (dump--word-at pos))) 'type))
-      ('font-lock-constant-face
-       (and (eq 0 (string-match c-constant-key (dump--word-at pos))) 'constant))
+      ((and 'font-lock-type-face (guard (not dump--lexical))) 'type)
+      ((and 'font-lock-constant-face (guard (not dump--lexical))) 'constant)
+      ((and 'font-lock-function-name-face (guard (not dump--lexical))) 'function-name)
+      ((and 'font-lock-variable-name-face (guard (not dump--lexical))) 'variable-name)
       (_ nil))))
 (let ((runs nil))
-  (c-mode)
+  (if (string-match-p "\\.cpp\\'" (buffer-file-name)) (c++-mode) (c-mode))
   (font-lock-mode 1)
   (font-lock-ensure)
   (let ((pos (point-min)))
