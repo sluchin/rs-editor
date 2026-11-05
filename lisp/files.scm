@@ -8,9 +8,10 @@
     ("\\.(scm|ss|sld|sls|rkt)$" scheme)
     ("\\.(txt|text)$" text-mode)
     ("\\.[ch]$" c-mode)
+    ("\\.rs$" rust-mode)
     ("\\.(cc|hh|cpp|hpp|cxx|hxx|c\\+\\+|h\\+\\+|ii|C|H|CC|HH|CPP|HPP|CXX|HXX)$" c++-mode))
   "List of (REGEXP MODE) to choose the major mode of a visited file.
-MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode).
+MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode, rust-mode).
 The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental.")
 
 (define (set-auto-mode)
@@ -21,7 +22,7 @@ See `auto-mode-alist'."
       (cond ((or (not file) (null? modes)) (set-syntax-dialect 'fundamental))
             ((regexp-match (car (car modes)) file)
              (let ((mode (cadr (car modes))))
-               (if (member mode '(text-mode c-mode c++-mode))
+               (if (member mode '(text-mode c-mode c++-mode rust-mode))
                    (begin (set-syntax-dialect 'fundamental) (set-major-mode-name mode))
                    (set-syntax-dialect mode))))
             (else (loop (cdr modes)))))))

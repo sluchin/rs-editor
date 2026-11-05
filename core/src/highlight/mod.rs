@@ -5,7 +5,10 @@
 //! 手本は、Emacs 30 の `c-mode` です (`tests/c-highlight/` で、Emacs の結果と比べる).
 
 mod decl;
+mod elisp_keywords;
 mod lang;
+mod lisp;
+mod rust;
 
 pub use lang::{Language, LanguageSpec};
 
@@ -34,11 +37,17 @@ pub enum TokenKind {
     FunctionName,
     /// 変数の名前 (`font-lock-variable-name-face`). 宣言の変数、引数、構造体のメンバー、列挙子、`#define` の名前.
     VariableName,
+    /// 組み込みの名前 (`font-lock-builtin-face`). Lisp の `:key`.
+    Builtin,
+    /// 警告 (`font-lock-warning-face`). Emacs Lisp の `error` の形、要らない `\`、閉じた括弧の後ろに続く引数.
+    Warning,
+    /// 正規表現のグループ (`font-lock-regexp-grouping-backslash` と `-construct`). Emacs Lisp の文字列の中の `\(` など.
+    RegexpGroup,
 }
 
 impl TokenKind {
     /// 全ての種類 (番号を付けて使うため).
-    pub const ALL: [TokenKind; 11] = [
+    pub const ALL: [TokenKind; 14] = [
         TokenKind::Comment,
         TokenKind::CommentDelimiter,
         TokenKind::DocComment,
@@ -50,6 +59,9 @@ impl TokenKind {
         TokenKind::Number,
         TokenKind::FunctionName,
         TokenKind::VariableName,
+        TokenKind::Builtin,
+        TokenKind::Warning,
+        TokenKind::RegexpGroup,
     ];
 
     /// 画面に渡す名前 (CSS のクラス名と、Lisp の記号に使う).
@@ -66,6 +78,9 @@ impl TokenKind {
             TokenKind::Number => "number",
             TokenKind::FunctionName => "function-name",
             TokenKind::VariableName => "variable-name",
+            TokenKind::Builtin => "builtin",
+            TokenKind::Warning => "warning",
+            TokenKind::RegexpGroup => "regexp-group",
         }
     }
 }
@@ -92,9 +107,20 @@ pub struct Span {
 ///
 /// 範囲の並び (始まりの順. 重ならない). 色の付かない文字は、含まない.
 pub fn tokenize(language: Language, text: &str) -> Vec<Span> {
+    let Some(spec) = language.spec() else {
+        if language == Language::Rust {
+            return rust::tokenize(text);
+        }
+        let dialect = if language == Language::Scheme {
+            lisp::Dialect::Scheme
+        } else {
+            lisp::Dialect::Elisp
+        };
+        return lisp::tokenize(dialect, text);
+    };
     let chars: Vec<char> = text.chars().collect();
     let mut lexer = Lexer {
-        spec: language.spec(),
+        spec,
         chars: &chars,
         pos: 0,
         spans: Vec::new(),

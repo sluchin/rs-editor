@@ -2567,9 +2567,16 @@ Comments, strings, keywords, types, constants and preprocessor directives are hi
   (set-major-mode-name 'c++-mode)
   #f)
 
+(define-command (rust-mode)
+  "Major mode for editing Rust code.
+Comments, strings, keywords, types, attributes and macros are highlighted."
+  (set-syntax-dialect 'fundamental)
+  (set-major-mode-name 'rust-mode)
+  #f)
+
 (define-command (lisp-interaction-mode)
-  "Major mode for typing and evaluating Lisp forms."
-  (set-syntax-dialect 'elisp)
+  "Major mode for typing and evaluating Lisp forms (Scheme forms, in this editor)."
+  (set-syntax-dialect 'scheme)
   (set-major-mode-name 'lisp-interaction-mode)
   #f)
 

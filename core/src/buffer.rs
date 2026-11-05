@@ -398,11 +398,17 @@ impl Buffer {
         self.mode_name = Some(name.to_string());
     }
 
-    /// シンタックスハイライトの言語 (`major-mode` が `c-mode` なら C. 無ければ `None`).
+    /// シンタックスハイライトの言語 (`major-mode` が `c-mode` なら C、`lisp-interaction-mode` なら Scheme. 構文の方言が Lisp なら、その Lisp. 無ければ `None`).
     pub fn highlight_language(&self) -> Option<crate::highlight::Language> {
+        use crate::highlight::Language;
         self.mode_name
             .as_deref()
-            .and_then(crate::highlight::Language::from_mode_name)
+            .and_then(Language::from_mode_name)
+            .or(match self.dialect {
+                Dialect::Fundamental => None,
+                Dialect::Elisp => Some(Language::Elisp),
+                Dialect::Scheme => Some(Language::Scheme),
+            })
     }
 
     /// 本文の字句の範囲 (言語が無ければ空). 本文が変わるまでは、覚えた結果を返す.

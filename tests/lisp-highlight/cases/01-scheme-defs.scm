@@ -1,0 +1,15 @@
+(define (square x) (if (car x) x 1))
+(define ((curried a) b) a)
+(define-syntax swap! (syntax-rules ()))
+(define-module (a b))
+(define-command hello (lambda () 1))
+(let loop ((i 0)) i) (let ((j 1)) j)
+(library (srfi 1) (import))
+(list if 'define) [if]
+'(define y)
+(define "x" y)
+(define
+ z)
+(define-record-type point (make-point x y) point? (x point-x))
+(cond ((assv 1 '()) => car) (else #f))
+(case-lambda ((a) a) ((a b) b))

@@ -168,7 +168,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | --- | --- |
 | 言語 | Emacs は Emacs Lisp、rs-editor は Scheme。試験は言語ごとに書く (`nil` と `#f`、`defun` と `define` など)。出力は `format` と `princ` で `nil` と `t` になる (E-51) ので、そのまま比べる。評価の結果 (ミニバッファに出す値) は Scheme の `#t` と `#f` |
 | 正規表現 | rs-editor は Rust の正規表現で、Emacs の書き方を変換して使う (試験 E-46、E-49)。合わないのは、番号付きの括弧 `\(?2:` (エラーにする) と、構文表の細かい違い (`\s.` が句読点と見る字など) |
-| メジャーモード | `major-mode` の名前は合わせた (試験 E-45。`*scratch*` は `lisp-interaction-mode`、`.txt` は `text-mode`)。`*scratch*` の構文は Fundamental のまま (Emacs は Lisp)。モードごとのキーやフックは比べない |
+| メジャーモード | `major-mode` の名前は合わせた (試験 E-45。`*scratch*` は `lisp-interaction-mode`、`.txt` は `text-mode`)。始めの `*scratch*` の構文は Fundamental のまま (Emacs は Lisp。コマンド `lisp-interaction-mode` は Scheme にする)。モードごとのキーやフックは比べない |
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |

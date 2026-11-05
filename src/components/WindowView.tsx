@@ -19,7 +19,6 @@ import { controlChars } from '../lib/controlChars'
 import type { DocEntry } from '../lib/docs'
 import { type Highlight, regexpHighlighting, type Token, tokenHighlighting } from '../lib/faces'
 import { emacsKey } from '../lib/keys'
-import { lispHighlighting } from '../lib/lispMode'
 import { dialectConfig } from '../lib/lispParser'
 import type { MajorMode } from '../lib/modes'
 import type { Input } from '../lib/session'
@@ -139,12 +138,11 @@ export default function WindowView({
   })
 
   /**
-   * 言語の拡張 (色分け, 括弧の強調のための方言, タブの幅) を作ります.
+   * 言語の拡張 (括弧の強調のための方言, タブの幅) を作ります. 色は, 核が返す字句 (`tokens`) で付けます.
    *
    * @returns 拡張.
    */
   const languageExtension = (): Extension => [
-    mode.language ? lispHighlighting[mode.language] : [],
     dialectConfig.of(mode.language),
     EditorState.tabSize.of(mode.tabWidth),
   ]
@@ -299,7 +297,7 @@ export default function WindowView({
     }
   })
 
-  // メジャーモードが変わったら, 色分けを合わせ直す
+  // メジャーモードが変わったら, 方言とタブの幅を合わせ直す
   useEffect(() => {
     ;(view.current as EditorView).dispatch({
       effects: language.current.reconfigure(languageExtension()),

@@ -57,7 +57,7 @@ Lisp のコマンド (`lisp/simple.scm` など) は、このコマンドルー�
 
 ### 4.2 画面 (TypeScript) に残すもの
 
-- CodeMirror: 表示、色分け (`src/lib/lispMode.ts`)、括弧の強調 (`src/lib/showParen.ts`)、スクロール。CodeMirror の編集のコマンドと keymap は外す。
+- CodeMirror: 表示、色分け (核の字句 `BufferFrame.tokens` を色にする。`src/lib/faces.ts`)、括弧の強調 (`src/lib/showParen.ts`)、スクロール。CodeMirror の編集のコマンドと keymap は外す。
 - 入力: キーを Emacs の書き方 (`toEmacsKey`) にして `key_event` で送る。文字は `insert_text` で送る。日本語の IME は、変換を確定したとき (`compositionend`) に送る。
 - ミニバッファ (`Minibuffer.tsx`): 入力の欄と補完の候補。補完の候補は、Rust から問いと一緒に受け取る。
 - モードライン、サイドバー (`ProjectTree.tsx`)、色とフォント (`src/lib/theme.ts`)。

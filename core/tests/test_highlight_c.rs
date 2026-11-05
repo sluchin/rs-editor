@@ -26,9 +26,9 @@ fn tokens(items: &[(&str, &'static str)]) -> Vec<(String, &'static str)> {
 
 #[test]
 fn test_tables_are_sorted_for_binary_search() {
-    let spec = Language::C.spec();
+    let spec = Language::C.spec().unwrap();
     for language in [Language::C, Language::Cpp] {
-        let spec = language.spec();
+        let spec = language.spec().unwrap();
         for table in [spec.keywords, spec.types, spec.constants] {
             assert!(table.windows(2).all(|w| w[0] < w[1]), "{table:?}");
         }
@@ -441,7 +441,8 @@ fn setup(text: &str) -> (Evaluator, EditorHost<NoUi>) {
 #[test]
 fn test_buffer_spans_follow_the_major_mode_and_the_text() {
     let (ev, host) = setup("int x;");
-    // Fundamental では、色が付かない
+    // text-mode では、色が付かない
+    ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host.editor().current_buffer().token_spans().is_empty());
     assert_eq!(host.editor().current_buffer().highlight_language(), None);
     ev.eval_with("(c-mode)", &host).unwrap();
@@ -499,7 +500,8 @@ fn test_set_auto_mode_chooses_c_mode_for_c_files() {
         ("/tmp/a.txt", "text-mode"),
         ("/tmp/a.scm", "scheme-mode"),
         ("/tmp/a.el", "emacs-lisp-mode"),
-        ("/tmp/a.rs", "fundamental-mode"),
+        ("/tmp/a.rs", "rust-mode"),
+        ("/tmp/a.txt2", "fundamental-mode"),
     ] {
         ev.eval_with(
             &format!(r#"(files--set-buffer-file-name "{file}") (set-auto-mode) major-mode"#),
@@ -514,6 +516,7 @@ fn test_set_auto_mode_chooses_c_mode_for_c_files() {
 fn test_line_token_spans_are_clipped_to_the_line() {
     let (ev, host) = setup("int a; /* x\ny */ char b;\n");
     // 言語が無ければ、空
+    ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host
         .editor()
         .current_buffer()
