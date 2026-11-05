@@ -876,14 +876,25 @@ msgstr ""
 msgctxt "variable:auto-mode-alist"
 msgid ""
 "List of (REGEXP MODE) to choose the major mode of a visited file.\n"
-"MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode).\n"
+"MODE is a syntax dialect (elisp, scheme), lisp-data-mode, or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode, rust-mode, typescript-mode).\n"
 "The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "variable:file-local-mode-alist"
+msgid "List of (NAME MODE) for `mode: NAME' in the -*- line of a file.  MODE is as in `auto-mode-alist'."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:set-auto-mode-1"
+msgid "Turn on MODE, a value of `auto-mode-alist'."
 msgstr ""
 
 #: lisp/files.scm
 msgctxt "function:set-auto-mode"
 msgid ""
-"Select the syntax dialect (major mode) of the current buffer from its file name.\n"
+"Select the syntax dialect (major mode) of the current buffer.\n"
+"`mode: NAME' in the first line (-*- ... -*-) of the file wins over the file name, as in Emacs.\n"
 "See `auto-mode-alist'."
 msgstr ""
 
@@ -6762,6 +6773,11 @@ msgid "Major mode for editing Lisp code to run in Emacs."
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:lisp-data-mode"
+msgid "Major mode for buffers holding data written as Lisp S-expressions."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:scheme-mode"
 msgid "Major mode for editing Scheme code."
 msgstr ""
@@ -6786,8 +6802,22 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:rust-mode"
+msgid ""
+"Major mode for editing Rust code.\n"
+"Comments, strings, keywords, types, attributes and macros are highlighted."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:typescript-mode"
+msgid ""
+"Major mode for editing TypeScript code.\n"
+"Comments, strings, template literals, regexps, keywords, types and names are highlighted."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:lisp-interaction-mode"
-msgid "Major mode for typing and evaluating Lisp forms."
+msgid "Major mode for typing and evaluating Lisp forms (Scheme forms, in this editor)."
 msgstr ""
 
 #: lisp/simple.scm

@@ -1014,20 +1014,32 @@ msgstr "今の Dired バッファにキーを割り当てる."
 msgctxt "variable:auto-mode-alist"
 msgid ""
 "List of (REGEXP MODE) to choose the major mode of a visited file.\n"
-"MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode).\n"
+"MODE is a syntax dialect (elisp, scheme), lisp-data-mode, or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode, rust-mode, typescript-mode).\n"
 "The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental."
 msgstr ""
 "訪れたファイルのメジャーモードを選ぶ (REGEXP MODE) のリスト.\n"
-"MODE は、構文の方言 (elisp, scheme) か、Fundamental の方言の上のメジャーモード (text-mode, c-mode, c++-mode).\n"
+"MODE は、構文の方言 (elisp, scheme)、lisp-data-mode、または Fundamental の方言の上のメジャーモード (text-mode, c-mode, c++-mode, rust-mode, typescript-mode).\n"
 "ファイルの名前に合う初めの REGEXP (Rust の regex の書き方) で決まる. 合わなければ Fundamental."
+
+#: lisp/files.scm
+msgctxt "variable:file-local-mode-alist"
+msgid "List of (NAME MODE) for `mode: NAME' in the -*- line of a file.  MODE is as in `auto-mode-alist'."
+msgstr "ファイルの -*- 行の `mode: NAME' のための (NAME MODE) のリスト.  MODE は `auto-mode-alist' と同じ."
+
+#: lisp/files.scm
+msgctxt "function:set-auto-mode-1"
+msgid "Turn on MODE, a value of `auto-mode-alist'."
+msgstr "MODE をオンにする. MODE は `auto-mode-alist' の値."
 
 #: lisp/files.scm
 msgctxt "function:set-auto-mode"
 msgid ""
-"Select the syntax dialect (major mode) of the current buffer from its file name.\n"
+"Select the syntax dialect (major mode) of the current buffer.\n"
+"`mode: NAME' in the first line (-*- ... -*-) of the file wins over the file name, as in Emacs.\n"
 "See `auto-mode-alist'."
 msgstr ""
-"今のバッファの構文の方言 (メジャーモード) を, ファイルの名前から選ぶ.\n"
+"今のバッファの構文の方言 (メジャーモード) を選ぶ.\n"
+"Emacs と同じく、ファイルの 1 行目 (-*- ... -*-) の `mode: NAME' が、ファイルの名前より優先される.\n"
 "`auto-mode-alist' を見よ."
 
 #: lisp/files.scm
@@ -7658,6 +7670,11 @@ msgid "Major mode for editing Lisp code to run in Emacs."
 msgstr "Emacs で動かす Lisp のコードを編集するメジャーモード."
 
 #: lisp/simple.scm
+msgctxt "function:lisp-data-mode"
+msgid "Major mode for buffers holding data written as Lisp S-expressions."
+msgstr "Lisp の S 式で書いたデータを持つバッファのメジャーモード."
+
+#: lisp/simple.scm
 msgctxt "function:scheme-mode"
 msgid "Major mode for editing Scheme code."
 msgstr "Scheme のコードを編集するメジャーモード."
@@ -7687,9 +7704,27 @@ msgstr ""
 "コメント, 文字列, キーワード, 型, 定数, プリプロセッサの指示に色を付ける."
 
 #: lisp/simple.scm
+msgctxt "function:rust-mode"
+msgid ""
+"Major mode for editing Rust code.\n"
+"Comments, strings, keywords, types, attributes and macros are highlighted."
+msgstr ""
+"Rust のコードを編集するメジャーモード.\n"
+"コメント, 文字列, キーワード, 型, 属性, マクロを色付けする."
+
+#: lisp/simple.scm
+msgctxt "function:typescript-mode"
+msgid ""
+"Major mode for editing TypeScript code.\n"
+"Comments, strings, template literals, regexps, keywords, types and names are highlighted."
+msgstr ""
+"TypeScript のコードを編集するメジャーモード.\n"
+"コメント, 文字列, テンプレートリテラル, 正規表現, キーワード, 型, 名前を色付けする."
+
+#: lisp/simple.scm
 msgctxt "function:lisp-interaction-mode"
-msgid "Major mode for typing and evaluating Lisp forms."
-msgstr "Lisp の式を入力して評価するメジャーモード."
+msgid "Major mode for typing and evaluating Lisp forms (Scheme forms, in this editor)."
+msgstr "Lisp の式 (このエディタでは Scheme の式) を入力して評価するメジャーモード."
 
 #: lisp/simple.scm
 msgctxt "function:string-match"

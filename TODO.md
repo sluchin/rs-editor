@@ -668,9 +668,9 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 | [ ] | `M-<f9>` | cscope-display-buffer | 5143 |
 | [ ] | `M-<f10>` | cscope-display-buffer-toggle | 5144 |
 
-## Phase 20: そのほかの機能 (開発メモから)
+## Phase 20: そのほかの機能
 
-HackMD の開発メモにあった rs-editor の項目のうち、上の Phase に無いもの。Scheme の整形 (Phase 18)、Scheme の lint (Phase 19)、ヘルプの多言語化 (Phase 17) は、それぞれの Phase で進める。
+上の Phase に無い項目。Scheme の整形 (Phase 18)、Scheme の lint (Phase 19)、ヘルプの多言語化 (Phase 17) は、それぞれの Phase で進める。
 
 ### 編集のモード
 
