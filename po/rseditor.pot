@@ -876,7 +876,7 @@ msgstr ""
 msgctxt "variable:auto-mode-alist"
 msgid ""
 "List of (REGEXP MODE) to choose the major mode of a visited file.\n"
-"MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode).\n"
+"MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode).\n"
 "The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental."
 msgstr ""
 
@@ -6775,6 +6775,13 @@ msgstr ""
 msgctxt "function:c-mode"
 msgid ""
 "Major mode for editing C code.\n"
+"Comments, strings, keywords, types, constants and preprocessor directives are highlighted."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:c++-mode"
+msgid ""
+"Major mode for editing C++ code.\n"
 "Comments, strings, keywords, types, constants and preprocessor directives are highlighted."
 msgstr ""
 

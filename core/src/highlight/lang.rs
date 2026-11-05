@@ -8,6 +8,8 @@
 pub enum Language {
     /// C (`c-mode`).
     C,
+    /// C++ (`c++-mode`).
+    Cpp,
 }
 
 /// 言語の字句の表.
@@ -19,6 +21,10 @@ pub struct LanguageSpec {
     pub types: &'static [&'static str],
     /// 組み込みの定数の名前.
     pub constants: &'static [&'static str],
+    /// 生の文字列 `R"x(...)x"` があるか.
+    pub raw_strings: bool,
+    /// 数値の区切り `1'000` があるか.
+    pub digit_separators: bool,
 }
 
 /// C の表 (`c-mode`).
@@ -86,6 +92,121 @@ static C: LanguageSpec = LanguageSpec {
         "void",
     ],
     constants: &["NULL", "false", "true"],
+    raw_strings: false,
+    digit_separators: false,
+};
+
+/// C++ の表 (`c++-mode`).
+static CPP: LanguageSpec = LanguageSpec {
+    keywords: &[
+        "NULL",
+        "__asm__",
+        "__attribute__",
+        "__declspec",
+        "alignas",
+        "alignof",
+        "and",
+        "and_eq",
+        "asm",
+        "auto",
+        "bitand",
+        "bitor",
+        "bool",
+        "break",
+        "case",
+        "catch",
+        "char",
+        "char16_t",
+        "char32_t",
+        "char8_t",
+        "class",
+        "co_await",
+        "co_return",
+        "co_yield",
+        "compl",
+        "concept",
+        "const",
+        "const_cast",
+        "consteval",
+        "constexpr",
+        "constinit",
+        "continue",
+        "decltype",
+        "default",
+        "delete",
+        "do",
+        "double",
+        "dynamic_cast",
+        "else",
+        "enum",
+        "explicit",
+        "export",
+        "extern",
+        "false",
+        "final",
+        "float",
+        "for",
+        "friend",
+        "goto",
+        "if",
+        "import",
+        "inline",
+        "int",
+        "long",
+        "module",
+        "mutable",
+        "namespace",
+        "new",
+        "noexcept",
+        "not",
+        "not_eq",
+        "nullptr",
+        "operator",
+        "or",
+        "or_eq",
+        "override",
+        "private",
+        "protected",
+        "public",
+        "register",
+        "reinterpret_cast",
+        "requires",
+        "return",
+        "short",
+        "signed",
+        "sizeof",
+        "static",
+        "static_cast",
+        "struct",
+        "switch",
+        "template",
+        "this",
+        "thread_local",
+        "throw",
+        "true",
+        "try",
+        "typedef",
+        "typeid",
+        "typename",
+        "typeof",
+        "union",
+        "unsigned",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "wchar_t",
+        "while",
+        "xor",
+        "xor_eq",
+    ],
+    types: &[
+        "bool", "char", "char16_t", "char32_t", "char8_t", "double", "float", "int", "long",
+        "short", "signed", "unsigned", "void", "wchar_t",
+    ],
+    constants: &["NULL", "false", "nullptr", "true"],
+    raw_strings: true,
+    digit_separators: true,
 };
 
 impl Language {
@@ -93,6 +214,7 @@ impl Language {
     pub fn spec(self) -> &'static LanguageSpec {
         match self {
             Language::C => &C,
+            Language::Cpp => &CPP,
         }
     }
 
@@ -100,6 +222,7 @@ impl Language {
     pub fn from_mode_name(name: &str) -> Option<Language> {
         match name {
             "c-mode" => Some(Language::C),
+            "c++-mode" => Some(Language::Cpp),
             _ => None,
         }
     }

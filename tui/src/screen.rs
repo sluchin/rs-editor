@@ -33,7 +33,8 @@ pub fn token_pair(kind: TokenKind) -> i16 {
 }
 
 /// 字句の種類の色. 8 色の端末で、暗い背景の Emacs の font-lock の色に合わせる
-/// (コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ, プリプロセッサは青の太字).
+/// (コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ, プリプロセッサと関数の名前は青の太字,
+/// 変数の名前は黄の太字).
 ///
 /// # Returns
 ///
@@ -44,7 +45,8 @@ pub fn token_style(kind: TokenKind) -> Option<TokenStyle> {
         TokenKind::DocComment | TokenKind::String | TokenKind::Type => (2, false),
         TokenKind::Keyword => (6, true),
         TokenKind::Constant => (5, false),
-        TokenKind::Preprocessor => (4, true),
+        TokenKind::Preprocessor | TokenKind::FunctionName => (4, true),
+        TokenKind::VariableName => (3, true),
         TokenKind::Number => return None,
     };
     Some(TokenStyle { color, bold })

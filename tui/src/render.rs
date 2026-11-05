@@ -161,6 +161,7 @@ fn mode_line(buffer: &Buffer, width: usize) -> String {
     let flag = if buffer.modified() { "**" } else { "--" };
     let mode = match (buffer.highlight_language(), buffer.dialect()) {
         (Some(Language::C), _) => "C",
+        (Some(Language::Cpp), _) => "C++",
         (None, Dialect::Fundamental) => "Fundamental",
         (None, Dialect::Elisp) => "ELisp",
         (None, Dialect::Scheme) => "Scheme",

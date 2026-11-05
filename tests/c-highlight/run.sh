@@ -7,8 +7,8 @@
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
-# 試験は cases/NAME.c と cases/NAME.h. 比べるのは、範囲 (始まりと終わり) と種類 (dump.el と dump.scm が、同じ形で出す).
-# 字句だけで決まる種類に絞る (宣言の名前の色と、組み込みでない型の名前は、比べない).
+# 試験は cases/NAME.c, cases/NAME.h (C) と cases/NAME.cpp (C++). 比べるのは、範囲 (始まりと終わり) と種類 (dump.el と dump.scm が、同じ形で出す).
+# 宣言の名前の色も比べる (扱う形は core/src/highlight/decl.rs).
 set -u
 LC_ALL=C
 export LC_ALL
@@ -30,7 +30,7 @@ export LLVM_PROFILE_FILE
 tmp=$(mktemp -d "$root/target/c-highlight-test.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 pass=0 fail=0
-for f in "$here"/cases/*.[ch]; do
+for f in "$here"/cases/*.[ch] "$here"/cases/*.cpp; do
   file=$(basename "$f"); name=${file%.*}
   if [ $# -gt 0 ]; then
     ok=0; for pat in "$@"; do case $name in *"$pat"*) ok=1 ;; esac; done

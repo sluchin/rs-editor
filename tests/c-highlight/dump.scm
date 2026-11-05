@@ -1,4 +1,9 @@
 ;;; rs-editor の token-spans の結果を, dump.el と同じ形で出す (隣り合う同じ種類をつなぎ, 数値は出さず, 前後の改行を含めない).
+;;; ファイルの名前に "lexical" が付くものは, 型, 定数, 関数と変数の名前を出さない (dump.el も同じ).
+(define dump--lexical (if (string-search "lexical" (buffer-file-name)) #t #f))
+(define (dump--skip? kind)
+  (or (equal? kind 'number)
+      (and dump--lexical (member kind '(type constant function-name variable-name)))))
 (define (dump--newline? pos) (equal? (buffer-substring pos (+ pos 1)) "\n"))
 (define (dump--emit start end kind)
   (let loop-start ((s start))
@@ -12,7 +17,7 @@
 (let loop ((spans (token-spans)) (run #f))
   (cond ((null? spans)
          (if run (dump--emit (car run) (cadr run) (caddr run))))
-        ((equal? (caddr (car spans)) 'number) (loop (cdr spans) run))
+        ((dump--skip? (caddr (car spans))) (loop (cdr spans) run))
         ((and run (equal? (caddr run) (caddr (car spans))) (= (cadr run) (car (car spans))))
          (loop (cdr spans) (list (car run) (cadr (car spans)) (caddr run))))
         (else

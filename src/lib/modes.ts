@@ -15,9 +15,9 @@ export interface MajorMode {
 }
 
 /**
- * ファイルの名前とメジャーモード (Emacs 30 の `auto-mode-alist` の, Lisp と Org と C の分). 先に合ったものを使います.
+ * ファイルの名前とメジャーモード (Emacs 30 の `auto-mode-alist` の, Lisp と Org と C と C++ の分). 先に合ったものを使います.
  */
-const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme' | 'org' | 'c'][] = [
+const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme' | 'org' | 'c' | 'c++'][] = [
   [/\.dir-locals(?:-2)?\.el$/, 'lisp-data'],
   [/\.eld$/, 'lisp-data'],
   [/eww-bookmarks$/, 'lisp-data'],
@@ -34,6 +34,7 @@ const AUTO_MODES: [RegExp, 'lisp-data' | 'elisp' | 'scheme' | 'org' | 'c'][] = [
   [/[:/]_emacs$/, 'elisp'],
   [/\.org$/, 'org'],
   [/\.[ch]$/, 'c'],
+  [/\.(?:cc|hh|cpp|hpp|cxx|hxx|c\+\+|h\+\+|ii|C|H|CC|HH|CPP|HPP|CXX|HXX)$/, 'c++'],
 ]
 
 /** ファイルの変数 (Emacs の, 1 行目の `-*- ... -*-`). */
@@ -79,6 +80,7 @@ const MODE_NAMES: Record<string, (typeof AUTO_MODES)[number][1] | 'fundamental'>
   scheme: 'scheme',
   org: 'org',
   c: 'c',
+  'c++': 'c++',
   fundamental: 'fundamental',
 }
 
@@ -122,6 +124,7 @@ export function majorMode(name: string, filePath: string | null, content: string
   if (mode === 'org') return { name: 'Org', language: null, ...indent }
   // 色は、核のシンタックスハイライト (core/src/highlight) が付ける
   if (mode === 'c') return { name: 'C', language: null, ...indent }
+  if (mode === 'c++') return { name: 'C++', language: null, ...indent }
   if (mode === 'lisp-data') return { name: 'Lisp-Data', language: 'elisp', ...indent }
   // Emacs と同じく, 字句の束縛なら /l, 動的な束縛なら /d を付ける
   if (mode === 'elisp') {

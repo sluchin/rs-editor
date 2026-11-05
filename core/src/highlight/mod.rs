@@ -4,6 +4,7 @@
 //! ターミナル (ncurses) が、それぞれ行います. 種類は、Emacs の font-lock の face に当たります.
 //! 手本は、Emacs 30 の `c-mode` です (`tests/c-highlight/` で、Emacs の結果と比べる).
 
+mod decl;
 mod lang;
 
 pub use lang::{Language, LanguageSpec};
@@ -29,11 +30,15 @@ pub enum TokenKind {
     Preprocessor,
     /// 数値 (Emacs の `c-mode` は、色を付けない).
     Number,
+    /// 関数の名前 (`font-lock-function-name-face`). 宣言と定義の関数、関数ポインタの変数、関数のような `#define` の名前.
+    FunctionName,
+    /// 変数の名前 (`font-lock-variable-name-face`). 宣言の変数、引数、構造体のメンバー、列挙子、`#define` の名前.
+    VariableName,
 }
 
 impl TokenKind {
     /// 全ての種類 (番号を付けて使うため).
-    pub const ALL: [TokenKind; 9] = [
+    pub const ALL: [TokenKind; 11] = [
         TokenKind::Comment,
         TokenKind::CommentDelimiter,
         TokenKind::DocComment,
@@ -43,6 +48,8 @@ impl TokenKind {
         TokenKind::Constant,
         TokenKind::Preprocessor,
         TokenKind::Number,
+        TokenKind::FunctionName,
+        TokenKind::VariableName,
     ];
 
     /// 画面に渡す名前 (CSS のクラス名と、Lisp の記号に使う).
@@ -57,6 +64,8 @@ impl TokenKind {
             TokenKind::Constant => "constant",
             TokenKind::Preprocessor => "preprocessor",
             TokenKind::Number => "number",
+            TokenKind::FunctionName => "function-name",
+            TokenKind::VariableName => "variable-name",
         }
     }
 }
@@ -89,9 +98,36 @@ pub fn tokenize(language: Language, text: &str) -> Vec<Span> {
         chars: &chars,
         pos: 0,
         spans: Vec::new(),
+        tokens: Vec::new(),
     };
     lexer.run();
+    // 宣言の名前 (字句だけでは決まらない) は、コードの語と記号の並びから決める
+    let names = decl::declarations(lexer.spec, &chars, &lexer.tokens);
+    lexer.spans.extend(names);
+    lexer.spans.sort_by_key(|span| span.start);
     lexer.spans
+}
+
+/// コードの字句の種類 (宣言の名前を決めるために、字句解析器が覚える).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Class {
+    /// 語 (キーワードと識別子).
+    Word,
+    /// 数値、文字列、文字定数 (中身は見ない).
+    Literal,
+    /// 記号 1 文字.
+    Punct,
+}
+
+/// コードの字句 (コメントとプリプロセッサの行を除く).
+#[derive(Debug, Clone, Copy)]
+struct Tok {
+    /// 始まり.
+    start: usize,
+    /// 終わり (この位置の文字は含まない).
+    end: usize,
+    /// 種類.
+    class: Class,
 }
 
 /// 字句解析器の状態.
@@ -104,6 +140,8 @@ struct Lexer<'a> {
     pos: usize,
     /// ここまでの結果.
     spans: Vec<Span>,
+    /// コードの字句 (宣言の名前を決める元).
+    tokens: Vec<Tok>,
 }
 
 /// 語の文字か (Emacs の `c-symbol`: 英数字、`_`、`$`).
@@ -168,22 +206,44 @@ impl Lexer<'_> {
             }
             let at_line_start = line_start;
             line_start = false;
-            if c == '/' && next == '*' {
+            let begin = self.pos;
+            let class = if c == '/' && next == '*' {
                 self.block_comment();
+                None
             } else if c == '/' && next == '/' {
                 self.line_comment();
+                None
             } else if c == '"' || c == '\'' {
                 self.quoted(c);
+                Some(Class::Literal)
             } else if c == '#' && at_line_start {
                 directive = self.directive(line_begin);
+                if directive == Some(Directive::Define) {
+                    self.define_names();
+                }
+                None
             } else if c == '<' && directive == Some(Directive::Include) {
                 self.header_name();
+                None
             } else if c.is_ascii_digit() || (c == '.' && next.is_ascii_digit()) {
                 self.number();
+                Some(Class::Literal)
             } else if is_word(c) {
-                self.word(directive);
+                Some(if self.word(directive) {
+                    Class::Literal
+                } else {
+                    Class::Word
+                })
             } else {
                 self.pos += 1;
+                Some(Class::Punct)
+            };
+            if let (Some(class), None) = (class, directive) {
+                self.tokens.push(Tok {
+                    start: begin,
+                    end: self.pos,
+                    class,
+                });
             }
             if let Some(Directive::Message) = directive {
                 // #error と #warning の、行の終わりまでの本文
@@ -305,6 +365,7 @@ impl Lexer<'_> {
             "include" | "include_next" | "import" => Directive::Include,
             "if" | "elif" => Directive::Condition,
             "error" | "warning" => Directive::Message,
+            "define" => Directive::Define,
             _ => Directive::Other,
         })
     }
@@ -338,6 +399,50 @@ impl Lexer<'_> {
         self.pos = end;
     }
 
+    /// 生の文字列 `R"x(...)x"` の、`"` の位置から読みます. 色が付くのは、`(` から `)` まで (引用符と区切りの `x` は除く).
+    /// 終わりが無ければ、`(` の次から本文の終わりまで.
+    ///
+    /// # Arguments
+    ///
+    /// * `quote` - 始まりの `"` の位置.
+    ///
+    /// # Returns
+    ///
+    /// 生の文字列だったか (区切りの書き方が正しくなければ偽. 普通の文字列として読む).
+    fn raw_string(&mut self, quote: usize) -> bool {
+        let mut open = quote + 1;
+        while self.at(open) != '(' {
+            // 区切りは 16 文字まで. 空白、括弧、`\`、引用符は使えない
+            let c = self.at(open);
+            if open - quote > 16
+                || c == '\0'
+                || c == ')'
+                || c == '\\'
+                || c == '"'
+                || c.is_whitespace()
+            {
+                return false;
+            }
+            open += 1;
+        }
+        let end_mark: Vec<char> = std::iter::once(')')
+            .chain(self.chars[quote + 1..open].iter().copied())
+            .chain(std::iter::once('"'))
+            .collect();
+        let found = (open + 1..self.chars.len()).find(|&i| self.chars[i..].starts_with(&end_mark));
+        match found {
+            Some(close) => {
+                self.push(open, close + 1, TokenKind::String);
+                self.pos = close + end_mark.len();
+            }
+            None => {
+                self.push(open + 1, self.chars.len(), TokenKind::String);
+                self.pos = self.chars.len();
+            }
+        }
+        true
+    }
+
     /// 数値 (`0x1F`、`1.5e-3`、`10UL`) を読みます.
     fn number(&mut self) {
         let start = self.pos;
@@ -347,7 +452,12 @@ impl Lexer<'_> {
             let exponent_sign = matches!(c, '+' | '-')
                 && i > start
                 && matches!(self.at(i - 1), 'e' | 'E' | 'p' | 'P');
-            if is_word(c) || c == '.' || exponent_sign {
+            let separator = c == '\''
+                && self.spec.digit_separators
+                && i > start
+                && is_word(self.at(i - 1))
+                && is_word(self.at(i + 1));
+            if is_word(c) || c == '.' || exponent_sign || separator {
                 i += 1;
             } else {
                 break;
@@ -359,9 +469,11 @@ impl Lexer<'_> {
 
     /// 語を読んで、キーワード、型、定数なら、その種類にします.
     ///
+    /// 生の文字列だったときは、真を返します (数値や文字列と同じく、中身を見ない字句).
+    ///
     /// `#if` と `#elif` の行の `defined` は、指示の色です. Emacs は、`_` で区切った部分にも色を付けるので (`__off64_t_defined` の
     /// 終わりの `defined`)、同じにします.
-    fn word(&mut self, directive: Option<Directive>) {
+    fn word(&mut self, directive: Option<Directive>) -> bool {
         let start = self.pos;
         let mut end = start;
         while is_word(self.at(end)) {
@@ -369,6 +481,10 @@ impl Lexer<'_> {
         }
         self.pos = end;
         let word: String = self.chars[start..end].iter().collect();
+        let raw_prefix = matches!(word.as_str(), "R" | "LR" | "uR" | "UR" | "u8R");
+        if self.spec.raw_strings && raw_prefix && self.at(end) == '"' && self.raw_string(end) {
+            return true;
+        }
         if directive == Some(Directive::Condition) {
             let mut at = start;
             for part in word.split('_') {
@@ -390,6 +506,49 @@ impl Lexer<'_> {
         if let Some(kind) = kind {
             self.push(start, end, kind);
         }
+        false
+    }
+
+    /// `#define` の次の名前と、関数のような形 (`F(a, b)`) の引数の名前を読みます.
+    ///
+    /// 名前が関数のような形 (名前の直後に `(`) なら関数の名前、そうでなければ変数の名前の色です (Emacs に合わせる).
+    /// 名前がキーワードなら、何もしません.
+    fn define_names(&mut self) {
+        let start = self.skip_blanks(self.pos);
+        let mut end = start;
+        while is_word(self.at(end)) {
+            end += 1;
+        }
+        if !self.is_name(start, end) {
+            return;
+        }
+        let function_like = self.at(end) == '(';
+        self.pos = end;
+        if !function_like {
+            self.push(start, end, TokenKind::VariableName);
+            return;
+        }
+        self.push(start, end, TokenKind::FunctionName);
+        let mut i = end + 1;
+        while !matches!(self.at(i), ')' | '\n' | '\0') {
+            let from = i;
+            while is_word(self.at(i)) {
+                i += 1;
+            }
+            if self.is_name(from, i) {
+                self.push(from, i, TokenKind::VariableName);
+            }
+            if i == from {
+                i += 1;
+            }
+        }
+        self.pos = i + usize::from(self.at(i) == ')');
+    }
+
+    /// `from` から `to` の前までが、名前 (数字で始まらず、キーワードでもない語) か.
+    fn is_name(&self, from: usize, to: usize) -> bool {
+        let word: String = self.chars[from..to].iter().collect();
+        from < to && !self.at(from).is_ascii_digit() && !self.spec.is_keyword(&word)
     }
 }
 
@@ -402,6 +561,8 @@ enum Directive {
     Condition,
     /// `#error` と `#warning` (行の終わりまでが文字列).
     Message,
+    /// `#define` (名前が変数か関数の名前の色).
+    Define,
     /// それ以外.
     Other,
 }
