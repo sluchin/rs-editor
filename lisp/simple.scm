@@ -2553,6 +2553,13 @@ A word that is not a key name stands for the keys of its characters.  The result
   (set-major-mode-name 'text-mode)
   #f)
 
+(define-command (c-mode)
+  "Major mode for editing C code.
+Comments, strings, keywords, types, constants and preprocessor directives are highlighted."
+  (set-syntax-dialect 'fundamental)
+  (set-major-mode-name 'c-mode)
+  #f)
+
 (define-command (lisp-interaction-mode)
   "Major mode for typing and evaluating Lisp forms."
   (set-syntax-dialect 'elisp)

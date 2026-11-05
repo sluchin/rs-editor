@@ -14,7 +14,7 @@ import Minibuffer, {
 import ProjectTree from './components/ProjectTree'
 import { completeFileName } from './lib/complete'
 import { type DocEntry, DocStore } from './lib/docs'
-import type { Highlight } from './lib/faces'
+import type { Highlight, Token } from './lib/faces'
 import { getHomeDir, listDirectory, projectRoot } from './lib/fileOps'
 import { HISTORY_LENGTH, addToHistory } from './lib/history'
 import { emacsKey } from './lib/keys'
@@ -53,6 +53,31 @@ interface Question {
 
 /** 色付けの, 前に作ったもの (同じなら, 同じ配列にして, 引き直さない). */
 const highlightCache = new Map<string, Highlight[]>()
+
+/** バッファごとの、前の字句 (同じ内容なら、同じ配列を返すため). */
+const previousTokens = new Map<string, readonly Token[]>()
+
+/**
+ * 字句が前と同じなら、前の配列を返します (画面の色付けを、引き直さないため).
+ *
+ * @param name - バッファの名前.
+ * @param tokens - 描く内容の字句.
+ * @returns 字句 (同じ内容なら、同じ配列).
+ */
+function stableTokens(name: string, tokens: readonly Token[]): readonly Token[] {
+  const previous = previousTokens.get(name)
+  if (
+    previous &&
+    previous.length === tokens.length &&
+    previous.every(
+      (t, i) => t.from === tokens[i].from && t.to === tokens[i].to && t.kind === tokens[i].kind,
+    )
+  ) {
+    return previous
+  }
+  previousTokens.set(name, tokens)
+  return tokens
+}
 
 /**
  * 描く内容の色付けを, ウィンドウの色付けにします.
@@ -413,6 +438,7 @@ function App() {
                   asking={question !== null}
                   mode={mode}
                   highlights={toHighlights(b.highlights)}
+                  tokens={stableTokens(b.name, b.tokens)}
                   onInput={send}
                   handle={(handle) => {
                     if (handle) views.current.set(w.id, handle)

@@ -139,3 +139,34 @@ fn test_frame_of_windows_marks_and_hidden_buffers() {
     let frame = frames.build(&mut editor, "");
     assert_eq!(frame.buffers[1].text.as_deref(), Some("new"));
 }
+
+#[test]
+fn test_frame_sends_syntax_tokens_for_shown_buffers_in_utf16() {
+    let mut editor = Editor::new();
+    let mut frames = FrameBuilder::new();
+    // 出していないバッファには、字句を送らない
+    let b = editor.get_buffer_create("hidden");
+    b.load("int x;");
+    b.set_mode_name("c-mode");
+    let frame = frames.build(&mut editor, "");
+    assert!(frame.buffers[1].tokens.is_empty());
+    // 出しているバッファには、UTF-16 の位置で送る (😀 は 2 つ)
+    let b = editor.current_buffer_mut();
+    b.load("/* 😀 */ int x;");
+    b.set_mode_name("c-mode");
+    let frame = frames.build(&mut editor, "");
+    let kinds: Vec<(usize, usize, &str)> = frame.buffers[0]
+        .tokens
+        .iter()
+        .map(|t| (t.from, t.to, t.kind))
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            (0, 3, "comment-delimiter"),
+            (3, 5, "comment"),
+            (5, 8, "comment-delimiter"),
+            (9, 12, "type")
+        ]
+    );
+}

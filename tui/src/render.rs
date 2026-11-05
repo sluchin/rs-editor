@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use rseditor_core::buffer::{Buffer, TAB_WIDTH};
 use rseditor_core::editor::Editor;
+use rseditor_core::highlight::{Language, TokenKind};
 use rseditor_core::scheme::builtins::char_width;
 use rseditor_core::syntax::Dialect;
 use rseditor_core::window::FULL;
@@ -69,9 +70,9 @@ fn wrap(line: &str, width: usize) -> Vec<Vec<char>> {
     rows
 }
 
-/// `wrap` と同じに折り返して, マスごとに, 強調する範囲 (文字の位置) の中かを返します.
-fn wrap_marks(line: &str, width: usize, spans: &[(usize, usize)]) -> Vec<Vec<bool>> {
-    let mut rows: Vec<Vec<bool>> = vec![Vec::new()];
+/// `wrap` と同じに折り返して、マスごとに、文字の位置 `value` で決まる値を返します (幅の広い文字の 2 マスは、同じ値).
+fn wrap_values<T: Copy>(line: &str, width: usize, value: impl Fn(usize) -> T) -> Vec<Vec<T>> {
+    let mut rows: Vec<Vec<T>> = vec![Vec::new()];
     let mut column = 0;
     for (i, c) in line.chars().enumerate() {
         let cells = cells_of(c, column);
@@ -79,10 +80,30 @@ fn wrap_marks(line: &str, width: usize, spans: &[(usize, usize)]) -> Vec<Vec<boo
         if rows.last().unwrap().len() + cells.len() > width {
             rows.push(Vec::new());
         }
-        let marked = spans.iter().any(|&(from, to)| from <= i && i < to);
-        rows.last_mut().unwrap().extend(vec![marked; cells.len()]);
+        rows.last_mut().unwrap().extend(vec![value(i); cells.len()]);
     }
     rows
+}
+
+/// `wrap` と同じに折り返して, マスごとに, 強調する範囲 (文字の位置) の中かを返します.
+fn wrap_marks(line: &str, width: usize, spans: &[(usize, usize)]) -> Vec<Vec<bool>> {
+    wrap_values(line, width, |i| {
+        spans.iter().any(|&(from, to)| from <= i && i < to)
+    })
+}
+
+/// `wrap` と同じに折り返して, マスごとに, 字句の種類を返します.
+fn wrap_tokens(
+    line: &str,
+    width: usize,
+    spans: &[(usize, usize, TokenKind)],
+) -> Vec<Vec<Option<TokenKind>>> {
+    wrap_values(line, width, |i| {
+        spans
+            .iter()
+            .find(|&&(from, to, _)| from <= i && i < to)
+            .map(|&(_, _, kind)| kind)
+    })
 }
 
 /// 行の先頭の空白の桁の数.
@@ -138,10 +159,11 @@ fn cursor_cell(buffer: &Buffer, width: usize) -> (usize, usize) {
 /// モードラインの文字.
 fn mode_line(buffer: &Buffer, width: usize) -> String {
     let flag = if buffer.modified() { "**" } else { "--" };
-    let mode = match buffer.dialect() {
-        Dialect::Fundamental => "Fundamental",
-        Dialect::Elisp => "ELisp",
-        Dialect::Scheme => "Scheme",
+    let mode = match (buffer.highlight_language(), buffer.dialect()) {
+        (Some(Language::C), _) => "C",
+        (None, Dialect::Fundamental) => "Fundamental",
+        (None, Dialect::Elisp) => "ELisp",
+        (None, Dialect::Scheme) => "Scheme",
     };
     let line = buffer.line_of_position(buffer.point()) + 1;
     let text = format!("-:{flag}-  {}   L{line}   ({mode}) ", buffer.name());
@@ -248,6 +270,7 @@ pub fn render_with(
         while row < text_rows && line < buffer.line_count() {
             let text = buffer.line_text(line);
             let marks = wrap_marks(&text, width, &buffer.highlighted_spans(line));
+            let tokens = wrap_tokens(&text, width, &buffer.line_token_spans(line));
             for (i, cells) in rows_for(&text, width, display).into_iter().enumerate() {
                 if row >= text_rows {
                     break;
@@ -258,10 +281,12 @@ pub fn render_with(
                         .and_then(|m| m.get(x))
                         .copied()
                         .unwrap_or(false);
+                    let token = tokens.get(i).and_then(|t| t.get(x)).copied().flatten();
                     frame.cells[y0 + row][x0 + x] = Cell {
                         ch,
                         reverse: false,
                         underline,
+                        token,
                     };
                 }
                 if is_selected && line == point_line && i == in_cursor_row {
@@ -277,6 +302,7 @@ pub fn render_with(
                 ch,
                 reverse: true,
                 underline: false,
+                token: None,
             };
         }
     }

@@ -55,6 +55,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ),
     ("set-match-data", &[Kind::Any], 1),
     ("highlighted-regexps", &[], 0),
+    ("token-spans", &[], 0),
     (
         "match-substitute-replacement",
         &[Kind::Text, Kind::Any, Kind::Any, Kind::Any, Kind::Number],
@@ -245,6 +246,7 @@ pub const NAMES: &[&str] = &[
     "string-match--op",
     "set-match-data",
     "highlighted-regexps",
+    "token-spans",
     "match-substitute-replacement",
     "replace-match",
     "mark",

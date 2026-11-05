@@ -135,7 +135,16 @@ pub struct Buffer {
     visited_modtime: Option<std::time::SystemTime>,
     /// 外で書き換わったファイルを、書き換えてよいと答えたか (保存、読み直し、訪れ直しで偽に戻る).
     supersession_ok: bool,
+    /// 字句の範囲の覚え (本文の版, 言語, 結果). 本文を書き換えると、版が変わって、使わなくなる.
+    token_cache: std::cell::RefCell<Option<TokenCache>>,
 }
+
+/// 字句の範囲の覚え (本文の版, 言語, 結果).
+type TokenCache = (
+    u64,
+    crate::highlight::Language,
+    std::sync::Arc<Vec<crate::highlight::Span>>,
+);
 
 /// 強調する正規表現 (Emacs の hi-lock).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -194,6 +203,7 @@ impl Buffer {
             auto_saved_version: 0,
             visited_modtime: None,
             supersession_ok: false,
+            token_cache: std::cell::RefCell::new(None),
         }
     }
 
@@ -381,6 +391,56 @@ impl Buffer {
     /// `match_data` を決めた順番.
     pub fn match_seq(&self) -> u64 {
         self.match_seq
+    }
+
+    /// `major-mode` の名前を決めます (Lisp の `set-major-mode-name`. 方言だけでは決まらないモード用).
+    pub fn set_mode_name(&mut self, name: &str) {
+        self.mode_name = Some(name.to_string());
+    }
+
+    /// シンタックスハイライトの言語 (`major-mode` が `c-mode` なら C. 無ければ `None`).
+    pub fn highlight_language(&self) -> Option<crate::highlight::Language> {
+        self.mode_name
+            .as_deref()
+            .and_then(crate::highlight::Language::from_mode_name)
+    }
+
+    /// 本文の字句の範囲 (言語が無ければ空). 本文が変わるまでは、覚えた結果を返す.
+    pub fn token_spans(&self) -> std::sync::Arc<Vec<crate::highlight::Span>> {
+        let Some(language) = self.highlight_language() else {
+            return std::sync::Arc::default();
+        };
+        let mut cache = self.token_cache.borrow_mut();
+        if let Some((version, cached_language, spans)) = cache.as_ref() {
+            if *version == self.version && *cached_language == language {
+                return spans.clone();
+            }
+        }
+        let spans = std::sync::Arc::new(crate::highlight::tokenize(language, &self.text()));
+        *cache = Some((self.version, language, spans.clone()));
+        spans
+    }
+
+    /// 行の字句の範囲 (行の中の文字の位置. `highlighted_spans` と同じ単位. 言語が無ければ空).
+    pub fn line_token_spans(
+        &self,
+        line: usize,
+    ) -> Vec<(usize, usize, crate::highlight::TokenKind)> {
+        let spans = self.token_spans();
+        let start = self.line_start(line);
+        let end = start + self.line_text(line).chars().count();
+        let first = spans.partition_point(|span| span.end <= start);
+        spans[first..]
+            .iter()
+            .take_while(|span| span.start < end)
+            .map(|span| {
+                (
+                    span.start.max(start) - start,
+                    span.end.min(end) - start,
+                    span.kind,
+                )
+            })
+            .collect()
     }
 
     /// 構文の方言 (Fundamental, emacs-lisp-mode, scheme-mode に当たる).

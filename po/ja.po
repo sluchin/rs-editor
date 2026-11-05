@@ -1013,10 +1013,12 @@ msgstr "今の Dired バッファにキーを割り当てる."
 #: lisp/files.scm
 msgctxt "variable:auto-mode-alist"
 msgid ""
-"List of (REGEXP DIALECT) to choose the syntax dialect (major mode) of a visited file.\n"
+"List of (REGEXP MODE) to choose the major mode of a visited file.\n"
+"MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode).\n"
 "The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental."
 msgstr ""
-"訪れたファイルの構文の方言 (メジャーモード) を選ぶ (REGEXP DIALECT) のリスト.\n"
+"訪れたファイルのメジャーモードを選ぶ (REGEXP MODE) のリスト.\n"
+"MODE は、構文の方言 (elisp, scheme) か、Fundamental の方言の上のメジャーモード (text-mode, c-mode).\n"
 "ファイルの名前に合う初めの REGEXP (Rust の regex の書き方) で決まる. 合わなければ Fundamental."
 
 #: lisp/files.scm
@@ -7664,6 +7666,15 @@ msgstr "Scheme のコードを編集するメジャーモード."
 msgctxt "function:text-mode"
 msgid "Major mode for editing text written for humans to read."
 msgstr "人が読む文章を編集するメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:c-mode"
+msgid ""
+"Major mode for editing C code.\n"
+"Comments, strings, keywords, types, constants and preprocessor directives are highlighted."
+msgstr ""
+"C のコードを編集するメジャーモード.\n"
+"コメント, 文字列, キーワード, 型, 定数, プリプロセッサの指示に色を付ける."
 
 #: lisp/simple.scm
 msgctxt "function:lisp-interaction-mode"

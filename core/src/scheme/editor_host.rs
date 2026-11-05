@@ -1215,6 +1215,21 @@ impl<U: Host> EditorHost<U> {
                     .map(|h| Value::String(h.regexp.clone()))
                     .collect(),
             ),
+            "token-spans" => Value::List(
+                b.token_spans()
+                    .iter()
+                    .map(|span| {
+                        Value::List(
+                            vec![
+                                at(span.start),
+                                at(span.end),
+                                Value::Symbol(span.kind.name().to_string()),
+                            ]
+                            .into(),
+                        )
+                    })
+                    .collect(),
+            ),
             "mark" => at_opt(b.mark()),
             "set-mark" => {
                 match pos_opt(op, args, 0)? {
@@ -1474,7 +1489,7 @@ impl<U: Host> EditorHost<U> {
                 .to_string()
             })),
             "set-major-mode-name" => {
-                b.mode_name = Some(name(op, args, 0)?.to_string());
+                b.set_mode_name(name(op, args, 0)?);
                 Value::Nil
             }
             "set-syntax-dialect" => {

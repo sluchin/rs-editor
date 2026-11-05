@@ -1,6 +1,6 @@
 # C / C++ のシンタックスハイライト 設計方針
 
-状態: 実装前。
+状態: 段階 1 (C の字句) を実装済み。段階 2 以降は未実装。
 
 ## 1. 目的と範囲
 
@@ -30,38 +30,37 @@
 
 ## 3. 方針の中心: 核が「範囲と種類」を返す
 
-核は、色を知りません。「行の、どこからどこまでが、どの種類か」だけを返します。色への割り当ては、各フロントが行います。
+核は、色を知りません。「本文の、どこからどこまでが、どの種類か」だけを返します。色への割り当ては、各フロントが行います。
 
 ```rust
 /// 字句の種類 (Emacs の font-lock の face に対応する).
 pub enum TokenKind {
     Comment,          // font-lock-comment-face
-    CommentDelimiter, // font-lock-comment-delimiter-face ("/* " "// " " */". 後ろと前の空白を含む)
-    String,           // font-lock-string-face (文字列, 文字定数, #include の <...>)
+    CommentDelimiter, // font-lock-comment-delimiter-face (隣の空白 1 つを含む)
+    DocComment,       // font-lock-doc-face ("/** ... */" の全体)
+    String,           // font-lock-string-face (文字列, 文字定数, #include の <...>, #error の本文)
     Keyword,          // font-lock-keyword-face (if, return, static, struct, typedef ...)
-    Type,             // font-lock-type-face (int, void, bool ...)
+    Type,             // font-lock-type-face (int, void ... 組み込みの型)
     Constant,         // font-lock-constant-face (NULL, true, false)
-    Preprocessor,     // font-lock-preprocessor-face (#include, #define ...)
-    Number,           // 色は既定で付けない (3.2)
-    FunctionName,     // font-lock-function-name-face (段階 3)
-    VariableName,     // font-lock-variable-name-face (段階 3)
+    Preprocessor,     // font-lock-preprocessor-face (行頭の空白から "#include" まで)
+    Number,           // 字句としては返すが、色は既定で付けない (3.2)
+    // 段階 3: FunctionName, VariableName
 }
 
-/// 行の中の範囲 (文字 (char) の位置. `Buffer::highlighted_spans` と同じ単位).
+/// 本文の範囲 (文字 (char) の位置. `end` は含まない).
 pub struct Span { pub start: usize, pub end: usize, pub kind: TokenKind }
 
-pub trait Highlighter {
-    /// 1 行 `text` の字句を返す. `state` は, 前の行の終わりの状態 (ブロックコメントの中, など).
-    fn highlight_line(&self, text: &str, state: State) -> (Vec<Span>, State);
-}
+/// 本文の全体を字句に分ける (始まりの順. 重ならない. 色の付かない文字は含まない).
+pub fn tokenize(language: Language, text: &str) -> Vec<Span>;
 ```
 
-### 3.1 解析の方式: 行ごとの状態機械
+### 3.1 解析の方式: 本文を 1 回で読む字句解析器
 
-- 正規表現ではなく、手書きの字句解析器にします。ブロックコメント `/* */`、行の継続 (`\` で終わる行。`//` コメント、文字列、プリプロセッサの行が続く)、C++ の raw 文字列が、行をまたぐためです。行ごとの正規表現では、扱えません。
-- 状態は小さな値です (`Normal`、`BlockComment`、`LineCommentContinued`、`StringContinued`、`PreprocessorContinued`、`RawString(区切り)`)。行の終わりの状態を、バッファが行ごとに覚えます。
-- 編集したら、その行から先を、状態が前と同じになるまで再解析します。段階 1 から 3 は、バッファの先頭から、表示している範囲の終わりまで計算します (段階 4 で効率化)。
-- 解析器は、`core/src/highlight/` に置きます。言語ごとの違い (キーワード、型、定数の表、コメントの形式、raw 文字列の有無) は、データ (`LanguageSpec`) にして、字句解析器は 1 つにします。
+- 正規表現ではなく、手書きの字句解析器 (`core/src/highlight/mod.rs`) にします。ブロックコメント `/* */`、行の継続 (`\` で終わる行。`//` コメント、文字列、プリプロセッサの行が続く) が、行をまたぐためです。行ごとの正規表現では、扱えません。
+- 本文の先頭から終わりまでを、1 回の走査で読みます。状態 (指示の行の中か、行の始まりか) は、走査の変数で持ちます。
+- バッファ (`Buffer::token_spans`) は、結果を本文の版 (`version`) と言語で覚えます。本文を書き換えるまでは、同じ結果を使い回します。書き換えると、次の要求で、全体を読み直します (行ごとの状態を覚えて、変わった行から先だけを読み直す効率化は、段階 4)。
+- 言語ごとの違い (キーワード、型、定数の表) は、データ (`LanguageSpec`、`core/src/highlight/lang.rs`) にして、字句解析器は 1 つにします。表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` から取りました。
+- `Buffer::line_token_spans(line)` は、行の中の位置に切った範囲を返します (TUI が使います)。
 
 ### 3.2 Emacs に合わせる点
 
@@ -70,15 +69,19 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 - 数値 (`0x1F`、`0`) と、関数の呼び出し (`foo()`) には、色が付きません。`Number` は字句としては返しますが、既定では色を付けません。
 - 大文字の名前 (`MAX_LEN`) は、定数の色になりません。`#define MAX_LEN` の名前は、変数の名前の色 (`font-lock-variable-name-face`) です。使う側の `MAX_LEN` には、色が付きません。
 - 宣言の名前には、色が付きます。`int count` の `count`、`struct point { int x; }` の `x` は変数の名前の色、`int main(void)` の `main` は関数の名前の色、`struct point` の `point` と `typedef ... point_t` の `point_t` と `size_t n` の `size_t` は型の色です。これは cc-mode の宣言の推測 (`c-font-lock-declarations`) によるもので、字句だけでは決まりません。段階 3 で扱い、段階 1 と 2 の Emacs との比較では、これらの face を比べる対象から外します。
-- コメントの区切りの色は、隣の空白 1 つを含みます (`/*` の後、`*/` の前、`//` の後の空白)。
-- 比べ方: `emacs -Q --batch` で、`c-mode` と `c++-mode` の `font-lock-ensure` を実行して、各文字の face を出して比べます。`tests/org-lint/` と同じ、Emacs との比較の枠組みを、`tests/c-highlight/` に作ります。
-- キーワードと型の表は、Emacs の `cc-langs.el` (`c-primitive-type-kwds`、`c-constant-kwds` など) を元にします。
+- コメントの区切り: `/*` は、続く `*` (最後の `*` が `*/` の一部なら除く) と空白まで。`*/` は、前の空白から (終わりの `*` は 1 つだけ)。`//` は、続く `/` と空白まで。本文が空 (空白だけ、`/**/`、`/*****/`) なら、全体が区切りです。
+- ドキュメントのコメント: `/**` の次が `/` と `*` 以外なら、区切りも含めた全体が `font-lock-doc-face` です。
+- プリプロセッサ: 行頭の空白から、指示の名前まで (行頭に空白がある `#` から `include` まで) が `font-lock-preprocessor-face` です。`#include <...>` の `<...>` と、`#error` と `#warning` の本文は、文字列の色です。`#if` と `#elif` の行の `defined` は、指示の色で、`_` で区切った部分にも付きます (`__off64_t_defined` の終わりの `defined`)。
+- 閉じない文字列は、始まりの引用符が警告の色で、本文だけが文字列の色です。
+- 比べ方: `emacs -Q --batch` で、`c-mode` の `font-lock-ensure` を実行して、各文字の face を範囲にして、rs-editor の `token-spans` と比べます (`tests/c-highlight/`。`npm run test:c-highlight`)。字句だけで決まる種類に絞り、宣言の名前の色と、組み込みでない型と定数の名前 (ラベルなど) は、比べません。範囲の前後の改行は、含めません。
+- キーワードと型の表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` (`c-mode` で読んだ値) から取りました。
 
 ## 4. 言語とモードの結び付け
 
-- 段階 1 で、核の `auto-mode-alist` (`lisp/files.scm`) に、`.c` `.h` (C) と、`.cc` `.cpp` `.cxx` `.hh` `.hpp` (C++) を足します。方言 (`Dialect`) に `C` と `Cpp` を足し、`set-syntax-dialect`、`syntax-dialect`、`major-mode-name` (`c-mode`、`c++-mode`) も対応させます。構文表は、Emacs の `c-mode-syntax-table` に合わせます。
-- コマンド `c-mode` と `c++-mode` を足します (方言を変える)。
-- 画面の `modes.ts` にも、同じファイル名の判定と、モードラインの名前 (`C`、`C++`) を足します。`language` は、C と C++ では `null` のままにして、色は核の字句 (5 章) で付けます。
+- 方言 (`Dialect`) は、Lisp の構文表、字下げ、段落、コメントに使われていて、`Fundamental` でなければ Lisp として扱う箇所が多くあります。そのため、C は方言を増やさず、`text-mode` と同じく、方言は `Fundamental` のままで、`major-mode` の名前 (`Buffer::mode_name`) を `c-mode` にします。`Buffer::highlight_language()` が、この名前から言語を決めます。
+- 核の `auto-mode-alist` (`lisp/files.scm`) に、`.c` と `.h` を足しました (`c-mode`)。コマンド `c-mode` は `lisp/simple.scm` にあります。C++ (`c++-mode`) は段階 2 です。
+- Scheme からは、`(token-spans)` が、バッファの字句を `(始まり 終わり 種類)` の並びで返します (位置は 1 から。終わりは含まない)。比較の試験が使います。
+- 画面の `src/lib/modes.ts` にも、`.c` と `.h` と `mode: c` の判定と、モードラインの名前 (`C`) を足しました。`language` は `null` のままで、色は核の字句で付けます。TUI のモードラインも `(C)` を出します。
 - `modes.ts` の判定を、核の判定に一本化する作業は、別の作業にします。
 - 既存の `highlight-regexp` は、そのまま残します。ハイライトは、「字句の種類」の層と、「`highlight-regexp`」の層の 2 つです。後者が上に重なります (Emacs の hi-lock と同じ)。
 
@@ -86,24 +89,24 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 ### Tauri (画面)
 
-- `frame.rs` が作る `Frame` に、表示している行の `Span` を足します。種類は、文字列 (`"keyword"` など) で渡します。
-- JS 側 (`src/lib/faces.ts`) は、種類を CSS のクラス (`.tok-keyword` など) に変えて、装飾にします。色はテーマ (明るい / 暗い) で決めます。
+- 核は、描画を作るとき、言語があって、ウィンドウに出しているバッファの字句の全体を、`BufferFrame.tokens` (`{ from, to, kind }` の並び。位置は UTF-16) に入れます。画面は、スクロールの範囲を核に知らせないため、表示している行ではなく、全体を送ります。
+- 画面 (`src/lib/faces.ts` の `tokenHighlighting`) は、種類を CSS のクラス `cm-tok-<種類>` にして、装飾にします。色は `src/styles/CodeEditor.css` で、既存の `--font-lock-*` の変数 (明るい / 暗い) から決めます。本文より先へ出る範囲は、飛ばします。
+- 字句が前と同じなら (`src/App.tsx` の `stableTokens`)、同じ配列を渡して、色付けを引き直しません。
 - Scheme と Elisp は、今の CodeMirror の仕組みのままにします。
 
 ### TUI (ncurses)
 
-- `tui/src/ncurses_screen.rs` で、色を始めて (`start_color`、`use_default_colors`)、種類ごとの色の対 (`init_pair`) を作ります。種類から色の対への表は、1 か所に置きます。画面のマス (`tui/src/screen.rs` の `Cell`) に、今の `reverse` と `underline` と並べて、字句の種類を足します。`tui/src/render.rs` が、`Span` からマスの種類を決めます。
-- 端末が色に対応していなければ (`has_colors` が偽)、色を付けません。`highlight-regexp` の下線は、そのままです。
-- 既定は 8 色 (青、緑、シアン、マゼンタ、黄) です。256 色の端末で Emacs に近い色にするのは、後で足します。
-- マルチバイトと全角の幅は、今の描画の処理に従います。
+- 画面のマス (`tui/src/screen.rs` の `Cell`) に、字句の種類 (`token`) を持たせます。`tui/src/render.rs` が、`Buffer::line_token_spans` から、折り返しと幅の広い文字を考えて、マスごとの種類を決めます。
+- 種類から色への表は、`tui/src/screen.rs` の `token_style` と `token_pair` の 1 か所です。ncurses の描画 (`tui/src/ncurses_screen.rs`) が、起動のときに `start_color` と `use_default_colors` と `init_pair` を呼び、マスごとに色の対を付けます。端末が色に対応していなければ (`has_colors` が偽)、色を付けません。`highlight-regexp` の下線は、そのままです。
+- 色は、8 色の端末で、暗い背景の Emacs の font-lock の色に合わせます (コメントは黄、文字列とドキュメントと型は緑、キーワードはシアンの太字、定数はマゼンタ、プリプロセッサは青の太字)。256 色の端末で Emacs に近い色にするのは、後で足します。
 
 ## 6. テストと 100% カバレッジ
 
-- 核の字句解析器は、単体テストで、種類ごと、行をまたぐ状態ごとに確かめます (`core/tests/test_highlight_c.rs`)。
-- Emacs との比較 (`npm run test:c-highlight`) は、`tests/c-highlight/cases/` の C と C++ のファイルを、Emacs と rs-editor の両方で処理して、文字ごとの種類を比べます。ケースは、コメント、文字列と文字定数のエスケープ、行の継続、プリプロセッサ、キーワード、型、定数を含めます。
-- TUI の側は、`render.rs` が作るマスの種類と、種類から色の対への表を、単体テストします。Tauri の側は、種類から CSS のクラスへの変換を、単体テストします。
-- 100% の行カバレッジ (`npm run coverage:be`) を、守ります。状態の分岐が多いので、状態の表を使い、到達できない分岐を作らない書き方にします。
-- ja.po: 新しい公開コマンド (`c-mode`、`c++-mode`) と変数の docstring を、`npm run po:update` で足して、日本語に訳します。
+- 核の字句解析器は、単体テストで、種類ごと、行をまたぐ場合ごとに確かめます (`core/tests/test_highlight_c.rs`)。
+- Emacs との比較は、`tests/c-highlight/cases/` の C のファイルを、Emacs と rs-editor の両方で処理して、範囲と種類を比べます。ケースは、コメントの区切りの全ての形、文字列と文字定数のエスケープ、行の継続、プリプロセッサ、キーワード、型、定数、日本語、改行のない終わり、空のファイルを含みます。
+- Tauri の側は、核の `FrameBuilder` (`core/tests/test_frame.rs`) と、画面 (`tests/frontend/`) を単体テストします。TUI の側は、マスの種類と、種類から色への表を単体テストします (`tui/tests/test_render.rs`)。ncurses の描画そのものは、端末が要るので、自動のテストの対象外です。
+- 100% の行カバレッジ (`npm run coverage:be`、`npm run coverage:fe`) を守ります。
+- ja.po: 新しい公開コマンドと変数の docstring を、`npm run po:update` で足して、日本語に訳します。
 
 ## 7. 決定事項
 
@@ -114,10 +117,10 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 ## 8. 実装の順序
 
-1. `core/src/highlight/` に `TokenKind`、`Span`、`State`、`LanguageSpec` と、C の字句解析器を作る。単体テスト。
-2. 方言 `C`、`auto-mode-alist`、`c-mode` を足す。
-3. `tests/c-highlight/` の Emacs との比較の枠組みを作り、C のケースを通す。
-4. `frame.rs` と `faces.ts` で、Tauri に出す。
-5. `tui/` で、ncurses の色を出す。
-6. C++ の表と分岐を足し、比較のケースを足す。
-7. TODO.md、ja.po、`.claude/CLAUDE.md` を更新する。
+1. 済: `core/src/highlight/` に `TokenKind`、`Span`、`LanguageSpec` と、C の字句解析器。単体テスト。
+2. 済: `c-mode`、`auto-mode-alist`、`(token-spans)`。
+3. 済: `tests/c-highlight/` の Emacs との比較の枠組みと、C のケース。
+4. 済: `frame.rs` と `faces.ts` で、Tauri に出す。
+5. 済: `tui/` で、ncurses の色を出す。
+6. 未: C++ (`c++-mode`、キーワードと型の表、raw 文字列) と、比較のケース。
+7. 未: 宣言の名前 (段階 3)。再解析の効率化 (段階 4)。

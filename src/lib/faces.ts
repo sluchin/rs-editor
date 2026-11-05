@@ -3,10 +3,11 @@
  * (org-mode の見出しの色など). face が無ければ, 下線を引きます.
  */
 
+import { type Range } from '@codemirror/state'
 import {
   Decoration,
   type DecorationSet,
-  type EditorView,
+  EditorView,
   MatchDecorator,
   ViewPlugin,
   type ViewUpdate,
@@ -87,5 +88,56 @@ export function regexpHighlighting(highlights: readonly Highlight[]) {
       },
       { decorations: (plugin) => plugin.decorations },
     )
+  })
+}
+
+/** シンタックスハイライトの字句 (核が返す. 位置は UTF-16). */
+export interface Token {
+  /** 始まり. */
+  from: number
+  /** 終わり (この位置の文字は含まない). */
+  to: number
+  /** 種類の名前 (CSS のクラスは `cm-tok-<名前>`). */
+  kind: string
+}
+
+/** 種類の印 (同じ種類は、同じ印を使う). */
+const tokenMarks = new Map<string, Decoration>()
+
+/**
+ * 種類の印を返します.
+ *
+ * @param kind - 種類の名前.
+ * @returns 印.
+ */
+function tokenMark(kind: string): Decoration {
+  let mark = tokenMarks.get(kind)
+  if (!mark) {
+    mark = Decoration.mark({ class: `cm-tok-${kind}` })
+    tokenMarks.set(kind, mark)
+  }
+  return mark
+}
+
+/**
+ * 核が返したシンタックスハイライトの字句を、色にする拡張を作ります (C など. Lisp は `lispMode.ts`).
+ *
+ * 本文より先へ出る範囲は、飛ばします (本文と字句は同じ描く内容で届くが、反映の順で、一瞬ずれるため).
+ *
+ * @param tokens - 字句.
+ * @returns 拡張. 字句が無ければ、空.
+ */
+export function tokenHighlighting(tokens: readonly Token[]) {
+  if (tokens.length === 0) return []
+  let built: { length: number; set: DecorationSet } | null = null
+  return EditorView.decorations.of((view) => {
+    const length = view.state.doc.length
+    if (built?.length !== length) {
+      const ranges: Range<Decoration>[] = tokens
+        .filter((t) => t.from < t.to && t.to <= length)
+        .map((t) => tokenMark(t.kind).range(t.from, t.to))
+      built = { length, set: Decoration.set(ranges, true) }
+    }
+    return built.set
   })
 }

@@ -24,6 +24,7 @@
     "test:rust": "cargo test --workspace",
     "test:batch": "tests/batch/run.sh",
     "test:org-lint": "tests/org-lint/run.sh",
+    "test:c-highlight": "tests/c-highlight/run.sh",
     "test:scheme": "cargo test -p rseditor-core --test test_lisp_ert -- --nocapture",
     "test:all": "npm run test && npm run test:rust",
     "coverage:fe": "vitest run --coverage",

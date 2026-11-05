@@ -1,5 +1,7 @@
 //! 画面 (端末) の窓口: 描くことと, キーを読むこと. ncurses の実装は `ncurses_screen.rs`, テストでは偽物を使う.
 
+use rseditor_core::highlight::TokenKind;
+
 /// 画面の 1 マス.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cell {
@@ -9,6 +11,43 @@ pub struct Cell {
     pub reverse: bool,
     /// 下線を引いて描くか (`highlight-regexp` で強調した所).
     pub underline: bool,
+    /// シンタックスハイライトの字句の種類 (色は、`token_style` で決める).
+    pub token: Option<TokenKind>,
+}
+
+/// 字句の色 (ncurses の色の番号: 0 黒, 1 赤, 2 緑, 3 黄, 4 青, 5 マゼンタ, 6 シアン, 7 白).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TokenStyle {
+    /// 前景の色の番号.
+    pub color: i16,
+    /// 太字か.
+    pub bold: bool,
+}
+
+/// 字句の種類の、ncurses の色の対の番号 (1 から. `TokenKind::ALL` の位置 + 1).
+pub fn token_pair(kind: TokenKind) -> i16 {
+    TokenKind::ALL
+        .iter()
+        .position(|k| *k == kind)
+        .map_or(0, |i| i as i16 + 1)
+}
+
+/// 字句の種類の色. 8 色の端末で、暗い背景の Emacs の font-lock の色に合わせる
+/// (コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ, プリプロセッサは青の太字).
+///
+/// # Returns
+///
+/// 色 (数値のように、色を付けない種類は `None`).
+pub fn token_style(kind: TokenKind) -> Option<TokenStyle> {
+    let (color, bold) = match kind {
+        TokenKind::Comment | TokenKind::CommentDelimiter => (3, false),
+        TokenKind::DocComment | TokenKind::String | TokenKind::Type => (2, false),
+        TokenKind::Keyword => (6, true),
+        TokenKind::Constant => (5, false),
+        TokenKind::Preprocessor => (4, true),
+        TokenKind::Number => return None,
+    };
+    Some(TokenStyle { color, bold })
 }
 
 impl Cell {
@@ -17,6 +56,7 @@ impl Cell {
         ch: ' ',
         reverse: false,
         underline: false,
+        token: None,
     };
 }
 

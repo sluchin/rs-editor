@@ -17,7 +17,7 @@ import { EditorView, drawSelection } from '@codemirror/view'
 import { codeFolding, foldEffect, foldedRanges, unfoldEffect } from '@codemirror/language'
 import { controlChars } from '../lib/controlChars'
 import type { DocEntry } from '../lib/docs'
-import { type Highlight, regexpHighlighting } from '../lib/faces'
+import { type Highlight, regexpHighlighting, type Token, tokenHighlighting } from '../lib/faces'
 import { emacsKey } from '../lib/keys'
 import { lispHighlighting } from '../lib/lispMode'
 import { dialectConfig } from '../lib/lispParser'
@@ -74,6 +74,8 @@ interface WindowViewProps {
   mode: MajorMode
   /** 色付けする所. */
   highlights: readonly Highlight[]
+  /** シンタックスハイライトの字句 (核が返す). */
+  tokens: readonly Token[]
   /** 入力をエディタに送ります. */
   onInput: (input: Input) => void
   /** 画面から, ウィンドウを動かす窓口. */
@@ -119,6 +121,7 @@ export default function WindowView({
   asking,
   mode,
   highlights,
+  tokens,
   onInput,
   handle,
 }: WindowViewProps) {
@@ -161,7 +164,7 @@ export default function WindowView({
         controlChars(),
         folding,
         language.current.of(languageExtension()),
-        underline.current.of(regexpHighlighting(highlights)),
+        underline.current.of([regexpHighlighting(highlights), tokenHighlighting(tokens)]),
         // 本文はエディタが持つ. 日本語の変換中の文字のほかは, 自分で書き換えない
         EditorState.transactionFilter.of((tr) =>
           !tr.docChanged || tr.annotation(remote) || tr.isUserEvent('input.type.compose') ? tr : [],
@@ -307,9 +310,12 @@ export default function WindowView({
   // 色付けが変わったら, 引き直す
   useEffect(() => {
     ;(view.current as EditorView).dispatch({
-      effects: underline.current.reconfigure(regexpHighlighting(highlights)),
+      effects: underline.current.reconfigure([
+        regexpHighlighting(highlights),
+        tokenHighlighting(tokens),
+      ]),
     })
-  }, [highlights])
+  }, [highlights, tokens])
 
   // 選んでいるウィンドウに, フォーカスを移す (ミニバッファで聞いているあいだは, 移さない)
   useEffect(() => {

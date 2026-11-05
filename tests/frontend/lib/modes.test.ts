@@ -99,6 +99,15 @@ describe('majorMode', () => {
       tabWidth: 8,
     })
     expect(majorMode('a.txt', '/tmp/a.txt', '# -*- mode: org -*-').name).toBe('Org')
+    // C (ファイルの名前と、ファイルの変数. 色は核が付けるので、言語は無い)
+    expect(majorMode('a.c', '/tmp/a.c', 'int x;')).toEqual({
+      name: 'C',
+      language: null,
+      indentTabs: true,
+      tabWidth: 8,
+    })
+    expect(majorMode('a.h', '/tmp/a.h', '').name).toBe('C')
+    expect(majorMode('a.txt', '/tmp/a.txt', '/* -*- mode: c -*- */').name).toBe('C')
     expect(majorMode('a.scm', '/tmp/a.scm', '; -*- mode: fundamental -*-').name).toBe('Fundamental')
     expect(majorMode('a', '/tmp/a', '-*- mode: lisp-data; tab-width: 4 -*-')).toEqual({
       name: 'Lisp-Data',

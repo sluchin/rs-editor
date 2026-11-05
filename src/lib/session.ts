@@ -50,6 +50,16 @@ export interface HighlightFrame {
   group: number
 }
 
+/** シンタックスハイライトの字句 (種類と範囲). */
+export interface TokenFrame {
+  /** 始まり (UTF-16 の位置). */
+  from: number
+  /** 終わり (UTF-16 の位置. この位置の文字は含まない). */
+  to: number
+  /** 種類の名前 (`comment`, `keyword` など). CSS のクラスは `cm-tok-<名前>`. */
+  kind: string
+}
+
 /** バッファの描く内容. */
 export interface BufferFrame {
   /** 名前. */
@@ -70,6 +80,8 @@ export interface BufferFrame {
   directory: string | null
   /** 強調する正規表現. */
   highlights: HighlightFrame[]
+  /** シンタックスハイライトの字句 (言語があるバッファで、ウィンドウに出しているものだけ). */
+  tokens: TokenFrame[]
 }
 
 /** 描く内容. */

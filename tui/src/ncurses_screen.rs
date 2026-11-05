@@ -2,10 +2,15 @@
 
 use ncurses::*;
 
-use crate::screen::{Frame, Screen};
+use rseditor_core::highlight::TokenKind;
+
+use crate::screen::{token_pair, token_style, Frame, Screen};
 
 /// ncurses の画面.
-pub struct NcursesScreen;
+pub struct NcursesScreen {
+    /// 色を使えるか (端末が色に対応していて、色の対を作れたか).
+    colors: bool,
+}
 
 impl NcursesScreen {
     /// ncurses を始めます.
@@ -17,7 +22,29 @@ impl NcursesScreen {
         noecho();
         keypad(stdscr(), true);
         set_escdelay(25);
-        NcursesScreen
+        NcursesScreen {
+            colors: Self::start_colors(),
+        }
+    }
+
+    /// 字句の種類ごとの色の対を作ります (対の番号は、`token_pair`).
+    ///
+    /// # Returns
+    ///
+    /// 色を使えるか (端末が色に対応していなければ、偽).
+    fn start_colors() -> bool {
+        if !has_colors() {
+            return false;
+        }
+        start_color();
+        // 端末の背景の色を、そのまま使う
+        use_default_colors();
+        for kind in TokenKind::ALL {
+            if let Some(style) = token_style(kind) {
+                init_pair(token_pair(kind), style.color, -1);
+            }
+        }
+        true
     }
 
     /// ncurses を終えます.
@@ -85,7 +112,23 @@ impl Screen for NcursesScreen {
                 if cell.underline {
                     attron(A_UNDERLINE);
                 }
+                let style = cell
+                    .token
+                    .filter(|_| self.colors)
+                    .and_then(|kind| token_style(kind).map(|style| (kind, style)));
+                if let Some((kind, style)) = style {
+                    attron(COLOR_PAIR(token_pair(kind)));
+                    if style.bold {
+                        attron(A_BOLD);
+                    }
+                }
                 let _ = mvaddstr(y as i32, x as i32, &cell.ch.to_string());
+                if let Some((kind, style)) = style {
+                    if style.bold {
+                        attroff(A_BOLD);
+                    }
+                    attroff(COLOR_PAIR(token_pair(kind)));
+                }
                 if cell.underline {
                     attroff(A_UNDERLINE);
                 }
