@@ -182,3 +182,30 @@
   color: var(--font-lock-warning);
   font-weight: bold;
 }
+
+/* 核が返すシンタックスハイライト (C など. 種類は core/src/highlight の TokenKind. Emacs の font-lock の face と同じ色) */
+.code-editor-container .cm-tok-comment,
+.code-editor-container .cm-tok-comment-delimiter {
+  color: var(--font-lock-comment);
+}
+
+.code-editor-container .cm-tok-doc,
+.code-editor-container .cm-tok-string {
+  color: var(--font-lock-string);
+}
+
+.code-editor-container .cm-tok-keyword {
+  color: var(--font-lock-keyword);
+}
+
+.code-editor-container .cm-tok-type {
+  color: var(--font-lock-type);
+}
+
+.code-editor-container .cm-tok-constant {
+  color: var(--font-lock-constant);
+}
+
+.code-editor-container .cm-tok-preprocessor {
+  color: var(--font-lock-builtin);
+}

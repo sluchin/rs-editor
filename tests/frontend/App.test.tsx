@@ -73,6 +73,7 @@ const buf = (name: string, fields: Partial<BufferFrame> = {}): BufferFrame => ({
   file: null,
   directory: null,
   highlights: [],
+  tokens: [],
   ...fields,
 })
 
@@ -234,6 +235,23 @@ describe('App (描く内容)', () => {
     })
     expect(view.container.querySelector('.cm-lisp-highlight')?.textContent).toBe('scratch')
     expect(view.container.querySelector('.cm-face-org-todo')?.textContent).toBe(';;')
+  })
+
+  it('核が返した字句を色付けし, 同じ内容なら引き直さないこと', async () => {
+    const view = await setup()
+    const tokens = [{ from: 0, to: 2, kind: 'comment-delimiter' }]
+    sendFrame({ buffers: [buf('*scratch*', { tokens })] })
+    expect(view.container.querySelector('.cm-tok-comment-delimiter')?.textContent).toBe(';;')
+    // 内容が同じなら (長さも、中身も)、引き直さない
+    sendFrame({ buffers: [buf('*scratch*', { tokens: tokens.map((t) => ({ ...t })) })] })
+    expect(view.container.querySelector('.cm-tok-comment-delimiter')?.textContent).toBe(';;')
+    // 中身が違っても、長さが同じなら、引き直す
+    sendFrame({ buffers: [buf('*scratch*', { tokens: [{ from: 3, to: 10, kind: 'string' }] })] })
+    expect(view.container.querySelector('.cm-tok-comment-delimiter')).toBeNull()
+    expect(view.container.querySelector('.cm-tok-string')?.textContent).toBe('scratch')
+    // 長さが違えば、引き直す
+    sendFrame({ buffers: [buf('*scratch*', { tokens: [] })] })
+    expect(view.container.querySelector('.cm-tok-string')).toBeNull()
   })
 
   it('ウィンドウの外で押したキーも, エディタに送ること', async () => {

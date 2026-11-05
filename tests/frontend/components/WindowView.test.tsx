@@ -47,6 +47,7 @@ function setup(props: Partial<Parameters<typeof WindowView>[0]> = {}) {
     asking: false,
     mode: SCHEME,
     highlights: NONE,
+    tokens: [],
     onInput,
     handle,
     ...props,
@@ -200,6 +201,31 @@ describe('WindowView', () => {
     expect(editor().hasFocus).toBe(false)
     rerender({ asking: false })
     expect(editor().hasFocus).toBe(true)
+    view.unmount()
+  })
+
+  it('核が返した字句 (種類と範囲) を、種類ごとのクラスで色付けすること', () => {
+    const { rerender, view } = setup()
+    // 字句が無ければ、印は付かない
+    expect(view.container.querySelector('[class*="cm-tok-"]')).toBeNull()
+    // 本文 `(foo bar)\nline 2` (長さ 16). 空の範囲と、本文より先へ出る範囲は、飛ばす
+    rerender({
+      tokens: [
+        { from: 1, to: 4, kind: 'keyword' },
+        { from: 5, to: 8, kind: 'keyword' },
+        { from: 10, to: 14, kind: 'comment' },
+        { from: 3, to: 3, kind: 'string' },
+        { from: 12, to: 30, kind: 'type' },
+      ],
+    })
+    const keywords = view.container.querySelectorAll('.cm-tok-keyword')
+    expect([...keywords].map((e) => e.textContent)).toEqual(['foo', 'bar'])
+    expect(view.container.querySelector('.cm-tok-comment')?.textContent).toBe('line')
+    expect(view.container.querySelector('.cm-tok-string')).toBeNull()
+    expect(view.container.querySelector('.cm-tok-type')).toBeNull()
+    // 本文の長さが変わったら、作り直す (さっき飛ばした範囲が、収まる)
+    rerender({ entry: entryOf('(foo bar)\nline 2 and more text') })
+    expect(view.container.querySelector('.cm-tok-type')?.textContent).toBe('ne 2 and more text')
     view.unmount()
   })
 })

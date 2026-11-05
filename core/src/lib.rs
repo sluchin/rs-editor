@@ -15,6 +15,7 @@ pub mod error;
 pub mod files;
 pub mod fill;
 pub mod frame;
+pub mod highlight;
 pub mod indent;
 pub mod indent_specs;
 pub mod kbd_macro;

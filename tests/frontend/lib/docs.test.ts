@@ -19,6 +19,7 @@ const buffer = (name: string, fields: Partial<BufferFrame> = {}): BufferFrame =>
   file: null,
   directory: null,
   highlights: [],
+  tokens: [],
   ...fields,
 })
 

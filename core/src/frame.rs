@@ -43,6 +43,17 @@ pub struct HighlightFrame {
     pub group: usize,
 }
 
+/// シンタックスハイライトの字句 (種類と範囲).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TokenFrame {
+    /// 始まり (UTF-16 の位置).
+    pub from: usize,
+    /// 終わり (UTF-16 の位置. この位置の文字は含まない).
+    pub to: usize,
+    /// 種類の名前 (`comment`, `keyword` など. `TokenKind::name`).
+    pub kind: &'static str,
+}
+
 /// バッファの描く内容.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct BufferFrame {
@@ -64,6 +75,8 @@ pub struct BufferFrame {
     pub directory: Option<String>,
     /// 強調する正規表現.
     pub highlights: Vec<HighlightFrame>,
+    /// シンタックスハイライトの字句 (言語があるバッファで、ウィンドウに出しているものだけ).
+    pub tokens: Vec<TokenFrame>,
 }
 
 /// 描く内容.
@@ -133,6 +146,19 @@ impl FrameBuilder {
                 file: buffer.file().map(str::to_string),
                 directory: buffer.directory().map(str::to_string),
                 highlights: buffer.highlights().iter().map(highlight_frame).collect(),
+                tokens: if shown.contains(name) {
+                    buffer
+                        .token_spans()
+                        .iter()
+                        .map(|span| TokenFrame {
+                            from: buffer.utf16_position(span.start),
+                            to: buffer.utf16_position(span.end),
+                            kind: span.kind.name(),
+                        })
+                        .collect()
+                } else {
+                    Vec::new()
+                },
             });
         }
         let windows = editor

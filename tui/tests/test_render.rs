@@ -92,13 +92,25 @@ fn test_mode_names_and_the_file_dialects() {
     let dir = tempfile::tempdir().unwrap();
     let el = dir.path().join("a.el");
     let scm = dir.path().join("b.scm");
+    let c = dir.path().join("c.c");
     std::fs::write(&el, "(a)").unwrap();
     std::fs::write(&scm, "(b)").unwrap();
+    std::fs::write(&c, "int c;").unwrap();
     let files = [
         el.to_str().unwrap().to_string(),
         scm.to_str().unwrap().to_string(),
+        c.to_str().unwrap().to_string(),
     ];
     let fx = Fixture::sized(12, 50, &files).unwrap();
+    fx.app.draw();
+    assert!(fx.screen()[10].contains("(C)"));
+    fx.app.host().editor().set_buffer("b.scm").unwrap();
+    let w = fx.app.host().editor().selected_window();
+    fx.app
+        .host()
+        .editor()
+        .set_window_buffer(w, "b.scm")
+        .unwrap();
     fx.app.draw();
     assert!(fx.screen()[10].contains("(Scheme)"));
     fx.app.host().editor().set_buffer("a.el").unwrap();
@@ -288,4 +300,81 @@ fn test_narrowed_buffer_shows_only_the_accessible_part() {
     assert_eq!(&frame.lines()[..3], ["e", "two", ""]);
     assert_eq!(tops.values().copied().collect::<Vec<_>>(), [1]);
     assert_eq!(frame.cursor, (1, 3));
+}
+
+/// C のバッファを描いて、行 0 のマスの字句の種類を、文字ごとに文字列にする (無ければ `.`).
+fn token_letters(text: &str, rows: usize, cols: usize, row: usize) -> String {
+    use rseditor_core::highlight::TokenKind;
+    let mut editor = Editor::new();
+    editor.current_buffer_mut().insert(text);
+    editor.current_buffer_mut().set_mode_name("c-mode");
+    let mut tops = BTreeMap::new();
+    let frame = render(&editor, &mut tops, rows, cols, "", None);
+    frame.cells[row]
+        .iter()
+        .take(text.lines().nth(row).map_or(0, |l| l.chars().count()))
+        .map(|cell| match cell.token {
+            None => '.',
+            Some(TokenKind::Comment) => 'c',
+            Some(TokenKind::CommentDelimiter) => 'd',
+            Some(TokenKind::String) => 's',
+            Some(TokenKind::Keyword) => 'k',
+            Some(TokenKind::Type) => 't',
+            Some(TokenKind::Preprocessor) => 'p',
+            Some(_) => '?',
+        })
+        .collect()
+}
+
+#[test]
+fn test_cells_carry_the_syntax_token_kinds() {
+    assert_eq!(
+        token_letters("int x; // hi\nreturn \"s\";", 6, 30, 0),
+        "ttt....dddcc"
+    );
+    assert_eq!(
+        token_letters("int x; // hi\nreturn \"s\";", 6, 30, 1),
+        "kkkkkk.sss."
+    );
+    // 複数行のコメントは、次の行も
+    assert_eq!(token_letters("/* a\nb */ int", 6, 30, 1), "cddd.ttt");
+    // 折り返した行と、幅の広い文字の 2 マス目も、同じ種類
+    assert_eq!(token_letters("int あ; /* い */", 6, 8, 0), "ttt.....");
+    // 言語が無ければ、種類は無い
+    let mut editor = Editor::new();
+    editor.current_buffer_mut().insert("int x;");
+    let mut tops = BTreeMap::new();
+    let frame = render(&editor, &mut tops, 6, 30, "", None);
+    assert!(frame.cells[0].iter().all(|cell| cell.token.is_none()));
+}
+
+#[test]
+fn test_token_styles_and_color_pairs() {
+    use rseditor_core::highlight::TokenKind;
+    use rseditor_tui::screen::{token_pair, token_style, TokenStyle};
+    // 暗い背景の Emacs (8 色) に合わせる. 数値には色が無い
+    assert_eq!(token_style(TokenKind::Number), None);
+    assert_eq!(
+        token_style(TokenKind::Keyword),
+        Some(TokenStyle {
+            color: 6,
+            bold: true
+        })
+    );
+    assert_eq!(
+        token_style(TokenKind::Comment),
+        token_style(TokenKind::CommentDelimiter)
+    );
+    assert_eq!(
+        token_style(TokenKind::String),
+        token_style(TokenKind::DocComment)
+    );
+    assert_eq!(token_style(TokenKind::Constant).map(|s| s.color), Some(5));
+    assert_eq!(
+        token_style(TokenKind::Preprocessor).map(|s| s.color),
+        Some(4)
+    );
+    // 対の番号は、1 から、種類ごとに違う
+    let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
+    assert_eq!(pairs, (1..=9).collect::<Vec<i16>>());
 }
