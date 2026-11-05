@@ -6,14 +6,14 @@ import { EditorView } from '@codemirror/view'
 import WindowView, { type WindowHandle } from '@/components/WindowView'
 import type { DocEntry } from '@/lib/docs'
 import type { Highlight } from '@/lib/faces'
-import type { MajorMode } from '@/lib/modes'
+import type { MajorMode } from '@/lib/session'
 
-const SCHEME: MajorMode = { name: 'Scheme', language: 'scheme', indentTabs: true, tabWidth: 8 }
+const SCHEME: MajorMode = { name: 'Scheme', language: 'scheme', indent_tabs: true, tab_width: 8 }
 const FUNDAMENTAL: MajorMode = {
   name: 'Fundamental',
   language: null,
-  indentTabs: true,
-  tabWidth: 4,
+  indent_tabs: true,
+  tab_width: 4,
 }
 const NONE: Highlight[] = []
 

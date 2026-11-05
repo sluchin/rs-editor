@@ -4,9 +4,8 @@ use std::collections::BTreeMap;
 
 use rseditor_core::buffer::{Buffer, TAB_WIDTH};
 use rseditor_core::editor::Editor;
-use rseditor_core::highlight::{Language, TokenKind};
+use rseditor_core::highlight::TokenKind;
 use rseditor_core::scheme::builtins::char_width;
-use rseditor_core::syntax::Dialect;
 use rseditor_core::window::FULL;
 
 use crate::screen::{Cell, Frame};
@@ -159,15 +158,7 @@ fn cursor_cell(buffer: &Buffer, width: usize) -> (usize, usize) {
 /// モードラインの文字.
 fn mode_line(buffer: &Buffer, width: usize) -> String {
     let flag = if buffer.modified() { "**" } else { "--" };
-    let mode = match (buffer.highlight_language(), buffer.dialect()) {
-        (Some(Language::C), _) => "C",
-        (Some(Language::Cpp), _) => "C++",
-        (Some(Language::Rust), _) => "Rust",
-        (Some(Language::TypeScript), _) => "TypeScript",
-        (_, Dialect::Fundamental) => "Fundamental",
-        (_, Dialect::Elisp) => "ELisp",
-        (_, Dialect::Scheme) => "Scheme",
-    };
+    let mode = buffer.mode_info().name;
     let line = buffer.line_of_position(buffer.point()) + 1;
     let text = format!("-:{flag}-  {}   L{line}   ({mode}) ", buffer.name());
     let used: usize = text.chars().map(char_width).sum();

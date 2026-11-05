@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use crate::buffer::{Changes, Highlight, TextChange};
 use crate::editor::Editor;
+use crate::mode::ModeInfo;
 use crate::window::FULL;
 
 /// ウィンドウの描く内容.
@@ -77,6 +78,8 @@ pub struct BufferFrame {
     pub highlights: Vec<HighlightFrame>,
     /// シンタックスハイライトの字句 (言語があるバッファで、ウィンドウに出しているものだけ).
     pub tokens: Vec<TokenFrame>,
+    /// メジャーモードの情報 (モードラインの名前、Lisp の方言、字下げ).
+    pub mode: ModeInfo,
 }
 
 /// 描く内容.
@@ -146,6 +149,7 @@ impl FrameBuilder {
                 file: buffer.file().map(str::to_string),
                 directory: buffer.directory().map(str::to_string),
                 highlights: buffer.highlights().iter().map(highlight_frame).collect(),
+                mode: buffer.mode_info(),
                 tokens: if shown.contains(name) {
                     buffer
                         .token_spans()

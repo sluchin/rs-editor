@@ -74,6 +74,10 @@ const buf = (name: string, fields: Partial<BufferFrame> = {}): BufferFrame => ({
   directory: null,
   highlights: [],
   tokens: [],
+  mode:
+    name === '*scratch*'
+      ? { name: 'Lisp Interaction', language: 'scheme', indent_tabs: true, tab_width: 8 }
+      : { name: 'Fundamental', language: null, indent_tabs: true, tab_width: 8 },
   ...fields,
 })
 
@@ -196,7 +200,12 @@ describe('App (描く内容)', () => {
       selected: 2,
       buffers: [
         buf('*scratch*', { changes: [{ from: 0, to: 0, insert: 'x' }], modified: true }),
-        buf('d', { text: '  /tmp:', directory: '/tmp', read_only: true }),
+        buf('d', {
+          text: '  /tmp:',
+          directory: '/tmp',
+          read_only: true,
+          mode: { name: 'Dired by name', language: null, indent_tabs: true, tab_width: 8 },
+        }),
       ],
       message: 'hello',
     })

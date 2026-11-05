@@ -4,29 +4,57 @@
 ;; コマンドは, 引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の interactive に当たる).
 
 (define auto-mode-alist
-  '(("\\.el$" elisp)
-    ("\\.(scm|ss|sld|sls|rkt)$" scheme)
+  '(("\\.dir-locals(?:-2)?\\.el$" lisp-data-mode)
+    ("\\.eld$" lisp-data-mode)
+    ("eww-bookmarks$" lisp-data-mode)
+    ("tramp$" lisp-data-mode)
+    ("/archive-contents$" lisp-data-mode)
+    ("places$" lisp-data-mode)
+    ("\\.emacs-places$" lisp-data-mode)
+    ("\\.el$" elisp)
+    ("Project\\.ede$" elisp)
+    ("(?:\\.(?:scm|sls|sld|stk|ss|sch|rkt)|/\\.guile)$" scheme)
+    ("\\.scm\\.[0-9]*$" scheme)
+    ("\\.oak$" scheme)
+    ("[:/\\\\]\\..*(?:emacs|gnus|viper)$" elisp)
+    ("[:/]_emacs$" elisp)
     ("\\.(txt|text)$" text-mode)
     ("\\.[ch]$" c-mode)
     ("\\.rs$" rust-mode)
     ("\\.(ts|tsx|mts|cts)$" typescript-mode)
     ("\\.(cc|hh|cpp|hpp|cxx|hxx|c\\+\\+|h\\+\\+|ii|C|H|CC|HH|CPP|HPP|CXX|HXX)$" c++-mode))
   "List of (REGEXP MODE) to choose the major mode of a visited file.
-MODE is a syntax dialect (elisp, scheme) or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode, rust-mode, typescript-mode).
+MODE is a syntax dialect (elisp, scheme), lisp-data-mode, or a major mode on the Fundamental dialect (text-mode, c-mode, c++-mode, rust-mode, typescript-mode).
 The first REGEXP (Rust regex syntax) that matches the file name decides; other files are Fundamental.")
 
+(define file-local-mode-alist
+  '(("emacs-lisp" elisp)
+    ("lisp-data" lisp-data-mode)
+    ("scheme" scheme)
+    ("c" c-mode)
+    ("c++" c++-mode)
+    ("fundamental" fundamental))
+  "List of (NAME MODE) for `mode: NAME' in the -*- line of a file.  MODE is as in `auto-mode-alist'.")
+
+(define (set-auto-mode-1 mode)
+  "Turn on MODE, a value of `auto-mode-alist'."
+  (cond ((member mode '(elisp scheme fundamental)) (set-syntax-dialect mode))
+        ((equal? mode 'lisp-data-mode) (lisp-data-mode))
+        (else (set-syntax-dialect 'fundamental) (set-major-mode-name mode))))
+
 (define (set-auto-mode)
-  "Select the syntax dialect (major mode) of the current buffer from its file name.
+  "Select the syntax dialect (major mode) of the current buffer.
+`mode: NAME' in the first line (-*- ... -*-) of the file wins over the file name, as in Emacs.
 See `auto-mode-alist'."
-  (let ((file (buffer-file-name)))
-    (let loop ((modes auto-mode-alist))
-      (cond ((or (not file) (null? modes)) (set-syntax-dialect 'fundamental))
-            ((regexp-match (car (car modes)) file)
-             (let ((mode (cadr (car modes))))
-               (if (member mode '(text-mode c-mode c++-mode rust-mode typescript-mode))
-                   (begin (set-syntax-dialect 'fundamental) (set-major-mode-name mode))
-                   (set-syntax-dialect mode))))
-            (else (loop (cdr modes)))))))
+  (let* ((file (buffer-file-name))
+         (named (and file (file-local-mode)))
+         (from-variable (and named (assoc named file-local-mode-alist))))
+    (if from-variable
+        (set-auto-mode-1 (cadr from-variable))
+        (let loop ((modes auto-mode-alist))
+          (cond ((or (not file) (null? modes)) (set-syntax-dialect 'fundamental))
+                ((regexp-match (car (car modes)) file) (set-auto-mode-1 (cadr (car modes))))
+                (else (loop (cdr modes))))))))
 
 (define (find-buffer-visiting filename)
   "Return the buffer visiting file FILENAME, or #f if there is none."

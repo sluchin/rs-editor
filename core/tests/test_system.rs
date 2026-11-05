@@ -642,6 +642,7 @@ fn test_editor_settings() {
                 home.join("x.txt").to_string_lossy()
             ),
             "buffer-file-name".to_string(),
+            "file-local-mode".to_string(),
             "set-syntax-dialect fundamental".to_string(),
             "set-major-mode-name text-mode".to_string(),
             "buffer-name".to_string(),
@@ -741,6 +742,7 @@ fn test_buffer_operations() {
                 home.join("y").to_string_lossy()
             ),
             "buffer-file-name".to_string(),
+            "file-local-mode".to_string(),
             "set-syntax-dialect fundamental".to_string(),
             "buffer-name".to_string(),
             "set-buffer \"b\"".to_string(),

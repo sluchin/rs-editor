@@ -23,10 +23,10 @@
 
 - 色は、Scheme と Elisp だけで、核の `core/src/highlight/lisp.rs` が字句に分けます (設計は 3.4)。Tauri と TUI の両方に、同じ色が付きます。(以前は、CodeMirror の `StreamLanguage` で付けていたため、Tauri だけでした。)
 - `highlight-regexp` は、正規表現と face をバッファに持ちます。TUI (`tui/src/ncurses_screen.rs`) は、下線 (`A_UNDERLINE`) を引くだけで、色は使っていません (`start_color` と `init_pair` を使っていません)。
-- メジャーモードの判定は、2 か所にあります。
-  - 核: `lisp/files.scm` の `auto-mode-alist` と `set-auto-mode` が、ファイル名から、バッファの方言 (`Dialect`。Fundamental、Elisp、Scheme) を決めます。方言は、構文表 (`core/src/syntax.rs`)、字下げ、段落の区切りに使います。TUI も、これを使います。
-  - 画面: `src/lib/modes.ts` の `AUTO_MODES` と `majorMode` が、モードラインの名前と、CodeMirror の言語 (`'scheme' | 'elisp' | null`) を決めます。
-- どちらにも、C と C++ はありません。
+- メジャーモードの判定は、核の 1 か所です。
+  - `lisp/files.scm` の `auto-mode-alist` と `set-auto-mode` が、ファイルの名前と、1 行目の `-*- mode: NAME -*-` から、バッファの方言 (`Dialect`。Fundamental、Elisp、Scheme) と、`major-mode` の名前を決めます。方言は、構文表 (`core/src/syntax.rs`)、字下げ、段落の区切りに使います。
+  - `core/src/mode.rs` の `Buffer::mode_info` が、モードラインの名前と、括弧の読み方 (`scheme` / `elisp` / なし)、字下げのタブとタブの幅 (ファイルの変数 `indent-tabs-mode` `tab-width`) を返します。Tauri の画面は `BufferFrame.mode` で受け取り、TUI のモードラインも同じ名前を使います。
+  - 画面の `src/lib/modes.ts` は、消しました。
 
 ## 3. 方針の中心: 核が「範囲と種類」を返す
 
@@ -137,8 +137,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 - 方言 (`Dialect`) は、Lisp の構文表、字下げ、段落、コメントに使われていて、`Fundamental` でなければ Lisp として扱う箇所が多くあります。そのため、C は方言を増やさず、`text-mode` と同じく、方言は `Fundamental` のままで、`major-mode` の名前 (`Buffer::mode_name`) を `c-mode` にします。`Buffer::highlight_language()` が、この名前から言語を決めます。
 - 核の `auto-mode-alist` (`lisp/files.scm`) に、`.c` と `.h` (`c-mode`)、`.cc` `.hh` `.cpp` `.hpp` `.cxx` `.hxx` `.c++` `.h++` `.ii` と、大文字の `.C` `.H` など (`c++-mode`) を足しました。コマンド `c-mode` と `c++-mode` は `lisp/simple.scm` にあります。Emacs は `.h` を内容で C か C++ に決めますが、ここでは C にします。
 - Scheme からは、`(token-spans)` が、バッファの字句を `(始まり 終わり 種類)` の並びで返します (位置は 1 から。終わりは含まない)。比較の試験が使います。
-- 画面の `src/lib/modes.ts` にも、同じファイル名と `mode: c` と `mode: c++` の判定と、モードラインの名前 (`C`、`C++`) を足しました。`language` は `null` のままで、色は核の字句で付けます。TUI のモードラインも `(C)` と `(C++)` を出します。
-- `modes.ts` の判定を、核の判定に一本化する作業は、別の作業にします。
+- モードラインの名前 (`C`、`C++`) は、核の `mode_info` が決めます (画面と TUI で同じ)。`language` は `null` のままで、色は核の字句で付けます。
 - 既存の `highlight-regexp` は、そのまま残します。ハイライトは、「字句の種類」の層と、「`highlight-regexp`」の層の 2 つです。後者が上に重なります (Emacs の hi-lock と同じ)。
 
 ## 5. フロントへの渡し方
@@ -168,7 +167,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 1. **範囲**: 段階 1 は C だけ、段階 2 で C++ を足す。
 2. **数値の色**: Emacs に合わせて、既定は色なし。
-3. **モード判定**: 段階 1 は、核の `auto-mode-alist` と方言に C と C++ を足し、`modes.ts` にもモードラインの名前を足す。両者の一本化は別の作業。
+3. **モード判定**: 段階 1 は、核の `auto-mode-alist` と方言に C と C++ を足した。画面の `modes.ts` との二重の判定は、核の `mode_info` に一本化した。
 4. **TUI の色**: 8 色を既定にして、256 色は後で足す。
 
 ## 8. 実装の順序

@@ -191,7 +191,7 @@
       最後の `/` の後ろを、そのディレクトリの中の名前 (Rust の `list_directory`) で補完し、ディレクトリには `/` を付ける。
 - [x] シンタックスハイライト (Emacs の font-lock)。Emacs 30 の scheme-mode と emacs-lisp-mode と同じ所に、Emacs の既定の色を付ける
       (今は核の `core/src/highlight/lisp.rs`。以前は `src/lib/lispMode.ts`)。コメント、文字列、`(` の直後の特別な形、定義する名前、`:key` など。Emacs Lisp では、      文字列の中の正規表現のグループと要らない `\`、閉じた括弧の後ろに続く引数の警告も。`emacs -Q --batch` で付けた色と、1 文字ずつ比べて確かめた。
-- [x] メジャーモード (`src/lib/modes.ts`): Emacs の `auto-mode-alist` と同じく、`*scratch*` は Lisp Interaction, `.scm` などは Scheme,
+- [x] メジャーモード (核の `lisp/files.scm` の `auto-mode-alist` と `core/src/mode.rs`): Emacs の `auto-mode-alist` と同じく、`*scratch*` は Lisp Interaction, `.scm` などは Scheme,
       `.el` と `.emacs` などは ELisp/l か ELisp/d, `.dir-locals.el` などは Lisp-Data (この 4 つは色を付ける), ほかは Fundamental。
       モードラインに名前を出す。
 
@@ -690,7 +690,7 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 - [x] Elisp と Scheme の色付けを、画面の CodeMirror の `StreamLanguage` から、核の `core/src/highlight/lisp.rs` に移した (Tauri と TUI の両方に色が付く。`emacs -Q --batch` との比較は `tests/lisp-highlight/`。`src/lib/lispMode.ts` と `elispKeywords.ts` は消した。`docs/c_highlight_design.md` の 3.4)。
 - [x] Rust のシンタックスハイライト (`rust-mode`。`.rs`)。核の `core/src/highlight/rust.rs` が、rust-lang/rust-mode の font-lock (正規表現の並びと、先に付いた色を上書きしない決まり) を移し、Tauri と TUI の両方に色を付ける。コメント、ドキュメントのコメント、入れ子のブロックコメント、文字列、生の文字列、文字とライフタイム、キーワード、組み込みの型、`unsafe`、マクロ、属性、`fn` `struct` `enum` `mod` `use` の次の名前、`?` が、rust-mode と一致する。比較は `tests/rust-highlight/run.sh` (`npm run test:rust-highlight`。`RUST_MODE_DIR` に rust-mode の clone を指定する)。
 - [x] TypeScript のシンタックスハイライト (`typescript-mode`。`.ts` `.tsx` `.mts` `.cts`)。核の `core/src/highlight/typescript.rs` が、emacs-typescript/typescript-mode の font-lock (正規表現と、括弧を読む規則。コメント、文字列、テンプレートリテラルの `${}`、正規表現のリテラル、キーワード、型、定数、`class` `interface` `type` `enum` の名前、`const` の名前、引数、関数の呼び出し、デコレータ、JSDoc) を同じ順で移し、Tauri と TUI の両方に色を付ける。比較は `tests/ts-highlight/run.sh` (`npm run test:ts-highlight`。`TS_MODE_DIR` に typescript-mode の clone を指定する。Emacs の結果は `expected/` に入れてある)。`.js` と `.jsx` は、Emacs が組み込みの `js-mode` (規則が違う) で開くので含めない。
-- [ ] メジャーモードの判定を、核に一本化する (今は、核の `auto-mode-alist` (`lisp/files.scm`) と、画面の `src/lib/modes.ts` の 2 か所にある)。
+- [x] メジャーモードの判定を、核に一本化した (`auto-mode-alist` と、1 行目の `-*- mode: ... -*-` は `lisp/files.scm`。モードラインの名前、括弧の読み方、字下げは `core/src/mode.rs` の `Buffer::mode_info`。画面は `BufferFrame.mode` で受け取り、`src/lib/modes.ts` は消した。TUI のモードラインも同じ名前 (`Lisp Interaction`、`ELisp/d`、`Text` など) を出す)。
 - [ ] TUI の字句の色を、256 色の端末で、Emacs に近い色にする (今は 8 色)。
 
 ### 作りと画面

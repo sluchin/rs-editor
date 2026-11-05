@@ -473,6 +473,8 @@ impl Host for FakeEditor {
                 Value::Nil
             }
             "set-syntax-dialect" | "set-major-mode-name" => Value::Nil,
+            // 偽のエディタのファイルには、ファイルの変数が無い
+            "file-local-mode" => Value::Boolean(false),
             "rename-buffer" => {
                 // 同じ名前があれば, 番号を付ける
                 let base = text(&args[0]);

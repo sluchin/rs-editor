@@ -2542,6 +2542,12 @@ A word that is not a key name stands for the keys of its characters.  The result
   (set-syntax-dialect 'elisp)
   #f)
 
+(define-command (lisp-data-mode)
+  "Major mode for buffers holding data written as Lisp S-expressions."
+  (set-syntax-dialect 'elisp)
+  (set-major-mode-name 'lisp-data-mode)
+  #f)
+
 (define-command (scheme-mode)
   "Major mode for editing Scheme code."
   (set-syntax-dialect 'scheme)

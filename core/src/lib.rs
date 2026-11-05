@@ -21,6 +21,7 @@ pub mod indent_specs;
 pub mod kbd_macro;
 pub mod keymap;
 pub mod kill_ring;
+pub mod mode;
 pub mod paragraph;
 pub mod replace;
 pub mod scheme;

@@ -1488,6 +1488,11 @@ impl<U: Host> EditorHost<U> {
                 }
                 .to_string()
             })),
+            // 1 行目の `-*- mode: NAME -*-` の NAME (無ければ #f)
+            "file-local-mode" => match b.file_variables().mode {
+                Some(mode) => Value::String(mode),
+                None => Value::Boolean(false),
+            },
             "set-major-mode-name" => {
                 b.set_mode_name(name(op, args, 0)?);
                 Value::Nil

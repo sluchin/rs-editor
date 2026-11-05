@@ -18,7 +18,6 @@ import type { Highlight, Token } from './lib/faces'
 import { getHomeDir, listDirectory, projectRoot } from './lib/fileOps'
 import { HISTORY_LENGTH, addToHistory } from './lib/history'
 import { emacsKey } from './lib/keys'
-import { DIRED_MODE, majorMode } from './lib/modes'
 import { fileDirectory } from './lib/paths'
 import {
   type BufferFrame,
@@ -413,9 +412,7 @@ function App() {
             const b = buffer(w.buffer) as BufferFrame
             const entry = entries[w.buffer]
             const active = w.id === frame.selected
-            const mode = b.directory
-              ? DIRED_MODE
-              : majorMode(b.name, b.file, entry.doc.sliceString(0, 1000))
+            const mode = b.mode
             const line = entry.doc.lineAt(Math.min(w.point, entry.doc.length))
             return (
               <div

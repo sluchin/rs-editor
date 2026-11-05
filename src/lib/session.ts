@@ -82,6 +82,20 @@ export interface BufferFrame {
   highlights: HighlightFrame[]
   /** シンタックスハイライトの字句 (言語があるバッファで、ウィンドウに出しているものだけ). */
   tokens: TokenFrame[]
+  /** メジャーモードの情報 (核が決める). */
+  mode: MajorMode
+}
+
+/** メジャーモード (バッファの種類). モードラインに出す名前と, 括弧の読み方と字下げを決めます. */
+export interface MajorMode {
+  /** モードラインに出す名前. */
+  name: string
+  /** 括弧の読み方 (Lisp の方言. 無ければ `null`). */
+  language: 'scheme' | 'elisp' | null
+  /** 字下げにタブを使うなら `true` (Emacs の `indent-tabs-mode`). */
+  indent_tabs: boolean
+  /** タブの幅 (Emacs の `tab-width`). */
+  tab_width: number
 }
 
 /** 描く内容. */

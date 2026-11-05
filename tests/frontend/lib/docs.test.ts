@@ -20,6 +20,7 @@ const buffer = (name: string, fields: Partial<BufferFrame> = {}): BufferFrame =>
   directory: null,
   highlights: [],
   tokens: [],
+  mode: { name: 'Fundamental', language: null, indent_tabs: true, tab_width: 8 },
   ...fields,
 })
 

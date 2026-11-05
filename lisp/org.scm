@@ -493,6 +493,7 @@ Later ones are drawn over earlier ones."
 
 (define-command (org-mode)
   "Turn on Org mode: set the keys and highlighting, and read #+STARTUP."
+  (set-major-mode-name 'org-mode)
   (for-each (lambda (key) (local-set-key (car key) (cadr key))) org-mode-keys)
   (org-fontify)
   (org-set-startup-visibility)

@@ -20,7 +20,7 @@ import type { DocEntry } from '../lib/docs'
 import { type Highlight, regexpHighlighting, type Token, tokenHighlighting } from '../lib/faces'
 import { emacsKey } from '../lib/keys'
 import { dialectConfig } from '../lib/lispParser'
-import type { MajorMode } from '../lib/modes'
+import type { MajorMode } from '../lib/session'
 import type { Input } from '../lib/session'
 import { showParen } from '../lib/showParen'
 import '../styles/CodeEditor.css'
@@ -144,7 +144,7 @@ export default function WindowView({
    */
   const languageExtension = (): Extension => [
     dialectConfig.of(mode.language),
-    EditorState.tabSize.of(mode.tabWidth),
+    EditorState.tabSize.of(mode.tab_width),
   ]
 
   /**
@@ -303,7 +303,7 @@ export default function WindowView({
       effects: language.current.reconfigure(languageExtension()),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode.language, mode.tabWidth, mode.indentTabs, bufferName])
+  }, [mode.language, mode.tab_width, mode.indent_tabs, bufferName])
 
   // 色付けが変わったら, 引き直す
   useEffect(() => {

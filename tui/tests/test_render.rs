@@ -71,7 +71,9 @@ fn test_mode_line_and_echo_area() {
     fx.app.draw();
     let screen = fx.screen();
     assert!(screen[10].starts_with("-:**-  *scratch*   L1"));
-    assert_eq!(screen[10].chars().count(), 30);
+    // `*scratch*` は Lisp Interaction (幅を越えたら切る)
+    assert!(screen[10].starts_with("-:**-  *scratch*   L1   (Lisp"));
+    assert!(screen[10].chars().count() <= 30);
     let frames = fx.frames.lock().unwrap();
     let mode_row = &frames.last().unwrap().cells[10];
     assert!(mode_row.iter().all(|c| c.reverse));
@@ -145,7 +147,7 @@ fn test_mode_names_and_the_file_dialects() {
     let w = fx.app.host().editor().selected_window();
     fx.app.host().editor().set_window_buffer(w, "a.el").unwrap();
     fx.app.draw();
-    assert!(fx.screen()[10].contains("(ELisp)"));
+    assert!(fx.screen()[10].contains("(ELisp/d)"));
 }
 
 #[test]
