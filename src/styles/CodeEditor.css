@@ -206,7 +206,8 @@
   color: var(--font-lock-constant);
 }
 
-.code-editor-container .cm-tok-preprocessor {
+.code-editor-container .cm-tok-preprocessor,
+.code-editor-container .cm-tok-builtin {
   color: var(--font-lock-builtin);
 }
 
@@ -216,4 +217,14 @@
 
 .code-editor-container .cm-tok-variable-name {
   color: var(--font-lock-variable-name);
+}
+
+.code-editor-container .cm-tok-warning {
+  color: var(--font-lock-warning);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-tok-regexp-group {
+  color: var(--font-lock-string);
+  font-weight: bold;
 }

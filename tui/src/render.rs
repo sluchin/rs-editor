@@ -162,9 +162,10 @@ fn mode_line(buffer: &Buffer, width: usize) -> String {
     let mode = match (buffer.highlight_language(), buffer.dialect()) {
         (Some(Language::C), _) => "C",
         (Some(Language::Cpp), _) => "C++",
-        (None, Dialect::Fundamental) => "Fundamental",
-        (None, Dialect::Elisp) => "ELisp",
-        (None, Dialect::Scheme) => "Scheme",
+        (Some(Language::Rust), _) => "Rust",
+        (_, Dialect::Fundamental) => "Fundamental",
+        (_, Dialect::Elisp) => "ELisp",
+        (_, Dialect::Scheme) => "Scheme",
     };
     let line = buffer.line_of_position(buffer.point()) + 1;
     let text = format!("-:{flag}-  {}   L{line}   ({mode}) ", buffer.name());

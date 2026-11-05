@@ -186,7 +186,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **削除したもの:**
 
-- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - CodeMirror の Lisp のモード (`lispMode.ts`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく、色を付ける)
+- ❌ **シンタックスハイライト** (`schemeTokenizer.ts`) - 核の字句解析 (`core/src/highlight/lisp.rs`. Scheme と Emacs Lisp) で作り直した (Emacs の既定の font-lock と同じく、色を付ける)
 - ❌ **括弧マッチハイライト** (`findMatchingBracket`、`findUnmatchedClose` from `bracketMatch.ts`) - Emacs の show-paren-mode と同じく、`showParen.ts` で作り直した
 - ❌ **括弧自動補完** (`bracketAutoClose.ts`) - IDE 固有機能
 - ❌ **REPL コンポーネント** (`REPL.tsx`) - 評価は Emacs と同じく `C-x C-e` と `M-:` で行い、結果をミニバッファに出す

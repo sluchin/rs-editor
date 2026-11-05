@@ -94,6 +94,8 @@ fn test_mode_names_and_the_file_dialects() {
     let scm = dir.path().join("b.scm");
     let c = dir.path().join("c.c");
     let cpp = dir.path().join("d.cpp");
+    let rs = dir.path().join("e.rs");
+    std::fs::write(&rs, "fn e() {}").unwrap();
     std::fs::write(&el, "(a)").unwrap();
     std::fs::write(&scm, "(b)").unwrap();
     std::fs::write(&c, "int c;").unwrap();
@@ -103,8 +105,18 @@ fn test_mode_names_and_the_file_dialects() {
         scm.to_str().unwrap().to_string(),
         c.to_str().unwrap().to_string(),
         cpp.to_str().unwrap().to_string(),
+        rs.to_str().unwrap().to_string(),
     ];
     let fx = Fixture::sized(12, 50, &files).unwrap();
+    fx.app.draw();
+    assert!(fx.screen()[10].contains("(Rust)"));
+    fx.app.host().editor().set_buffer("d.cpp").unwrap();
+    let w = fx.app.host().editor().selected_window();
+    fx.app
+        .host()
+        .editor()
+        .set_window_buffer(w, "d.cpp")
+        .unwrap();
     fx.app.draw();
     assert!(fx.screen()[10].contains("(C++)"));
     fx.app.host().editor().set_buffer("c.c").unwrap();
@@ -352,6 +364,7 @@ fn test_cells_carry_the_syntax_token_kinds() {
     // 言語が無ければ、種類は無い
     let mut editor = Editor::new();
     editor.current_buffer_mut().insert("int x;");
+    editor.current_buffer_mut().set_mode_name("text-mode");
     let mut tops = BTreeMap::new();
     let frame = render(&editor, &mut tops, 6, 30, "", None);
     assert!(frame.cells[0].iter().all(|cell| cell.token.is_none()));
@@ -395,7 +408,26 @@ fn test_token_styles_and_color_pairs() {
             bold: true
         })
     );
+    // 組み込みの名前はプリプロセッサと同じ青の太字, 警告は赤の太字, 正規表現のグループは文字列と同じ緑の太字
+    assert_eq!(
+        token_style(TokenKind::Builtin),
+        token_style(TokenKind::Preprocessor)
+    );
+    assert_eq!(
+        token_style(TokenKind::Warning),
+        Some(TokenStyle {
+            color: 1,
+            bold: true
+        })
+    );
+    assert_eq!(
+        token_style(TokenKind::RegexpGroup),
+        Some(TokenStyle {
+            color: 2,
+            bold: true
+        })
+    );
     // 対の番号は、1 から、種類ごとに違う
     let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
-    assert_eq!(pairs, (1..=11).collect::<Vec<i16>>());
+    assert_eq!(pairs, (1..=14).collect::<Vec<i16>>());
 }

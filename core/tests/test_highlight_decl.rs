@@ -6,7 +6,7 @@ use rseditor_core::highlight::{tokenize, Language};
 /// 宣言の名前だけを (本文の中の文字列, 種類の名前) の並びにする (キーワード、組み込みの型と定数、数値などは除く).
 fn names_in(language: Language, text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
-    let spec = language.spec();
+    let spec = language.spec().unwrap();
     tokenize(language, text)
         .iter()
         .map(|s| {

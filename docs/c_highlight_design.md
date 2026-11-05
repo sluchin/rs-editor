@@ -8,7 +8,7 @@
 - そのため、字句の解析は、核 (`core/`、Rust) に置きます。TypeScript (CodeMirror の `StreamLanguage`) では、TUI で使えないためです。
 - 手本は Emacs 30 の `c-mode` / `c++-mode` の font-lock です。Emacs の既定は `font-lock-maximum-decoration` が `t` (最も詳しい段階) です。
 - 言語ごとの違いは、データ (`LanguageSpec`、3.1) にして、言語を足せる形にします。
-- 範囲外: 字下げ (`c-indent`)、構文木、C と C++ 以外の言語 (Rust、Python など)。
+- 範囲外: 字下げ (`c-indent`)、構文木。C と C++ 以外の言語は、3.4 (Lisp) と 3.5 (Rust) で足しました。
 
 ### 段階
 
@@ -21,7 +21,7 @@
 
 ## 2. 現状
 
-- 色は、Scheme と Elisp だけです。`src/lib/lispMode.ts` (CodeMirror) で付けるため、Tauri だけです。
+- 色は、Scheme と Elisp だけで、核の `core/src/highlight/lisp.rs` が字句に分けます (設計は 3.4)。Tauri と TUI の両方に、同じ色が付きます。(以前は、CodeMirror の `StreamLanguage` で付けていたため、Tauri だけでした。)
 - `highlight-regexp` は、正規表現と face をバッファに持ちます。TUI (`tui/src/ncurses_screen.rs`) は、下線 (`A_UNDERLINE`) を引くだけで、色は使っていません (`start_color` と `init_pair` を使っていません)。
 - メジャーモードの判定は、2 か所にあります。
   - 核: `lisp/files.scm` の `auto-mode-alist` と `set-auto-mode` が、ファイル名から、バッファの方言 (`Dialect`。Fundamental、Elisp、Scheme) を決めます。方言は、構文表 (`core/src/syntax.rs`)、字下げ、段落の区切りに使います。TUI も、これを使います。
@@ -100,6 +100,24 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
   - 範囲 `for (auto x : v)` の `x`。
 - 扱わない形: 演算子の関数 (`operator+`)、`typename T::x`、`T (&arr)[N]` のような、配列への参照、ファイルの先頭の、型の無い関数の呼び出し (`MODULE_LICENSE("GPL");`)、`if` の条件の中の宣言。これらは、Emacs と色が違うことがあります。
 
+### 3.4 Scheme と Emacs Lisp
+
+- `core/src/highlight/lisp.rs` が、行ごとに、字句を 1 つずつ読みます (状態は、行をまたいで覚えます。字句は、行をまたぎません)。`tokenize(Language::Scheme | Language::Elisp, text)` が呼びます。C と C++ の字句の表 (`LanguageSpec`) は使わないので、`Language::spec()` は `None` を返します。
+- 色を付けるのは、Emacs の `scheme-font-lock-keywords-2` と `lisp-el-font-lock-keywords-2` と同じ所です: コメント、文字列、`(` の直後の特別な形 (`define`、`defun`、`if` など)、特別な形で定義する名前 (関数、変数、型)、`:key` などの印。`car` などの関数と、数には付けません。Emacs Lisp では、文字列の中の正規表現のグループ (`\\(`)、キーの名前 (`\\[command]`)、要らない `\`、`` `name' ``、閉じた括弧の後ろに続く引数 (見落としやすい。警告の色) にも、付けます。
+- 種類は、C と同じ `TokenKind` に、`Builtin` (`:key`)、`Warning`、`RegexpGroup` を足しました。コメントの区切り (`;`) は、コメントと同じ種類です (色が同じ)。
+- 言語は、構文の方言 (`Buffer::dialect`) で決まります (`emacs-lisp-mode` は Emacs Lisp、`scheme-mode` は Scheme)。`*scratch*` の `lisp-interaction-mode` は、Scheme を評価するので、Scheme です (モード名から決め、コマンドは方言も Scheme にします)。
+- 比べ方: `tests/lisp-highlight/` (`npm run test:lisp-highlight`)。`emacs -Q --batch` で、`scheme-mode` と `emacs-lisp-mode` の `font-lock-ensure` を実行し、`token-spans` と比べます。範囲は行をまたがず、色を付けない文字と改行は含みません。
+- 画面の `src/lib/lispMode.ts` と `src/lib/elispKeywords.ts` (CodeMirror の `StreamLanguage`) は、核に移したので、消しました。
+
+### 3.5 Rust
+
+- `core/src/highlight/rust.rs` が、rust-lang/rust-mode (`rust-font-lock-keywords`) と同じ並びの正規表現 (`regex` クレート) を、同じ順に当てます。文字ごとに種類を持ち、先に付いた色は上書きしません (Emacs の `override` が `nil`: 範囲に 1 文字でも色が付いていれば、全体を付けない。`keep`: 色の無い文字にだけ付ける)。`Language::spec()` は `None` です。
+- コメント、文字列、文字、生の文字列は、正規表現より先に読みます (rust-mode の構文表と `rust-syntax-propertize` に当たる)。入れ子のブロックコメント、`r#"..."#`、文字とライフタイム (`'a` と `'a'`) を区別します。`///` `//!` `/** */` は `DocComment` です。
+- `Foo::` (型) と `foo::` (定数) は、後ろに `<` が続かないときだけ付けます (rust-mode の `rust-path-font-lock-matcher`)。
+- 種類の対応 (rust-mode の face → 種類): `rust-unsafe` → `Warning`、`font-lock-preprocessor-face` (属性とマクロ) → `Preprocessor`、書式のマクロと `?` → `Builtin`、文字列の中の `{}` → `String`。
+- 比べ方: `tests/rust-highlight/` (`RUST_MODE_DIR=<rust-mode の clone> npm run test:rust-highlight`)。rust-mode は Emacs の組み込みではないので、clone を `-L` で読みます。
+- 扱わない形: rust-mode の `rust-string-interpolation` の斜体 (種類は文字列と同じ)、`rust-ampersand-face` (既定の色)。
+
 ## 4. 言語とモードの結び付け
 
 - 方言 (`Dialect`) は、Lisp の構文表、字下げ、段落、コメントに使われていて、`Fundamental` でなければ Lisp として扱う箇所が多くあります。そのため、C は方言を増やさず、`text-mode` と同じく、方言は `Fundamental` のままで、`major-mode` の名前 (`Buffer::mode_name`) を `c-mode` にします。`Buffer::highlight_language()` が、この名前から言語を決めます。
@@ -116,7 +134,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 - 核は、描画を作るとき、言語があって、ウィンドウに出しているバッファの字句の全体を、`BufferFrame.tokens` (`{ from, to, kind }` の並び。位置は UTF-16) に入れます。画面は、スクロールの範囲を核に知らせないため、表示している行ではなく、全体を送ります。
 - 画面 (`src/lib/faces.ts` の `tokenHighlighting`) は、種類を CSS のクラス `cm-tok-<種類>` にして、装飾にします。色は `src/styles/CodeEditor.css` で、既存の `--font-lock-*` の変数 (明るい / 暗い) から決めます。本文より先へ出る範囲は、飛ばします。
 - 字句が前と同じなら (`src/App.tsx` の `stableTokens`)、同じ配列を渡して、色付けを引き直しません。
-- Scheme と Elisp は、今の CodeMirror の仕組みのままにします。
+- Scheme と Elisp も、同じ仕組みです (3.4)。
 
 ### TUI (ncurses)
 
