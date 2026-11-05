@@ -27,6 +27,7 @@
     "test:c-highlight": "tests/c-highlight/run.sh",
     "test:lisp-highlight": "tests/lisp-highlight/run.sh",
     "test:rust-highlight": "tests/rust-highlight/run.sh",
+    "test:ts-highlight": "tests/ts-highlight/run.sh",
     "test:scheme": "cargo test -p rseditor-core --test test_lisp_ert -- --nocapture",
     "test:all": "npm run test && npm run test:rust",
     "coverage:fe": "vitest run --coverage",

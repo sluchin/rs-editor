@@ -2574,6 +2574,13 @@ Comments, strings, keywords, types, attributes and macros are highlighted."
   (set-major-mode-name 'rust-mode)
   #f)
 
+(define-command (typescript-mode)
+  "Major mode for editing TypeScript code.
+Comments, strings, template literals, regexps, keywords, types and names are highlighted."
+  (set-syntax-dialect 'fundamental)
+  (set-major-mode-name 'typescript-mode)
+  #f)
+
 (define-command (lisp-interaction-mode)
   "Major mode for typing and evaluating Lisp forms (Scheme forms, in this editor)."
   (set-syntax-dialect 'scheme)

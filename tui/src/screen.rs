@@ -34,21 +34,23 @@ pub fn token_pair(kind: TokenKind) -> i16 {
 
 /// 字句の種類の色. 8 色の端末で、暗い背景の Emacs の font-lock の色に合わせる
 /// (コメントは黄, 文字列とドキュメントは緑, キーワードはシアンの太字, 型は緑, 定数はマゼンタ, プリプロセッサと関数の名前と組み込みの名前は青の太字,
-/// 変数の名前は黄の太字, 警告は赤の太字, 正規表現のグループは緑の太字).
+/// 変数の名前は黄の太字, 警告は赤の太字, 正規表現のグループは緑の太字.
+/// JSDoc のタグはコメントと同じ黄, 型は青, 値は黄の太字).
 ///
 /// # Returns
 ///
 /// 色 (数値のように、色を付けない種類は `None`).
 pub fn token_style(kind: TokenKind) -> Option<TokenStyle> {
     let (color, bold) = match kind {
-        TokenKind::Comment | TokenKind::CommentDelimiter => (3, false),
+        TokenKind::Comment | TokenKind::CommentDelimiter | TokenKind::DocTag => (3, false),
         TokenKind::DocComment | TokenKind::String | TokenKind::Type => (2, false),
         TokenKind::Keyword => (6, true),
         TokenKind::Constant => (5, false),
         TokenKind::Preprocessor | TokenKind::FunctionName | TokenKind::Builtin => (4, true),
         TokenKind::Warning => (1, true),
         TokenKind::RegexpGroup => (2, true),
-        TokenKind::VariableName => (3, true),
+        TokenKind::VariableName | TokenKind::DocValue => (3, true),
+        TokenKind::DocType => (4, false),
         TokenKind::Number => return None,
     };
     Some(TokenStyle { color, bold })

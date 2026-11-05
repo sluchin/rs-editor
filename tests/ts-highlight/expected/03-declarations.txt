@@ -1,0 +1,15 @@
+1	6	keyword
+27	32	keyword
+33	35	variable-name
+51	54	keyword
+94	97	keyword
+98	100	variable-name
+103	106	function-name
+124	127	keyword
+128	130	variable-name
+132	138	keyword
+152	157	keyword
+158	160	variable-name
+166	168	keyword
+171	177	keyword
+183	185	variable-name

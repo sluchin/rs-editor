@@ -8,7 +8,9 @@ mod decl;
 mod elisp_keywords;
 mod lang;
 mod lisp;
+mod paint;
 mod rust;
+mod typescript;
 
 pub use lang::{Language, LanguageSpec};
 
@@ -43,11 +45,17 @@ pub enum TokenKind {
     Warning,
     /// 正規表現のグループ (`font-lock-regexp-grouping-backslash` と `-construct`). Emacs Lisp の文字列の中の `\(` など.
     RegexpGroup,
+    /// JSDoc のタグ `@param` (typescript-mode の `typescript-jsdoc-tag`).
+    DocTag,
+    /// JSDoc の型 `{string}` (`typescript-jsdoc-type`).
+    DocType,
+    /// JSDoc のタグの値 (引数の名前など. `typescript-jsdoc-value`).
+    DocValue,
 }
 
 impl TokenKind {
     /// 全ての種類 (番号を付けて使うため).
-    pub const ALL: [TokenKind; 14] = [
+    pub const ALL: [TokenKind; 17] = [
         TokenKind::Comment,
         TokenKind::CommentDelimiter,
         TokenKind::DocComment,
@@ -62,6 +70,9 @@ impl TokenKind {
         TokenKind::Builtin,
         TokenKind::Warning,
         TokenKind::RegexpGroup,
+        TokenKind::DocTag,
+        TokenKind::DocType,
+        TokenKind::DocValue,
     ];
 
     /// 画面に渡す名前 (CSS のクラス名と、Lisp の記号に使う).
@@ -81,6 +92,9 @@ impl TokenKind {
             TokenKind::Builtin => "builtin",
             TokenKind::Warning => "warning",
             TokenKind::RegexpGroup => "regexp-group",
+            TokenKind::DocTag => "doc-tag",
+            TokenKind::DocType => "doc-type",
+            TokenKind::DocValue => "doc-value",
         }
     }
 }
@@ -108,8 +122,10 @@ pub struct Span {
 /// 範囲の並び (始まりの順. 重ならない). 色の付かない文字は、含まない.
 pub fn tokenize(language: Language, text: &str) -> Vec<Span> {
     let Some(spec) = language.spec() else {
-        if language == Language::Rust {
-            return rust::tokenize(text);
+        match language {
+            Language::Rust => return rust::tokenize(text),
+            Language::TypeScript => return typescript::tokenize(text),
+            _ => {}
         }
         let dialect = if language == Language::Scheme {
             lisp::Dialect::Scheme

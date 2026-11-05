@@ -228,3 +228,15 @@
   color: var(--font-lock-string);
   font-weight: bold;
 }
+
+.code-editor-container .cm-tok-doc-tag {
+  color: var(--typescript-jsdoc-tag);
+}
+
+.code-editor-container .cm-tok-doc-type {
+  color: var(--typescript-jsdoc-type);
+}
+
+.code-editor-container .cm-tok-doc-value {
+  color: var(--typescript-jsdoc-value);
+}

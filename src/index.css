@@ -14,6 +14,10 @@
   --font-lock-constant: #008b8b;
   --font-lock-builtin: #483d8b;
   --font-lock-warning: #ff0000;
+  /* typescript-mode の JSDoc の face (明るい背景と暗い背景で同じ色) */
+  --typescript-jsdoc-tag: #708090;
+  --typescript-jsdoc-type: #4682b4;
+  --typescript-jsdoc-value: #8b7500;
   --escape-glyph: brown;
   --show-paren-match: turquoise;
   --mode-line-inactive-background: #eeeeee;

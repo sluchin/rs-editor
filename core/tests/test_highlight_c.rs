@@ -501,6 +501,10 @@ fn test_set_auto_mode_chooses_c_mode_for_c_files() {
         ("/tmp/a.scm", "scheme-mode"),
         ("/tmp/a.el", "emacs-lisp-mode"),
         ("/tmp/a.rs", "rust-mode"),
+        ("/tmp/a.ts", "typescript-mode"),
+        ("/tmp/a.tsx", "typescript-mode"),
+        ("/tmp/a.mts", "typescript-mode"),
+        ("/tmp/a.cts", "typescript-mode"),
         ("/tmp/a.txt2", "fundamental-mode"),
     ] {
         ev.eval_with(
