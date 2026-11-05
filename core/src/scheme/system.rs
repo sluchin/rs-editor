@@ -2,6 +2,7 @@
 //!
 //! 相対パスは, 読み込んでいるファイル (`load`) のディレクトリ, またはホームディレクトリから数えます.
 
+use crate::error::Error;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hasher};
 use std::path::{Component, Path, PathBuf};
@@ -91,7 +92,7 @@ pub(crate) fn call(
     machine: &mut Machine,
     name: &str,
     args: Vec<Value>,
-) -> Option<Result<Value, String>> {
+) -> Option<Result<Value, Error>> {
     let result = match name {
         "load" => fixed::<1>(name, args).and_then(|[file]| {
             let file = string(name, &file)?;
@@ -104,15 +105,17 @@ pub(crate) fn call(
                 machine.evaluator.provide(&feature);
                 Ok(Value::Symbol(feature))
             }
-            _ => Err("provide expects a symbol".to_string()),
+            _ => Err("provide expects a symbol".to_string().into()),
         }),
         "featurep" => fixed::<1>(name, args).and_then(|[feature]| match feature {
             Value::Symbol(feature) => Ok(Value::Boolean(machine.evaluator.featurep(&feature))),
-            _ => Err("featurep expects a symbol".to_string()),
+            _ => Err("featurep expects a symbol".to_string().into()),
         }),
         "expand-file-name" => {
             if !(1..=2).contains(&args.len()) {
-                return Some(Err("expand-file-name expects 1 or 2 arguments".to_string()));
+                return Some(Err("expand-file-name expects 1 or 2 arguments"
+                    .to_string()
+                    .into()));
             }
             expand_args(machine, name, &args).map(|path| Value::String(path_string(&path)))
         }
@@ -128,21 +131,23 @@ pub(crate) fn call(
             let path = expand_args(machine, name, &args)?;
             std::fs::read_to_string(&path)
                 .map(Value::String)
-                .map_err(|e| format!("{}: {}", path.display(), e))
+                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
         }),
         "write-file-string" => fixed::<2>(name, args).and_then(|[path, text]| {
             let path = expand_args(machine, name, &[path])?;
             let text = string(name, &text)?;
             if let Some(dir) = path.parent() {
-                std::fs::create_dir_all(dir).map_err(|e| format!("{}: {}", dir.display(), e))?;
+                std::fs::create_dir_all(dir)
+                    .map_err(|e| Error::from(format!("{}: {}", dir.display(), e)))?;
             }
             write_atomic(&path, text.as_bytes())
-                .map_err(|e| format!("{}: {}", path.display(), e))?;
+                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
             Ok(Value::Nil)
         }),
         "make-directory" => fixed::<1>(name, args).and_then(|args| {
             let path = expand_args(machine, name, &args)?;
-            std::fs::create_dir_all(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
+            std::fs::create_dir_all(&path)
+                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
             Ok(Value::Nil)
         }),
         "directory-listing" => fixed::<1>(name, args).and_then(|args| {
@@ -152,7 +157,8 @@ pub(crate) fn call(
         "make-temp-file" => make_temp_file(name, &args),
         "delete-file" => fixed::<1>(name, args).and_then(|args| {
             let path = expand_args(machine, name, &args)?;
-            std::fs::remove_file(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
+            std::fs::remove_file(&path)
+                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
             Ok(Value::Nil)
         }),
         "rename-file" => {
@@ -160,35 +166,46 @@ pub(crate) fn call(
             let (from, to, ok) = match args.as_slice() {
                 [from, to] => (from, to, false),
                 [from, to, ok] => (from, to, ok.is_true()),
-                _ => return Some(Err("rename-file expects 2 or 3 arguments".to_string())),
+                _ => {
+                    return Some(Err("rename-file expects 2 or 3 arguments"
+                        .to_string()
+                        .into()))
+                }
             };
             (|| {
                 let from = expand_args(machine, name, std::slice::from_ref(from))?;
                 let to = expand_args(machine, name, std::slice::from_ref(to))?;
                 if !ok && to.exists() {
-                    return Err(format!("File already exists: {}", to.display()));
+                    return Err(Error::strings(
+                        "file-already-exists",
+                        &["File already exists", &to.display().to_string()],
+                    ));
                 }
                 std::fs::rename(&from, &to)
                     .map(|()| Value::Nil)
-                    .map_err(|e| format!("{}: {}", from.display(), e))
+                    .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
             })()
         }
         "directory-files" => {
             // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真なら, ディレクトリを付ける. MATCH は正規表現
             if !(1..=3).contains(&args.len()) {
-                return Some(Err("directory-files expects 1 to 3 arguments".to_string()));
+                return Some(Err("directory-files expects 1 to 3 arguments"
+                    .to_string()
+                    .into()));
             }
             (|| {
                 let dir = expand_args(machine, name, &args[..1])?;
                 let full = args.get(1).is_some_and(Value::is_true);
                 let pattern = match args.get(2) {
                     Some(Value::String(pattern)) => Some(
-                        regex::Regex::new(pattern).map_err(|e| format!("Invalid regexp: {e}"))?,
+                        regex::Regex::new(pattern)
+                            .map_err(|e| Error::strings("invalid-regexp", &[&e.to_string()]))?,
                     ),
                     _ => None,
                 };
-                let entries = std::fs::read_dir(&dir)
-                    .map_err(|e| format!("Opening directory: {}, {}", e, dir.display()))?;
+                let entries = std::fs::read_dir(&dir).map_err(|e| {
+                    Error::from(format!("Opening directory: {}, {}", e, dir.display()))
+                })?;
                 let mut names = vec![".".to_string(), "..".to_string()];
                 names.extend(
                     entries
@@ -216,17 +233,20 @@ pub(crate) fn call(
             let (from, to, ok) = match args.as_slice() {
                 [from, to] => (from, to, false),
                 [from, to, ok] => (from, to, ok.is_true()),
-                _ => return Some(Err("copy-file expects 2 or 3 arguments".to_string())),
+                _ => return Some(Err("copy-file expects 2 or 3 arguments".to_string().into())),
             };
             (|| {
                 let from = expand_args(machine, name, std::slice::from_ref(from))?;
                 let to = expand_args(machine, name, std::slice::from_ref(to))?;
                 if !ok && to.exists() {
-                    return Err(format!("File already exists: {}", to.display()));
+                    return Err(Error::strings(
+                        "file-already-exists",
+                        &["File already exists", &to.display().to_string()],
+                    ));
                 }
                 std::fs::copy(&from, &to)
                     .map(|_| Value::Nil)
-                    .map_err(|e| format!("{}: {}", from.display(), e))
+                    .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
             })()
         }
         "delete-directory" => {
@@ -234,7 +254,11 @@ pub(crate) fn call(
             let (path, recursive) = match args.as_slice() {
                 [path] => (path, false),
                 [path, recursive] => (path, recursive.is_true()),
-                _ => return Some(Err("delete-directory expects 1 or 2 arguments".to_string())),
+                _ => {
+                    return Some(Err("delete-directory expects 1 or 2 arguments"
+                        .to_string()
+                        .into()))
+                }
             };
             let path = match expand_args(machine, name, std::slice::from_ref(path)) {
                 Ok(path) => path,
@@ -247,7 +271,7 @@ pub(crate) fn call(
             };
             removed
                 .map(|_| Value::Nil)
-                .map_err(|e| format!("{}: {}", path.display(), e))
+                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
         }
         "directory-files-recursively" => fixed::<2>(name, args).and_then(|[dir, pattern]| {
             let dir = expand_args(machine, name, &[dir])?;
@@ -290,7 +314,7 @@ pub(crate) fn call(
         "random" => fixed::<1>(name, args).and_then(|[limit]| {
             let limit = number(name, &limit)?;
             if limit < 1.0 || limit.fract() != 0.0 {
-                return Err("random expects a positive integer".to_string());
+                return Err("random expects a positive integer".to_string().into());
             }
             let random = std::collections::hash_map::RandomState::new()
                 .build_hasher()
@@ -313,7 +337,11 @@ pub(crate) fn call(
             let url = string(name, &url)?.to_string();
             let program = match machine.evaluator.global().get("browse-url-generic-program") {
                 Some(Value::String(program)) => program,
-                _ => return Err("browse-url-generic-program must be a program".to_string()),
+                _ => {
+                    return Err("browse-url-generic-program must be a program"
+                        .to_string()
+                        .into())
+                }
             };
             browse_url(&program, &url)?;
             Ok(Value::Nil)
@@ -357,7 +385,7 @@ pub(crate) fn call(
 /// # Returns
 ///
 /// 見つけたファイルのパス. 無ければ, `Cannot open load file` の [`Err`].
-fn locate_library(machine: &Machine, file: &str) -> Result<PathBuf, String> {
+fn locate_library(machine: &Machine, file: &str) -> Result<PathBuf, Error> {
     let home = dirs::home_dir().unwrap_or_default();
     let plain = !(file.starts_with('/')
         || file.starts_with('~')
@@ -381,7 +409,12 @@ fn locate_library(machine: &Machine, file: &str) -> Result<PathBuf, String> {
                 .map(|name| expand_file_name(&name, dir, &home))
         })
         .find(|path| path.is_file())
-        .ok_or_else(|| format!("Cannot open load file: {}", file))
+        .ok_or_else(|| {
+            Error::strings(
+                "file-missing",
+                &["Cannot open load file", "No such file or directory", file],
+            )
+        })
 }
 
 /// `load-path` (ディレクトリの文字列のリスト) を返します.
@@ -393,8 +426,8 @@ fn locate_library(machine: &Machine, file: &str) -> Result<PathBuf, String> {
 /// # Returns
 ///
 /// ディレクトリ. `load-path` が文字列のリストでなければ [`Err`].
-fn load_path(machine: &Machine) -> Result<Vec<String>, String> {
-    let invalid = || "load-path must be a list of directories".to_string();
+fn load_path(machine: &Machine) -> Result<Vec<String>, Error> {
+    let invalid = || Error::plain("load-path must be a list of directories");
     match machine.evaluator.global().get("load-path") {
         Some(Value::List(dirs)) => dirs
             .iter()
@@ -419,17 +452,21 @@ fn load_path(machine: &Machine) -> Result<Vec<String>, String> {
 /// # Returns
 ///
 /// 機能. 読み込んでも, 機能を `provide` しなければ [`Err`].
-fn require(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+fn require(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
     let (feature, file) = match args.as_slice() {
         [Value::Symbol(feature)] => (feature.clone(), feature.clone()),
         [Value::Symbol(feature), file] => (feature.clone(), string(name, file)?.to_string()),
-        _ => return Err("require expects a feature (symbol) and an optional file".to_string()),
+        _ => {
+            return Err("require expects a feature (symbol) and an optional file"
+                .to_string()
+                .into())
+        }
     };
     if !machine.evaluator.featurep(&feature) {
         let path = locate_library(machine, &file)?;
         load_file(machine, &path)?;
         if !machine.evaluator.featurep(&feature) {
-            return Err(format!("Required feature was not provided: {}", feature));
+            return Err(format!("Required feature was not provided: {}", feature).into());
         }
     }
     Ok(Value::Symbol(feature))
@@ -445,13 +482,14 @@ fn require(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value,
 /// # Returns
 ///
 /// `#t`. 読めないときと, 評価が失敗したときは, ファイルのパスを添えた失敗の内容.
-fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, String> {
+fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, Error> {
     let path = path.to_path_buf();
     log::info!("Loading {}", path.display());
-    let code = std::fs::read_to_string(&path).map_err(|e| format!("{}: {}", path.display(), e))?;
+    let code = std::fs::read_to_string(&path)
+        .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
     let values = Parser::new(&code)
         .parse()
-        .map_err(|e| format!("{}: {}", path.display(), e))?;
+        .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
     machine
         .load_dirs
         .push(path.parent().map(Path::to_path_buf).unwrap_or_default());
@@ -462,7 +500,7 @@ fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, String> {
         .try_for_each(|value| machine.eval(value, &global).map(|_| ()));
     machine.load_dirs.pop();
     machine.load_files.pop();
-    result.map_err(|e| format!("{}: {}", path.display(), e))?;
+    result.map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
     Ok(Value::Boolean(true))
 }
 
@@ -477,7 +515,7 @@ fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, String> {
 /// # Returns
 ///
 /// 絶対パス. 引数が文字列でなければ [`Err`].
-fn expand_args(machine: &Machine, name: &str, args: &[Value]) -> Result<PathBuf, String> {
+fn expand_args(machine: &Machine, name: &str, args: &[Value]) -> Result<PathBuf, Error> {
     let path = string(name, &args[0])?;
     Ok(PathBuf::from(match args.get(1) {
         Some(dir) => {
@@ -548,16 +586,19 @@ fn path_string(path: &Path) -> String {
 /// # Returns
 ///
 /// `ls` の出力. 読めない, または `ls` が失敗したときは, 理由の文字列の [`Err`].
-pub fn directory_listing(program: &str, path: &Path) -> Result<String, String> {
-    std::fs::read_dir(path).map_err(|e| format!("{}: {}", path.display(), e))?;
+pub fn directory_listing(program: &str, path: &Path) -> Result<String, Error> {
+    std::fs::read_dir(path).map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
     let output = std::process::Command::new(program)
         .args(["-al", "--"])
         .arg(path)
         .env("LC_ALL", "C")
         .output()
-        .map_err(|e| format!("{program}: {e}"))?;
+        .map_err(|e| Error::from(format!("{program}: {e}")))?;
     if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+        return Err(String::from_utf8_lossy(&output.stderr)
+            .trim()
+            .to_string()
+            .into());
     }
     Ok(String::from_utf8_lossy(&output.stdout).into_owned())
 }
@@ -642,16 +683,20 @@ fn seconds(time: SystemTime) -> f64 {
 /// # Returns
 ///
 /// 文字列. 書式が誤っているときは [`Err`].
-fn format_time_string(name: &str, args: &[Value]) -> Result<Value, String> {
+fn format_time_string(name: &str, args: &[Value]) -> Result<Value, Error> {
     let (template, time) = match args {
         [template] => (template, seconds(SystemTime::now())),
         [template, time] => (template, number(name, time)?),
-        _ => return Err("format-time-string expects 1 or 2 arguments".to_string()),
+        _ => {
+            return Err("format-time-string expects 1 or 2 arguments"
+                .to_string()
+                .into())
+        }
     };
     let template = string(name, template)?;
     let items: Vec<Item> = StrftimeItems::new(template).collect();
     if items.contains(&Item::Error) {
-        return Err(format!("format-time-string: invalid format {:?}", template));
+        return Err(format!("format-time-string: invalid format {:?}", template).into());
     }
     let time = Local
         .timestamp_opt(time.floor() as i64, 0)
@@ -671,19 +716,19 @@ fn format_time_string(name: &str, args: &[Value]) -> Result<Value, String> {
 /// # Returns
 ///
 /// 秒数. 読めない日付は [`Err`].
-fn date_to_time(date: &str) -> Result<f64, String> {
+fn date_to_time(date: &str) -> Result<f64, Error> {
     let date = date.trim();
     let time = NaiveDateTime::parse_from_str(date, "%Y-%m-%d %H:%M:%S")
         .or_else(|_| NaiveDateTime::parse_from_str(date, "%Y-%m-%d %H:%M"))
         .or_else(|_| {
             NaiveDate::parse_from_str(date, "%Y-%m-%d").map(|d| d.and_time(Default::default()))
         })
-        .map_err(|_| format!("date-to-time: invalid date {:?}", date))?;
+        .map_err(|_| Error::from(format!("date-to-time: invalid date {:?}", date)))?;
     Local
         .from_local_datetime(&time)
         .earliest()
         .map(|t| t.timestamp() as f64)
-        .ok_or_else(|| format!("date-to-time: invalid date {:?}", date))
+        .ok_or_else(|| format!("date-to-time: invalid date {:?}", date).into())
 }
 
 /// 正規表現を作ります (作ったものは, 覚えておく).
@@ -695,13 +740,14 @@ fn date_to_time(date: &str) -> Result<f64, String> {
 /// # Returns
 ///
 /// 正規表現. 誤っていれば [`Err`].
-pub(crate) fn regexp(pattern: &str) -> Result<Regex, String> {
+pub(crate) fn regexp(pattern: &str) -> Result<Regex, Error> {
     REGEXPS.with(|cache| {
         let mut cache = cache.borrow_mut();
         if let Some(regex) = cache.get(pattern) {
             return Ok(regex.clone());
         }
-        let regex = Regex::new(pattern).map_err(|e| format!("Invalid regexp: {}", e))?;
+        let regex =
+            Regex::new(pattern).map_err(|e| Error::strings("invalid-regexp", &[&e.to_string()]))?;
         if cache.len() >= REGEXP_CACHE_SIZE {
             cache.clear();
         }
@@ -720,11 +766,11 @@ pub(crate) fn regexp(pattern: &str) -> Result<Regex, String> {
 /// # Returns
 ///
 /// 作ったファイルかディレクトリのパス. 作れなければ [`Err`].
-fn make_temp_file(name: &str, args: &[Value]) -> Result<Value, String> {
+fn make_temp_file(name: &str, args: &[Value]) -> Result<Value, Error> {
     let (prefix, directory) = match args {
         [prefix] => (string(name, prefix)?, false),
         [prefix, flag] => (string(name, prefix)?, flag.is_true()),
-        _ => return Err("make-temp-file expects 1 or 2 arguments".to_string()),
+        _ => return Err("make-temp-file expects 1 or 2 arguments".to_string().into()),
     };
     let builder = tempfile::Builder::new().prefix(prefix).to_owned();
     let path = if directory {
@@ -734,7 +780,7 @@ fn make_temp_file(name: &str, args: &[Value]) -> Result<Value, String> {
             .tempfile()
             .and_then(|file| file.keep().map(|(_, path)| path).map_err(|e| e.error))
     }
-    .map_err(|e| format!("make-temp-file: {}", e))?;
+    .map_err(|e| Error::from(format!("make-temp-file: {}", e)))?;
     Ok(Value::String(path_string(&path)))
 }
 
@@ -750,17 +796,17 @@ fn make_temp_file(name: &str, args: &[Value]) -> Result<Value, String> {
 /// 合った所の全体と, 括弧ごとの文字列 (合わなかった括弧は `#f`) のリスト. 合わなければ `#f`.
 /// `regexp-match-positions` なら, 文字列の代わりに, 始めと終わりの位置 (文字の数) のリスト
 /// (`(regexp-match-positions "a(b)" "xab")` → `((1 3) (2 3))`).
-fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
+fn regexp_match(name: &str, args: &[Value]) -> Result<Value, Error> {
     let (pattern, text, start) = match args {
         [pattern, text] => (pattern, text, 0),
         [pattern, text, start] => (pattern, text, index(name, start)?),
-        _ => return Err("regexp-match expects 2 or 3 arguments".to_string()),
+        _ => return Err("regexp-match expects 2 or 3 arguments".to_string().into()),
     };
     let regex = regexp(string(name, pattern)?)?;
     let text = string(name, text)?;
     let count = text.chars().count();
     if start > count {
-        return Err("regexp-match: index out of range".to_string());
+        return Err("regexp-match: index out of range".to_string().into());
     }
     let offset = text
         .char_indices()
@@ -799,10 +845,10 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, String> {
 /// # Returns
 ///
 /// 合った行ごとの `(パス 行の番号 行)` のリスト (ファイルの順, 行の順. 行の番号は 1 から).
-fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result<Value, String> {
+fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result<Value, Error> {
     let regex = regexp(string(name, pattern)?)?;
     let Value::List(files) = files else {
-        return Err(format!("{name} expects a list of files"));
+        return Err(format!("{name} expects a list of files").into());
     };
     let mut found = Vec::new();
     for file in files.iter() {
@@ -841,7 +887,7 @@ pub fn run_shell(
     command: &str,
     input: Option<&str>,
     dir: Option<&str>,
-) -> Result<(i32, String), String> {
+) -> Result<(i32, String), Error> {
     use std::io::Write;
     let mut process = std::process::Command::new("sh");
     process
@@ -852,14 +898,18 @@ pub fn run_shell(
     if let Some(dir) = dir {
         process.current_dir(dir);
     }
-    let mut child = process.spawn().map_err(|e| format!("sh: {e}"))?;
+    let mut child = process
+        .spawn()
+        .map_err(|e| Error::from(format!("sh: {e}")))?;
     let mut stdin = child.stdin.take().expect("stdin is piped");
     let text = input.unwrap_or("").to_string();
     // 出力を読みながら書かないと, 入力が大きいとき止まる
     let writer = std::thread::spawn(move || {
         let _ = stdin.write_all(text.as_bytes());
     });
-    let output = child.wait_with_output().map_err(|e| format!("sh: {e}"))?;
+    let output = child
+        .wait_with_output()
+        .map_err(|e| Error::from(format!("sh: {e}")))?;
     let _ = writer.join();
     Ok((
         output.status.code().unwrap_or(-1),
@@ -877,13 +927,13 @@ pub fn run_shell(
 /// # Returns
 ///
 /// 動かせなければ, 失敗の内容.
-pub fn browse_url(program: &str, url: &str) -> Result<(), String> {
+pub fn browse_url(program: &str, url: &str) -> Result<(), Error> {
     let mut child = std::process::Command::new(program)
         .arg(url)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| format!("browse-url: {}: {}", program, e))?;
+        .map_err(|e| Error::from(format!("browse-url: {}: {}", program, e)))?;
     // 終わったプログラムを片付ける
     std::thread::spawn(move || child.wait());
     Ok(())

@@ -10,11 +10,11 @@ use rseditor_core::scheme::value::Value;
 struct NoUi;
 
 impl Host for NoUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         if op == "local-set-key" {
             return Ok(Value::Nil);
         }
-        Err(format!("ui: {op}"))
+        Err(format!("ui: {op}").into())
     }
 }
 

@@ -12,10 +12,10 @@ use serde_json::{json, Value as Json};
 struct FakeUi;
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }
@@ -72,7 +72,7 @@ fn test_against_emacs() {
                 };
                 let code = format!("(set! last-command #f) (set! goal-column #f) {call}");
                 let result = ev.eval_with(&code, &host);
-                outcome(&host, result)
+                outcome(&host, result.map_err(|e| e.to_string()))
             };
             if &actual != expected {
                 failures.push(format!(

@@ -17,7 +17,7 @@ struct Ui {
 }
 
 impl Host for Ui {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
             "window-body-height" => Ok(Value::Number(5.0)),
@@ -28,8 +28,8 @@ impl Host for Ui {
                 .unwrap()
                 .pop_front()
                 .map(Value::String)
-                .ok_or_else(|| "no answer".to_string()),
-            other => Err(format!("ui: {other}")),
+                .ok_or_else(|| "no answer".into()),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

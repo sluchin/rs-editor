@@ -28,7 +28,7 @@ fn rejects_invalid_keys() {
         "", "  ", "C-", "C-foo", "<f13>", "<f0>", "<fx>", "<f5", "f5>",
     ] {
         assert_eq!(
-            to_codemirror(keys),
+            to_codemirror(keys).map_err(|e| e.to_string()),
             Err(format!("Invalid key: {:?}", keys)),
             "{}",
             keys

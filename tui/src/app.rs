@@ -1,5 +1,6 @@
 //! ターミナルのエディタ: キーを受けて、コマンドを動かし (コマンドループは核の [`CommandLoop`])、画面を描く.
 
+use rseditor_core::error::Error;
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
@@ -33,7 +34,7 @@ impl App {
     /// # Errors
     ///
     /// 基本のコマンドを読めないとき.
-    pub fn new(screen: Box<dyn Screen>, files: &[String]) -> Result<Self, String> {
+    pub fn new(screen: Box<dyn Screen>, files: &[String]) -> Result<Self, Error> {
         let editor = Arc::new(Mutex::new(Editor::new()));
         let keymap = Arc::new(Mutex::new(Keymap::default()));
         let state = Arc::new(Mutex::new(UiState {
@@ -67,7 +68,7 @@ impl App {
     /// # Errors
     ///
     /// 評価に失敗したとき.
-    pub fn eval(&self, code: &str) -> Result<String, String> {
+    pub fn eval(&self, code: &str) -> Result<String, Error> {
         self.commands.eval(code)
     }
 

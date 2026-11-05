@@ -11,6 +11,7 @@ pub mod casefiddle;
 pub mod command_loop;
 pub mod comment;
 pub mod editor;
+pub mod error;
 pub mod files;
 pub mod fill;
 pub mod frame;

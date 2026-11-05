@@ -22,7 +22,7 @@ struct Ui {
 }
 
 impl Host for Ui {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => {
                 *self.message.lock().unwrap() = match args.first() {
@@ -31,7 +31,7 @@ impl Host for Ui {
                 };
                 Ok(Value::Nil)
             }
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

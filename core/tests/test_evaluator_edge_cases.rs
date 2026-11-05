@@ -27,7 +27,7 @@ fn eval(code: &str) -> String {
 ///
 /// 失敗の内容 (成功したら panic する).
 fn eval_err(code: &str) -> String {
-    Evaluator::new().eval(code).unwrap_err()
+    Evaluator::new().eval(code).unwrap_err().to_string()
 }
 
 /// 読み込んで, 式を返す.

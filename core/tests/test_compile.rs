@@ -17,14 +17,14 @@ struct Ui {
 }
 
 impl Host for Ui {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match (op, args.first()) {
             ("message", Some(Value::String(text))) => {
                 self.messages.lock().unwrap().push(text.clone());
                 Ok(Value::Nil)
             }
             ("local-set-key", _) => Ok(Value::Nil),
-            _ => Err(format!("ui: {op}")),
+            _ => Err(format!("ui: {op}").into()),
         }
     }
 }

@@ -3,6 +3,7 @@
 //! 評価器は、別のスレッドでコマンドを動かし、画面の要る操作で止まって、キーが来るのを待ちます。
 //! ここでは、その場で画面を描き、キーを読んで,答えを返します。
 
+use rseditor_core::error::Error;
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -137,8 +138,8 @@ impl UiHost {
     }
 
     /// キーを読みます. 入力が終わっていたら、失敗にする.
-    fn read_key(&self) -> Result<String, String> {
-        let (key, from_screen) = next_key(&self.state).ok_or_else(|| "Quit".to_string())?;
+    fn read_key(&self) -> Result<String, Error> {
+        let (key, from_screen) = next_key(&self.state).ok_or_else(|| Error::bare("quit"))?;
         if from_screen {
             // 画面から読んだキーは, マクロを覚えているなら覚える
             self.editor.lock().unwrap().kbd_macro.record(&key);
@@ -152,7 +153,7 @@ impl UiHost {
         prompt: &str,
         initial: &str,
         completion: Completion,
-    ) -> Result<String, String> {
+    ) -> Result<String, Error> {
         let mut input: Vec<char> = initial.chars().collect();
         let mut cursor = input.len();
         loop {
@@ -165,7 +166,7 @@ impl UiHost {
             let key = self.read_key()?;
             match key.as_str() {
                 "RET" => return Ok(text),
-                "C-g" => return Err("Quit".to_string()),
+                "C-g" => return Err(Error::bare("quit")),
                 "DEL" => {
                     if cursor > 0 {
                         cursor -= 1;
@@ -270,7 +271,7 @@ fn text(args: &[Value], i: usize) -> String {
 }
 
 impl Host for UiHost {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
             "message" => {
                 self.state().message = text(&args, 0);
@@ -310,7 +311,7 @@ impl Host for UiHost {
                 let key = self.read_key()?;
                 let allow_quit = text(&args, 1) == "allow-quit";
                 if key == "C-g" && !allow_quit {
-                    return Err("Quit".to_string());
+                    return Err(Error::bare("quit"));
                 }
                 Ok(Value::String(read_key_name(&key)))
             }
@@ -431,7 +432,7 @@ impl Host for UiHost {
                     .collect(),
             )),
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
-            "command" => Err(format!("Undefined command: {}", text(&args, 0))),
+            "command" => Err(format!("Undefined command: {}", text(&args, 0)).into()),
             // 色, 下線, 隠すこと: 端末では何もしない
             "highlight-regexp"
             | "unhighlight-regexp"
@@ -441,7 +442,7 @@ impl Host for UiHost {
             | "set-foreground-color"
             | "set-font" => Ok(Value::Nil),
             "outline-invisible-p" => Ok(Value::Boolean(false)),
-            other => Err(format!("The terminal does not support {other}")),
+            other => Err(format!("The terminal does not support {other}").into()),
         }
     }
 }

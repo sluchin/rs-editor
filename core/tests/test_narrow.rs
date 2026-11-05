@@ -15,10 +15,10 @@ use rseditor_core::syntax::Dialect;
 struct Quiet;
 
 impl Host for Quiet {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }
@@ -60,7 +60,7 @@ fn test_narrow_and_widen() {
     assert_eq!(buffer.len(), 9);
     assert_eq!(buffer.text(), "ab\ncde\n\nf");
     assert_eq!(
-        buffer.narrow_to_region(0, 10),
+        buffer.narrow_to_region(0, 10).map_err(|e| e.to_string()),
         Err("Args out of range: 1, 11".to_string())
     );
     buffer.widen();
@@ -90,11 +90,14 @@ fn test_motion_stays_in_the_accessible_part() {
     assert_eq!(buffer.char_before(6), Some('e'));
     assert_eq!(buffer.char_before(7), None);
     assert_eq!(
-        buffer.forward_char(-1),
+        buffer.forward_char(-1).map_err(|e| e.to_string()),
         Err("Beginning of buffer".to_string())
     );
     assert_eq!(buffer.point(), 3);
-    assert_eq!(buffer.forward_char(4), Err("End of buffer".to_string()));
+    assert_eq!(
+        buffer.forward_char(4).map_err(|e| e.to_string()),
+        Err("End of buffer".to_string())
+    );
     assert_eq!(buffer.point(), 6);
     assert_eq!(buffer.forward_char(-3), Ok(()));
     assert_eq!(buffer.point(), 3);
@@ -135,19 +138,19 @@ fn test_lines_in_the_accessible_part() {
 fn test_editing_is_limited_to_the_accessible_part() {
     let mut buffer = narrowed();
     assert_eq!(
-        buffer.delete_region(0, 4),
+        buffer.delete_region(0, 4).map_err(|e| e.to_string()),
         Err("Args out of range: #<buffer n>, 1, 5".to_string())
     );
     assert_eq!(
-        buffer.substring(3, 8),
+        buffer.substring(3, 8).map_err(|e| e.to_string()),
         Err("Args out of range: #<buffer n>, 4, 9".to_string())
     );
     assert_eq!(
-        buffer.insert_at(2, "x"),
+        buffer.insert_at(2, "x").map_err(|e| e.to_string()),
         Err("Args out of range".to_string())
     );
     assert_eq!(
-        buffer.insert_at(7, "x"),
+        buffer.insert_at(7, "x").map_err(|e| e.to_string()),
         Err("Args out of range".to_string())
     );
     assert_eq!(buffer.substring(6, 4).unwrap(), "de");
@@ -387,13 +390,13 @@ struct NoRestriction {
 }
 
 impl Host for NoRestriction {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         self.calls.lock().unwrap().push(op.to_string());
         match op {
             "current-buffer" => Ok(Value::String("a".to_string())),
             "restriction-save" => Ok(Value::Number(0.0)),
-            "set-buffer" if self.gone => Err("No such buffer".to_string()),
-            _ => Err(format!("ui: {op}")),
+            "set-buffer" if self.gone => Err("No such buffer".to_string().into()),
+            _ => Err(format!("ui: {op}").into()),
         }
     }
 }
@@ -415,10 +418,10 @@ fn test_save_restriction_without_the_buffer() {
     // 画面が絞り込みを覚えられなければ, 本体だけを評価する
     struct NoSave;
     impl Host for NoSave {
-        fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+        fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
             match op {
                 "current-buffer" => Ok(Value::String("a".to_string())),
-                _ => Err(format!("ui: {op}")),
+                _ => Err(format!("ui: {op}").into()),
             }
         }
     }
@@ -504,13 +507,13 @@ struct Recording {
 }
 
 impl Host for Recording {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match (op, args.first()) {
             ("message", Some(Value::String(text))) => {
                 *self.message.lock().unwrap() = Some(text.clone());
                 Ok(Value::Nil)
             }
-            _ => Err(format!("ui: {op}")),
+            _ => Err(format!("ui: {op}").into()),
         }
     }
 }

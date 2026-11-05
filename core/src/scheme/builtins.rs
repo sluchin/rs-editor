@@ -2,6 +2,7 @@
 //!
 //! エディタの位置は, Emacs と同じく 1 から数えます (`point-min` は 1).
 
+use crate::error::Error;
 use crate::scheme::editor_ops;
 use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
@@ -88,6 +89,8 @@ pub const NAMES: &[&str] = &[
     "error",
     "user-error",
     "error-message-string",
+    "signal",
+    "define-error",
     "scan-error-reason",
     "string-search",
     "string-prefix?",
@@ -166,32 +169,32 @@ pub const NAMES: &[&str] = &[
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
     match name {
         "+" => Ok(Value::Number(numbers(name, &args)?.iter().sum())),
         "*" => Ok(Value::Number(numbers(name, &args)?.iter().product())),
         "-" => {
             let nums = numbers(name, &args)?;
             match nums.split_first() {
-                None => Err("- expects at least one argument".to_string()),
+                None => Err("- expects at least one argument".to_string().into()),
                 Some((first, [])) => Ok(Value::Number(-first)),
                 Some((first, rest)) => Ok(Value::Number(rest.iter().fold(*first, |a, b| a - b))),
             }
         }
         "/" => {
             if args.len() < 2 {
-                return Err("/ expects at least two arguments".to_string());
+                return Err("/ expects at least two arguments".to_string().into());
             }
             let nums = numbers(name, &args)?;
             if nums[1..].contains(&0.0) {
-                return Err("/ expects non-zero numbers".to_string());
+                return Err(Error::bare("arith-error"));
             }
             Ok(Value::Number(nums[1..].iter().fold(nums[0], |a, b| a / b)))
         }
         "=" | "<" | ">" | "<=" | ">=" => {
             let nums = numbers(name, &args)?;
             if nums.is_empty() {
-                return Err(format!("{} expects at least one argument", name));
+                return Err(format!("{} expects at least one argument", name).into());
             }
             let holds = |a: f64, b: f64| match name {
                 "=" => a == b,
@@ -210,7 +213,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let nums = numbers(name, &args)?;
             let pick = if name == "min" { f64::min } else { f64::max };
             match nums.split_first() {
-                None => Err(format!("{} expects at least one argument", name)),
+                None => Err(format!("{} expects at least one argument", name).into()),
                 Some((first, rest)) => Ok(Value::Number(rest.iter().copied().fold(*first, pick))),
             }
         }
@@ -218,7 +221,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let [a, b] = fixed::<2>(name, args)?;
             let (a, b) = (number(name, &a)?, number(name, &b)?);
             if b == 0.0 {
-                return Err(format!("{}: division by zero", name));
+                return Err(Error::bare("arith-error"));
             }
             Ok(Value::Number(match name {
                 "quotient" => (a / b).trunc(),
@@ -282,14 +285,16 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 .try_fold(v, |v, c| {
                     call(machine, if c == 'a' { "car" } else { "cdr" }, vec![v])
                 })
-                .map_err(|_| format!("{} expects a list with enough elements", name))
+                .map_err(|_| format!("{} expects a list with enough elements", name).into())
         }
         "cons" => {
             let [head, tail] = fixed::<2>(name, args)?;
             match tail {
                 // 配列の前の空きに置く (前へ足していくループが, 長さの 2 乗にならないように)
                 Value::List(items) => Ok(Value::List(items.cons(head))),
-                _ => Err("cons expects a list as the second argument".to_string()),
+                _ => Err("cons expects a list as the second argument"
+                    .to_string()
+                    .into()),
             }
         }
         "list" => Ok(Value::List(args.into())),
@@ -314,18 +319,18 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             list(name, &v)?
                 .get(index)
                 .cloned()
-                .ok_or_else(|| format!("{}: index out of range", name))
+                .ok_or_else(|| format!("{}: index out of range", name).into())
         }
         "map" | "for-each" => {
             let Some((procedure, lists)) = args.split_first() else {
-                return Err(format!("{} expects a procedure and lists", name));
+                return Err(format!("{} expects a procedure and lists", name).into());
             };
             let lists = lists
                 .iter()
                 .map(|v| list(name, v))
                 .collect::<Result<Vec<_>, _>>()?;
             if lists.is_empty() {
-                return Err(format!("{} expects a procedure and lists", name));
+                return Err(format!("{} expects a procedure and lists", name).into());
             }
             let count = lists.iter().map(|l| l.len()).min().unwrap_or(0);
             let mut results = Vec::new();
@@ -357,7 +362,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let [text] = fixed::<1>(name, args)?;
             Parser::new(string(name, &text)?)
                 .parse_first()?
-                .ok_or_else(|| "End of file during parsing".to_string())
+                .ok_or_else(|| Error::bare("end-of-file"))
         }
         "eval" => {
             // 一番外側の環境で評価する
@@ -367,10 +372,10 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "apply" => {
             let Some((procedure, rest)) = args.split_first() else {
-                return Err("apply expects a procedure and a list".to_string());
+                return Err("apply expects a procedure and a list".to_string().into());
             };
             let Some((last, init)) = rest.split_last() else {
-                return Err("apply expects a procedure and a list".to_string());
+                return Err("apply expects a procedure and a list".to_string().into());
             };
             let mut call_args = init.to_vec();
             call_args.extend(list(name, last)?.iter().cloned());
@@ -385,7 +390,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                             return Ok(item.clone());
                         }
                     }
-                    _ => return Err("assoc expects a list of lists".to_string()),
+                    _ => return Err("assoc expects a list of lists".to_string().into()),
                 }
             }
             Ok(Value::Boolean(false))
@@ -421,7 +426,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let code = number(name, &code)?;
             char::from_u32(code as u32)
                 .map(|c| Value::String(c.to_string()))
-                .ok_or_else(|| format!("{name}: invalid character {code}"))
+                .ok_or_else(|| format!("{name}: invalid character {code}").into())
         }
         "string->utf8" => {
             // UTF-8 のバイト (数のリスト)
@@ -437,7 +442,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let [n] = fixed::<1>(name, args)?;
             let n = number(name, &n)?;
             if n.fract() != 0.0 {
-                return Err(format!("{name} expects an integer"));
+                return Err(format!("{name} expects an integer").into());
             }
             Ok(Value::Boolean((n as i64 % 2 == 0) == (name == "even?")))
         }
@@ -454,7 +459,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "substring" => {
             if !(2..=3).contains(&args.len()) {
-                return Err("substring expects 2 or 3 arguments".to_string());
+                return Err("substring expects 2 or 3 arguments".to_string().into());
             }
             let chars: Vec<char> = string(name, &args[0])?.chars().collect();
             let start = index(name, &args[1])?;
@@ -463,11 +468,12 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 None => chars.len(),
             };
             if start > end || end > chars.len() {
-                let end = args.get(2).map_or("nil".to_string(), |v| v.to_string());
-                return Err(format!(
-                    "Args out of range: {}, {}, {end}",
-                    args[0], args[1]
-                ));
+                let end = args.get(2).cloned().unwrap_or(Value::Nil);
+                return Err(Error::args_out_of_range(vec![
+                    args[0].clone(),
+                    args[1].clone(),
+                    end,
+                ]));
             }
             Ok(Value::String(chars[start..end].iter().collect()))
         }
@@ -502,7 +508,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "symbol->string" => match fixed::<1>(name, args)? {
             [Value::Symbol(s)] => Ok(Value::String(s)),
-            _ => Err("symbol->string expects a symbol".to_string()),
+            _ => Err("symbol->string expects a symbol".to_string().into()),
         },
         "string->symbol" => {
             let [s] = fixed::<1>(name, args)?;
@@ -510,27 +516,68 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "format" => Ok(Value::String(format(&args)?)),
         // (error "書式" 引数...): Emacs と同じく, 書式で作った文字を, 失敗の内容にする
-        "error" | "user-error" => Err(format(&args)?),
-        "scan-error-reason" | "error-message-string" => {
-            // (condition-case の変数の) (error "メッセージ") か, メッセージの文字列から, メッセージを取り出す
-            let [value] = fixed::<1>(name, args)?;
-            let message = match &value {
-                Value::List(items) => error_text(items),
-                other => other.to_display(),
+        "error" => Err(Error::plain(format(&args)?)),
+        "user-error" => Err(machine.make_error("user-error", vec![Value::String(format(&args)?)])),
+        // (signal ERROR-SYMBOL DATA): 種類とデータのエラーを投げる. 種類が nil なら, DATA を (種類 . データ) として投げ直す
+        "signal" => {
+            let [kind, data] = fixed::<2>(name, args)?;
+            let items = error_items(&data);
+            Err(match kind {
+                Value::Symbol(kind) => machine.make_error(&kind, items),
+                // 種類が nil で, データが (種類 . データ) なら, 投げ直し
+                nil if !nil.is_non_nil() && !items.is_empty() => {
+                    machine.make_error(&items[0].to_display(), items[1..].to_vec())
+                }
+                other => return Err(wrong_type("symbolp", &other)),
+            })
+        }
+        // (define-error NAME MESSAGE [PARENT]): 新しい種類を決める. PARENT (記号か記号のリスト) の条件も受ける
+        "define-error" => {
+            let (Some(Value::Symbol(kind)), Some(Value::String(description))) =
+                (args.first(), args.get(1))
+            else {
+                return Err("define-error expects a name and a message".into());
             };
-            if name == "error-message-string" {
-                return Ok(Value::String(message));
+            let parents = match args.get(2) {
+                Some(Value::Symbol(parent)) => vec![parent.clone()],
+                Some(Value::List(items)) => items.iter().map(Value::to_display).collect(),
+                _ => vec!["error".to_string()],
+            };
+            let mut conditions = vec![kind.clone()];
+            for parent in &parents {
+                let known = machine.make_error(parent, Vec::new());
+                conditions.extend(known.conditions().iter().cloned());
             }
-            // 'Scan error: "理由", 3, 4' から理由を取り出す (Emacs の scan-error の最初のデータ). 他の失敗は, そのメッセージ
-            let reason = message
-                .strip_prefix("Scan error: \"")
-                .and_then(|rest| rest.split_once('"'))
-                .map_or(message.clone(), |(reason, _)| reason.to_string());
-            Ok(Value::String(reason))
+            conditions.dedup();
+            machine
+                .evaluator
+                .define_error(kind, conditions, description);
+            Ok(Value::Symbol(kind.clone()))
+        }
+        "scan-error-reason" | "error-message-string" => {
+            // (condition-case の変数の) (種類 . データ) から, メッセージを取り出す
+            let [value] = fixed::<1>(name, args)?;
+            let (message, reason) = match &value {
+                Value::List(items) if !items.is_empty() => {
+                    let error = machine.make_error(&items[0].to_display(), items[1..].to_vec());
+                    // scan-error の最初のデータが理由. 他の失敗は, そのメッセージ
+                    let reason = match (error.kind(), error.data().first()) {
+                        ("scan-error", Some(reason)) => reason.to_display(),
+                        _ => error.message().to_string(),
+                    };
+                    (error.message().to_string(), reason)
+                }
+                other => (other.to_display(), other.to_display()),
+            };
+            Ok(Value::String(if name == "error-message-string" {
+                message
+            } else {
+                reason
+            }))
         }
         "string-search" => {
             if !(2..=3).contains(&args.len()) {
-                return Err("string-search expects 2 or 3 arguments".to_string());
+                return Err("string-search expects 2 or 3 arguments".to_string().into());
             }
             let needle = string(name, &args[0])?;
             let haystack = string(name, &args[1])?;
@@ -538,7 +585,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // 始めが範囲の外なら, Emacs と同じく (args-out-of-range START)
             let start = match args.get(2) {
                 Some(Value::Number(n)) if *n < 0.0 || *n > chars.len() as f64 => {
-                    return Err(format!("Args out of range: {}", args[2]));
+                    return Err(Error::args_out_of_range(vec![args[2].clone()]));
                 }
                 Some(start) => index(name, start)?,
                 None => 0,
@@ -566,7 +613,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let (items, separator) = match args.as_slice() {
                 [items] => (items, ""),
                 [items, separator] => (items, string(name, separator)?),
-                _ => return Err("string-join expects 1 or 2 arguments".to_string()),
+                _ => return Err("string-join expects 1 or 2 arguments".to_string().into()),
             };
             let items = list(name, items)?
                 .iter()
@@ -583,14 +630,16 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 [text, separator] => {
                     let separator = string(name, separator)?;
                     if separator.is_empty() {
-                        return Err("split-string expects a non-empty separator".to_string());
+                        return Err("split-string expects a non-empty separator"
+                            .to_string()
+                            .into());
                     }
                     string(name, text)?
                         .split(separator)
                         .map(str::to_string)
                         .collect()
                 }
-                _ => return Err("split-string expects 1 or 2 arguments".to_string()),
+                _ => return Err("split-string expects 1 or 2 arguments".to_string().into()),
             };
             Ok(Value::List(pieces.into_iter().map(Value::String).collect()))
         }
@@ -651,7 +700,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "call-interactively" | "command-execute" => match fixed::<1>(name, args)? {
             [Value::Symbol(command) | Value::String(command)] => machine.call_command(&command),
-            _ => Err(format!("{} expects a command name", name)),
+            _ => Err(format!("{} expects a command name", name).into()),
         },
         "global-set-key" => match fixed::<2>(name, args)? {
             [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
@@ -662,7 +711,9 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 });
                 Ok(Value::Symbol(command))
             }
-            _ => Err("global-set-key expects a key and a command name".to_string()),
+            _ => Err("global-set-key expects a key and a command name"
+                .to_string()
+                .into()),
         },
         "local-set-key" => match fixed::<2>(name, args)? {
             [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
@@ -673,7 +724,9 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                 )?;
                 Ok(Value::Symbol(command))
             }
-            _ => Err("local-set-key expects a key and a command name".to_string()),
+            _ => Err("local-set-key expects a key and a command name"
+                .to_string()
+                .into()),
         },
         "set-buffer-directory" => {
             // (set-buffer-directory DIR): 今のバッファの `default-directory` を DIR にする (dired が使う)
@@ -713,7 +766,9 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         "highlight-regexp" => {
             // (highlight-regexp REGEXP [FACE [SUBEXP]]): FACE は記号か文字列, SUBEXP は括弧の番号
             if args.is_empty() || args.len() > 3 {
-                return Err("highlight-regexp expects 1 to 3 arguments".to_string());
+                return Err("highlight-regexp expects 1 to 3 arguments"
+                    .to_string()
+                    .into());
             }
             let regexp = string(name, &args[0])?.to_string();
             let face = match args.get(1) {
@@ -721,7 +776,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                     Value::String(face.clone())
                 }
                 Some(v) if v.is_non_nil() => {
-                    return Err(format!("highlight-regexp: invalid face {}", v))
+                    return Err(format!("highlight-regexp: invalid face {}", v).into())
                 }
                 _ => Value::Nil,
             };
@@ -752,7 +807,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                     number(name, pos)?;
                     pos.clone()
                 }
-                _ => return Err("outline-invisible-p expects 0 or 1 arguments".to_string()),
+                _ => {
+                    return Err("outline-invisible-p expects 0 or 1 arguments"
+                        .to_string()
+                        .into())
+                }
             };
             machine.host.call(name, vec![pos])
         }
@@ -761,7 +820,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let [regexp] = fixed::<1>(name, args)?;
             match regexp {
                 Value::String(_) | Value::Boolean(true) => machine.host.call(name, vec![regexp])?,
-                _ => return Err("unhighlight-regexp expects a regexp or #t".to_string()),
+                _ => {
+                    return Err("unhighlight-regexp expects a regexp or #t"
+                        .to_string()
+                        .into())
+                }
             };
             Ok(Value::Nil)
         }
@@ -777,7 +840,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
                         line.clone(),
                     ]
                 }
-                _ => return Err("display-buffer expects 1 or 2 arguments".to_string()),
+                _ => return Err("display-buffer expects 1 or 2 arguments".to_string().into()),
             };
             machine.host.call(name, args)?;
             Ok(Value::Nil)
@@ -786,7 +849,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // (insert-file-contents FILENAME [VISIT]): ファイルの名前は, 広げてから渡す
             let (path, rest) = match args.as_slice() {
                 [path, rest @ ..] if rest.len() <= 1 => (path, rest),
-                _ => return Err("insert-file-contents expects 1 or 2 arguments".to_string()),
+                _ => {
+                    return Err("insert-file-contents expects 1 or 2 arguments"
+                        .to_string()
+                        .into())
+                }
             };
             let path = Value::String(machine.expand_file_name(string(name, path)?));
             machine.host.call(
@@ -804,7 +871,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         "read-string" => {
             // (read-string PROMPT [INITIAL-INPUT [HISTORY [DEFAULT-VALUE]]])
             if args.is_empty() || args.len() > 5 {
-                return Err("read-string expects 1 to 5 arguments".to_string());
+                return Err("read-string expects 1 to 5 arguments".to_string().into());
             }
             let prompt = string(name, &args[0])?;
             let initial = optional_string(name, args.get(1))?;
@@ -816,7 +883,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // (read-file-name PROMPT [DIR [DEFAULT-FILENAME [MUSTMATCH [INITIAL [PREDICATE]]]]])
             // DIR を省くと, 画面が今のバッファのディレクトリを入れる. 入力を変えなければ, DEFAULT-FILENAME
             if args.is_empty() || args.len() > 6 {
-                return Err("read-file-name expects 1 to 6 arguments".to_string());
+                return Err("read-file-name expects 1 to 6 arguments".to_string().into());
             }
             let prompt = string(name, &args[0])?;
             let dir = optional_string(name, args.get(1))?;
@@ -831,7 +898,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // (read-key [PROMPT [ALLOW-QUIT]]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの).
             // ALLOW-QUIT が真なら, C-g も, 失敗にせず, キー ("C-g") として返す (isearch が使う)
             if args.len() > 2 {
-                return Err("read-key expects 0 to 2 arguments".to_string());
+                return Err("read-key expects 0 to 2 arguments".to_string().into());
             }
             let prompt = optional_string(name, args.first())?;
             let mut host_args = vec![prompt];
@@ -843,12 +910,18 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         "execute-kbd-macro" => {
             // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら, 失敗するまで) 打ったことにする. 打つのは, 画面
             let [keys, rest @ ..] = args.as_slice() else {
-                return Err("execute-kbd-macro expects 1 or 2 arguments".to_string());
+                return Err("execute-kbd-macro expects 1 or 2 arguments"
+                    .to_string()
+                    .into());
             };
             let count = match rest {
                 [] => Value::Number(1.0),
                 [count] => count.clone(),
-                _ => return Err("execute-kbd-macro expects 1 or 2 arguments".to_string()),
+                _ => {
+                    return Err("execute-kbd-macro expects 1 or 2 arguments"
+                        .to_string()
+                        .into())
+                }
             };
             machine.host.call(name, vec![keys.clone(), count])?;
             Ok(Value::Nil)
@@ -865,7 +938,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         "write-region" => {
             // (write-region START END FILENAME [APPEND VISIT]): ファイルの名前 (と, VISIT の文字列) は, 広げてから渡す
             if !(3..=5).contains(&args.len()) {
-                return Err("write-region expects 3 to 5 arguments".to_string());
+                return Err("write-region expects 3 to 5 arguments".to_string().into());
             }
             let mut args = args;
             args[2] = Value::String(machine.expand_file_name(string(name, &args[2])?));
@@ -890,7 +963,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             // 割り当てたキー (Emacs の書き方. 画面のキーと, Lisp のキー)
             let [command] = fixed::<1>(name, args)?;
             let Value::Symbol(command) = command else {
-                return Err("where-is-internal expects a symbol".to_string());
+                return Err("where-is-internal expects a symbol".to_string().into());
             };
             machine.host.call(name, vec![Value::String(command)])
         }
@@ -913,7 +986,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         _ if hooks::NAMES.contains(&name) => hooks::call(machine, name, args),
         _ if help::NAMES.contains(&name) => help::call(machine, name, args),
         _ => system::call(machine, name, args)
-            .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name))),
+            .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name).into())),
     }
 }
 
@@ -932,7 +1005,7 @@ fn merge_sort(
     machine: &mut Machine,
     less: &Value,
     mut items: Vec<Value>,
-) -> Result<Vec<Value>, String> {
+) -> Result<Vec<Value>, Error> {
     if items.len() <= 1 {
         return Ok(items);
     }
@@ -985,7 +1058,7 @@ pub fn parse_font(font: &str) -> (String, Option<f64>) {
 /// # Returns
 ///
 /// `nil`, または失敗の内容.
-fn set_font(machine: &mut Machine, family: String, size: Option<f64>) -> Result<Value, String> {
+fn set_font(machine: &mut Machine, family: String, size: Option<f64>) -> Result<Value, Error> {
     let family = if family.is_empty() {
         Value::Nil
     } else {
@@ -1007,16 +1080,22 @@ fn set_font(machine: &mut Machine, family: String, size: Option<f64>) -> Result<
 /// # Returns
 ///
 /// `nil`, または失敗の内容.
-fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, String> {
+fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Error> {
     let name = "set-face-attribute";
     let [face, _frame, attributes @ ..] = args.as_slice() else {
-        return Err("set-face-attribute expects a face, a frame and attributes".to_string());
+        return Err("set-face-attribute expects a face, a frame and attributes"
+            .to_string()
+            .into());
     };
     if *face != Value::Symbol("default".to_string()) {
-        return Err(format!("set-face-attribute: unsupported face {}", face));
+        return Err(format!("set-face-attribute: unsupported face {}", face).into());
     }
     if attributes.len() % 2 != 0 {
-        return Err("set-face-attribute expects pairs of an attribute and a value".to_string());
+        return Err(
+            "set-face-attribute expects pairs of an attribute and a value"
+                .to_string()
+                .into(),
+        );
     }
     let (mut family, mut size) = (String::new(), None);
     for pair in attributes.chunks(2) {
@@ -1036,7 +1115,9 @@ fn set_face_attribute(machine: &mut Machine, args: Vec<Value>) -> Result<Value, 
                 };
                 machine.host.call(op, vec![value.clone()])?;
             }
-            (key, _) => return Err(format!("set-face-attribute: unsupported attribute {}", key)),
+            (key, _) => {
+                return Err(format!("set-face-attribute: unsupported attribute {}", key).into())
+            }
         }
     }
     if family.is_empty() && size.is_none() {
@@ -1110,14 +1191,18 @@ pub fn string_width(s: &str) -> usize {
 /// # Returns
 ///
 /// 入力. 引数が誤っているか, やめたら [`Err`].
-fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, String> {
+fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Error> {
     let name = "completing-read";
     if args.len() < 2 || args.len() > 8 {
-        return Err("completing-read expects 2 to 8 arguments".to_string());
+        return Err("completing-read expects 2 to 8 arguments"
+            .to_string()
+            .into());
     }
     let prompt = string(name, &args[0])?.to_string();
     let Value::List(items) = &args[1] else {
-        return Err("completing-read expects a list of candidates".to_string());
+        return Err("completing-read expects a list of candidates"
+            .to_string()
+            .into());
     };
     let predicate = args.get(2).filter(|p| p.is_non_nil()).cloned();
     let require_match = args.get(3).is_some_and(Value::is_non_nil);
@@ -1131,7 +1216,7 @@ fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Str
         };
         let label = match label {
             Value::String(text) | Value::Symbol(text) => text.clone(),
-            other => return Err(format!("completing-read: not a candidate: {}", other)),
+            other => return Err(format!("completing-read: not a candidate: {}", other).into()),
         };
         if let Some(predicate) = &predicate {
             if !machine
@@ -1160,7 +1245,7 @@ fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Str
             ],
         )? {
             Value::String(input) => input,
-            other => return Err(format!("completing-read: unexpected input {}", other)),
+            other => return Err(format!("completing-read: unexpected input {}", other).into()),
         };
         if !require_match || input.is_empty() || candidates.contains(&input) {
             return Ok(Value::String(or_default(input, default)));
@@ -1181,13 +1266,13 @@ fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Str
 /// # Returns
 ///
 /// 入力. やめたら [`Err`].
-fn read_input(machine: &mut Machine, name: &str, args: Vec<String>) -> Result<String, String> {
+fn read_input(machine: &mut Machine, name: &str, args: Vec<String>) -> Result<String, Error> {
     match machine
         .host
         .call(name, args.into_iter().map(Value::String).collect())?
     {
         Value::String(input) => Ok(input),
-        other => Err(format!("{}: unexpected input {}", name, other)),
+        other => Err(format!("{}: unexpected input {}", name, other).into()),
     }
 }
 
@@ -1201,7 +1286,7 @@ fn read_input(machine: &mut Machine, name: &str, args: Vec<String>) -> Result<St
 /// # Returns
 ///
 /// 文字列. 文字列でも nil でもなければ [`Err`].
-fn optional_string(name: &str, v: Option<&Value>) -> Result<String, String> {
+fn optional_string(name: &str, v: Option<&Value>) -> Result<String, Error> {
     match v {
         Some(v) if v.is_non_nil() => string(name, v).map(str::to_string),
         _ => Ok(String::new()),
@@ -1218,7 +1303,7 @@ fn optional_string(name: &str, v: Option<&Value>) -> Result<String, String> {
 /// # Returns
 ///
 /// 既定の値 (省くか, nil なら `None`).
-fn default_value(name: &str, v: Option<&Value>) -> Result<Option<String>, String> {
+fn default_value(name: &str, v: Option<&Value>) -> Result<Option<String>, Error> {
     match v {
         Some(Value::List(items)) if !items.is_empty() => {
             string(name, &items[0]).map(|s| Some(s.to_string()))
@@ -1255,9 +1340,10 @@ fn or_default(input: String, default: Option<String>) -> String {
 /// # Returns
 ///
 /// `N` 個の引数の配列. 数が違う場合は [`Err`].
-pub(crate) fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], String> {
+pub(crate) fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], Error> {
     let count = args.len();
-    args.try_into().map_err(|_| arity_error(name, N, count))
+    args.try_into()
+        .map_err(|_| arity_error(name, N, count).into())
 }
 
 /// 引数の数が違うときの, 失敗の内容を作ります.
@@ -1289,14 +1375,14 @@ fn arity_error(name: &str, expected: usize, given: usize) -> String {
 /// # Returns
 ///
 /// 数. 数でない場合は [`Err`].
-pub(crate) fn number(name: &str, v: &Value) -> Result<f64, String> {
+pub(crate) fn number(name: &str, v: &Value) -> Result<f64, Error> {
     match v {
         Value::Number(n) => Ok(*n),
         _ => Err(wrong_type(number_predicate(name), v)),
     }
 }
 
-/// Emacs の `wrong-type-argument` の失敗の内容 (`Wrong type argument: 述語, 値`).
+/// Emacs の `wrong-type-argument` のエラー.
 ///
 /// # Arguments
 ///
@@ -1305,9 +1391,9 @@ pub(crate) fn number(name: &str, v: &Value) -> Result<f64, String> {
 ///
 /// # Returns
 ///
-/// 失敗の内容.
-pub(crate) fn wrong_type(predicate: &str, value: &Value) -> String {
-    format!("Wrong type argument: {predicate}, {value}")
+/// エラー.
+pub(crate) fn wrong_type(predicate: &str, value: &Value) -> Error {
+    Error::wrong_type(predicate, value)
 }
 
 /// 手続きが数を求める述語の名前 (Emacs と同じ): 算術と比較は `number-or-marker-p`, `abs` は `numberp`, ほかは位置などの `integer-or-marker-p`.
@@ -1338,7 +1424,7 @@ fn list_predicate(name: &str) -> &'static str {
 /// # Returns
 ///
 /// 数 (引数の順). 数でない引数がある場合は [`Err`].
-fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, String> {
+fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, Error> {
     args.iter().map(|v| number(name, v)).collect()
 }
 
@@ -1352,7 +1438,7 @@ fn numbers(name: &str, args: &[Value]) -> Result<Vec<f64>, String> {
 /// # Returns
 ///
 /// 添え字. 0 以上の整数でない場合は [`Err`].
-pub(crate) fn index(_name: &str, v: &Value) -> Result<usize, String> {
+pub(crate) fn index(_name: &str, v: &Value) -> Result<usize, Error> {
     match v {
         Value::Number(n) if *n >= 0.0 && n.fract() == 0.0 => Ok(*n as usize),
         _ => Err(wrong_type("integerp", v)),
@@ -1369,7 +1455,7 @@ pub(crate) fn index(_name: &str, v: &Value) -> Result<usize, String> {
 /// # Returns
 ///
 /// 文字列. 文字列でない場合は [`Err`].
-pub(crate) fn string<'v>(_name: &str, v: &'v Value) -> Result<&'v str, String> {
+pub(crate) fn string<'v>(_name: &str, v: &'v Value) -> Result<&'v str, Error> {
     match v {
         Value::String(s) => Ok(s),
         _ => Err(wrong_type("stringp", v)),
@@ -1386,14 +1472,14 @@ pub(crate) fn string<'v>(_name: &str, v: &'v Value) -> Result<&'v str, String> {
 /// # Returns
 ///
 /// エディタに渡す引数. 多すぎるか, 名前が文字列でなければ [`Err`].
-fn optional_buffer(name: &str, args: Vec<Value>) -> Result<Vec<Value>, String> {
+fn optional_buffer(name: &str, args: Vec<Value>) -> Result<Vec<Value>, Error> {
     match args.as_slice() {
         [] => Ok(vec![]),
         [buffer] => {
             string(name, buffer)?;
             Ok(args)
         }
-        _ => Err(format!("{} expects 0 or 1 arguments", name)),
+        _ => Err(format!("{} expects 0 or 1 arguments", name).into()),
     }
 }
 
@@ -1407,7 +1493,7 @@ fn optional_buffer(name: &str, args: Vec<Value>) -> Result<Vec<Value>, String> {
 /// # Returns
 ///
 /// リストの要素. リストでない場合は [`Err`].
-fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
+fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], Error> {
     match v {
         Value::List(items) => Ok(items),
         _ => Err(wrong_type(list_predicate(name), v)),
@@ -1415,7 +1501,7 @@ fn list<'v>(name: &str, v: &'v Value) -> Result<&'v [Value], String> {
 }
 
 /// 標準出力に書く (バッチモードは標準出力. 画面のエディタは, エコー領域).
-fn write_output(machine: &mut Machine, text: &str) -> Result<(), String> {
+fn write_output(machine: &mut Machine, text: &str) -> Result<(), Error> {
     machine
         .host
         .call("standard-output", vec![Value::String(text.to_string())])
@@ -1423,7 +1509,7 @@ fn write_output(machine: &mut Machine, text: &str) -> Result<(), String> {
 }
 
 /// 値の出力の文字 (`prin1` は文字列を引用符で囲み, `princ` は囲まない).
-fn print_string(value: &Value, quoted: bool) -> String {
+pub(crate) fn print_string(value: &Value, quoted: bool) -> String {
     match value {
         Value::String(s) if quoted => {
             format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
@@ -1451,9 +1537,9 @@ fn print_string(value: &Value, quoted: bool) -> String {
 /// # Returns
 ///
 /// 作った文字列. 書式が文字列でない, 値が足りない, 使えない指定がある場合は [`Err`].
-fn format(args: &[Value]) -> Result<String, String> {
+fn format(args: &[Value]) -> Result<String, Error> {
     let Some((template, values)) = args.split_first() else {
-        return Err("format expects a format string".to_string());
+        return Err("format expects a format string".to_string().into());
     };
     let template = string("format", template)?;
     let mut values = values.iter();
@@ -1502,7 +1588,7 @@ fn format(args: &[Value]) -> Result<String, String> {
                 format!("{:X}", number("format", value)?.trunc() as i64),
                 true,
             ),
-            _ => return Err("format: invalid directive".to_string()),
+            _ => return Err("format: invalid directive".to_string().into()),
         };
         let pad = width.saturating_sub(text.chars().count());
         if left {
@@ -1522,55 +1608,11 @@ fn format(args: &[Value]) -> Result<String, String> {
     Ok(result)
 }
 
-/// `condition-case` の変数 (種類とデータ) から, Emacs の `error-message-string` と同じ文を作る.
-///
-/// # Arguments
-///
-/// * `items` - 種類の記号と, その後ろのデータ.
-///
-/// # Returns
-///
-/// メッセージ.
-fn error_text(items: &[Value]) -> String {
-    let kind = items.first().map(Value::to_display).unwrap_or_default();
-    let data = items.get(1);
-    if let ("args-out-of-range", [_, rest @ ..]) = (kind.as_str(), items) {
-        if rest.is_empty() {
-            return "Args out of range".to_string();
-        }
-        let parts: Vec<String> = rest.iter().map(|v| v.to_string()).collect();
-        return format!("Args out of range: {}", parts.join(", "));
-    }
-    if let ("wrong-type-argument", [_, predicate, value]) = (kind.as_str(), items) {
-        return wrong_type(&predicate.to_display(), value);
-    }
-    if let ("file-missing", [_, what, reason, path]) = (kind.as_str(), items) {
-        return format!(
-            "{}: {}, {}",
-            what.to_display(),
-            reason.to_display(),
-            path.to_display()
-        );
-    }
-    match (kind.as_str(), data) {
-        ("end-of-buffer", None) => "End of buffer".to_string(),
-        ("beginning-of-buffer", None) => "Beginning of buffer".to_string(),
-        ("arith-error", None) => "Arithmetic error".to_string(),
-        ("quit", None) => "Quit".to_string(),
-        ("search-failed", Some(pattern)) => format!("Search failed: {pattern}"),
-        ("void-variable", Some(symbol @ Value::Symbol(_))) => {
-            format!(
-                "Symbol's value as variable is void: {}",
-                symbol.to_display()
-            )
-        }
-        ("void-function", Some(symbol @ Value::Symbol(_))) => {
-            format!(
-                "Symbol's function definition is void: {}",
-                symbol.to_display()
-            )
-        }
-        (_, Some(data)) => data.to_display(),
-        (_, None) => kind,
+/// `signal` の第 2 引数 (データのリスト) の要素.
+fn error_items(data: &Value) -> Vec<Value> {
+    match data {
+        Value::List(items) => items.to_vec(),
+        Value::Boolean(false) | Value::Nil => Vec::new(),
+        other => vec![other.clone()],
     }
 }

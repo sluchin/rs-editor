@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::buffer::Buffer;
+use crate::buffer::{Buffer, Groups};
 use crate::kbd_macro::KbdMacro;
 use crate::kill_ring::KillRing;
 use crate::window::{Direction, Layout, FULL};
@@ -60,6 +60,8 @@ pub struct Editor {
     pub global_mark_ring: Vec<(String, usize)>,
     /// 覚えたウィンドウの設定 (Emacs の `current-window-configuration`. 番号で引く).
     window_configurations: Vec<WindowConfiguration>,
+    /// 文字列に `string-match` した結果の括弧の範囲 (文字の位置. 0 から)と, 決めた順番.
+    pub string_match: Option<(Groups, u64)>,
 }
 
 /// ウィンドウの設定: 分け方と, ウィンドウごとのバッファと, 選んでいるウィンドウ.
@@ -102,6 +104,22 @@ impl Editor {
             prefix_arg: None,
             global_mark_ring: Vec::new(),
             window_configurations: Vec::new(),
+            string_match: None,
+        }
+    }
+
+    /// 直前に合った所 (Emacs の `match-data`. 全体で 1 つ): 文字列を探した結果と, バッファごとの結果のうち, 一番新しいもの.
+    ///
+    /// # Returns
+    ///
+    /// 括弧ごとの範囲 (文字の位置, 0 から) と, 文字列の結果なら `true`.
+    pub fn latest_match(&self) -> (Groups, bool) {
+        let current = self.current_buffer();
+        let newest = self.buffers.iter().max_by_key(|b| b.match_seq());
+        let newest = newest.unwrap_or(current);
+        match &self.string_match {
+            Some((data, seq)) if *seq > newest.match_seq() => (data.clone(), true),
+            _ => (newest.match_data().to_vec(), false),
         }
     }
 

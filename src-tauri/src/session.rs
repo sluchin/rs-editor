@@ -4,6 +4,7 @@
 //! 問い (`read-string`, `completing-read`, `read-key` など) と, 画面だけの操作 (色, フォント, スクロール) は,
 //! 画面に頼みます ([`Front`]). Tauri に依存する部分 (イベントとスレッド) は [`crate::commands`] に置きます.
 
+use rseditor_core::error::Error;
 use std::collections::VecDeque;
 use std::path::Path;
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
@@ -43,7 +44,7 @@ pub trait Front: Send + Sync {
     /// # Errors
     ///
     /// 画面が失敗を返したとき (`C-g` でやめたときは `Quit`).
-    fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, String>;
+    fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, Error>;
 }
 
 /// 画面からの入力.
@@ -170,7 +171,7 @@ impl<F: Front> SessionUi<F> {
 
     /// 選んでいるウィンドウの, 上から `row` 行目 (負なら下から. 省くと真ん中) の行の始めへ動きます.
     /// 一番上の行は, 画面に聞きます (`window-top-line`).
-    fn move_to_window_line(&self, row: Option<&Value>) -> Result<Value, String> {
+    fn move_to_window_line(&self, row: Option<&Value>) -> Result<Value, Error> {
         let height = self.body_height();
         let window = self.editor.lock().unwrap().selected_window();
         self.send_frame();
@@ -224,7 +225,7 @@ pub fn append_message(editor: &mut Editor, message: &str) {
 }
 
 impl<F: Front> Host for SessionUi<F> {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
             "message" => {
                 self.show_message(&text(&args, 0));
@@ -254,7 +255,7 @@ impl<F: Front> Host for SessionUi<F> {
                     }
                 };
                 if key == "C-g" && !allow_quit {
-                    return Err("Quit".to_string());
+                    return Err(Error::bare("quit"));
                 }
                 Ok(Value::String(read_key_name(&key)))
             }
@@ -311,7 +312,7 @@ impl<F: Front> Host for SessionUi<F> {
             )),
             "recent-keys" => Ok(strings(self.state().recent_keys.iter().cloned())),
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
-            "command" => Err(format!("Undefined command: {}", text(&args, 0))),
+            "command" => Err(format!("Undefined command: {}", text(&args, 0)).into()),
             // スクロール, 色, フォント, 隠すこと, 終わること: 画面に頼む
             _ => {
                 self.send_frame();
@@ -358,7 +359,7 @@ impl<F: Front> Session<F> {
     /// # Errors
     ///
     /// 基本のコマンドを読めないとき.
-    pub fn new(front: Arc<F>) -> Result<Self, String> {
+    pub fn new(front: Arc<F>) -> Result<Self, Error> {
         let mut editor = Editor::new();
         let scratch = editor.current_buffer_mut();
         scratch.insert(SCRATCH_TEXT);
@@ -385,7 +386,7 @@ impl<F: Front> Session<F> {
     }
 
     /// コードを評価し, 失敗したらエコー領域に出します. 終わったら描く (初期設定ファイルを読むときなど).
-    pub fn eval(&mut self, code: &str) -> Result<String, String> {
+    pub fn eval(&mut self, code: &str) -> Result<String, Error> {
         let result = self.commands.eval(code);
         if let Err(error) = &result {
             self.host().ui().show_message(error);
@@ -408,7 +409,7 @@ impl<F: Front> Session<F> {
         );
         let outcome = std::fs::read_to_string(path)
             .map_err(|e| e.to_string())
-            .and_then(|code| self.commands.eval(&code));
+            .and_then(|code| self.commands.eval(&code).map_err(|e| e.to_string()));
         if let Err(error) = outcome {
             log::warn!("Could not load {}: {}", path.display(), error);
             let error = format!("{}: {}", path.display(), error);
@@ -502,7 +503,7 @@ pub fn run<F: Front>(
     init_file: Option<&Path>,
     inputs: Receiver<Input>,
     auto_save_timeout: Duration,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     let mut session = Session::new(front)?;
     session.load_init(init_file);
     session.host().ui().send_frame();

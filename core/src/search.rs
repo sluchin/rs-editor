@@ -6,6 +6,7 @@
 //! 合わせられない書き方 (`\=`, `\c`, 一部の構文クラス) は, 失敗にします.
 //! 括弧の中の繰り返しで, 空の繰り返しが最後に合ったときの括弧の位置 (`\(a*\)*b` の `\1`) は, Emacs と違うことがあります.
 
+use crate::error::Error;
 use fancy_regex::Regex;
 
 use crate::buffer::Buffer;
@@ -39,7 +40,7 @@ fn boundary(set: &str, kind: &str) -> String {
 /// # Errors
 ///
 /// 書き方が誤っているか, 合わせられない書き方のとき.
-pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
+pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, Error> {
     let chars: Vec<char> = pattern.chars().collect();
     let mut out = String::new();
     // 選択肢の始めか (`^` が行の始めを表し, `*` が文字になる所)
@@ -51,7 +52,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
         match c {
             '\\' => {
                 let Some(&n) = chars.get(i) else {
-                    return Err("Trailing backslash".to_string());
+                    return Err(invalid("Trailing backslash"));
                 };
                 i += 1;
                 match n {
@@ -60,7 +61,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
                             i += 2;
                             out.push_str("(?:");
                         } else if chars.get(i) == Some(&'?') {
-                            return Err("Numbered groups are not supported".to_string());
+                            return Err(invalid("Numbered groups are not supported"));
                         } else {
                             out.push('(');
                         }
@@ -76,25 +77,26 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
                     '{' => {
                         let close = (i..chars.len().saturating_sub(1))
                             .find(|&j| chars[j] == '\\' && chars[j + 1] == '}')
-                            .ok_or("Unmatched \\{")?;
+                            .ok_or_else(|| invalid("Unmatched \\{"))?;
                         let body: String = chars[i..close].iter().collect();
                         if body.is_empty() || !body.chars().all(|c| c.is_ascii_digit() || c == ',')
                         {
-                            return Err("Invalid content of \\{\\}".to_string());
+                            return Err(invalid("Invalid content of \\{\\}"));
                         }
                         out.push_str(&format!("{{{body}}}"));
                         i = close + 2;
                     }
-                    '}' => return Err("Unmatched \\}".to_string()),
+                    '}' => return Err(invalid("Unmatched \\}")),
                     d @ '1'..='9' => out.push_str(&format!(r"\{d}")),
                     'w' => out.push_str(&format!("[{WORD}]")),
                     'W' => out.push_str(&format!("[^{WORD}]")),
                     's' | 'S' => {
                         let Some(&class) = chars.get(i) else {
-                            return Err("Invalid syntax designator".to_string());
+                            return Err(invalid("Invalid syntax designator"));
                         };
                         i += 1;
-                        let class = class_of_designator(class).ok_or("Unsupported syntax class")?;
+                        let class = class_of_designator(class)
+                            .ok_or_else(|| invalid("Unsupported syntax class"))?;
                         let set = class_chars(dialect, class);
                         // 文字が 1 つも無い構文は、どれにも合わない (`\S` なら, どれにも合う)
                         if set.is_empty() {
@@ -112,7 +114,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
                             i += 1;
                             out.push_str(&boundary(SYMBOL, "end"));
                         }
-                        _ => return Err("Invalid regular expression".to_string()),
+                        _ => return Err(invalid("Invalid regular expression")),
                     },
                     '<' => out.push_str(&boundary(WORD, "start")),
                     '>' => out.push_str(&boundary(WORD, "end")),
@@ -121,7 +123,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
                     '`' => out.push_str(r"\A"),
                     '\'' => out.push_str(r"\z"),
                     '=' | 'c' | 'C' | 'e' | 'E' => {
-                        return Err("Unsupported regular expression".to_string())
+                        return Err(invalid("Unsupported regular expression"))
                     }
                     other => out.push_str(&regex::escape(&other.to_string())),
                 }
@@ -175,7 +177,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, String> {
 /// # Returns
 ///
 /// Rust の文字クラスと, `]` の次の位置.
-fn bracket(chars: &[char], mut i: usize) -> Result<(String, usize), String> {
+fn bracket(chars: &[char], mut i: usize) -> Result<(String, usize), Error> {
     let mut out = String::from("[");
     if chars.get(i) == Some(&'^') {
         out.push('^');
@@ -184,7 +186,7 @@ fn bracket(chars: &[char], mut i: usize) -> Result<(String, usize), String> {
     let mut first = true;
     loop {
         let Some(&c) = chars.get(i) else {
-            return Err("Unmatched [ or [^".to_string());
+            return Err(invalid("Unmatched [ or [^"));
         };
         i += 1;
         match c {
@@ -195,7 +197,7 @@ fn bracket(chars: &[char], mut i: usize) -> Result<(String, usize), String> {
             '[' if chars.get(i) == Some(&':') => {
                 let close = (i + 1..chars.len().saturating_sub(1))
                     .find(|&j| chars[j] == ':' && chars[j + 1] == ']')
-                    .ok_or("Unmatched [ or [^")?;
+                    .ok_or_else(|| invalid("Unmatched [ or [^"))?;
                 let name: String = chars[i + 1..close].iter().collect();
                 out.push_str(class_set(&name)?);
                 i = close + 2;
@@ -211,7 +213,7 @@ fn bracket(chars: &[char], mut i: usize) -> Result<(String, usize), String> {
 }
 
 /// 文字クラス `[:name:]` の, Rust の文字クラスの中身 (Emacs は Unicode の文字も含める).
-fn class_set(name: &str) -> Result<&'static str, String> {
+fn class_set(name: &str) -> Result<&'static str, Error> {
     Ok(match name {
         "alpha" => r"\p{Alphabetic}",
         "alnum" => r"\p{Alphabetic}\p{Nd}",
@@ -229,7 +231,7 @@ fn class_set(name: &str) -> Result<&'static str, String> {
         "ascii" => r"\x00-\x7f",
         "nonascii" | "multibyte" => r"\x{80}-\x{10ffff}",
         "unibyte" => r"\x00-\x7f",
-        _ => return Err(format!("Invalid character class name: {name}")),
+        _ => return Err(invalid(&format!("Invalid character class name: {name}"))),
     })
 }
 
@@ -251,7 +253,7 @@ impl Pattern {
     /// # Errors
     ///
     /// 正規表現が誤っているとき.
-    pub fn new(pattern: &str, case_fold: bool, dialect: Dialect) -> Result<Self, String> {
+    pub fn new(pattern: &str, case_fold: bool, dialect: Dialect) -> Result<Self, Error> {
         Self::compile(&translate(pattern, dialect)?, case_fold)
     }
 
@@ -262,7 +264,7 @@ impl Pattern {
     }
 
     /// Rust の regex の書き方から作ります.
-    fn compile(pattern: &str, case_fold: bool) -> Result<Self, String> {
+    fn compile(pattern: &str, case_fold: bool) -> Result<Self, Error> {
         let source = if case_fold {
             format!("(?i){pattern}")
         } else {
@@ -270,7 +272,7 @@ impl Pattern {
         };
         Regex::new(&source)
             .map(|regex| Pattern { regex })
-            .map_err(|e| format!("Invalid regexp: {e}"))
+            .map_err(|e| invalid(&e.to_string()))
     }
 }
 
@@ -383,10 +385,11 @@ impl Buffer {
     fn remember(&mut self, found: &[Option<(usize, usize)>]) {
         // Emacs の `match-data` は, 最後に合った括弧より後ろの, 合わなかった括弧を持たない
         let used = found.iter().rposition(Option::is_some).map_or(0, |i| i + 1);
-        self.match_data = found[..used]
+        let data = found[..used]
             .iter()
             .map(|m| m.map(|(a, b)| (self.text.byte_to_char(a), self.text.byte_to_char(b))))
             .collect();
+        self.set_match_data(data);
     }
 
     /// カーソルの所から後ろへ探して, 合った所の終わりへカーソルを動かします (Emacs の `re-search-forward`).
@@ -620,4 +623,9 @@ impl Buffer {
         }
         self.point as i64 - start as i64
     }
+}
+
+/// 正規表現の誤り (`invalid-regexp`. データは理由).
+fn invalid(reason: &str) -> Error {
+    Error::strings("invalid-regexp", &[reason])
 }

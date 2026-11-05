@@ -10,10 +10,10 @@ use rseditor_core::scheme::value::Value;
 struct NoUi;
 
 impl Host for NoUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

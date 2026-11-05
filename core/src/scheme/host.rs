@@ -3,6 +3,7 @@
 //! 評価は Rust で行うので, エディタの操作 (`insert`, `point` など) は, 画面に頼んで, 返事を待ちます.
 //! アプリでは, [`Bridge`] が, 頼みを画面へ送って (Tauri のイベント), 返事 (Tauri のコマンド) を待ちます.
 
+use crate::error::Error;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{mpsc, Mutex};
@@ -27,15 +28,15 @@ pub trait Host: Sync {
     /// # Returns
     ///
     /// 結果, または失敗の内容.
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String>;
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error>;
 }
 
 /// エディタのないところ (テストや, 画面のない評価). 操作は, 全て失敗します.
 pub struct NoHost;
 
 impl Host for NoHost {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
-        Err(format!("No editor is attached ({})", op))
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, Error> {
+        Err(format!("No editor is attached ({})", op).into())
     }
 }
 
@@ -94,7 +95,7 @@ impl Bridge {
         op: &str,
         args: Vec<Value>,
         send: &dyn Fn(EditorRequest) -> Result<(), String>,
-    ) -> Result<Value, String> {
+    ) -> Result<Value, Error> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (sender, receiver) = mpsc::channel();
         self.pending.lock().unwrap().insert(id, sender);
@@ -118,7 +119,7 @@ impl Bridge {
                 .unwrap_or_else(|_| Err(format!("The editor did not answer ({})", op)))
         });
         self.pending.lock().unwrap().remove(&id);
-        answer
+        answer.map_err(screen_error)
     }
 
     /// 画面からの返事を, 待っている頼みに渡します.
@@ -142,6 +143,15 @@ impl Bridge {
             None => Ok(from_json(value)),
         });
         true
+    }
+}
+
+/// 画面が返した失敗の文を, エラーにします (`Quit` は `quit`).
+fn screen_error(message: String) -> Error {
+    if message == "Quit" {
+        Error::bare("quit")
+    } else {
+        Error::plain(message)
     }
 }
 
@@ -176,7 +186,7 @@ impl<F> Host for BridgeHost<'_, F>
 where
     F: Fn(EditorRequest) -> Result<(), String> + Sync,
 {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         self.bridge.request(op, args, &self.send)
     }
 }

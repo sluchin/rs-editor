@@ -26,7 +26,7 @@ fn list(items: &[&str]) -> Value {
 }
 
 impl Host for Ui {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         let text = |i: usize| match args.get(i) {
             Some(Value::String(s)) => s.clone(),
             _ => String::new(),
@@ -42,7 +42,7 @@ impl Host for Ui {
                 .unwrap()
                 .pop_front()
                 .map(Value::String)
-                .ok_or_else(|| "no answer".to_string()),
+                .ok_or_else(|| "no answer".into()),
             "key-binding" => Ok(match text(0).as_str() {
                 "C-x C-f" => Value::String("find-file".to_string()),
                 "C-x" => Value::Boolean(true),
@@ -62,7 +62,7 @@ impl Host for Ui {
             )),
             "recent-keys" => Ok(list(&["C-x", "C-f", "a"])),
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

@@ -19,7 +19,7 @@ fn test_expand_backslashes() {
     assert_eq!(apply_case(&text, case_action("AB")), "A\\B");
     // `\` の後ろが `&` 数字 `\` のどれでもなければ, エラー
     assert_eq!(
-        expand("a\\qb", &[]),
+        expand("a\\qb", &[]).map_err(|e| e.to_string()),
         Err("Invalid use of ‘\\’ in replacement text".to_string())
     );
 }

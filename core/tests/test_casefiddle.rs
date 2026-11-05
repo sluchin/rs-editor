@@ -13,8 +13,8 @@ use rseditor_core::scheme::value::Value;
 struct FakeUi;
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
-        Err(format!("ui: {op}"))
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
+        Err(format!("ui: {op}").into())
     }
 }
 

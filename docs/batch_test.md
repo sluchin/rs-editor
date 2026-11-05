@@ -154,12 +154,13 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-43 | `43-prompts` | 標準入力 (`43-prompts.in`) から読む `read-string`、`completing-read`、`read-file-name`、`yes-or-no-p`、`y-or-n-p`。標準出力のプロンプト、聞き直しのベルと知らせ、入力が尽きたときのエラー |
 | E-44 | `44-error-kinds` | エラーの種類 (`(car e)`) と、種類の名前の `condition-case` の節。`end-of-buffer`、`search-failed`、`args-out-of-range`、`arith-error` など |
 | E-45 | `45-major-mode` | `major-mode` の名前 (`fundamental-mode`、`emacs-lisp-mode`、`.el` を開いたとき)、`emacs-lisp-mode` などのコマンド |
-| E-46 | `46-string-match` | `string-match`、`string-match-p`、文字列の `match-beginning`、`match-end`、`match-data`、`match-string N STRING`、開始位置、`case-fold-search`、範囲外 |
+| E-46 | `46-string-match` | `string-match`、`string-match-p`、文字列の `match-beginning`、`match-end`、`match-data`、`match-string N STRING`、開始位置 (負なら終わりから数える)、`case-fold-search`、範囲外、合った所が全体で 1 つであること (バッファを替えても残り、一番新しい検索 (文字列か本文) のものが使われる) |
 | E-47 | `47-error-data` | エラーのデータ (`(cdr e)`): `error` はメッセージ、`end-of-buffer` などは空、`search-failed` は探した文字列、`void-variable` と `void-function` は記号、`file-missing` は 3 つの文字列、`wrong-type-argument` は述語 (`number-or-marker-p`、`listp`、`stringp` など) と値、`args-out-of-range` は対象 (バッファか文字列) と位置。`error-message-string` |
 | E-48 | `48-dired-add` | dired でコピー、名前の変更、ディレクトリの作成の後の行の並び (Emacs は点の行の前に足し、並べ直さない) |
 | E-49 | `49-regexp-syntax` | 正規表現の書き方: `\s-`、`\w`、`\_<`、`\<`、`\b`、`\{n,m\}`、`[[:alpha:]]`、後方参照、`\(?:`、非貪欲、`[]a]`、`^` と `$`、特別でない括弧と波括弧と縦線 |
 | E-50 | `50-args-range` | 範囲外の位置: `buffer-substring`、`delete-region`、`kill-region`、`upcase-region`、`narrow-to-region` に 1 より小さい位置や本文の外の位置 (引数の順のまま報せる)、`string-search` の始め、`goto-char` は丸める、`car` と `cdr` の nil |
 | E-51 | `51-nil-printing` | `format`、`princ`、`prin1`、`print`、`message` の `nil` と `t` (偽と空のリストは `nil`、真は `t`。入れ子のリストの中も、`%s` では文字列に引用符を付けない)、`null`、`string=` |
+| E-52 | `52-error-conditions` | エラーの種類とデータを持つ型: `signal` (種類とデータ、`nil` と `(種類 . データ)` での投げ直し)、`define-error` (説明と親の種類)、`user-error`、`condition-case` が受ける条件 (`error-conditions`: `file-missing` は `file-error`、`text-read-only` は `buffer-read-only`、`quit` は `error` に入らない、`t` は何でも受ける)、`error` のメッセージが文の書き出し (`End of buffer` など) で種類を変えないこと、`error-message-string` (`file-error` と `end-of-file` と `user-error` のデータは引用符なし) |
 
 ## 5. 比べない違い
 
@@ -171,7 +172,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | `Error: ...` の行 | Emacs 30 が標準出力に出す、エラーの 1 行とバックトレース。比べる前に除く |
 | 標準エラー出力 | 既定では比べない (`-e` で比べる) |
 | メッセージの言語 | `LC_ALL=C` で動かす (Emacs はロケールでエラーの文を訳すため) |
-| エラーのデータ | `(car e)` と、よく使う種類の `(cdr e)` は Emacs と同じ (試験 E-47、E-50)。`wrong-type-argument` の述語は、算術と比較 (`number-or-marker-p`)、`abs` (`numberp`)、位置と数 (`integer-or-marker-p`)、`car` と `member` など (`listp`)、並び (`sequencep`)、文字列 (`stringp`)、添え字 (`integerp`) だけ合わせた。`args-out-of-range` は、範囲を取る編集、`substring`、`string-match`、`string-search`、`delete-char` の第 2 引数を合わせた (バッファは `#<buffer 名前>` の記号)。`list-ref` など、Emacs に無い手続きの範囲外は、メッセージの文字列 1 つ |
+| エラーのデータ | エラーは種類 (`error-conditions` つき) とデータを持つ型で、`(car e)` と `(cdr e)`、`error-message-string` は Emacs と同じ (試験 E-44、E-47、E-50、E-52)。`wrong-type-argument` の述語は、算術と比較 (`number-or-marker-p`)、`abs` (`numberp`)、位置と数 (`integer-or-marker-p`)、`car` と `member` など (`listp`)、並び (`sequencep`)、文字列 (`stringp`)、添え字 (`integerp`) だけ合わせた。`args-out-of-range` は、範囲を取る編集、`substring`、`string-match`、`string-search`、`delete-char` の第 2 引数を合わせた (バッファは `#<buffer 名前>` の記号)。`list-ref` など、Emacs に無い手続きの範囲外と、引数の数の違い (`wrong-number-of-arguments`) は、種類が `error` でメッセージの文字列 1 つ |
 | dired の一覧の並び | コピー、名前の変更、ディレクトリの作成の後の並びは合わせた (試験 E-48。一覧は作り直し、前の並びに戻して、新しい行を点の行の前に置く)。日付や大きさは比べない |
 | ロックファイル | Emacs は `create-lockfiles` を `nil` にして動かす。rs-editor はロックファイルを作らない |
 

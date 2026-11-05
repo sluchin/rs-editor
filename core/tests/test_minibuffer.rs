@@ -14,7 +14,7 @@ use std::sync::Mutex;
 struct Messages(Mutex<Vec<String>>);
 
 impl Host for Messages {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
@@ -22,7 +22,7 @@ impl Host for Messages {
                 }
                 Ok(Value::Nil)
             }
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

@@ -99,7 +99,7 @@ Interactively, read FILENAME in the minibuffer with file name completion."
   "Signal an error unless FILE does not exist or the user agrees to ACTION it anyway."
   (when (and (file-exists? file)
              (not (yes-or-no-p (format "File %s already exists; %s anyway? " file action))))
-    (error (format "File already exists: %s" file))))
+    (signal 'file-already-exists (list "File already exists" file))))
 
 (define-command (write-region . args)
   "Write current region into specified file.

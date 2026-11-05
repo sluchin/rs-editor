@@ -14,11 +14,11 @@ use rseditor_core::scheme::value::Value;
 struct Ui;
 
 impl Host for Ui {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
             "read-key" => Ok(Value::String("y".to_string())),
-            _ => Err(format!("ui: {op}")),
+            _ => Err(format!("ui: {op}").into()),
         }
     }
 }
@@ -55,17 +55,16 @@ fn test_insert_file_contents() {
     // 無いファイル, 読めないファイル
     let missing = dir.path().join("none");
     assert_eq!(
-        insert_file_contents(&mut buffer, missing.to_str().unwrap(), true),
+        insert_file_contents(&mut buffer, missing.to_str().unwrap(), true)
+            .map_err(|e| e.to_string()),
         Err(format!(
             "Opening input file: No such file or directory, {}",
             missing.display()
         ))
     );
-    assert!(
-        insert_file_contents(&mut buffer, dir.path().to_str().unwrap(), false)
-            .unwrap_err()
-            .starts_with(dir.path().to_str().unwrap())
-    );
+    let error = insert_file_contents(&mut buffer, dir.path().to_str().unwrap(), false).unwrap_err();
+    assert_eq!(error.kind(), "file-error");
+    assert!(error.ends_with(dir.path().to_str().unwrap()));
 }
 
 #[test]
@@ -141,13 +140,13 @@ fn test_auto_save_skips_the_files_it_cannot_write() {
 struct Answers(std::sync::Mutex<Vec<&'static str>>);
 
 impl Host for Answers {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
             "read-string" | "read-file-name" => {
                 Ok(Value::String(self.0.lock().unwrap().remove(0).to_string()))
             }
-            _ => Err(format!("ui: {op}")),
+            _ => Err(format!("ui: {op}").into()),
         }
     }
 }
@@ -172,7 +171,10 @@ fn test_the_commands_of_the_builtins() {
     assert!(result.is_ok());
     assert_eq!(fs::read_to_string(&b).unwrap(), "el");
     let (result, _) = run(vec![leak(b.clone()), "no"], region, "write-region");
-    assert_eq!(result, Err(format!("File already exists: {b}")));
+    assert_eq!(
+        result.map_err(|e| e.to_string()),
+        Err(format!("File already exists: {b}"))
+    );
     let (result, _) = run(
         vec![leak(b.clone()), "yes"],
         "(insert \"xyz\") (set-mark 1)",
@@ -191,7 +193,10 @@ fn test_the_commands_of_the_builtins() {
         "",
         "copy-file",
     );
-    assert_eq!(result, Err(format!("File already exists: {b}")));
+    assert_eq!(
+        result.map_err(|e| e.to_string()),
+        Err(format!("File already exists: {b}"))
+    );
     let (result, _) = run(
         vec![leak(a.clone()), leak(b.clone()), "yes"],
         "",
@@ -232,7 +237,8 @@ fn test_copy_file() {
     assert_eq!(fs::read_to_string(b).unwrap(), "a");
     // 既にあれば, 3 つ目の引数が真のときだけ置き換える
     assert_eq!(
-        ev.eval(&format!("(copy-file {a:?} {b:?})")),
+        ev.eval(&format!("(copy-file {a:?} {b:?})"))
+            .map_err(|e| e.to_string()),
         Err(format!("File already exists: {b}"))
     );
     ev.eval(&format!("(copy-file {a:?} {b:?} #t)")).unwrap();
@@ -241,7 +247,7 @@ fn test_copy_file() {
         .unwrap_err()
         .starts_with(&format!("{a}-none: ")));
     assert_eq!(
-        ev.eval("(copy-file \"a\")"),
+        ev.eval("(copy-file \"a\")").map_err(|e| e.to_string()),
         Err("copy-file expects 2 or 3 arguments".to_string())
     );
 }

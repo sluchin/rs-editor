@@ -4,6 +4,7 @@
 //! ファイルを開いたとき (`find-file-hook`) と, 保存したとき (`after-save-hook`) は,
 //! `lisp/files.scm` の `find-file-noselect` と `basic-save-buffer` が, そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
 
+use crate::error::Error;
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;
 use crate::scheme::evaluator::Machine;
@@ -43,10 +44,10 @@ fn functions(global: &Env, hook: &str) -> Vec<Value> {
 /// # Returns
 ///
 /// 名前. 記号でなければ [`Err`].
-fn hook_name(name: &str, hook: &Value) -> Result<String, String> {
+fn hook_name(name: &str, hook: &Value) -> Result<String, Error> {
     match hook {
         Value::Symbol(hook) => Ok(hook.clone()),
-        other => Err(format!("{} expects a hook symbol, given {}", name, other)),
+        other => Err(format!("{} expects a hook symbol, given {}", name, other).into()),
     }
 }
 
@@ -61,7 +62,7 @@ fn hook_name(name: &str, hook: &Value) -> Result<String, String> {
 /// # Returns
 ///
 /// 成功すれば `Ok`. 手続きが失敗すれば, その内容.
-fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), String> {
+fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), Error> {
     for function in functions(machine.evaluator.global(), hook) {
         // 記号は, その名前の手続き (呼ぶときに引く. 後で定義し直しても, 新しいものを呼ぶ)
         let procedure = match &function {
@@ -69,7 +70,7 @@ fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), String> 
                 .evaluator
                 .global()
                 .get(name)
-                .ok_or_else(|| format!("Unbound variable: {}", name))?,
+                .ok_or_else(|| Error::void_variable(name))?,
             other => other.clone(),
         };
         machine.apply(procedure, args.to_vec())?;
@@ -88,7 +89,7 @@ fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), String> 
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
     match name {
         // (add-hook 'hook f [append]): 無ければ, 前 (append なら後ろ) に足す
         "add-hook" => {
@@ -97,7 +98,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 [hook, function, append, ..] if args.len() <= 4 => {
                     (hook, function, append.is_non_nil())
                 }
-                _ => return Err("add-hook expects 2 to 4 arguments".to_string()),
+                _ => return Err("add-hook expects 2 to 4 arguments".to_string().into()),
             };
             let hook = hook_name(name, hook)?;
             let mut functions = functions(machine.evaluator.global(), &hook);
@@ -134,7 +135,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         _ => {
             // run-hook-with-args
             let Some((hook, rest)) = args.split_first() else {
-                return Err("run-hook-with-args expects a hook".to_string());
+                return Err("run-hook-with-args expects a hook".to_string().into());
             };
             run(machine, &hook_name(name, hook)?, rest)?;
             Ok(Value::Nil)

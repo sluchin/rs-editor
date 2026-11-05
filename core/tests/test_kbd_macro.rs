@@ -16,10 +16,13 @@ fn test_record_and_end() {
     // 覚えていなければ, 覚えない
     m.record("x");
     assert!(!m.defining() && m.last().is_empty());
-    assert_eq!(m.end(), Err("Not defining kbd macro".to_string()));
+    assert_eq!(
+        m.end().map_err(|e| e.to_string()),
+        Err("Not defining kbd macro".to_string())
+    );
     m.start(false).unwrap();
     assert_eq!(
-        m.start(false),
+        m.start(false).map_err(|e| e.to_string()),
         Err("Already defining kbd macro".to_string())
     );
     m.begin_command();
@@ -49,7 +52,7 @@ struct FakeUi {
 }
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         self.calls.lock().unwrap().push((op.to_string(), args));
         Ok(Value::Nil)
     }

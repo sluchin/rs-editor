@@ -63,6 +63,7 @@ fn run(ev: &Evaluator, editor: &FakeEditor, code: &str) -> String {
 fn fail(ev: &Evaluator, editor: &FakeEditor, code: &str) -> String {
     ev.eval_with(code, editor)
         .expect_err(&format!("{} did not fail", code))
+        .to_string()
 }
 
 /// 出しているバッファの本文を変え, カーソルを `|` の所に置く (`|` は消す).

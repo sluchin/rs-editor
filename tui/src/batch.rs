@@ -10,6 +10,7 @@
 //! `princ` などは標準出力に、`message` は標準エラー出力に書く. `(kill-emacs N)` で終了コード N (既定は 0)、
 //! 捕まえなかったエラーは標準エラー出力に出して終了コード 255 で終わる.
 
+use rseditor_core::error::Error;
 use std::collections::VecDeque;
 use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -140,7 +141,7 @@ impl BatchUi {
     }
 
     /// キーを打ったことにして, そのコマンドを動かす (`COUNT` 回. 0 なら失敗するまで).
-    fn execute_keys(&self, keys: &[String], count: usize) -> Result<(), String> {
+    fn execute_keys(&self, keys: &[String], count: usize) -> Result<(), Error> {
         let commands = self
             .commands
             .lock()
@@ -186,23 +187,21 @@ impl BatchUi {
         if let Some(error) = &error {
             *self.failure.lock().unwrap() = Some((round.saturating_sub(1), error.clone()));
         }
-        error.map_or(Ok(()), Err)
+        error.map_or(Ok(()), |e| Err(Error::plain(e)))
     }
 
     /// 標準入力から 1 行読む (改行は除く).
-    fn read_line(&self) -> Result<String, String> {
+    fn read_line(&self) -> Result<String, Error> {
         let mut line = String::new();
         match self.input.lock().unwrap().read_line(&mut line) {
-            Ok(0) | Err(_) => {
-                Err("End of file during parsing: Error reading from stdin".to_string())
-            }
+            Ok(0) | Err(_) => Err(Error::strings("end-of-file", &["Error reading from stdin"])),
             Ok(_) => Ok(line.trim_end_matches(['\n', '\r']).to_string()),
         }
     }
 }
 
 impl Host for BatchUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
@@ -257,7 +256,7 @@ impl Host for BatchUi {
                 };
                 *self.exit.lock().unwrap() = Some(code);
                 // 後ろを評価しないために、失敗にする (呼んだ側が、終了コードを見分ける)
-                Err("kill-emacs".to_string())
+                Err("kill-emacs".to_string().into())
             }
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
             // 色, 下線, 隠すこと: バッチモードでは何もしない
@@ -269,7 +268,7 @@ impl Host for BatchUi {
             | "set-foreground-color"
             | "set-font" => Ok(Value::Nil),
             "outline-invisible-p" => Ok(Value::Boolean(false)),
-            other => Err(format!("The batch mode does not support {other}")),
+            other => Err(format!("The batch mode does not support {other}").into()),
         }
     }
 }
@@ -399,7 +398,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
             // マクロの中のコマンドの失敗を捕まえなかったときは, Emacs と同じく, 繰り返しの数を前置きにする
             let failed = failure.lock().unwrap().take();
             match failed {
-                Some((done, text)) if text == error => {
+                Some((done, text)) if text == error.message() => {
                     fail(&format!("After {done} kbd macro iterations: {error}"))
                 }
                 _ => fail(&error),

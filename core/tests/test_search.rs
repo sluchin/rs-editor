@@ -203,7 +203,7 @@ fn test_translate() {
     for (emacs, message) in errors {
         assert_eq!(
             translate(emacs, Dialect::Fundamental).unwrap_err(),
-            message,
+            format!("Invalid regexp: {message:?}"),
             "{emacs}"
         );
     }

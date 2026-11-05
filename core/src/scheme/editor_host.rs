@@ -6,6 +6,7 @@
 //!
 //! 位置は Emacs と同じく 1 から数えます (核の [`Buffer`] は 0 から数えるので, ここで 1 を足し引きします).
 
+use crate::error::Error;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -84,7 +85,7 @@ impl<U: Host> EditorHost<U> {
         regexp: bool,
         fold: bool,
         dialect: Dialect,
-    ) -> Result<Pattern, String> {
+    ) -> Result<Pattern, Error> {
         let mut cache = self.patterns.lock().unwrap();
         let key = (text.to_string(), regexp, fold, dialect);
         if let Some(p) = cache.get(&key) {
@@ -104,10 +105,10 @@ impl<U: Host> EditorHost<U> {
 }
 
 impl<U: Host> Host for EditorHost<U> {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         if op == "standard-output" {
             let Some(Value::String(text)) = args.first() else {
-                return Err("standard-output expects a string".to_string());
+                return Err("standard-output expects a string".to_string().into());
             };
             return match &*self.output.lock().unwrap() {
                 Some(output) => {
@@ -155,7 +156,7 @@ fn at(pos: usize) -> Value {
 }
 
 /// `indent-sexp` で字下げする式の終わり: 点の後ろの式の終わり. 終わりが行の途中で, 行の終わりが式の中なら, 行の終わりを越える式まで.
-fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, String> {
+fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, Error> {
     // 点が, `(` の直後の文字の途中で, そのシンボルの後ろに式が無ければ (行末かコメントまで), Emacs はエラーにする
     let symbol = |c: Option<char>| c.is_some_and(|c| !indent::delimiter(c));
     if point > 0 && symbol(source.char_at(point - 1)) && symbol(source.char_at(point)) {
@@ -175,10 +176,12 @@ fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, String> {
             && source.char_at(start - 1) == Some('(')
             && matches!(source.char_at(rest), None | Some('\n' | ';'))
         {
-            return Err("End position is smaller than start position".to_string());
+            return Err("End position is smaller than start position"
+                .to_string()
+                .into());
         }
     }
-    let mut end = forward_sexp(source, point).map_err(|e| e.to_string())?;
+    let mut end = forward_sexp(source, point).map_err(Error::from)?;
     let mut eol = end;
     while eol < source.size() && source.char_at(eol) != Some('\n') {
         eol += 1;
@@ -196,7 +199,7 @@ fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, String> {
 }
 
 /// 字下げの計画を, バッファに行います (後ろの変更から). カーソルは, 計画にあればそこへ, 無ければ変更から写す.
-fn apply_plan(b: &mut Buffer, point: usize, plan: Plan) -> Result<(), String> {
+fn apply_plan(b: &mut Buffer, point: usize, plan: Plan) -> Result<(), Error> {
     let cursor = plan
         .cursor
         .unwrap_or_else(|| indent::map_pos(&plan.edits, point, true));
@@ -209,12 +212,12 @@ fn apply_plan(b: &mut Buffer, point: usize, plan: Plan) -> Result<(), String> {
 }
 
 /// 動いた先の位置の値. 失敗したら, Emacs と同じに, 動いた所にカーソルを置いて, 失敗にする.
-fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, String> {
+fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, Error> {
     match result {
         Ok(found) => Ok(at(found)),
         Err(e) => {
             b.set_point(e.point);
-            Err(e.message)
+            Err(e.error)
         }
     }
 }
@@ -223,10 +226,10 @@ fn moved(b: &mut Buffer, result: Result<usize, MotionError>) -> Result<Value, St
 type Position = fn(usize) -> Value;
 
 /// 直前に合った所を見る: 文字列を探した後は文字列の中の位置 (0 から), 本文を探した後はバッファの位置 (1 から).
-fn match_view(b: &Buffer) -> (&[Option<(usize, usize)>], Position) {
-    match b.string_match_data() {
-        Some(data) => (data, |p| Value::Number(p as f64)),
-        None => (b.match_data(), at),
+fn match_view(ed: &Editor) -> (Vec<Option<(usize, usize)>>, Position) {
+    match ed.latest_match() {
+        (data, true) => (data, |p| Value::Number(p as f64)),
+        (data, false) => (data, at),
     }
 }
 
@@ -236,7 +239,7 @@ fn at_opt(pos: Option<usize>) -> Value {
 }
 
 /// 引数の数を取り出します.
-fn number(_op: &str, args: &[Value], i: usize) -> Result<f64, String> {
+fn number(_op: &str, args: &[Value], i: usize) -> Result<f64, Error> {
     match args.get(i) {
         Some(Value::Number(n)) => Ok(*n),
         other => Err(builtins::wrong_type(
@@ -247,12 +250,12 @@ fn number(_op: &str, args: &[Value], i: usize) -> Result<f64, String> {
 }
 
 /// 整数を取り出します (小数は切り捨てる).
-fn int(op: &str, args: &[Value], i: usize) -> Result<i64, String> {
+fn int(op: &str, args: &[Value], i: usize) -> Result<i64, Error> {
     number(op, args, i).map(|n| n as i64)
 }
 
 /// 省ける整数 (無いか nil なら, 既定の値).
-fn int_or(op: &str, args: &[Value], i: usize, default: i64) -> Result<i64, String> {
+fn int_or(op: &str, args: &[Value], i: usize, default: i64) -> Result<i64, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => int(op, args, i),
         _ => Ok(default),
@@ -260,7 +263,7 @@ fn int_or(op: &str, args: &[Value], i: usize, default: i64) -> Result<i64, Strin
 }
 
 /// 位置の引数 (1 から数える) を, 0 から数える位置にします (1 より小さければ 0).
-fn pos(op: &str, args: &[Value], i: usize) -> Result<usize, String> {
+fn pos(op: &str, args: &[Value], i: usize) -> Result<usize, Error> {
     number(op, args, i).map(|n| (n as i64 - 1).max(0) as usize)
 }
 
@@ -273,20 +276,22 @@ fn region(
     op: &str,
     args: &[Value],
     i: usize,
-) -> Result<(usize, usize), String> {
+) -> Result<(usize, usize), Error> {
     let (a, b) = (int(op, args, i)?, int(op, args, i + 1)?);
     let (from, to) = (a.min(b), a.max(b));
     if from < limit.0 as i64 + 1 || to > limit.1 as i64 + 1 {
-        return Err(match buffer {
-            Some(name) => format!("Args out of range: #<buffer {name}>, {a}, {b}"),
-            None => format!("Args out of range: {a}, {b}"),
-        });
+        let mut data = Vec::new();
+        if let Some(name) = buffer {
+            data.push(Value::Symbol(format!("#<buffer {name}>")));
+        }
+        data.extend([Value::Number(a as f64), Value::Number(b as f64)]);
+        return Err(Error::args_out_of_range(data));
     }
     Ok((from as usize - 1, to as usize - 1))
 }
 
 /// 省ける位置の引数.
-fn pos_opt(op: &str, args: &[Value], i: usize) -> Result<Option<usize>, String> {
+fn pos_opt(op: &str, args: &[Value], i: usize) -> Result<Option<usize>, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => pos(op, args, i).map(Some),
         _ => Ok(None),
@@ -294,7 +299,7 @@ fn pos_opt(op: &str, args: &[Value], i: usize) -> Result<Option<usize>, String> 
 }
 
 /// 文字列の引数.
-fn text<'a>(_op: &str, args: &'a [Value], i: usize) -> Result<&'a str, String> {
+fn text<'a>(_op: &str, args: &'a [Value], i: usize) -> Result<&'a str, Error> {
     match args.get(i) {
         Some(Value::String(s)) => Ok(s),
         other => Err(builtins::wrong_type(
@@ -305,7 +310,7 @@ fn text<'a>(_op: &str, args: &'a [Value], i: usize) -> Result<&'a str, String> {
 }
 
 /// 省ける文字列の引数 (無いか nil なら `None`).
-fn text_opt<'a>(op: &str, args: &'a [Value], i: usize) -> Result<Option<&'a str>, String> {
+fn text_opt<'a>(op: &str, args: &'a [Value], i: usize) -> Result<Option<&'a str>, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => text(op, args, i).map(Some),
         _ => Ok(None),
@@ -313,15 +318,15 @@ fn text_opt<'a>(op: &str, args: &'a [Value], i: usize) -> Result<Option<&'a str>
 }
 
 /// 名前か記号の引数.
-fn name<'a>(op: &str, args: &'a [Value], i: usize) -> Result<&'a str, String> {
+fn name<'a>(op: &str, args: &'a [Value], i: usize) -> Result<&'a str, Error> {
     match args.get(i) {
         Some(Value::String(s) | Value::Symbol(s)) => Ok(s),
-        _ => Err(format!("{op} expects a name")),
+        _ => Err(format!("{op} expects a name").into()),
     }
 }
 
 /// バッファの引数 (名前. 無いか nil なら, 今のバッファ) を, 名前にします.
-fn buffer_name(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<String, String> {
+fn buffer_name(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<String, Error> {
     Ok(match text_opt(op, args, i)? {
         Some(name) => name.to_string(),
         None => editor.current_buffer_name().to_string(),
@@ -329,7 +334,7 @@ fn buffer_name(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<St
 }
 
 /// ウィンドウの引数 (無いか nil なら, 選んでいるウィンドウ).
-fn window(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<usize, String> {
+fn window(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<usize, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => Ok(int(op, args, i)? as usize),
         _ => Ok(editor.selected_window()),
@@ -337,13 +342,13 @@ fn window(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<usize, 
 }
 
 /// 文字の引数 (1 文字の文字列か, 文字の番号).
-fn character(op: &str, args: &[Value], i: usize) -> Result<char, String> {
+fn character(op: &str, args: &[Value], i: usize) -> Result<char, Error> {
     match args.get(i) {
         Some(Value::String(s)) if s.chars().count() == 1 => Ok(s.chars().next().unwrap()),
         Some(Value::Number(n)) => {
-            char::from_u32(*n as u32).ok_or(format!("{op}: invalid character"))
+            char::from_u32(*n as u32).ok_or(format!("{op}: invalid character").into())
         }
-        _ => Err(format!("{op} expects a character")),
+        _ => Err(format!("{op} expects a character").into()),
     }
 }
 
@@ -389,7 +394,7 @@ fn entry_value(entry: &UndoEntry) -> Value {
 }
 
 /// 評価器の値を, 元に戻す記録にします.
-fn value_entry(value: &Value) -> Result<UndoEntry, String> {
+fn value_entry(value: &Value) -> Result<UndoEntry, Error> {
     let invalid = || "primitive-undo: invalid undo entry".to_string();
     match value {
         Value::Boolean(false) | Value::Nil => Ok(UndoEntry::Boundary),
@@ -404,9 +409,9 @@ fn value_entry(value: &Value) -> Result<UndoEntry, String> {
                 text: text.clone(),
                 point_at_end: *p < 0.0,
             }),
-            _ => Err(invalid()),
+            _ => Err(invalid().into()),
         },
-        _ => Err(invalid()),
+        _ => Err(invalid().into()),
     }
 }
 
@@ -417,7 +422,7 @@ impl<U: Host> EditorHost<U> {
         ed: &mut Editor,
         op: &str,
         args: &[Value],
-    ) -> Result<Option<Outcome>, String> {
+    ) -> Result<Option<Outcome>, Error> {
         // 窓, バッファの一覧, kill-ring, 前置引数, ファイル
         if let Some(outcome) = self.editor_op(ed, op, args)? {
             return Ok(Some(outcome));
@@ -432,7 +437,7 @@ impl<U: Host> EditorHost<U> {
         ed: &mut Editor,
         op: &str,
         args: &[Value],
-    ) -> Result<Option<Outcome>, String> {
+    ) -> Result<Option<Outcome>, Error> {
         let value = match op {
             "buffer-list" => Value::List(ed.buffer_list().into_iter().map(Value::String).collect()),
             "get-buffer" => ed
@@ -474,7 +479,7 @@ impl<U: Host> EditorHost<U> {
                     .get_buffer(&name)
                     .ok_or_else(|| format!("No such buffer: {name}"))?;
                 if buffer.file().is_some() && buffer.modified() {
-                    return Err(format!("Buffer {name} is modified"));
+                    return Err(format!("Buffer {name} is modified").into());
                 }
                 ed.kill_buffer(&name)?;
                 Value::Boolean(true)
@@ -553,7 +558,7 @@ impl<U: Host> EditorHost<U> {
                     Some(v) if v.is_non_nil() => match name(op, args, 0)? {
                         "below" | "below-sides" => Direction::Below,
                         "right" | "right-sides" => Direction::Right,
-                        other => return Err(format!("{op}: unknown direction {other}")),
+                        other => return Err(format!("{op}: unknown direction {other}").into()),
                     },
                     _ => Direction::Below,
                 };
@@ -742,7 +747,7 @@ impl<U: Host> EditorHost<U> {
                     })
                     .collect();
                 if ring.is_empty() {
-                    return Err("No global mark set".to_string());
+                    return Err("No global mark set".to_string().into());
                 }
                 let (name, id) = ring.remove(0);
                 let position = ed.get_buffer(&name).unwrap().marker_position(id).unwrap();
@@ -760,12 +765,7 @@ impl<U: Host> EditorHost<U> {
     }
 
     /// 今のバッファに対する操作.
-    fn buffer_op(
-        &self,
-        ed: &mut Editor,
-        op: &str,
-        args: &[Value],
-    ) -> Result<Option<Value>, String> {
+    fn buffer_op(&self, ed: &mut Editor, op: &str, args: &[Value]) -> Result<Option<Value>, Error> {
         // 名前でバッファを引く操作は, ここで先に済ませる
         match op {
             "buffer-file-name" | "buffer-modified-p" => {
@@ -779,6 +779,68 @@ impl<U: Host> EditorHost<U> {
                     buffer
                         .file()
                         .map_or(Value::Nil, |f| Value::String(f.to_string()))
+                }));
+            }
+            "match-beginning" | "match-end" => {
+                // 文字列を探した後は, 文字列の中の位置 (0 から)
+                let (data, to_value) = match_view(ed);
+                let group = data
+                    .get(int(op, args, 0)?.max(0) as usize)
+                    .copied()
+                    .flatten();
+                let begin = op == "match-beginning";
+                let value = group.map_or_else(nil, |(s, e)| to_value(if begin { s } else { e }));
+                return Ok(Some(value));
+            }
+            "match-data" => {
+                let (data, to_value) = match_view(ed);
+                let mut items = Vec::new();
+                for group in data {
+                    let (start, end) =
+                        group.map_or((nil(), nil()), |(s, e)| (to_value(s), to_value(e)));
+                    items.push(start);
+                    items.push(end);
+                }
+                return Ok(Some(Value::List(items.into())));
+            }
+            "string-match--op" => {
+                // (string-match REGEXP STRING START FOLD INHIBIT-MODIFY): 最初に合う所の位置 (0 から). 無ければ nil
+                let fold = args.get(3).is_some_and(|v| v.is_non_nil());
+                let dialect = ed.current_buffer().dialect();
+                let pattern = self.pattern(text(op, args, 0)?, true, fold, dialect)?;
+                let string = text(op, args, 1)?;
+                let length = string.chars().count() as i64;
+                // 負の始めは, 文字列の終わりから数える
+                let start = int(op, args, 2)?;
+                let start = if start < 0 { start + length } else { start };
+                if start < 0 || start > length {
+                    return Err(Error::args_out_of_range(vec![
+                        args[1].clone(),
+                        args[2].clone(),
+                    ]));
+                }
+                return Ok(Some(match pattern.captures_from(string, start as usize) {
+                    Some(data) => {
+                        let first = data[0].map_or(0, |(s, _)| s);
+                        if !args.get(4).is_some_and(Value::is_non_nil) {
+                            ed.string_match = Some((data, crate::buffer::next_match_seq()));
+                        }
+                        Value::Number(first as f64)
+                    }
+                    None => nil(),
+                }));
+            }
+            "match-string" => {
+                // (match-string N [STRING]): 文字列を探した後は, その文字列の部分. 本文を探した後は, 本文の部分
+                let n = int(op, args, 0)?.max(0) as usize;
+                let (data, _) = match_view(ed);
+                let group = data.get(n).copied().flatten();
+                return Ok(Some(match (group, args.get(1)) {
+                    (None, _) => nil(),
+                    (Some((s, e)), Some(Value::String(string))) => {
+                        Value::String(string.chars().skip(s).take(e - s).collect())
+                    }
+                    (Some((s, e)), _) => Value::String(ed.current_buffer().substring(s, e)?),
                 }));
             }
             "kill-region" => {
@@ -890,10 +952,10 @@ impl<U: Host> EditorHost<U> {
                 let n = int(op, args, 0)?;
                 let target = b.point() as i64 + n;
                 if target < b.begv() as i64 {
-                    return Err("Beginning of buffer".to_string());
+                    return Err(Error::bare("beginning-of-buffer"));
                 }
                 if target > b.zv() as i64 {
-                    return Err("End of buffer".to_string());
+                    return Err(Error::bare("end-of-buffer"));
                 }
                 b.delete_region(b.point(), target as usize)?;
                 Value::Nil
@@ -948,73 +1010,19 @@ impl<U: Host> EditorHost<U> {
                 let pattern = self.pattern(text(op, args, 0)?, true, fold, b.dialect())?;
                 Value::Boolean(b.looking_at(&pattern))
             }
-            "match-beginning" | "match-end" => {
-                let n = int(op, args, 0)?.max(0) as usize;
-                // 文字列を探した後は, 文字列の中の位置 (0 から)
-                let (data, to_value) = match_view(b);
-                let group = data.get(n).copied().flatten();
-                group
-                    .map(|(s, e)| if op == "match-beginning" { s } else { e })
-                    .map_or_else(nil, to_value)
-            }
-            "match-data" => {
-                let (data, to_value) = match_view(b);
-                let mut items = Vec::new();
-                for group in data {
-                    let (start, end) =
-                        group.map_or((nil(), nil()), |(s, e)| (to_value(s), to_value(e)));
-                    items.push(start);
-                    items.push(end);
-                }
-                Value::List(items.into())
-            }
-            "string-match--op" => {
-                // (string-match REGEXP STRING START FOLD INHIBIT-MODIFY): 最初に合う所の位置 (0 から). 無ければ nil
-                let fold = args.get(3).is_some_and(|v| v.is_non_nil());
-                let pattern = self.pattern(text(op, args, 0)?, true, fold, b.dialect())?;
-                let string = text(op, args, 1)?;
-                let start = int(op, args, 2)?.max(0) as usize;
-                if start > string.chars().count() {
-                    return Err(format!("Args out of range: {}, {start}", args[1]));
-                }
-                match pattern.captures_from(string, start) {
-                    Some(data) => {
-                        let first = data[0].map_or(0, |(s, _)| s);
-                        if !args.get(4).is_some_and(Value::is_non_nil) {
-                            b.string_match = Some((data, b.match_data.clone()));
-                        }
-                        Value::Number(first as f64)
-                    }
-                    None => nil(),
-                }
-            }
-            "match-string" => {
-                let n = int(op, args, 0)?.max(0) as usize;
-                // (match-string N STRING): 文字列を探した後は, その文字列の部分
-                if let Some(Value::String(string)) = args.get(1) {
-                    let group = b
-                        .string_match_data()
-                        .and_then(|d| d.get(n).copied().flatten());
-                    return Ok(Some(group.map_or_else(nil, |(s, e)| {
-                        Value::String(string.chars().skip(s).take(e - s).collect())
-                    })));
-                }
-                match b.match_data().get(n).copied().flatten() {
-                    Some((s, e)) => Value::String(b.substring(s, e)?),
-                    None => nil(),
-                }
-            }
             "replace-match" | "match-substitute-replacement" => {
                 let fixed = args.get(1).is_some_and(Value::is_non_nil);
                 let literal = args.get(2).is_some_and(Value::is_non_nil);
                 // 引数は Emacs と同じ (NEWTEXT FIXEDCASE LITERAL STRING SUBEXP). 文字列の中の置き換え (STRING) は, まだ無い
                 if args.get(3).is_some_and(Value::is_non_nil) {
-                    return Err(format!("{op}: STRING is not supported"));
+                    return Err(format!("{op}: STRING is not supported").into());
                 }
                 let sub = int_or(op, args, 4, 0)?.max(0) as usize;
                 let data = b.match_data().to_vec();
                 let Some((from, to)) = data.get(sub).copied().flatten() else {
-                    return Err("replace-match subexpression does not exist".to_string());
+                    return Err("replace-match subexpression does not exist"
+                        .to_string()
+                        .into());
                 };
                 let newtext = text(op, args, 0)?;
                 let matched = b.substring(from, to)?;
@@ -1041,7 +1049,7 @@ impl<U: Host> EditorHost<U> {
                 // 合った範囲は, 置き換えた分だけ変わる (括弧の範囲は, 捨てる)
                 let delta = end as i64 - to as i64;
                 let (start0, end0) = data[0].unwrap_or((from, to));
-                b.match_data = vec![Some((start0, (end0 as i64 + delta) as usize))];
+                b.set_match_data(vec![Some((start0, (end0 as i64 + delta) as usize))]);
                 Value::Nil
             }
             "set-match-data" => {
@@ -1049,7 +1057,7 @@ impl<U: Host> EditorHost<U> {
                     Some(Value::List(items)) => items.to_vec(),
                     // Emacs の nil (`#f`) は, 空のリストと同じ
                     Some(v) if !v.is_non_nil() => Vec::new(),
-                    _ => return Err("set-match-data expects a list".to_string()),
+                    _ => return Err("set-match-data expects a list".to_string().into()),
                 };
                 // (始め 終わり) の組ごと. 合わなかった括弧は #f の組. 余った要素は捨てる (Emacs と同じ)
                 let position = |n: f64| (n as i64 - 1).max(0) as usize;
@@ -1058,14 +1066,14 @@ impl<U: Host> EditorHost<U> {
                     data.push(match (s, e) {
                         (Value::Number(s), Value::Number(e)) => Some((position(*s), position(*e))),
                         (s, e) if !s.is_non_nil() && !e.is_non_nil() => None,
-                        _ => return Err("set-match-data expects a number".to_string()),
+                        _ => return Err("set-match-data expects a number".to_string().into()),
                     });
                 }
                 // 終わりの合わなかった括弧は, 持たない (Emacs の `match-data` は返さない)
                 while data.last() == Some(&None) {
                     data.pop();
                 }
-                b.match_data = data;
+                b.set_match_data(data);
                 Value::Nil
             }
             "set-buffer-directory" => {
@@ -1172,7 +1180,7 @@ impl<U: Host> EditorHost<U> {
             "primitive-undo" => primitive_undo(b, op, args)?,
             "set-buffer-undo-list" => {
                 let Some(Value::List(items)) = args.first() else {
-                    return Err(format!("{op} expects a list"));
+                    return Err(format!("{op} expects a list").into());
                 };
                 let mut entries = items
                     .iter()
@@ -1191,7 +1199,7 @@ impl<U: Host> EditorHost<U> {
                 let source = Source::from_buffer(b, b.dialect());
                 let found = source
                     .scan_lists(from, count, depth, sexp)
-                    .map_err(|e| e.to_string())?;
+                    .map_err(Error::from)?;
                 at_opt(found)
             }
             "up-list-position" => {
@@ -1221,7 +1229,7 @@ impl<U: Host> EditorHost<U> {
                     Ok((head, mark)) => Value::List(vec![at(head), at(mark)].into_iter().collect()),
                     Err(e) => {
                         b.set_point(e.point);
-                        return Err(e.message);
+                        return Err(e.error);
                     }
                 }
             }
@@ -1372,7 +1380,9 @@ impl<U: Host> EditorHost<U> {
                     "fundamental" => Dialect::Fundamental,
                     "elisp" => Dialect::Elisp,
                     "scheme" => Dialect::Scheme,
-                    other => return Err(format!("set-syntax-dialect: unknown dialect {other}")),
+                    other => {
+                        return Err(format!("set-syntax-dialect: unknown dialect {other}").into())
+                    }
                 });
                 Value::Nil
             }
@@ -1382,13 +1392,7 @@ impl<U: Host> EditorHost<U> {
 
     /// 探します (`search-forward`, `re-search-backward` など).
     /// 引数は, 探す文字, 限り, 見つからないときの扱い, 回数, 最後に, 大文字と小文字を区別しないか.
-    fn search(
-        &self,
-        b: &mut Buffer,
-        op: &str,
-        args: &[Value],
-        fold: bool,
-    ) -> Result<Value, String> {
+    fn search(&self, b: &mut Buffer, op: &str, args: &[Value], fold: bool) -> Result<Value, Error> {
         let regexp = op.starts_with("re-");
         let mut forward = op.ends_with("forward");
         let needle = text(op, args, 0)?;
@@ -1409,7 +1413,9 @@ impl<U: Host> EditorHost<U> {
                 limit > b.point()
             }
         }) {
-            return Err("Invalid search bound (wrong side of point)".to_string());
+            return Err("Invalid search bound (wrong side of point)"
+                .to_string()
+                .into());
         }
         let pattern = self.pattern(needle, regexp, fold, b.dialect())?;
         let found = if forward {
@@ -1421,7 +1427,7 @@ impl<U: Host> EditorHost<U> {
             // 文字を探すときは, 後ろ向きでも, 合った所の始めに止まる (Emacs と同じ)
             Some(p) => Ok(at(p)),
             None => match noerror {
-                Value::Boolean(false) | Value::Nil => Err(format!("Search failed: \"{needle}\"")),
+                Value::Boolean(false) | Value::Nil => Err(Error::search_failed(needle)),
                 Value::Boolean(true) => Ok(nil()),
                 _ => {
                     b.set_point(bound.unwrap_or(if forward { b.zv() } else { b.begv() }));
@@ -1433,25 +1439,25 @@ impl<U: Host> EditorHost<U> {
 }
 
 /// 前置引数の値 (nil, `-`, `(4)`, 数) を, 前置引数にします.
-fn prefix_arg_of(op: &str, v: Option<&Value>) -> Result<Option<PrefixArg>, String> {
+fn prefix_arg_of(op: &str, v: Option<&Value>) -> Result<Option<PrefixArg>, Error> {
     Ok(match v {
         None | Some(Value::Boolean(false) | Value::Nil) => None,
         Some(Value::Symbol(s)) if s == "-" => Some(PrefixArg::Minus),
         Some(Value::Number(n)) => Some(PrefixArg::Number(*n as i64)),
         Some(Value::List(items)) => match &items[..] {
             [Value::Number(n)] => Some(PrefixArg::Universal(*n as i64)),
-            _ => return Err(format!("{op}: invalid prefix argument")),
+            _ => return Err(format!("{op}: invalid prefix argument").into()),
         },
-        Some(_) => return Err(format!("{op}: invalid prefix argument")),
+        Some(_) => return Err(format!("{op}: invalid prefix argument").into()),
     })
 }
 
 /// 元に戻します (Emacs の `primitive-undo`): `(primitive-undo N LIST)`. 区切りまでを 1 つのまとまりとして N 回元に戻し,
 /// 残りの記録のリストを返す.
-fn primitive_undo(b: &mut Buffer, op: &str, args: &[Value]) -> Result<Value, String> {
+fn primitive_undo(b: &mut Buffer, op: &str, args: &[Value]) -> Result<Value, Error> {
     let mut groups = int(op, args, 0)?;
     let Some(Value::List(list)) = args.get(1) else {
-        return Err(format!("{op} expects a list"));
+        return Err(format!("{op} expects a list").into());
     };
     let mut rest: &[Value] = &list[..];
     while groups > 0 {

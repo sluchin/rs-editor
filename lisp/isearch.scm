@@ -233,7 +233,7 @@
   (if (and isearch--success (not isearch--error))
       (begin
         (goto-char isearch--opoint)
-        (error "Quit"))
+        (signal 'quit '()))
       (begin
         (let loop ()
           (when (and (not (null? (cdr isearch--cmds))) (or (not isearch--success) isearch--error))

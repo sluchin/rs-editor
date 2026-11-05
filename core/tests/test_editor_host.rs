@@ -15,7 +15,7 @@ struct FakeUi {
 }
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         if op == "message" {
             let Value::String(text) = &args[0] else {
                 panic!("not a string")
@@ -23,14 +23,14 @@ impl Host for FakeUi {
             self.messages.lock().unwrap().push(text.clone());
             return Ok(Value::Nil);
         }
-        Err(format!("ui: {op}"))
+        Err(format!("ui: {op}").into())
     }
 }
 
 /// 評価器とホストを作って, Scheme を評価する.
 fn run(code: &str) -> Result<String, String> {
     let (ev, host) = setup();
-    ev.eval_with(code, &host)
+    ev.eval_with(code, &host).map_err(|e| e.to_string())
 }
 
 /// 評価器とホスト.
@@ -817,8 +817,18 @@ fn test_string_match() {
         ("(string-match--op \"A\" \"a\" 0 #t #f)", "0"),
         ("(string-match--op \"A\" \"a\" 0 #f #f)", "#f"),
         ("(string-match--op \"a\" \"b\" 5 #f #f)", "ERR Args out of range: \"b\", 5"),
-        ("(string-match--op \"\\\\(\" \"b\" 0 #f #f)", "ERR Invalid regexp: Parsing error at position 1: Opening parenthesis without closing parenthesis"),
+        ("(string-match--op \"\\\\(\" \"b\" 0 #f #f)", "ERR Invalid regexp: \"Parsing error at position 1: Opening parenthesis without closing parenthesis\""),
         ("(string-match--op \"b\" \"abc\" 0 #f #f) (insert \"xb\") (goto-char 1) (search-forward \"x\") (match-beginning 0)", "1"),
+        // 負の始めは, 文字列の終わりから数える
+        ("(string-match--op \"b\" \"abab\" -2 #f #f)", "3"),
+        ("(string-match--op \"a\" \"abc\" -9 #f #f)", "ERR Args out of range: \"abc\", -9"),
+        // 合った所は, 全体で 1 つ: 一番新しいものが, バッファを替えても残る
+        ("(insert \"abc\") (goto-char 1) (search-forward \"b\") (string-match--op \"c\" \"xc\" 0 #f #f) (match-beginning 0)", "1"),
+        ("(insert \"abc\") (goto-char 1) (search-forward \"b\") (string-match--op \"b\" \"ab\" 0 #f #f) (goto-char 1) (search-forward \"b\") (match-beginning 0)", "2"),
+        ("(insert \"abc\") (goto-char 1) (search-forward \"b\") (generate-new-buffer \"other\") (set-buffer \"other\") (match-beginning 0)", "2"),
+        ("(string-match--op \"c\" \"abc\" 0 #f #f) (generate-new-buffer \"o2\") (set-buffer \"o2\") (match-beginning 0)", "2"),
+        ("(string-match--op \"c\" \"abc\" 0 #f #f) (generate-new-buffer \"o3\") (set-buffer \"o3\") (match-string 0 \"abc\")", "\"c\""),
+        ("(insert \"abc\") (goto-char 1) (search-forward \"b\") (generate-new-buffer \"o4\") (set-buffer \"o4\") (match-data)", "(2 3)"),
     ];
     for (code, want) in cases {
         assert_eq!(run_last(code), want, "{code}");

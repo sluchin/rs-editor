@@ -11,7 +11,7 @@ use std::sync::Arc;
 #[test]
 fn no_host_fails() {
     assert_eq!(
-        NoHost.call("point", vec![]),
+        NoHost.call("point", vec![]).map_err(|e| e.to_string()),
         Err("No editor is attached (point)".to_string())
     );
 }
@@ -84,7 +84,23 @@ fn bridge_passes_the_error_of_the_reply() {
         });
         bridge.request("point", vec![], &|_| Ok(()))
     });
-    assert_eq!(result, Err("bad".to_string()));
+    assert_eq!(result.map_err(|e| e.to_string()), Err("bad".to_string()));
+}
+
+#[test]
+fn bridge_turns_a_quit_of_the_reply_into_the_quit_error() {
+    let bridge = Bridge::new(Duration::from_secs(5));
+    let result = std::thread::scope(|scope| {
+        scope.spawn(|| {
+            while !bridge.reply(1, json!(null), Some("Quit".to_string())) {
+                std::thread::yield_now();
+            }
+        });
+        bridge.request("read-string", vec![], &|_| Ok(()))
+    });
+    let error = result.unwrap_err();
+    assert!(error.is_quit());
+    assert_eq!(error.message(), "Quit");
 }
 
 #[test]
@@ -107,11 +123,15 @@ fn bridge_waits_longer_for_the_input() {
 fn bridge_fails_when_sending_fails_or_nobody_answers() {
     let bridge = Bridge::new(Duration::from_millis(10));
     assert_eq!(
-        bridge.request("point", vec![], &|_| Err("closed".to_string())),
+        bridge
+            .request("point", vec![], &|_| Err("closed".to_string()))
+            .map_err(|e| e.to_string()),
         Err("closed".to_string())
     );
     assert_eq!(
-        bridge.request("point", vec![], &|_| Ok(())),
+        bridge
+            .request("point", vec![], &|_| Ok(()))
+            .map_err(|e| e.to_string()),
         Err("The editor did not answer (point)".to_string())
     );
     // 時間切れの後の返事は, 捨てる
@@ -125,7 +145,7 @@ struct NoMarkers {
 }
 
 impl Host for NoMarkers {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         self.calls.lock().unwrap().push(format!(
             "{op} {}",
             args.iter()
@@ -136,7 +156,7 @@ impl Host for NoMarkers {
         match op {
             "current-buffer" => Ok(Value::String("a".to_string())),
             "point" => Ok(Value::Number(5.0)),
-            "point-marker" => Err("No markers".to_string()),
+            "point-marker" => Err("No markers".to_string().into()),
             _ => Ok(Value::Nil),
         }
     }

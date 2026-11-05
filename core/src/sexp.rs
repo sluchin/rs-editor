@@ -2,15 +2,16 @@
 //!
 //! defun は, 行の始め (0 桁) の開く括弧から始まる式です (Emacs の `open-paren-in-column-0-is-defun-start`).
 
+use crate::error::Error;
 use crate::syntax::{ScanError, Source};
 
 /// 動くのに失敗したとき: 失敗の理由と, 失敗したときのカーソル (Emacs は, 動いた所で止まる).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MotionError {
     /// 失敗したときのカーソル.
     pub point: usize,
-    /// 理由 (`Unbalanced parentheses` など).
-    pub message: String,
+    /// エラー (`scan-error` など).
+    pub error: Error,
 }
 
 /// 行の始めを返します.
@@ -101,7 +102,7 @@ pub fn up_list(source: &Source, pos: usize, count: i64) -> Result<usize, MotionE
                         forward_sexp(source, start).map_err(|e| MotionError {
                             // 文字列の始めまで動いてから失敗する
                             point: start,
-                            message: e.to_string(),
+                            error: e.into(),
                         })?
                     } else {
                         start
@@ -117,7 +118,7 @@ pub fn up_list(source: &Source, pos: usize, count: i64) -> Result<usize, MotionE
                     }
                     return Err(MotionError {
                         point: pos,
-                        message: "At top level".to_string(),
+                        error: Error::plain("At top level"),
                     });
                 }
             }
@@ -217,10 +218,10 @@ pub fn end_of_defun_scanning(
     let scan = |from: usize| {
         forward_sexp(source, from).map_err(|e| MotionError {
             point: from,
-            message: if scan_error {
-                e.to_string()
+            error: if scan_error {
+                e.into()
             } else {
-                e.message.to_string()
+                Error::plain(e.message)
             },
         })
     };

@@ -145,7 +145,7 @@ Called from Lisp with a name, kill the buffer without asking (an error if it vis
         (when (and (buffer-file-name name)
                    (buffer-modified-p name)
                    (not (yes-or-no-p (format "Buffer %s modified; kill anyway? " name))))
-          (error "Quit"))
+          (signal 'quit '()))
         (with-current-buffer name (set-buffer-modified-p #f))
         (window--kill-buffer name))))
 
@@ -179,8 +179,8 @@ A negative ARG scrolls downward, and `-' means a screenful downward."
              ((eq? arg '-) (scroll-down-command))
              (else (let ((n (prefix-numeric-value arg)))
                      (if (> n 0)
-                         (if (eobp) (error "End of buffer") (forward-line n))
-                         (if (bobp) (error "Beginning of buffer") (forward-line n))))))))))
+                         (if (eobp) (signal 'end-of-buffer '()) (forward-line n))
+                         (if (bobp) (signal 'beginning-of-buffer '()) (forward-line n))))))))))
 
 (define-command (scroll-other-window-down . args)
   "Scroll the next window downward ARG lines; or near full screen if no ARG."
@@ -192,8 +192,8 @@ A negative ARG scrolls downward, and `-' means a screenful downward."
              ((eq? arg '-) (scroll-up-command))
              (else (let ((n (prefix-numeric-value arg)))
                      (if (> n 0)
-                         (if (bobp) (error "Beginning of buffer") (forward-line (- n)))
-                         (if (eobp) (error "End of buffer") (forward-line (- n)))))))))))
+                         (if (bobp) (signal 'beginning-of-buffer '()) (forward-line (- n)))
+                         (if (eobp) (signal 'end-of-buffer '()) (forward-line (- n)))))))))))
 
 (define-command (beginning-of-buffer-other-window . args)
   "Move point to the beginning of the buffer in the next window.

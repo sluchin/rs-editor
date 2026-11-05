@@ -312,7 +312,7 @@ pub fn text(v: &Value) -> String {
 }
 
 impl Host for FakeEditor {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         Ok(match op {
             "point" => Value::Number(self.buffer().point as f64),
             "point-min" => Value::Number(1.0),
@@ -352,7 +352,7 @@ impl Host for FakeEditor {
             "set-buffer" => {
                 let name = text(&args[0]);
                 if !self.buffers.lock().unwrap().contains_key(&name) {
-                    return Err(format!("No such buffer: {name}"));
+                    return Err(format!("No such buffer: {name}").into());
                 }
                 *self.current.lock().unwrap() = name;
                 Value::Nil
@@ -377,7 +377,7 @@ impl Host for FakeEditor {
                 let name = self.named(&args);
                 let mut buffers = self.buffers.lock().unwrap();
                 if buffers[&name].file.is_some() && buffers[&name].modified {
-                    return Err(format!("Buffer {} is modified", name));
+                    return Err(format!("Buffer {} is modified", name).into());
                 }
                 buffers.remove(&name);
                 let mut current = self.current.lock().unwrap();
@@ -626,10 +626,12 @@ impl Host for FakeEditor {
                     *self.message.lock().unwrap() = "list-buffers".to_string();
                     Value::Boolean(true)
                 }
-                other => return Err(format!("Undefined command: {}", other)),
+                other => return Err(format!("Undefined command: {}", other).into()),
             },
             // 偽のエディタは, マークと絞り込みを持たない (save-excursion は, 点を覚える)
-            "point-marker" | "restriction-save" => return Err(format!("{op} is not supported")),
+            "point-marker" | "restriction-save" => {
+                return Err(format!("{op} is not supported").into())
+            }
             "widen" => Value::Nil,
             _ => panic!("unknown op {}", op),
         })

@@ -51,7 +51,7 @@ fn test_passing_and_failing_tests() {
   :tags '(quick)
   (should (= (+ 1 1) 2))
   (should-not (string=? "a" "b"))
-  (should (equal (should-error (car 1)) '(error "Wrong type argument: listp, 1")))
+  (should (equal (should-error (car 1)) '(wrong-type-argument listp 1)))
   (should-error (car 1) :type 'wrong-type-argument))
 (ert-deftest fail-test () (should (equal (+ 1 1) 3)))
 (ert-deftest fail-not-test () (should-not (+ 1 1)))
@@ -188,7 +188,7 @@ fn test_errors() {
         ("(ert-run-tests-batch 1)", "Invalid test selector: 1"),
         (
             "(ert-run-tests-batch \"(\")",
-            "Invalid regexp: regex parse error:\n    (\n    ^\nerror: unclosed group",
+            "Invalid regexp: \"regex parse error:\n    (\n    ^\nerror: unclosed group\"",
         ),
         (
             "(ert-run-tests-batch 1 2)",
@@ -207,6 +207,12 @@ fn test_errors() {
     ] {
         assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);
     }
+    // should-error の :type が合わなければ, 失敗する
+    let mismatch = ev
+        .eval("(should-error (car 1) :type 'arith-error)")
+        .unwrap_err();
+    assert!(mismatch.contains(":condition (wrong-type-argument listp 1)"));
+    assert!(mismatch.contains(":expected arith-error"));
     // 引数の評価が失敗する should, :tags の評価が失敗する
     assert_eq!(
         ev.eval("(should (= 1 (car 1)))").unwrap_err(),
@@ -309,7 +315,7 @@ struct Recorder {
 }
 
 impl Host for Recorder {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         let shown: Vec<String> = args.iter().map(|a| a.to_string()).collect();
         self.calls
             .lock()

@@ -21,7 +21,7 @@ struct Ui {
 }
 
 impl Host for Ui {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
@@ -35,8 +35,8 @@ impl Host for Ui {
                 .unwrap()
                 .pop_front()
                 .map(Value::String)
-                .ok_or_else(|| "no answer".to_string()),
-            other => Err(format!("ui: {other}")),
+                .ok_or_else(|| "no answer".into()),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

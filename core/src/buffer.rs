@@ -4,6 +4,8 @@
 //! 位置は 0 から数える文字の位置です (Lisp の位置は 1 から数えるので, Lisp との間で 1 を足し引きします).
 //! 画面 (Tauri) にもターミナルにも頼らないので, どちらからも同じように使えます.
 
+use crate::error::Error;
+use crate::scheme::value::Value;
 use ropey::Rope;
 
 use crate::scheme::builtins::char_width;
@@ -93,9 +95,8 @@ pub struct Buffer {
     undo: Vec<UndoEntry>,
     /// 最後に合った所 (全体と, 括弧ごと. Emacs の `match-data`). 位置は文字の位置.
     pub(crate) match_data: Vec<Option<(usize, usize)>>,
-    /// 文字列に `string-match` した結果の括弧の範囲 (文字の位置. 0 から)と, そのときの `match_data`. 後で本文を探して
-    /// `match_data` が変われば, 文字列の結果は古い.
-    pub(crate) string_match: Option<(Groups, Groups)>,
+    /// `match_data` を決めた順番 (全体で増える番号. `Editor::latest_match` が, 一番新しいものを選ぶ).
+    pub(crate) match_seq: u64,
     /// 構文の方言 (メジャーモードに当たる).
     dialect: Dialect,
     /// `major-mode` の名前 (方言だけでは決まらないモード: text-mode など). 無ければ方言から決める.
@@ -163,7 +164,7 @@ impl Buffer {
             file: None,
             undo: Vec::new(),
             match_data: Vec::new(),
-            string_match: None,
+            match_seq: 0,
             dialect: Dialect::Fundamental,
             mode_name: if name == crate::editor::SCRATCH {
                 Some("lisp-interaction-mode".to_string())
@@ -348,12 +349,19 @@ impl Buffer {
         self.file = file;
     }
 
-    /// 文字列に `string-match` した結果 (括弧の範囲. 文字の位置は 0 から). 後で本文を探して `match_data` が変わっていれば `None`.
-    pub fn string_match_data(&self) -> Option<&[Option<(usize, usize)>]> {
-        self.string_match
-            .as_ref()
-            .filter(|(_, snapshot)| *snapshot == self.match_data)
-            .map(|(data, _)| data.as_slice())
+    /// 最後に合った所を決めます (決めた順番も新しくする).
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - 括弧ごとの範囲 (文字の位置).
+    pub fn set_match_data(&mut self, data: Groups) {
+        self.match_data = data;
+        self.match_seq = next_match_seq();
+    }
+
+    /// `match_data` を決めた順番.
+    pub fn match_seq(&self) -> u64 {
+        self.match_seq
     }
 
     /// 構文の方言 (Fundamental, emacs-lisp-mode, scheme-mode に当たる).
@@ -387,9 +395,12 @@ impl Buffer {
     /// # Errors
     ///
     /// 読み取り専用のとき.
-    pub fn ensure_writable(&self) -> Result<(), String> {
+    pub fn ensure_writable(&self) -> Result<(), Error> {
         if self.read_only {
-            Err(format!("Buffer is read-only: #<buffer {}>", self.name))
+            Err(Error::new(
+                "buffer-read-only",
+                vec![Value::Symbol(format!("#<buffer {}>", self.name))],
+            ))
         } else {
             Ok(())
         }
@@ -436,10 +447,13 @@ impl Buffer {
     /// # Errors
     ///
     /// 範囲が本文の外のとき.
-    pub fn narrow_to_region(&mut self, from: usize, to: usize) -> Result<(), String> {
+    pub fn narrow_to_region(&mut self, from: usize, to: usize) -> Result<(), Error> {
         let (from, to) = if from <= to { (from, to) } else { (to, from) };
         if to > self.len() {
-            return Err(format!("Args out of range: {}, {}", from + 1, to + 1));
+            return Err(Error::args_out_of_range(vec![
+                number(from + 1),
+                number(to + 1),
+            ]));
         }
         self.restriction = Some((from, to));
         self.point = self.point.clamp(from, to);
@@ -493,7 +507,7 @@ impl Buffer {
     /// # Errors
     ///
     /// 範囲がバッファの外のとき.
-    pub fn substring(&self, from: usize, to: usize) -> Result<String, String> {
+    pub fn substring(&self, from: usize, to: usize) -> Result<String, Error> {
         let (from, to) = self.range(from, to)?;
         Ok(self.text.slice(from..to).to_string())
     }
@@ -509,15 +523,14 @@ impl Buffer {
     }
 
     /// 範囲を, 始めが小さい順にして, 見える範囲の中か確かめます.
-    fn range(&self, from: usize, to: usize) -> Result<(usize, usize), String> {
+    fn range(&self, from: usize, to: usize) -> Result<(usize, usize), Error> {
         let (from, to) = if from <= to { (from, to) } else { (to, from) };
         if from < self.begv() || to > self.zv() {
-            return Err(format!(
-                "Args out of range: #<buffer {}>, {}, {}",
-                self.name,
-                from + 1,
-                to + 1
-            ));
+            return Err(Error::args_out_of_range(vec![
+                Value::Symbol(format!("#<buffer {}>", self.name)),
+                number(from + 1),
+                number(to + 1),
+            ]));
         }
         Ok((from, to))
     }
@@ -585,15 +598,15 @@ impl Buffer {
     /// # Errors
     ///
     /// 端を越えるとき. カーソルは端まで動かしてから, 失敗にする ("Beginning of buffer" か "End of buffer").
-    pub fn forward_char(&mut self, n: i64) -> Result<(), String> {
+    pub fn forward_char(&mut self, n: i64) -> Result<(), Error> {
         let target = self.point as i64 + n;
         if target < self.begv() as i64 {
             self.point = self.begv();
-            return Err("Beginning of buffer".to_string());
+            return Err(Error::bare("beginning-of-buffer"));
         }
         if target > self.zv() as i64 {
             self.point = self.zv();
-            return Err("End of buffer".to_string());
+            return Err(Error::bare("end-of-buffer"));
         }
         self.point = target as usize;
         Ok(())
@@ -815,7 +828,7 @@ impl Buffer {
     /// # Errors
     ///
     /// 位置がバッファの外のとき.
-    pub fn insert_at(&mut self, pos: usize, text: &str) -> Result<(), String> {
+    pub fn insert_at(&mut self, pos: usize, text: &str) -> Result<(), Error> {
         self.insert_at_with(pos, text, false)
     }
 
@@ -825,9 +838,9 @@ impl Buffer {
         pos: usize,
         text: &str,
         before_markers: bool,
-    ) -> Result<(), String> {
+    ) -> Result<(), Error> {
         if pos < self.begv() || pos > self.zv() {
-            return Err("Args out of range".to_string());
+            return Err(Error::args_out_of_range(Vec::new()));
         }
         let len = text.chars().count();
         if len == 0 {
@@ -864,7 +877,7 @@ impl Buffer {
     /// # Errors
     ///
     /// 範囲がバッファの外のとき.
-    pub fn delete_region(&mut self, from: usize, to: usize) -> Result<String, String> {
+    pub fn delete_region(&mut self, from: usize, to: usize) -> Result<String, Error> {
         let (from, to) = self.range(from, to)?;
         if from == to {
             return Ok(String::new());
@@ -891,7 +904,7 @@ impl Buffer {
     /// # Errors
     ///
     /// 範囲がバッファの外のとき.
-    pub fn replace_region(&mut self, from: usize, to: usize, text: &str) -> Result<(), String> {
+    pub fn replace_region(&mut self, from: usize, to: usize, text: &str) -> Result<(), Error> {
         let (from, to) = self.range(from, to)?;
         if from == to && text.is_empty() {
             return Ok(());
@@ -1049,7 +1062,7 @@ impl Buffer {
     /// # Errors
     ///
     /// マークが無いとき.
-    pub fn region_beginning(&self) -> Result<usize, String> {
+    pub fn region_beginning(&self) -> Result<usize, Error> {
         self.region().map(|(from, _)| from)
     }
 
@@ -1058,12 +1071,12 @@ impl Buffer {
     /// # Errors
     ///
     /// マークが無いとき.
-    pub fn region_end(&self) -> Result<usize, String> {
+    pub fn region_end(&self) -> Result<usize, Error> {
         self.region().map(|(_, to)| to)
     }
 
     /// リージョン (カーソルとマークの間).
-    fn region(&self) -> Result<(usize, usize), String> {
+    fn region(&self) -> Result<(usize, usize), Error> {
         let mark = self
             .mark
             .ok_or("The mark is not set now, so there is no region")?;
@@ -1130,7 +1143,7 @@ impl Buffer {
     /// # Errors
     ///
     /// 記録の位置が, 今の本文に合わないとき.
-    pub fn primitive_undo(&mut self, entries: &[UndoEntry]) -> Result<(), String> {
+    pub fn primitive_undo(&mut self, entries: &[UndoEntry]) -> Result<(), Error> {
         for entry in entries {
             match entry {
                 UndoEntry::Boundary => {}
@@ -1157,4 +1170,15 @@ impl Buffer {
         }
         Ok(())
     }
+}
+
+/// 最後に合った所を決めた順番の番号を, 新しく取る (バッファと文字列で共通).
+pub fn next_match_seq() -> u64 {
+    static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1
+}
+
+/// 位置などの数を Lisp の値にする.
+fn number(n: usize) -> Value {
+    Value::Number(n as f64)
 }

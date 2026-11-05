@@ -91,7 +91,7 @@ fn unknown_builtin_is_an_error() {
     let evaluator = Evaluator::new();
     let mut machine = Machine::new(&evaluator, &NoHost);
     assert_eq!(
-        builtins::call(&mut machine, "none", vec![]),
+        builtins::call(&mut machine, "none", vec![]).map_err(|e| e.to_string()),
         Err("Unknown procedure: none".to_string())
     );
 }
@@ -106,16 +106,21 @@ fn remembers_definitions_between_evaluations() {
 #[test]
 fn condition_case_tells_the_kind_of_the_error() {
     let eval = Evaluator::new();
-    // (car e) は、エラーの種類. 知らないメッセージは error
+    // (car e) は、エラーの種類. error はメッセージだけで、文の書き出しで種類は決まらない
     for (code, kind) in [
         ("(/ 1 0)", "arith-error"),
         ("(modulo 1 0)", "arith-error"),
         ("zzz", "void-variable"),
-        ("(error \"End of buffer\")", "end-of-buffer"),
-        ("(error \"Search failed: \\\"x\\\"\")", "search-failed"),
+        ("(signal 'end-of-buffer '())", "end-of-buffer"),
+        ("(signal 'search-failed '(\"x\"))", "search-failed"),
+        ("(signal 'quit '())", "quit"),
+        ("(user-error \"no\")", "user-error"),
+        ("(error \"End of buffer\")", "error"),
+        ("(error \"Quit\")", "error"),
+        ("(error \"Search failed: x\")", "error"),
         ("(error \"boom\")", "error"),
     ] {
-        let code = format!("(condition-case e {code} (error (car e)))");
+        let code = format!("(condition-case e {code} ((error quit) (car e)))");
         assert_eq!(eval.eval(&code).unwrap(), kind, "{code}");
     }
     // 種類の名前の節と、変数が nil の節
@@ -135,30 +140,126 @@ fn condition_case_tells_the_kind_of_the_error() {
 }
 
 #[test]
+fn condition_case_matches_the_error_conditions() {
+    let eval = Evaluator::new();
+    // 親の種類でも受ける (file-missing は file-error で、user-error は error で)
+    for (code, handler) in [
+        ("(signal 'file-missing '(\"a\" \"b\" \"c\"))", "file-error"),
+        ("(signal 'file-already-exists '(\"a\" \"c\"))", "file-error"),
+        ("(signal 'text-read-only '())", "buffer-read-only"),
+        ("(user-error \"x\")", "error"),
+        ("(signal 'args-out-of-range '(1))", "error"),
+        ("(signal 'quit '())", "quit"),
+        ("(signal 'quit '())", "t"),
+        ("(signal 'quit '())", "(error quit)"),
+        ("(signal 'whatever '(1))", "t"),
+    ] {
+        let code = format!("(condition-case e {code} ({handler} 'caught))");
+        assert_eq!(eval.eval(&code).unwrap(), "caught", "{code}");
+    }
+    // 受けないもの: quit は error で、知らない種類も error では受けない
+    for (code, handler) in [
+        ("(signal 'quit '())", "error"),
+        ("(signal 'whatever '(1))", "error"),
+        ("(signal 'whatever '(1))", "whatever"),
+        ("(error \"x\")", "user-error"),
+        ("(signal 'file-error '(\"a\"))", "file-missing"),
+    ] {
+        let code = format!("(condition-case e {code} ({handler} 'caught))");
+        assert!(eval.eval(&code).is_err(), "{code}");
+    }
+}
+
+#[test]
+fn signal_and_define_error() {
+    let eval = Evaluator::new();
+    // signal の種類とデータは、そのまま condition-case の変数になる
+    assert_eq!(
+        eval.eval("(condition-case e (signal 'my-error '(1 \"two\" three)) (t e))")
+            .unwrap(),
+        "(my-error 1 \"two\" three)"
+    );
+    // 種類が偽 (nil) で (種類 . データ) を渡すと、投げ直せる
+    assert_eq!(
+        eval.eval("(condition-case e (condition-case e2 (/ 1 0) (error (signal #f e2))) (arith-error 'again))")
+            .unwrap(),
+        "again"
+    );
+    assert_eq!(
+        eval.eval("(signal 1 '())").unwrap_err(),
+        "Wrong type argument: symbolp, 1"
+    );
+    // define-error: 文と、親の種類
+    eval.eval("(define-error 'my-problem \"My problem\")")
+        .unwrap();
+    eval.eval("(define-error 'my-sub \"My sub\" 'my-problem)")
+        .unwrap();
+    eval.eval("(define-error 'my-multi \"My multi\" '(my-problem file-error))")
+        .unwrap();
+    for (code, expected) in [
+        (
+            "(condition-case e (signal 'my-problem '(1 \"x\")) (error (error-message-string e)))",
+            "\"My problem: 1, \\\"x\\\"\"",
+        ),
+        (
+            "(condition-case e (signal 'my-sub '()) (my-problem 'parent))",
+            "parent",
+        ),
+        (
+            "(condition-case e (signal 'my-sub '()) (error 'any))",
+            "any",
+        ),
+        (
+            "(condition-case e (signal 'my-multi '(\"f\")) (file-error 'file))",
+            "file",
+        ),
+        (
+            "(condition-case e (signal 'my-problem '()) (my-sub 'sub))",
+            "x",
+        ),
+    ] {
+        let result = eval.eval(code);
+        if expected == "x" {
+            assert!(result.is_err(), "{code}");
+        } else {
+            assert_eq!(result.unwrap(), expected, "{code}");
+        }
+    }
+    assert_eq!(
+        eval.eval("(define-error 1 2)").unwrap_err(),
+        "define-error expects a name and a message"
+    );
+    // error-message-string の種類の無いものは、そのまま
+    assert_eq!(
+        eval.eval("(error-message-string \"plain\")").unwrap(),
+        "\"plain\""
+    );
+    assert_eq!(
+        eval.eval("(error-message-string '(error))").unwrap(),
+        "\"peculiar error\""
+    );
+}
+
+#[test]
 fn condition_case_binds_the_emacs_data_of_each_kind() {
     let eval = Evaluator::new();
     // (cdr e) は、種類ごとの Emacs のデータ. error-message-string は、それから文を作る
     for (code, data, text) in [
         ("(error \"boom %d\" 3)", "(\"boom 3\")", "boom 3"),
-        ("(error \"End of buffer\")", "()", "End of buffer"),
+        ("(signal 'end-of-buffer '())", "()", "End of buffer"),
         (
-            "(error \"Beginning of buffer\")",
+            "(signal 'beginning-of-buffer '())",
             "()",
             "Beginning of buffer",
         ),
         ("(/ 1 0)", "()", "Arithmetic error"),
-        ("(error \"Quit\")", "()", "Quit"),
+        ("(signal 'quit '())", "()", "Quit"),
         (
-            "(error \"Search failed: \\\"zz\\\"\")",
+            "(signal 'search-failed '(\"zz\"))",
             "(\"zz\")",
             "Search failed: \"zz\"",
         ),
-        (
-            "(error \"Search failed: zz\")",
-            "(\"zz\")",
-            "Search failed: \"zz\"",
-        ),
-        ("(error \"Search failed\")", "(\"\")", "Search failed: \"\""),
+        ("(signal 'search-failed '())", "()", "Search failed"),
         (
             "undefined-var",
             "(undefined-var)",
@@ -170,19 +271,46 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Symbol's function definition is void: undefined-fn",
         ),
         (
-            "(error \"Opening input file: No such file or directory, /x/y\")",
+            "(signal 'file-missing '(\"Opening input file\" \"No such file or directory\" \"/x/y\"))",
             "(\"Opening input file\" \"No such file or directory\" \"/x/y\")",
             "Opening input file: No such file or directory, /x/y",
         ),
         (
-            "(error \"Cannot open load file: zz\")",
-            "(\"Cannot open load file\" \"No such file or directory\" \"zz\")",
-            "Cannot open load file: No such file or directory, zz",
+            "(load \"zz-missing\")",
+            "(\"Cannot open load file\" \"No such file or directory\" \"zz-missing\")",
+            "Cannot open load file: No such file or directory, zz-missing",
         ),
         (
-            "(error \"Opening input file\")",
+            "(signal 'file-missing '(\"Opening input file\"))",
             "(\"Opening input file\")",
             "Opening input file",
+        ),
+        (
+            "(signal 'file-already-exists '(\"File exists\" \"/x\"))",
+            "(\"File exists\" \"/x\")",
+            "File exists: /x",
+        ),
+        (
+            "(signal 'scan-error '(\"Unbalanced parentheses\" 1 5))",
+            "(\"Unbalanced parentheses\" 1 5)",
+            "Scan error: \"Unbalanced parentheses\", 1, 5",
+        ),
+        (
+            "(signal 'invalid-regexp '(\"Unmatched [\"))",
+            "(\"Unmatched [\")",
+            "Invalid regexp: \"Unmatched [\"",
+        ),
+        (
+            "(signal 'end-of-file '(\"Error reading from stdin\"))",
+            "(\"Error reading from stdin\")",
+            "End of file during parsing: Error reading from stdin",
+        ),
+        ("(user-error \"a\" )", "(\"a\")", "a"),
+        ("(signal 'user-error '(\"a\" \"b\"))", "(\"a\" \"b\")", "a, b"),
+        (
+            "(signal 'buffer-read-only '(b))",
+            "(b)",
+            "Buffer is read-only: b",
         ),
         (
             "(+ 1 \"a\")",
@@ -208,17 +336,12 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Wrong type argument: integerp, \"a\"",
         ),
         (
-            "(error \"Wrong type argument: odd\")",
-            "(\"Wrong type argument: odd\")",
+            "(signal 'wrong-type-argument '(odd))",
+            "(odd)",
             "Wrong type argument: odd",
         ),
         (
-            "(error \"Wrong type argument: p, )\")",
-            "(\"Wrong type argument: p, )\")",
-            "Wrong type argument: p, )",
-        ),
-        (
-            "(error \"Args out of range: #<buffer b>, 1, 99\")",
+            "(signal 'args-out-of-range (list (string->symbol \"#<buffer b>\") 1 99))",
             "(#<buffer b> 1 99)",
             "Args out of range: #<buffer b>, 1, 99",
         ),
@@ -228,23 +351,13 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "Args out of range: \"a, \\\"b\\\"\", 9, nil",
         ),
         (
-            "(error \"Args out of range: \\\"x\\\"\")",
+            "(signal 'args-out-of-range '(\"x\"))",
             "(\"x\")",
             "Args out of range: \"x\"",
         ),
+        ("(signal 'args-out-of-range '())", "()", "Args out of range"),
         (
-            "(error \"Args out of range: @@\")",
-            "(\"@@\")",
-            "Args out of range: \"@@\"",
-        ),
-        ("(error \"Args out of range\")", "()", "Args out of range"),
-        (
-            "(error \"Unbound variable\")",
-            "(\"Unbound variable\")",
-            "Unbound variable",
-        ),
-        (
-            "(error \"Symbol's value as variable is void: v\")",
+            "(signal 'void-variable '(v))",
             "(v)",
             "Symbol's value as variable is void: v",
         ),
@@ -259,9 +372,4 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
             "{code}"
         );
     }
-    // メッセージを持たない変数 (種類だけ) でも、文になる
-    assert_eq!(
-        eval.eval("(error-message-string '(error))").unwrap(),
-        "\"error\""
-    );
 }

@@ -616,15 +616,16 @@ HackMD の開発メモにあった rs-editor の項目のうち、上の Phase �
 
 ### バッチモードの Emacs との違い (レビューから)
 
-- [ ] エラーを、種類とデータを持つ型にする。今は文字列で、`error_kind` が文の書き出しで種類を決めるため、`(error "Quitting soon")` が `quit` 節に捕まり、`(error "Search failed: %s" "x")` が `search-failed` になる (Emacs は `error`)。`signal` も、種類とデータをそのまま渡せるようにする。
-- [ ] `string-match` の結果を、バッファごとでなく 1 つにする (Emacs のマッチデータと同じ)。今はバッファごとで、バッファを切り替えると `match-string` が別のデータを読む。本文の結果が前と同じ範囲だと、古い文字列の結果を新しいものと見なす。
-- [ ] `string-match` の負の START を、文字列の末尾から数える (今は 0)。
-- [ ] `execute-kbd-macro` の回数の 0 (と負の数) を、Emacs と同じに扱う。止まらないマクロを止められるようにする。
-- [ ] 開発用の依存 `markdownlint-cli2` を 0.24 に上げ、`npm audit` の `js-yaml` と `katex` の警告を無くす (破壊的な変更なので、markdownlint の結果が変わらないか確かめる)。
+- [ ] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、Emacs と同じく、失敗するまで繰り返す。画面のアプリ (Tauri) とターミナルのアプリは、繰り返している間、キー入力を見ないので、失敗しないマクロを止められない (Emacs は、繰り返しの間に `C-g` を見る)。
+- [ ] 引数の数の違いを、`wrong-number-of-arguments` (データは手続きと個数) にする。今は種類が `error` で、メッセージは `car expects 1 argument, given 2`。
+- [ ] `list-ref` など、Emacs に無い手続きの範囲外を、`args-out-of-range` にする (今は種類が `error`)。
 - [ ] 評価を回さないロックの `lock().unwrap()` (core に約 50 か所) も、panic のあとで続けられるようにするか検討する。
+- [ ] 開発用の依存の `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (今は `markdownlint-cli2@0.23.3` と、`markdown-it` の `overrides` で、high は 0 件)。
 
 ### 済んだもの
 
+- [x] エラーを、種類とデータを持つ型にする (`core/src/error.rs`)。`signal`、`define-error`、`user-error`、`condition-case` が受ける条件 (`error-conditions`)。`(error "End of buffer")` などが、文の書き出しで種類を変えない。
+- [x] `string-match` の結果を、バッファごとでなく 1 つにする。`string-match` の負の START を、文字列の終わりから数える。
 - [x] ERT (Emacs Lisp のテストの仕組み) と同じことを Scheme でできるようにする (`ert-deftest`, `should`, `should-not`)。
 - [x] Org mode (`lisp/org.scm`)。
 - [x] ミニバッファを `C-g` で抜ける。

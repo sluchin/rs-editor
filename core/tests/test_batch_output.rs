@@ -14,14 +14,14 @@ use rseditor_core::scheme::value::Value;
 struct Ui(Arc<Mutex<Vec<String>>>);
 
 impl Host for Ui {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         if op == "message" {
             if let Some(Value::String(text)) = args.first() {
                 self.0.lock().unwrap().push(text.clone());
             }
             return Ok(Value::Nil);
         }
-        Err(format!("ui: {op}"))
+        Err(format!("ui: {op}").into())
     }
 }
 
@@ -47,7 +47,8 @@ fn test_output_goes_to_the_echo_area_by_default() {
     );
     // 文字列でない出力は失敗する
     assert_eq!(
-        host.call("standard-output", vec![Value::Nil]),
+        host.call("standard-output", vec![Value::Nil])
+            .map_err(|e| e.to_string()),
         Err("standard-output expects a string".to_string())
     );
 }
@@ -71,11 +72,11 @@ fn test_output_goes_to_the_sink_in_batch_mode() {
     assert!(messages.lock().unwrap().is_empty());
     // 引数の数
     assert_eq!(
-        ev.eval_with("(princ)", &host),
+        ev.eval_with("(princ)", &host).map_err(|e| e.to_string()),
         Err("princ expects 1 argument, given 0".to_string())
     );
     assert_eq!(
-        ev.eval_with("(terpri 1)", &host),
+        ev.eval_with("(terpri 1)", &host).map_err(|e| e.to_string()),
         Err("terpri expects 0 arguments, given 1".to_string())
     );
 }
@@ -88,11 +89,13 @@ fn test_buffer_name_takes_a_buffer() {
     assert_eq!(eval("(buffer-name \"foo\")"), "\"foo\"");
     assert_eq!(eval("(buffer-name \"none\")"), "#f");
     assert_eq!(
-        ev.eval_with("(buffer-name 1)", &host),
+        ev.eval_with("(buffer-name 1)", &host)
+            .map_err(|e| e.to_string()),
         Err("Wrong type argument: stringp, 1".to_string())
     );
     assert_eq!(
-        ev.eval_with("(buffer-name \"a\" \"b\")", &host),
+        ev.eval_with("(buffer-name \"a\" \"b\")", &host)
+            .map_err(|e| e.to_string()),
         Err("buffer-name expects 1 argument, given 2".to_string())
     );
 }

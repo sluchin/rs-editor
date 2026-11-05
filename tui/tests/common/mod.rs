@@ -44,7 +44,11 @@ pub struct Fixture {
 
 impl Fixture {
     /// 画面の大きさ (行, 桁) を決めて作る.
-    pub fn sized(rows: usize, cols: usize, files: &[String]) -> Result<Self, String> {
+    pub fn sized(
+        rows: usize,
+        cols: usize,
+        files: &[String],
+    ) -> Result<Self, rseditor_core::error::Error> {
         let keys = Arc::new(Mutex::new(VecDeque::new()));
         let frames = Arc::new(Mutex::new(Vec::new()));
         let screen = FakeScreen {

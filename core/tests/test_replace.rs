@@ -20,7 +20,7 @@ struct FakeUi {
 }
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
@@ -38,9 +38,9 @@ impl Host for FakeUi {
                     Ok(Value::String(key))
                 }
                 Some(key) => Ok(Value::String(key)),
-                None => Err("no more keys".to_string()),
+                None => Err("no more keys".into()),
             },
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }

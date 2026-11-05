@@ -73,13 +73,13 @@ Signal an error if there are not N lines: point is then at the end of the buffer
           ((> n 0)
            (when (= (line-end-position) (point-max))
              (goto-char (point-max))
-             (error "End of buffer"))
+             (signal 'end-of-buffer '()))
            (forward-line 1)
            (loop (- left 1)))
           (else
            (when (= (line-beginning-position) (point-min))
              (goto-char (point-min))
-             (error "Beginning of buffer"))
+             (signal 'beginning-of-buffer '()))
            (forward-line -1)
            (loop (- left 1))))))
 
@@ -214,13 +214,13 @@ N is the argument or the numeric prefix argument; otherwise read it in the minib
 (define-command (scroll-up-command . args)
   "Scroll the text of the window up by almost one window height.
 Signal an error at the end of the buffer."
-  (if (eobp) (error "End of buffer"))
+  (if (eobp) (signal 'end-of-buffer '()))
   (forward-line (- (window-body-height) 2)))
 
 (define-command (scroll-down-command . args)
   "Scroll the text of the window down by almost one window height.
 Signal an error at the beginning of the buffer."
-  (if (bobp) (error "Beginning of buffer"))
+  (if (bobp) (signal 'beginning-of-buffer '()))
   (forward-line (- 2 (window-body-height))))
 
 (define-command (recenter-top-bottom . args)
@@ -468,7 +468,7 @@ Interactively, N is the prefix argument, and KILLFLAG is true if there is a pref
     (if kill
         (let ((target (+ (point) n)))
           (if (or (< target (point-min)) (> target (point-max)))
-              (error "Args out of range: #<buffer %s>, %d, %d" (buffer-name) (point) target)
+              (signal 'args-out-of-range (list (string->symbol (format "#<buffer %s>" (buffer-name))) (point) target))
               (simple--kill (point) target)))
         (simple--delete-char n))
     #f))
@@ -640,7 +640,7 @@ and 0 kills the text before point on the line.  Signal an error at the end of th
     (if arg
         (forward-line (prefix-numeric-value arg))
         (begin
-          (if (eobp) (error "End of buffer"))
+          (if (eobp) (signal 'end-of-buffer '()))
           (let ((end (line-end-position)))
             (if (save-excursion (skip-chars-forward " \t" end) (= (point) end))
                 (forward-line 1)
@@ -660,9 +660,9 @@ With an argument N, kill that many lines from the current line; a negative N kil
 backward, also killing the preceding newline.  With 0, kill the line without its newline."
   (let ((arg (if (null? args) (prefix-numeric-value (current-prefix-arg)) (or (car args) 1))))
     (if (and (> arg 0) (eobp) (save-excursion (forward-line 0) (eobp)))
-        (error "End of buffer"))
+        (signal 'end-of-buffer '()))
     (if (and (< arg 0) (bobp) (save-excursion (goto-char (line-end-position)) (bobp)))
-        (error "Beginning of buffer"))
+        (signal 'beginning-of-buffer '()))
     (when (not (equal? last-command 'kill-region))
       (kill-new "")
       (set! last-command 'kill-region))
@@ -1162,7 +1162,7 @@ With argument N, do it for N words (backward if N is negative)."
 (define-command (keyboard-quit . args)
   "Deactivate the mark and cancel the running command by signaling a quit."
   (deactivate-mark)
-  (error "Quit"))
+  (signal 'quit '()))
 
 (define-command (keyboard-escape-quit . args)
   "Exit the current mode in a general sense: deactivate the region, clear a prefix

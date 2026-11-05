@@ -14,8 +14,8 @@ use rseditor_core::scheme::value::Value;
 struct NoUi;
 
 impl Host for NoUi {
-    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
-        Err(format!("ui: {op}"))
+    fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
+        Err(format!("ui: {op}").into())
     }
 }
 
@@ -47,7 +47,7 @@ fn test_directory_listing_errors() {
         .unwrap_err()
         .contains("rseditor-dired-listing/none"));
     // `ls` が失敗したとき (標準エラー出力が理由), 見つからないとき
-    assert_eq!(directory_listing("false", &dir), Err(String::new()));
+    assert_eq!(directory_listing("false", &dir).unwrap_err(), "");
     assert!(directory_listing("no-such-ls-program", &dir)
         .unwrap_err()
         .starts_with("no-such-ls-program: "));

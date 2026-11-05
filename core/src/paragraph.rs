@@ -3,6 +3,7 @@
 //! 段落を分ける行は, モードの `paragraph-start` と `paragraph-separate` で決めます. Fundamental モードと
 //! emacs-lisp-mode では, 空白だけの行で, scheme-mode では, 空の行だけです (空白だけの行は, 段落を分けない).
 
+use crate::error::Error;
 use crate::sexp::MotionError;
 use crate::syntax::Dialect;
 
@@ -274,7 +275,7 @@ fn start_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> usize
 /// # Errors
 ///
 /// 本文の終わりから動こうとしたとき (`End of buffer`).
-fn end_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> Result<usize, String> {
+fn end_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> Result<usize, Error> {
     let mut p = forward_paragraph(text, pos, 1, dialect);
     if p > 0 && text[p - 1] == '\n' {
         p -= 1;
@@ -283,7 +284,7 @@ fn end_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> Result<
         return Ok(p);
     }
     if p >= text.len() {
-        return Err("End of buffer".to_string());
+        return Err(Error::bare("end-of-buffer"));
     }
     p += 1;
     if p < text.len() {
@@ -325,7 +326,7 @@ pub fn forward_sentence(
         if line_start > p {
             return Err(MotionError {
                 point: p,
-                message: "Invalid search bound (wrong side of point)".to_string(),
+                error: Error::plain("Invalid search bound (wrong side of point)"),
             });
         }
         let mut m = search_backward(text, p, line_start, &sentence_end_match);
@@ -339,7 +340,7 @@ pub fn forward_sentence(
     }
     for _ in 0..count {
         let end = end_of_paragraph_text(text, p, dialect)
-            .map_err(|message| MotionError { point: p, message })?;
+            .map_err(|error| MotionError { point: p, error })?;
         let v = View { text, limit: end };
         match (p..end).find_map(|i| sentence_end_match(&v, i)) {
             Some(found) => {

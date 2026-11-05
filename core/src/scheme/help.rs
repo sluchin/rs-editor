@@ -3,6 +3,7 @@
 //! docstring は, 変数 `help-language` の言語の翻訳があれば, 翻訳を返します ([`po`]).
 //! 元の docstring (英語) は, 引数 RAW を真にすると返します.
 
+use crate::error::Error;
 use crate::scheme::builtins::fixed;
 use crate::scheme::evaluator::Machine;
 use crate::scheme::po;
@@ -32,7 +33,7 @@ pub const NAMES: &[&str] = &[
 /// # Returns
 ///
 /// 手続きと, 名前 (無名の手続きは [`None`]). 記号に値が無ければ [`Err`].
-fn resolve(machine: &Machine, function: Value) -> Result<(Value, Option<String>), String> {
+fn resolve(machine: &Machine, function: Value) -> Result<(Value, Option<String>), Error> {
     match function {
         Value::Symbol(symbol) => {
             let value = machine
@@ -101,14 +102,14 @@ fn flag(v: Option<&Value>) -> bool {
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
     match name {
         "documentation" => {
             // (documentation FUNCTION &optional RAW). docstring が無ければ #f
             let (function, raw) = match args.as_slice() {
                 [function] => (function.clone(), false),
                 [function, raw] => (function.clone(), flag(Some(raw))),
-                _ => return Err("documentation expects 1 or 2 arguments".to_string()),
+                _ => return Err("documentation expects 1 or 2 arguments".to_string().into()),
             };
             match resolve(machine, function)? {
                 (Value::Lambda(lambda), name) => {
@@ -117,7 +118,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                     }))
                 }
                 (Value::Function(_), _) => Ok(Value::Boolean(false)),
-                (other, _) => Err(format!("Invalid function: {}", other)),
+                (other, _) => Err(format!("Invalid function: {}", other).into()),
             }
         }
         "documentation-property" => {
@@ -125,7 +126,11 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             let (symbol, property, raw) = match args.as_slice() {
                 [symbol, property] => (symbol, property, false),
                 [symbol, property, raw] => (symbol, property, flag(Some(raw))),
-                _ => return Err("documentation-property expects 2 or 3 arguments".to_string()),
+                _ => {
+                    return Err("documentation-property expects 2 or 3 arguments"
+                        .to_string()
+                        .into())
+                }
             };
             match (symbol, property) {
                 (Value::Symbol(symbol), Value::Symbol(property)) => Ok(
@@ -139,7 +144,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                         _ => Value::Boolean(false),
                     },
                 ),
-                _ => Err("documentation-property expects symbols".to_string()),
+                _ => Err("documentation-property expects symbols".to_string().into()),
             }
         }
         "help-function-arglist" => {
@@ -156,7 +161,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                     Ok(Value::List(params.into()))
                 }
                 (Value::Function(_), _) => Ok(Value::Boolean(true)),
-                (other, _) => Err(format!("Invalid function: {}", other)),
+                (other, _) => Err(format!("Invalid function: {}", other).into()),
             }
         }
         "commandp" => {
@@ -175,7 +180,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             // 一番外側の環境で, 手続きの名前か
             let [symbol] = fixed::<1>(name, args)?;
             let Value::Symbol(symbol) = symbol else {
-                return Err("fboundp expects a symbol".to_string());
+                return Err("fboundp expects a symbol".to_string().into());
             };
             Ok(Value::Boolean(matches!(
                 machine.evaluator.global().get(&symbol),
@@ -186,7 +191,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             // 一番外側の環境に, 名前があるか (手続きも含む)
             let [symbol] = fixed::<1>(name, args)?;
             let Value::Symbol(symbol) = symbol else {
-                return Err("boundp expects a symbol".to_string());
+                return Err("boundp expects a symbol".to_string().into());
             };
             Ok(Value::Boolean(
                 machine.evaluator.global().get(&symbol).is_some(),
@@ -195,13 +200,13 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "symbol-value" => {
             let [symbol] = fixed::<1>(name, args)?;
             let Value::Symbol(symbol) = symbol else {
-                return Err("symbol-value expects a symbol".to_string());
+                return Err("symbol-value expects a symbol".to_string().into());
             };
             machine
                 .evaluator
                 .global()
                 .get(&symbol)
-                .ok_or_else(|| format!("Symbol's value as variable is void: {symbol}"))
+                .ok_or_else(|| Error::void_variable(&symbol))
         }
         "message-log" => Ok(Value::List(
             machine
@@ -215,7 +220,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
             // 定義を読んだファイル. 分からなければ #f
             let symbol = match args.as_slice() {
                 [Value::Symbol(symbol)] | [Value::Symbol(symbol), _] => symbol,
-                _ => return Err("symbol-file expects a symbol".to_string()),
+                _ => return Err("symbol-file expects a symbol".to_string().into()),
             };
             Ok(machine
                 .evaluator

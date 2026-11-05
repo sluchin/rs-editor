@@ -3,6 +3,7 @@
 //! 引数の数と型を確かめて, [`Host`](crate::scheme::host::Host) に頼みます. 位置は Emacs と同じく 1 から数えます.
 //! 手続きの動きは, [`EditorHost`](crate::scheme::editor_host::EditorHost) にあります.
 
+use crate::error::Error;
 use crate::scheme::evaluator::Machine;
 use crate::scheme::value::Value;
 
@@ -356,12 +357,12 @@ pub const NAMES: &[&str] = &[
 ];
 
 /// 引数が決まりに合うか確かめます.
-fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<(), String> {
+fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<(), Error> {
     if args.len() < required || args.len() > kinds.len() {
         return Err(if required == kinds.len() {
-            format!("{name} expects {required} arguments")
+            format!("{name} expects {required} arguments").into()
         } else {
-            format!("{name} expects {required} to {} arguments", kinds.len())
+            format!("{name} expects {required} to {} arguments", kinds.len()).into()
         });
     }
     for (arg, kind) in args.iter().zip(kinds) {
@@ -380,7 +381,8 @@ fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<
                     Kind::Text => "a string",
                     _ => "a name",
                 }
-            ));
+            )
+            .into());
         }
     }
     Ok(())
@@ -401,7 +403,7 @@ pub(crate) fn call(
     machine: &mut Machine,
     name: &str,
     mut args: Vec<Value>,
-) -> Result<Value, String> {
+) -> Result<Value, Error> {
     let (_, kinds, required) = SPECS
         .iter()
         .find(|(n, _, _)| *n == name)

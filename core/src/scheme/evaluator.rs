@@ -6,6 +6,7 @@
 //! - 組み込みの手続きは [`builtins`].
 //! - 末尾の呼び出しは, 深さを使いません. それ以外の入れ子は, [`MAX_DEPTH`] までです.
 
+use crate::error::Error;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -68,6 +69,8 @@ pub struct Evaluator {
     message_log: Mutex<Vec<String>>,
     /// 相対パスの基のディレクトリ (Emacs の `default-directory`. 無ければ, ホームディレクトリ).
     default_directory: Mutex<Option<std::path::PathBuf>>,
+    /// `define-error` で決めた種類 (名前, 受ける条件と, 説明).
+    error_kinds: Mutex<HashMap<String, (Vec<String>, String)>>,
 }
 
 impl Default for Evaluator {
@@ -129,6 +132,7 @@ impl Evaluator {
             symbol_files: Mutex::new(HashMap::new()),
             message_log: Mutex::new(Vec::new()),
             default_directory: Mutex::new(None),
+            error_kinds: Mutex::new(HashMap::new()),
         };
         // M-x ert
         let mut machine = Machine::new(&evaluator, &NoHost);
@@ -162,7 +166,7 @@ impl Evaluator {
     /// # Returns
     ///
     /// 式ごとの結果 (改行で区切る), または失敗の内容.
-    pub fn eval(&self, code: &str) -> Result<String, String> {
+    pub fn eval(&self, code: &str) -> Result<String, Error> {
         self.eval_with(code, &NoHost)
     }
 
@@ -176,7 +180,7 @@ impl Evaluator {
     /// # Returns
     ///
     /// 式ごとの結果 (改行で区切る), または失敗の内容.
-    pub fn eval_with(&self, code: &str, host: &dyn Host) -> Result<String, String> {
+    pub fn eval_with(&self, code: &str, host: &dyn Host) -> Result<String, Error> {
         // 読むのも, 大きなスタックのスレッドで (パーサは, 入れ子を再帰で読むため)
         self.run(host, |machine| {
             let values = Parser::new(code).parse()?;
@@ -197,15 +201,18 @@ impl Evaluator {
     /// # Errors
     ///
     /// 読めないとき.
-    pub fn load_editor_files(&self, host: &dyn Host) -> Result<(), String> {
+    pub fn load_editor_files(&self, host: &dyn Host) -> Result<(), Error> {
         for (file, code) in loadup::EDITOR_FILES {
             self.run(host, |machine| {
                 machine.load_files.push(file.to_string());
-                let result = Parser::new(code).parse().and_then(|values| {
-                    values
-                        .iter()
-                        .try_for_each(|value| machine.eval(value, &self.global).map(|_| ()))
-                });
+                let result = Parser::new(code)
+                    .parse()
+                    .map_err(Error::from)
+                    .and_then(|values| {
+                        values
+                            .iter()
+                            .try_for_each(|value| machine.eval(value, &self.global).map(|_| ()))
+                    });
                 machine.load_files.pop();
                 result
             })?;
@@ -223,9 +230,9 @@ impl Evaluator {
     /// # Returns
     ///
     /// 結果, または失敗の内容.
-    pub fn run_command(&self, name: &str, host: &dyn Host) -> Result<String, String> {
+    pub fn run_command(&self, name: &str, host: &dyn Host) -> Result<String, Error> {
         if !self.is_command(name) {
-            return Err(format!("Undefined command: {}", name));
+            return Err(format!("Undefined command: {}", name).into());
         }
         self.run(host, |machine| {
             machine.call_command(name).map(|value| value.to_string())
@@ -239,6 +246,20 @@ impl Evaluator {
     /// * `dir` - ディレクトリ.
     pub fn set_default_directory(&self, dir: std::path::PathBuf) {
         *self.default_directory.lock().unwrap() = Some(dir);
+    }
+
+    /// `define-error`: 種類の, 受ける条件と説明を決めます.
+    ///
+    /// # Arguments
+    ///
+    /// * `kind` - 種類の名前.
+    /// * `conditions` - 受ける条件 (種類が先).
+    /// * `description` - 説明 (エラーの文の始め).
+    pub(crate) fn define_error(&self, kind: &str, conditions: Vec<String>, description: &str) {
+        self.error_kinds
+            .lock()
+            .unwrap()
+            .insert(kind.to_string(), (conditions, description.to_string()));
     }
 
     /// Lisp で作ったコマンドの名前を返します.
@@ -407,8 +428,8 @@ impl Evaluator {
     fn run<T: Send>(
         &self,
         host: &dyn Host,
-        task: impl FnOnce(&mut Machine) -> Result<T, String> + Send,
-    ) -> Result<T, String> {
+        task: impl FnOnce(&mut Machine) -> Result<T, Error> + Send,
+    ) -> Result<T, Error> {
         // 評価の中から呼ばれたとき (`execute-kbd-macro` が打ったキーのコマンドなど) は, ロックも新しいスレッドも要らない
         if IN_EVALUATION.with(std::cell::Cell::get) {
             return task(&mut Machine::new(self, host));
@@ -427,7 +448,7 @@ impl Evaluator {
                 })
                 .map_err(|e| e.to_string())?
                 .join()
-                .unwrap_or_else(|_| Err("The evaluator crashed".to_string()))
+                .unwrap_or_else(|_| Err("The evaluator crashed".to_string().into()))
         })
     }
 }
@@ -483,6 +504,23 @@ impl<'a> Machine<'a> {
     ///
     /// # Returns
     ///
+    /// 種類とデータからエラーを作ります (`define-error` で決めた種類は, その条件と説明を使う).
+    pub(crate) fn make_error(&self, kind: &str, data: Vec<Value>) -> Error {
+        let defined = self
+            .evaluator
+            .error_kinds
+            .lock()
+            .unwrap()
+            .get(kind)
+            .cloned();
+        match defined {
+            Some((conditions, description)) => {
+                Error::signal(kind, data, conditions, Some(&description))
+            }
+            None => Error::new(kind, data),
+        }
+    }
+
     /// 絶対パス.
     pub(crate) fn expand_file_name(&self, path: &str) -> String {
         let home = dirs::home_dir().unwrap_or_default();
@@ -508,13 +546,13 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 値. 失敗した場合 (入れ子が深すぎる場合も) は, その内容の [`Err`].
-    pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, String> {
+    pub(crate) fn eval(&mut self, expr: &Value, env: &Env) -> Result<Value, Error> {
         // リストでない式は, その場で値にする (式を写さない)
         if !matches!(expr, Value::List(_)) {
             return self.atom(expr, env);
         }
         if self.depth >= MAX_DEPTH {
-            return Err("Too deep recursion".to_string());
+            return Err("Too deep recursion".to_string().into());
         }
         self.depth += 1;
         let result = self.eval_tail(expr.clone(), env.clone());
@@ -523,7 +561,7 @@ impl<'a> Machine<'a> {
     }
 
     /// リストでない式の値. 変数 `major-mode` は, 定義が無ければ, 今のバッファの構文の方言から決める (Emacs の名前で).
-    fn atom(&self, expr: &Value, env: &Env) -> Result<Value, String> {
+    fn atom(&self, expr: &Value, env: &Env) -> Result<Value, Error> {
         let value = eval_atom(expr, env);
         match (&value, expr) {
             (Err(_), Value::Symbol(name)) if name == "major-mode" => {
@@ -543,7 +581,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 値, または失敗の内容.
-    fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, String> {
+    fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, Error> {
         loop {
             let items = match &expr {
                 Value::List(items) if !items.is_empty() => items.clone(),
@@ -559,7 +597,7 @@ impl<'a> Machine<'a> {
                     // 呼ぶ手続きの記号が無いのは, void-function
                     if let Value::Symbol(name) = &items[0] {
                         if env.get(name).is_none() {
-                            return Err(format!("Symbol's function definition is void: {name}"));
+                            return Err(Error::void_function(name));
                         }
                     }
                     let procedure = self.eval(&items[0], &env)?;
@@ -587,7 +625,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 値 (式の順). 1 つでも失敗した場合は, その内容の [`Err`].
-    fn eval_all(&mut self, exprs: &[Value], env: &Env) -> Result<Vec<Value>, String> {
+    fn eval_all(&mut self, exprs: &[Value], env: &Env) -> Result<Vec<Value>, Error> {
         exprs.iter().map(|e| self.eval(e, env)).collect()
     }
 
@@ -601,7 +639,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 結果, または失敗の内容.
-    pub(crate) fn apply(&mut self, procedure: Value, args: Vec<Value>) -> Result<Value, String> {
+    pub(crate) fn apply(&mut self, procedure: Value, args: Vec<Value>) -> Result<Value, Error> {
         match self.apply_step(procedure, args)? {
             Step::Done(value) => Ok(value),
             Step::Tail(expr, env) => self.eval(&expr, &env),
@@ -618,14 +656,14 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 評価の 1 歩の結果. 手続きでない値の場合や, 引数の数が違う場合は [`Err`].
-    fn apply_step(&mut self, procedure: Value, args: Vec<Value>) -> Result<Step, String> {
+    fn apply_step(&mut self, procedure: Value, args: Vec<Value>) -> Result<Step, Error> {
         match procedure {
             Value::Lambda(lambda) => {
                 let env = bind(&lambda, args)?;
                 self.sequence(&lambda.body, &env)
             }
             Value::Function(name) => builtins::call(self, &name, args).map(Step::Done),
-            other => Err(format!("Not a procedure: {}", other)),
+            other => Err(format!("Not a procedure: {}", other).into()),
         }
     }
 
@@ -638,13 +676,13 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 結果, または失敗の内容.
-    pub(crate) fn call_command(&mut self, name: &str) -> Result<Value, String> {
+    pub(crate) fn call_command(&mut self, name: &str) -> Result<Value, Error> {
         if self.evaluator.is_command(name) {
             let procedure = self
                 .evaluator
                 .global
                 .get(name)
-                .ok_or_else(|| format!("Unbound variable: {}", name))?;
+                .ok_or_else(|| Error::void_variable(name))?;
             return self.apply(procedure, vec![]);
         }
         self.host
@@ -661,7 +699,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 評価の 1 歩の結果, または失敗の内容.
-    fn sequence(&mut self, body: &[Value], env: &Env) -> Result<Step, String> {
+    fn sequence(&mut self, body: &[Value], env: &Env) -> Result<Step, Error> {
         match body.split_last() {
             None => Ok(Step::Done(Value::Nil)),
             Some((last, init)) => {
@@ -675,11 +713,11 @@ impl<'a> Machine<'a> {
 
     /// 今のバッファ (と, カーソル) を覚えて本体を評価し, 終わったら戻します
     /// (`save-current-buffer`, `save-excursion`, `with-current-buffer`). 本体が失敗しても戻す.
-    fn save_buffer_state(&mut self, op: &str, args: &[Value], env: &Env) -> Result<Value, String> {
+    fn save_buffer_state(&mut self, op: &str, args: &[Value], env: &Env) -> Result<Value, Error> {
         let (target, body) = match (op, args) {
             ("with-current-buffer", [buffer, body @ ..]) => (Some(buffer), body),
             ("with-current-buffer", _) => {
-                return Err("with-current-buffer expects a buffer".to_string())
+                return Err("with-current-buffer expects a buffer".to_string().into())
             }
             _ => (None, args),
         };
@@ -718,7 +756,7 @@ impl<'a> Machine<'a> {
 
     /// 今の絞り込みを覚えて本体を評価し, 終わったら戻します (`save-restriction`). 本体が失敗しても戻す.
     /// 絞り込みの無い画面 (Tauri) では, 覚えずに評価する.
-    fn save_restriction(&mut self, body: &[Value], env: &Env) -> Result<Value, String> {
+    fn save_restriction(&mut self, body: &[Value], env: &Env) -> Result<Value, Error> {
         let saved = self.host.call("current-buffer", vec![])?;
         let id = self.host.call("restriction-save", vec![]).ok();
         let outcome = self.eval_body(body, env);
@@ -734,7 +772,7 @@ impl<'a> Machine<'a> {
     }
 
     /// 式を順に評価して, 最後の値を返します.
-    fn eval_body(&mut self, body: &[Value], env: &Env) -> Result<Value, String> {
+    fn eval_body(&mut self, body: &[Value], env: &Env) -> Result<Value, Error> {
         let mut value = Value::Nil;
         for expr in body {
             value = self.eval(expr, env)?;
@@ -753,16 +791,11 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 評価の 1 歩の結果. 特別な形でなければ `None`. 書き方が誤っている場合は [`Err`].
-    fn special_form(
-        &mut self,
-        op: &str,
-        args: &[Value],
-        env: &Env,
-    ) -> Result<Option<Step>, String> {
+    fn special_form(&mut self, op: &str, args: &[Value], env: &Env) -> Result<Option<Step>, Error> {
         let step = match op {
             "quote" => match args {
                 [value] => Step::Done(value.clone()),
-                _ => return Err("quote expects 1 argument".to_string()),
+                _ => return Err("quote expects 1 argument".to_string().into()),
             },
             "if" => match args {
                 [test, then, rest @ ..] if rest.len() <= 1 => {
@@ -775,7 +808,7 @@ impl<'a> Machine<'a> {
                         }
                     }
                 }
-                _ => return Err("if expects 2 or 3 arguments".to_string()),
+                _ => return Err("if expects 2 or 3 arguments".to_string().into()),
             },
             "define" => Step::Done(Value::Symbol(self.define(args, env)?)),
             "define-command" => {
@@ -785,22 +818,22 @@ impl<'a> Machine<'a> {
                         self.evaluator.add_command(&name);
                         Step::Done(Value::Symbol(name))
                     }
-                    _ => return Err("define-command expects a procedure".to_string()),
+                    _ => return Err("define-command expects a procedure".to_string().into()),
                 }
             }
             "set!" => match args {
                 [Value::Symbol(name), expr] => {
                     let value = self.eval(expr, env)?;
                     if !env.set(name, value) {
-                        return Err(format!("Unbound variable: {}", name));
+                        return Err(Error::void_variable(name));
                     }
                     Step::Done(Value::Nil)
                 }
-                _ => return Err("set! expects a name and a value".to_string()),
+                _ => return Err("set! expects a name and a value".to_string().into()),
             },
             "lambda" => match args {
                 [params, body @ ..] => Step::Done(make_lambda(None, params, body, env)?),
-                _ => return Err("lambda expects parameters".to_string()),
+                _ => return Err("lambda expects parameters".to_string().into()),
             },
             "begin" => self.sequence(args, env)?,
             "let" => match args {
@@ -816,7 +849,7 @@ impl<'a> Machine<'a> {
                     }
                     self.sequence(body, &inner)?
                 }
-                _ => return Err("let expects bindings".to_string()),
+                _ => return Err("let expects bindings".to_string().into()),
             },
             "let*" | "letrec" | "letrec*" => match args {
                 [bindings, body @ ..] => {
@@ -834,7 +867,7 @@ impl<'a> Machine<'a> {
                     }
                     self.sequence(body, &inner)?
                 }
-                _ => return Err(format!("{} expects bindings", op)),
+                _ => return Err(format!("{} expects bindings", op).into()),
             },
             "cond" => self.cond(args, env)?,
             "case" => match args {
@@ -842,7 +875,7 @@ impl<'a> Machine<'a> {
                     let key = self.eval(key, env)?;
                     self.case(&key, clauses, env)?
                 }
-                _ => return Err("case expects a key".to_string()),
+                _ => return Err("case expects a key".to_string().into()),
             },
             "and" => match args.split_last() {
                 None => Step::Done(Value::Boolean(true)),
@@ -876,7 +909,7 @@ impl<'a> Machine<'a> {
                         Step::Done(Value::Nil)
                     }
                 }
-                _ => return Err(format!("{} expects a test", op)),
+                _ => return Err(format!("{} expects a test", op).into()),
             },
             "while" => match args {
                 // (while TEST BODY...): TEST が真の間, BODY を繰り返す (Emacs Lisp の while). 値は偽
@@ -888,36 +921,36 @@ impl<'a> Machine<'a> {
                     }
                     Step::Done(Value::Nil)
                 }
-                _ => return Err("while expects a test".to_string()),
+                _ => return Err("while expects a test".to_string().into()),
             },
             "condition-case" => match args {
                 [var @ (Value::Symbol(_) | Value::Boolean(false)), body, handlers @ ..] => {
                     match self.eval(body, env) {
                         Ok(value) => Step::Done(value),
-                        Err(message) => {
+                        Err(error) => {
                             let handler = handlers.iter().find_map(|handler| match handler {
                                 Value::List(items) => {
-                                    handles(&items[0], &message).then(|| items[1..].to_vec())
+                                    handles(&items[0], &error).then(|| items[1..].to_vec())
                                 }
                                 _ => None,
                             });
                             let Some(body) = handler else {
-                                return Err(message);
+                                return Err(error);
                             };
-                            // 変数には, (error "メッセージ") を束ねる
+                            // 変数には, (種類 . データ) を束ねる. 変数が nil (`(condition-case nil ...)`) なら, 束ねない
                             let inner = env.child();
-                            let kind = error_kind(&message);
-                            let mut data = vec![Value::Symbol(kind.to_string())];
-                            data.extend(error_data(kind, message));
-                            // 変数が nil (`(condition-case nil ...)`) なら, 束ねない
                             if let Value::Symbol(var) = var {
-                                inner.define(var, Value::List(data.into()));
+                                inner.define(var, error.to_value());
                             }
                             self.sequence(&body, &inner)?
                         }
                     }
                 }
-                _ => return Err("condition-case expects a variable and a body form".to_string()),
+                _ => {
+                    return Err("condition-case expects a variable and a body form"
+                        .to_string()
+                        .into())
+                }
             },
             "unwind-protect" => match args {
                 [body, cleanup @ ..] => {
@@ -928,7 +961,7 @@ impl<'a> Machine<'a> {
                     }
                     Step::Done(result?)
                 }
-                _ => return Err("unwind-protect expects a body form".to_string()),
+                _ => return Err("unwind-protect expects a body form".to_string().into()),
             },
             "save-restriction" => Step::Done(self.save_restriction(args, env)?),
             "save-current-buffer" | "save-excursion" | "with-current-buffer" => {
@@ -949,7 +982,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 定義した名前, または失敗の内容.
-    fn define(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
+    fn define(&mut self, args: &[Value], env: &Env) -> Result<String, Error> {
         let name = self.define_value(args, env)?;
         // 読み込んでいるファイルの, 一番外側の定義なら, ファイルを覚える
         if let Some(file) = self.load_files.last() {
@@ -974,13 +1007,15 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 定義した名前, または失敗の内容.
-    fn define_value(&mut self, args: &[Value], env: &Env) -> Result<String, String> {
+    fn define_value(&mut self, args: &[Value], env: &Env) -> Result<String, Error> {
         match args {
             [Value::Symbol(name), rest @ ..] if rest.len() <= 2 => {
                 // 3 つ目は, docstring (Emacs の defvar と同じ)
                 if let Some(doc) = rest.get(1) {
                     let Value::String(doc) = doc else {
-                        return Err("define expects a docstring after the value".to_string());
+                        return Err("define expects a docstring after the value"
+                            .to_string()
+                            .into());
                     };
                     self.evaluator
                         .variable_docs
@@ -1001,9 +1036,9 @@ impl<'a> Machine<'a> {
                     env.define(name, lambda);
                     Ok(name.clone())
                 }
-                _ => Err("define expects a name".to_string()),
+                _ => Err("define expects a name".to_string().into()),
             },
-            _ => Err("define expects a name and a value".to_string()),
+            _ => Err("define expects a name and a value".to_string().into()),
         }
     }
 
@@ -1025,7 +1060,7 @@ impl<'a> Machine<'a> {
         bindings: &Value,
         body: &[Value],
         env: &Env,
-    ) -> Result<Step, String> {
+    ) -> Result<Step, Error> {
         let pairs = parse_bindings("let", bindings)?;
         let (names, exprs): (Vec<Value>, Vec<Value>) = pairs
             .into_iter()
@@ -1048,13 +1083,13 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 評価の 1 歩の結果 (当てはまる節が無ければ `nil`), または失敗の内容.
-    fn cond(&mut self, clauses: &[Value], env: &Env) -> Result<Step, String> {
+    fn cond(&mut self, clauses: &[Value], env: &Env) -> Result<Step, Error> {
         for clause in clauses {
             let Value::List(items) = clause else {
-                return Err("cond expects clauses".to_string());
+                return Err("cond expects clauses".to_string().into());
             };
             let Some((test, body)) = items.split_first() else {
-                return Err("cond expects clauses".to_string());
+                return Err("cond expects clauses".to_string().into());
             };
             if *test == Value::Symbol("else".to_string()) {
                 return self.sequence(body, env);
@@ -1081,7 +1116,7 @@ impl<'a> Machine<'a> {
     /// # Returns
     ///
     /// 評価の 1 歩の結果 (当てはまる節が無ければ `nil`), または失敗の内容.
-    fn case(&mut self, key: &Value, clauses: &[Value], env: &Env) -> Result<Step, String> {
+    fn case(&mut self, key: &Value, clauses: &[Value], env: &Env) -> Result<Step, Error> {
         for clause in clauses {
             match clause {
                 Value::List(items) => match items.split_first() {
@@ -1093,9 +1128,9 @@ impl<'a> Machine<'a> {
                             return self.sequence(body, env);
                         }
                     }
-                    _ => return Err("case expects clauses".to_string()),
+                    _ => return Err("case expects clauses".to_string().into()),
                 },
-                _ => return Err("case expects clauses".to_string()),
+                _ => return Err("case expects clauses".to_string().into()),
             }
         }
         Ok(Step::Done(Value::Nil))
@@ -1119,7 +1154,7 @@ pub(crate) fn make_lambda(
     params: &Value,
     body: &[Value],
     env: &Env,
-) -> Result<Value, String> {
+) -> Result<Value, Error> {
     let (names, rest) = match params {
         Value::Symbol(rest) => (vec![], Some(rest.clone())),
         Value::List(items) => {
@@ -1130,15 +1165,15 @@ pub(crate) fn make_lambda(
                 match item {
                     Value::Symbol(dot) if dot == "." => match (iter.next(), iter.next()) {
                         (Some(Value::Symbol(last)), None) => rest = Some(last.clone()),
-                        _ => return Err("Invalid parameter list".to_string()),
+                        _ => return Err("Invalid parameter list".to_string().into()),
                     },
                     Value::Symbol(param) => names.push(param.clone()),
-                    _ => return Err("Invalid parameter list".to_string()),
+                    _ => return Err("Invalid parameter list".to_string().into()),
                 }
             }
             (names, rest)
         }
-        _ => return Err("Invalid parameter list".to_string()),
+        _ => return Err("Invalid parameter list".to_string().into()),
     };
     Ok(Value::Lambda(Arc::new(Lambda {
         name: name.map(str::to_string),
@@ -1159,11 +1194,11 @@ pub(crate) fn make_lambda(
 /// # Returns
 ///
 /// 値. 変数が無ければ [`Err`].
-fn eval_atom(expr: &Value, env: &Env) -> Result<Value, String> {
+fn eval_atom(expr: &Value, env: &Env) -> Result<Value, Error> {
     match expr {
-        Value::Symbol(name) if !name.starts_with(':') => env
-            .get(name)
-            .ok_or_else(|| format!("Unbound variable: {}", name)),
+        Value::Symbol(name) if !name.starts_with(':') => {
+            env.get(name).ok_or_else(|| Error::void_variable(name))
+        }
         other => Ok(other.clone()),
     }
 }
@@ -1201,7 +1236,7 @@ fn name_lambda(value: Value, name: &str) -> Value {
 /// # Returns
 ///
 /// 引数を定義した, 本体を評価する環境. 引数の数が違う場合は [`Err`].
-fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
+fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, Error> {
     let count = lambda.params.len();
     let fits = match lambda.rest {
         Some(_) => args.len() >= count,
@@ -1220,7 +1255,8 @@ fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
             at_least,
             count,
             args.len()
-        ));
+        )
+        .into());
     }
     let env = lambda.env.child();
     let mut args = args.into_iter();
@@ -1244,180 +1280,29 @@ fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, String> {
 /// # Returns
 ///
 /// 名前と式の組 (書いた順). 書き方が誤っている場合は [`Err`].
-fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, String> {
+fn parse_bindings(form: &str, bindings: &Value) -> Result<Vec<(String, Value)>, Error> {
     let invalid = || format!("{} expects bindings", form);
     let Value::List(items) = bindings else {
-        return Err(invalid());
+        return Err(invalid().into());
     };
     items
         .iter()
         .map(|item| match item {
             Value::List(pair) => match &**pair {
                 [Value::Symbol(name), expr] => Ok((name.clone(), expr.clone())),
-                _ => Err(invalid()),
+                _ => Err(invalid().into()),
             },
-            _ => Err(invalid()),
+            _ => Err(invalid().into()),
         })
         .collect()
 }
 
-/// 失敗のメッセージから, Emacs のエラーの種類 (`condition-case` の節と `(car e)` の記号) を決める. 知らなければ `error`.
-fn error_kind(message: &str) -> &'static str {
-    const PREFIXES: &[(&str, &str)] = &[
-        ("Scan error:", "scan-error"),
-        ("End of buffer", "end-of-buffer"),
-        ("Beginning of buffer", "beginning-of-buffer"),
-        ("Search failed", "search-failed"),
-        ("Args out of range", "args-out-of-range"),
-        ("Buffer is read-only", "buffer-read-only"),
-        ("Text is read-only", "text-read-only"),
-        ("Wrong type argument", "wrong-type-argument"),
-        ("Unbound variable", "void-variable"),
-        ("Symbol's value as variable is void", "void-variable"),
-        ("Symbol's function definition is void", "void-function"),
-        ("/ expects non-zero numbers", "arith-error"),
-        ("Invalid regexp", "invalid-regexp"),
-        ("End of file during parsing", "end-of-file"),
-        ("Opening input file", "file-missing"),
-        ("Cannot open load file", "file-missing"),
-        ("File already exists", "file-already-exists"),
-        ("Quit", "quit"),
-    ];
-    if message.ends_with("division by zero") {
-        return "arith-error";
-    }
-    PREFIXES
-        .iter()
-        .find(|(prefix, _)| message.starts_with(prefix))
-        .map_or("error", |(_, kind)| kind)
-}
-
-/// 失敗のメッセージから, Emacs のエラーのデータ (`(car e)` の後ろ) を作る.
-///
-/// 種類ごとに Emacs と同じ形にする: `error` はメッセージ, `search-failed` は探した文字列,
-/// `void-variable` と `void-function` は記号, `end-of-buffer` などは空. ほかは, メッセージ.
-fn error_data(kind: &str, message: String) -> Vec<Value> {
-    let after = |prefix: &str| message.strip_prefix(prefix).map(str::to_string);
-    match kind {
-        "end-of-buffer" | "beginning-of-buffer" | "arith-error" | "quit" => Vec::new(),
-        "search-failed" => {
-            let pattern = after("Search failed: ").unwrap_or_default();
-            // 探した文字列は, 引用符で囲んである
-            let pattern = pattern
-                .strip_prefix('"')
-                .and_then(|p| p.strip_suffix('"'))
-                .unwrap_or(&pattern);
-            vec![Value::String(pattern.to_string())]
-        }
-        "args-out-of-range" => match after("Args out of range: ") {
-            // "Args out of range: 値, 値, ..." を, 値 (読み直す. バッファは `#<buffer 名前>` の記号) にする
-            Some(rest) => split_data(&rest)
-                .iter()
-                .map(|part| {
-                    if part.starts_with("#<") {
-                        Value::Symbol(part.to_string())
-                    } else {
-                        crate::scheme::parser::Parser::new(part)
-                            .parse_first()
-                            .ok()
-                            .flatten()
-                            .unwrap_or_else(|| Value::String(part.to_string()))
-                    }
-                })
-                .collect(),
-            None => Vec::new(),
-        },
-        "wrong-type-argument" => {
-            // "Wrong type argument: 述語, 値" を, 述語の記号と, 値 (読み直す) にする
-            let parsed = after("Wrong type argument: ").and_then(|rest| {
-                let (predicate, value) = rest.split_once(", ")?;
-                let value = crate::scheme::parser::Parser::new(value)
-                    .parse_first()
-                    .ok()??;
-                Some(vec![Value::Symbol(predicate.to_string()), value])
-            });
-            parsed.unwrap_or_else(|| vec![Value::String(message)])
-        }
-        "file-missing" => {
-            // "Opening input file: 理由, パス" か "Cannot open load file: 名前" を, Emacs の 3 つのデータにする
-            let parts = message
-                .split_once(": ")
-                .map(|(what, rest)| match rest.split_once(", ") {
-                    Some((reason, path)) => (what, reason, path),
-                    None => (what, "No such file or directory", rest),
-                });
-            match parts {
-                Some((what, reason, path)) => [what, reason, path]
-                    .iter()
-                    .map(|s| Value::String(s.to_string()))
-                    .collect(),
-                None => vec![Value::String(message)],
-            }
-        }
-        "void-variable" | "void-function" => {
-            let name = [
-                "Unbound variable: ",
-                "Symbol's value as variable is void: ",
-                "Symbol's function definition is void: ",
-            ]
-            .iter()
-            .find_map(|prefix| after(prefix));
-            match name {
-                Some(name) => vec![Value::Symbol(name)],
-                None => vec![Value::String(message)],
-            }
-        }
-        _ => vec![Value::String(message)],
-    }
-}
-
-/// エラーのメッセージのデータ ("値, 値, ...") を, 文字列の外の ", " で分けます.
-fn split_data(text: &str) -> Vec<String> {
-    let mut parts = vec![String::new()];
-    let (mut in_string, mut escaped) = (false, false);
-    let mut chars = text.chars().peekable();
-    while let Some(c) = chars.next() {
-        if !in_string && c == ',' && chars.peek() == Some(&' ') {
-            chars.next();
-            parts.push(String::new());
-            continue;
-        }
-        if in_string && !escaped && c == '"' {
-            in_string = false;
-        } else if !in_string && c == '"' {
-            in_string = true;
-        }
-        escaped = in_string && !escaped && c == '\\';
-        parts.last_mut().unwrap().push(c);
-    }
-    parts
-}
-
-/// `condition-case` の条件 (記号か記号のリスト) が, 失敗のメッセージを受けるか.
-///
-/// 失敗は文字列なので, 種類は文字列で見分ける: `scan-error` は `Scan error:` で始まり, `quit` は `Quit`.
-/// `error` と `t` は, `quit` 以外の全て. `user-error` は, `scan-error` と `quit` 以外の全て.
-fn handles(conditions: &Value, message: &str) -> bool {
-    let names: Vec<&str> = match conditions {
-        Value::Symbol(name) => vec![name.as_str()],
-        Value::List(items) => items
-            .iter()
-            .filter_map(|v| match v {
-                Value::Symbol(name) => Some(name.as_str()),
-                _ => None,
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    let scan = message.starts_with("Scan error:");
-    let quit = message == "Quit";
-    let kind = error_kind(message);
-    names.iter().any(|name| match *name {
-        name if name == kind && kind != "error" => true,
-        "scan-error" => scan,
-        "quit" => quit,
-        "user-error" => !scan && !quit,
-        "error" | "t" => !quit,
+/// `condition-case` の条件 (記号か記号のリスト) が, エラーを受けるか (エラーの `error-conditions` で決める).
+pub(crate) fn handles(conditions: &Value, error: &Error) -> bool {
+    match conditions {
+        Value::Symbol(name) => error.matches(name),
+        Value::Boolean(true) => true,
+        Value::List(items) => items.iter().any(|v| handles(v, error)),
         _ => false,
-    })
+    }
 }

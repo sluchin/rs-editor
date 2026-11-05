@@ -5,6 +5,7 @@
 //! Scheme の `#;` の後ろの式も, コメントです (Emacs の `scheme-syntax-propertize` と同じく, 文字の構文を上書きする).
 //! 位置は 0 から数える文字の位置です. 期待値は, `emacs -Q --batch` の結果 (`tools/syntax/run.sh` で作る) と比べます.
 
+use crate::scheme::value::Value;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::OnceLock;
@@ -271,6 +272,20 @@ impl fmt::Display for ScanError {
             self.message,
             self.from + 1,
             self.to + 1
+        )
+    }
+}
+
+impl From<ScanError> for crate::error::Error {
+    /// Emacs の `scan-error` (データは, 理由と, 最後に読めた所と, 失敗した所. 位置は 1 から数える).
+    fn from(e: ScanError) -> Self {
+        crate::error::Error::new(
+            "scan-error",
+            vec![
+                Value::String(e.message.to_string()),
+                Value::Number((e.from + 1) as f64),
+                Value::Number((e.to + 1) as f64),
+            ],
         )
     }
 }

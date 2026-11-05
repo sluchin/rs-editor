@@ -37,7 +37,7 @@ fn eval(code: &str) -> String {
 ///
 /// 失敗の内容 (成功したら panic する).
 fn eval_err(code: &str) -> String {
-    Evaluator::new().eval(code).unwrap_err()
+    Evaluator::new().eval(code).unwrap_err().to_string()
 }
 
 /// 文字列を, Scheme の文字列の書き方にする.
@@ -89,7 +89,7 @@ impl Recorder {
 }
 
 impl Host for Recorder {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         let shown: Vec<String> = args.iter().map(|a| a.to_string()).collect();
         self.calls
             .lock()
@@ -216,7 +216,7 @@ fn test_files() {
     );
     assert_eq!(
         eval_err("(directory-files-recursively \"/\" \"(\")"),
-        "Invalid regexp: regex parse error:\n    (\n    ^\nerror: unclosed group"
+        "Invalid regexp: \"regex parse error:\n    (\n    ^\nerror: unclosed group\""
     );
 }
 
@@ -283,7 +283,10 @@ fn test_load() {
     assert_eq!(
         ev.eval(&format!("(load {})", quoted(&missing)))
             .unwrap_err(),
-        format!("Cannot open load file: {}", missing.display())
+        format!(
+            "Cannot open load file: No such file or directory, {}",
+            missing.display()
+        )
     );
     let invalid = dir.path().join("invalid.sl");
     fs::write(&invalid, [0xff, 0xfe]).unwrap();
@@ -355,12 +358,12 @@ fn test_load_path_and_require() {
     );
     assert_eq!(
         ev.eval("(require 'nothing)").unwrap_err(),
-        "Cannot open load file: nothing"
+        "Cannot open load file: No such file or directory, nothing"
     );
     // ./ で始まる名前は, load-path から探さない
     assert_eq!(
         ev.eval("(load \"./plain\")").unwrap_err(),
-        "Cannot open load file: ./plain"
+        "Cannot open load file: No such file or directory, ./plain"
     );
     // 書き方の誤り
     assert_eq!(
@@ -921,7 +924,7 @@ fn test_hooks() {
         ("(run-hook-with-args)", "run-hook-with-args expects a hook"),
         (
             "(add-hook 'h 'nothing) (run-hooks 'h)",
-            "Unbound variable: nothing",
+            "Symbol's value as variable is void: nothing",
         ),
         (
             "(add-hook 'h2 (lambda () (car 1))) (run-hooks 'h2)",

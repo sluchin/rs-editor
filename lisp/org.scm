@@ -1628,7 +1628,7 @@ otherwise cycle within the set of OLD (C-c C-t)."
     (cond ((org-blank? answer) #f)
           (found (cadr found))
           ((member (string-upcase answer) (org-todo-keywords-1)) (string-upcase answer))
-          (else (error "Quit")))))
+          (else (signal 'quit '())))))
 
 (define (org-set-todo h new)
   "Set the state of the heading at line H to NEW, or remove it if NEW is #f.

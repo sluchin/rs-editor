@@ -19,7 +19,7 @@ struct FakeUi {
 }
 
 impl Host for FakeUi {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
@@ -37,9 +37,9 @@ impl Host for FakeUi {
                     .unwrap()
                     .pop_front()
                     .map(Value::String)
-                    .ok_or_else(|| "no more keys".to_string())
+                    .ok_or_else(|| "no more keys".into())
             }
-            other => Err(format!("ui: {other}")),
+            other => Err(format!("ui: {other}").into()),
         }
     }
 }
@@ -74,7 +74,7 @@ fn run(ev: &Evaluator, host: &EditorHost<FakeUi>, row: &Row, pos: usize) -> Json
     let mark = buffer.mark().filter(|m| *m != pos || buffer.point() != pos);
     match result {
         Err(e) if e == "Quit" => json!(["quit", buffer.point(), None::<usize>]),
-        Err(e) => json!(["error", e]),
+        Err(e) => json!(["error", e.to_string()]),
         Ok(_) => json!([
             buffer.point(),
             mark,

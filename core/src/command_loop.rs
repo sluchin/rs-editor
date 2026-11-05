@@ -4,6 +4,7 @@
 //! 元に戻す区切り (`undo-boundary`), 変更した後のマークの解除を受け持ちます.
 //! 画面の違い (エコー領域, キーボードマクロ, 出し方の設定) は [`LoopUi`] で受けます.
 
+use crate::error::Error;
 use std::sync::{Arc, Mutex};
 
 use crate::editor::prefix_numeric_value;
@@ -77,7 +78,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         host: EditorHost<U>,
         evaluator: Evaluator,
         keymap: Arc<Mutex<Keymap>>,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, Error> {
         evaluator.load_editor_files(&host)?;
         Ok(CommandLoop {
             host,
@@ -112,7 +113,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     /// # Errors
     ///
     /// 評価に失敗したとき.
-    pub fn eval(&self, code: &str) -> Result<String, String> {
+    pub fn eval(&self, code: &str) -> Result<String, Error> {
         self.evaluator.eval_with(code, &self.host)
     }
 
@@ -284,7 +285,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     }
 
     /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.
-    fn finish(&self, command: &str, outcome: Result<(), String>) {
+    fn finish(&self, command: &str, outcome: Result<(), Error>) {
         if let Err(error) = outcome {
             // マクロは, 失敗したところで止める
             self.host.ui().stop_macro();

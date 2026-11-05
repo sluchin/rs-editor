@@ -30,7 +30,7 @@ fn eval(code: &str) -> String {
 ///
 /// 失敗の内容 (成功したら panic する).
 fn eval_err(code: &str) -> String {
-    Evaluator::new().eval(code).unwrap_err()
+    Evaluator::new().eval(code).unwrap_err().to_string()
 }
 
 /// 偽のエディタ. 本文とカーソル (1 から数える) を持ち, 呼ばれた操作を覚える.
@@ -98,7 +98,7 @@ fn offset(v: &Value) -> usize {
 }
 
 impl Host for FakeEditor {
-    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         let shown: Vec<String> = args.iter().map(|a| a.to_string()).collect();
         self.calls
             .lock()
@@ -137,7 +137,7 @@ impl Host for FakeEditor {
                     *point += 1;
                     Value::Boolean(true)
                 }
-                _ => return Err("Undefined command".to_string()),
+                _ => return Err("Undefined command".into()),
             },
             _ => panic!("unknown op {}", op),
         })
@@ -523,7 +523,7 @@ fn test_define_command_and_global_set_key() {
     ev.eval("(let () (define-command (inner) 1))").unwrap();
     assert_eq!(
         ev.run_command("inner", &editor).unwrap_err(),
-        "Unbound variable: inner"
+        "Symbol's value as variable is void: inner"
     );
 
     assert_eq!(
@@ -560,22 +560,25 @@ fn test_define_command_and_global_set_key() {
 fn test_evaluator_reports_the_errors() {
     let cases = [
         ("(1 2)", "Not a procedure: 1"),
-        ("undefined", "Unbound variable: undefined"),
+        ("undefined", "Symbol's value as variable is void: undefined"),
         ("(-)", "- expects at least one argument"),
         (
             "(- \"a\")",
             "Wrong type argument: number-or-marker-p, \"a\"",
         ),
-        ("(* 2 #t)", "Wrong type argument: number-or-marker-p, #t"),
+        ("(* 2 #t)", "Wrong type argument: number-or-marker-p, t"),
         ("(/ 1)", "/ expects at least two arguments"),
-        ("(/ #f 1)", "Wrong type argument: number-or-marker-p, #f"),
+        ("(/ #f 1)", "Wrong type argument: number-or-marker-p, nil"),
         ("(quote 1 2)", "quote expects 1 argument"),
         ("(if 1)", "if expects 2 or 3 arguments"),
         ("(define)", "define expects a name and a value"),
         ("(define 1 2)", "define expects a name and a value"),
         ("(define (1) 2)", "define expects a name"),
         ("(define-command x 1)", "define-command expects a procedure"),
-        ("(set! undefined-x 1)", "Unbound variable: undefined-x"),
+        (
+            "(set! undefined-x 1)",
+            "Symbol's value as variable is void: undefined-x",
+        ),
         ("(set! 1 2)", "set! expects a name and a value"),
         ("(lambda)", "lambda expects parameters"),
         ("(lambda 1 2)", "Invalid parameter list"),
@@ -607,7 +610,7 @@ fn test_evaluator_reports_the_errors() {
         ("(abs 1 2)", "abs expects 1 argument, given 2"),
         ("(eq? 1)", "eq? expects 2 arguments, given 1"),
         ("(point 1)", "point expects 0 arguments, given 1"),
-        ("(modulo 1 0)", "modulo: division by zero"),
+        ("(modulo 1 0)", "Arithmetic error"),
         ("(zero? 'a)", "Wrong type argument: number-or-marker-p, a"),
         ("(car 1)", "Wrong type argument: listp, 1"),
         ("(cons 1 2)", "cons expects a list as the second argument"),
@@ -840,7 +843,7 @@ fn test_condition_case() {
         "(wrong-type-argument listp 1)"
     );
     // 条件: 当てはまる処理だけ. scan-error は Scan error:, quit は Quit
-    let scan = "(error \"Scan error: \\\"Unbalanced parentheses\\\", 1, 2\")";
+    let scan = "(signal 'scan-error '(\"Unbalanced parentheses\" 1 2))";
     assert_eq!(
         eval(&format!(
             "(condition-case e {scan} (quit 1) (user-error 2) (scan-error (scan-error-reason e)))"
@@ -848,11 +851,18 @@ fn test_condition_case() {
         "\"Unbalanced parentheses\""
     );
     assert_eq!(
-        eval("(condition-case e (error \"Quit\") (error 1) (quit 2))"),
+        eval("(condition-case e (signal 'quit '()) (error 1) (quit 2))"),
         "2"
     );
-    assert_eq!(eval("(condition-case e (error \"x\") (user-error 1))"), "1");
+    assert_eq!(
+        eval("(condition-case e (user-error \"x\") (user-error 1))"),
+        "1"
+    );
     assert_eq!(eval("(condition-case e (error \"x\") (t 1))"), "1");
+    // 偽の条件 (#t) も何でも受ける. signal のデータは, 偽 (nil) でも 1 つの値でもよい
+    assert_eq!(eval("(condition-case e (error \"x\") (#t 7))"), "7");
+    assert_eq!(eval("(condition-case e (signal 'foo #f) (t e))"), "(foo)");
+    assert_eq!(eval("(condition-case e (signal 'foo 5) (t e))"), "(foo 5)");
     assert_eq!(eval("(condition-case e (error \"x\") ((1 error) 5))"), "5");
     // 当てはまる処理が無ければ, 失敗のまま. 条件が記号でない処理と, 処理でないものは当てはまらない
     assert_eq!(

@@ -8,11 +8,12 @@
 //!   選ぶものは, `#t` (全て), 文字列 (名前の正規表現), 記号 (その名前).
 //! - `M-x ert` は, 選ぶものを聞いて実行し, 報告を `*ert*` のバッファに出す ([`PRELUDE`]).
 
+use crate::error::Error;
 use std::time::Instant;
 
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;
-use crate::scheme::evaluator::{make_lambda, Machine};
+use crate::scheme::evaluator::{handles, make_lambda, Machine};
 use crate::scheme::parser::Parser;
 use crate::scheme::system;
 use crate::scheme::value::Value;
@@ -86,19 +87,20 @@ pub(crate) fn special_form(
     op: &str,
     args: &[Value],
     env: &Env,
-) -> Result<Option<Value>, String> {
+) -> Result<Option<Value>, Error> {
     let value = match op {
         "ert-deftest" => deftest(machine, args, env)?,
         "should" | "should-not" => {
             let [form] = args else {
-                return Err(format!("{} expects 1 argument", op));
+                return Err(format!("{} expects 1 argument", op).into());
             };
             let (value, shown) = eval_shown(machine, form, env)?;
             if value.is_true() != (op == "should") {
                 return Err(format!(
                     "{}(({} {}) :form {} :value {})",
                     FAILED, op, form, shown, value
-                ));
+                )
+                .into());
             }
             if op == "should" {
                 value
@@ -107,27 +109,45 @@ pub(crate) fn special_form(
             }
         }
         "should-error" => match args {
-            // :type は, 失敗に種類が無いので, 読むだけ
-            [form, rest @ ..] if rest.is_empty() || matches!(rest, [Value::Symbol(k), _] if k == ":type") => {
+            // :type は, 失敗が受ける条件 (記号か記号のリスト). 無ければ, どんな失敗でもよい
+            [form, rest @ ..]
+                if rest.is_empty() || matches!(rest, [Value::Symbol(k), _] if k == ":type") =>
+            {
+                let expected = match rest {
+                    [_, expected] => Some(machine.eval(expected, env)?),
+                    _ => None,
+                };
                 match machine.eval(form, env) {
                     Ok(value) => {
                         return Err(format!(
                             "{}((should-error {}) :form {} :value {} :fail-reason \"did not signal an error\")",
                             FAILED, form, form, value
-                        ))
+                        ).into())
                     }
                     Err(e) if e.starts_with(FAILED) || e.starts_with(SKIPPED) => return Err(e),
-                    Err(e) => Value::List([Value::Symbol("error".to_string()), Value::String(e)].into()),
+                    Err(e) => {
+                        if let Some(expected) = expected.filter(|t| !handles(t, &e)) {
+                            return Err(format!(
+                                "{}((should-error {}) :form {} :condition {} :fail-reason \"the error signaled did not have the expected type\" :expected {})",
+                                FAILED, form, form, e.to_value(), expected
+                            ).into());
+                        }
+                        e.to_value()
+                    }
                 }
             }
-            _ => return Err("should-error expects a form and an optional :type".to_string()),
+            _ => {
+                return Err("should-error expects a form and an optional :type"
+                    .to_string()
+                    .into())
+            }
         },
         "skip-unless" => {
             let [form] = args else {
-                return Err("skip-unless expects 1 argument".to_string());
+                return Err("skip-unless expects 1 argument".to_string().into());
             };
             if !machine.eval(form, env)?.is_true() {
-                return Err(format!("{}(skip-unless {})", SKIPPED, form));
+                return Err(format!("{}(skip-unless {})", SKIPPED, form).into());
             }
             Value::Nil
         }
@@ -147,12 +167,16 @@ pub(crate) fn special_form(
 /// # Returns
 ///
 /// テストの名前 (記号). 書き方が誤っていれば [`Err`].
-fn deftest(machine: &mut Machine, args: &[Value], env: &Env) -> Result<Value, String> {
+fn deftest(machine: &mut Machine, args: &[Value], env: &Env) -> Result<Value, Error> {
     let (name, mut rest) = match args {
         [Value::Symbol(name), Value::List(params), rest @ ..] if params.is_empty() => {
             (name.clone(), rest)
         }
-        _ => return Err("ert-deftest expects a name and an empty argument list".to_string()),
+        _ => {
+            return Err("ert-deftest expects a name and an empty argument list"
+                .to_string()
+                .into())
+        }
     };
     // 説明 (後に本体があるときだけ)
     if let [Value::String(_), more @ ..] = rest {
@@ -170,7 +194,7 @@ fn deftest(machine: &mut Machine, args: &[Value], env: &Env) -> Result<Value, St
                 machine.eval(value, env)?;
             }
             _ if keyword.starts_with(':') => {
-                return Err(format!("ert-deftest: unknown keyword {}", keyword))
+                return Err(format!("ert-deftest: unknown keyword {}", keyword).into())
             }
             _ => break,
         }
@@ -198,14 +222,14 @@ fn deftest(machine: &mut Machine, args: &[Value], env: &Env) -> Result<Value, St
 /// # Returns
 ///
 /// 値と, 引数を評価した式 (手続きの呼び出しでなければ, 元の式).
-fn eval_shown(machine: &mut Machine, form: &Value, env: &Env) -> Result<(Value, Value), String> {
+fn eval_shown(machine: &mut Machine, form: &Value, env: &Env) -> Result<(Value, Value), Error> {
     if let Value::List(items) = form {
         if let Some((Value::Symbol(head), args)) = items.split_first() {
             if let Some(procedure @ (Value::Lambda(_) | Value::Function(_))) = env.get(head) {
                 let args = args
                     .iter()
                     .map(|arg| machine.eval(arg, env))
-                    .collect::<Result<Vec<Value>, String>>()?;
+                    .collect::<Result<Vec<Value>, Error>>()?;
                 let shown = Value::List(
                     std::iter::once(Value::Symbol(head.clone()))
                         .chain(args.iter().cloned())
@@ -229,17 +253,17 @@ fn eval_shown(machine: &mut Machine, form: &Value, env: &Env) -> Result<(Value, 
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, String> {
+pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
     match name {
         "ert-run-tests-batch" | "ert-run-tests-batch-and-exit" => {
             let selector = match args.as_slice() {
                 [] => Value::Boolean(true),
                 [selector] => selector.clone(),
-                _ => return Err(format!("{} expects 0 or 1 arguments", name)),
+                _ => return Err(format!("{} expects 0 or 1 arguments", name).into()),
             };
             let (report, unexpected) = run_tests(machine, &selector)?;
             if unexpected > 0 && name == "ert-run-tests-batch-and-exit" {
-                Err(report)
+                Err(report.into())
             } else {
                 Ok(Value::String(report))
             }
@@ -247,7 +271,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
         "ert-test-boundp" | "ert-delete-test" => {
             let [test] = fixed::<1>(name, args)?;
             let Value::Symbol(test) = test else {
-                return Err(format!("{} expects a test name", name));
+                return Err(format!("{} expects a test name", name).into());
             };
             let mut tests = machine.evaluator.tests();
             let found = tests.iter().any(|t| t.name == test);
@@ -272,7 +296,8 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
                 "{}{}",
                 if name == "ert-fail" { FAILED } else { SKIPPED },
                 reason
-            ))
+            )
+            .into())
         }
     }
 }
@@ -287,7 +312,7 @@ pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Resul
 /// # Returns
 ///
 /// 報告と, 思ったとおりでなかった結果の数. 選ぶものが誤っていれば [`Err`].
-fn run_tests(machine: &mut Machine, selector: &Value) -> Result<(String, usize), String> {
+fn run_tests(machine: &mut Machine, selector: &Value) -> Result<(String, usize), Error> {
     let all = machine.evaluator.tests().clone();
     let selected: Vec<ErtTest> = match selector {
         Value::Boolean(true) => all,
@@ -298,7 +323,7 @@ fn run_tests(machine: &mut Machine, selector: &Value) -> Result<(String, usize),
                 .collect()
         }
         Value::Symbol(name) => all.into_iter().filter(|t| &t.name == name).collect(),
-        other => return Err(format!("Invalid test selector: {}", other)),
+        other => return Err(format!("Invalid test selector: {}", other).into()),
     };
     let total = selected.len();
     let started = Instant::now();

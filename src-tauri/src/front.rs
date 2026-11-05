@@ -1,6 +1,7 @@
 //! 画面 (Tauri) への窓口: 描く内容を `frame` のイベントで送り, 問いと画面だけの操作を `editor-request` のイベントで頼みます.
 //! 画面からの入力は, Tauri のコマンド [`session_input`] で受け, エディタのスレッド ([`session::run`]) に渡します.
 
+use rseditor_core::error::Error;
 use std::sync::{mpsc, Arc, Mutex};
 
 use rseditor_core::frame::Frame;
@@ -29,7 +30,7 @@ impl Front for TauriFront {
         }
     }
 
-    fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, String> {
+    fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         self.bridge.request(op, args, &|request| {
             self.app
                 .emit(EDITOR_REQUEST_EVENT, request)

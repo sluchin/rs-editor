@@ -3,6 +3,7 @@
 //! ファイルを開くこと (`find-file-noselect`), 保存すること (`basic-save-buffer`), バックアップ (`backup-buffer`) と
 //! フックは, Emacs と同じく Lisp (`lisp/files.scm`) で書きます. ここは, 本文とファイルの間で読み書きするだけです.
 
+use crate::error::Error;
 use std::io::Write;
 use std::path::Path;
 
@@ -53,14 +54,8 @@ pub fn insert_file_contents(
     buffer: &mut Buffer,
     path: &str,
     visit_file: bool,
-) -> Result<usize, String> {
-    let content = std::fs::read_to_string(path).map_err(|e| {
-        if e.kind() == std::io::ErrorKind::NotFound {
-            format!("Opening input file: No such file or directory, {path}")
-        } else {
-            format!("{path}: {e}")
-        }
-    })?;
+) -> Result<usize, Error> {
+    let content = std::fs::read_to_string(path).map_err(|e| Error::open_input(&e, path))?;
     if visit_file && buffer.is_empty() {
         // 空のバッファに訪れるときは, 元に戻す履歴に残さずに読み込む (ファイルを開くとき. 大きなファイルでも速い)
         buffer.load(&content);
@@ -104,7 +99,7 @@ pub fn write_region(
     path: &str,
     append: bool,
     visit_file: Option<&str>,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     let text = match region {
         Region::Whole => buffer.text(),
         Region::Range(start, end) => buffer.substring(start.min(end), start.max(end))?,

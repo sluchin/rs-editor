@@ -27,7 +27,7 @@ impl Front for FakeFront {
         self.frames.lock().unwrap().push(frame.clone());
     }
 
-    fn request(&self, op: &str, _args: Vec<Value>) -> Result<Value, String> {
+    fn request(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         self.requests.lock().unwrap().push(op.to_string());
         if op == "window-top-line" {
             // 答えを並べていれば, それを返す (画面がまだ描いていないときの 0 など)
@@ -44,7 +44,7 @@ impl Front for FakeFront {
                 .lock()
                 .unwrap()
                 .pop_front()
-                .ok_or_else(|| "Quit".to_string());
+                .ok_or_else(|| rseditor_core::error::Error::bare("quit"));
         }
         Ok(Value::Nil)
     }
