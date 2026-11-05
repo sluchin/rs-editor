@@ -119,6 +119,250 @@
           (list (org-lint--start r) "Incorrect contents for PROPERTIES drawer")))
    (org-lint--records ast)))
 
+
+;;; リンク
+
+;; 角括弧のリンク "[[PATH][DESCRIPTION]]" の記録: (位置 PATH DESCRIPTION か #f 直後が "]" か)
+(define (org-lint--links-of record)
+  (let loop ((text (org-lint--text record)) (offset 0) (out '()))
+    (let ((m (regexp-match-positions "\\[\\[([^\\]\\[]+)\\](?:\\[(.+?)\\])?\\]" text)))
+      (if m
+          (let* ((whole (car m)) (path (cadr m)) (desc (caddr m))
+                 (end (cadr whole)))
+            (loop (substring text end) (+ offset end)
+                  (cons (list (+ (org-lint--start record) offset (car whole))
+                              (substring text (car path) (cadr path))
+                              (and desc (substring text (car desc) (cadr desc)))
+                              (and (< end (string-length text)) (equal? (substring text end (+ end 1)) "]")))
+                        out)))
+          (reverse out)))))
+
+(define (org-lint--links ast)
+  (apply append (map org-lint--links-of (org-lint--text-records ast))))
+
+(define org-lint--link-types '("file+sys" "file+emacs" "shell" "news" "mailto" "https" "http" "ftp" "help" "elisp" "id")
+  )
+
+;; リンクの種類と, 種類を除いた PATH: (種類 PATH 応用). 種類は custom-id, fuzzy, file, ほか
+(define (org-lint--link-type path)
+  (let ((m (regexp-match "^([A-Za-z][-A-Za-z0-9+._]*):(.*)$" path)))
+    (cond
+     ((regexp-match "^#" path) (list "custom-id" (substring path 1) #f))
+     ((and m (equal? (cadr m) "file")) (list "file" (caddr m) #f))
+     ((and m (member (cadr m) org-lint--link-types))
+      (if (regexp-match "^file\\+" (cadr m))
+          (list "file" (caddr m) (substring (cadr m) 5))
+          (list (cadr m) (caddr m) #f)))
+     ((regexp-match "^(/|\\./|\\.\\./|~)" path) (list "file" path #f))
+     (else (list "fuzzy" path #f)))))
+
+(define (org-lint--normalize str)
+  (string-downcase
+   (string-join (filter (lambda (w) (not (equal? w ""))) (split-string (org-replace-all str "\t" " ") " ")) " ")))
+
+;; 最初に合った RE を TO に置き換える (TO は文字そのもの)
+(define (org-lint--replace-first re str to)
+  (let ((m (regexp-match-positions re str)))
+    (if m
+        (string-append (substring str 0 (car (car m))) to (substring str (cadr (car m))))
+        str)))
+
+;; STR の中の CH (1 文字の文字列) の数
+(define (org-lint--count-char ch str)
+  (let loop ((i 0) (n 0))
+    (if (>= i (string-length str))
+        n
+        (loop (+ i 1) (if (equal? (substring str i (+ i 1)) ch) (+ n 1) n)))))
+
+(define (org-lint--headline-title text)
+  ;; 見出しの題 (星, TODO のキーワード, 優先度, タグを除く)
+  (let* ((t1 (org-lint--strip-stars text))
+         (t2 (org-lint--replace-first "^(TODO|DONE)( +|$)" t1 ""))
+         (t3 (org-lint--replace-first "^\\[#[A-Z0-9]+\\]( +|$)" t2 "")))
+    (org-lint--replace-first "[ \\t]+:[[:alnum:]_@#%:]+:[ \\t]*$" t3 "")))
+
+(define (org-lint--fuzzy-destinations ast)
+  ;; (headline の題の並び 対象と NAME の並び)
+  (list
+   (map (lambda (r) (org-lint--normalize (org-lint--headline-title (org-lint--text r))))
+        (org-lint--records-of ast 'headline))
+   (append
+    (apply append
+           (map (lambda (r) (map (lambda (t) (org-lint--normalize (string-join (car t) " ")))
+                                 (org-lint--targets (org-lint--text r))))
+                (org-lint--text-records ast)))
+    (org-lint--filter-map
+     (lambda (r)
+       (let ((m (regexp-match "(?i)^[ \\t]*#\\+NAME:[ \\t]*(.*?)[ \\t]*$" (org-lint--text r))))
+         (and m (org-lint--normalize (cadr m)))))
+     (org-lint--records-of ast 'affiliated)))))
+
+(define (org-lint-invalid-custom-id-link ast)
+  (let ((ids (org-lint--filter-map
+              (lambda (r) (let ((p (org-lint--node-property r)))
+                            (and p (equal? (string-upcase (car p)) "CUSTOM_ID") (cadr p))))
+              (org-lint--records-of ast 'node-property))))
+    (org-lint--filter-map
+     (lambda (l)
+       (let ((info (org-lint--link-type (cadr l))))
+         (and (equal? (car info) "custom-id") (not (member (cadr info) ids))
+              (list (car l) (format "Unknown custom ID \"%s\"" (cadr info))))))
+     (org-lint--links ast))))
+
+(define (org-lint-invalid-fuzzy-link ast)
+  (let* ((dest (org-lint--fuzzy-destinations ast)))
+    (org-lint--filter-map
+     (lambda (l)
+       (let ((info (org-lint--link-type (cadr l))))
+         (and (equal? (car info) "fuzzy")
+              (let* ((path (cadr info))
+                     (heading-only (regexp-match "^\\*" path))
+                     (name (if heading-only (substring path 1) path))
+                     (key (org-lint--normalize name)))
+                (and (not (member key (car dest)))
+                     (or heading-only (not (member key (cadr dest))))
+                     (list (car l) (format "Unknown fuzzy location \"%s\"" name)))))))
+     (org-lint--links ast))))
+
+(define (org-lint--buffer-directory)
+  (let ((file (buffer-file-name)))
+    (if file
+        (org-lint--replace-first "[^/]*$" file "")
+        "")))
+
+(define (org-lint-link-to-local-file ast)
+  (org-lint--filter-map
+   (lambda (l)
+     (let ((info (org-lint--link-type (cadr l))))
+       (and (equal? (car info) "file")
+            (let* ((raw (cadr info))
+                   (path (org-lint--replace-first "::.*$" raw ""))
+                   (full (if (equal? (org-lint--buffer-directory) "") path (expand-file-name path (org-lint--buffer-directory)))))
+              (and (not (file-exists? full))
+                   (list (car l) (string-append "Link to non-existent local file " (org-lint--quote path))))))))
+   (org-lint--links ast)))
+
+(define (org-lint-file-application ast)
+  (org-lint--filter-map
+   (lambda (l)
+     (let ((info (org-lint--link-type (cadr l))))
+       (and (caddr info)
+            (list (car l) (format "Deprecated \"file+%s\" link type" (caddr info))))))
+   (org-lint--links ast)))
+
+(define (org-lint--obsolete-percent? uri)
+  ;; "%XX" が, 25 5B 5D 20 だけで, 1 つはあるとき #t
+  (let loop ((rest uri) (found #f))
+    (let ((m (regexp-match-positions "%(..)?" rest)))
+      (cond ((not m) found)
+            ((and (cadr m) (member (substring rest (car (cadr m)) (cadr (cadr m))) '("25" "5B" "5D" "20")))
+             (loop (substring rest (cadr (car m))) #t))
+            (else #f)))))
+
+(define (org-lint-percent-encoding-link-escape ast)
+  (org-lint--filter-map
+   (lambda (l)
+     (let ((info (org-lint--link-type (cadr l))))
+       (and (org-lint--obsolete-percent? (if (equal? (car info) "fuzzy") (cadr l) (cadr info)))
+            (list (car l) "Link escaped with obsolete percent-encoding syntax"))))
+   (org-lint--links ast)))
+
+(define (org-lint-confusing-brackets ast)
+  (org-lint--filter-map
+   (lambda (l) (and (list-ref l 3) (list (car l) "Trailing ']' after link end")))
+   (org-lint--links ast)))
+
+(define (org-lint-brackets-inside-description ast)
+  (org-lint--filter-map
+   (lambda (l)
+     (let ((desc (caddr l)))
+       (and desc
+            (> (org-lint--count-char "[" desc) (org-lint--count-char "]" desc))
+            (list (car l)
+                  (format "No closing ']' matches '[' in link description: %s" desc)))))
+   (org-lint--links ast)))
+
+
+;;; キーワード
+
+;; キーワード KEY の行の (記録 値) の並び
+(define (org-lint--keywords-named ast key)
+  (org-lint--filter-map
+   (lambda (r)
+     (let ((m (regexp-match "^[ \\t]*#\\+([^ \\t:]+)(?:\\[.*\\])?:(?: +(.*?))?[ \\t]*$" (org-lint--text r))))
+       (and m (equal? (string-upcase (cadr m)) key)
+            (list r (if (caddr m) (caddr m) "")))))
+   (org-lint--records-of ast 'keyword)))
+
+(define org-lint--babel-header-names
+  '("cache" "cmdline" "colnames" "comments" "eval" "exports" "epilogue" "file" "file-desc" "file-ext"
+    "file-mode" "hlines" "mkdirp" "no-expand" "noeval" "noweb" "noweb-ref" "noweb-sep" "noweb-prefix"
+    "output-dir" "padline" "post" "prologue" "results" "rownames" "sep" "session" "shebang" "tangle"
+    "tangle-mode" "var" "wrap"))
+
+(define (org-lint-deprecated-header-syntax ast)
+  (append
+   (org-lint--filter-map
+    (lambda (k)
+      (let ((m (regexp-match (string-append "(?i)^(" (string-join org-lint--babel-header-names "|") ")[ \\t]") (cadr k))))
+        (and m (list (org-lint--start (car k))
+                     (format "Deprecated syntax for \"%s\".  Use header-args instead" (cadr m))))))
+    (org-lint--keywords-named ast "PROPERTY"))
+   (org-lint--filter-map
+    (lambda (r)
+      (let ((p (org-lint--node-property r)))
+        (and p (member (string-downcase (car p)) org-lint--babel-header-names)
+             (list (org-lint--start r)
+                   (format "Deprecated syntax for \"%s\".  Use :header-args: instead" (car p))))))
+    (org-lint--records-of ast 'node-property))))
+
+(define (org-lint--url? str) (regexp-match "^[A-Za-z][A-Za-z0-9+.-]*://" str))
+
+(define (org-lint--strip-quotes str)
+  (if (regexp-match "^\".*\"$" str) (substring str 1 (- (string-length str) 1)) str))
+
+(define (org-lint--file-missing? file)
+  (let ((dir (org-lint--buffer-directory)))
+    (not (file-exists? (if (equal? dir "") file (expand-file-name file dir))))))
+
+(define (org-lint-non-existent-setupfile-parameter ast)
+  (org-lint--filter-map
+   (lambda (k)
+     (let ((file (org-lint--strip-quotes (cadr k))))
+       (and (not (org-lint--url? file)) (org-lint--file-missing? file)
+            (list (org-lint--start (car k)) (string-append "Non-existent setup file " (org-lint--quote file))))))
+   (org-lint--keywords-named ast "SETUPFILE")))
+
+(define (org-lint-wrong-include-link-parameter ast)
+  (org-lint--filter-map
+   (lambda (k)
+     (let ((m (regexp-match "^(\".+?\"|[^ \\t]+)[ \\t]*" (cadr k))))
+       (if (not m)
+           (list (org-lint--start (car k)) "Missing location argument in INCLUDE keyword")
+           (let* ((path (org-lint--strip-quotes (cadr m)))
+                  (file (org-lint--replace-first "::.*$" path "")))
+             (and (not (equal? file "")) (not (org-lint--url? file)) (org-lint--file-missing? file)
+                  (list (org-lint--start (car k)) "Non-existent file argument in INCLUDE keyword"))))))
+   (org-lint--keywords-named ast "INCLUDE")))
+
+(define (org-lint-obsolete-include-markup ast)
+  (org-lint--filter-map
+   (lambda (k)
+     (let ((m (regexp-match "(?i)^(?:\".+\"|[^ \\t]+)[ \\t]+(ASCII|BEAMER|HTML|LATEX|MAN|MARKDOWN|MD|ODT|ORG|TEXINFO)" (cadr k))))
+       (and m (list (org-lint--start (car k))
+                    (format "Obsolete markup \"%s\" in INCLUDE keyword.  Use \"export %s\" instead" (cadr m) (cadr m))))))
+   (org-lint--keywords-named ast "INCLUDE")))
+
+(define (org-lint-inactive-planning ast)
+  (org-lint--filter-map
+   (lambda (r)
+     (let ((scheduled (regexp-match "(?i)SCHEDULED:[ \\t]+\\[" (org-lint--text r)))
+           (deadline (regexp-match "(?i)DEADLINE:[ \\t]+\\[" (org-lint--text r))))
+       (cond (scheduled (list (org-lint--start r) "Inactive timestamp in SCHEDULED will not appear in agenda."))
+             (deadline (list (org-lint--start r) "Inactive timestamp in DEADLINE will not appear in agenda."))
+             (else #f))))
+   (org-lint--records-of ast 'planning)))
+
 ;;; チェッカーの登録
 
 ;; 登録されたチェッカーの並び (新しいものが先). 各々は (NAME SUMMARY FUNCTION TRUST CATEGORIES).
@@ -620,6 +864,30 @@ and the list of categories."
                       org-lint-indented-diary-sexp 'low '())
 (org-lint-add-checker 'obsolete-properties-drawer "Report obsolete syntax for properties drawers"
                       org-lint-obsolete-properties-drawer #f '(obsolete properties))
+(org-lint-add-checker 'invalid-custom-id-link "Report \"custom-id\" links with unknown destination"
+                      org-lint-invalid-custom-id-link #f '(link))
+(org-lint-add-checker 'invalid-fuzzy-link "Report \"fuzzy\" links with unknown destination"
+                      org-lint-invalid-fuzzy-link #f '(link))
+(org-lint-add-checker 'trailing-bracket-after-link "Report potentially confused trailing ']' after link."
+                      org-lint-confusing-brackets 'low '(link))
+(org-lint-add-checker 'unclosed-brackets-in-link-description "Report potentially confused trailing ']' after link."
+                      org-lint-brackets-inside-description 'low '(link))
+(org-lint-add-checker 'link-to-local-file "Report links to non-existent local files"
+                      org-lint-link-to-local-file 'low '(link))
+(org-lint-add-checker 'file-application "Report obsolete \"file+application\" link"
+                      org-lint-file-application #f '(link obsolete))
+(org-lint-add-checker 'percent-encoding-link-escape "Report obsolete escape syntax in links"
+                      org-lint-percent-encoding-link-escape 'low '(link obsolete))
+(org-lint-add-checker 'deprecated-header-syntax "Report deprecated Babel header syntax"
+                      org-lint-deprecated-header-syntax 'low '(obsolete babel))
+(org-lint-add-checker 'non-existent-setupfile-parameter "Report SETUPFILE keywords with non-existent file parameter"
+                      org-lint-non-existent-setupfile-parameter 'low '())
+(org-lint-add-checker 'wrong-include-link-parameter "Report INCLUDE keywords with misleading link parameter"
+                      org-lint-wrong-include-link-parameter 'low '())
+(org-lint-add-checker 'obsolete-include-markup "Report obsolete markup in INCLUDE keyword"
+                      org-lint-obsolete-include-markup 'low '(obsolete export))
+(org-lint-add-checker 'planning-inactive "Report inactive timestamps in SCHEDULED/DEADLINE."
+                      org-lint-inactive-planning 'high '(timestamp))
 
 ;;; レポートの組み立て
 
@@ -704,15 +972,13 @@ With a list of checker names (symbols) as the argument, run only those checkers 
     (goto-char (org-line-start (org-lines) line))))
 
 (define org-lint-unsupported-checkers
-  '(suspicious-language-in-src-block combining-keywords-with-affiliated deprecated-header-syntax
+  '(suspicious-language-in-src-block combining-keywords-with-affiliated
     invalid-babel-call-block wrong-header-argument wrong-header-value named-result empty-header-argument
-    invalid-coderef-link invalid-custom-id-link invalid-fuzzy-link invalid-id-link trailing-bracket-after-link
-    unclosed-brackets-in-link-description link-to-local-file non-existent-setupfile-parameter
-    wrong-include-link-parameter obsolete-include-markup unknown-options-item misspelled-export-option
+    invalid-coderef-link invalid-id-link unknown-options-item misspelled-export-option
     invalid-macro-argument-and-template extraneous-element-in-footnote-section invalid-image-alignment
-    mismatched-planning-repeaters file-application percent-encoding-link-escape non-existent-bibliography
+    mismatched-planning-repeaters non-existent-bibliography
     missing-print-bibliography invalid-cite-export-declaration incomplete-citation item-number
-    LaTeX-$ beamer-frame timestamp-syntax planning-inactive)
+    LaTeX-$ beamer-frame timestamp-syntax)
   "Checkers of Emacs's org-lint that are not ported.
 They need the syntax tree (links, timestamps, items), the exporter, Babel, org-id or org-cite.")
 
