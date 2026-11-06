@@ -721,6 +721,31 @@ fn test_dabbrev_expand_cycles_through_the_candidates() {
 }
 
 #[test]
+fn test_hippie_expand_tries_the_functions_in_order() {
+    let mut fx = Fixture::new();
+    fx.app
+        .eval("(global-set-key \"C-;\" 'hippie-expand) (set! hippie-expand-try-functions-list '(try-expand-line try-expand-dabbrev))")
+        .unwrap();
+    fx.press("f o o b a r SPC x RET f o o d RET f o");
+    // 行, 次に dabbrev. 続けて押すと次の候補
+    fx.press("C-;");
+    assert_eq!(fx.text(), "foobar x\nfood\nfood");
+    assert_eq!(fx.app.message(), "Using try-expand-line");
+    fx.press("C-;");
+    assert_eq!(fx.text(), "foobar x\nfood\nfoobar x");
+    fx.press("C-;");
+    assert_eq!(fx.text(), "foobar x\nfood\nfoobar");
+    assert_eq!(fx.app.message(), "Using try-expand-dabbrev");
+    // C-u で元に戻す
+    fx.press("C-u C-;");
+    assert_eq!(fx.text(), "foobar x\nfood\nfo");
+    assert_eq!(fx.app.message(), "Undoing expansions");
+    // 見つからない
+    fx.press("RET C-;");
+    assert_eq!(fx.app.message(), "No expansion found");
+}
+
+#[test]
 fn test_list_buffers_shows_the_list_in_another_window() {
     let mut fx = Fixture::new();
     fx.press("a b");

@@ -1626,6 +1626,316 @@ msgstr ""
 "今のバッファの構文表の指定を説明する.\n"
 "ASCII の文字を, 同じ構文が続く範囲ごとに並べる."
 
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-try-functions-list"
+msgid ""
+"The list of expansion functions tried in order by `hippie-expand'.\n"
+"To change the behavior of `hippie-expand', remove, change the order of,\n"
+"or insert functions in this list."
+msgstr ""
+"`hippie-expand' が順に試す, 展開の関数の並び.\n"
+"`hippie-expand' の動きを変えるには, この並びの関数を除く, 順を変える, 足す."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-verbose"
+msgid "Non-nil makes `hippie-expand' output which function it is trying."
+msgstr "nil でなければ, `hippie-expand' は試している関数を出す."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-dabbrev-skip-space"
+msgid "Non-nil means tolerate trailing spaces in the abbreviation to expand."
+msgstr "nil でなければ, 展開する略語の後ろの空白を許す."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-dabbrev-as-symbol"
+msgid "Non-nil means expand as symbols, i.e. syntax `_' is considered a letter."
+msgstr "nil でなければ, シンボルとして展開する (構文 `_' を文字と見なす)."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-no-restriction"
+msgid "Non-nil means that narrowed buffers are widened during search."
+msgstr "nil でなければ, 探す間, ナローイングしたバッファを広げる."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-max-buffers"
+msgid ""
+"The maximum number of buffers (apart from the current) searched.\n"
+"If nil, all buffers are searched."
+msgstr ""
+"(今のバッファの他に) 探すバッファの数の上限.\n"
+"nil なら, 全てのバッファを探す."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-ignore-buffers"
+msgid ""
+"A list specifying which buffers not to search (if not current).\n"
+"Can contain both regexps matching buffer names (as strings) and major modes (as atoms)."
+msgstr ""
+"(今のバッファでなければ) 探さないバッファの並び.\n"
+"バッファの名前に合う正規表現 (文字列) と, メジャーモード (記号) を入れられる."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:hippie-expand-only-buffers"
+msgid ""
+"A list specifying the only buffers to search (in addition to current).\n"
+"Can contain both regexps matching buffer names (as strings) and major modes (as atoms).\n"
+"If non-nil, this variable overrides the variable `hippie-expand-ignore-buffers'."
+msgstr ""
+"(今のバッファの他に) 探すバッファを, これだけにする並び.\n"
+"バッファの名前に合う正規表現 (文字列) と, メジャーモード (記号) を入れられる.\n"
+"nil でなければ, 変数 `hippie-expand-ignore-buffers' より優先する."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--markers"
+msgid "Make the markers `he-string-beg', `he-string-end' and `he-search-loc' in the current buffer."
+msgstr "今のバッファに, 印 `he-string-beg', `he-string-end', `he-search-loc' を作る."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:hippie-expand"
+msgid ""
+"Try to expand text before point, using multiple methods.\n"
+"The expansion functions in `hippie-expand-try-functions-list' are\n"
+"tried in order, until a possible expansion is found.  Repeated\n"
+"application of `hippie-expand' inserts successively possible\n"
+"expansions.\n"
+"With a positive numeric argument, jumps directly to the ARG next\n"
+"function in this list.  With a negative argument or just \\[universal-argument],\n"
+"undoes the expansion."
+msgstr ""
+"点の前の文字を, いくつもの方法で展開してみる.\n"
+"`hippie-expand-try-functions-list' の展開の関数を, 展開が見つかるまで順に試す.\n"
+"`hippie-expand' を続けて使うと, 次々に別の展開を入れる.\n"
+"正の数の引数なら, この並びの ARG 個先の関数へ飛ぶ.\n"
+"負の引数か, \\[universal-argument] だけなら, 展開を元に戻す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-init-string"
+msgid "Initialize the string to expand: the text from BEG to END."
+msgstr "展開する文字を, BEG から END までの本文にする."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-reset-string"
+msgid "Put back the string being expanded."
+msgstr "展開している文字を元に戻す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-substitute-string"
+msgid "Replace the string being expanded with STR, transferring its case if TRANS-CASE."
+msgstr "展開している文字を STR に置き換える. TRANS-CASE なら, 大文字と小文字を写す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-capitalize-first"
+msgid "Return STR in lower case, with its first word character in upper case."
+msgstr "STR を小文字にし, 最初の単語の文字だけを大文字にして返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-transfer-case"
+msgid "Return TO-STR in the case of FROM-STR."
+msgstr "TO-STR を, FROM-STR の大文字と小文字にして返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-string-member"
+msgid "Return non-nil if STR (in the case of the string to expand, if TRANS-CASE) is in LST."
+msgstr "STR (TRANS-CASE なら, 展開する文字の大文字と小文字にしたもの) が LST に有れば, nil でないものを返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he-buffer-member"
+msgid "Return non-nil if the current buffer's major mode or name is matched by LST."
+msgstr "今のバッファのメジャーモードか名前が LST に合えば, nil でないものを返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--result"
+msgid "Substitute EXPANSION (transferring the case if TRANS-CASE) and return #t; or reset the string and return #f."
+msgstr "EXPANSION に置き換えて (TRANS-CASE なら大文字と小文字を写して) #t を返す. EXPANSION が無ければ, 文字を元に戻して #f を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "variable:he-file-name-chars"
+msgid "Characters that may be part of a file name."
+msgstr "ファイルの名前に使える文字."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--file-name-all-completions"
+msgid "Return the names of the files in DIR starting with NAME (directories end in a slash)."
+msgstr "DIR のファイルのうち, NAME で始まるものの名前を返す (ディレクトリはスラッシュで終わる)."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--file-name-completion"
+msgid "Return the longest common prefix of the files in DIR starting with NAME, #t for a unique exact match, or #f."
+msgstr "DIR のファイルのうち, NAME で始まるものの名前の共通の頭を返す. 一つだけで全く同じなら #t, 無ければ #f."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--file-name-parts"
+msgid "Return the name part and the directory part of `he-search-string'."
+msgstr "`he-search-string' の名前の部分と, ディレクトリの部分を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-complete-file-name"
+msgid ""
+"Try to complete text as a file name.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"文字を, ファイルの名前として補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-complete-file-name-partially"
+msgid ""
+"Try to complete text as a file name, as many characters as unique.\n"
+"The argument OLD has to be nil the first call of this function.  It\n"
+"returns t if a unique, possibly partial, completion is found, nil\n"
+"otherwise."
+msgstr ""
+"文字を, ファイルの名前として, 一つに決まる所まで補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil にする.\n"
+"一つに決まる (一部でもよい) 補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--lisp-symbols"
+msgid "Return the names of the defined symbols starting with PREFIX, sorted."
+msgstr "定義されたシンボルのうち, PREFIX で始まるものの名前を, 順に並べて返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-complete-lisp-symbol"
+msgid ""
+"Try to complete word as an Emacs Lisp symbol.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"単語を, Emacs Lisp のシンボルとして補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-complete-lisp-symbol-partially"
+msgid ""
+"Try to complete as an Emacs Lisp symbol, as many characters as unique.\n"
+"The argument OLD has to be nil the first call of this function.  It\n"
+"returns t if a unique, possibly partial, completion is found, nil\n"
+"otherwise."
+msgstr ""
+"Emacs Lisp のシンボルとして, 一つに決まる所まで補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil にする.\n"
+"一つに決まる (一部でもよい) 補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--search-around"
+msgid ""
+"Search backward from the string to expand with SEARCH, then forward.\n"
+"BEG is the start of the string on the first call (OLD is false)."
+msgstr ""
+"展開する文字から, SEARCH で後ろへ, 次に前へ探す.\n"
+"BEG は, 最初に呼ぶとき (OLD が偽) の, 文字の始まり."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--all-buffers"
+msgid "Search the other buffers with SEARCH-FUNCTION for an expansion of the text from BEG-FUNCTION."
+msgstr "BEG-FUNCTION の位置からの文字の展開を, ほかのバッファから SEARCH-FUNCTION で探す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-line"
+msgid ""
+"Try to complete the current line to an entire line in the buffer.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"今の行を, バッファの中の行全体に補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-line-all-buffers"
+msgid ""
+"Try to complete the current line, searching all other buffers.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"今の行を, ほかの全てのバッファから探して補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-list"
+msgid ""
+"Try to complete the current beginning of a list.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"今のリストの始まりを補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-list-all-buffers"
+msgid ""
+"Try to complete the current list, searching all other buffers.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"今のリストを, ほかの全てのバッファから探して補完してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-all-abbrevs"
+msgid ""
+"Try to expand word before point according to all abbrev tables.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible expansions of the same\n"
+"string).  It returns t if a new expansion is found, nil otherwise."
+msgstr ""
+"点の前の単語を, 全ての略語の表で展開してみる.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の展開) は t にする.\n"
+"新しい展開が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-dabbrev"
+msgid ""
+"Try to expand word \"dynamically\", searching the current buffer.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible expansions of the same\n"
+"string).  It returns t if a new expansion is found, nil otherwise."
+msgstr ""
+"単語を「動的に」展開してみる. 今のバッファを探す.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の展開) は t にする.\n"
+"新しい展開が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-dabbrev-all-buffers"
+msgid ""
+"Try to expand word \"dynamically\", searching all other buffers.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible expansions of the same\n"
+"string).  It returns t if a new expansion is found, nil otherwise."
+msgstr ""
+"単語を「動的に」展開してみる. ほかの全てのバッファを探す.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の展開) は t にする.\n"
+"新しい展開が見つかれば t, 見つからなければ nil を返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:he--kill-ring"
+msgid "Return the strings in the kill ring, the most recent first."
+msgstr "kill-ring の文字列を, 新しいものから順に返す."
+
+#: lisp/hippie-exp.scm
+msgctxt "function:try-expand-dabbrev-from-kill"
+msgid ""
+"Try to expand word \"dynamically\", searching the kill ring.\n"
+"The argument OLD has to be nil the first call of this function, and t\n"
+"for subsequent calls (for further possible completions of the same\n"
+"string).  It returns t if a new completion is found, nil otherwise."
+msgstr ""
+"単語を「動的に」展開してみる. kill-ring を探す.\n"
+"引数 OLD は, この関数を最初に呼ぶときは nil, 続けて呼ぶとき (同じ文字の次の補完) は t にする.\n"
+"新しい補完が見つかれば t, 見つからなければ nil を返す."
+
 #: lisp/howm.scm
 msgctxt "variable:howm-directory"
 msgid "Directory where memos are stored."

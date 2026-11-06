@@ -355,7 +355,7 @@
 |---|---|---|---|---|
 | [x] | (tty の erase) | backward-delete-char-untabify | 473 | タブを空白に崩して消す (キーは無い) |
 | [~] | `C-x %` | (括弧の対へ移る lambda) | 1269 | `forward-list` / `backward-list`。rs-editor は `C-M-f` / `C-M-b` (forward-sexp) で代わりになる |
-| [ ] | `C-;` / `C-x ;` | hippie-expand | 1367, 1368 | `M-/` (dabbrev-expand) は有る |
+| [x] | `C-;` / `C-x ;` | hippie-expand | 1367, 1368 | Emacs と同じく、既定のキーは無い (初期設定ファイルで `(global-set-key "C-;" 'hippie-expand)`) |
 | [x] | `RET` | newline-and-indent | 1382 | rs-editor の `RET` は字下げする (electric-indent-mode) |
 | [x] | `<C-insert>` | clipboard-kill-ring-save | 1406 | 既定の `C-<insert>` は kill-ring-save (Emacs と同じ) |
 | [x] | `S-DEL` | clipboard-kill-region | 1409 | 既定の `S-<delete>` は kill-region (Emacs と同じ) |
@@ -678,7 +678,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
 - [x] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - [x] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
-- [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。完了: クリップボードのキーとコマンド (`select-enable-clipboard`。画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない)、`backward-delete-char-untabify`。未完了: `hippie-expand`。
+- [x] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。クリップボード (`select-enable-clipboard`) は、画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない。`hippie-expand` (`lisp/hippie-exp.scm`) は、Emacs の既定の `hippie-expand-try-functions-list` の関数を全て持つ。違い: `try-expand-dabbrev-visible` と `try-expand-whole-kill` は無い。ファイルの名前の補完は `completion-ignored-extensions` を使わない。`try-expand-dabbrev-from-kill` は、kill-ring を `yank-pop` で回した後は、回した位置から読む。
 - [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
