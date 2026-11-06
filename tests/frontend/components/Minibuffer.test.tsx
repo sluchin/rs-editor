@@ -434,6 +434,15 @@ describe('Minibuffer Component (既定の値と履歴の検索)', () => {
     expect(t.get().input).toBe('a')
   })
 
+  it('履歴が無いときの M-r は, 見つからないと知らせること', () => {
+    const t = setup({ mode: 'input', prompt: 'p: ', input: 'typed' })
+    t.alt('r')
+    t.type('x')
+    t.enter()
+    expect(t.view.container.textContent).toContain('[No earlier matching history item]')
+    expect(t.get().input).toBe('typed')
+  })
+
   it('M-s で新しい履歴を探し, 誤った正規表現は知らせること', () => {
     const t = setup({
       mode: 'input',
