@@ -66,6 +66,11 @@
         (isearch--regexp isearch--string)
         (else #f)))
 
+(define (isearch--update-fold)
+  "Fold case while the search string has no upper case letter, unless M-c fixed it."
+  (when (eq? isearch--fold #t)
+    (set! isearch--fold (and case-fold-search (replace--no-upper-p isearch--string isearch--regexp)))))
+
 (define (isearch--search-string)
   "Search from point for the search string.  Return #t (point moved to the match) or #f."
   (let ((pattern (isearch--pattern)))
@@ -80,7 +85,7 @@
   "Do the search with the current search string."
   (let ((saved case-fold-search)
         (found #f))
-    (set! isearch--fold (and case-fold-search (replace--no-upper-p isearch--string isearch--regexp)))
+    (isearch--update-fold)
     (set! case-fold-search isearch--fold)
     (set! isearch--error #f)
     (set! found (isearch--search-string))
@@ -119,7 +124,8 @@
   "Return #t if the search string matches at point."
   (let ((saved case-fold-search)
         (pattern (or (isearch--pattern) (regexp-quote isearch--string))))
-    (set! case-fold-search (and case-fold-search (replace--no-upper-p isearch--string isearch--regexp)))
+    (isearch--update-fold)
+    (set! case-fold-search isearch--fold)
     (let ((result (condition-case e (looking-at pattern) (error #f))))
       (set! case-fold-search saved)
       result)))
@@ -245,6 +251,7 @@
   (let* ((prefix (string-append (if (not isearch--success) "failing " "")
                                 (if (eq? isearch--adjusted #t) "pending " "")
                                 (if isearch--wrapped "wrapped " "")
+                                (if (and (not isearch--success) (not isearch--fold)) "case-sensitive " "")
                                 (if isearch--regexp "regexp " "")
                                 (cond ((eq? isearch--function 'symbol) "symbol ") ((eq? isearch--function 'word) "word ") (else ""))
                                 "I-search" (if isearch--forward "" " backward") ": "))
@@ -262,13 +269,14 @@
   "Search incrementally.  FORWARD is the direction, REGEXP #t for a regexp search, FUNCTION #f, `word' or `symbol'.
 INITIAL is (STRING GOTO ERROR): the initial search string, a position to move to, and an error to show.
 The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,
-C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode,
+C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode, M-c toggles case folding,
 RET exits, C-g backs up to the last match or, if it was found, cancels the search.
 Another key exits the search, and is ignored."
   (set! isearch--forward forward)
   (set! isearch--regexp regexp)
   (set! isearch--function function)
   (set! isearch--string "")
+  (set! isearch--fold (if case-fold-search #t #f))
   (set! isearch--cmds '())
   (set! isearch--success #t)
   (set! isearch--wrapped #f)
@@ -297,7 +305,12 @@ Another key exits the search, and is ignored."
             ((equal? key "C-q") (isearch--add (read-key "Quote: ")) (loop))
             ((equal? key "M-r")
              (set! isearch--regexp (not isearch--regexp))
-             (isearch--search-and-update)
+             (if isearch--regexp (set! isearch--function #f))
+             (set! isearch--success #t)
+             (loop))
+            ((equal? key "M-c")
+             (set! isearch--fold (if isearch--fold #f 'yes))
+             (set! isearch--success #t)
              (loop))
             ((isearch--printing-key key)
              ;; バッチモードでは, 文字を打つたびに, 探す前の状態で, 文字列を知らせる (Emacs と同じ)

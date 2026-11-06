@@ -1299,3 +1299,25 @@ fn test_kill_ring_rectangles_and_registers_are_shared_by_windows() {
     fx.press("C-x r i");
     assert_eq!(fx.text(), "abcab");
 }
+
+#[test]
+fn test_isearch_folds_case_and_m_c_toggles_it() {
+    // 小文字だけの検索は, 大文字と小文字を区別しない
+    let mut fx = Fixture::new();
+    fx.press("a X b a x C-a");
+    fx.feed("a x RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 2);
+    // M-c で区別する
+    let mut fx = Fixture::new();
+    fx.press("a X b a x C-a");
+    fx.feed("a M-c x RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 5);
+    // M-r で正規表現にして, 続きを打つ
+    let mut fx = Fixture::new();
+    fx.press("a b b b C-a");
+    fx.feed("b M-r + RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 4);
+}

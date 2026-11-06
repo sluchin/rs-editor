@@ -2664,6 +2664,11 @@ msgid "Return the regexp to search for, or #f to search for the string itself."
 msgstr ""
 
 #: lisp/isearch.scm
+msgctxt "function:isearch--update-fold"
+msgid "Fold case while the search string has no upper case letter, unless M-c fixed it."
+msgstr ""
+
+#: lisp/isearch.scm
 msgctxt "function:isearch--search-string"
 msgid "Search from point for the search string.  Return #t (point moved to the match) or #f."
 msgstr ""
@@ -2704,7 +2709,7 @@ msgid ""
 "Search incrementally.  FORWARD is the direction, REGEXP #t for a regexp search, FUNCTION #f, `word' or `symbol'.\n"
 "INITIAL is (STRING GOTO ERROR): the initial search string, a position to move to, and an error to show.\n"
 "The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,\n"
-"C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode,\n"
+"C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode, M-c toggles case folding,\n"
 "RET exits, C-g backs up to the last match or, if it was found, cancels the search.\n"
 "Another key exits the search, and is ignored."
 msgstr ""
