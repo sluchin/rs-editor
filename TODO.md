@@ -236,7 +236,8 @@
 - [x] `M-SPC` (cycle-spacing): Emacs 30 の既定は、続けて押すと、空白を 1 つ、無し、元に戻す。今は `just-one-space`。
 - [x] `M-'` (abbrev-prefix-mark), `C-x a ...` (add-global-abbrev など), `C-x '` (expand-abbrev): 略語 (abbrev)。
 - [x] `C-M-i` (complete-symbol), `C-M-/` (dabbrev-completion): 補完の候補の一覧。
-- [ ] キーの無いコマンド: `untabify`、`tabify`、`align`、`align-regexp`、`center-line`、`whitespace-mode` (ほかの `sort-lines` などは完了)。
+- [x] キーの無いコマンド: `untabify`、`tabify` (`tests/batch/cases/62-tabify`。タブの幅は 8)。
+- [ ] キーの無いコマンド: `align`、`align-regexp`、`center-line`、`whitespace-mode` (ほかの `sort-lines` などは完了)。
 
 ### リージョン・矩形・レジスタ・ブックマーク
 
@@ -352,13 +353,13 @@
 
 | 状態 | キー | 関数 | 行 | 備考 |
 |---|---|---|---|---|
-| [ ] | (tty の erase) | backward-delete-char-untabify | 473 | タブを空白に崩して消す |
+| [x] | (tty の erase) | backward-delete-char-untabify | 473 | タブを空白に崩して消す (キーは無い) |
 | [~] | `C-x %` | (括弧の対へ移る lambda) | 1269 | `forward-list` / `backward-list`。rs-editor は `C-M-f` / `C-M-b` (forward-sexp) で代わりになる |
 | [ ] | `C-;` / `C-x ;` | hippie-expand | 1367, 1368 | `M-/` (dabbrev-expand) は有る |
 | [x] | `RET` | newline-and-indent | 1382 | rs-editor の `RET` は字下げする (electric-indent-mode) |
-| [ ] | `<C-insert>` | clipboard-kill-ring-save | 1406 | |
-| [ ] | `S-DEL` | clipboard-kill-region | 1409 | |
-| [ ] | `<S-insert>` | clipboard-yank | 1412 | |
+| [x] | `<C-insert>` | clipboard-kill-ring-save | 1406 | 既定の `C-<insert>` は kill-ring-save (Emacs と同じ) |
+| [x] | `S-DEL` | clipboard-kill-region | 1409 | 既定の `S-<delete>` は kill-region (Emacs と同じ) |
+| [x] | `<S-insert>` | clipboard-yank | 1412 | 既定の `S-<insert>` は yank (Emacs と同じ) |
 | [x] | `C-S-k` | just-one-space | 1424 | rs-editor は `M-SPC` |
 | [x] | `C-S-t` | transpose-chars | 1429 | `C-t` は nil にしている |
 | [x] | `C-i` | self-insert-command | 1432 | タブを入れる |
@@ -676,8 +677,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 - [x] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
 - [x] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
-- [ ] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
-- [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
+- [x] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
+- [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。完了: クリップボードのキーとコマンド (`select-enable-clipboard`。画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない)、`backward-delete-char-untabify`。未完了: `hippie-expand`。
 - [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。

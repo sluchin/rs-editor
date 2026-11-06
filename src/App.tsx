@@ -299,6 +299,18 @@ function App() {
           setTreeRoot(dir.replace(/\/+$/, '') || '/')
           return null
         })
+      // クリップボード (Emacs の gui-set-selection, gui-selection-value). 使えなければ, 何もしない (nil)
+      case 'gui-set-selection':
+        return Promise.resolve()
+          .then(() => navigator.clipboard.writeText(String(args[0])))
+          .then(
+            () => null,
+            () => null,
+          )
+      case 'gui-selection-value':
+        return Promise.resolve()
+          .then(() => navigator.clipboard.readText())
+          .catch(() => null)
       case 'kill-emacs':
         exitConfirmed.current = true
         return getCurrentWindow()

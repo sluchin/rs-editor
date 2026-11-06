@@ -234,6 +234,8 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("recenter", &[], 0),
     ("kill-emacs", &[Kind::Any], 0),
     ("toggle-project-tree", &[], 0),
+    ("gui-set-selection", &[Kind::Text], 1),
+    ("gui-selection-value", &[], 0),
 ];
 
 /// 手続きの名前.
@@ -380,6 +382,8 @@ pub const NAMES: &[&str] = &[
     "recenter",
     "kill-emacs",
     "toggle-project-tree",
+    "gui-set-selection",
+    "gui-selection-value",
 ];
 
 /// 引数が決まりに合うか確かめます.

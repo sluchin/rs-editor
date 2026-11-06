@@ -101,6 +101,9 @@ fn test_default_keys_of_existing_commands() {
         ("C-x z", "repeat"),
         ("C-x ESC ESC", "repeat-complex-command"),
         ("C-x M-ESC", "repeat-complex-command"),
+        ("C-<insert>", "kill-ring-save"),
+        ("S-<insert>", "yank"),
+        ("S-<delete>", "kill-region"),
     ] {
         assert_eq!(
             keymap.lookup(&keys(key)),

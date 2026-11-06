@@ -438,6 +438,26 @@ describe('App (画面だけの操作)', () => {
     expect((await request('no-such-op')).error).toBe('Unknown editor operation: no-such-op')
   })
 
+  it('クリップボードに書き, 読み, 使えなければ nil を返すこと', async () => {
+    await setup()
+    const clipboard = {
+      writeText: vi.fn().mockResolvedValue(undefined),
+      readText: vi.fn().mockResolvedValue('pasted'),
+    }
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true })
+    expect(await request('gui-set-selection', ['copied'])).toMatchObject({
+      value: null,
+      error: null,
+    })
+    expect(clipboard.writeText).toHaveBeenCalledWith('copied')
+    expect(await request('gui-selection-value')).toMatchObject({ value: 'pasted', error: null })
+    clipboard.writeText.mockRejectedValue(new Error('denied'))
+    clipboard.readText.mockRejectedValue(new Error('denied'))
+    expect(await request('gui-set-selection', ['x'])).toMatchObject({ value: null, error: null })
+    expect(await request('gui-selection-value')).toMatchObject({ value: null, error: null })
+    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
+  })
+
   it('サイドバーのツリーを出し, ファイルを選ぶと開き, もう一度で消すこと', async () => {
     mocked.listDirectory.mockResolvedValue(['a.txt'])
     const view = await setup()

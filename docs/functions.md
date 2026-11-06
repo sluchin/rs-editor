@@ -386,8 +386,8 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `keyboard-escape-quit` |  | simple | `ESC ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `keyboard-quit` | ◯ | simple | `C-g` | 実装済み | `C-g` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-line` | ◯ | simple | `C-k`, `<deleteline>` | 実装済み | `C-k` | Lisp (`lisp/simple.scm`) | 済 |
-| `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w` | Lisp (`lisp/simple.scm`) | 済 |
-| `kill-ring-save` |  | simple | `M-w`, `<copy>`, `C-<insert>`, `C-<insertchar>` | 実装済み | `M-w` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w`, `S-<delete>` | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-ring-save` |  | simple | `M-w`, `<copy>`, `C-<insert>`, `C-<insertchar>` | 実装済み | `M-w`, `C-<insert>` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-whole-line` |  | simple | `C-S-<backspace>` | 実装済み | `C-S-DEL` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-word` | ◯ | simple | `M-d`, `C-<delete>` | 実装済み | `M-d` | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-whole-buffer` | ◯ | simple | `C-x h` | 実装済み | `C-x h` | Lisp (`lisp/simple.scm`) | 済 |
@@ -420,7 +420,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み | `C-M-_`, `C-?` | Lisp (`lisp/simple.scm`) | 済 |
 | `universal-argument` | ◯ | simple | `C-u` | 実装済み | `C-u` | Lisp (`lisp/simple.scm`) | 済 |
 | `what-cursor-position` | ◯ | simple | `C-x =` | 実装済み | `C-x =` | Lisp (`lisp/simple.scm`) | 済 |
-| `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | Lisp (`lisp/simple.scm`) | 済 |
+| `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `S-<insert>`, `C-y` | Lisp (`lisp/simple.scm`) | 済 |
 | `yank-pop` | ◯ | simple | `M-y` | 実装済み | `M-y` | Lisp (`lisp/simple.scm`) | 済 |
 | `zap-to-char` |  | simple | `M-z` | 実装済み | `M-z` | Lisp (`lisp/simple.scm`) | 済 |
 | `find-alternate-file` | ◯ | files | `C-x C-v` | 実装済み | `C-x C-v` | Lisp (`lisp/files.scm`) | 済 |

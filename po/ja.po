@@ -6254,6 +6254,79 @@ msgstr ""
 "空行でない行の上では, 続く空行を消す."
 
 #: lisp/simple.scm
+msgctxt "variable:select-enable-clipboard"
+msgid ""
+"Non-nil means kills also go to the clipboard, and a yank uses the clipboard text if another program changed it.\n"
+"The terminal app and the batch mode have no clipboard (like Emacs in a terminal)."
+msgstr ""
+"nil でなければ, kill をクリップボードにも書き, ほかのアプリがクリップボードを変えていれば, yank はその文字を使う.\n"
+"ターミナルのアプリとバッチモードには, クリップボードが無い (端末の Emacs と同じ)."
+
+#: lisp/simple.scm
+msgctxt "variable:simple--last-selected-text"
+msgid "The text that this editor put on the clipboard last."
+msgstr "このエディタが最後にクリップボードに書いた文字."
+
+#: lisp/simple.scm
+msgctxt "function:simple--gui-set-selection"
+msgid "Put TEXT on the clipboard if select-enable-clipboard (Emacs's interprogram-cut-function)."
+msgstr "select-enable-clipboard なら, TEXT をクリップボードに書く (Emacs の interprogram-cut-function)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--gui-selection-value"
+msgid ""
+"Return the clipboard text if select-enable-clipboard and another program changed it, or #f\n"
+"(Emacs's interprogram-paste-function)."
+msgstr ""
+"select-enable-clipboard で, ほかのアプリがクリップボードを変えていれば, その文字を返す. そうでなければ #f\n"
+"(Emacs の interprogram-paste-function)."
+
+#: lisp/simple.scm
+msgctxt "function:kill-new"
+msgid ""
+"Make STRING the latest kill in the kill ring, and put it on the clipboard (see select-enable-clipboard).\n"
+"If REPLACE (the optional second argument) is true, replace the latest kill instead."
+msgstr ""
+"STRING を kill-ring の最新の kill にし, クリップボードに書く (select-enable-clipboard を見る).\n"
+"REPLACE (オプションの第 2 引数) が真なら, 最新の kill を置き換える."
+
+#: lisp/simple.scm
+msgctxt "function:kill-append"
+msgid "Append STRING to the end of the latest kill (to the beginning if BEFORE-P), and put the kill on the clipboard."
+msgstr "STRING を最新の kill の終わり (BEFORE-P なら初め) に足し, その kill をクリップボードに書く."
+
+#: lisp/simple.scm
+msgctxt "function:current-kill"
+msgid ""
+"Rotate the yanking point by N places, and return that kill.\n"
+"If N is zero and another program put text on the clipboard, push that text as the latest kill, and return it.\n"
+"If DO-NOT-MOVE (the optional second argument) is true, do not rotate the yanking point."
+msgstr ""
+"yank の位置を N だけ回し, その kill を返す.\n"
+"N が 0 で, ほかのアプリがクリップボードに書いていれば, その文字を最新の kill にして返す.\n"
+"DO-NOT-MOVE (オプションの第 2 引数) が真なら, yank の位置を回さない."
+
+#: lisp/simple.scm
+msgctxt "function:simple--with-clipboard"
+msgid "Run COMMAND (interactively if ARGS is empty) with select-enable-clipboard set."
+msgstr "select-enable-clipboard を真にして, COMMAND を動かす (ARGS が空なら対話的に)."
+
+#: lisp/simple.scm
+msgctxt "function:clipboard-kill-ring-save"
+msgid "Copy the region to the kill ring and to the clipboard (kill-ring-save with select-enable-clipboard)."
+msgstr "リージョンを kill-ring とクリップボードに写す (select-enable-clipboard を真にした kill-ring-save)."
+
+#: lisp/simple.scm
+msgctxt "function:clipboard-kill-region"
+msgid "Kill the region, and put it on the clipboard (kill-region with select-enable-clipboard)."
+msgstr "リージョンを kill して, クリップボードに書く (select-enable-clipboard を真にした kill-region)."
+
+#: lisp/simple.scm
+msgctxt "function:clipboard-yank"
+msgid "Insert the clipboard text, or the latest kill (yank with select-enable-clipboard)."
+msgstr "クリップボードの文字か, 最新の kill を入れる (select-enable-clipboard を真にした yank)."
+
+#: lisp/simple.scm
 msgctxt "function:simple--kill"
 msgid ""
 "Delete the text between FROM and TO and save it in the kill ring.\n"
@@ -7710,6 +7783,65 @@ msgstr ""
 "カーソルから, タブと空白で, 桁 COLUMN まで字下げする.\n"
 "2 つ目の引数 MINIMUM は, COLUMN を過ぎても, 少なくとも MINIMUM 個の空白を入れる.\n"
 "字下げした後の桁を返す."
+
+#: lisp/simple.scm
+msgctxt "variable:tabify-regexp"
+msgid ""
+"Regexp matching whitespace that tabify should consider.\n"
+"Usually this is \" [ \\t]+\" to match a space followed by whitespace.\n"
+"\"^\\t* [ \\t]+\" is also useful, for tabifying only initial whitespace."
+msgstr ""
+"tabify が見る空白に合う正規表現.\n"
+"ふつうは, 空白の後に空白が続くものに合う \" [ \\t]+\".\n"
+"\"^\\t* [ \\t]+\" にすると, 行の始めの空白だけを tabify する."
+
+#: lisp/simple.scm
+msgctxt "function:simple--with-indent-tabs-mode"
+msgid "Call THUNK with indent-tabs-mode set to VALUE."
+msgstr "indent-tabs-mode を VALUE にして, THUNK を呼ぶ."
+
+#: lisp/simple.scm
+msgctxt "function:simple--region-or-buffer"
+msgid "Return (START END): the first two of ARGS, the whole buffer with a prefix argument, or the region."
+msgstr "(START END) を返す: ARGS の初めの 2 つ, 前置引数があればバッファ全体, 無ければリージョン."
+
+#: lisp/simple.scm
+msgctxt "function:untabify"
+msgid ""
+"Convert all tabs in the region (START and END) to spaces, preserving columns.\n"
+"Interactively with a prefix argument, convert the whole buffer."
+msgstr ""
+"リージョン (START と END) の全てのタブを, 桁を保って空白にする.\n"
+"対話的に前置引数があれば, バッファ全体を変える."
+
+#: lisp/simple.scm
+msgctxt "function:tabify"
+msgid ""
+"Convert multiple spaces in the region (START and END) to tabs when possible.\n"
+"A group of spaces is partly replaced by tabs when this keeps the column they end at.\n"
+"Interactively with a prefix argument, convert the whole buffer.  Tabs are 8 columns wide."
+msgstr ""
+"リージョン (START と END) の続いた空白を, できるところでタブにする.\n"
+"空白の終わりの桁が変わらないときに, 空白の一部をタブに置き換える.\n"
+"対話的に前置引数があれば, バッファ全体を変える. タブの幅は 8."
+
+#: lisp/simple.scm
+msgctxt "variable:backward-delete-char-untabify-method"
+msgid ""
+"The method for untabifying when deleting backward: untabify (turn a tab into spaces, then delete one space),\n"
+"hungry (delete all spaces and tabs), all (also newlines), or #f (delete one character)."
+msgstr ""
+"後ろへ消すときのタブの崩し方: untabify (タブを空白に崩し, 空白を 1 つ消す),\n"
+"hungry (空白とタブを全て消す), all (改行も消す), #f (1 文字を消す)."
+
+#: lisp/simple.scm
+msgctxt "function:backward-delete-char-untabify"
+msgid ""
+"Delete N characters backward, changing tabs into spaces (see backward-delete-char-untabify-method).\n"
+"Kill them (save in the kill ring) if KILLP (the second argument) is true; interactively, if there is a prefix argument."
+msgstr ""
+"前の N 文字を, タブを空白に崩して消す (backward-delete-char-untabify-method を見る).\n"
+"KILLP (第 2 引数) が真なら kill する (kill-ring に入れる). 対話的には, 前置引数があれば kill する."
 
 #: lisp/simple.scm
 msgctxt "function:current-indentation"

@@ -19,6 +19,8 @@ struct Ui {
     stopped: Mutex<usize>,
     /// 出し方の設定.
     display: Mutex<(bool, Option<usize>)>,
+    /// クリップボード.
+    clipboard: Mutex<String>,
 }
 
 impl Host for Ui {
@@ -31,6 +33,13 @@ impl Host for Ui {
                 };
                 Ok(Value::Nil)
             }
+            "gui-set-selection" => {
+                if let Some(Value::String(text)) = args.first() {
+                    *self.clipboard.lock().unwrap() = text.clone();
+                }
+                Ok(Value::Nil)
+            }
+            "gui-selection-value" => Ok(Value::String(self.clipboard.lock().unwrap().clone())),
             other => Err(format!("ui: {other}").into()),
         }
     }
@@ -166,6 +175,35 @@ fn test_repeat_and_transient_keys() {
         .unwrap();
     press(&mut commands, "C-x");
     assert_eq!(commands.host().editor().current_buffer().point(), 4);
+}
+
+#[test]
+fn test_kills_and_yanks_use_the_clipboard() {
+    fn clipboard(commands: &CommandLoop<Ui>) -> String {
+        commands.host().ui().clipboard.lock().unwrap().clone()
+    }
+    let mut commands = setup();
+    // kill はクリップボードにも書く. 足した kill も
+    press(&mut commands, "a b C-SPC C-a M-w");
+    assert_eq!(clipboard(&commands), "ab");
+    press(&mut commands, "RET c C-a C-k");
+    assert_eq!(clipboard(&commands), "cab");
+    // ほかのアプリが書いた文字は, yank が最新の kill にして入れる. 自分が書いた文字は重ねない
+    *commands.host().ui().clipboard.lock().unwrap() = "xy".to_string();
+    press(&mut commands, "C-y C-y");
+    assert_eq!(text(&commands), "\nxyxy");
+    // select-enable-clipboard が偽なら使わない
+    commands
+        .evaluator()
+        .eval("(set! select-enable-clipboard #f)")
+        .unwrap();
+    *commands.host().ui().clipboard.lock().unwrap() = "zz".to_string();
+    press(&mut commands, "C-y");
+    assert_eq!(text(&commands), "\nxyxyxy");
+    // クリップボードのコマンドは, select-enable-clipboard を真にして動かす
+    press(&mut commands, "C-a");
+    commands.execute("clipboard-yank");
+    assert_eq!(text(&commands), "\nzzxyxyxy");
 }
 
 #[test]

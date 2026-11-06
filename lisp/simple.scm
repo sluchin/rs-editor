@@ -736,6 +736,76 @@ On a nonblank line, delete any blank lines that follow it."
 
 ;;; Killing and yanking
 
+(define select-enable-clipboard #t
+  "Non-nil means kills also go to the clipboard, and a yank uses the clipboard text if another program changed it.
+The terminal app and the batch mode have no clipboard (like Emacs in a terminal).")
+
+(define simple--last-selected-text #f
+  "The text that this editor put on the clipboard last.")
+
+(define (simple--gui-set-selection text)
+  "Put TEXT on the clipboard if select-enable-clipboard (Emacs's interprogram-cut-function)."
+  (when select-enable-clipboard
+    (set! simple--last-selected-text text)
+    (condition-case e (gui-set-selection text) (error #f))))
+
+(define (simple--gui-selection-value)
+  "Return the clipboard text if select-enable-clipboard and another program changed it, or #f
+(Emacs's interprogram-paste-function)."
+  (let ((text (and select-enable-clipboard (condition-case e (gui-selection-value) (error #f)))))
+    (and (string? text)
+         (not (equal? text ""))
+         (not (equal? text simple--last-selected-text))
+         (begin (set! simple--last-selected-text text) text))))
+
+(define simple--kill-new kill-new)
+(define simple--kill-append kill-append)
+(define simple--current-kill current-kill)
+
+(define (kill-new string . rest)
+  "Make STRING the latest kill in the kill ring, and put it on the clipboard (see select-enable-clipboard).
+If REPLACE (the optional second argument) is true, replace the latest kill instead."
+  (apply simple--kill-new string rest)
+  (simple--gui-set-selection string)
+  #f)
+
+(define (kill-append string before-p)
+  "Append STRING to the end of the latest kill (to the beginning if BEFORE-P), and put the kill on the clipboard."
+  (simple--kill-append string before-p)
+  (simple--gui-set-selection (simple--current-kill 0 #t))
+  #f)
+
+(define (current-kill n . rest)
+  "Rotate the yanking point by N places, and return that kill.
+If N is zero and another program put text on the clipboard, push that text as the latest kill, and return it.
+If DO-NOT-MOVE (the optional second argument) is true, do not rotate the yanking point."
+  (let ((pasted (and (= n 0) (simple--gui-selection-value))))
+    (if pasted
+        (begin
+          (simple--kill-new pasted)
+          pasted)
+        (apply simple--current-kill n rest))))
+
+(define (simple--with-clipboard command args)
+  "Run COMMAND (interactively if ARGS is empty) with select-enable-clipboard set."
+  (let ((saved select-enable-clipboard))
+    (set! select-enable-clipboard #t)
+    (unwind-protect
+        (if (null? args) (call-interactively command) (apply (eval command) args))
+      (set! select-enable-clipboard saved))))
+
+(define-command (clipboard-kill-ring-save . args)
+  "Copy the region to the kill ring and to the clipboard (kill-ring-save with select-enable-clipboard)."
+  (simple--with-clipboard 'kill-ring-save args))
+
+(define-command (clipboard-kill-region . args)
+  "Kill the region, and put it on the clipboard (kill-region with select-enable-clipboard)."
+  (simple--with-clipboard 'kill-region args))
+
+(define-command (clipboard-yank . args)
+  "Insert the clipboard text, or the latest kill (yank with select-enable-clipboard)."
+  (simple--with-clipboard 'yank args))
+
 (define (simple--kill from to)
   "Delete the text between FROM and TO and save it in the kill ring.
 If the previous command was a kill, append the text to its kill."
@@ -2603,6 +2673,102 @@ Return the column where point ends up."
   (let ((target (max column (+ (current-column) (if (pair? rest) (car rest) 0)))))
     (simple--indent-to target)
     target))
+
+;;; Tabs (Emacs's tabify.el)
+
+(define tabify-regexp " [ \t]+"
+  "Regexp matching whitespace that tabify should consider.
+Usually this is \" [ \\t]+\" to match a space followed by whitespace.
+\"^\\t* [ \\t]+\" is also useful, for tabifying only initial whitespace.")
+
+(define (simple--with-indent-tabs-mode value thunk)
+  "Call THUNK with indent-tabs-mode set to VALUE."
+  (let ((saved indent-tabs-mode))
+    (set! indent-tabs-mode value)
+    (unwind-protect (thunk) (set! indent-tabs-mode saved))))
+
+(define (simple--region-or-buffer args)
+  "Return (START END): the first two of ARGS, the whole buffer with a prefix argument, or the region."
+  (cond ((and (pair? args) (pair? (cdr args))) (list (car args) (cadr args)))
+        ((current-prefix-arg) (list (point-min) (point-max)))
+        (else (list (region-beginning) (region-end)))))
+
+(define-command (untabify . args)
+  "Convert all tabs in the region (START and END) to spaces, preserving columns.
+Interactively with a prefix argument, convert the whole buffer."
+  (let* ((range (simple--region-or-buffer args))
+         (column (current-column)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-min) (cadr range))
+        (goto-char (car range))
+        (let loop ()
+          (when (search-forward "\t" #f #t)
+            (forward-char -1)
+            (let ((tab-beg (point)))
+              (skip-chars-forward "\t")
+              (let ((goal (current-column)))
+                (delete-region tab-beg (point))
+                (simple--with-indent-tabs-mode #f (lambda () (indent-to goal)))))
+            (loop)))))
+    (move-to-column column)))
+
+(define-command (tabify . args)
+  "Convert multiple spaces in the region (START and END) to tabs when possible.
+A group of spaces is partly replaced by tabs when this keeps the column they end at.
+Interactively with a prefix argument, convert the whole buffer.  Tabs are 8 columns wide."
+  (let ((range (simple--region-or-buffer args)))
+    (save-excursion
+      (save-restriction
+        (goto-char (car range))
+        (forward-line 0)
+        (narrow-to-region (point) (cadr range))
+        (goto-char (car range))
+        (simple--with-indent-tabs-mode
+         #t
+         (lambda ()
+           (let loop ()
+             (when (re-search-forward tabify-regexp #f #t)
+               (let ((end-col (current-column))
+                     (beg-col (save-excursion
+                                (goto-char (match-beginning 0))
+                                (skip-chars-forward "\t")
+                                (current-column))))
+                 (when (not (= (quotient end-col 8) (quotient beg-col 8)))
+                   (delete-region (match-beginning 0) (point))
+                   (indent-to end-col)))
+               (loop)))))))))
+
+(define backward-delete-char-untabify-method 'untabify
+  "The method for untabifying when deleting backward: untabify (turn a tab into spaces, then delete one space),
+hungry (delete all spaces and tabs), all (also newlines), or #f (delete one character).")
+
+(define-command (backward-delete-char-untabify . args)
+  "Delete N characters backward, changing tabs into spaces (see backward-delete-char-untabify-method).
+Kill them (save in the kill ring) if KILLP (the second argument) is true; interactively, if there is a prefix argument."
+  (let ((n (simple--arg args))
+        (killp (if (and (pair? args) (pair? (cdr args))) (cadr args) (and (null? args) (current-prefix-arg)))))
+    (when (eq? backward-delete-char-untabify-method 'untabify)
+      (save-excursion
+        (let loop ((count n))
+          (when (and (> count 0) (not (bobp)))
+            (when (equal? (char-before) "\t")
+              (let ((col (current-column)))
+                (forward-char -1)
+                (insert (simple--spaces (- col (current-column))))
+                (delete-char 1)))
+            (forward-char -1)
+            (loop (- count 1))))))
+    (let* ((skip (cond ((eq? backward-delete-char-untabify-method 'hungry) " \t")
+                       ((eq? backward-delete-char-untabify-method 'all) " \t\n\r")
+                       (else #f)))
+           (count (if skip
+                      (let ((wh (- (point) (save-excursion (skip-chars-backward skip) (point)))))
+                        (+ n (if (= wh 0) 0 (- wh 1))))
+                      n)))
+      (if killp
+          (kill-region (- (point) count) (point))
+          (delete-char (- count))))))
 
 (define (current-indentation)
   "Return the indentation of the current line.
