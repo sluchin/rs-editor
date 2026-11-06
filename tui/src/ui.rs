@@ -11,7 +11,7 @@ use rseditor_core::editor::Editor;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
-use crate::history::{add_to_history, Navigator};
+use crate::history::{add_to_history, HistoryArgs, Navigator};
 use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
 use rseditor_core::command_loop::LoopUi;
@@ -167,18 +167,22 @@ impl UiHost {
         prompt: &str,
         initial: &str,
         completion: Completion,
-        history: &str,
-        defaults: &[String],
+        history: &HistoryArgs,
     ) -> Result<String, Error> {
         let mut input: Vec<char> = initial.chars().collect();
         let mut cursor = input.len();
-        let mut navigator = Navigator::new();
-        let items = self
-            .state()
-            .histories
-            .get(history)
-            .cloned()
-            .unwrap_or_default();
+        let defaults = &history.defaults;
+        // Lisp の変数の履歴は, 画面の履歴の代わりに使い, 加えない (isearch の `history-add-new-input` が nil)
+        let items = match &history.items {
+            Some(items) => items.clone(),
+            None => self
+                .state()
+                .histories
+                .get(&history.name)
+                .cloned()
+                .unwrap_or_default(),
+        };
+        let mut navigator = Navigator::starting_at(history.start, initial, &items);
         loop {
             let text: String = input.iter().collect();
             self.draw(Some(&Minibuffer {
@@ -189,11 +193,11 @@ impl UiHost {
             let key = self.read_key()?;
             match key.as_str() {
                 "RET" => {
-                    if !history.is_empty() {
+                    if !history.name.is_empty() && history.items.is_none() {
                         add_to_history(
                             self.state()
                                 .histories
-                                .entry(history.to_string())
+                                .entry(history.name.clone())
                                 .or_default(),
                             &text,
                         );
@@ -266,7 +270,7 @@ impl UiHost {
             "Next element matching (regexp): "
         };
         let regexp = self
-            .read_line(prompt, "", Completion::None, "", &[])
+            .read_line(prompt, "", Completion::None, &HistoryArgs::default())
             .map_err(|e| e.to_string())?;
         let regexp = if regexp.is_empty() {
             self.state().history_regexp.clone()
@@ -348,19 +352,6 @@ fn text(args: &[Value], i: usize) -> String {
     }
 }
 
-/// 既定の値のリストの引数.
-fn defaults(args: &[Value], i: usize) -> Vec<String> {
-    // 核は, 文字列のリストを必ず渡す
-    let items: &[Value] = match args.get(i) {
-        Some(Value::List(list)) => list,
-        _ => &[],
-    };
-    items
-        .iter()
-        .map(|v| text(std::slice::from_ref(v), 0))
-        .collect()
-}
-
 impl Host for UiHost {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
@@ -373,8 +364,7 @@ impl Host for UiHost {
                     &text(&args, 0),
                     &text(&args, 1),
                     Completion::None,
-                    &text(&args, 2),
-                    &defaults(&args, 3),
+                    &HistoryArgs::from_args(&args, 2),
                 )
                 .map(Value::String),
             "read-file-name" => self
@@ -382,8 +372,7 @@ impl Host for UiHost {
                     &text(&args, 0),
                     &text(&args, 1),
                     Completion::Files,
-                    &text(&args, 2),
-                    &defaults(&args, 3),
+                    &HistoryArgs::from_args(&args, 2),
                 )
                 .map(Value::String),
             "completing-read" => {
@@ -401,8 +390,7 @@ impl Host for UiHost {
                     &text(&args, 0),
                     &text(&args, 2),
                     Completion::Candidates(candidates),
-                    "minibuffer",
-                    &defaults(&args, 3),
+                    &HistoryArgs::named("minibuffer", Vec::new()),
                 )
                 .map(Value::String)
             }

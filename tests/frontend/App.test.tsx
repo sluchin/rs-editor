@@ -321,6 +321,25 @@ describe('App (問い)', () => {
     expect(await reply(id)).toMatchObject({ value: 'dflt', error: null })
   })
 
+  it('read-string: 核が渡した履歴を, 始めの位置からたどり, 加えないこと', async () => {
+    const view = await setup()
+    let id = ask('read-string', ['I-search: ', 'foo', ['isearch-ring', 1], [], ['foo', 'bar'], 1])
+    expect(minibufferInput(view).value).toBe('foo')
+    fireEvent.keyDown(minibufferInput(view), { key: 'p', altKey: true })
+    expect(minibufferInput(view).value).toBe('bar')
+    fireEvent.keyDown(minibufferInput(view), { key: 'n', altKey: true })
+    fireEvent.keyDown(minibufferInput(view), { key: 'n', altKey: true })
+    expect(minibufferInput(view).value).toBe('foo')
+    fireEvent.keyDown(minibufferInput(view), { key: 'Enter' })
+    expect(await reply(id)).toMatchObject({ value: 'foo', error: null })
+    // 名前の履歴には加えない. 始めの位置は, 履歴の数までにする
+    id = ask('read-string', ['Name: ', '', 'minibuffer', [], null, 5])
+    fireEvent.keyDown(minibufferInput(view), { key: 'p', altKey: true })
+    expect(minibufferInput(view).value).toBe('')
+    fireEvent.keyDown(minibufferInput(view), { key: 'Enter' })
+    await reply(id)
+  })
+
   it('read-file-name: 既定のディレクトリから始め, ~ を展開して補完すること', async () => {
     const view = await setup()
     await vi.waitFor(() => expect(mocked.getHomeDir).toHaveBeenCalled())

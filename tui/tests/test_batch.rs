@@ -384,6 +384,23 @@ fn test_typed_keys_are_read_by_commands() {
 }
 
 #[test]
+fn test_typed_line_starts_with_the_initial_text_and_walks_the_history() {
+    let code = concat!(
+        "(begin (define got '()) (define my-ring '(\"b\" \"a\"))",
+        " (define-command (rr) (set! got (cons (read-string \"p: \" \"x\" '(my-ring 1)) got)))",
+        " (define-command (ff) (set! got (cons (read-file-name \"f: \" \"/d/\") got)))",
+        " (define-command (cc) (set! got (cons (completing-read \"c: \" '(\"one\")) got)))",
+        " (global-set-key \"C-c r\" 'rr) (global-set-key \"C-c f\" 'ff) (global-set-key \"C-c c\" 'cc)",
+        // 始めの文字に足す. 位置 1 からの M-p は 2 つ目, M-n で戻る. 履歴の端では何もしない
+        " (execute-kbd-macro (kbd \"C-c r y RET C-c r M-p RET C-c r M-p M-p M-n RET C-c r M-n M-n RET\"))",
+        // read-file-name の 2 つ目 (ディレクトリ) と completing-read は, 始めの文字にしない
+        " (execute-kbd-macro (kbd \"C-c f a RET C-c c M-p o RET\"))",
+        " (princ got))",
+    );
+    assert_eq!(out_of(code, ""), "(o a x b a xy)");
+}
+
+#[test]
 fn test_failing_key_stops_the_macro() {
     let code = "(begin (switch-to-buffer (generate-new-buffer \"b\")) (execute-kbd-macro (kbd \"x C-f y\")) (princ \"no\"))";
     let (status, out, err) = batch(&["--eval", code], "");

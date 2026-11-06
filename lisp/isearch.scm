@@ -25,6 +25,7 @@
 (define isearch--error #f)
 (define isearch--fold #t)
 (define isearch--cmds '())
+(define isearch--ring-pointer #f)
 
 ;;; 状態
 
@@ -247,7 +248,7 @@
             (loop)))
         'continue)))
 
-(define (isearch--prompt)
+(define (isearch--message-prefix)
   (let* ((prefix (string-append (if (not isearch--success) "failing " "")
                                 (if (eq? isearch--adjusted #t) "pending " "")
                                 (if isearch--wrapped "wrapped " "")
@@ -256,8 +257,57 @@
                                 (cond ((eq? isearch--function 'symbol) "symbol ") ((eq? isearch--function 'word) "word ") (else ""))
                                 "I-search" (if isearch--forward "" " backward") ": "))
          (head (string-upcase (substring prefix 0 1))))
-    (string-append head (substring prefix 1 (string-length prefix)) isearch--string
-                   (if isearch--error (string-append " [" isearch--error "]") ""))))
+    (string-append head (substring prefix 1 (string-length prefix)))))
+
+(define (isearch--prompt)
+  (string-append (isearch--message-prefix) isearch--string
+                 (if isearch--error (string-append " [" isearch--error "]") "")))
+
+;;; 文字を直す, 履歴
+
+(define (isearch--ring)
+  (if isearch--regexp isearch-regexp-ring isearch-ring))
+
+(define (isearch--ring-adjust1 advance)
+  "Set the search string to the next (ADVANCE) or the previous element of the search ring."
+  (let ((ring (isearch--ring)))
+    (when (pair? ring)
+      (set! isearch--ring-pointer
+            (modulo (+ (or isearch--ring-pointer (if advance 0 -1)) (if advance -1 1)) (length ring)))
+      (set! isearch--string (list-ref ring isearch--ring-pointer)))))
+
+(define (isearch--edit-string)
+  "Edit the search string in the minibuffer, and search again with it (Emacs's `isearch-edit-string').
+The search resumes from the start (or the end, searching backward) of the current match.
+DEL after that goes back to the state before the edit."
+  (let ((old-point (point))
+        (old-other-end isearch--other-end)
+        (saved (isearch--get-state))
+        (new (condition-case e
+                 (read-string (isearch--message-prefix) isearch--string
+                              (list (if isearch--regexp 'isearch-regexp-ring 'isearch-ring)
+                                    (+ 1 (or isearch--ring-pointer -1))))
+               (quit #f))))
+    (if (not new)
+        (isearch--abort)
+        (begin
+          ;; Emacs は, 文字を直すあいだ, isearch を終える (マークを置き, 知らせない)
+          (if (and (not (= (point) isearch--opoint)) (not (use-region-p))) (push-mark isearch--opoint))
+          (isearch--set-state saved)
+          (set! isearch--string new)
+          (if (and old-other-end (= old-point (point))) (goto-char old-other-end))
+          ;; 空なら, 履歴の最初を使う
+          (when (equal? isearch--string "")
+            (set! isearch--string (if (pair? (isearch--ring)) (car (isearch--ring)) ""))
+            (isearch--ring-adjust1 #f))
+          (isearch--search)
+          (if (not (equal? (car isearch--cmds) (isearch--get-state))) (isearch--push-state))
+          'continue))))
+
+(define (isearch--ring-adjust advance)
+  "Edit the next (ADVANCE) or the previous search string of the ring (`search-ring-update' is nil)."
+  (isearch--ring-adjust1 advance)
+  (isearch--edit-string))
 
 (define (isearch--printing-key key)
   "Return the string to add to the search string for KEY, or #f if KEY is not a printing key."
@@ -270,6 +320,7 @@
 INITIAL is (STRING GOTO ERROR): the initial search string, a position to move to, and an error to show.
 The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,
 C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode, M-c toggles case folding,
+M-e edits the search string in the minibuffer, M-p and M-n edit the previous or next search string,
 RET exits, C-g backs up to the last match or, if it was found, cancels the search.
 Another key exits the search, and is ignored."
   (set! isearch--forward forward)
@@ -278,6 +329,7 @@ Another key exits the search, and is ignored."
   (set! isearch--string "")
   (set! isearch--fold (if case-fold-search #t #f))
   (set! isearch--cmds '())
+  (set! isearch--ring-pointer #f)
   (set! isearch--success #t)
   (set! isearch--wrapped #f)
   (set! isearch--barrier (point))
@@ -308,6 +360,9 @@ Another key exits the search, and is ignored."
              (if isearch--regexp (set! isearch--function #f))
              (set! isearch--success #t)
              (loop))
+            ((equal? key "M-e") (if (eq? (isearch--edit-string) 'continue) (loop)))
+            ((equal? key "M-n") (if (eq? (isearch--ring-adjust #t) 'continue) (loop)))
+            ((equal? key "M-p") (if (eq? (isearch--ring-adjust #f) 'continue) (loop)))
             ((equal? key "M-c")
              (set! isearch--fold (if isearch--fold #f 'yes))
              (set! isearch--success #t)

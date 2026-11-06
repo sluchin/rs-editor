@@ -2958,6 +2958,27 @@ msgid "Add the word after point (or after the current match) to the search strin
 msgstr "点の後ろの単語 (今の一致があれば, その後ろの単語) を, 検索の文字列に加える."
 
 #: lisp/isearch.scm
+msgctxt "function:isearch--ring-adjust1"
+msgid "Set the search string to the next (ADVANCE) or the previous element of the search ring."
+msgstr "検索の文字列を, 検索の履歴の次 (ADVANCE) か前の要素にする."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--edit-string"
+msgid ""
+"Edit the search string in the minibuffer, and search again with it (Emacs's `isearch-edit-string').\n"
+"The search resumes from the start (or the end, searching backward) of the current match.\n"
+"DEL after that goes back to the state before the edit."
+msgstr ""
+"検索の文字列をミニバッファで直し, それで探し直す (Emacs の `isearch-edit-string').\n"
+"今の一致の初め (後ろへの検索なら終わり) から探し直す.\n"
+"その後の DEL は, 直す前の状態に戻る."
+
+#: lisp/isearch.scm
+msgctxt "function:isearch--ring-adjust"
+msgid "Edit the next (ADVANCE) or the previous search string of the ring (`search-ring-update' is nil)."
+msgstr "履歴の次 (ADVANCE) か前の検索の文字列を直させる (`search-ring-update' が nil)."
+
+#: lisp/isearch.scm
 msgctxt "function:isearch--printing-key"
 msgid "Return the string to add to the search string for KEY, or #f if KEY is not a printing key."
 msgstr "KEY を検索の文字列に加える文字列を返す. KEY が表示できる文字のキーでなければ #f を返す."
@@ -2969,6 +2990,7 @@ msgid ""
 "INITIAL is (STRING GOTO ERROR): the initial search string, a position to move to, and an error to show.\n"
 "The keys: C-s and C-r repeat the search forward or backward, DEL deletes the last character,\n"
 "C-w adds the word at point, C-q quotes the next key, M-r toggles the regexp mode, M-c toggles case folding,\n"
+"M-e edits the search string in the minibuffer, M-p and M-n edit the previous or next search string,\n"
 "RET exits, C-g backs up to the last match or, if it was found, cancels the search.\n"
 "Another key exits the search, and is ignored."
 msgstr ""
@@ -2976,6 +2998,7 @@ msgstr ""
 "INITIAL は (STRING GOTO ERROR): 検索の文字列の初めの値, 動く先の位置, 出すエラー.\n"
 "キー: C-s と C-r で前か後ろへの検索を繰り返す. DEL は最後の文字を消す,\n"
 "C-w は点の単語を加える. C-q は次のキーをそのまま入れる. M-r は正規表現のモードを切り替える. M-c は大文字と小文字の区別を切り替える,\n"
+"M-e は検索の文字列をミニバッファで直す. M-p と M-n は前か次の検索の文字列を直させる,\n"
 "RET で終わる. C-g は最後の一致まで戻る. 一致が見つかっていれば, 検索をやめる.\n"
 "ほかのキーで検索を終わり, そのキーは無視する."
 

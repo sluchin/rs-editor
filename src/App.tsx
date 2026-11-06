@@ -44,6 +44,8 @@ interface Question {
   state: Exclude<MinibufferState, { mode: 'message' }>
   /** 入力の履歴の名前. */
   history: string
+  /** 核が渡した履歴の中身 (Lisp の変数. 名前の履歴の代わりに使い, 加えない). */
+  items?: readonly string[]
   /** 答える. */
   resolve: (value: string) => void
   /** やめる. */
@@ -169,12 +171,17 @@ function App() {
    *
    * @param state - 出す状態.
    * @param history - 入力の履歴の名前.
+   * @param items - 核が渡した履歴の中身 (省くと, 名前の履歴).
    * @returns 答え. やめたら `Quit` で失敗する.
    */
-  const ask = (state: Question['state'], history: string): Promise<string> =>
+  const ask = (
+    state: Question['state'],
+    history: string,
+    items?: readonly string[],
+  ): Promise<string> =>
     new Promise((resolve, reject) => {
       setInputState(state.mode === 'input' ? state : null)
-      setQuestion({ state, history, resolve, reject })
+      setQuestion({ state, history, items, resolve, reject })
     })
 
   /**
@@ -210,9 +217,24 @@ function App() {
       case 'read-string': {
         const prompt = String(args[0])
         const history = prompt === 'M-x ' ? 'extended-command' : 'minibuffer'
+        const input = String(args[1] ?? '')
+        // 履歴の中身 (Lisp の変数) と, 始めの位置 (Emacs の HISTORY の (SYMBOL . POSITION))
+        const items = Array.isArray(args[4]) ? stringList(args[4]) : undefined
+        const start = Math.min(
+          Math.max(Number(args[5] ?? 0), 0),
+          (items ?? histories[history] ?? []).length,
+        )
         return ask(
-          { mode: 'input', prompt, input: String(args[1] ?? ''), defaults: stringList(args[3]) },
+          {
+            mode: 'input',
+            prompt,
+            input,
+            defaults: stringList(args[3]),
+            historyPos: start,
+            historySaved: input,
+          },
           history,
+          items,
         )
       }
       case 'read-file-name':
@@ -368,11 +390,13 @@ function App() {
    * @param value - 入力.
    */
   const handleSubmit = (value: string) => {
-    const { history, resolve } = question as Question
-    setHistories((prev) => ({
-      ...prev,
-      [history]: addToHistory(prev[history] ?? [], value, HISTORY_LENGTH),
-    }))
+    const { history, items, resolve } = question as Question
+    if (!items) {
+      setHistories((prev) => ({
+        ...prev,
+        [history]: addToHistory(prev[history] ?? [], value, HISTORY_LENGTH),
+      }))
+    }
     closeQuestion()
     resolve(value)
   }
@@ -407,7 +431,7 @@ function App() {
   const minibufferState: MinibufferState = !question
     ? { mode: 'message', text: frame.message }
     : inputState
-      ? { ...inputState, history: histories[question.history] }
+      ? { ...inputState, history: question.items ?? histories[question.history] }
       : question.state
 
   return (

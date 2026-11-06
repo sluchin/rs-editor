@@ -879,7 +879,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let prompt = string(name, &args[0])?;
             let initial = optional_string(name, args.get(1))?;
             let default = default_value(name, args.get(3))?;
-            let extra = history_arguments(name, args.get(2), args.get(3), "minibuffer")?;
+            let extra = history_arguments(machine, name, args.get(2), args.get(3), "minibuffer")?;
             let input = read_input_with(machine, name, vec![prompt.to_string(), initial], extra)?;
             Ok(Value::String(or_default(input, default)))
         }
@@ -892,7 +892,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let prompt = string(name, &args[0])?;
             let dir = optional_string(name, args.get(1))?;
             let default = default_value(name, args.get(2))?;
-            let extra = history_arguments(name, None, args.get(2), "file-name-history")?;
+            let extra = history_arguments(machine, name, None, args.get(2), "file-name-history")?;
             let input =
                 read_input_with(machine, name, vec![prompt.to_string(), dir.clone()], extra)?;
             Ok(Value::String(match default {
@@ -1303,12 +1303,17 @@ fn read_input_with(
     }
 }
 
-/// 履歴と既定の値を, 画面に渡す引数にします (履歴の名前と, 既定の値のリスト).
+/// 履歴と既定の値を, 画面に渡す引数にします (履歴の名前, 既定の値のリスト, 履歴の中身, 始めの位置).
+///
+/// 履歴の引数は, Emacs の HISTORY と同じく, 名前か, 名前と始めの位置 (`(名前 位置)`. Emacs の `(SYMBOL . POSITION)`).
+/// 名前が, 文字列のリストを持つ Lisp の変数なら, その中身を履歴にする (画面は, 自分の覚えている履歴の代わりに使い, 加えない).
+/// そうでなければ, 中身は nil で, 画面が名前ごとに覚えている履歴を使う.
 ///
 /// # Arguments
 ///
+/// * `machine` - 評価の状態 (変数を引く).
 /// * `name` - 手続きの名前.
-/// * `history` - 履歴の引数 (記号か文字列. 省くか, nil なら `fallback`).
+/// * `history` - 履歴の引数 (記号か文字列か, それと位置のリスト. 省くか, nil なら `fallback`).
 /// * `default` - 既定の値の引数 (文字列か, 文字列のリスト).
 /// * `fallback` - 履歴の引数が無いときの名前.
 ///
@@ -1316,11 +1321,16 @@ fn read_input_with(
 ///
 /// 画面に渡す, 追加の引数.
 fn history_arguments(
+    machine: &Machine,
     name: &str,
     history: Option<&Value>,
     default: Option<&Value>,
     fallback: &str,
 ) -> Result<Vec<Value>, Error> {
+    let (history, position) = match history {
+        Some(Value::List(pair)) if pair.len() == 2 => (Some(&pair[0]), number(name, &pair[1])?),
+        other => (other, 0.0),
+    };
     let history = match history {
         Some(Value::Symbol(s) | Value::String(s)) => s.clone(),
         _ => fallback.to_string(),
@@ -1333,9 +1343,17 @@ fn history_arguments(
         Some(v) if v.is_non_nil() => vec![Value::String(string(name, v)?.to_string())],
         _ => Vec::new(),
     };
+    let items = match machine.evaluator.global().get(&history) {
+        Some(Value::List(items)) if items.iter().all(|v| matches!(v, Value::String(_))) => {
+            Value::List(items)
+        }
+        _ => Value::Nil,
+    };
     Ok(vec![
         Value::String(history),
         Value::List(defaults.into_iter().collect()),
+        items,
+        Value::Number(position),
     ])
 }
 

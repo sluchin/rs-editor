@@ -16,6 +16,7 @@ use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
+use crate::history::{HistoryArgs, Navigator};
 use rseditor_core::command_loop::{read_key_name, CommandLoop, LoopUi};
 use rseditor_core::editor::Editor;
 use rseditor_core::keymap::Keymap;
@@ -122,16 +123,29 @@ impl BatchUi {
     }
 
     /// 打ったことにするキーを、改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
-    fn read_typed_line(&self) -> Option<String> {
+    /// 始めの文字 `initial` の後ろに足す. `M-p`, `M-n` は, 履歴 `history` をたどる (画面のミニバッファと同じ).
+    fn read_typed_line(&self, initial: &str, history: &HistoryArgs) -> Option<String> {
         let mut keys = self.keys.lock_recover();
         keys.front()?;
-        let mut line = String::new();
+        let items = history.items.clone().unwrap_or_default();
+        let mut navigator = Navigator::starting_at(history.start, initial, &items);
+        let mut line = initial.to_string();
         while let Some(key) = keys.pop_front() {
             match key.as_str() {
                 "RET" => break,
                 "SPC" => line.push(' '),
                 "DEL" => {
                     line.pop();
+                }
+                "M-p" | "M-n" => {
+                    let found = if key == "M-p" {
+                        navigator.previous(&line, &items, &history.defaults)
+                    } else {
+                        navigator.next(&line, &items, &history.defaults)
+                    };
+                    if let Ok(found) = found {
+                        line = found;
+                    }
                 }
                 other if other.chars().count() == 1 => line.push_str(other),
                 _ => {}
@@ -213,7 +227,17 @@ impl Host for BatchUi {
                 }
                 Ok(Value::Nil)
             }
-            "read-string" | "read-file-name" | "completing-read" => match self.read_typed_line() {
+            "read-string" | "read-file-name" | "completing-read" => match self.read_typed_line(
+                // 始めの文字は, read-string だけ (read-file-name の 2 つ目はディレクトリ)
+                &match (op, args.get(1)) {
+                    ("read-string", Some(Value::String(initial))) => initial.clone(),
+                    _ => String::new(),
+                },
+                &match op {
+                    "completing-read" => HistoryArgs::default(),
+                    _ => HistoryArgs::from_args(&args, 2),
+                },
+            ) {
                 Some(line) => Ok(Value::String(line)),
                 None => {
                     self.show_prompt(&args);

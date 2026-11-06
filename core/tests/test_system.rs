@@ -651,8 +651,8 @@ fn test_editor_settings() {
             "pop-to-buffer-same-window \"*howm*\"".to_string(),
             "buffer-file-name".to_string(),
             "set-buffer-modified-p #f".to_string(),
-            "read-string \"Search: \" \"\" \"minibuffer\" ()".to_string(),
-            "read-string \"Search: \" \"init\" \"minibuffer\" ()".to_string(),
+            "read-string \"Search: \" \"\" \"minibuffer\" () nil 0".to_string(),
+            "read-string \"Search: \" \"init\" \"minibuffer\" () nil 0".to_string(),
         ]
     );
     // ファイルのないバッファ
@@ -1052,8 +1052,8 @@ fn test_read_file_name() {
     assert_eq!(
         editor.calls(),
         vec![
-            "read-file-name \"Find file: \" \"\" \"file-name-history\" ()",
-            "read-file-name \"F: \" \"~/\" \"file-name-history\" (\"~/d.txt\")"
+            "read-file-name \"Find file: \" \"\" \"file-name-history\" () nil 0",
+            "read-file-name \"F: \" \"~/\" \"file-name-history\" (\"~/d.txt\") nil 0"
         ]
     );
     // 入力を変えなければ (空か, DIR のまま), DEFAULT-FILENAME
@@ -1083,7 +1083,7 @@ fn test_read_file_name() {
     assert_eq!(
         editor.calls(),
         vec![
-            "read-file-name \"Find file: \" \"\" \"file-name-history\" ()",
+            "read-file-name \"Find file: \" \"\" \"file-name-history\" () nil 0",
             "buffer-list",
             // 訪れているバッファがあれば, それ
             "buffer-file-name \"/home/b.txt\"",
@@ -1093,6 +1093,33 @@ fn test_read_file_name() {
     assert_eq!(
         ev.eval("(documentation 'find-file #t)").unwrap(),
         format!("{:?}", "Edit file FILENAME.\nSwitch to a buffer visiting file FILENAME, creating one if none already exists.\nInteractively, read FILENAME in the minibuffer with file name completion.")
+    );
+}
+
+#[test]
+fn test_read_string_passes_the_history_variable_and_position() {
+    let ev = Evaluator::new();
+    let editor = Recorder::new(Value::String("x".to_string()));
+    // 文字列のリストを持つ変数なら, その中身. (名前 位置) なら, 始めの位置も
+    ev.eval_with(
+        "(define my-ring '(\"b\" \"a\")) (define my-number 1)
+         (read-string \"P: \" \"i\" '(my-ring 1)) (read-string \"P: \" #f 'my-number)
+         (read-string \"P: \" #f '(my-list 2))",
+        &editor,
+    )
+    .unwrap();
+    assert_eq!(
+        editor.calls(),
+        vec![
+            "read-string \"P: \" \"i\" \"my-ring\" () (\"b\" \"a\") 1",
+            "read-string \"P: \" \"\" \"my-number\" () nil 0",
+            "read-string \"P: \" \"\" \"my-list\" () nil 2",
+        ]
+    );
+    assert_eq!(
+        ev.eval_with("(read-string \"P: \" #f '(my-ring x))", &editor)
+            .unwrap_err(),
+        "Wrong type argument: integer-or-marker-p, x"
     );
 }
 

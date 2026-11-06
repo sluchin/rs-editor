@@ -3,8 +3,60 @@
 //! 履歴は新しい順に並べる. 位置 0 は入力中の文字, 位置 1 以上は履歴 (1 が最も新しい),
 //! 位置 -1 以下は既定の値 (`M-n` で出す. Emacs の future history).
 
+use rseditor_core::scheme::value::Value;
 use rseditor_core::search::Pattern;
 use rseditor_core::syntax::Dialect;
+
+/// 問いの履歴 (核の `read-string` などが渡す, 履歴の名前, 既定の値, 中身, 始めの位置).
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct HistoryArgs {
+    /// 履歴の名前 (空なら, 履歴を使わない).
+    pub name: String,
+    /// 既定の値 (`M-n` で, 履歴の先に出す).
+    pub defaults: Vec<String>,
+    /// 履歴の中身 (Lisp の変数の値. 新しい順). `None` なら, 画面が名前ごとに覚えている履歴を使う.
+    pub items: Option<Vec<String>>,
+    /// 始めの位置 (Emacs の HISTORY の `(SYMBOL . POSITION)`. 0 は打っている文字).
+    pub start: i64,
+}
+
+impl HistoryArgs {
+    /// 名前と既定の値から作ります (中身は画面が覚えているもの, 始めの位置は 0).
+    pub fn named(name: &str, defaults: Vec<String>) -> Self {
+        Self {
+            name: name.to_string(),
+            defaults,
+            ..Self::default()
+        }
+    }
+
+    /// 核の頼みの引数 (`i` 番目から: 名前, 既定の値, 中身, 始めの位置) から作ります.
+    pub fn from_args(args: &[Value], i: usize) -> Self {
+        let strings = |v: Option<&Value>| match v {
+            Some(Value::List(list)) => Some(
+                list.iter()
+                    .filter_map(|v| match v {
+                        Value::String(s) => Some(s.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
+            ),
+            _ => None,
+        };
+        Self {
+            name: match args.get(i) {
+                Some(Value::String(s)) => s.clone(),
+                _ => String::new(),
+            },
+            defaults: strings(args.get(i + 1)).unwrap_or_default(),
+            items: strings(args.get(i + 2)),
+            start: match args.get(i + 3) {
+                Some(Value::Number(n)) => *n as i64,
+                _ => 0,
+            },
+        }
+    }
+}
 
 /// 履歴の数の限り (Emacs の `history-length`).
 pub const HISTORY_LENGTH: usize = 100;
@@ -36,6 +88,15 @@ impl Navigator {
     /// 作ります.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// 履歴の位置 `pos` から始める状態を作ります (Emacs の HISTORY の `(SYMBOL . POSITION)`).
+    /// 位置 0 に戻ると, 始めの文字 `input` を出す.
+    pub fn starting_at(pos: i64, input: &str, history: &[String]) -> Self {
+        Self {
+            pos: pos.clamp(0, history.len() as i64),
+            saved: input.to_string(),
+        }
     }
 
     /// 位置 `pos` の文字を返します (0 は, 打っていた文字).

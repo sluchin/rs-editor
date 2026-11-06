@@ -1323,6 +1323,35 @@ fn test_isearch_folds_case_and_m_c_toggles_it() {
 }
 
 #[test]
+fn test_isearch_edits_the_search_string_in_the_minibuffer() {
+    // M-e で文字を直し, 合った所の頭から探し直す
+    let mut fx = Fixture::new();
+    fx.press(&typed("ab foo fob foo"));
+    fx.press("C-a");
+    fx.feed("f o M-e o RET RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 6);
+    // M-p は, 前の検索の文字をミニバッファで直させる. ミニバッファの M-p は, その次の履歴
+    fx.press("C-a");
+    fx.feed("f o b RET");
+    fx.press("C-s");
+    fx.press("C-a");
+    fx.feed("M-p M-p RET RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 6);
+    fx.press("C-a");
+    // M-n は, 履歴の最後から
+    fx.feed("M-n RET RET");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 10);
+    // ミニバッファで C-g を押すと, 探し始めた所に戻ってやめる
+    fx.press("C-a");
+    fx.feed("f o M-e C-g");
+    fx.press("C-s");
+    assert_eq!(fx.point(), 0);
+}
+
+#[test]
 fn test_minibuffer_history_keys() {
     // 入力した値が履歴に残り, M-p で出せる
     let mut fx = Fixture::new();

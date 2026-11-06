@@ -352,7 +352,7 @@ fn test_ert_command() {
             .collect();
         assert_eq!(
             calls[0],
-            "read-string \"Run tests (default t): \" \"\" \"minibuffer\" ()"
+            "read-string \"Run tests (default t): \" \"\" \"minibuffer\" () nil 0"
         );
         assert_eq!(calls[1], "pop-to-buffer-same-window \"*ert*\"");
         assert!(

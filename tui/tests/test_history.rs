@@ -1,6 +1,6 @@
 //! ミニバッファの入力の履歴 (`M-p`, `M-n`, `M-r`, `M-s`).
 
-use rseditor_tui::history::{add_to_history, Navigator, HISTORY_LENGTH};
+use rseditor_tui::history::{add_to_history, HistoryArgs, Navigator, HISTORY_LENGTH};
 
 fn items(list: &[&str]) -> Vec<String> {
     list.iter().map(|s| s.to_string()).collect()
@@ -86,4 +86,56 @@ fn test_search_finds_the_matching_items_in_both_directions() {
         Err("No later matching history item".to_string())
     );
     assert!(nav.search("\\(", true, "x", &history, &[]).is_err());
+}
+
+#[test]
+fn test_history_args_from_the_request_of_the_core() {
+    use rseditor_core::scheme::value::Value;
+    let s = |t: &str| Value::String(t.to_string());
+    let list = |v: Vec<Value>| Value::List(v.into());
+    // 名前, 既定の値, 中身, 始めの位置 (文字列でない要素は除く)
+    let args = vec![
+        s("P: "),
+        s(""),
+        s("isearch-ring"),
+        list(vec![s("d")]),
+        list(vec![s("b"), Value::Number(1.0), s("a")]),
+        Value::Number(1.0),
+    ];
+    assert_eq!(
+        HistoryArgs::from_args(&args, 2),
+        HistoryArgs {
+            name: "isearch-ring".to_string(),
+            defaults: items(&["d"]),
+            items: Some(items(&["b", "a"])),
+            start: 1,
+        }
+    );
+    // 省くと, 名前の無い, 画面の履歴
+    assert_eq!(HistoryArgs::from_args(&[], 2), HistoryArgs::default());
+    assert_eq!(
+        HistoryArgs::named("minibuffer", items(&["d"])),
+        HistoryArgs {
+            name: "minibuffer".to_string(),
+            defaults: items(&["d"]),
+            items: None,
+            start: 0,
+        }
+    );
+}
+
+#[test]
+fn test_navigator_starting_at_a_position() {
+    let history = items(&["c", "b", "a"]);
+    // 位置 1 から始めると, M-p は 2 つ目. 位置 0 に戻ると, 始めの文字
+    let mut nav = Navigator::starting_at(1, "init", &history);
+    assert_eq!(nav.previous("init", &history, &[]), Ok("b".to_string()));
+    assert_eq!(nav.next("b", &history, &[]), Ok("c".to_string()));
+    assert_eq!(nav.next("c", &history, &[]), Ok("init".to_string()));
+    // 履歴の数より先は, 履歴の終わり
+    let mut nav = Navigator::starting_at(9, "", &history);
+    assert_eq!(
+        nav.previous("", &history, &[]),
+        Err("Beginning of history; no preceding item".to_string())
+    );
 }
