@@ -55,6 +55,8 @@ pub struct FakeEditor {
     pub commands: Mutex<Vec<String>>,
     /// 訪れてから、ファイルが外で書き換わったことにするか (`verify-visited-file-modtime` が偽を返す).
     pub file_changed: Mutex<bool>,
+    /// push-mark で置いたマークの位置.
+    pub marks: Mutex<Vec<usize>>,
 }
 
 impl FakeEditor {
@@ -642,6 +644,14 @@ impl Host for FakeEditor {
                 return Err(format!("{op} is not supported").into())
             }
             "widen" => Value::Nil,
+            "push-mark" => {
+                let at = match args.first() {
+                    Some(Value::Number(n)) => *n as usize,
+                    _ => self.buffer().point,
+                };
+                self.marks.lock().unwrap().push(at);
+                Value::Nil
+            }
             _ => panic!("unknown op {}", op),
         })
     }

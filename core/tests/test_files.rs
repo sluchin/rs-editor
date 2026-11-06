@@ -297,6 +297,8 @@ fn test_insert_file() {
     assert_eq!(prompts(&editor), vec!["Insert file: "]);
     assert_eq!(editor.text(), "ainsertedb");
     assert_eq!(editor.buffer().point, 2);
+    // マークは, 入れた文字の後に置く
+    assert_eq!(*editor.marks.lock().unwrap(), vec![10]);
     ev.eval_with(
         &format!("(insert-file {:?})", path.to_string_lossy()),
         &editor,

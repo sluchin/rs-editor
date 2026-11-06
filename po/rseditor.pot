@@ -941,7 +941,7 @@ msgstr ""
 msgctxt "function:insert-file"
 msgid ""
 "Insert the contents of file FILENAME at point.\n"
-"Point stays before the inserted text.\n"
+"Point stays before the inserted text, and the mark is set after it.\n"
 "Interactively, read FILENAME in the minibuffer with file name completion."
 msgstr ""
 

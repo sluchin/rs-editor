@@ -147,23 +147,21 @@
 - [ ] `C-u M-=` (count-words-region): 前置引数があれば、バッファ全体を数える。
 - [x] `M-f`、`M-b` などの単語: Emacs と同じく、書記体系で単語を切る (日本語は、漢字と送りがなを 1 つの単語にする、など。`tests/batch/cases/56-word-motion`)。
 - [x] kill-ring, 消した矩形 (`C-x r k`), レジスタ: Emacs と同じく、全てのウィンドウで共通。
-- [ ] `C-x r y` (yank-rectangle) と `C-x r i` (insert-register): Emacs は、入れた範囲の端にマークを置く (リージョンは選ばない)。
-      今は、マークを置くとリージョンを選ぶので、置かない。
+- [x] `C-x r y` (yank-rectangle) と `C-x r i` (insert-register): Emacs は、入れた範囲の端にマークを置く (リージョンは選ばない)。
 - [ ] 矩形とレジスタの前置引数: `C-u C-x r k` (短い行も空白で埋める), `C-u C-x r s` (リージョンを消す),
       `C-u C-x r i` (カーソルを入れた文字の後ろに置く)。
 - [ ] `C-x r t` (string-rectangle): Emacs は、入力しているあいだ、置き換えた結果を見せる (`rectangle-preview`)。
 - [ ] ブックマーク: Emacs は、`~/.emacs.d/bookmarks` に、Lisp の形で、終わるときに保存する。
       今は、`~/.config/rseditor/bookmarks` に、JSON で、付けるたびに保存する。位置は、Emacs と違い、0 から数える (UTF-16 の位置)。
 - [ ] `C-x r b` (bookmark-jump): ファイルが無いとき、Emacs は、新しい場所を聞く。今は、読めないと知らせるだけ。
-- [ ] `C-M-a` (beginning-of-defun) と `C-M-e` (end-of-defun): Emacs は、動く前の位置にマークを置く (リージョンは選ばない)。
-      今は、マークを置くとリージョンを選ぶので、置かない。
+- [x] `C-M-a` (beginning-of-defun) と `C-M-e` (end-of-defun): Emacs は、動く前の位置にマークを置く (リージョンは選ばない)。
 - [x] `C-x C-n` (set-goal-column): Emacs と同じく、既定で使えない (disabled) コマンド。
 - [x] `C-n`、`C-p` (`C-x C-n` で桁を決めていないとき): Emacs と同じく、表示の桁 (タブと全角の文字の幅) を保つ (`tests/batch/cases/55-line-column`)。
 - [ ] Scheme の `#;` でコメントにした式と、`#/.../` (正規表現): Emacs の scheme-mode は、式の移動 (`C-M-f`、`C-M-u` など) でも、      コメントと文字列として読む。今は、字下げと括弧の強調だけで、そう読む。
 - [x] `M-@`、`C-M-SPC`、`C-M-h` の負の前置引数 (前へ選ぶ)。
 - [ ] `M-SPC`: Linux のデスクトップ (GNOME など) は、Alt+Space をウィンドウのメニューに使うので、エディタにキーが届かないことがある。
       Emacs と同じく、`ESC SPC` でも動くようにするか、届かないことを README に書く。
-- [ ] `C-x i` (insert-file): Emacs は、入れた文字の終わりにマークを置く (リージョンは選ばない)。今は、置かない。
+- [x] `C-x i` (insert-file): Emacs は、入れた文字の終わりにマークを置く (リージョンは選ばない)。
 - [ ] `C-x s` (save-some-buffers): Emacs の問いは、`C-r` (バッファを見る), `C-f`、`d` (違いを見る), `C-h` も受ける。
       バッファの名前とファイルの名前が違えば、両方を出す。
 - [x] 自動保存: Emacs は、300 回キーを押すごとにも保存する (`auto-save-interval`)。今は、書き換えが 30 秒止まったときだけ。
@@ -638,7 +636,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 22: 優先度つきの進め方
 
-各 Phase の未完了 (`- [ ]`) は 131 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+各 Phase の未完了 (`- [ ]`) は 128 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -666,7 +664,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `C-n` / `C-p` が、表示の桁 (タブと全角の幅) を保つ (Phase 12)。中。
 - [x] 単語の文字を Emacs の構文表に合わせる (`M-f`、`M-b`) (Phase 12)。小〜中。
 - [x] `M-q` を、docstring の中と、リージョンの全ての段落でも使えるようにする (Phase 12)。小〜中。
-- [ ] マークを置く違い: `C-M-a` / `C-M-e`、`C-x i`、`C-x r y`、`C-x r i` (Phase 12)。小。
+- [x] マークを置く違い: `C-M-a` / `C-M-e`、`C-x i`、`C-x r y`、`C-x r i` (Phase 12)。小。
 
 足りないコマンド (Phase 14 と dotfiles の表から。よく使うものを先に):
 

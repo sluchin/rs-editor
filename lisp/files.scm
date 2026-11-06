@@ -119,9 +119,10 @@ Interactively, read FILENAME in the minibuffer; the initial input is the current
 
 (define-command (insert-file . args)
   "Insert the contents of file FILENAME at point.
-Point stays before the inserted text.
+Point stays before the inserted text, and the mark is set after it.
 Interactively, read FILENAME in the minibuffer with file name completion."
-  (insert-file-contents (if (null? args) (read-file-name "Insert file: ") (car args)))
+  (let ((result (insert-file-contents (if (null? args) (read-file-name "Insert file: ") (car args)))))
+    (push-mark (+ (point) (cadr result))))
   #f)
 
 ;;; Commands of the builtins (Emacs の C のコマンド). 組み込みは, files--NAME で呼ぶ

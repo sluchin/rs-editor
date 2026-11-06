@@ -1476,3 +1476,30 @@ fn test_fill_paragraph_in_a_docstring_and_a_region() {
     fx.press("C-x h M-q");
     assert_eq!(fx.text(), "aaa bbb\n\nccc ddd\n");
 }
+
+#[test]
+fn test_defun_motions_and_insertions_set_the_mark_without_selecting() {
+    let mut fx = Fixture::new();
+    fx.feed(&typed("scheme-mode\n"));
+    fx.press("M-x");
+    fx.press(&typed("(defun a ()\n  1)\n\n(defun b ()\n  2)\n"));
+    // C-M-a は、動く前の位置にマークを置く (リージョンは選ばない)
+    fx.press("C-p");
+    let before = fx.point();
+    fx.press("C-M-a");
+    assert!(fx.point() < before);
+    fx.press("C-x C-x");
+    assert_eq!(fx.point(), before);
+    // C-M-e も同じ (C-x C-x が選んだリージョンは, C-g で解く)
+    fx.press("C-g");
+    fx.press("C-M-e");
+    assert!(fx.point() > before);
+    fx.press("C-x C-x");
+    assert_eq!(fx.point(), before);
+    // C-x r s と C-x r i: 入れた文字の端にマークを置く
+    fx.press("C-x r s a");
+    fx.press("C-x r i a");
+    let after = fx.point();
+    fx.press("C-x C-x");
+    assert_ne!(fx.point(), after);
+}
