@@ -5845,8 +5845,14 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:forward-word"
-msgid "Move point forward over N words (backward if N is negative)."
-msgstr "点を N 個の単語の先に動かす (N が負なら後ろへ)."
+msgid ""
+"Move point forward over N words (backward if N is negative).\n"
+"Where a word ends is decided as in Emacs: Japanese kanji followed by kana make one word,\n"
+"and so do other runs of characters of the same script."
+msgstr ""
+"点を N 個の単語の先に動かす (N が負なら後ろへ).\n"
+"単語の切れ目は Emacs と同じに決める: 日本語の漢字とそれに続くかなは 1 語になり,\n"
+"同じ書記体系の文字が続けば, 1 語になる."
 
 #: lisp/simple.scm
 msgctxt "function:backward-word"

@@ -30,3 +30,4 @@ pub mod sexp;
 pub mod sync;
 pub mod syntax;
 pub mod window;
+pub mod word;

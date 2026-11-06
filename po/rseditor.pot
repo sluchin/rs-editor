@@ -5253,7 +5253,10 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:forward-word"
-msgid "Move point forward over N words (backward if N is negative)."
+msgid ""
+"Move point forward over N words (backward if N is negative).\n"
+"Where a word ends is decided as in Emacs: Japanese kanji followed by kana make one word,\n"
+"and so do other runs of characters of the same script."
 msgstr ""
 
 #: lisp/simple.scm

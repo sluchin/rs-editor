@@ -124,6 +124,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
         &[Kind::Number, Kind::Any, Kind::Number],
         1,
     ),
+    ("forward-word-position", &[Kind::Number, Kind::Number], 2),
     (
         "forward-paragraph-position",
         &[Kind::Number, Kind::Number],
@@ -304,6 +305,7 @@ pub const NAMES: &[&str] = &[
     "beginning-of-defun-position",
     "end-of-defun-position",
     "mark-defun-range",
+    "forward-word-position",
     "forward-paragraph-position",
     "forward-sentence-position",
     "indent-for-tab-op",

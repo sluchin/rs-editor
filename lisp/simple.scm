@@ -176,22 +176,15 @@ or the mark is active."
     (if (and arg (not (pair? arg))) (forward-line 1))))
 
 (define-command (forward-word . args)
-  "Move point forward over N words (backward if N is negative)."
+  "Move point forward over N words (backward if N is negative).
+Where a word ends is decided as in Emacs: Japanese kanji followed by kana make one word,
+and so do other runs of characters of the same script."
   (let ((n (simple--arg args)))
-    (cond ((> n 0)
-           (re-search-forward "\\W*\\w+" #f 'move)
-           (forward-word (- n 1)))
-          ((< n 0) (backward-word (- n))))))
+    (goto-char (forward-word-position (point) n))))
 
 (define-command (backward-word . args)
   "Move point backward over N words (forward if N is negative)."
-  (let ((n (simple--arg args)))
-    (cond ((> n 0)
-           (when (not (bobp))
-             (backward-char 1)
-             (re-search-backward "\\<" #f 'move))
-           (backward-word (- n 1)))
-          ((< n 0) (forward-word (- n))))))
+  (forward-word (- (simple--arg args))))
 
 (define-command (left-word . args)
   "Move point N words to the left (to the right if N is negative).

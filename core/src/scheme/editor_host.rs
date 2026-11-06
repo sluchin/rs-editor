@@ -26,6 +26,7 @@ use crate::sexp::{
 use crate::sync::LockExt;
 use crate::syntax::{class_of_designator, syntax_of, Class, Dialect, Source};
 use crate::window::Direction;
+use crate::word::forward_word;
 use crate::{comment, fill, replace};
 
 /// 覚えておく正規表現の数の上限.
@@ -1354,6 +1355,16 @@ impl<U: Host> EditorHost<U> {
                         return Err(e.error);
                     }
                 }
+            }
+            "forward-word-position" => {
+                let chars: Vec<char> = b.text().chars().collect();
+                at(forward_word(
+                    &chars,
+                    pos(op, args, 0)?,
+                    int(op, args, 1)?,
+                    b.begv(),
+                    b.zv(),
+                ))
             }
             "forward-paragraph-position" => {
                 let chars: Vec<char> = b.text().chars().collect();
