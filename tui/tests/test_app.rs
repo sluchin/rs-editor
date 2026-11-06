@@ -1364,3 +1364,33 @@ fn test_minibuffer_history_keys() {
     fx.press("M-g g");
     assert_eq!(fx.point(), 4);
 }
+
+#[test]
+fn test_quoted_insert_inserts_control_and_meta_keys() {
+    // 前置きのキーも, 制御文字としてそのまま入る (C-x は ^X)
+    for (key, expected) in [
+        ("C-x", "\u{18}"),
+        ("C-h", "\u{8}"),
+        ("RET", "\r"),
+        ("C-m", "\r"),
+        ("C-j", "\n"),
+        ("C-@", "\u{0}"),
+        ("C-SPC", "\u{0}"),
+        ("C-?", "\u{7f}"),
+        ("ESC", "\u{1b}"),
+        ("DEL", "\u{7f}"),
+        ("M-a", "\u{e1}"),
+        ("C-M-x", "\u{98}"),
+        ("a", "a"),
+    ] {
+        let mut fx = Fixture::new();
+        fx.feed(key);
+        fx.press("C-q");
+        assert_eq!(fx.text(), expected, "C-q {key}");
+    }
+    // 文字にならないキーは, 入れない
+    let mut fx = Fixture::new();
+    fx.feed("<f1>");
+    fx.press("C-q");
+    assert_eq!(fx.text(), "");
+}

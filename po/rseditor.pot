@@ -5813,7 +5813,8 @@ msgstr ""
 msgctxt "function:quoted-insert"
 msgid ""
 "Read a character and insert it as it is, N times.\n"
-"Only the keys that stand for one character can be inserted."
+"A control key inserts its control character (C-x inserts ^X), a Meta key the character with the\n"
+"eighth bit set (M-a inserts the character 225), RET inserts a carriage return."
 msgstr ""
 
 #: lisp/simple.scm

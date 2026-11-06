@@ -1059,17 +1059,33 @@ With argument N, move the previous line past N lines."
          (forward-line n)))
    (simple--arg args)))
 
+;; The code of the character that KEY stands for when quoted: C-x is 24, M-a is 225, RET is 13.
+(define (simple--quoted-code key)
+  (let loop ((rest key) (control #f) (meta #f))
+    (cond ((and (> (string-length rest) 2) (equal? (substring rest 0 2) "C-"))
+           (loop (substring rest 2 (string-length rest)) #t meta))
+          ((and (> (string-length rest) 2) (equal? (substring rest 0 2) "M-"))
+           (loop (substring rest 2 (string-length rest)) control #t))
+          (else
+           (let* ((named (cond ((equal? rest "Enter") 13) ((equal? rest "TAB") 9)
+                               ((equal? rest "Escape") 27) ((equal? rest "Backspace") 127) ((equal? rest "SPC") 32)
+                               (else #f)))
+                  (code (or named (and (= (string-length rest) 1) (string-to-char rest))))
+                  (ctl (cond ((not control) code)
+                             ((not code) #f)
+                             ((and (>= code 97) (<= code 122)) (- code 96))
+                             ((and (>= code 64) (<= code 95)) (- code 64))
+                             ((= code 63) 127)
+                             ((= code 32) 0)
+                             (else #f)))
+                  (full (and ctl (if meta (and (< ctl 128) (+ ctl 128)) ctl))))
+             (or full (error (format "Cannot insert %s" key))))))))
+
 (define-command (quoted-insert . args)
   "Read a character and insert it as it is, N times.
-Only the keys that stand for one character can be inserted."
-  (let* ((key (read-key "C-q-"))
-         (char (cond ((= (string-length key) 1) key)
-                     ((equal? key "Enter") "\r")
-                     ((equal? key "TAB") "\t")
-                     ((equal? key "C-j") "\n")
-                     ((equal? key "C-m") "\r")
-                     ((equal? key "C-i") "\t")
-                     (else (error (format "Cannot insert %s" key))))))
+A control key inserts its control character (C-x inserts ^X), a Meta key the character with the
+eighth bit set (M-a inserts the character 225), RET inserts a carriage return."
+  (let ((char (char-to-string (simple--quoted-code (read-key "C-q-")))))
     (let loop ((n (simple--arg args)))
       (when (> n 0)
         (insert char)
