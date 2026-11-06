@@ -93,16 +93,38 @@ If goal-column is a number, move to that column instead.  Signal an error at the
 If goal-column is a number, move to that column instead.  Signal an error at the first line."
   (simple--move-line (- (simple--arg args))))
 
+(define disabled-command-function #t
+  "Non-nil means that a disabled command asks before it runs.  Answering ! turns this off for the session.")
+
+(define disabled-commands '(upcase-region downcase-region set-goal-column)
+  "The commands that ask before they run when they are invoked from a key or M-x (Emacs marks them disabled).")
+
+(define (simple--disabled-ok command)
+  "Return #t if COMMAND may run now.  A disabled command invoked from a key or M-x asks first:
+n or C-g cancels it, y enables it for the session, SPC runs it once, ! enables all disabled commands."
+  (if (and simple--interactive disabled-command-function (member command disabled-commands))
+      (let loop ()
+        (let ((key (read-key (format "You have invoked the disabled command %s.  Use this command? (n, y, SPC or !) " command) #t)))
+          (cond ((member key '("n" "C-g")) #f)
+                ((equal? key "y")
+                 (set! disabled-commands (filter (lambda (c) (not (eq? c command))) disabled-commands))
+                 #t)
+                ((equal? key " ") #t)
+                ((equal? key "!") (set! disabled-command-function #f) #t)
+                (else (loop)))))
+      #t))
+
 (define-command (set-goal-column . args)
   "Set the current column as the goal column of next-line and previous-line.
 With an argument, clear the goal column."
-  (if (simple--raw-arg args)
-      (begin
-        (set! goal-column #f)
-        (message "No goal column"))
-      (begin
-        (set! goal-column (current-column))
-        (message (format "Goal column %d (use set-goal-column with an arg to unset it)" goal-column)))))
+  (when (simple--disabled-ok 'set-goal-column)
+    (if (simple--raw-arg args)
+        (begin
+          (set! goal-column #f)
+          (message "No goal column"))
+        (begin
+          (set! goal-column (current-column))
+          (message (format "Goal column %d (use set-goal-column with an arg to unset it)" goal-column))))))
 
 (define-command (move-beginning-of-line . args)
   "Move point to the beginning of the line.
@@ -853,12 +875,12 @@ Point moves to the end of the converted text, except for a negative N."
 (define-command (upcase-region . args)
   "Convert the region to upper case.
 Called from Lisp with the two positions BEG and END, convert the text between them."
-  (simple--casify-region "upcase" args))
+  (and (simple--disabled-ok 'upcase-region) (simple--casify-region "upcase" args)))
 
 (define-command (downcase-region . args)
   "Convert the region to lower case.
 Called from Lisp with the two positions BEG and END, convert the text between them."
-  (simple--casify-region "downcase" args))
+  (and (simple--disabled-ok 'downcase-region) (simple--casify-region "downcase" args)))
 
 (define-command (upcase-initials-region . args)
   "Upcase the initial of each word in the region.

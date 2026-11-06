@@ -5190,6 +5190,23 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:disabled-command-function"
+msgid "Non-nil means that a disabled command asks before it runs.  Answering ! turns this off for the session."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:disabled-commands"
+msgid "The commands that ask before they run when they are invoked from a key or M-x (Emacs marks them disabled)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--disabled-ok"
+msgid ""
+"Return #t if COMMAND may run now.  A disabled command invoked from a key or M-x asks first:\n"
+"n or C-g cancels it, y enables it for the session, SPC runs it once, ! enables all disabled commands."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:set-goal-column"
 msgid ""
 "Set the current column as the goal column of next-line and previous-line.\n"

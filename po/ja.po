@@ -5767,6 +5767,25 @@ msgstr ""
 "goal-column が数なら, その桁に動く. 最初の行ではエラーにする."
 
 #: lisp/simple.scm
+msgctxt "variable:disabled-command-function"
+msgid "Non-nil means that a disabled command asks before it runs.  Answering ! turns this off for the session."
+msgstr "真なら, 使えないコマンドは動かす前に確かめる. ! と答えると, このセッションでは確かめなくなる."
+
+#: lisp/simple.scm
+msgctxt "variable:disabled-commands"
+msgid "The commands that ask before they run when they are invoked from a key or M-x (Emacs marks them disabled)."
+msgstr "キーか M-x から呼ぶと, 動かす前に確かめるコマンド (Emacs で使えないとされているもの)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--disabled-ok"
+msgid ""
+"Return #t if COMMAND may run now.  A disabled command invoked from a key or M-x asks first:\n"
+"n or C-g cancels it, y enables it for the session, SPC runs it once, ! enables all disabled commands."
+msgstr ""
+"COMMAND を今動かしてよければ #t を返す. キーか M-x から呼んだ使えないコマンドは, 先に確かめる:\n"
+"n か C-g でやめる. y でこのセッションでは使えるようにする. SPC で 1 回だけ動かす. ! で使えないコマンドを全て使えるようにする."
+
+#: lisp/simple.scm
 msgctxt "function:set-goal-column"
 msgid ""
 "Set the current column as the goal column of next-line and previous-line.\n"

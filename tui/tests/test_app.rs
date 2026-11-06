@@ -1394,3 +1394,45 @@ fn test_quoted_insert_inserts_control_and_meta_keys() {
     fx.press("C-q");
     assert_eq!(fx.text(), "");
 }
+
+#[test]
+fn test_disabled_commands_ask_before_they_run() {
+    // C-x C-u: n でやめる, SPC で 1 回だけ, y で以後は聞かない
+    let mut fx = Fixture::new();
+    fx.press("a b c C-a C-SPC C-e");
+    fx.feed("n");
+    fx.press("C-x C-u");
+    assert_eq!(fx.text(), "abc");
+    fx.feed("C-g");
+    fx.press("C-x C-u");
+    assert_eq!(fx.text(), "abc");
+    // 他のキーは聞き直す
+    fx.feed("x SPC");
+    fx.press("C-x C-u");
+    assert_eq!(fx.text(), "ABC");
+    // SPC では有効にならない. y で有効にした C-x C-l は, 以後は聞かない
+    fx.press("C-a C-SPC C-e");
+    fx.feed("y");
+    fx.press("C-x C-l");
+    assert_eq!(fx.text(), "abc");
+    fx.press("C-a C-SPC C-e");
+    fx.feed("SPC");
+    fx.press("C-x C-u");
+    assert_eq!(fx.text(), "ABC");
+    fx.press("C-a C-SPC C-e C-x C-l");
+    assert_eq!(fx.text(), "abc");
+    // ! で全てを有効にする
+    let mut fx = Fixture::new();
+    fx.press("a b C-a C-SPC C-e");
+    fx.feed("!");
+    fx.press("C-x C-n");
+    assert_eq!(fx.point(), 2);
+    fx.press("C-x C-u");
+    assert_eq!(fx.text(), "AB");
+    // M-x でも聞く (プログラムから呼ぶときは聞かない)
+    let mut fx = Fixture::new();
+    fx.press("a b C-a C-SPC C-e");
+    fx.feed("u p c a s e - r e g i o n RET n");
+    fx.press("M-x");
+    assert_eq!(fx.text(), "ab");
+}
