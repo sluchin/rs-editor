@@ -241,7 +241,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 
 ## 7. 既知の違い (不合格にしない)
 
-- `C-h f` で、Rust の組み込みの手続き (`car`、`insert` など) は、docstring が `Not documented.` になる (`TODO.md` の Phase 17)。
+- `C-h f` で、Rust の組み込みの手続き (`car`、`insert` など) は、docstring が `Not documented.` になる (`TODO.md` の Phase 18)。
 - `kill-buffer` を Lisp から名前付きで呼ぶと、聞かずに消す (書き換えたファイルのバッファならエラー)。
 - 古い JSON 形式のブックマークは、読み込まない。
 - dired には、`RET`、`n`、`p`、`^`、`g` などの専用のキーがまだ無い (一覧と `dired-jump` だけ)。

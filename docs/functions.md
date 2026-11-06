@@ -271,7 +271,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 ### 実装の計画 (エディタの基本のコマンドを Lisp で書く)
 
-エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 16 の続き。目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと(そのため, 段階 1 で, エディタの核を Rust に作る)。下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。段階は番号の順に進める (1 は土台で, 2 以降の前提)。画面 (Tauri) の TypeScript のコマンドは, 全て消した (画面は核の frame を描くだけ。`docs/core_migration.md`)。
+エディタの基本のコマンドを, Lisp (`lisp/`) で書く計画。TODO.md の Phase 17 の続き。目標は, 今の画面 (Tauri) と, ターミナル (ncurses) の両方で動かすこと(そのため, 段階 1 で, エディタの核を Rust に作る)。下の表の「計画」の列の番号が, ここの段階の番号。「済」は, 既に Lisp で書いたもの。段階は番号の順に進める (1 は土台で, 2 以降の前提)。画面 (Tauri) の TypeScript のコマンドは, 全て消した (画面は核の frame を描くだけ。`docs/core_migration.md`)。
 
 | 段階 | 内容 | コマンド | 新しく書く | Rust から移す |
 |---|---|---|---|---|
@@ -321,7 +321,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **6. 字下げ, 整形, コメント**
 
-- 【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: `indent-for-tab-command`, `indent-region`, `indent-sexp`, `newline`, `indent-rigidly`, `tab-to-tab-stop`, `set-fill-prefix`, `fill-paragraph`, `comment-dwim`, `comment-line` を, 本文の全ての位置から. 日本語の折り (禁則) は Emacs と別の決まりで, `core/tests/test_fill.rs` で試す). 違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, `comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, `comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】`TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。
+- 【Lisp 版は済 (`lisp/simple.scm`, 計算は字下げが `core/src/indent.rs`, 整形が `core/src/fill.rs`, コメントが `core/src/comment.rs`). `emacs -Q --batch` の結果と一致 (`core/tests/test_lisp.rs`: `indent-for-tab-command`, `indent-region`, `indent-sexp`, `newline`, `indent-rigidly`, `tab-to-tab-stop`, `set-fill-prefix`, `fill-paragraph`, `comment-dwim`, `comment-line` を, 本文の全ての位置から. 日本語の折り (禁則) は Emacs と別の決まりで, `core/tests/test_fill.rs` で試す). 違いが残るのは, Lisp の `fill-paragraph` が文字列と `#| |#` の中の段落を詰めないこと, `comment-dwim` が `#| |#` に対応しないこと, `comment-dwim` と `comment-line` のリージョンが行の途中で始まるか終わるとき (Emacs は途中から入れる. こちらは行ごと), `indent-rigidly` が前置引数で動かすだけで, 矢印キーの続きの入力は無いこと, `comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。画面 (Tauri) の TypeScript 版は消した (1.11)】`TAB`, `C-M-\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。エディタと整形の道具 (TODO の Phase 19) で, 決まりを 1 つにする。
 
 **7. 検索, 置換, 強調**
 
@@ -344,7 +344,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 
 **11. ヘルプ, xref, info**
 
-- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). `emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). `describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, `info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。画面 (Tauri) の TypeScript 版は消した (1.11)】
+- `C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 18 (docstring と多言語化) と一緒に進める。【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). `emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). `describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。違いが残るのは, `*Help*` が help-mode でなく (リンクも履歴も無い), 定義を探すのが `grep` の正規表現で (etags や LSP の backend が無い), `xref-find-references` の結果が `*xref*` の簡単な一覧なこと, `info` が Info のノードの移動 (`n`, `p`, `u`, 索引) を持たず, マニュアルの文章をそのまま出すことと, `describe-char`, `describe-face`, `apropos-command` などが無いこと。画面 (Tauri) の TypeScript 版は消した (1.11)】
 
 **12. 入れない**
 

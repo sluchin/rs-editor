@@ -64,7 +64,7 @@ STEPS = [
       '`comment-set-column` が桁を決めるだけで, コメントの置き直しをしないこと。'
       '画面 (Tauri) の TypeScript 版は消した (1.11)】'
       '`TAB`, `C-M-\\`, `M-q`, `M-;`。字下げの決まりと整形は, ターミナルでも使うため, Rust に移した。'
-      'エディタと整形の道具 (TODO の Phase 18) で, 決まりを 1 つにする。']),
+      'エディタと整形の道具 (TODO の Phase 19) で, 決まりを 1 つにする。']),
     (7, '検索, 置換, 強調',
      ['【Lisp 版は済 (`lisp/isearch.scm`, `lisp/replace.scm`. ターミナルのアプリが読む). `emacs -Q --batch` の結果と一致: '
       '`replace-string`, `replace-regexp`, `query-replace`, `query-replace-regexp` (`core/tests/test_replace.rs`), `occur` (`core/tests/test_occur.rs`), '
@@ -124,7 +124,7 @@ STEPS = [
       '`move-to-window-line-top-bottom` が `scroll-margin` を見ないこと。'
       '画面 (Tauri) の TypeScript 版は消した (1.11)】']),
     (11, 'ヘルプ, xref, info',
-     ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 17 (docstring と多言語化) と一緒に進める。'
+     ['`C-h` のコマンドと, 定義へ移るコマンド (`M-.`), info。ヘルプは Phase 18 (docstring と多言語化) と一緒に進める。'
      '【Lisp 版とターミナルのアプリは済 (`lisp/help.scm`, `lisp/xref.scm`, `lisp/info.scm`, `tui/`). '
      '`emacs -Q --batch` には窓も info のマニュアルも無いので, Rust のテストで試す (`core/tests/test_help.rs`, `tui/tests/test_app.rs`). '
      '`describe-variable`, `describe-command`, `describe-symbol`, `describe-key`, `where-is`, `describe-bindings`, `view-lossage`, `view-echo-area-messages`, `describe-syntax`, `xref-find-definitions`, `xref-find-references`, `xref-find-apropos`, `xref-go-back`, `info` などがある。'

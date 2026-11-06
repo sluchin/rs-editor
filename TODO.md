@@ -6,86 +6,10 @@
 
 ## 現状整理
 
-- Phase 1 から Phase 12.5 までと、Phase 14 の必須の項目は、実装した ([x])。Phase 12.5 は、全て済んだ。Phase 12 は、実装したコマンドの、Emacs 30 と違うところ。
+- Phase 1 から Phase 13 までと、Phase 15 の必須の項目は、実装した ([x])。Phase 13 は、全て完了。Phase 12 は、実装したコマンドの、Emacs 30 と違うところ。
 - エディタは CodeMirror 6 (Phase 8)。Phase 1 から Phase 7 の、`<textarea>` と `prefixKeymap.ts`、`emacsKeymap.ts` などの記述は、当時のもの
   (今は `src/components/CodeEditor.tsx` と `src/lib/emacs.ts`)。
-- まだ無い Emacs の標準機能は、Phase 13 に並べた。
-
-## 優先度つきの進め方
-
-未完了 (`- [ ]`) は 147 件ある (実装を確かめて、済んだ項目にチェックを付けたあとの数)。下に、優先度ごとにまとめた。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
-決め方は、(1) 固まる・データを失う・落ちるものを先に (P0 は済んだ)、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
-各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
-
-### P0: 固まる、データを失う、落ちる (済んだ)
-
-- 済んだ: キーボードマクロを `C-g` で止める、保存前に外の書き換えを確かめる、300 回のキーごとの自動保存、`lock().unwrap()` の panic 対策、`yes-or-no-p` の聞き直し (これは前から済んでいた)。
-- 残りの 2 つのうち、編集のときの確かめ (`ask-user-about-supersession-threat`) は済んだ。ターミナルの 30 秒の自動保存は、P1 の「ファイル・バッファ」に移した。
-
-### P1: 毎日の編集で、Emacs と違って困るもの (次にやる)
-
-編集の動き (小が多い。まとめて 1 つのまとまりで進める):
-
-- 前置引数を、繰り返しでなく、引数として渡す (Phase 12)。多くのコマンドの動きに関わるので、先にやる。中。
-- 負の前置引数 `C--` / `M--` と、`M-@` などの負の前置引数 (Phase 12, 13)。小。
-- kill-ring、消した矩形、レジスタを、全てのウィンドウで共通にする (Phase 12)。中。
-- isearch の大文字と小文字 (`case-fold-search`)、`M-c` / `M-r` / `M-e` (Phase 13「検索・置換」)。小〜中。
-- `M-n` の既定の値 (ミニバッファと isearch) と、`M-r` / `M-s` の履歴の検索 (Phase 12, 13)。小。
-- `C-q` の細かい違い (前置きのキー、`C-q RET`、Meta 付き) (Phase 12)。小。
-- 使えない (disabled) コマンドの確かめ: `C-x C-u`、`C-x C-l`、`C-x C-n` (Phase 12)。小。
-- `C-n` / `C-p` が、表示の桁 (タブと全角の幅) を保つ (Phase 12)。中。
-- 単語の文字を Emacs の構文表に合わせる (`M-f`、`M-b`) (Phase 12)。小〜中。
-- `M-q` を、docstring の中と、リージョンの全ての段落でも使えるようにする (Phase 12)。小〜中。
-- マークを置く違い: `C-M-a` / `C-M-e`、`C-x i`、`C-x r y`、`C-x r i` (Phase 12)。小。
-
-足りないコマンド (Phase 13 と dotfiles の表から。よく使うものを先に):
-
-- キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
-- コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
-- キーの無いコマンドのうち `untabify`、`tabify` (Phase 13「削除・編集」)。小。
-- クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
-- ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
-- dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 13)。大。毎日使うなら、P1 の最後に進める。
-- Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 13)。小。
-- Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 13「Lisp」)。小〜中。
-- 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 13「モードとそのほか」)。中。
-- ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 13)。小〜中。
-- `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 13)。中。
-- 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 13)。中。
-
-### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
-
-- ヘルプ: `C-h m` / `a` / `d` / `t`、`*Help*` の中のキー (Phase 13, 17)。中。
-- 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--debug-init`、`--no-splash` (Phase 15)。小。引数を読む仕組みを先に (`--batch` と `--script` は済んだ)。
-- エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 20)。小。
-- grep: `rgrep` / `lgrep`、`*grep*` の中のキー、探しながら出す、止める (Phase 12, 13, 14)。中。
-- ツリー (サイドバー): キーで動かす、今のファイルまで開く (Phase 14)。中。
-- `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) (Phase 13)。小〜中。
-- `*Completions*` で選ぶ、補完のスタイル (Phase 13)。中。
-- キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 13)。中。
-- `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 13)。中〜大。
-- モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、ほかのメジャーモードの切り替え (Phase 13)。中。
-- Scheme の整形 (`scmfmt`) と lint (Phase 18, 19)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
-- 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 20)。`dotfiles` で使っているので、使う頻度で上げる。大。
-- ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 17)。中。
-- Phase 16 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。中〜大。
-
-### P3: 使う場面が限られる、または大きい (後回し)
-
-- バージョン管理 (`C-x v ...`)、`diff`、`ediff`、綴り (`ispell`、`flyspell`)、`calc`、`calendar`、メール、`eww` / w3m、`shell`、`eshell`、`term` (Phase 13, 20)。大。外のツールで足りる。
-- フレームとタブ (`C-x 5 ...`、`C-x t ...`)、`C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 13)。中〜大。
-- 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--user`、`--no-desktop`、`--dump-file` など (Phase 15)。先の機能 (server、`-nw`) を決めてから。
-- Scheme のインタプリタを、独立したクレートにする (Phase 20)。大。
-- 画面 (Tauri) の `*Messages*`、Web のページを見る機能 (Phase 20)。調べてから決める。
-- `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (Phase 20)。待つ。
-
-### 整理 (進める前に直す)
-
-- Phase 15 の `--batch` と `--script FILE` は、実装済み (`tui/src/batch.rs`、`tests/batch/` の `cli-script`) なので、チェックを付けた。Phase 13 の済んだ項目も、`fboundp` とキーの割り当てで確かめて、チェックを付けた。Phase 12 の「Emacs と違うところ」は、動きを一つずつ確かめないと分からないので、まだ確かめていない。
-- 同じ内容が、Phase 12 と Phase 13 の両方にある項目 (`M-n` の既定の値、`C-x C-n` など) は、片方に寄せる。
-- この節の項目には、チェックボックスを付けない (数が二重になるため)。項目を済ませたら、各 Phase の項目を `[x]` にして、この節からも、同じ変更で消す。
-
----
+- まだ無い Emacs の標準機能は、Phase 14 に並べた。
 
 ## Phase 1: 既存キーマップの統合と配線
 
@@ -258,7 +182,7 @@
       (Emacs の `rgrep` の `case-fold-search` と同じ)。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは、探さない。
       既定の正規表現 (カーソルの所の言葉) は、まだ。
 
-## Phase 12.5: 初期設定ファイルと howm
+## Phase 13: 初期設定ファイルと howm
 
 - [x] 初期設定ファイルを `~/.rseditor` にする (無ければ、前の `~/.config/rseditor/init.scm`)。
 - [x] 色とフォントを、初期設定ファイルで変える: `set-background-color`、`set-foreground-color`、`set-frame-font`、`set-face-attribute` (`default` の `:family`、`:height`、`:foreground`、`:background`)。
@@ -275,143 +199,7 @@
 - [x] Lisp の文字列の位置は文字の数、画面の位置は UTF-16 の数で数える (絵文字など、BMP の外の文字があると、ずれる)。
       `performEditorRequest` (`src/lib/lisp.ts`) で、文字の数と UTF-16 の位置を変える (`charCount`、`utf16Offset`)。
 
-## Phase 15: 起動の引数 (Emacs の Initial options)
-
-Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを、`rseditor` の起動の引数でできるようにする。
-今は、起動の引数を読んでいない (初期設定ファイルは、必ず `~/.rseditor` か `~/.rseditor.d/init.scm` を読む)。
-
-- [ ] 起動の引数を読む仕組み (Rust の `std::env::args` か `tauri-plugin-cli`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。
-      引数の値は、`--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
-- [ ] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
-- [ ] `--quick`、`-Q`: `-q --no-site-file --no-site-lisp --no-splash --no-x-resources` と同じ。
-- [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に、rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
-- [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
-- [ ] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR から探す (`user-emacs-directory` に当たる変数も足す)。
-- [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
-- [ ] `--debug-init`: 初期設定ファイルの失敗で、止まった所 (式と、呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。
-- [ ] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
-- [ ] `--no-splash`: 始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
-- [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
-- [x] `--batch`: 画面を出さずに動かす (`-q` を含む)。Lisp の `message` は標準エラーに出し、終わったら終える。`noninteractive` に当たる変数を足す。
-- [x] `--script FILE`: 画面を出さずに、Scheme のファイルを動かして終える (`--batch -l FILE` に当たる)。`-x` は、`#!/usr/bin/rseditor -x` で使う `-Q --script`。
-- [ ] `--daemon`、`--bg-daemon[=NAME]`、`--fg-daemon[=NAME]`: 窓を出さずに、後ろで動かす (Emacs の server)。先に、`emacsclient` に当たるもの (動いている rs-editor でファイルを開く) を作る。
-- [ ] `--no-window-system`、`-nw`: 端末の中で動かす。画面が Tauri (WebView) なので、作れるかを調べてから決める。
-- [ ] `--display DISPLAY`、`-d DISPLAY`: 窓を出す X のディスプレイを変える (Tauri に環境変数 `DISPLAY` を渡す)。
-- [ ] `--terminal DEVICE`、`-t DEVICE`: 端末の装置を変える (`-nw` を作ってから)。
-- [ ] `--no-x-resources`: X のリソース (`~/.Xresources` の `Emacs.font` など) を読まない。先に、X のリソースを読むかを決める (読まないなら、受けて何もしない)。
-- [ ] Emacs の作り方のための引数 (`--dump-file`、`--no-loadup` / `-nl`、`--fingerprint`、`--seccomp`、`--no-build-details`、`--module-assertions`):
-      rs-editor には、当たるもの (Lisp の状態を書き出したファイル、loadup.el, 動的なモジュール) が無い。受けて何もしないか、`--fingerprint` などは版を出すかを決める。
-
-## Phase 16: TypeScript のコマンドを、Lisp に移す
-
-今は、エディタのコマンド (`find-file`、`forward-word` など) を、ほとんど TypeScript (画面) で書いている。
-Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScript) は小さくし、コマンドは Lisp (`lisp/`) で書くようにする。
-どのコマンドを、どこで書いているかは、docs/functions.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
-
-- [x] 起動のときに読む、既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`、`files.el` などに当たる) を決める (`lisp/` に置き、アプリに入れる)。
-      `core/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`、`lisp/window.scm`、`lisp/files.scm`、`lisp/help-fns.scm`) を、ビルドのときに埋め込み、評価器を作るときに評価する。
-      コマンドは、引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
-- [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`。`read-file-name`、`find-file-noselect`、`pop-to-buffer-same-window` を使う)。
-- [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
-      `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
-      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      ファイルの読み書きの組み込み (Emacs の C と同じ `insert-file-contents`、`write-region`、`do-auto-save`。`core/src/files.rs`) を足した。開くこと、保存すること、バックアップは、Emacs と同じく Lisp (`find-file-noselect`、`basic-save-buffer`、`backup-buffer`)。
-      バッファを出す組み込みは、Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
-- [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
-      組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。
-- [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
-      `kill-buffer` は、Emacs で C の関数なので、組み込みのまま残す。
-- [ ] Lisp から使う組み込みの関数を足す (カーソル、文字、行、マーク、窓、バッファなど。 Emacs の C の関数に当たるもの)。
-- [ ] Emacs で Lisp で書いたコマンド (docs/functions.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
-      進め方は、docs/functions.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
-      目標は、今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
-      (1.1 から 1.11. 進み方は、docs/functions.md の「実装の計画」)。
-      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は済。1.11 (今の画面 (Tauri) を核につなぐ) は済 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は済で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が済 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も済 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が済で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も済 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が済 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは docs/functions.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が済で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
-      速さが要るもの (`self-insert-command`、カーソルを動かすもの) は、動かして比べてから決める。
-- [x] 読み出し専用のバッファ (`buffer-read-only`、`read-only-mode`、`toggle-read-only`) を核に入れる (`Buffer::read_only`。書き換えると `Buffer is read-only` のエラー)。
-- [ ] Emacs で C で書いたコマンド (docs/functions.md の「組み込みのコマンド」) は、組み込みのまま残す (Emacs と同じ)。
-
-## Phase 17: ヘルプ (docstring と C-h f) と、ヘルプの多言語化
-
-Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstring (引数の後の文字列) を出す。rs-editor も同じにする。
-今は、`define` と `define-command` の docstring を覚えておらず、`lisp/*.scm` の説明は、全て `;;` のコメントで書いている。
-
-- [x] `define`、`define-command` の docstring (引数の後の文字列。本体が文字列だけなら、docstring でなく値) を覚える。
-      `(documentation 'name)` と、変数の docstring (Emacs の `defvar` の 3 つ目。 `documentation-property`) も。
-- [ ] `define-syntax` の docstring。
-- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
-      画面のコマンド (TypeScript) は、核に移した (`docs/core_migration.md`) ので、コマンドは全て Lisp の docstring を持つ。
-      残るのは、Rust の組み込みの手続き (`car`、`insert`、`forward-char` など)。`C-h f` で調べると、`Not documented.` と出る。
-      次の順で直す。
-  1. 組み込みの手続きの docstring (英語) を、1 つの表 `core/src/scheme/builtin_docs.rs` (名前 → 文) に置く。
-     Emacs にある関数は、Emacs の docstring を `emacs -Q --batch` で書き出して作る (`tools/emacs-commands/` に足す)。rs-editor で動きが違うものは、違いを 1 行足す。
-  2. Lisp の `documentation` が、Lisp の docstring が無ければ、表の文を返す。`lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。
-  3. `tools/po/update.py` が表も集め (`msgctxt` は `function:名前`)、`po/ja.po` に訳を足す。表の文も、Lisp の docstring と同じく `help-language` の訳で出る。
-  4. テスト: 組み込みの名前 (`builtins::NAMES` など) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
-- [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`), 割り当てたキー (`where-is-internal`),
-      引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
-      候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。
-- [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。カーソルの所の名前を既定にする。
-      docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は、Emacs と同じく置き換える。
-      引数の形は、Emacs の書き方 (`&optional`) にする (今は、残りの引数で受けて `&rest ARGS`)。
-- [x] `lisp/howm.scm` の `;;` の説明を、docstring (英語) に書き直す (元の日本語は、`po/ja.po` の翻訳にした)。
-- [x] `lisp/org.scm` の `;;` の説明を、docstring (英語) に書き直す (訳は `po/ja.po`)。
-- [ ] 多言語化の仕組み (Emacs には無い。 rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし、読むのは Rust で行う
-      (gettext の実行時の仕組み (libintl, `setlocale`) は使わない。エディタの中で言語を変えるため、C のライブラリに頼らないため):
-  - docstring は、Emacs と同じく英語で書く (元の文。翻訳が無ければ、これを出す)。
-  - 翻訳は `po/ja.po` のように、言語ごとの PO のファイルに置く。`msgctxt` は名前 (`org-cycle` など。関数と変数は `function:` と `variable:` を前に付ける),
-    `msgid` は英語の docstring, `msgstr` は翻訳。
-  - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り、各言語の PO に混ぜる道具 (`tools/po/update.py`。`npm run po:update`)。
-    元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず、英語を出す。
-    `npm run po:check` (`npm run check` で動く) で、作り直していない PO を見つける。
-  - [ ] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
-  - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
-    Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
-  - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。
-  - [ ] `*Help*` に、元の文 (英語) を見るボタンを付ける。
-  - 翻訳の無いものと、fuzzy の翻訳を、一覧にする (Phase 19 の lint の 1 つ)。Poedit などの翻訳の道具で直せることを、README に書く。
-  - Rust のエラーの文 (`Cannot move column further` など) は、Emacs と同じく訳さない。
-    画面の文 (メニュー、`message`) を訳すことになったら、複数形や語順を扱える Fluent (`fluent-rs`) と比べて決める。
-
-## Phase 18: Scheme の整形 (format)
-
-`lisp/*.scm` と `tests/lisp/*.scm` を、決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
-
-- [ ] 字下げの決まりを、エディタ (`src/lib/lispIndent.ts`、`lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
-      Rust で書くなら、決まりの表をファイル (JSON か Scheme) にして、両方から読む。
-- [ ] 整形の道具 (例: `cargo run --bin scmfmt -- FILE...`): 字下げを直し、行の終わりの空白、閉じ括弧だけの行、空行の重なりを消す。
-      コメント (`;`、`;;`、`;;;` の位置。 Emacs の決まり) と、文字列の中は変えない。長い行を分けるかは、はじめは変えない。
-- [ ] `--check` (直す所があれば、失敗にする) を付け、`npm run format` と `npm run check` に入れる。
-- [ ] エディタの `M-x indent-region` と結果が同じことを、テストで確かめる。
-
-## Phase 19: Scheme の lint
-
-`lisp/*.scm` と `tests/lisp/*.scm` の誤りを、動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
-
-- [ ] 定義していない名前 (変数と関数), 引数の数の違い (定義した関数と、組み込みの関数)。
-- [ ] 使っていない変数 (`let` と引数), 同じ名前の定義の重なり。
-- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので、同じ名前の変数と関数は、後のものが前のものを消す。 org.scm の `org-agenda-files` で起きた)。
-- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`、`cons` の 2 つ目がリストでない), `cond` の `=>`、      `format` の `%s`、`%S`、`%d`、`%%` 以外 (`%5d` など), ベクタ、文字 (`#\a`)。
-- [ ] `'()` を偽として使った所 (`(if '() ...)` は真)。
-- [ ] docstring (Phase 17): コマンド (`define-command`) と、外から使う関数の docstring が無い所。Emacs の `checkdoc` の決まり (1 行目は文で終える、引数は大文字で書くなど)。
-- [ ] 翻訳 (Phase 17): `.pot` が docstring と合っているか、PO の翻訳の無いものと fuzzy (元の docstring が変わった) の翻訳。
-- [ ] 警告ごとに、止める書き方 (コメントか、ファイルの変数) を決める。
-
-## Phase 14: M-x grep と、サイドバーのプロジェクトのツリー
-
-- [x] `M-x grep`: 外のコマンドを使わず、エディタ (Lisp の `lisp/compile.scm` が `rust-grep` で) が、ディレクトリの下のファイルから探す。
-      正規表現とディレクトリを聞き、結果を `*grep*` バッファ (Emacs の grep-mode の形。 `ファイル:行:行の文字`) に、ほかのウィンドウに出す。
-      `RET` (compile-goto-error) で、その行のファイルを、ほかのウィンドウに開く。`M-g n`、`M-g p`、`` C-x ` `` で、次・前の合った行へ。
-- [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー。 `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で、出すか消す。
-      根は、バッファのディレクトリから上へたどって `.git` のある所 (無ければ、バッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
-      ファイルを押すと、選んでいるウィンドウに開く。今のバッファのファイルを強調する。`.git` は出さない。↻ で読み直す。
-- [ ] ツリー: キーで動かす (フォーカスを移して、`n`、`p`、`RET` など), 幅を変える、今のファイルまで開く (VS Code の Reveal),
-      ファイルを作る・名前を変える・消す、ファイルが変わったら読み直す、根を選ぶコマンド、起動のときに出す設定 (今は、初期設定ファイルで `(call-interactively 'project-tree)`)。
-- [ ] `*grep*` の中のキー: `n` / `p` (next-error-no-select など), `g` (探し直す), `TAB` / `S-TAB` (次・前のファイル), `C-c C-k` (止める)。
-- [ ] grep: 探しているあいだに、見つけた行を順に出す (今は、終わってから出す)。止める (`C-c C-k`)。
-
----
-
-## Phase 13: Emacs の標準機能で、まだ無いもの
+## Phase 14: Emacs の標準機能で、まだ無いもの
 
 `emacs -Q` (Emacs 30.2) の既定のキーの割り当て (`global-map`) と比べて、rs-editor に無いもの (2026-10-25 に洗い出した)。
 マウス、メニュー、ファンクションキー、入力メソッド、文字コード、フレーム、タブは、除いた。
@@ -423,7 +211,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `C-x [` / `C-x ]` (backward-page / forward-page), `C-x C-p` (mark-page), `C-x l` (count-lines-page): ページ (`^L`) の単位。
 - [x] `M-r` (move-to-window-line-top-bottom): カーソルを、画面の中、上、下の行へ。
 - [ ] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置、桁へ。
-- [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 14)。
+- [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 15)。
 - [ ] `next-error` で、`compile` と `occur` の結果も使う。`*grep*` の中の、今の行の印 (`=>`) と強調。
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
@@ -448,7 +236,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `M-SPC` (cycle-spacing): Emacs 30 の既定は、続けて押すと、空白を 1 つ、無し、元に戻す。今は `just-one-space`。
 - [x] `M-'` (abbrev-prefix-mark), `C-x a ...` (add-global-abbrev など), `C-x '` (expand-abbrev): 略語 (abbrev)。
 - [x] `C-M-i` (complete-symbol), `C-M-/` (dabbrev-completion): 補完の候補の一覧。
-- [ ] キーの無いコマンド: `untabify`、`tabify`、`align`、`align-regexp`、`center-line`、`whitespace-mode` (ほかの `sort-lines` などは済んだ)。
+- [ ] キーの無いコマンド: `untabify`、`tabify`、`align`、`align-regexp`、`center-line`、`whitespace-mode` (ほかの `sort-lines` などは完了)。
 
 ### リージョン・矩形・レジスタ・ブックマーク
 
@@ -470,7 +258,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] isearch の、合った所の全てを強調する (`isearch-lazy-highlight`) と、合った数を出す (`isearch-lazy-count`)。
 - [x] `M-s w` (isearch-forward-word), `M-s _` (isearch-forward-symbol), `M-s .` (isearch-forward-symbol-at-point), `M-s M-.` (isearch-forward-thing-at-point)。
 - [ ] `multi-occur`。
-- [x] `grep` (Phase 14. 外のコマンドを使わず、エディタが探す)。
+- [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
 - [ ] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く), `zrgrep`、`find-grep`。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
 - [ ] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
@@ -500,7 +288,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] `C-x 4 4` (other-window-prefix)。
 - [x] `C-x ^` / `C-x {` / `C-x }` / `C-x -` / `C-x +` (enlarge-window, shrink-window-horizontally, enlarge-window-horizontally,
       shrink-window-if-larger-than-buffer, balance-windows): ウィンドウの大きさ。
-- [ ] `C-M-S-v` (scroll-other-window-down) / `C-M-S-l`: キーを割り当てる (`C-M-v` は済み)。
+- [ ] `C-M-S-v` (scroll-other-window-down) / `C-M-S-l`: キーを割り当てる (`C-M-v` は完了済み)。
 - [ ] `C-x w ...` のうち `toggle-window-dedicated`、`winner-mode`、`windmove`。
 - [ ] `C-x 5 ...` (フレーム) と `C-x t ...` (タブ)。
 
@@ -512,7 +300,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### ヘルプ
 
-- [~] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 17)。`C-h f` は済んだ。
+- [~] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 18)。`C-h f` は完了。
 - [ ] `C-h m` (describe-mode)。
 - [ ] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。
 - [x] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
@@ -668,9 +456,143 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 | [ ] | `M-<f9>` | cscope-display-buffer | 5143 |
 | [ ] | `M-<f10>` | cscope-display-buffer-toggle | 5144 |
 
-## Phase 20: そのほかの機能
+## Phase 15: M-x grep と、サイドバーのプロジェクトのツリー
 
-上の Phase に無い項目。Scheme の整形 (Phase 18)、Scheme の lint (Phase 19)、ヘルプの多言語化 (Phase 17) は、それぞれの Phase で進める。
+- [x] `M-x grep`: 外のコマンドを使わず、エディタ (Lisp の `lisp/compile.scm` が `rust-grep` で) が、ディレクトリの下のファイルから探す。
+      正規表現とディレクトリを聞き、結果を `*grep*` バッファ (Emacs の grep-mode の形。 `ファイル:行:行の文字`) に、ほかのウィンドウに出す。
+      `RET` (compile-goto-error) で、その行のファイルを、ほかのウィンドウに開く。`M-g n`、`M-g p`、`` C-x ` `` で、次・前の合った行へ。
+- [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー。 `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で、出すか消す。
+      根は、バッファのディレクトリから上へたどって `.git` のある所 (無ければ、バッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
+      ファイルを押すと、選んでいるウィンドウに開く。今のバッファのファイルを強調する。`.git` は出さない。↻ で読み直す。
+- [ ] ツリー: キーで動かす (フォーカスを移して、`n`、`p`、`RET` など), 幅を変える、今のファイルまで開く (VS Code の Reveal),
+      ファイルを作る・名前を変える・消す、ファイルが変わったら読み直す、根を選ぶコマンド、起動のときに出す設定 (今は、初期設定ファイルで `(call-interactively 'project-tree)`)。
+- [ ] `*grep*` の中のキー: `n` / `p` (next-error-no-select など), `g` (探し直す), `TAB` / `S-TAB` (次・前のファイル), `C-c C-k` (止める)。
+- [ ] grep: 探しているあいだに、見つけた行を順に出す (今は、終わってから出す)。止める (`C-c C-k`)。
+
+## Phase 16: 起動の引数 (Emacs の Initial options)
+
+Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを、`rseditor` の起動の引数でできるようにする。
+今は、起動の引数を読んでいない (初期設定ファイルは、必ず `~/.rseditor` か `~/.rseditor.d/init.scm` を読む)。
+
+- [ ] 起動の引数を読む仕組み (Rust の `std::env::args` か `tauri-plugin-cli`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。
+      引数の値は、`--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
+- [ ] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
+- [ ] `--quick`、`-Q`: `-q --no-site-file --no-site-lisp --no-splash --no-x-resources` と同じ。
+- [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に、rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
+- [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
+- [ ] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR から探す (`user-emacs-directory` に当たる変数も足す)。
+- [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
+- [ ] `--debug-init`: 初期設定ファイルの失敗で、止まった所 (式と、呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。
+- [ ] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
+- [ ] `--no-splash`: 始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
+- [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
+- [x] `--batch`: 画面を出さずに動かす (`-q` を含む)。Lisp の `message` は標準エラーに出し、終わったら終える。`noninteractive` に当たる変数を足す。
+- [x] `--script FILE`: 画面を出さずに、Scheme のファイルを動かして終える (`--batch -l FILE` に当たる)。`-x` は、`#!/usr/bin/rseditor -x` で使う `-Q --script`。
+- [ ] `--daemon`、`--bg-daemon[=NAME]`、`--fg-daemon[=NAME]`: 窓を出さずに、後ろで動かす (Emacs の server)。先に、`emacsclient` に当たるもの (動いている rs-editor でファイルを開く) を作る。
+- [ ] `--no-window-system`、`-nw`: 端末の中で動かす。画面が Tauri (WebView) なので、作れるかを調べてから決める。
+- [ ] `--display DISPLAY`、`-d DISPLAY`: 窓を出す X のディスプレイを変える (Tauri に環境変数 `DISPLAY` を渡す)。
+- [ ] `--terminal DEVICE`、`-t DEVICE`: 端末の装置を変える (`-nw` を作ってから)。
+- [ ] `--no-x-resources`: X のリソース (`~/.Xresources` の `Emacs.font` など) を読まない。先に、X のリソースを読むかを決める (読まないなら、受けて何もしない)。
+- [ ] Emacs の作り方のための引数 (`--dump-file`、`--no-loadup` / `-nl`、`--fingerprint`、`--seccomp`、`--no-build-details`、`--module-assertions`):
+      rs-editor には、当たるもの (Lisp の状態を書き出したファイル、loadup.el, 動的なモジュール) が無い。受けて何もしないか、`--fingerprint` などは版を出すかを決める。
+
+## Phase 17: TypeScript のコマンドを、Lisp に移す
+
+今は、エディタのコマンド (`find-file`、`forward-word` など) を、ほとんど TypeScript (画面) で書いている。
+Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScript) は小さくし、コマンドは Lisp (`lisp/`) で書くようにする。
+どのコマンドを、どこで書いているかは、docs/functions.md の「実装」の列 (`tools/emacs-commands/run.sh` で作り直す) で分かる。
+
+- [x] 起動のときに読む、既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`、`files.el` などに当たる) を決める (`lisp/` に置き、アプリに入れる)。
+      `core/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`、`lisp/window.scm`、`lisp/files.scm`、`lisp/help-fns.scm`) を、ビルドのときに埋め込み、評価器を作るときに評価する。
+      コマンドは、引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
+- [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`。`read-file-name`、`find-file-noselect`、`pop-to-buffer-same-window` を使う)。
+- [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
+      `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
+      問いの `y-or-n-p`、`yes-or-no-p` と `file-name-directory` は `lisp/subr.scm`。組み込みに `read-key` (1 つのキーを読む) と、      ファイルの読み書きの組み込み (Emacs の C と同じ `insert-file-contents`、`write-region`、`do-auto-save`。`core/src/files.rs`) を足した。開くこと、保存すること、バックアップは、Emacs と同じく Lisp (`find-file-noselect`、`basic-save-buffer`、`backup-buffer`)。
+      バッファを出す組み込みは、Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
+- [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
+      組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。
+- [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
+      `kill-buffer` は、Emacs で C の関数なので、組み込みのまま残す。
+- [ ] Lisp から使う組み込みの関数を足す (カーソル、文字、行、マーク、窓、バッファなど。 Emacs の C の関数に当たるもの)。
+- [ ] Emacs で Lisp で書いたコマンド (docs/functions.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
+      進め方は、docs/functions.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
+      目標は、今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
+      (1.1 から 1.11. 進み方は、docs/functions.md の「実装の計画」)。
+      1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は完了。1.11 (今の画面 (Tauri) を核につなぐ) は完了 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は完了で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が完了 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も完了 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が完了で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も完了 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が完了 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは docs/functions.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が完了で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
+      速さが要るもの (`self-insert-command`、カーソルを動かすもの) は、動かして比べてから決める。
+- [x] 読み出し専用のバッファ (`buffer-read-only`、`read-only-mode`、`toggle-read-only`) を核に入れる (`Buffer::read_only`。書き換えると `Buffer is read-only` のエラー)。
+- [ ] Emacs で C で書いたコマンド (docs/functions.md の「組み込みのコマンド」) は、組み込みのまま残す (Emacs と同じ)。
+
+## Phase 18: ヘルプ (docstring と C-h f) と、ヘルプの多言語化
+
+Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstring (引数の後の文字列) を出す。rs-editor も同じにする。
+今は、`define` と `define-command` の docstring を覚えておらず、`lisp/*.scm` の説明は、全て `;;` のコメントで書いている。
+
+- [x] `define`、`define-command` の docstring (引数の後の文字列。本体が文字列だけなら、docstring でなく値) を覚える。
+      `(documentation 'name)` と、変数の docstring (Emacs の `defvar` の 3 つ目。 `documentation-property`) も。
+- [ ] `define-syntax` の docstring。
+- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
+      画面のコマンド (TypeScript) は、核に移した (`docs/core_migration.md`) ので、コマンドは全て Lisp の docstring を持つ。
+      残るのは、Rust の組み込みの手続き (`car`、`insert`、`forward-char` など)。`C-h f` で調べると、`Not documented.` と出る。
+      次の順で直す。
+  1. 組み込みの手続きの docstring (英語) を、1 つの表 `core/src/scheme/builtin_docs.rs` (名前 → 文) に置く。
+     Emacs にある関数は、Emacs の docstring を `emacs -Q --batch` で書き出して作る (`tools/emacs-commands/` に足す)。rs-editor で動きが違うものは、違いを 1 行足す。
+  2. Lisp の `documentation` が、Lisp の docstring が無ければ、表の文を返す。`lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。
+  3. `tools/po/update.py` が表も集め (`msgctxt` は `function:名前`)、`po/ja.po` に訳を足す。表の文も、Lisp の docstring と同じく `help-language` の訳で出る。
+  4. テスト: 組み込みの名前 (`builtins::NAMES` など) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
+- [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`), 割り当てたキー (`where-is-internal`),
+      引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
+      候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。
+- [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。カーソルの所の名前を既定にする。
+      docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は、Emacs と同じく置き換える。
+      引数の形は、Emacs の書き方 (`&optional`) にする (今は、残りの引数で受けて `&rest ARGS`)。
+- [x] `lisp/howm.scm` の `;;` の説明を、docstring (英語) に書き直す (元の日本語は、`po/ja.po` の翻訳にした)。
+- [x] `lisp/org.scm` の `;;` の説明を、docstring (英語) に書き直す (訳は `po/ja.po`)。
+- [ ] 多言語化の仕組み (Emacs には無い。 rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし、読むのは Rust で行う
+      (gettext の実行時の仕組み (libintl, `setlocale`) は使わない。エディタの中で言語を変えるため、C のライブラリに頼らないため):
+  - docstring は、Emacs と同じく英語で書く (元の文。翻訳が無ければ、これを出す)。
+  - 翻訳は `po/ja.po` のように、言語ごとの PO のファイルに置く。`msgctxt` は名前 (`org-cycle` など。関数と変数は `function:` と `variable:` を前に付ける),
+    `msgid` は英語の docstring, `msgstr` は翻訳。
+  - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り、各言語の PO に混ぜる道具 (`tools/po/update.py`。`npm run po:update`)。
+    元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず、英語を出す。
+    `npm run po:check` (`npm run check` で動く) で、作り直していない PO を見つける。
+  - [ ] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
+  - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
+    Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
+  - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。
+  - [ ] `*Help*` に、元の文 (英語) を見るボタンを付ける。
+  - 翻訳の無いものと、fuzzy の翻訳を、一覧にする (Phase 20 の lint の 1 つ)。Poedit などの翻訳の道具で直せることを、README に書く。
+  - Rust のエラーの文 (`Cannot move column further` など) は、Emacs と同じく訳さない。
+    画面の文 (メニュー、`message`) を訳すことになったら、複数形や語順を扱える Fluent (`fluent-rs`) と比べて決める。
+
+## Phase 19: Scheme の整形 (format)
+
+`lisp/*.scm` と `tests/lisp/*.scm` を、決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
+
+- [ ] 字下げの決まりを、エディタ (`src/lib/lispIndent.ts`、`lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
+      Rust で書くなら、決まりの表をファイル (JSON か Scheme) にして、両方から読む。
+- [ ] 整形の道具 (例: `cargo run --bin scmfmt -- FILE...`): 字下げを直し、行の終わりの空白、閉じ括弧だけの行、空行の重なりを消す。
+      コメント (`;`、`;;`、`;;;` の位置。 Emacs の決まり) と、文字列の中は変えない。長い行を分けるかは、はじめは変えない。
+- [ ] `--check` (直す所があれば、失敗にする) を付け、`npm run format` と `npm run check` に入れる。
+- [ ] エディタの `M-x indent-region` と結果が同じことを、テストで確かめる。
+
+## Phase 20: Scheme の lint
+
+`lisp/*.scm` と `tests/lisp/*.scm` の誤りを、動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
+
+- [ ] 定義していない名前 (変数と関数), 引数の数の違い (定義した関数と、組み込みの関数)。
+- [ ] 使っていない変数 (`let` と引数), 同じ名前の定義の重なり。
+- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので、同じ名前の変数と関数は、後のものが前のものを消す。 org.scm の `org-agenda-files` で起きた)。
+- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`、`cons` の 2 つ目がリストでない), `cond` の `=>`、      `format` の `%s`、`%S`、`%d`、`%%` 以外 (`%5d` など), ベクタ、文字 (`#\a`)。
+- [ ] `'()` を偽として使った所 (`(if '() ...)` は真)。
+- [ ] docstring (Phase 18): コマンド (`define-command`) と、外から使う関数の docstring が無い所。Emacs の `checkdoc` の決まり (1 行目は文で終える、引数は大文字で書くなど)。
+- [ ] 翻訳 (Phase 18): `.pot` が docstring と合っているか、PO の翻訳の無いものと fuzzy (元の docstring が変わった) の翻訳。
+- [ ] 警告ごとに、止める書き方 (コメントか、ファイルの変数) を決める。
+
+## Phase 21: そのほかの機能
+
+上の Phase に無い項目。Scheme の整形 (Phase 19)、Scheme の lint (Phase 20)、ヘルプの多言語化 (Phase 18) は、それぞれの Phase で進める。
 
 ### 編集のモード
 
@@ -680,7 +602,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### Org mode
 
-- [x] org-lint: Org の文書の書き方の誤りを一覧にする (`lisp/org-lint.scm`。`M-x org-lint` で `*Org Lint*` に出し、`RET` でその行に移る)。Phase 19 (Scheme のコードの lint) とは別のもの。行を種類に分けて調べ、`tests/org-lint/run.sh` で Emacs の org-lint の結果と比べる。移したチェッカー: misplaced-heading、duplicate-custom-id、duplicate-name、duplicate-target、duplicate-footnote-definition、orphaned-affiliated-keywords、obsolete-affiliated-keywords、deprecated-export-blocks、missing-language-in-src-block、missing-backend-in-export-block、deprecated-category-setup、special-property-in-properties-drawer、obsolete-properties-drawer、invalid-effort-property、invalid-id-property、undefined-footnote-reference、unreferenced-footnote-definition、invalid-keyword-syntax、invalid-block、misplaced-planning-info、incomplete-drawer、indented-diary-sexp、quote-section、spurious-colons、invalid-custom-id-link、invalid-fuzzy-link、trailing-bracket-after-link、unclosed-brackets-in-link-description、link-to-local-file、file-application、percent-encoding-link-escape、deprecated-header-syntax、non-existent-setupfile-parameter、wrong-include-link-parameter (INCLUDE の `::` の後の検索の部分は確かめない)、obsolete-include-markup、planning-inactive (計 36)。
+- [x] org-lint: Org の文書の書き方の誤りを一覧にする (`lisp/org-lint.scm`。`M-x org-lint` で `*Org Lint*` に出し、`RET` でその行に移る)。Phase 20 (Scheme のコードの lint) とは別のもの。行を種類に分けて調べ、`tests/org-lint/run.sh` で Emacs の org-lint の結果と比べる。移したチェッカー: misplaced-heading、duplicate-custom-id、duplicate-name、duplicate-target、duplicate-footnote-definition、orphaned-affiliated-keywords、obsolete-affiliated-keywords、deprecated-export-blocks、missing-language-in-src-block、missing-backend-in-export-block、deprecated-category-setup、special-property-in-properties-drawer、obsolete-properties-drawer、invalid-effort-property、invalid-id-property、undefined-footnote-reference、unreferenced-footnote-definition、invalid-keyword-syntax、invalid-block、misplaced-planning-info、incomplete-drawer、indented-diary-sexp、quote-section、spurious-colons、invalid-custom-id-link、invalid-fuzzy-link、trailing-bracket-after-link、unclosed-brackets-in-link-description、link-to-local-file、file-application、percent-encoding-link-escape、deprecated-header-syntax、non-existent-setupfile-parameter、wrong-include-link-parameter (INCLUDE の `::` の後の検索の部分は確かめない)、obsolete-include-markup、planning-inactive (計 36)。
 - [ ] org-lint の残りのチェッカー 23 個 (`org-lint-unsupported-checkers`): 日時 (`timestamp-syntax` (曜日が言語で変わる)、`mismatched-planning-repeaters`)、項目 (`item-number`)、`invalid-id-link` (org-id)、Babel (`wrong-header-argument`、`wrong-header-value`、`empty-header-argument`、`named-result`、`invalid-babel-call-block`、`suspicious-language-in-src-block`)、引用 (`org-cite`)、書き出しの設定 (`unknown-options-item`、`misspelled-export-option`、`invalid-macro-argument-and-template`)、ほか。構文木 (日時、項目) や、Babel と ox の情報を作ってから。
 - [x] C のシンタックスハイライト (核の Rust で字句に分け、画面 (Tauri) と TUI (ncurses) の両方に色を付ける。設計は `docs/c_highlight_design.md`)。`core/src/highlight/` が本文を字句 (コメント、コメントの区切り、`/** */`、文字列、キーワード、型、定数、プリプロセッサ、数値) に分け、`c-mode` (`.c` と `.h`) のバッファは `Buffer::token_spans` で取れる。Emacs 30 の `c-mode` の font-lock と、`tests/c-highlight/run.sh` (`npm run test:c-highlight`) で比べる。
 - [x] C++ のシンタックスハイライト (`c++-mode`。`.cc` `.cpp` `.hpp` など。キーワードと型の表、生の文字列 `R"x(...)x"`、数値の区切り `1'000`。Emacs 30 の `c++-mode` と、`tests/c-highlight/run.sh` で比べる。`docs/c_highlight_design.md` の段階 2)。
@@ -707,7 +629,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] ロックの `lock().unwrap()` を、panic のあとでも続けられるようにする (`core/src/sync.rs` の `LockExt::lock_recover`)。評価の panic で poisoned になったロックで、以後のキーが全て失敗することは無くなった。
 - [ ] 開発用の依存の `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (今は `markdownlint-cli2@0.23.3` と、`markdown-it` の `overrides` で、high は 0 件)。
 
-### 済んだもの
+### 完了済み
 
 - [x] エラーを、種類とデータを持つ型にする (`core/src/error.rs`)。`signal`、`define-error`、`user-error`、`condition-case` が受ける条件 (`error-conditions`)。`(error "End of buffer")` などが、文の書き出しで種類を変えない。
 - [x] `string-match` の結果を、バッファごとでなく 1 つにする。`string-match` の負の START を、文字列の終わりから数える。
@@ -716,6 +638,85 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] ミニバッファを `C-g` で抜ける。
 - [x] Rust のテストのファイル名を `test_<対象>.rs` にそろえる (`core/tests/test_evaluator_edge_cases.rs`, `src-tauri/tests/test_integration.rs` に改名)。
 
+## Phase 22: 優先度つきの進め方
+
+各 Phase の未完了 (`- [ ]`) は 149 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
+各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
+
+### P0: 固まる、データを失う、落ちる
+
+- [x] キーボードマクロを `C-g` で止める。
+- [x] 保存前に、外の書き換えを確かめる。
+- [x] 300 回のキーごとの自動保存。
+- [x] `lock().unwrap()` の panic 対策。
+- [x] `yes-or-no-p` の聞き直し。
+- [x] 編集のときの確かめ (`ask-user-about-supersession-threat`)。
+
+### P1: 毎日の編集で、Emacs と違って困るもの (次にやる)
+
+編集の動き (小が多い。まとめて 1 つのまとまりで進める):
+
+- [ ] 前置引数を、繰り返しでなく、引数として渡す (Phase 12)。多くのコマンドの動きに関わるので、先にやる。中。
+- [x] 負の前置引数 `C--` / `M--` (Phase 14)。
+- [ ] `M-@`、`C-M-SPC`、`C-M-h` の負の前置引数 (前へ選ぶ) (Phase 12)。小。
+- [ ] kill-ring、消した矩形、レジスタを、全てのウィンドウで共通にする (Phase 12)。中。
+- [ ] isearch の大文字と小文字 (`case-fold-search`)、`M-c` / `M-r` / `M-e` (Phase 14「検索・置換」)。小〜中。
+- [ ] `M-n` の既定の値 (ミニバッファと isearch) と、`M-r` / `M-s` の履歴の検索 (Phase 12, 14)。小。
+- [ ] `C-q` の細かい違い (前置きのキー、`C-q RET`、Meta 付き) (Phase 12)。小。
+- [ ] 使えない (disabled) コマンドの確かめ: `C-x C-u`、`C-x C-l`、`C-x C-n` (Phase 12)。小。
+- [ ] `C-n` / `C-p` が、表示の桁 (タブと全角の幅) を保つ (Phase 12)。中。
+- [ ] 単語の文字を Emacs の構文表に合わせる (`M-f`、`M-b`) (Phase 12)。小〜中。
+- [ ] `M-q` を、docstring の中と、リージョンの全ての段落でも使えるようにする (Phase 12)。小〜中。
+- [ ] マークを置く違い: `C-M-a` / `C-M-e`、`C-x i`、`C-x r y`、`C-x r i` (Phase 12)。小。
+
+足りないコマンド (Phase 14 と dotfiles の表から。よく使うものを先に):
+
+- [ ] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
+- [ ] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
+- [ ] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
+- [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
+- [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
+- [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
+- [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
+- [ ] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
+- [ ] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
+- [ ] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
+- [ ] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
+- [ ] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。
+
+### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
+
+- [ ] ヘルプ: `C-h m` / `a` / `d` / `t`、`*Help*` の中のキー (Phase 14, 18)。中。
+- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--debug-init`、`--no-splash` (Phase 16)。小。引数を読む仕組みを先に (`--batch` と `--script` は完了)。
+- [ ] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
+- [ ] grep: `rgrep` / `lgrep`、`*grep*` の中のキー、探しながら出す、止める (Phase 12, 14, 15)。中。
+- [ ] ツリー (サイドバー): キーで動かす、今のファイルまで開く (Phase 15)。中。
+- [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) (Phase 14)。小〜中。
+- [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
+- [ ] キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 14)。中。
+- [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。
+- [ ] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、ほかのメジャーモードの切り替え (Phase 14)。中。
+- [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
+- [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。`dotfiles` で使っているので、使う頻度で上げる。大。
+- [ ] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。中。
+- [ ] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。中〜大。
+
+### P3: 使う場面が限られる、または大きい (後回し)
+
+- [ ] バージョン管理 (`C-x v ...`)、`diff`、`ediff`、綴り (`ispell`、`flyspell`)、`calc`、`calendar`、メール、`eww` / w3m、`shell`、`eshell`、`term` (Phase 14, 21)。大。外のツールで足りる。
+- [ ] フレームとタブ (`C-x 5 ...`、`C-x t ...`)、`C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 14)。中〜大。
+- [ ] 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--user`、`--no-desktop`、`--dump-file` など (Phase 16)。先の機能 (server、`-nw`) を決めてから。
+- [ ] Scheme のインタプリタを、独立したクレートにする (Phase 21)。大。
+- [ ] 画面 (Tauri) の `*Messages*`、Web のページを見る機能 (Phase 21)。調べてから決める。
+- [ ] `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (Phase 21)。待つ。
+
+### 整理 (進める前に直す)
+
+- Phase 16 の `--batch` と `--script FILE` は、実装済み (`tui/src/batch.rs`、`tests/batch/` の `cli-script`)。Phase 14 の完了項目は、`fboundp` とキーの割り当てで確かめて、チェックを付けてある。Phase 12 の「Emacs と違うところ」は、動きを一つずつ確かめていない。
+- 同じ内容が、Phase 12 と Phase 14 の両方にある項目 (`M-n` の既定の値、`C-x C-n` など) は、片方に寄せる。
+- この節の項目は、チェックボックスで進み具合を示す。項目を完了したら、各 Phase の項目と、この節の項目を、同じ変更で `[x]` にする (消さない)。この節の項目は、未完了の数 (上の件数) には数えない。
+
 ## 実装順序の目安
 
-Phase 1 から Phase 12 は、済んだ。これからは、上の「優先度つきの進め方」の順 (P0 から P3) で進める。
+Phase 1 から Phase 12 は、完了。これからは、上の「Phase 22: 優先度つきの進め方」の順 (P0 から P3) で進める。

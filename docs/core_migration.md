@@ -111,7 +111,7 @@ Emacs の結果と全ての位置で比べている試験 (`tests/frontend/lib/m
 | 5 | ウィンドウ、モードライン、スクロール、マウス、色付け、IME | `C-x 2`、`C-x o`、`C-l`、`C-v`、日本語の入力が動く |
 | 6 | 自動保存、バックアップ、初期設定ファイル、フック、サイドバー | `~/.rseditor` が読める。`#名前#` と `名前~` ができる |
 | 7 | TypeScript のコマンドと、使わなくなった部品と試験を消す。`mirror.rs` と `RSEDITOR_NO_CORE` を消す | `npm run check`。カバレッジは TypeScript も Rust も 100% |
-| 8 | 文書を直す (`.claude/CLAUDE.md`、`docs/functions.md`、`TODO.md`)。画面のコマンドの docstring の計画 (`TODO.md` の Phase 17) を、Rust の組み込みだけに直す | markdownlint |
+| 8 | 文書を直す (`.claude/CLAUDE.md`、`docs/functions.md`、`TODO.md`)。画面のコマンドの docstring の計画 (`TODO.md` の Phase 18) を、Rust の組み込みだけに直す | markdownlint |
 | 9 | 結合試験の仕様書を新しい作りに合わせて直し、結合試験をする | `docs/integration_test.md` |
 
 ## 7. 危ないところと、その対策
