@@ -2104,6 +2104,56 @@ a negative N moves backward to the start of the sentence."
 Unlike Emacs, every command is offered, not only those that fit the major mode."
   (simple--run-named-command "M-X "))
 
+(define last-repeatable-command #f
+  "The last command run from a key, other than the prefix argument commands (the command loop sets it).")
+
+(define last-prefix-arg #f
+  "The raw prefix argument of the last command (the command loop sets it).")
+
+(define repeat-previous-repeated-command #f
+  "The command that repeat repeated last.")
+
+(define repeat-too-dangerous '(kill-this-buffer)
+  "Commands that repeat refuses to repeat.")
+
+(define repeat-on-final-keystroke #t
+  "Non-nil means that the last key of C-x z (z) repeats the command again.")
+
+(define transient-map--keys #f
+  "The keys of set-transient-map: a list of (KEY COMMAND), used for the next key only.")
+
+(define (set-transient-map keys)
+  "Use KEYS, a list of (KEY COMMAND), for the next key only, before the other key bindings."
+  (set! transient-map--keys keys))
+
+(define-command (repeat . args)
+  "Repeat the most recently executed command.
+With a prefix argument, give it to that command; otherwise, give it the prefix argument it had before.
+Then the last key of this command (z of C-x z) repeats it again.
+Unlike Emacs, a command that read its arguments in the minibuffer reads them again."
+  (let ((arg (simple--raw-arg args))
+        (key last-command-event))
+    (when (eq? last-repeatable-command 'repeat)
+      (set! last-repeatable-command repeat-previous-repeated-command))
+    (cond ((not last-repeatable-command) (error "There is nothing to repeat"))
+          ((member last-repeatable-command repeat-too-dangerous)
+           (error (format "Command %s too dangerous to repeat automatically" last-repeatable-command))))
+    (set! this-command last-repeatable-command)
+    (set! repeat-previous-repeated-command last-repeatable-command)
+    (if (not arg) (set! arg last-prefix-arg))
+    (if arg
+        (message (format "Repeating command %s %s" (if (pair? arg) (format "%S" arg) arg) last-repeatable-command))
+        (message (format "Repeating command %s" last-repeatable-command)))
+    (set-current-prefix-arg arg)
+    (if (eq? last-repeatable-command 'self-insert-command)
+        (let ((char (char-before)))
+          (let loop ((n (prefix-numeric-value arg)))
+            (when (> n 0)
+              (insert char)
+              (loop (- n 1)))))
+        (call-interactively last-repeatable-command))
+    (if repeat-on-final-keystroke (set-transient-map (list (list key 'repeat))))))
+
 (define-command (repeat-complex-command . args)
   "Edit and re-evaluate the last command run with M-x.
 With the argument N, use the Nth previous command (1 is the last)."

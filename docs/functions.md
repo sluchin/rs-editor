@@ -403,7 +403,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 済 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p`, `<up>` | Lisp (`lisp/simple.scm`) | 済 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | Lisp (`lisp/simple.scm`) | 済 |
-| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み | `C-x M-:` | Lisp (`lisp/simple.scm`) | 済 |
+| `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み | `C-x ESC ESC`, `C-x M-ESC`, `C-x M-:` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-fill-column` | ◯ | simple | `C-x f` | 実装済み | `C-x f` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC`, `C-@` | Lisp (`lisp/simple.scm`) | 済 |

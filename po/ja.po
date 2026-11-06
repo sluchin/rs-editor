@@ -7328,6 +7328,54 @@ msgstr ""
 "Emacs と違い, メジャーモードに合うものだけでなく, 全てのコマンドを出す."
 
 #: lisp/simple.scm
+msgctxt "variable:last-repeatable-command"
+msgid "The last command run from a key, other than the prefix argument commands (the command loop sets it)."
+msgstr "キーから動かした最後のコマンド (前置引数のコマンドを除く. コマンドループが置く)."
+
+#: lisp/simple.scm
+msgctxt "variable:last-prefix-arg"
+msgid "The raw prefix argument of the last command (the command loop sets it)."
+msgstr "最後のコマンドの, そのままの前置引数 (コマンドループが置く)."
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-previous-repeated-command"
+msgid "The command that repeat repeated last."
+msgstr "repeat が最後に繰り返したコマンド."
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-too-dangerous"
+msgid "Commands that repeat refuses to repeat."
+msgstr "repeat が繰り返さないコマンド."
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-on-final-keystroke"
+msgid "Non-nil means that the last key of C-x z (z) repeats the command again."
+msgstr "nil でなければ, C-x z の最後のキー (z) で, また繰り返す."
+
+#: lisp/simple.scm
+msgctxt "variable:transient-map--keys"
+msgid "The keys of set-transient-map: a list of (KEY COMMAND), used for the next key only."
+msgstr "set-transient-map のキー: (KEY COMMAND) のリスト. 次のキーにだけ使う."
+
+#: lisp/simple.scm
+msgctxt "function:set-transient-map"
+msgid "Use KEYS, a list of (KEY COMMAND), for the next key only, before the other key bindings."
+msgstr "KEYS ((KEY COMMAND) のリスト) を, 次のキーにだけ, ほかの割り当てより先に使う."
+
+#: lisp/simple.scm
+msgctxt "function:repeat"
+msgid ""
+"Repeat the most recently executed command.\n"
+"With a prefix argument, give it to that command; otherwise, give it the prefix argument it had before.\n"
+"Then the last key of this command (z of C-x z) repeats it again.\n"
+"Unlike Emacs, a command that read its arguments in the minibuffer reads them again."
+msgstr ""
+"最後に動かしたコマンドを繰り返す.\n"
+"前置引数があれば, それをそのコマンドに渡す. 無ければ, 前と同じ前置引数を渡す.\n"
+"その後は, このコマンドの最後のキー (C-x z の z) で, また繰り返す.\n"
+"Emacs と違い, ミニバッファで引数を読んだコマンドは, 引数を聞き直す."
+
+#: lisp/simple.scm
 msgctxt "function:repeat-complex-command"
 msgid ""
 "Edit and re-evaluate the last command run with M-x.\n"

@@ -211,7 +211,7 @@
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
 - [x] `C-x C-@` (pop-global-mark)。
-- [ ] `C-u C-SPC` (前のマークへ戻る。 mark-ring): マークの履歴。
+- [x] `C-u C-SPC` (前のマークへ戻る。 mark-ring): マークの履歴 (`tests/batch/cases/61-repeat`)。
 
 ### 削除・編集
 
@@ -226,7 +226,8 @@
 - [ ] `C-x 8 RET` で、Unicode の名前で入れる (Emacs は、名前を補完する。今は、`Invalid character`)。`C-x 8` で始まる、そのほかの文字。
 - [ ] `read-number`: 既定の値が無く、`M-n` の値だけがあるとき、Emacs は空の入力を聞き直す。今は、`M-n` の最初の値を返す。
 - [x] `C-x =` (what-cursor-position): カーソルの文字と位置を出す。
-- [ ] `C-x z` (repeat), `C-x ESC ESC` (repeat-complex-command): 前のコマンドの繰り返し。
+- [x] `C-x z` (repeat), `C-x ESC ESC` (repeat-complex-command): 前のコマンドの繰り返し。続けて `z` を押すと、また繰り返す。
+- [ ] `C-x z`: Emacs は、ミニバッファで引数を読んだコマンドを、`command-history` に残した同じ引数で繰り返す。今は、引数を聞き直す (`command-history` は、`M-x` のコマンドの名前だけを残す)。
 - [x] `C--` / `M--` (negative-argument): 負の前置引数。
 - [x] `C-?` (undo-redo)。
 - [ ] リージョンの中だけの undo (`C-u C-/` ではなく、リージョンがあるときの `C-/`)。
@@ -641,7 +642,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 22: 優先度つきの進め方
 
-各 Phase の未完了 (`- [ ]`) は 121 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+各 Phase の未完了 (`- [ ]`) は 120 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -674,7 +675,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 足りないコマンド (Phase 14 と dotfiles の表から。よく使うものを先に):
 
 - [x] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
-- [ ] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
+- [x] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - [ ] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
 - [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。
 - [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。

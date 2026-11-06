@@ -135,6 +135,40 @@ fn test_shifted_keys_fall_back_to_the_unshifted_keys() {
 }
 
 #[test]
+fn test_repeat_and_transient_keys() {
+    let mut commands = setup();
+    press(&mut commands, "a b c C-a");
+    // 前置引数のコマンドは, 繰り返すコマンドにしない. 前置引数は覚える
+    press(&mut commands, "C-u 1 C-f");
+    let globals = commands.evaluator().global();
+    assert_eq!(
+        globals.get("last-repeatable-command").unwrap().to_string(),
+        "forward-char"
+    );
+    assert_eq!(globals.get("last-prefix-arg").unwrap().to_string(), "1");
+    // C-x z で繰り返し, z で, また繰り返す. ほかのキーは, いつもどおり
+    press(&mut commands, "C-x z z");
+    assert_eq!(commands.host().editor().current_buffer().point(), 3);
+    press(&mut commands, "C-b z");
+    assert_eq!(text(&commands), "abzc");
+    // 表の要素の形が違えば, 使わない
+    commands
+        .evaluator()
+        .eval("(set! transient-map--keys '(x (\"q\" \"forward-char\") (\"r\" backward-char)))")
+        .unwrap();
+    press(&mut commands, "q");
+    assert_eq!(text(&commands), "abzqc");
+    // 続きのキーを待っているときは, 表を見ない (C-x C-x は exchange-point-and-mark)
+    press(&mut commands, "C-x");
+    commands
+        .evaluator()
+        .eval("(set-transient-map '((\"C-x\" backward-char)))")
+        .unwrap();
+    press(&mut commands, "C-x");
+    assert_eq!(commands.host().editor().current_buffer().point(), 4);
+}
+
+#[test]
 fn test_prefix_arguments_and_failures() {
     let mut commands = setup();
     // 負の数の前置引数でも, 文字は 1 つ入れる

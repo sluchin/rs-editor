@@ -6496,6 +6496,50 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:last-repeatable-command"
+msgid "The last command run from a key, other than the prefix argument commands (the command loop sets it)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:last-prefix-arg"
+msgid "The raw prefix argument of the last command (the command loop sets it)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-previous-repeated-command"
+msgid "The command that repeat repeated last."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-too-dangerous"
+msgid "Commands that repeat refuses to repeat."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:repeat-on-final-keystroke"
+msgid "Non-nil means that the last key of C-x z (z) repeats the command again."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:transient-map--keys"
+msgid "The keys of set-transient-map: a list of (KEY COMMAND), used for the next key only."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:set-transient-map"
+msgid "Use KEYS, a list of (KEY COMMAND), for the next key only, before the other key bindings."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:repeat"
+msgid ""
+"Repeat the most recently executed command.\n"
+"With a prefix argument, give it to that command; otherwise, give it the prefix argument it had before.\n"
+"Then the last key of this command (z of C-x z) repeats it again.\n"
+"Unlike Emacs, a command that read its arguments in the minibuffer reads them again."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:repeat-complex-command"
 msgid ""
 "Edit and re-evaluate the last command run with M-x.\n"

@@ -15,6 +15,17 @@ use crate::scheme::host::Host;
 use crate::scheme::value::Value;
 use crate::sync::LockExt;
 
+/// 一度だけ使うキーの表の, Lisp の変数 (`((KEY COMMAND) ...)`. Lisp の `set-transient-map` が置く).
+pub const TRANSIENT_KEYS: &str = "transient-map--keys";
+
+/// 前置引数のコマンド (`last-repeatable-command` にしない).
+const PREFIX_COMMANDS: &[&str] = &[
+    "universal-argument",
+    "universal-argument-more",
+    "digit-argument",
+    "negative-argument",
+];
+
 /// コマンドループが画面に頼むこと.
 pub trait LoopUi {
     /// エコー領域に出します (空ならエコー領域を消す).
@@ -193,6 +204,10 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         self.evaluator
             .global()
             .define("last-command-event", Value::String(key.to_string()));
+        if let Some(command) = self.transient_command(key) {
+            self.execute(&command);
+            return;
+        }
         if let Some(command) = self.prefix_command(key) {
             self.execute(command);
             return;
@@ -219,6 +234,28 @@ impl<U: Host + LoopUi> CommandLoop<U> {
                 }
             }
         }
+    }
+
+    /// 一度だけ使うキーの表 (Lisp の `set-transient-map` が置く, `transient-map--keys`) から, キーのコマンドを引きます.
+    /// 表は, 次のキーで捨てる (Emacs の `set-transient-map` の, 次のコマンドまでの表).
+    fn transient_command(&self, key: &str) -> Option<String> {
+        if !self.pending.lock_recover().is_empty() {
+            return None;
+        }
+        let globals = self.evaluator.global();
+        let Some(Value::List(entries)) = globals.get(TRANSIENT_KEYS) else {
+            return None;
+        };
+        globals.define(TRANSIENT_KEYS, Value::Boolean(false));
+        entries.iter().find_map(|entry| match entry {
+            Value::List(pair) if pair.len() == 2 && pair[0] == Value::String(key.to_string()) => {
+                match &pair[1] {
+                    Value::Symbol(command) => Some(command.clone()),
+                    _ => None,
+                }
+            }
+            _ => None,
+        })
     }
 
     /// 読んでいるキーを引きます. 割り当てが無く, 最後のキーに Shift があれば, Shift を外して引き直す
@@ -324,6 +361,15 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             },
         );
         globals.define("this-command", symbol(command));
+        // 繰り返す (C-x z) ためのコマンドと前置引数. 前置引数のコマンドは除く
+        if !PREFIX_COMMANDS.contains(&command) {
+            globals.define("last-repeatable-command", symbol(command));
+            let arg = self
+                .host
+                .call("current-prefix-arg", vec![])
+                .unwrap_or(Value::Nil);
+            globals.define("last-prefix-arg", arg);
+        }
         self.host.editor().prefix_arg = None;
         self.sync_display();
         // 前置引数のコマンドの後は, 次のコマンドに前置引数を渡す

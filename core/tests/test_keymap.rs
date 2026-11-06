@@ -98,6 +98,9 @@ fn test_default_keys_of_existing_commands() {
         ("C-M-S-l", "recenter-other-window"),
         ("C-x C-@", "pop-global-mark"),
         ("C-x C-SPC", "pop-global-mark"),
+        ("C-x z", "repeat"),
+        ("C-x ESC ESC", "repeat-complex-command"),
+        ("C-x M-ESC", "repeat-complex-command"),
     ] {
         assert_eq!(
             keymap.lookup(&keys(key)),
