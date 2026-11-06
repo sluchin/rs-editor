@@ -1276,3 +1276,26 @@ fn test_c_g_stops_a_macro_that_never_fails() {
     fx.app.run();
     assert_eq!(fx.text(), "yya");
 }
+
+#[test]
+fn test_kill_ring_rectangles_and_registers_are_shared_by_windows() {
+    // 1 つ目のウィンドウで消したものを, 2 つ目のウィンドウで取り出せる
+    let mut fx = Fixture::new();
+    fx.press("a b c RET d e f C-x 3 C-a C-SPC C-n C-w C-x o C-y");
+    assert_eq!(fx.text(), "abc\ndef");
+    // 消した矩形 (C-x r k) も共通
+    let mut fx = Fixture::new();
+    fx.press("a b c RET d e f C-x 3 C-p C-a C-SPC C-n C-f C-x r k");
+    assert_eq!(fx.text(), "bc\nef");
+    fx.press("C-x o C-p C-a C-x r y");
+    assert_eq!(fx.text(), "abc\ndef");
+    // レジスタ (C-x r s, C-x r i) も共通
+    let mut fx = Fixture::new();
+    fx.press("a b c C-x 3 C-a C-SPC C-f C-f");
+    fx.feed("a");
+    fx.press("C-x r s");
+    fx.press("C-x o C-e");
+    fx.feed("a");
+    fx.press("C-x r i");
+    assert_eq!(fx.text(), "abcab");
+}
