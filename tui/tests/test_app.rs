@@ -360,6 +360,79 @@ fn test_editing_keys_of_step_3() {
 }
 
 #[test]
+fn test_mark_defun_takes_the_prefix_argument() {
+    // "(a)\n\n(b)\n\n(c)": (b) は 5 から
+    let keys = "( a ) RET RET ( b ) RET RET ( c ) C-p C-p C-p C-e";
+    // 引数なし: 今の defun (前の空の行を含む) の始めがカーソル
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-M-h");
+    assert_eq!(fx.point(), 4);
+    // 2: 今の defun から 2 つ
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-u 2 C-M-h");
+    assert_eq!(fx.point(), 4);
+    // 負の数: 向きを変える. 今の defun の終わりをマークにする
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-u - C-M-h C-x C-x");
+    assert_eq!(fx.point(), 9);
+    // -2: さらに 1 つ前の defun の始めまで
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-u - 2 C-M-h");
+    assert_eq!(fx.point(), 0);
+    // 0: 今の defun を選ぶが, 後ろの defun の終わりは延ばさない
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-u 0 C-M-h");
+    assert_eq!(fx.point(), 4);
+    // リージョンがあれば, 負の数でカーソルを前の defun の始めへ動かす
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-M-h C-u - C-M-h");
+    assert_eq!(fx.point(), 0);
+    let mut fx = Fixture::new();
+    fx.press(keys);
+    fx.press("C-M-h C-u - 2 C-M-h");
+    assert_eq!(fx.point(), 0);
+    // リージョンがあれば, 正の数でマークを defun の終わりへ延ばす
+    let mut fx = Fixture::new();
+    fx.press("( a ) RET RET ( b ) RET RET ( c ) RET C-p C-p C-p C-p C-e");
+    fx.press("C-M-h C-u 2 C-M-h C-x C-x");
+    assert_eq!(fx.point(), 14);
+}
+
+#[test]
+fn test_whitespace_keys_take_the_prefix_argument() {
+    // C-u 3 M-SPC: 空白を 3 つ残す
+    let mut fx = Fixture::new();
+    fx.press("a SPC SPC SPC SPC SPC b C-b C-b C-b");
+    fx.press("C-u 3 M-SPC");
+    assert_eq!(fx.text(), "a   b");
+    // 負の数なら, 改行も消して -N 個残す
+    let mut fx = Fixture::new();
+    fx.press("a SPC RET RET SPC b C-b C-b");
+    fx.press("C-u - 2 M-SPC");
+    assert_eq!(fx.text(), "a  b");
+    // C-u M-\: カーソルの前の空白だけを消す
+    let mut fx = Fixture::new();
+    fx.press("a SPC SPC SPC b C-b C-b");
+    fx.press("C-u M-\\");
+    assert_eq!((fx.text().as_str(), fx.point()), ("a b", 1));
+    // C-u M-^: 次の行とつなぐ
+    let mut fx = Fixture::new();
+    fx.press("a RET SPC SPC b RET c C-p C-p C-u M-^");
+    assert_eq!(fx.text(), "a b\n  c");
+    // リージョンがあれば, リージョンの行を全てつなぐ
+    let mut fx = Fixture::new();
+    fx.press("a RET SPC b RET SPC c RET d");
+    fx.press("M-< C-SPC C-n C-n C-e M-^");
+    assert_eq!(fx.text(), "a b c\n  d");
+}
+
+#[test]
 fn test_whitespace_and_zap_keys() {
     let mut fx = Fixture::new();
     fx.press("a SPC SPC SPC b");

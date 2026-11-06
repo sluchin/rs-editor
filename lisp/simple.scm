@@ -556,11 +556,26 @@ white space, and the third restores it.  Repeat the command to cycle."
 
 (define-command (delete-indentation . args)
   "Join this line to the previous one and fix up the white space at the join.
-With an argument, join the current line to the following line."
+With an argument, join the current line to the following line.
+When BEG and END are given, join all lines in the region they define.
+Interactively, BEG and END are the start and the end of the region if it is
+active (the region is ignored if there is a prefix argument)."
   (set-deactivate-mark #t)
-  (let* ((arg (simple--raw-arg args))
-         (beg (- (line-beginning-position (if arg 2 1)) 1)))
-    (if arg (forward-line 1))
+  (let* ((interactive (null? args))
+         (arg (simple--raw-arg args))
+         (beg (if interactive
+                  (and (use-region-p) (region-beginning))
+                  (and (pair? args) (pair? (cdr args)) (cadr args))))
+         (end (if interactive
+                  (and (use-region-p) (region-end))
+                  (and beg (pair? (cddr args)) (caddr args)))))
+    (if (and beg (not arg))
+        (begin
+          (goto-char beg)
+          (if (> end (line-end-position)) (goto-char end)))
+        (begin
+          (set! beg (- (line-beginning-position (if arg 2 1)) 1))
+          (if arg (forward-line 1))))
     (let loop ()
       (when (and (> (line-beginning-position) beg)
                  (forward-line 0)
@@ -1852,11 +1867,13 @@ Push the mark first, unless repeated."
 
 (define-command (mark-defun . args)
   "Put the region around the current defun, including the comments before it.
+With argument N, mark N defuns; a negative N marks backward.
 If the region is active, extend it to the end of the next defun."
   (let ((extend (and (use-region-p) (mark)))
-        (opoint (point)))
+        (opoint (point))
+        (arg (simple--arg args)))
     (if (not extend) (push-mark opoint))
-    (let ((range (mark-defun-range opoint extend)))
+    (let ((range (mark-defun-range opoint extend arg)))
       (push-mark (cadr range) #t #t)
       (goto-char (car range)))))
 

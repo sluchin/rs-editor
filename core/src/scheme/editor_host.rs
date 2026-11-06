@@ -1341,7 +1341,12 @@ impl<U: Host> EditorHost<U> {
             }
             "mark-defun-range" => {
                 let source = Source::from_buffer(b, b.dialect());
-                let range = mark_defun(&source, pos(op, args, 0)?, pos_opt(op, args, 1)?);
+                let range = mark_defun(
+                    &source,
+                    pos(op, args, 0)?,
+                    pos_opt(op, args, 1)?,
+                    int_or(op, args, 2, 1)?,
+                );
                 match range {
                     Ok((head, mark)) => Value::List(vec![at(head), at(mark)].into_iter().collect()),
                     Err(e) => {

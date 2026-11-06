@@ -119,7 +119,11 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
         &[Kind::Number, Kind::Number, Kind::Any],
         1,
     ),
-    ("mark-defun-range", &[Kind::Number, Kind::Any], 1),
+    (
+        "mark-defun-range",
+        &[Kind::Number, Kind::Any, Kind::Number],
+        1,
+    ),
     (
         "forward-paragraph-position",
         &[Kind::Number, Kind::Number],

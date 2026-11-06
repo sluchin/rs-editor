@@ -310,13 +310,17 @@ fn beginning_of_defun_comments(source: &Source, pos: usize) -> usize {
 }
 
 /// defun を選ぶ範囲を返します (Emacs の `mark-defun`). 前のコメントと, 前の空の行も含めます.
-/// リージョンがあれば, マークを次の defun の終わりへ延ばします.
+///
+/// 引数が正 (0 を含む) なら, その数の defun を選び, リージョンがあれば, マークをその数の defun の終わりへ延ばします.
+/// 負なら, 向きを変えます: リージョンが無ければ, 今の defun の終わりをマークにして, カーソルを `-arg` 個前の defun の始めへ,
+/// リージョンがあれば, カーソルを `-arg` 個前の defun の始め (コメントを含む) へ動かします.
 ///
 /// # Arguments
 ///
 /// * `source` - 本文.
 /// * `pos` - カーソル.
 /// * `mark` - リージョンのマーク (リージョンが無ければ `None`).
+/// * `arg` - defun の数 (向きを含む).
 ///
 /// # Returns
 ///
@@ -329,24 +333,49 @@ pub fn mark_defun(
     source: &Source,
     pos: usize,
     mark: Option<usize>,
+    arg: i64,
 ) -> Result<(usize, usize), MotionError> {
     let (mut head, new_mark);
     match mark.filter(|&m| m != pos) {
-        Some(m) => {
+        Some(m) if arg >= 0 => {
             // save-excursion の中なので, 失敗してもカーソルは動かない
-            new_mark = end_of_defun(source, m, 1).map_err(|e| MotionError { point: pos, ..e })?;
+            let mut end = m;
+            for _ in 0..arg {
+                end = end_of_defun(source, end, 1).map_err(|e| MotionError { point: pos, ..e })?;
+            }
+            new_mark = end;
             head = pos;
+        }
+        Some(m) => {
+            let mut at = pos;
+            for _ in 1..-arg {
+                at = beginning_of_defun(source, at);
+            }
+            head = beginning_of_defun_comments(source, at);
+            new_mark = m;
         }
         None => {
             let mut beg = beginning_of_defun_comments(source, pos);
             let mut end = end_of_defun(source, beg, 1)?;
-            if end <= pos || beg == 0 {
+            if (end <= pos && arg > 0) || beg == 0 {
                 // 前の defun を見つけたので, 後ろの defun にする
                 end = end_of_defun(source, pos, 1)?;
                 beg = beginning_of_defun_comments(source, end);
             }
-            new_mark = end_of_defun(source, beg, 1)?;
-            head = beg;
+            if arg > 0 {
+                let mut last = beg;
+                for _ in 0..arg {
+                    last = end_of_defun(source, last, 1)?;
+                }
+                new_mark = last;
+                head = beg;
+            } else {
+                head = beg;
+                for _ in 1..(-arg) {
+                    head = beginning_of_defun(source, head);
+                }
+                new_mark = end;
+            }
         }
     }
     // 前の空の行も含める
