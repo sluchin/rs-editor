@@ -36,6 +36,12 @@ describe('eventKeyName と emacsKey', () => {
     expect(emacsKey(press('ArrowLeft'))).toBe('<left>')
     expect(emacsKey(press('x', { altKey: true }))).toBe('M-x')
     expect(emacsKey(press('/', { ctrlKey: true }))).toBe('C-/')
+    // Shift は, 名前のあるキーと, Ctrl と一緒の英字にだけ付ける (Emacs の C-S-DEL, C-M-S-v)
+    expect(emacsKey(press('Backspace', { ctrlKey: true, shiftKey: true }))).toBe('C-S-DEL')
+    expect(emacsKey(press('V', { ctrlKey: true, altKey: true, shiftKey: true }))).toBe('C-M-S-v')
+    expect(emacsKey(press('Insert', { shiftKey: true }))).toBe('S-<insert>')
+    expect(emacsKey(press('?', { ctrlKey: true, shiftKey: true }))).toBe('C-?')
+    expect(emacsKey(press('F', { altKey: true, shiftKey: true }))).toBe('M-F')
     // 修飾キーだけなら, 送らない
     expect(emacsKey(press('Control', { ctrlKey: true }))).toBeNull()
     expect(emacsKey(press('Shift'))).toBeNull()

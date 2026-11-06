@@ -5731,6 +5731,44 @@ msgid "Return the first of ARGS, or the raw prefix argument (#f, a number, - or 
 msgstr "ARGS の最初の値を返す. ARGS が空なら, 前置引数そのまま (#f, 数, -, (4) のようなリスト) を返す."
 
 #: lisp/simple.scm
+msgctxt "function:simple--match-around"
+msgid ""
+"Return #t if a match for REGEXP in the line contains point, and set the match data to it\n"
+"(like thing-at-point-looking-at)."
+msgstr ""
+"行の中の REGEXP の一致が点を含めば #t を返し, 一致の情報をそれにする\n"
+"(thing-at-point-looking-at と同じ)."
+
+#: lisp/simple.scm
+msgctxt "function:number-at-point"
+msgid ""
+"Return the number at point, or #f if none is found.\n"
+"Decimal numbers like \"14\" or \"-14.5\", as well as hex numbers like \"0xBEEF09\" or \"#xBEEF09\", are recognized."
+msgstr ""
+"点の数を返す. 無ければ #f.\n"
+"\"14\" や \"-14.5\" のような 10 進の数と, \"0xBEEF09\" や \"#xBEEF09\" のような 16 進の数を読む."
+
+#: lisp/simple.scm
+msgctxt "function:simple--read-natnum"
+msgid ""
+"Return the numeric prefix argument, or read a number with PROMPT (like goto-char--read-natnum-interactive).\n"
+"The number at point, if it is a natural number, is the default."
+msgstr ""
+"数の前置引数を返す. 無ければ, PROMPT で数を聞く (goto-char--read-natnum-interactive と同じ).\n"
+"点の数が自然数なら, それが既定の値."
+
+#: lisp/simple.scm
+msgctxt "function:goto-char"
+msgid ""
+"Set point to POSITION, a number.\n"
+"Interactively, POSITION is the numeric prefix argument, or read in the minibuffer;\n"
+"the default is the natural number at point, and M-n also offers point."
+msgstr ""
+"点を位置 POSITION (数) にする.\n"
+"対話的には, POSITION は数の前置引数か, ミニバッファで聞く数.\n"
+"既定の値は点の自然数で, M-n では点の位置も出す."
+
+#: lisp/simple.scm
 msgctxt "function:forward-char"
 msgid ""
 "Move point N characters forward (backward if N is negative).\n"
@@ -5988,12 +6026,14 @@ msgid ""
 "The column of a tab or a wide character can be beyond COLUMN.\n"
 "If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if\n"
 "indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN\n"
-"is in the middle of a tab, change the tab into spaces."
+"is in the middle of a tab, change the tab into spaces.\n"
+"Interactively, COLUMN is the numeric prefix argument, or read in the minibuffer."
 msgstr ""
 "今の行の桁 COLUMN へ点を動かして, 着いた桁を返す.\n"
 "タブや幅の広い文字の桁は, COLUMN を越えることがある.\n"
 "オプションの第 2 引数 FORCE が #t で行が短ければ, 行の終わりに空白 (`indent-tabs-mode` ならタブも) を足して COLUMN まで届かせる.\n"
-"FORCE がほかの真の値で COLUMN がタブの途中なら, そのタブを空白にする."
+"FORCE がほかの真の値で COLUMN がタブの途中なら, そのタブを空白にする.\n"
+"対話的には, COLUMN は数の前置引数か, ミニバッファで聞く数."
 
 #: lisp/simple.scm
 msgctxt "function:newline"
@@ -6785,8 +6825,12 @@ msgstr "数 N は, N 桁以上字下げした行を出さないことを表す."
 
 #: lisp/simple.scm
 msgctxt "function:set-fill-column"
-msgid "Set fill-column to the argument.  With C-u, use the current column."
-msgstr "fill-column を引数にする. C-u なら, 今の桁にする."
+msgid ""
+"Set fill-column to the argument.  With C-u, use the current column.\n"
+"Interactively without a prefix argument, read the column in the minibuffer (the current column is the default)."
+msgstr ""
+"fill-column を引数にする. C-u なら, 今の桁にする.\n"
+"対話的に前置引数が無ければ, ミニバッファで桁を聞く (既定の値は今の桁)."
 
 #: lisp/simple.scm
 msgctxt "function:toggle-truncate-lines"
@@ -7582,13 +7626,31 @@ msgstr ""
 "Lisp から START と END を渡すと, その間の文字を保存する."
 
 #: lisp/simple.scm
+msgctxt "function:read-char-by-name"
+msgid ""
+"Read a character in the minibuffer with PROMPT, and return its code.\n"
+"The input is a hex number like 3042, or a number with a radix like #x3042, #o30102 or #10r12354.\n"
+"Unicode character names are not supported (Emacs completes them)."
+msgstr ""
+"PROMPT でミニバッファで文字を聞き, その文字コードを返す.\n"
+"入力は, 3042 のような 16 進の数か, #x3042, #o30102, #10r12354 のような基数付きの数.\n"
+"Unicode の文字の名前は読まない (Emacs は名前を補完する)."
+
+#: lisp/simple.scm
+msgctxt "function:simple--valid-char"
+msgid "Return N if it is a character code (up to #x10FFFF, not a surrogate), or signal an error."
+msgstr "N が文字コード (#x10FFFF まで. サロゲートでない) なら N を返す. そうでなければエラーにする."
+
+#: lisp/simple.scm
 msgctxt "function:insert-char"
 msgid ""
 "Insert COUNT copies of CHARACTER (a character code or a string of one character).\n"
-"COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
+"COUNT defaults to 1.  Interactively, read the character in the minibuffer (see read-char-by-name);\n"
+"COUNT is the prefix argument."
 msgstr ""
 "文字 CHARACTER (文字コードか, 1 文字の文字列) を COUNT 個入れる.\n"
-"COUNT の既定は 1. 対話的には, ミニバッファで文字を聞く. COUNT は前置引数."
+"COUNT の既定は 1. 対話的には, ミニバッファで文字を聞く (read-char-by-name を見る).\n"
+"COUNT は前置引数."
 
 #: lisp/simple.scm
 msgctxt "function:indent-to"
@@ -7874,6 +7936,24 @@ msgstr ""
 "y か n で答える問いを聞き, 答えが y なら #t を返す.\n"
 "PROMPT の後には \"(y or n) \" を付ける. y か SPC は yes, n か DEL は no.\n"
 "ほかのキーは, 聞き直す."
+
+#: lisp/subr.scm
+msgctxt "variable:minibuffer-default-prompt-format"
+msgid "Format string used to show the default value in a prompt."
+msgstr "問いに既定の値を出すときの書式."
+
+#: lisp/subr.scm
+msgctxt "function:read-number"
+msgid ""
+"Read a number in the minibuffer with PROMPT, and return it.\n"
+"DEFAULT (the first of ARGS) is returned for an empty input, and shown in PROMPT.  It can be a list:\n"
+"its first element is that value, and M-n shows its non-#f elements.  HIST (the second) is the history.\n"
+"An input that is not a number asks again."
+msgstr ""
+"PROMPT でミニバッファで数を聞き, それを返す.\n"
+"DEFAULT (ARGS の 1 つ目) は, 空の入力のときに返し, PROMPT に出す. リストでもよい:\n"
+"その最初の要素が既定の値で, M-n は #f でない要素を出す. HIST (2 つ目) は履歴.\n"
+"数でない入力は, 聞き直す."
 
 #: lisp/subr.scm
 msgctxt "function:yes-or-no-p"

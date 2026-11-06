@@ -1,6 +1,6 @@
 //! キーの割り当て (`keymap`) のテスト.
 
-use rseditor_core::keymap::{from_codemirror, Keymap, Lookup};
+use rseditor_core::keymap::{from_codemirror, unshifted, Keymap, Lookup};
 
 fn keys(text: &str) -> Vec<String> {
     text.split(' ').map(str::to_string).collect()
@@ -67,5 +67,42 @@ fn test_from_codemirror() {
         ("Alt-<", "M-<"),
     ] {
         assert_eq!(from_codemirror(cm), emacs, "{cm}");
+    }
+}
+
+#[test]
+fn test_unshifted() {
+    assert_eq!(unshifted("C-M-S-v"), Some("C-M-v".to_string()));
+    assert_eq!(unshifted("S-<insert>"), Some("<insert>".to_string()));
+    assert_eq!(unshifted("C-S-DEL"), Some("C-DEL".to_string()));
+    assert_eq!(unshifted("C-v"), None);
+    assert_eq!(unshifted("S"), None);
+    assert_eq!(unshifted("s-a"), None);
+}
+
+#[test]
+fn test_default_keys_of_existing_commands() {
+    let keymap = Keymap::default();
+    for (key, command) in [
+        ("C-S-DEL", "kill-whole-line"),
+        ("C-x f", "set-fill-column"),
+        ("C-x =", "what-cursor-position"),
+        ("C-x 8 RET", "insert-char"),
+        ("C-?", "undo-redo"),
+        ("M-g c", "goto-char"),
+        ("M-g TAB", "move-to-column"),
+        ("C-x n g", "goto-line-relative"),
+        ("C-x x t", "toggle-truncate-lines"),
+        ("C-M-S-v", "scroll-other-window-down"),
+        ("M-<prior>", "scroll-other-window-down"),
+        ("C-M-S-l", "recenter-other-window"),
+        ("C-x C-@", "pop-global-mark"),
+        ("C-x C-SPC", "pop-global-mark"),
+    ] {
+        assert_eq!(
+            keymap.lookup(&keys(key)),
+            Lookup::Command(command.to_string()),
+            "{key}"
+        );
     }
 }

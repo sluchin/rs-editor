@@ -163,7 +163,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 - キーは Emacs の書き方 (`key-description`)。`C-c C-m` は `C-c RET`, `C-i` は `TAB` と書く。
 - 「エディタの基本のコマンド」は, Lisp で書いたコマンド (`find-file` など) のうち, 既定の global-map にキーがあり, エディタの基本のライブラリ (`simple`, `files`, `window`, `bindings`, `lisp`, `indent`, `paragraphs`, `page`, `fill`, `newcomment`, `replace`, `isearch`, `rect`, `register`, `kmacro`, `abbrev`, `dabbrev`, `buff-menu`, `dired`, `bookmark`, `xref`, `loaddefs`, `help`, `help-fns`, `info`) にあるもの。マイナーモードのコマンド (`-mode`) と, 版管理 (`vc-`) は, 入れていない。
 
-### 組み込みのコマンド (101 個. 実装済み 25 個: Lisp 25 個, Rust 0 個. Edwin にもある: 41 個)
+### 組み込みのコマンド (101 個. 実装済み 27 個: Lisp 27 個, Rust 0 個. Edwin にもある: 41 個)
 
 | コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |
 |---|---|---|---|---|---|
@@ -203,13 +203,13 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `forward-line` |  |  |  |  |  |
 | `forward-word` | ◯ | `M-f`, `ESC <right>` | 実装済み | `M-f` | Lisp (`lisp/simple.scm`) |
 | `garbage-collect` |  |  |  |  |  |
-| `goto-char` | ◯ | `M-g c` |  |  |  |
+| `goto-char` | ◯ | `M-g c` | 実装済み | `M-g c` | Lisp (`lisp/simple.scm`) |
 | `handle-save-session` |  | special-event-map: `<save-session>` |  |  |  |
 | `handle-switch-frame` |  | `<switch-frame>` |  |  |  |
 | `iconify-frame` |  |  |  |  |  |
 | `indent-to` |  |  |  |  |  |
 | `indent-to-column` |  |  |  |  |  |
-| `insert-char` |  | `C-x 8 RET` | 実装済み |  | Lisp (`lisp/simple.scm`) |
+| `insert-char` |  | `C-x 8 RET` | 実装済み | `C-x 8 RET` | Lisp (`lisp/simple.scm`) |
 | `kill-buffer` | ◯ | `C-x k` | 実装済み | `C-x k` | Lisp (`lisp/window.scm`) |
 | `kill-emacs` |  |  |  |  |  |
 | `kill-local-variable` | ◯ |  |  |  |  |
@@ -225,7 +225,7 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `malloc-info` |  |  |  |  |  |
 | `malloc-trim` |  |  |  |  |  |
 | `modify-syntax-entry` |  |  |  |  |  |
-| `move-to-column` |  | `M-g TAB` |  |  |  |
+| `move-to-column` |  | `M-g TAB` | 実装済み | `M-g TAB` | Lisp (`lisp/simple.scm`) |
 | `move-to-window-line` | ◯ |  |  |  |  |
 | `narrow-to-region` | ◯ | `C-x n n` | 実装済み | `C-x n n` | Lisp (`lisp/simple.scm`) |
 | `open-dribble-file` |  |  |  |  |  |
@@ -381,14 +381,14 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `execute-extended-command` | ◯ | simple | `M-x`, `<menu>`, `<execute>` | 実装済み | `M-x` | Lisp (`lisp/simple.scm`) | 済 |
 | `execute-extended-command-for-buffer` |  | simple | `M-X` | 実装済み | `M-X` | Lisp (`lisp/simple.scm`) | 済 |
 | `goto-line` | ◯ | simple | `M-g g`, `M-g M-g` | 実装済み | `M-g g`, `M-g M-g` | Lisp (`lisp/simple.scm`) | 済 |
-| `goto-line-relative` |  | simple | `C-x n g` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `goto-line-relative` |  | simple | `C-x n g` | 実装済み | `C-x n g` | Lisp (`lisp/simple.scm`) | 済 |
 | `insert-buffer` | ◯ | simple | `C-x x i` | 実装済み | `C-x x i` | Lisp (`lisp/simple.scm`) | 済 |
 | `keyboard-escape-quit` |  | simple | `ESC ESC ESC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `keyboard-quit` | ◯ | simple | `C-g` | 実装済み | `C-g` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-line` | ◯ | simple | `C-k`, `<deleteline>` | 実装済み | `C-k` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-region` | ◯ | simple | `C-w`, `<cut>`, `S-<delete>` | 実装済み | `C-w` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-ring-save` |  | simple | `M-w`, `<copy>`, `C-<insert>`, `C-<insertchar>` | 実装済み | `M-w` | Lisp (`lisp/simple.scm`) | 済 |
-| `kill-whole-line` |  | simple | `C-S-<backspace>` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `kill-whole-line` |  | simple | `C-S-<backspace>` | 実装済み | `C-S-DEL` | Lisp (`lisp/simple.scm`) | 済 |
 | `kill-word` | ◯ | simple | `M-d`, `C-<delete>` | 実装済み | `M-d` | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-whole-buffer` | ◯ | simple | `C-x h` | 実装済み | `C-x h` | Lisp (`lisp/simple.scm`) | 済 |
 | `mark-word` | ◯ | simple | `M-@` | 実装済み | `M-@` | Lisp (`lisp/simple.scm`) | 済 |
@@ -399,27 +399,27 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `next-error` |  | simple | `` C-x ` ``, `M-g n`, `M-g M-n` | 実装済み | `M-g n`, `M-g M-n`, `` C-x ` `` | Lisp (`lisp/compile.scm`) | 済 |
 | `next-line` | ◯ | simple | `C-n`, `<down>` | 実装済み | `C-n`, `<down>` | Lisp (`lisp/simple.scm`) | 済 |
 | `open-line` | ◯ | simple | `C-o`, `<insertline>` | 実装済み | `C-o` | Lisp (`lisp/simple.scm`) | 済 |
-| `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `pop-global-mark` |  | simple | `C-x C-@`, `C-x C-SPC` | 実装済み | `C-x C-@`, `C-x C-SPC` | Lisp (`lisp/simple.scm`) | 済 |
 | `previous-error` |  | simple | `M-g p`, `M-g M-p` | 実装済み | `M-g p`, `M-g M-p` | Lisp (`lisp/compile.scm`) | 済 |
 | `previous-line` | ◯ | simple | `C-p`, `<up>` | 実装済み | `C-p`, `<up>` | Lisp (`lisp/simple.scm`) | 済 |
 | `quoted-insert` | ◯ | simple | `C-q` | 実装済み | `C-q` | Lisp (`lisp/simple.scm`) | 済 |
 | `repeat-complex-command` | ◯ | simple | `<redo>`, `<again>`, `C-x M-:`, `C-x ESC ESC` | 実装済み | `C-x M-:` | Lisp (`lisp/simple.scm`) | 済 |
-| `set-fill-column` | ◯ | simple | `C-x f` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `set-fill-column` | ◯ | simple | `C-x f` | 実装済み | `C-x f` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-goal-column` | ◯ | simple | `C-x C-n` | 実装済み | `C-x C-n` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-mark-command` | ◯ | simple | `C-@`, `C-SPC` | 実装済み | `C-SPC`, `C-@` | Lisp (`lisp/simple.scm`) | 済 |
 | `set-selective-display` |  | simple | `C-x $` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
 | `shell-command` | ◯ | simple | `M-!` | 実装済み | `M-!` | Lisp (`lisp/simple.scm`) | 済 |
 | `shell-command-on-region` | ◯ | simple | `M-\|` | 実装済み | `M-\|` | Lisp (`lisp/simple.scm`) | 済 |
 | `split-line` | ◯ | simple | `C-M-o` | 実装済み | `C-M-o` | Lisp (`lisp/simple.scm`) | 済 |
-| `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `toggle-truncate-lines` |  | simple | `C-x x t` | 実装済み | `C-x x t` | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-chars` | ◯ | simple | `C-t` | 実装済み | `C-t` | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-lines` | ◯ | simple | `C-x C-t` | 実装済み | `C-x C-t` | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-sexps` | ◯ | simple | `C-M-t` | 実装済み | `C-M-t` | Lisp (`lisp/simple.scm`) | 済 |
 | `transpose-words` | ◯ | simple | `M-t` | 実装済み | `M-t` | Lisp (`lisp/simple.scm`) | 済 |
 | `undo` | ◯ | simple | `C-/`, `C-_`, `C-x u`, `<undo>` | 実装済み | `C-/`, `C-_`, `C-x u` | Lisp (`lisp/simple.scm`) | 済 |
-| `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み | `C-M-_` | Lisp (`lisp/simple.scm`) | 済 |
+| `undo-redo` |  | simple | `C-?`, `C-M-_` | 実装済み | `C-M-_`, `C-?` | Lisp (`lisp/simple.scm`) | 済 |
 | `universal-argument` | ◯ | simple | `C-u` | 実装済み | `C-u` | Lisp (`lisp/simple.scm`) | 済 |
-| `what-cursor-position` | ◯ | simple | `C-x =` | 実装済み |  | Lisp (`lisp/simple.scm`) | 済 |
+| `what-cursor-position` | ◯ | simple | `C-x =` | 実装済み | `C-x =` | Lisp (`lisp/simple.scm`) | 済 |
 | `yank` | ◯ | simple | `C-y`, `<paste>`, `S-<insert>`, `S-<insertchar>` | 実装済み | `C-y` | Lisp (`lisp/simple.scm`) | 済 |
 | `yank-pop` | ◯ | simple | `M-y` | 実装済み | `M-y` | Lisp (`lisp/simple.scm`) | 済 |
 | `zap-to-char` |  | simple | `M-z` | 実装済み | `M-z` | Lisp (`lisp/simple.scm`) | 済 |
@@ -458,12 +458,12 @@ Emacs 30.2 の組み込みのコマンド (C で書いたもの) と, エディ�
 | `other-window-prefix` |  | window | `C-x 4 4` |  |  |  | 10 |
 | `previous-buffer` |  | window | `<XF86Back>`, `C-x <left>`, `C-x C-<left>` | 実装済み | `C-x <left>`, `C-x C-<left>` | Lisp (`lisp/window.scm`) | 済 |
 | `quit-window` |  | window | `C-x w q` | 実装済み | `C-x w q` | Lisp (`lisp/window.scm`) | 済 |
-| `recenter-other-window` |  | window | `C-M-S-l` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `recenter-other-window` |  | window | `C-M-S-l` | 実装済み | `C-M-S-l` | Lisp (`lisp/window.scm`) | 済 |
 | `recenter-top-bottom` |  | window | `C-l` | 実装済み | `C-l` | Lisp (`lisp/simple.scm`) | 済 |
 | `same-window-prefix` |  | window | `C-x 4 1` |  |  |  | 10 |
 | `scroll-down-command` |  | window | `M-v`, `<prior>` | 実装済み | `M-v`, `<prior>` | Lisp (`lisp/simple.scm`) | 済 |
 | `scroll-other-window` | ◯ | window | `C-M-v`, `M-<next>`, `ESC <next>` | 実装済み | `C-M-v` | Lisp (`lisp/window.scm`) | 済 |
-| `scroll-other-window-down` | ◯ | window | `C-M-S-v`, `M-<prior>`, `ESC <prior>` | 実装済み |  | Lisp (`lisp/window.scm`) | 済 |
+| `scroll-other-window-down` | ◯ | window | `C-M-S-v`, `M-<prior>`, `ESC <prior>` | 実装済み | `C-M-S-v`, `M-<prior>` | Lisp (`lisp/window.scm`) | 済 |
 | `scroll-up-command` |  | window | `C-v`, `<next>` | 実装済み | `C-v`, `<next>` | Lisp (`lisp/simple.scm`) | 済 |
 | `shrink-window-horizontally` | ◯ | window | `C-x {` | 実装済み | `C-x {` | Lisp (`lisp/window.scm`) | 済 |
 | `shrink-window-if-larger-than-buffer` | ◯ | window | `C-x -` | 実装済み | `C-x -` | Lisp (`lisp/window.scm`) | 済 |

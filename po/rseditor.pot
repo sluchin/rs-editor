@@ -5164,6 +5164,35 @@ msgid "Return the first of ARGS, or the raw prefix argument (#f, a number, - or 
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:simple--match-around"
+msgid ""
+"Return #t if a match for REGEXP in the line contains point, and set the match data to it\n"
+"(like thing-at-point-looking-at)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:number-at-point"
+msgid ""
+"Return the number at point, or #f if none is found.\n"
+"Decimal numbers like \"14\" or \"-14.5\", as well as hex numbers like \"0xBEEF09\" or \"#xBEEF09\", are recognized."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--read-natnum"
+msgid ""
+"Return the numeric prefix argument, or read a number with PROMPT (like goto-char--read-natnum-interactive).\n"
+"The number at point, if it is a natural number, is the default."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:goto-char"
+msgid ""
+"Set point to POSITION, a number.\n"
+"Interactively, POSITION is the numeric prefix argument, or read in the minibuffer;\n"
+"the default is the natural number at point, and M-n also offers point."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:forward-char"
 msgid ""
 "Move point N characters forward (backward if N is negative).\n"
@@ -5372,7 +5401,8 @@ msgid ""
 "The column of a tab or a wide character can be beyond COLUMN.\n"
 "If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if\n"
 "indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN\n"
-"is in the middle of a tab, change the tab into spaces."
+"is in the middle of a tab, change the tab into spaces.\n"
+"Interactively, COLUMN is the numeric prefix argument, or read in the minibuffer."
 msgstr ""
 
 #: lisp/simple.scm
@@ -6037,7 +6067,9 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:set-fill-column"
-msgid "Set fill-column to the argument.  With C-u, use the current column."
+msgid ""
+"Set fill-column to the argument.  With C-u, use the current column.\n"
+"Interactively without a prefix argument, read the column in the minibuffer (the current column is the default)."
 msgstr ""
 
 #: lisp/simple.scm
@@ -6698,10 +6730,24 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:read-char-by-name"
+msgid ""
+"Read a character in the minibuffer with PROMPT, and return its code.\n"
+"The input is a hex number like 3042, or a number with a radix like #x3042, #o30102 or #10r12354.\n"
+"Unicode character names are not supported (Emacs completes them)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--valid-char"
+msgid "Return N if it is a character code (up to #x10FFFF, not a surrogate), or signal an error."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:insert-char"
 msgid ""
 "Insert COUNT copies of CHARACTER (a character code or a string of one character).\n"
-"COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
+"COUNT defaults to 1.  Interactively, read the character in the minibuffer (see read-char-by-name);\n"
+"COUNT is the prefix argument."
 msgstr ""
 
 #: lisp/simple.scm
@@ -6938,6 +6984,20 @@ msgid ""
 "Ask the user a y or n question, and return #t if the answer is y.\n"
 "PROMPT is followed by \"(y or n) \". y or SPC means yes, and n or DEL means no.\n"
 "Other keys ask again."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "variable:minibuffer-default-prompt-format"
+msgid "Format string used to show the default value in a prompt."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:read-number"
+msgid ""
+"Read a number in the minibuffer with PROMPT, and return it.\n"
+"DEFAULT (the first of ARGS) is returned for an empty input, and shown in PROMPT.  It can be a list:\n"
+"its first element is that value, and M-n shows its non-#f elements.  HIST (the second) is the history.\n"
+"An input that is not a number asks again."
 msgstr ""
 
 #: lisp/subr.scm

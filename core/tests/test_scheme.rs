@@ -341,6 +341,20 @@ fn test_string_procedures() {
         eval("(number->string 42) (string->number \" 1.5 \") (string->number \"x\")"),
         "\"42\"\n1.5\n#f"
     );
+    // 基数 (10 でなければ整数)
+    assert_eq!(
+        eval("(string->number \"1f\" 16) (string->number \"102\" 8) (string->number \"1.5\" 2)"),
+        "31\n66\n#f"
+    );
+    for (code, error) in [
+        (
+            "(string->number)",
+            "string->number expects 1 or 2 arguments",
+        ),
+        ("(string->number \"1\" 1)", "string->number: bad radix 1"),
+    ] {
+        assert_eq!(eval_err(code), error, "{code}");
+    }
     assert_eq!(
         eval("(symbol->string 'abc) (string->symbol \"abc\")"),
         "\"abc\"\nabc"

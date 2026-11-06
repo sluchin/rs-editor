@@ -500,11 +500,24 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             Ok(Value::String(Value::Number(number(name, &n)?).to_string()))
         }
         "string->number" => {
-            let [s] = fixed::<1>(name, args)?;
-            Ok(match string(name, &s)?.trim().parse::<f64>() {
-                Ok(n) => Value::Number(n),
-                Err(_) => Value::Boolean(false),
-            })
+            // (string->number STRING [RADIX]): RADIX が 10 でなければ, 整数として読む (R7RS)
+            if args.is_empty() || args.len() > 2 {
+                return Err("string->number expects 1 or 2 arguments".to_string().into());
+            }
+            let text = string(name, &args[0])?.trim().to_string();
+            let radix = match args.get(1) {
+                Some(radix) => number(name, radix)? as u32,
+                None => 10,
+            };
+            if !(2..=36).contains(&radix) {
+                return Err(format!("string->number: bad radix {radix}").into());
+            }
+            let parsed = if radix == 10 {
+                text.parse::<f64>().ok()
+            } else {
+                i64::from_str_radix(&text, radix).ok().map(|n| n as f64)
+            };
+            Ok(parsed.map_or(Value::Boolean(false), Value::Number))
         }
         "symbol->string" => match fixed::<1>(name, args)? {
             [Value::Symbol(s)] => Ok(Value::String(s)),

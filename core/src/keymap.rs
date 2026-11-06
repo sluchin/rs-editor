@@ -157,6 +157,20 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-M-w", "append-next-kill"),
     ("C-x x i", "insert-buffer"),
     ("C-M-_", "undo-redo"),
+    ("C-?", "undo-redo"),
+    ("C-S-DEL", "kill-whole-line"),
+    ("C-x f", "set-fill-column"),
+    ("C-x =", "what-cursor-position"),
+    ("C-x 8 RET", "insert-char"),
+    ("M-g c", "goto-char"),
+    ("M-g TAB", "move-to-column"),
+    ("C-x n g", "goto-line-relative"),
+    ("C-x x t", "toggle-truncate-lines"),
+    ("C-M-S-v", "scroll-other-window-down"),
+    ("M-<prior>", "scroll-other-window-down"),
+    ("C-M-S-l", "recenter-other-window"),
+    ("C-x C-@", "pop-global-mark"),
+    ("C-x C-SPC", "pop-global-mark"),
     ("C-y", "yank"),
     ("M-y", "yank-pop"),
     ("C-u", "universal-argument"),
@@ -364,6 +378,27 @@ impl Keymap {
             .map(|(k, _)| k.join(" "))
             .collect()
     }
+}
+
+/// Shift を外したキーを返します (Emacs の shift-translation. 割り当ての無い `C-S-DEL` を `C-DEL` として引く).
+///
+/// # Arguments
+///
+/// * `key` - キー (Emacs の書き方. `C-M-S-v`).
+///
+/// # Returns
+///
+/// Shift (`S-`) を外したキー. Shift が無ければ `None`.
+pub fn unshifted(key: &str) -> Option<String> {
+    let mut rest = key;
+    let mut modifiers = Vec::new();
+    while rest.len() > 2 && rest.as_bytes()[1] == b'-' && "ACHMSs".contains(&rest[..1]) {
+        modifiers.push(&rest[..2]);
+        rest = &rest[2..];
+    }
+    let shift = modifiers.iter().position(|m| *m == "S-")?;
+    modifiers.remove(shift);
+    Some(modifiers.concat() + rest)
 }
 
 /// Lisp で割り当てたキー (CodeMirror の書き方. `Ctrl-h f`) を, Emacs の書き方 (`C-h f`) にします.

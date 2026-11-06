@@ -15,6 +15,35 @@ Other keys ask again."
             ((member key '("n" "Backspace" "Delete")) #f)
             (else (loop (string-append "Please answer y or n.  " prompt "(y or n) ")))))))
 
+(define minibuffer-default-prompt-format " (default %s)"
+  "Format string used to show the default value in a prompt.")
+
+(define (read-number prompt . args)
+  "Read a number in the minibuffer with PROMPT, and return it.
+DEFAULT (the first of ARGS) is returned for an empty input, and shown in PROMPT.  It can be a list:
+its first element is that value, and M-n shows its non-#f elements.  HIST (the second) is the history.
+An input that is not a number asks again."
+  (let* ((default (if (pair? args) (car args) #f))
+         (default1 (if (pair? default) (car default) default))
+         (hist (if (and (pair? args) (pair? (cdr args)) (cadr args)) (cadr args) 'read-number-history))
+         (shown (format minibuffer-default-prompt-format (if default1 default1 "")))
+         (prompt (cond ((not default1) prompt)
+                       ((string-match "\\(\\):[ \t]*\\'" prompt)
+                        (string-append (substring prompt 0 (match-beginning 1)) shown
+                                       (substring prompt (match-beginning 1) (string-length prompt))))
+                       (else (string-append (substring prompt 0 (string-match "[ \t]*\\'" prompt)) shown))))
+         (defaults (cond ((pair? default) (map number->string (filter (lambda (n) n) default)))
+                         (default (list (number->string default)))
+                         (else '()))))
+    (let loop ()
+      (let* ((input (read-string prompt #f hist defaults))
+             (n (if (equal? input "") default1 (string->number input))))
+        (if (number? n)
+            n
+            (begin
+              (message "Please enter a number.")
+              (loop)))))))
+
 (define (yes-or-no-p prompt)
   "Ask the user a yes or no question, and return #t if the answer is yes.
 PROMPT is followed by \"(yes or no) \". The answer must be typed in full, and ended with RET.

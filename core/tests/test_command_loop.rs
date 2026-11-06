@@ -120,6 +120,21 @@ fn test_keys_commands_and_self_insert() {
 }
 
 #[test]
+fn test_shifted_keys_fall_back_to_the_unshifted_keys() {
+    let mut commands = setup();
+    // 割り当ての無い Shift 付きのキーは, Shift を外して引く (S-SPC は空白を入れる)
+    press(&mut commands, "a b S-SPC S-<left> C-S-f");
+    assert_eq!(text(&commands), "ab ");
+    assert_eq!(commands.host().editor().current_buffer().point(), 3);
+    // 割り当てがあれば, そのまま (C-S-DEL は kill-whole-line)
+    press(&mut commands, "C-S-DEL");
+    assert_eq!(text(&commands), "");
+    // Shift を外しても無ければ, 外したキーを知らせる
+    press(&mut commands, "C-x S-C-z");
+    assert_eq!(message(&commands), "C-x C-z is undefined");
+}
+
+#[test]
 fn test_prefix_arguments_and_failures() {
     let mut commands = setup();
     // 負の数の前置引数でも, 文字は 1 つ入れる

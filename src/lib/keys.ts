@@ -60,12 +60,22 @@ function strokeName(stroke: string): string {
 /**
  * 押したキーを, CodeMirror の書き方にします (修飾キーを付ける).
  *
+ * Shift は, Emacs と同じく, 名前のあるキー (`S-DEL`, `C-S-<up>`) と, Ctrl と一緒の英字 (`C-S-v`) にだけ付ける.
+ * ほかの文字は, Shift で変わった文字 (`A`, `?`) にする.
+ *
  * @param event - キーの事象.
  * @returns CodeMirror の書き方.
  */
 export function eventKeyName(event: KeyboardEvent): string {
-  const modifiers = [event.ctrlKey && 'Ctrl-', event.altKey && 'Alt-', event.metaKey && 'Meta-']
-  return modifiers.filter(Boolean).join('') + event.key
+  const letter = event.ctrlKey && /^[A-Z]$/.test(event.key)
+  const shift = event.shiftKey && (event.key.length > 1 || letter)
+  const modifiers = [
+    event.ctrlKey && 'Ctrl-',
+    event.altKey && 'Alt-',
+    shift && 'Shift-',
+    event.metaKey && 'Meta-',
+  ]
+  return modifiers.filter(Boolean).join('') + (letter ? event.key.toLowerCase() : event.key)
 }
 
 /**

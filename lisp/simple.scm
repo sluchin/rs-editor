@@ -52,6 +52,43 @@ If it is a number, those commands move to that column of the line they move to."
 
 (define simple--forward-char forward-char)
 (define simple--backward-char backward-char)
+(define simple--goto-char goto-char)
+
+(define (simple--match-around regexp)
+  "Return #t if a match for REGEXP in the line contains point, and set the match data to it
+(like thing-at-point-looking-at)."
+  (let ((pt (point))
+        (found #f))
+    (save-excursion
+      (goto-char (line-beginning-position))
+      (let loop ()
+        (when (re-search-forward regexp (line-end-position) #t)
+          (cond ((> (match-beginning 0) pt) #f)
+                ((>= (match-end 0) pt) (set! found #t))
+                (else (loop))))))
+    found))
+
+(define (number-at-point)
+  "Return the number at point, or #f if none is found.
+Decimal numbers like \"14\" or \"-14.5\", as well as hex numbers like \"0xBEEF09\" or \"#xBEEF09\", are recognized."
+  (cond ((simple--match-around "\\(0x\\|#x\\)\\([a-fA-F0-9]+\\)") (string->number (match-string 2) 16))
+        ((simple--match-around "-?[0-9]+\\.?[0-9]*") (string->number (match-string 0)))
+        (else #f)))
+
+(define (simple--read-natnum prompt)
+  "Return the numeric prefix argument, or read a number with PROMPT (like goto-char--read-natnum-interactive).
+The number at point, if it is a natural number, is the default."
+  (let ((arg (current-prefix-arg)))
+    (if (and arg (not (pair? arg)))
+        (prefix-numeric-value arg)
+        (let ((n (number-at-point)))
+          (read-number prompt (list (and n (integer? n) (>= n 0) n) (point)))))))
+
+(define-command (goto-char . args)
+  "Set point to POSITION, a number.
+Interactively, POSITION is the numeric prefix argument, or read in the minibuffer;
+the default is the natural number at point, and M-n also offers point."
+  (simple--goto-char (if (pair? args) (car args) (simple--read-natnum "Go to char: "))))
 
 (define-command (forward-char . args)
   "Move point N characters forward (backward if N is negative).
@@ -279,13 +316,17 @@ Signal an error at the beginning of the buffer."
 
 (define simple--move-to-column move-to-column)
 
-(define (move-to-column column . rest)
+(define-command (move-to-column . args)
   "Move point to column COLUMN in the current line, and return the column where it ends up.
 The column of a tab or a wide character can be beyond COLUMN.
 If the optional second argument FORCE is #t and the line is too short, add spaces (and tabs if
 indent-tabs-mode) at the end of the line to reach COLUMN.  If FORCE is another true value and COLUMN
-is in the middle of a tab, change the tab into spaces."
-  (let* ((force (and (pair? rest) (car rest)))
+is in the middle of a tab, change the tab into spaces.
+Interactively, COLUMN is the numeric prefix argument, or read in the minibuffer."
+  (let* ((column (cond ((pair? args) (car args))
+                       ((current-prefix-arg) (prefix-numeric-value (current-prefix-arg)))
+                       (else (read-number "Move to column: "))))
+         (force (and (pair? args) (pair? (cdr args)) (cadr args)))
          (reached (simple--move-to-column column)))
     (when (and force (> reached column) (equal? (char-before) "\t"))
       (backward-char 1)
@@ -1446,8 +1487,11 @@ With a prefix argument, report on the whole buffer."
   "A number N means that lines indented by N columns or more are not displayed.")
 
 (define-command (set-fill-column . args)
-  "Set fill-column to the argument.  With C-u, use the current column."
-  (let ((arg (if (null? args) (current-prefix-arg) (car args))))
+  "Set fill-column to the argument.  With C-u, use the current column.
+Interactively without a prefix argument, read the column in the minibuffer (the current column is the default)."
+  (let ((arg (cond ((pair? args) (car args))
+                   ((current-prefix-arg) (current-prefix-arg))
+                   (else (read-number (format "Change fill-column from %s to: " fill-column) (current-column))))))
     (if (pair? arg) (set! arg (current-column)))
     (if (not (number? arg))
         (error "set-fill-column requires an explicit argument")
@@ -2466,10 +2510,32 @@ Called from Lisp with START and END, it saves the text between them."
           (kill-new text)))
     #f))
 
+(define (read-char-by-name prompt)
+  "Read a character in the minibuffer with PROMPT, and return its code.
+The input is a hex number like 3042, or a number with a radix like #x3042, #o30102 or #10r12354.
+Unicode character names are not supported (Emacs completes them)."
+  (let ((input (string-trim (read-string prompt))))
+    (cond ((string-match "\\`[0-9a-fA-F]+\\'" input) (simple--valid-char (string->number input 16)))
+          ((string-match "\\`#\\([xX]\\|[oO]\\|[bB]\\|\\([0-9]+\\)r\\)\\([0-9a-zA-Z]+\\)\\'" input)
+           (let* ((kind (string-downcase (match-string 1 input)))
+                  (radix (cond ((equal? kind "x") 16)
+                               ((equal? kind "o") 8)
+                               ((equal? kind "b") 2)
+                               (else (string->number (match-string 2 input))))))
+             (simple--valid-char (string->number (match-string 3 input) radix))))
+          (else (error "Invalid character")))))
+
+(define (simple--valid-char n)
+  "Return N if it is a character code (up to #x10FFFF, not a surrogate), or signal an error."
+  (if (and n (integer? n) (>= n 0) (<= n 1114111) (not (and (>= n 55296) (<= n 57343))))
+      n
+      (error "Invalid character")))
+
 (define-command (insert-char . args)
   "Insert COUNT copies of CHARACTER (a character code or a string of one character).
-COUNT defaults to 1.  Interactively, read the character in the minibuffer; COUNT is the prefix argument."
-  (let* ((char (if (null? args) (substring (read-string "Insert character: ") 0 1) (car args)))
+COUNT defaults to 1.  Interactively, read the character in the minibuffer (see read-char-by-name);
+COUNT is the prefix argument."
+  (let* ((char (if (null? args) (read-char-by-name "Insert character (Unicode name or hex): ") (car args)))
          (count (cond ((and (pair? args) (pair? (cdr args))) (cadr args))
                       ((null? args) (prefix-numeric-value (current-prefix-arg)))
                       (else 1)))

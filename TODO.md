@@ -205,29 +205,33 @@
 - [x] `C-M-n` / `C-M-p` (forward-list / backward-list): リストの単位の移動。
 - [x] `C-x [` / `C-x ]` (backward-page / forward-page), `C-x C-p` (mark-page), `C-x l` (count-lines-page): ページ (`^L`) の単位。
 - [x] `M-r` (move-to-window-line-top-bottom): カーソルを、画面の中、上、下の行へ。
-- [ ] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置、桁へ。
+- [x] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置、桁へ (`tests/batch/cases/60-key-commands`)。
 - [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 15)。
 - [ ] `next-error` で、`compile` と `occur` の結果も使う。`*grep*` の中の、今の行の印 (`=>`) と強調。
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
-- [ ] `C-x C-@` (pop-global-mark), `C-u C-SPC` (前のマークへ戻る。 mark-ring): マークの履歴。
+- [x] `C-x C-@` (pop-global-mark)。
+- [ ] `C-u C-SPC` (前のマークへ戻る。 mark-ring): マークの履歴。
 
 ### 削除・編集
 
 - [x] `C-M-w` (append-next-kill): 次のキルを、kill-ring の先頭につなげる。
-- [ ] `C-S-DEL` (kill-whole-line) にキーを割り当てる (コマンドは有る)。
+- [x] `C-S-DEL` (kill-whole-line) にキーを割り当てる。画面のアプリは、名前のあるキーと Ctrl と一緒の英字に、Emacs と同じく Shift (`S-`) を付けて送り、割り当ての無い Shift 付きのキーは、Shift を外して引く (shift-translation)。ターミナルは、Shift を区別できないことが多い。
 - [x] `C-M-t` (transpose-sexps)。
 - [x] `M-(` (insert-parentheses), `M-)` (move-past-close-and-reindent)。
 - [x] `C-M-o` (split-line), `C-M-j` (default-indent-new-line), `M-i` (tab-to-tab-stop)。
 - [x] `C-x TAB` (indent-rigidly): リージョンを、桁の数だけ字下げする。
 - [x] `C-x C-;` (comment-line), `C-x ;` (comment-set-column)。
-- [ ] `C-x 8 RET` (insert-char): 文字を名前か番号で入れる。`C-x 8` で始まる、そのほかの文字。
-- [ ] `C-x =` (what-cursor-position): カーソルの文字と位置を出す。
+- [x] `C-x 8 RET` (insert-char): 文字を番号 (16 進、`#x`、`#o`、`#10r` など) で入れる。
+- [ ] `C-x 8 RET` で、Unicode の名前で入れる (Emacs は、名前を補完する。今は、`Invalid character`)。`C-x 8` で始まる、そのほかの文字。
+- [ ] `read-number`: 既定の値が無く、`M-n` の値だけがあるとき、Emacs は空の入力を聞き直す。今は、`M-n` の最初の値を返す。
+- [x] `C-x =` (what-cursor-position): カーソルの文字と位置を出す。
 - [ ] `C-x z` (repeat), `C-x ESC ESC` (repeat-complex-command): 前のコマンドの繰り返し。
 - [x] `C--` / `M--` (negative-argument): 負の前置引数。
-- [ ] `C-?` (undo-redo), リージョンの中だけの undo (`C-u C-/` ではなく、リージョンがあるときの `C-/`)。
+- [x] `C-?` (undo-redo)。
+- [ ] リージョンの中だけの undo (`C-u C-/` ではなく、リージョンがあるときの `C-/`)。
 - [x] `M-~` (not-modified): バッファを、変更なしにする。
-- [ ] `C-x f` (set-fill-column) にキーを割り当てる (コマンドは有る)。
+- [x] `C-x f` (set-fill-column) にキーを割り当てる (前置引数が無ければ、Emacs 30 と同じく、桁を聞く)。
 - [x] `M-SPC` (cycle-spacing): Emacs 30 の既定は、続けて押すと、空白を 1 つ、無し、元に戻す。今は `just-one-space`。
 - [x] `M-'` (abbrev-prefix-mark), `C-x a ...` (add-global-abbrev など), `C-x '` (expand-abbrev): 略語 (abbrev)。
 - [x] `C-M-i` (complete-symbol), `C-M-/` (dabbrev-completion): 補完の候補の一覧。
@@ -242,7 +246,7 @@
 - [x] `C-x r SPC` / `C-x r j` (point-to-register / jump-to-register): 位置のレジスタ。
 - [ ] `C-x C-k x` (kmacro-to-register)。
 - [ ] `bookmark-delete`、`bookmark-rename`。
-- [ ] `C-x n g` (goto-line-relative): キーを割り当てる (コマンドは有る)。
+- [x] `C-x n g` (goto-line-relative): キーを割り当てる。
 
 ### 検索・置換
 
@@ -278,14 +282,14 @@
 
 ### バッファ・ウィンドウ
 
-- [ ] `C-x x t` (toggle-truncate-lines): キーを割り当てる (コマンドは有る)。
+- [x] `C-x x t` (toggle-truncate-lines): キーを割り当てる。
 - [ ] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`)。今は、同じ名前になる。
 - [ ] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`s`、`x`、`u`、`~` など)。今は、`RET`、`f`、`o`、`q`、`n`、`p`、`SPC` だけ (`lisp/buff-menu.scm`)。
 - [ ] `ibuffer`。
 - [ ] `C-x 4 4` (other-window-prefix)。
 - [x] `C-x ^` / `C-x {` / `C-x }` / `C-x -` / `C-x +` (enlarge-window, shrink-window-horizontally, enlarge-window-horizontally,
       shrink-window-if-larger-than-buffer, balance-windows): ウィンドウの大きさ。
-- [ ] `C-M-S-v` (scroll-other-window-down) / `C-M-S-l`: キーを割り当てる (`C-M-v` は完了済み)。
+- [x] `C-M-S-v` (scroll-other-window-down、`M-<prior>` も) / `C-M-S-l`: キーを割り当てる。
 - [ ] `C-x w ...` のうち `toggle-window-dedicated`、`winner-mode`、`windmove`。
 - [ ] `C-x 5 ...` (フレーム) と `C-x t ...` (タブ)。
 
@@ -637,7 +641,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 22: 優先度つきの進め方
 
-各 Phase の未完了 (`- [ ]`) は 127 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+各 Phase の未完了 (`- [ ]`) は 121 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -669,7 +673,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 足りないコマンド (Phase 14 と dotfiles の表から。よく使うものを先に):
 
-- [ ] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
+- [x] キー割り当てだけが残るもの (コマンドは有る): `C-S-DEL` (kill-whole-line)、`C-x f` (set-fill-column)、`C-x =` (what-cursor-position)、`C-x 8 RET` (insert-char)、`C-?` (undo-redo)、`M-g c` / `M-g TAB`、`C-x n g`、`C-x x t`、`C-M-S-v` / `C-M-S-l`、`C-x C-@` (pop-global-mark)。小。
 - [ ] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - [ ] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
 - [ ] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。

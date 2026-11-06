@@ -8,7 +8,7 @@ use crate::error::Error;
 use std::sync::{Arc, Mutex};
 
 use crate::editor::prefix_numeric_value;
-use crate::keymap::{from_codemirror, Keymap, Lookup};
+use crate::keymap::{from_codemirror, unshifted, Keymap, Lookup};
 use crate::scheme::editor_host::EditorHost;
 use crate::scheme::evaluator::Evaluator;
 use crate::scheme::host::Host;
@@ -212,7 +212,8 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             }
             Lookup::Unbound => {
                 let keys = std::mem::take(&mut *self.pending.lock_recover());
-                match (keys.as_slice(), printable(key)) {
+                // 文字は, Shift を外した後のキーで決める (S-SPC は空白)
+                match (keys.as_slice(), keys.first().and_then(|k| printable(k))) {
                     ([_], Some(c)) => self.self_insert(&c.to_string()),
                     _ => self.say(&format!("{} is undefined", keys.join(" "))),
                 }
@@ -220,8 +221,25 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         }
     }
 
-    /// 読んでいるキーを引きます. バッファだけのキー (`local-set-key`) を, 全体の割り当てより先に引く.
+    /// 読んでいるキーを引きます. 割り当てが無く, 最後のキーに Shift があれば, Shift を外して引き直す
+    /// (Emacs の shift-translation).
     fn lookup_pending(&self) -> Lookup {
+        let found = self.lookup_keys();
+        if found != Lookup::Unbound {
+            return found;
+        }
+        let mut pending = self.pending.lock_recover();
+        let key = pending.last().and_then(|key| unshifted(key));
+        let (Some(key), Some(last)) = (key, pending.last_mut()) else {
+            return found;
+        };
+        *last = key;
+        drop(pending);
+        self.lookup_pending()
+    }
+
+    /// 読んでいるキーを引きます. バッファだけのキー (`local-set-key`) を, 全体の割り当てより先に引く.
+    fn lookup_keys(&self) -> Lookup {
         let local = self.host.editor().current_buffer().local_keys().to_vec();
         if !local.is_empty() {
             let mut keymap = Keymap::empty();
