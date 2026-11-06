@@ -25,6 +25,17 @@ A command can set it, so that the next command sees it as last-command.")
   "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, or true when called from the keyboard."
   (if (and (pair? args) (pair? (cdr args))) (cadr args) simple--interactive))
 
+;; Like Emacs, call-interactively runs the command as if it was typed.
+(define simple--call-interactively call-interactively)
+
+(define (call-interactively command)
+  "Call COMMAND as if it was typed with a key (the commands then act as called interactively)."
+  (let ((saved simple--interactive))
+    (set! simple--interactive #t)
+    (unwind-protect
+        (simple--call-interactively command)
+      (set! simple--interactive saved))))
+
 (define (simple--arg args)
   "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
   (if (null? args) (prefix-numeric-value (current-prefix-arg)) (car args)))
@@ -412,9 +423,55 @@ At the beginning of a line, cancel the fill prefix."
         (message (format "fill-prefix: \"%s\"" fill-prefix))
         (message "fill-prefix canceled"))))
 
+;; Emacs's lisp--fill-line-simple: break a long line of code before the sexp that crosses the fill column.
+(define (simple--fill-line-simple)
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (line-beginning-position) (line-end-position))
+      (goto-char (point-min))
+      (let loop ()
+        (when (and (not (eobp)) (re-search-forward "\\_>" #f #t))
+          (when (> (current-column) fill-column)
+            (let ((start (point)))
+              (backward-sexp)
+              (if (and (> (point) (point-min)) (member (char-before) '("(" "[")))
+                  (goto-char start)
+                  (begin
+                    (skip-chars-backward " \t")
+                    (insert "\n")
+                    (forward-sexp)))))
+          (when (not (eobp)) (forward-char 1))
+          (loop))))))
+
+;; Emacs's lisp-fill-paragraph: fill a comment, the docstring around point, or break a line of code.
+(define (simple--fill-lisp)
+  (let ((here (syntax-ppss))
+        (at-end (syntax-ppss (line-end-position))))
+    (cond ((or (list-ref here 4) (list-ref at-end 4))
+           (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
+          ((list-ref here 3)
+           (let* ((open (list-ref here 8))
+                  (start (+ open 1))
+                  (end (condition-case e
+                           (save-excursion (goto-char open) (forward-sexp 1) (- (point) 1))
+                         (error (point-max)))))
+             ;; The first line of a string is filled by itself, the rest as one text.
+             (if (<= (line-beginning-position) start)
+                 (fill-text-op start (min (line-end-position) end) fill-column fill-prefix indent-tabs-mode)
+                 (fill-text-op (save-excursion (goto-char start) (forward-line 1) (point))
+                               end fill-column fill-prefix indent-tabs-mode))))
+          (else (simple--fill-line-simple)))))
+
 (define-command (fill-paragraph . args)
-  "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
-  (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
+  "Fill the paragraph at or after point.
+With an active region (from the keyboard), fill each paragraph of the region.
+In a Lisp buffer, fill the comment or the docstring around point, or break a long line of code."
+  (cond ((and simple--interactive (use-region-p) (not (= (region-beginning) (region-end))))
+         (fill-region))
+        ((eq? (syntax-dialect) 'fundamental)
+         (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
+        (else (simple--fill-lisp)))
+  #f)
 
 (define-command (fill-region . args)
   "Fill each of the paragraphs in the region.
@@ -423,13 +480,16 @@ Called from Lisp with FROM and TO, fill the paragraphs between them."
                     (if (null? args) (region-end) (cadr args))))
          (to (max (if (null? args) (region-beginning) (car args))
                   (if (null? args) (region-end) (cadr args))))
-         (tail (- (point-max) to)))
+         (tail (- (point-max) to))
+         (text? (not (eq? (syntax-dialect) 'fundamental))))
     (save-excursion
       (goto-char from)
       (let loop ()
         (skip-chars-forward "\n \t")
         (when (< (point) (- (point-max) tail))
-          (fill-paragraph-op fill-column fill-prefix indent-tabs-mode)
+          (if text?
+              (fill-text-op from (- (point-max) tail) fill-column fill-prefix indent-tabs-mode)
+              (fill-paragraph-op fill-column fill-prefix indent-tabs-mode))
           (forward-paragraph)
           (loop))))
     #f))

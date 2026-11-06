@@ -1449,6 +1449,37 @@ impl<U: Host> EditorHost<U> {
                 apply_plan(b, point, plan)?;
                 Value::Nil
             }
+            "fill-text-op" => {
+                // 範囲の本文を 1 つの文章として, カーソルの段落を詰める (Lisp の文字列の中など)
+                let (from, to) = (pos(op, args, 0)?, pos(op, args, 1)?);
+                let column = usize::try_from(int(op, args, 2)?).unwrap_or(0);
+                let config = IndentConfig {
+                    dialect: Dialect::Fundamental,
+                    indent_tabs: args.get(4).is_some_and(Value::is_non_nil),
+                    tab_width: crate::buffer::TAB_WIDTH,
+                };
+                let chars: Vec<char> = b
+                    .text()
+                    .chars()
+                    .skip(from)
+                    .take(to.saturating_sub(from))
+                    .collect();
+                let lines: Vec<Vec<char>> =
+                    chars.split(|c| *c == '\n').map(<[char]>::to_vec).collect();
+                let point = b.point();
+                let relative = point.clamp(from, from + chars.len()) - from;
+                if let Some(mut plan) =
+                    fill::fill_paragraph(&lines, relative, &config, column, text_opt(op, args, 3)?)
+                {
+                    for edit in &mut plan.edits {
+                        edit.from += from;
+                        edit.to += from;
+                    }
+                    plan.cursor = plan.cursor.map(|c| c + from);
+                    apply_plan(b, point, plan)?;
+                }
+                Value::Nil
+            }
             "syntax-ppss" => {
                 let p = pos_opt(op, args, 0)?.unwrap_or(b.point());
                 let state = Source::from_buffer(b, b.dialect()).parse_state(p);

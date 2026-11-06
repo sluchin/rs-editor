@@ -5123,6 +5123,11 @@ msgid "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, o
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:call-interactively"
+msgid "Call COMMAND as if it was typed with a key (the commands then act as called interactively)."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:simple--arg"
 msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
 msgstr ""
@@ -5411,7 +5416,10 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:fill-paragraph"
-msgid "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
+msgid ""
+"Fill the paragraph at or after point.\n"
+"With an active region (from the keyboard), fill each paragraph of the region.\n"
+"In a Lisp buffer, fill the comment or the docstring around point, or break a long line of code."
 msgstr ""
 
 #: lisp/simple.scm

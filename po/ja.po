@@ -5684,6 +5684,11 @@ msgid "Return the ALLOW-EXTEND argument of a mark command: the second of ARGS, o
 msgstr "マークのコマンドの ALLOW-EXTEND 引数を返す: ARGS の 2 番目. 無ければ, キーから動かしたとき真."
 
 #: lisp/simple.scm
+msgctxt "function:call-interactively"
+msgid "Call COMMAND as if it was typed with a key (the commands then act as called interactively)."
+msgstr "COMMAND を, キーで打ったかのように呼ぶ (コマンドは, 対話的に呼ばれたように動く)."
+
+#: lisp/simple.scm
 msgctxt "function:simple--arg"
 msgid "Return the first of ARGS, or the numeric value of the prefix argument if ARGS is empty."
 msgstr "ARGS の最初の値を返す. ARGS が空なら, 前置引数の数としての値を返す."
@@ -6040,8 +6045,14 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:fill-paragraph"
-msgid "Fill the paragraph at or after point (the comment paragraph in a Lisp buffer)."
-msgstr "点の所か, 次の段落を詰める (Lisp のバッファでは, コメントの段落)."
+msgid ""
+"Fill the paragraph at or after point.\n"
+"With an active region (from the keyboard), fill each paragraph of the region.\n"
+"In a Lisp buffer, fill the comment or the docstring around point, or break a long line of code."
+msgstr ""
+"点の所か, 次の段落を詰める.\n"
+"有効なリージョンがあれば (キーボードから), リージョンの各段落を詰める.\n"
+"Lisp のバッファでは, 点の回りのコメントか docstring を詰めるか, 長いコードの行を折る."
 
 #: lisp/simple.scm
 msgctxt "function:fill-region"

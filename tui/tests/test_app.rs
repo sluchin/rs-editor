@@ -1436,3 +1436,43 @@ fn test_disabled_commands_ask_before_they_run() {
     fx.press("M-x");
     assert_eq!(fx.text(), "ab");
 }
+
+/// 文字列を打つキーの並びにする.
+fn typed(text: &str) -> String {
+    text.chars()
+        .map(|c| match c {
+            '\n' => "RET".to_string(),
+            ' ' => "SPC".to_string(),
+            c => c.to_string(),
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+#[test]
+fn test_fill_paragraph_in_a_docstring_and_a_region() {
+    // docstring の中: 長い行が詰められる
+    let mut fx = Fixture::new();
+    fx.feed(&typed("scheme-mode\n"));
+    fx.press("M-x");
+    fx.press(&typed(
+        "(foo \"aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq rrr sss\")",
+    ));
+    fx.press("C-b C-b C-b M-q");
+    assert_eq!(
+        fx.text(),
+        "(foo \"aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq\nrrr sss\")"
+    );
+    // 複数行の docstring: 最初の行は別にして, 残りが 1 つの文章として詰められる
+    let mut fx = Fixture::new();
+    fx.feed(&typed("scheme-mode\n"));
+    fx.press("M-x");
+    fx.press(&typed("(foo \"aaa\nbbb\nccc\")"));
+    fx.press("C-b C-b M-q");
+    assert_eq!(fx.text(), "(foo \"aaa\nbbb ccc\")");
+    // リージョン: 全ての段落が詰められる
+    let mut fx = Fixture::new();
+    fx.press(&typed("aaa\nbbb\n\nccc\nddd\n"));
+    fx.press("C-x h M-q");
+    assert_eq!(fx.text(), "aaa bbb\n\nccc ddd\n");
+}

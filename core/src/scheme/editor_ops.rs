@@ -149,6 +149,17 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
         &[Kind::Number, Kind::Any, Kind::Any],
         3,
     ),
+    (
+        "fill-text-op",
+        &[
+            Kind::Number,
+            Kind::Number,
+            Kind::Number,
+            Kind::Any,
+            Kind::Any,
+        ],
+        5,
+    ),
     ("comment-dwim-op", &[Kind::Any, Kind::Number, Kind::Any], 3),
     (
         "comment-region-op",
@@ -314,6 +325,7 @@ pub const NAMES: &[&str] = &[
     "newline-and-indent-op",
     "plain-newline-and-indent-op",
     "fill-paragraph-op",
+    "fill-text-op",
     "comment-dwim-op",
     "comment-region-op",
     "syntax-dialect",
