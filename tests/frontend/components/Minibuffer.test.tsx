@@ -350,3 +350,113 @@ describe('Minibuffer Component (履歴を戻る)', () => {
     expect(state.input).toBe('typed')
   })
 })
+
+describe('Minibuffer Component (既定の値と履歴の検索)', () => {
+  /** 入力欄を描いて, キーを送る道具を返す. */
+  function setup(initial: MinibufferInputState) {
+    let state = initial
+    const onInputChange = vi.fn((value: string, next: MinibufferInputState) => {
+      state = { ...next, input: value }
+    })
+    const props = { onSubmit: vi.fn(), onCancel: vi.fn(), onQueryKey: vi.fn(), onInputChange }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const alt = (k: string) => {
+      fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, {
+        key: k,
+        altKey: true,
+      })
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    const type = (text: string) => {
+      fireEvent.change(view.container.querySelector('input') as HTMLInputElement, {
+        target: { value: text },
+      })
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    const enter = () => {
+      fireEvent.keyDown(view.container.querySelector('input') as HTMLInputElement, {
+        key: 'Enter',
+      })
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    return { view, alt, type, enter, get: () => state }
+  }
+
+  it('M-n で履歴の先の既定の値を出し, M-p で入力していた文字に戻ること', () => {
+    const t = setup({
+      mode: 'input',
+      prompt: 'p: ',
+      input: 'typed',
+      history: ['a'],
+      defaults: ['d1', 'd2'],
+    })
+    t.alt('n')
+    expect(t.get().input).toBe('d1')
+    t.alt('n')
+    expect(t.get().input).toBe('d2')
+    t.alt('n')
+    expect(t.view.container.textContent).toContain('[End of defaults; no next item]')
+    t.alt('p')
+    t.alt('p')
+    expect(t.get().input).toBe('typed')
+    t.alt('p')
+    expect(t.get().input).toBe('a')
+  })
+
+  it('M-r で正規表現を入力して, 古い履歴を探すこと', () => {
+    const t = setup({
+      mode: 'input',
+      prompt: 'p: ',
+      input: 'typed',
+      history: ['foo2', 'bar', 'foo1'],
+    })
+    t.alt('r')
+    expect(t.view.container.textContent).toContain('Previous element matching (regexp): ')
+    t.type('foo')
+    t.enter()
+    expect(t.get().input).toBe('foo2')
+    expect(t.view.container.textContent).toContain('p: ')
+    // 空の入力は, 前に探した正規表現
+    t.alt('r')
+    t.enter()
+    expect(t.get().input).toBe('foo1')
+    // もう無い
+    t.alt('r')
+    t.enter()
+    expect(t.view.container.textContent).toContain('[No earlier matching history item]')
+    expect(t.get().input).toBe('foo1')
+  })
+
+  it('前に探した正規表現が無いまま Enter なら, 空の正規表現 (全てに合う) で探すこと', () => {
+    const t = setup({ mode: 'input', prompt: 'p: ', input: '', history: ['a', 'b'] })
+    t.alt('r')
+    t.enter()
+    expect(t.get().input).toBe('a')
+  })
+
+  it('M-s で新しい履歴を探し, 誤った正規表現は知らせること', () => {
+    const t = setup({
+      mode: 'input',
+      prompt: 'p: ',
+      input: 'typed',
+      history: ['foo2', 'bar', 'foo1'],
+    })
+    t.alt('p')
+    t.alt('p')
+    t.alt('p')
+    expect(t.get().input).toBe('foo1')
+    t.alt('s')
+    expect(t.view.container.textContent).toContain('Next element matching (regexp): ')
+    t.type('foo')
+    t.enter()
+    expect(t.get().input).toBe('foo2')
+    t.alt('s')
+    t.type('(')
+    t.enter()
+    expect(t.view.container.textContent).toMatch(/\[.*\]/)
+    // 検索の入力の間は M-p / M-n が効かない
+    t.alt('s')
+    t.alt('p')
+    expect(t.get().input).toBe('')
+  })
+})

@@ -49,6 +49,8 @@ impl App {
             macro_loop: Vec::new(),
             executing_macro: false,
             recent_keys: VecDeque::new(),
+            histories: BTreeMap::new(),
+            history_regexp: String::new(),
         }));
         let ui = UiHost::new(state.clone(), editor.clone(), keymap.clone());
         let host = EditorHost::shared(editor, ui);

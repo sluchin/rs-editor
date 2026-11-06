@@ -312,6 +312,15 @@ describe('App (問い)', () => {
     await reply(id)
   })
 
+  it('read-string: M-n で核が渡した既定の値を出すこと', async () => {
+    const view = await setup()
+    const id = ask('read-string', ['Name: ', '', 'minibuffer', ['dflt', 1]])
+    fireEvent.keyDown(minibufferInput(view), { key: 'n', altKey: true })
+    expect(minibufferInput(view).value).toBe('dflt')
+    fireEvent.keyDown(minibufferInput(view), { key: 'Enter' })
+    expect(await reply(id)).toMatchObject({ value: 'dflt', error: null })
+  })
+
   it('read-file-name: 既定のディレクトリから始め, ~ を展開して補完すること', async () => {
     const view = await setup()
     await vi.waitFor(() => expect(mocked.getHomeDir).toHaveBeenCalled())

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react'
 import { emacsKey } from '../lib/keys'
 import { complete, type Completion } from '../lib/complete'
+import { historyText, searchHistory, stepHistory } from '../lib/history'
 import '../styles/Minibuffer.css'
 
 /** メッセージを出している状態. */
@@ -31,6 +32,12 @@ export interface MinibufferInputState {
   historyPos?: number
   /** 履歴を出す前に, 入力していた文字. */
   historySaved?: string
+  /** `M-n` で履歴の先に出す, 既定の値 (位置 -1, -2, ...). */
+  defaults?: readonly string[]
+  /** `M-r` / `M-s` で正規表現を入力しているとき (`older` は古い方へ探すか). */
+  historySearch?: { older: boolean }
+  /** `M-r` / `M-s` で最後に探した正規表現. */
+  historyRegexp?: string
 }
 
 /** 1 つのキーで答える問い (`read-key`. query-replace の `y`, `n`, isearch の文字など). */
@@ -137,30 +144,80 @@ export default function Minibuffer({
      *
      * @param e - キーのイベント.
      */
+    /**
+     * 履歴の位置を動かして, その文字を入力欄に出します.
+     *
+     * @param pos - 新しい位置.
+     * @param items - 履歴.
+     * @param defaults - 既定の値.
+     * @param saved - 履歴を出す前に入力していた文字.
+     * @param base - 入力の状態 (省くと, 今の状態).
+     */
+    const showHistory = (
+      pos: number,
+      items: readonly string[],
+      defaults: readonly string[],
+      saved: string,
+      base: MinibufferInputState = state,
+    ) => {
+      const text = historyText(items, defaults, saved, pos)
+      setShown([])
+      setNote({ key: '', text: '' })
+      onInputChange(text, { ...base, historyPos: pos, historySaved: saved })
+    }
+
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       // 日本語などの変換中のキー (変換を確定する Enter も) は, IME に任せる
       // (WebKit は, 確定の Enter で isComposing が false でも, keyCode を 229 にする)
       if (e.nativeEvent.isComposing || e.keyCode === 229) return
 
-      // 入力の履歴 (M-p で古い方へ, M-n で新しい方へ)
-      if (e.altKey && (e.key === 'p' || e.key === 'n')) {
+      // 入力の履歴 (M-p で古い方へ, M-n で新しい方へ. 履歴の先では既定の値)
+      if (e.altKey && (e.key === 'p' || e.key === 'n') && !state.historySearch) {
         e.preventDefault()
         const items = state.history ?? []
+        const defaults = state.defaults ?? []
         const current = state.historyPos ?? 0
-        const pos = current + (e.key === 'p' ? 1 : -1)
-        if (pos > items.length) {
-          setNote({ key: inputKey, text: '[Beginning of history; no preceding item]' })
-        } else if (pos < 0) {
-          setNote({ key: inputKey, text: '[End of history; no default available]' })
+        const step = stepHistory(items, defaults, current, e.key === 'p')
+        if ('error' in step) {
+          setNote({ key: inputKey, text: `[${step.error}]` })
         } else {
-          const saved = current === 0 ? state.input : (state.historySaved as string)
-          setShown([])
-          setNote({ key: '', text: '' })
-          onInputChange(pos === 0 ? saved : items[pos - 1], {
-            ...state,
-            historyPos: pos,
-            historySaved: saved,
-          })
+          showHistory(
+            step.pos,
+            items,
+            defaults,
+            current === 0 ? state.input : (state.historySaved as string),
+          )
+        }
+        return
+      }
+
+      // 入力の履歴を正規表現で探す (M-r で古い方へ, M-s で新しい方へ). 正規表現はこの入力欄に打つ
+      if (e.altKey && (e.key === 'r' || e.key === 's') && !state.historySearch) {
+        e.preventDefault()
+        const saved = (state.historyPos ?? 0) === 0 ? state.input : (state.historySaved as string)
+        setNote({ key: '', text: '' })
+        onInputChange('', {
+          ...state,
+          historySearch: { older: e.key === 'r' },
+          historySaved: saved,
+        })
+        return
+      }
+      if (state.historySearch && e.key === 'Enter') {
+        e.preventDefault()
+        const regexp = state.input === '' ? (state.historyRegexp ?? '') : state.input
+        const items = state.history ?? []
+        const current = state.historyPos ?? 0
+        const restored = { ...state, historySearch: undefined, historyRegexp: regexp }
+        const step = searchHistory(items, current, regexp, state.historySearch.older)
+        if ('error' in step) {
+          setNote({ key: inputKey, text: `[${step.error}]` })
+          onInputChange(
+            historyText(items, state.defaults ?? [], state.historySaved as string, current),
+            restored,
+          )
+        } else {
+          showHistory(step.pos, items, state.defaults ?? [], state.historySaved as string, restored)
         }
         return
       }
@@ -193,7 +250,11 @@ export default function Minibuffer({
 
     return (
       <div className="minibuffer">
-        <span className="minibuffer-prompt">{state.prompt}</span>
+        <span className="minibuffer-prompt">
+          {state.historySearch
+            ? `${state.historySearch.older ? 'Previous' : 'Next'} element matching (regexp): `
+            : state.prompt}
+        </span>
         <input
           ref={inputRef}
           className="minibuffer-input"

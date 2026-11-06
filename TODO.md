@@ -177,7 +177,7 @@
 - [ ] `C-x d` (dired): 一覧を出すだけで、dired の中のキー (`RET`、`^`、`g`、`m`、`d` など) と、読み込み専用は、まだ。
       Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は、出さない。
 - [ ] isearch の `M-p`、`M-n`: Emacs (`search-ring-update` が `nil`) は、履歴の文字を、ミニバッファで直させる。今は、すぐに探す。
-- [ ] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら、今のファイルの名前など) を出す。今は、出さない。
+- [x] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら、今のファイルの名前など) を出す。今は、出さない。
 - [ ] `M-x grep`: Emacs は、grep のコマンドの行 (`grep --color=auto -nH --null -e`) を聞き、外の grep を動かす。今は、正規表現とディレクトリを聞き、      エディタが、ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ、大文字と小文字を区別しない
       (Emacs の `rgrep` の `case-fold-search` と同じ)。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは、探さない。
       既定の正規表現 (カーソルの所の言葉) は、まだ。
@@ -310,8 +310,8 @@
 
 ### ミニバッファと補完
 
-- [ ] `M-r` / `M-s` (previous-matching-history-element など): 入力の履歴を正規表現で探す。
-- [ ] `M-n` の既定の値 (future history)。`C-x C-f` なら、カーソルの所のファイルの名前など。
+- [x] `M-r` / `M-s` (previous-matching-history-element など): 入力の履歴を正規表現で探す (ターミナルと画面)。
+- [x] `M-n` の既定の値 (future history)。`read-string` と `read-file-name` の既定の値を出す。
 - [ ] `*Completions*` バッファで選ぶ (`M-v`、`M-<up>`、`M-<down>`、`RET`)。補完のスタイル (`partial-completion` の `f-f` など)。
 - [x] `yes-or-no-p` で、`yes` と `no` のほかの答えには、聞き直す (「Please answer yes or no.」)。今は、`no` とする。
 - [ ] `M-ESC ESC` (keyboard-escape-quit), 再帰編集 (`C-M-c`)。
@@ -641,7 +641,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 22: 優先度つきの進め方
 
-各 Phase の未完了 (`- [ ]`) は 143 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+各 Phase の未完了 (`- [ ]`) は 140 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -663,7 +663,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `M-@`、`C-M-SPC`、`C-M-h` の負の前置引数 (前へ選ぶ) (Phase 12)。小。
 - [x] kill-ring、消した矩形、レジスタを、全てのウィンドウで共通にする (Phase 12)。中。
 - [ ] isearch の大文字と小文字 (`case-fold-search`)、`M-c` / `M-r` / `M-e` (Phase 14「検索・置換」)。小〜中。完了: 大文字と小文字、`M-c`、`M-r`。未完了: `M-e`。
-- [ ] `M-n` の既定の値 (ミニバッファと isearch) と、`M-r` / `M-s` の履歴の検索 (Phase 12, 14)。小。
+- [ ] `M-n` の既定の値 (ミニバッファと isearch) と、`M-r` / `M-s` の履歴の検索 (Phase 12, 14)。小。完了: ミニバッファの `M-n` と `M-r` / `M-s`。未完了: isearch の `M-n` / `M-p`。
 - [ ] `C-q` の細かい違い (前置きのキー、`C-q RET`、Meta 付き) (Phase 12)。小。
 - [ ] 使えない (disabled) コマンドの確かめ: `C-x C-u`、`C-x C-l`、`C-x C-n` (Phase 12)。小。
 - [ ] `C-n` / `C-p` が、表示の桁 (タブと全角の幅) を保つ (Phase 12)。中。

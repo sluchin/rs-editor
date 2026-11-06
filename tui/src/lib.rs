@@ -8,6 +8,7 @@
 
 pub mod app;
 pub mod batch;
+pub mod history;
 pub mod render;
 pub mod screen;
 pub mod ui;

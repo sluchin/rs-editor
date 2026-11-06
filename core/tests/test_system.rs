@@ -651,8 +651,8 @@ fn test_editor_settings() {
             "pop-to-buffer-same-window \"*howm*\"".to_string(),
             "buffer-file-name".to_string(),
             "set-buffer-modified-p #f".to_string(),
-            "read-string \"Search: \" \"\"".to_string(),
-            "read-string \"Search: \" \"init\"".to_string(),
+            "read-string \"Search: \" \"\" \"minibuffer\" ()".to_string(),
+            "read-string \"Search: \" \"init\" \"minibuffer\" ()".to_string(),
         ]
     );
     // ファイルのないバッファ
@@ -1052,8 +1052,8 @@ fn test_read_file_name() {
     assert_eq!(
         editor.calls(),
         vec![
-            "read-file-name \"Find file: \" \"\"",
-            "read-file-name \"F: \" \"~/\""
+            "read-file-name \"Find file: \" \"\" \"file-name-history\" ()",
+            "read-file-name \"F: \" \"~/\" \"file-name-history\" (\"~/d.txt\")"
         ]
     );
     // 入力を変えなければ (空か, DIR のまま), DEFAULT-FILENAME
@@ -1083,7 +1083,7 @@ fn test_read_file_name() {
     assert_eq!(
         editor.calls(),
         vec![
-            "read-file-name \"Find file: \" \"\"",
+            "read-file-name \"Find file: \" \"\" \"file-name-history\" ()",
             "buffer-list",
             // 訪れているバッファがあれば, それ
             "buffer-file-name \"/home/b.txt\"",

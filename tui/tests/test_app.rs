@@ -1321,3 +1321,46 @@ fn test_isearch_folds_case_and_m_c_toggles_it() {
     fx.press("C-s");
     assert_eq!(fx.point(), 4);
 }
+
+#[test]
+fn test_minibuffer_history_keys() {
+    // 入力した値が履歴に残り, M-p で出せる
+    let mut fx = Fixture::new();
+    fx.press("a RET b RET c RET d");
+    fx.feed("2 RET");
+    fx.press("M-g g");
+    assert_eq!(fx.point(), 2);
+    fx.feed("M-p RET");
+    fx.press("M-g g");
+    assert_eq!(fx.point(), 2);
+    // M-r で履歴を正規表現で探す
+    fx.feed("3 RET");
+    fx.press("M-g g");
+    fx.feed("2 RET");
+    fx.press("M-g g");
+    fx.feed("M-r 3 RET RET");
+    fx.press("M-g g");
+    assert_eq!(fx.point(), 4);
+    // M-n で既定の値を出す
+    let mut fx = Fixture::new();
+    fx.feed("( i n s e r t SPC ( r e a d - s t r i n g SPC \" p \" SPC \" \" SPC # f SPC \" d f l t \" ) ) RET");
+    fx.feed("M-n RET");
+    fx.press("M-:");
+    assert_eq!(fx.text(), "dflt");
+    // 履歴が無ければ知らせる
+    let mut fx = Fixture::new();
+    fx.feed("M-p M-n C-g");
+    fx.press("M-g g");
+    // M-r の正規表現の入力をやめる (C-g) と, 空の入力 (前の正規表現を使う), M-s
+    let mut fx = Fixture::new();
+    fx.press("a RET b RET c RET d");
+    for line in ["1", "2", "3"] {
+        fx.feed(&format!("{line} RET"));
+        fx.press("M-g g");
+    }
+    fx.feed("M-r C-g C-g");
+    fx.press("M-g g");
+    fx.feed("M-r 1 RET M-r RET M-s 3 RET RET");
+    fx.press("M-g g");
+    assert_eq!(fx.point(), 4);
+}

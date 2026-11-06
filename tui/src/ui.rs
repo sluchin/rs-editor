@@ -11,6 +11,7 @@ use rseditor_core::editor::Editor;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
+use crate::history::{add_to_history, Navigator};
 use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
 use rseditor_core::command_loop::LoopUi;
@@ -38,6 +39,10 @@ pub struct UiState {
     pub executing_macro: bool,
     /// 画面から読んだ最近のキー (古いものから. `view-lossage` に使う).
     pub recent_keys: VecDeque<String>,
+    /// ミニバッファの入力の履歴 (履歴の名前ごと. 新しい順).
+    pub histories: BTreeMap<String, Vec<String>>,
+    /// `M-r` と `M-s` で最後に探した正規表現.
+    pub history_regexp: String,
 }
 
 /// 覚えておく最近のキーの数 (Emacs の `recent-keys` と同じ).
@@ -162,9 +167,18 @@ impl UiHost {
         prompt: &str,
         initial: &str,
         completion: Completion,
+        history: &str,
+        defaults: &[String],
     ) -> Result<String, Error> {
         let mut input: Vec<char> = initial.chars().collect();
         let mut cursor = input.len();
+        let mut navigator = Navigator::new();
+        let items = self
+            .state()
+            .histories
+            .get(history)
+            .cloned()
+            .unwrap_or_default();
         loop {
             let text: String = input.iter().collect();
             self.draw(Some(&Minibuffer {
@@ -174,8 +188,34 @@ impl UiHost {
             }));
             let key = self.read_key()?;
             match key.as_str() {
-                "RET" => return Ok(text),
+                "RET" => {
+                    if !history.is_empty() {
+                        add_to_history(
+                            self.state()
+                                .histories
+                                .entry(history.to_string())
+                                .or_default(),
+                            &text,
+                        );
+                    }
+                    return Ok(text);
+                }
                 "C-g" => return Err(Error::bare("quit")),
+                "M-p" | "M-n" | "M-r" | "M-s" => {
+                    let result = match key.as_str() {
+                        "M-p" => navigator.previous(&text, &items, defaults),
+                        "M-n" => navigator.next(&text, &items, defaults),
+                        _ => self.search_history(&mut navigator, &key, &text, &items, defaults),
+                    };
+                    match result {
+                        Ok(found) => {
+                            input = found.chars().collect();
+                            cursor = input.len();
+                            self.state().message = String::new();
+                        }
+                        Err(message) => self.state().message = format!("[{message}]"),
+                    }
+                }
                 "DEL" => {
                     if cursor > 0 {
                         cursor -= 1;
@@ -206,6 +246,35 @@ impl UiHost {
                 }
             }
         }
+    }
+}
+
+impl UiHost {
+    /// `M-r` / `M-s`: 正規表現を読んで, 履歴から探します (入力を空にすると, 前に探した正規表現を使う).
+    fn search_history(
+        &self,
+        navigator: &mut Navigator,
+        key: &str,
+        text: &str,
+        items: &[String],
+        defaults: &[String],
+    ) -> Result<String, String> {
+        let older = key == "M-r";
+        let prompt = if older {
+            "Previous element matching (regexp): "
+        } else {
+            "Next element matching (regexp): "
+        };
+        let regexp = self
+            .read_line(prompt, "", Completion::None, "", &[])
+            .map_err(|e| e.to_string())?;
+        let regexp = if regexp.is_empty() {
+            self.state().history_regexp.clone()
+        } else {
+            self.state().history_regexp = regexp.clone();
+            regexp
+        };
+        navigator.search(&regexp, older, text, items, defaults)
     }
 }
 
@@ -279,6 +348,19 @@ fn text(args: &[Value], i: usize) -> String {
     }
 }
 
+/// 既定の値のリストの引数.
+fn defaults(args: &[Value], i: usize) -> Vec<String> {
+    // 核は, 文字列のリストを必ず渡す
+    let items: &[Value] = match args.get(i) {
+        Some(Value::List(list)) => list,
+        _ => &[],
+    };
+    items
+        .iter()
+        .map(|v| text(std::slice::from_ref(v), 0))
+        .collect()
+}
+
 impl Host for UiHost {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
@@ -287,10 +369,22 @@ impl Host for UiHost {
                 Ok(Value::Nil)
             }
             "read-string" => self
-                .read_line(&text(&args, 0), &text(&args, 1), Completion::None)
+                .read_line(
+                    &text(&args, 0),
+                    &text(&args, 1),
+                    Completion::None,
+                    &text(&args, 2),
+                    &defaults(&args, 3),
+                )
                 .map(Value::String),
             "read-file-name" => self
-                .read_line(&text(&args, 0), &text(&args, 1), Completion::Files)
+                .read_line(
+                    &text(&args, 0),
+                    &text(&args, 1),
+                    Completion::Files,
+                    &text(&args, 2),
+                    &defaults(&args, 3),
+                )
                 .map(Value::String),
             "completing-read" => {
                 let candidates = match args.get(1) {
@@ -307,6 +401,8 @@ impl Host for UiHost {
                     &text(&args, 0),
                     &text(&args, 2),
                     Completion::Candidates(candidates),
+                    "minibuffer",
+                    &defaults(&args, 3),
                 )
                 .map(Value::String)
             }

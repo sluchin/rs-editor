@@ -121,6 +121,16 @@ function expandTilde(dir: string, home: string): string {
  *
  * @returns 画面.
  */
+/**
+ * 核が渡す引数から, 文字列のリストを取り出します.
+ *
+ * @param value - 引数 (文字列の配列のはず).
+ * @returns 文字列だけの配列 (配列でなければ空).
+ */
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+}
+
 function App() {
   // 描く内容と, 出しているバッファの本文
   const [{ frame, entries }, setShown] = useState<{
@@ -200,7 +210,10 @@ function App() {
       case 'read-string': {
         const prompt = String(args[0])
         const history = prompt === 'M-x ' ? 'extended-command' : 'minibuffer'
-        return ask({ mode: 'input', prompt, input: String(args[1] ?? '') }, history)
+        return ask(
+          { mode: 'input', prompt, input: String(args[1] ?? ''), defaults: stringList(args[3]) },
+          history,
+        )
       }
       case 'read-file-name':
         return ask(
@@ -208,6 +221,7 @@ function App() {
             mode: 'input',
             prompt: String(args[0]),
             input: String(args[1] ?? '') || defaultDirectory(selectedBuffer),
+            defaults: stringList(args[3]),
             complete: (text) =>
               completeFileName(text, (dir) => listDirectory(expandTilde(dir, home.current))),
           },

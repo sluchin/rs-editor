@@ -879,7 +879,8 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let prompt = string(name, &args[0])?;
             let initial = optional_string(name, args.get(1))?;
             let default = default_value(name, args.get(3))?;
-            let input = read_input(machine, name, vec![prompt.to_string(), initial])?;
+            let extra = history_arguments(name, args.get(2), args.get(3), "minibuffer")?;
+            let input = read_input_with(machine, name, vec![prompt.to_string(), initial], extra)?;
             Ok(Value::String(or_default(input, default)))
         }
         "read-file-name" => {
@@ -891,7 +892,9 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             let prompt = string(name, &args[0])?;
             let dir = optional_string(name, args.get(1))?;
             let default = default_value(name, args.get(2))?;
-            let input = read_input(machine, name, vec![prompt.to_string(), dir.clone()])?;
+            let extra = history_arguments(name, None, args.get(2), "file-name-history")?;
+            let input =
+                read_input_with(machine, name, vec![prompt.to_string(), dir.clone()], extra)?;
             Ok(Value::String(match default {
                 Some(default) if input.is_empty() || input == dir => default,
                 _ => input,
@@ -1270,13 +1273,70 @@ fn completing_read(machine: &mut Machine, args: Vec<Value>) -> Result<Value, Err
 ///
 /// 入力. やめたら [`Err`].
 fn read_input(machine: &mut Machine, name: &str, args: Vec<String>) -> Result<String, Error> {
-    match machine
-        .host
-        .call(name, args.into_iter().map(Value::String).collect())?
-    {
+    read_input_with(machine, name, args, Vec::new())
+}
+
+/// [`read_input`] に, 追加の引数 (履歴の名前と既定の値) を渡します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 操作の名前.
+/// * `args` - 引数 (文字列).
+/// * `extra` - 追加の引数.
+///
+/// # Returns
+///
+/// 入力. やめたら [`Err`].
+fn read_input_with(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<String>,
+    extra: Vec<Value>,
+) -> Result<String, Error> {
+    match machine.host.call(
+        name,
+        args.into_iter().map(Value::String).chain(extra).collect(),
+    )? {
         Value::String(input) => Ok(input),
         other => Err(format!("{}: unexpected input {}", name, other).into()),
     }
+}
+
+/// 履歴と既定の値を, 画面に渡す引数にします (履歴の名前と, 既定の値のリスト).
+///
+/// # Arguments
+///
+/// * `name` - 手続きの名前.
+/// * `history` - 履歴の引数 (記号か文字列. 省くか, nil なら `fallback`).
+/// * `default` - 既定の値の引数 (文字列か, 文字列のリスト).
+/// * `fallback` - 履歴の引数が無いときの名前.
+///
+/// # Returns
+///
+/// 画面に渡す, 追加の引数.
+fn history_arguments(
+    name: &str,
+    history: Option<&Value>,
+    default: Option<&Value>,
+    fallback: &str,
+) -> Result<Vec<Value>, Error> {
+    let history = match history {
+        Some(Value::Symbol(s) | Value::String(s)) => s.clone(),
+        _ => fallback.to_string(),
+    };
+    let defaults = match default {
+        Some(Value::List(items)) => items
+            .iter()
+            .map(|v| string(name, v).map(|s| Value::String(s.to_string())))
+            .collect::<Result<Vec<_>, _>>()?,
+        Some(v) if v.is_non_nil() => vec![Value::String(string(name, v)?.to_string())],
+        _ => Vec::new(),
+    };
+    Ok(vec![
+        Value::String(history),
+        Value::List(defaults.into_iter().collect()),
+    ])
 }
 
 /// 省ける, 文字列の引数を返します (省くか, nil なら空).
