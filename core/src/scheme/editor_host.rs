@@ -676,6 +676,36 @@ impl<U: Host> EditorHost<U> {
                 };
                 Value::Number(size.ok_or_else(|| format!("No such window: {w}"))? as f64)
             }
+            "window-dedicated-p" => {
+                let w = window(ed, op, args, 0)?;
+                match ed.dedicated.get(&w).map(String::as_str) {
+                    None => Value::Boolean(false),
+                    Some("t") => Value::Boolean(true),
+                    Some(flag) => Value::Symbol(flag.to_string()),
+                }
+            }
+            "set-window-dedicated-p" => {
+                let w = window(ed, op, args, 0)?;
+                match args.get(1) {
+                    None | Some(Value::Nil) | Some(Value::Boolean(false)) => {
+                        ed.dedicated.remove(&w);
+                    }
+                    Some(Value::Symbol(flag)) if flag != "t" => {
+                        ed.dedicated.insert(w, flag.clone());
+                    }
+                    Some(_) => {
+                        ed.dedicated.insert(w, "t".to_string());
+                    }
+                }
+                args.get(1).cloned().unwrap_or(Value::Nil)
+            }
+            "window-edges" => {
+                let w = window(ed, op, args, 0)?;
+                let edges = ed
+                    .window_edges(w)
+                    .ok_or_else(|| format!("No such window: {w}"))?;
+                Value::List(edges.iter().map(|&n| Value::Number(n as f64)).collect())
+            }
             "delete-window" => {
                 let w = window(ed, op, args, 0)?;
                 ed.delete_window(w)?;
@@ -720,16 +750,8 @@ impl<U: Host> EditorHost<U> {
             "display-buffer" => {
                 let name = text(op, args, 0)?.to_string();
                 ed.get_buffer_create(&name);
-                // 別のウィンドウに出す (1 つだけなら, 分ける)
-                let selected = ed.selected_window();
-                if ed.window_list().len() == 1 {
-                    ed.split_window(Direction::Below);
-                }
-                let target = ed
-                    .window_list()
-                    .into_iter()
-                    .find(|w| *w != selected)
-                    .unwrap_or(selected);
+                // 別のウィンドウ (専用でないもの) に出す. 無ければ, 分ける
+                let target = ed.window_for_display();
                 ed.set_window_buffer(target, &name)?;
                 if let Some(line) = pos_opt(op, args, 1)? {
                     let buffer = ed.get_buffer_mut(&name).unwrap();

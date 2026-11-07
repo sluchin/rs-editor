@@ -41,6 +41,11 @@ pub const EDITOR_FILES: &[(&str, &str)] = &[
         "lisp/uniquify.scm",
         include_str!("../../../lisp/uniquify.scm"),
     ),
+    (
+        "lisp/windmove.scm",
+        include_str!("../../../lisp/windmove.scm"),
+    ),
+    ("lisp/winner.scm", include_str!("../../../lisp/winner.scm")),
     ("lisp/rect.scm", include_str!("../../../lisp/rect.scm")),
     ("lisp/sort.scm", include_str!("../../../lisp/sort.scm")),
     (

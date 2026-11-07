@@ -288,11 +288,14 @@
 - [x] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`。`lisp/uniquify.scm`)。dired のバッファは分けない (Emacs は分ける)。
 - [x] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`k`、`C-k`、`C-d`、`s`、`x`、`u`、`U`、`DEL`、`~`、`%`。`lisp/buff-menu.scm`)。`m`、`v`、`1`、`2`、`T` などは無い。
 - [ ] `ibuffer`。
-- [ ] `C-x 4 4` (other-window-prefix)。
+- [x] `C-x 4 4` (other-window-prefix) と `C-x 4 1` (same-window-prefix)。次のコマンドが出すバッファ (`switch-to-buffer`、`find-file`、`display-buffer` など) を、新しいウィンドウか選んだウィンドウに出す。
 - [x] `C-x ^` / `C-x {` / `C-x }` / `C-x -` / `C-x +` (enlarge-window, shrink-window-horizontally, enlarge-window-horizontally,
       shrink-window-if-larger-than-buffer, balance-windows): ウィンドウの大きさ。
 - [x] `C-M-S-v` (scroll-other-window-down、`M-<prior>` も) / `C-M-S-l`: キーを割り当てる。
-- [ ] `C-x w ...` のうち `toggle-window-dedicated`、`winner-mode`、`windmove`。
+- [x] `C-x w d` (toggle-window-dedicated)、`winner-mode` (`C-c <left>` / `C-c <right>`。`lisp/winner.scm`)、`windmove` (`windmove-default-keybindings` で `S-<矢印>`。`lisp/windmove.scm`)。
+      違い: windmove の基準の位置は、ポイントの位置でなく窓の上端か左端。winner は、窓の変化に、コマンドの後で前のコマンドの後と比べて気付く
+      (Emacs は描き直すとき。バッチでは、どちらも気付かない)。ミニバッファを開いたときには覚えない。消したバッファの窓は、消さずに今のバッファを出す。
+      `display-buffer` は、ウィンドウが 2 つ以上あれば分けずに使う (Emacs は、大きい窓なら分けることがある)。
 - [ ] `C-x 5 ...` (フレーム) と `C-x t ...` (タブ)。
 
 ### 前置引数とキーボードマクロ
@@ -684,7 +687,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [x] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
 - [ ] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
-- [ ] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
+- [x] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
 - [ ] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
 - [ ] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。
 

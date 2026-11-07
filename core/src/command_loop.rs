@@ -335,11 +335,31 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         globals.define("this-command", symbol(command));
         // キーから動かすコマンドは, 対話的 (called-interactively-p)
         globals.define("simple--interactive", Value::Boolean(true));
+        self.run_command_hook("pre-command-hook");
         let outcome = self.evaluator.run_command(command, &self.host).map(|_| ());
         self.evaluator
             .global()
             .define("simple--interactive", Value::Boolean(false));
+        self.run_command_hook("post-command-hook");
         self.finish(command, outcome);
+    }
+
+    /// コマンドの前か後のフック (`pre-command-hook`, `post-command-hook`) を走らせます.
+    /// 手続きが無ければ, 評価しない. 失敗は, エコー領域に出す.
+    fn run_command_hook(&self, hook: &str) {
+        let empty = match self.evaluator.global().get(hook) {
+            None | Some(Value::Nil) | Some(Value::Boolean(false)) => true,
+            Some(Value::List(items)) => items.is_empty(),
+            Some(_) => false,
+        };
+        if !empty {
+            if let Err(error) = self
+                .evaluator
+                .eval_with(&format!("(run-hooks '{hook})"), &self.host)
+            {
+                self.say(&format!("Error in {hook}: {error}"));
+            }
+        }
     }
 
     /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.

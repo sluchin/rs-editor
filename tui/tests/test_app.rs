@@ -792,6 +792,37 @@ fn test_buffer_menu_marks_and_kills_buffers() {
 }
 
 #[test]
+fn test_window_prefix_dedication_windmove_and_winner() {
+    let mut fx = Fixture::new();
+    let shown = |fx: &mut Fixture| {
+        fx.app
+            .eval("(list (map window-buffer (window-list)) (window-buffer (selected-window)))")
+            .unwrap()
+    };
+    // C-x 4 4 C-x b: 新しいウィンドウにバッファを出して, 選ぶ
+    fx.feed("e RET");
+    fx.press("C-x 4 4 C-x b");
+    assert_eq!(shown(&mut fx), "((\"*scratch*\" \"e\") \"e\")");
+    // 強く専用のウィンドウでは, バッファを切り替えられない
+    fx.press("C-u C-x w d");
+    fx.feed("RET");
+    fx.press("C-x b");
+    assert_eq!(
+        fx.app.message(),
+        "Cannot switch buffers in a dedicated window"
+    );
+    // windmove と winner
+    fx.app
+        .eval("(windmove-default-keybindings) (winner-mode 1)")
+        .unwrap();
+    fx.press("S-<up>");
+    assert_eq!(shown(&mut fx), "((\"*scratch*\" \"e\") \"*scratch*\")");
+    fx.press("C-x 1 C-a C-c <left>");
+    assert_eq!(fx.app.message(), "Winner undo (1 / 1)");
+    assert_eq!(shown(&mut fx), "((\"*scratch*\" \"e\") \"*scratch*\")");
+}
+
+#[test]
 fn test_dired_starts_from_the_directory_of_the_file() {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("a.txt");

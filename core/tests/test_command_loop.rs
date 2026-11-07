@@ -263,3 +263,173 @@ fn test_lisp_keys_local_keys_and_display() {
     press(commands, "C-SPC a");
     assert!(!commands.host().editor().current_buffer().mark_active());
 }
+
+#[test]
+fn test_command_hooks() {
+    let commands = &mut setup();
+    commands
+        .eval(
+            "(define hook-log '()) \
+             (add-hook 'pre-command-hook (lambda () (set! hook-log (cons (list 'pre this-command) hook-log)))) \
+             (add-hook 'post-command-hook (lambda () (set! hook-log (cons (list 'post this-command) hook-log))))",
+        )
+        .unwrap();
+    press(commands, "C-a");
+    assert_eq!(
+        commands.eval("(reverse hook-log)").unwrap(),
+        "((pre move-beginning-of-line) (post move-beginning-of-line))"
+    );
+    // フックの失敗は, エコー領域に出す
+    commands
+        .eval("(set! post-command-hook (list (lambda () (error \"boom\"))))")
+        .unwrap();
+    press(commands, "C-e");
+    assert!(message(commands).starts_with("Error in post-command-hook:"));
+    assert!(message(commands).contains("boom"));
+    // リストでない値 (手続き 1 つ) も, フックとして走らせる
+    commands
+        .eval("(set! post-command-hook '()) (set! pre-command-hook (lambda () (set! hook-log 'single)))")
+        .unwrap();
+    press(commands, "C-a");
+    assert_eq!(commands.eval("hook-log").unwrap(), "single");
+}
+
+#[test]
+fn test_window_keys() {
+    let commands = &mut setup();
+    commands.host().editor().set_screen_size(25, 80);
+    let buffers = |commands: &mut CommandLoop<Ui>| {
+        commands
+            .eval("(list (map window-buffer (window-list)) (window-buffer (selected-window)) (window-dedicated-p))")
+            .unwrap()
+    };
+    commands.eval("(get-buffer-create \"a\")").unwrap();
+    // C-x 4 4: 次のコマンドのバッファを, 新しいウィンドウに出す
+    press(commands, "C-x 4 4");
+    assert_eq!(
+        message(commands),
+        "Display next command buffer in a new window..."
+    );
+    commands.eval("(switch-to-buffer \"a\")").unwrap();
+    press(commands, "C-a");
+    assert_eq!(buffers(commands), "((\"*scratch*\" \"a\") \"a\" #f)");
+    // 次のコマンドがバッファを出さなければ, 忘れる
+    press(commands, "C-x 4 1 C-a");
+    commands
+        .eval("(switch-to-buffer-other-window \"*scratch*\")")
+        .unwrap();
+    assert_eq!(
+        buffers(commands),
+        "((\"*scratch*\" \"a\") \"*scratch*\" #f)"
+    );
+    // C-x 4 1 の後の C-x 4 C-o は, 選んだウィンドウに出す
+    press(commands, "C-x 4 1");
+    commands.eval("(display-buffer \"a\")").unwrap();
+    press(commands, "C-a");
+    assert_eq!(buffers(commands), "((\"a\" \"a\") \"a\" #f)");
+    press(commands, "C-x 4 4");
+    commands.eval("(display-buffer \"*scratch*\")").unwrap();
+    assert_eq!(buffers(commands), "((\"a\" \"*scratch*\") \"a\" #f)");
+    // C-x w d: 専用にする. C-u なら強く
+    press(commands, "C-x w d");
+    assert_eq!(message(commands), "Window is now dedicated to buffer a");
+    assert_eq!(
+        buffers(commands),
+        "((\"a\" \"*scratch*\") \"a\" interactive)"
+    );
+    press(commands, "C-x w d C-u C-x w d");
+    assert_eq!(
+        message(commands),
+        "Window is now strongly dedicated to buffer a"
+    );
+    commands
+        .eval("(set! toggle-window-dedicated-flag #t)")
+        .unwrap();
+    press(commands, "C-x w d C-u C-x w d");
+    assert_eq!(message(commands), "Window is now dedicated to buffer a");
+    press(commands, "C-x w d");
+    assert_eq!(
+        message(commands),
+        "Window is no longer dedicated to buffer a"
+    );
+    commands
+        .eval("(toggle-window-dedicated #f 'side #f) (toggle-window-dedicated #f #f #t)")
+        .unwrap();
+    assert_eq!(buffers(commands), "((\"a\" \"*scratch*\") \"a\" #f)");
+    // windmove: S-<矢印> に割り当てる
+    commands.eval("(windmove-default-keybindings)").unwrap();
+    press(commands, "S-<down>");
+    assert_eq!(
+        buffers(commands),
+        "((\"a\" \"*scratch*\") \"*scratch*\" #f)"
+    );
+    press(commands, "S-<down>");
+    assert_eq!(message(commands), "Minibuffer is inactive");
+    press(commands, "S-<left>");
+    assert_eq!(message(commands), "No window left from selected window");
+    commands
+        .eval("(windmove-default-keybindings '(control meta)) (windmove-default-keybindings 'none)")
+        .unwrap();
+    press(commands, "C-M-<up>");
+    assert_eq!(buffers(commands), "((\"a\" \"*scratch*\") \"a\" #f)");
+    press(commands, "<down>");
+    assert_eq!(
+        buffers(commands),
+        "((\"a\" \"*scratch*\") \"*scratch*\" #f)"
+    );
+    assert!(commands
+        .eval("(windmove-default-keybindings 'alt)")
+        .is_err());
+    assert!(commands.eval("(window-in-direction 'north)").is_err());
+}
+
+#[test]
+fn test_winner_keys() {
+    let commands = &mut setup();
+    commands.host().editor().set_screen_size(25, 80);
+    let count = |commands: &mut CommandLoop<Ui>| commands.eval("(length (window-list))").unwrap();
+    commands.eval("(winner-mode 1)").unwrap();
+    // 画面を描く場合は, 変わったウィンドウの設定を, 次のコマンドの後で覚える
+    press(commands, "C-x 2 C-a C-x 3 C-a C-x 1 C-a");
+    press(commands, "C-c <left>");
+    assert_eq!(message(commands), "Winner undo (1 / 3)");
+    assert_eq!(count(commands), "3");
+    press(commands, "C-c <left>");
+    assert_eq!(message(commands), "Winner undo (2 / 3)");
+    assert_eq!(count(commands), "2");
+    press(commands, "C-c <left> C-c <left>");
+    assert_eq!(
+        message(commands),
+        "No further window configuration undo information"
+    );
+    press(commands, "C-c <right>");
+    assert_eq!(message(commands), "Winner undid undo");
+    press(commands, "C-c <right>");
+    assert_eq!(
+        message(commands),
+        "Previous command was not a `winner-undo'"
+    );
+    // 退屈なバッファのウィンドウは, 戻さない
+    commands
+        .eval("(delete-other-windows) (split-window-below) (set-window-buffer (cadr (window-list)) (get-buffer-create \"*Completions*\"))")
+        .unwrap();
+    press(commands, "C-a C-x 1 C-a C-c <left>");
+    assert_eq!(
+        commands
+            .eval("(member \"*Completions*\" (map window-buffer (window-list)))")
+            .unwrap(),
+        "#f"
+    );
+    // 覚える設定の数には限りがある
+    commands.eval("(set! winner-ring-size 2)").unwrap();
+    press(commands, "C-x 2 C-a C-x 1 C-a C-x 2 C-a");
+    assert_eq!(commands.eval("(length winner--ring)").unwrap(), "2");
+    // 止めると, 覚えない
+    commands.eval("(winner-mode 0)").unwrap();
+    press(commands, "C-c <left>");
+    assert_eq!(message(commands), "Winner mode is turned off");
+    commands
+        .eval("(simple--call-interactively 'winner-mode)")
+        .unwrap();
+    assert_eq!(message(commands), "Winner mode enabled");
+}

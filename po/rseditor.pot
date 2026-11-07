@@ -7765,6 +7765,94 @@ msgctxt "function:uniquify--rename-buffer-advice"
 msgid "Rationalize after the current buffer was renamed from OLD to NEWNAME (UNIQUE as `rename-buffer')."
 msgstr ""
 
+#: lisp/windmove.scm
+msgctxt "variable:windmove-wrap-around"
+msgid ""
+"Whether movement off the edge of the frame wraps around.\n"
+"If true, windmove-up from the top window selects the bottom window, and so on."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--edges"
+msgid "Return the edges (left top right bottom) of WINDOW, or those of the minibuffer if WINDOW is minibuffer."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--at-side-p"
+msgid "Return #t if WINDOW is at SIDE (left, top, right or bottom) of the frame."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--in-direction-2"
+msgid "The distance of WINDOW from POSN, across the direction (rows if HOR, columns otherwise)."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:window-in-direction"
+msgid ""
+"Return the window in DIRECTION (above, below, left or right; up and down too) from WINDOW.\n"
+"The optional arguments are WINDOW (default: the selected one), IGNORE, SIGN, WRAP and MINIBUF.\n"
+"SIGN negative means to look from the bottom or right edge of WINDOW, otherwise from the top or left edge.\n"
+"WRAP true means to wrap around the edges of the frame.  MINIBUF true means the result may be the\n"
+"symbol minibuffer, for the minibuffer below the windows.  Return #f if there is no such window."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-find-other-window"
+msgid ""
+"Return the window in direction DIR (left, up, right or down) from WINDOW (default: the selected one).\n"
+"ARG, if negative, means to look from the right or bottom edge of WINDOW."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-do-window-select"
+msgid "Select the window in direction DIR from WINDOW; signal an error if there is none."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-left"
+msgid ""
+"Select the window to the left of the current one.\n"
+"With a positive prefix argument, \"left\" is relative to the top edge of the current\n"
+"window; with a negative one, to the bottom edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-up"
+msgid ""
+"Select the window above the current one.\n"
+"With a positive prefix argument, \"up\" is relative to the left edge of the current\n"
+"window; with a negative one, to the right edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-right"
+msgid ""
+"Select the window to the right of the current one.\n"
+"With a positive prefix argument, \"right\" is relative to the top edge of the current\n"
+"window; with a negative one, to the bottom edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-down"
+msgid ""
+"Select the window below the current one.\n"
+"With a positive prefix argument, \"down\" is relative to the left edge of the current\n"
+"window; with a negative one, to the right edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-default-keybindings"
+msgid ""
+"Set up keybindings for windmove: MODIFIERS-{left,right,up,down}.\n"
+"MODIFIERS is a modifier (shift, control, meta, super or hyper) or a list of them;\n"
+"the default is shift.  If MODIFIERS is none, bind the arrow keys themselves."
+msgstr ""
+
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"
 msgid "Return the name of a buffer other than the current one, or #f if there is none."
@@ -7776,7 +7864,69 @@ msgid ""
 "Display buffer BUFFER-OR-NAME in the selected window.\n"
 "If there is no buffer named BUFFER-OR-NAME, create one.\n"
 "Interactively, read the name in the minibuffer with completion;\n"
-"the default is another buffer."
+"the default is another buffer.\n"
+"If the selected window is strongly dedicated to its buffer, signal an error;\n"
+"if it is dedicated in another way, stop dedicating it."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "variable:window--override-next"
+msgid "How the next command displays a buffer: other (in another window), same (in the selected window), or #f."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "variable:window--override-command"
+msgid "The command that set `window--override-next'."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--override-post-command"
+msgid "Forget the override of `other-window-prefix' or `same-window-prefix' after the next command."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--display-overridden"
+msgid ""
+"Display buffer NAME as `other-window-prefix' or `same-window-prefix' asked, and forget the request.\n"
+"Return #f if there is no such request."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:pop-to-buffer-same-window"
+msgid ""
+"Display buffer NAME in the selected window and make it current.\n"
+"After `other-window-prefix' or `same-window-prefix', display it as they asked."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:other-window-prefix"
+msgid ""
+"Display the buffer of the next command in a new window.\n"
+"The next buffer is the buffer displayed by the next command invoked\n"
+"immediately after this command (ignoring reading from the minibuffer)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:same-window-prefix"
+msgid ""
+"Display the buffer of the next command in the same window.\n"
+"The next buffer is the buffer displayed by the next command invoked\n"
+"immediately after this command (ignoring reading from the minibuffer)."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "variable:toggle-window-dedicated-flag"
+msgid "What `toggle-window-dedicated' passes to `set-window-dedicated-p' by default."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:toggle-window-dedicated"
+msgid ""
+"Toggle whether WINDOW is dedicated to its current buffer.\n"
+"WINDOW defaults to the selected one.  If FLAG is t (interactively, the\n"
+"prefix argument), make the window \"strongly\" dedicated to its buffer.\n"
+"If INTERACTIVE is true, print a message describing the dedication\n"
+"status of WINDOW, after toggling it."
 msgstr ""
 
 #: lisp/window.scm
@@ -7791,7 +7941,9 @@ msgstr ""
 
 #: lisp/window.scm
 msgctxt "function:window--pop-to-buffer-other-window"
-msgid "Show buffer NAME in another window (splitting if there is only one) and select that window."
+msgid ""
+"Show buffer NAME in another window (splitting if there is only one) and select that window.\n"
+"After `other-window-prefix' or `same-window-prefix', display it as they asked."
 msgstr ""
 
 #: lisp/window.scm
@@ -7983,6 +8135,72 @@ msgstr ""
 #: lisp/window.scm
 msgctxt "function:project-tree"
 msgid "Show or hide the tree of the files of the project in the side bar."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "variable:winner--on"
+msgid "True if Winner mode is enabled (`winner-mode' of Emacs; here the name is the command)."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "variable:winner-ring-size"
+msgid "Maximum number of stored window configurations."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "variable:winner-boring-buffers"
+msgid "List of buffer names whose windows `winner-undo' will not restore."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "variable:winner--ring"
+msgid ""
+"The stored configurations, the newest first.  Each is (CONFIGURATION DATA),\n"
+"where DATA lists the edges and the buffer of each window."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner--drop-index"
+msgid "Return ITEMS without the element at INDEX."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner--ring-remove"
+msgid "Remove the configuration at INDEX of the ring and return it."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner-save-old-configurations"
+msgid "Store the window configuration before the last change (in post-command-hook)."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner--set"
+msgid "Restore the configuration CONF, except windows of boring buffers.  The selected window stays if it is in CONF."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner-mode"
+msgid ""
+"Toggle Winner mode on or off.\n"
+"Winner mode is a global minor mode that records the changes in\n"
+"the window configuration (i.e. how the frames are partitioned\n"
+"into windows) so that the changes can be \"undone\" using the\n"
+"command `winner-undo'.  By default this one is bound to the key\n"
+"sequence C-c <left>.  If you change your mind (while undoing),\n"
+"you can press C-c <right> (calling `winner-redo')."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner-undo"
+msgid ""
+"Switch back to an earlier window configuration saved by Winner mode.\n"
+"In other words, \"undo\" changes in window configuration."
+msgstr ""
+
+#: lisp/winner.scm
+msgctxt "function:winner-redo"
+msgid "Restore a more recent window configuration saved by Winner mode."
 msgstr ""
 
 #: lisp/xref.scm

@@ -64,6 +64,8 @@ pub struct Editor {
     window_configurations: Vec<WindowConfiguration>,
     /// 文字列に `string-match` した結果の括弧の範囲 (文字の位置. 0 から)と, 決めた順番.
     pub string_match: Option<(Groups, u64)>,
+    /// バッファに専用のウィンドウ (Emacs の `window-dedicated-p`). 値は `t` (強く専用) か, 記号の名前.
+    pub dedicated: BTreeMap<usize, String>,
 }
 
 /// ウィンドウの設定: 分け方と, ウィンドウごとのバッファと, 選んでいるウィンドウ.
@@ -108,6 +110,7 @@ impl Editor {
             global_mark_ring: Vec::new(),
             window_configurations: Vec::new(),
             string_match: None,
+            dedicated: BTreeMap::new(),
         }
     }
 
@@ -332,7 +335,8 @@ impl Editor {
     ///
     /// # Errors
     ///
-    /// ウィンドウかバッファが無いとき.
+    /// ウィンドウかバッファが無いとき. 強く専用のウィンドウ (`t`) に, 別のバッファを出そうとしたとき
+    /// (ほかの専用は, 外す).
     pub fn set_window_buffer(&mut self, window: usize, name: &str) -> Result<(), String> {
         if self.get_buffer(name).is_none() {
             return Err(format!("No such buffer: {name}"));
@@ -341,8 +345,31 @@ impl Editor {
             .window_buffers
             .get_mut(&window)
             .ok_or_else(|| format!("No such window: {window}"))?;
+        if shown != name {
+            match self.dedicated.get(&window).map(String::as_str) {
+                Some("t") => return Err(format!("Window is dedicated to ‘{shown}’")),
+                Some(_) => {
+                    self.dedicated.remove(&window);
+                }
+                None => {}
+            }
+        }
         *shown = name.to_string();
         Ok(())
+    }
+
+    /// 別のバッファを出すのに使うウィンドウ (`display-buffer`): 選んでいないウィンドウのうち, 専用でない最初のもの.
+    /// 無ければ, 選んでいるウィンドウを分ける.
+    pub fn window_for_display(&mut self) -> usize {
+        let selected = self.selected;
+        let found = self
+            .window_list()
+            .into_iter()
+            .find(|w| *w != selected && !self.dedicated.contains_key(w));
+        match found {
+            Some(window) => window,
+            None => self.split_window(Direction::Below),
+        }
     }
 
     /// ウィンドウを選びます (Emacs の `select-window`). 今のバッファは, そのウィンドウのバッファになる.
@@ -427,6 +454,24 @@ impl Editor {
             .into_iter()
             .find(|r| r.id == window)
             .map(|r| to_cells(r.top + r.height, rows) - to_cells(r.top, rows))
+    }
+
+    /// ウィンドウの端 (Emacs の `window-edges`. 左の桁, 上の行, 右の桁, 下の行. 右と下は, 含まない).
+    pub fn window_edges(&self, window: usize) -> Option<[usize; 4]> {
+        let rows = self.screen.0.saturating_sub(1);
+        let cols = self.screen.1;
+        self.layout
+            .rects(FULL)
+            .into_iter()
+            .find(|r| r.id == window)
+            .map(|r| {
+                [
+                    to_cells(r.left, cols),
+                    to_cells(r.top, rows),
+                    to_cells(r.left + r.width, cols),
+                    to_cells(r.top + r.height, rows),
+                ]
+            })
     }
 
     /// ウィンドウの全体の幅 (桁).

@@ -644,6 +644,8 @@ impl Host for FakeEditor {
                 return Err(format!("{op} is not supported").into())
             }
             "widen" => Value::Nil,
+            // 偽のエディタのウィンドウは, 専用にしない
+            "window-dedicated-p" => Value::Boolean(false),
             "push-mark" => {
                 let at = match args.first() {
                     Some(Value::Number(n)) => *n as usize,

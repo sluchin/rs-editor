@@ -427,6 +427,9 @@ fn test_define_command_and_global_set_key() {
         vec![
             "ert",
             "switch-to-buffer",
+            "other-window-prefix",
+            "same-window-prefix",
+            "toggle-window-dedicated",
             "switch-to-buffer-other-window",
             "display-buffer",
             "next-buffer",

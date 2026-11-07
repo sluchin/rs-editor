@@ -8873,6 +8873,122 @@ msgctxt "function:uniquify--rename-buffer-advice"
 msgid "Rationalize after the current buffer was renamed from OLD to NEWNAME (UNIQUE as `rename-buffer')."
 msgstr "今のバッファの名前が OLD から NEWNAME に変わったあとに, 付け直す (UNIQUE は `rename-buffer' と同じ)."
 
+#: lisp/windmove.scm
+msgctxt "variable:windmove-wrap-around"
+msgid ""
+"Whether movement off the edge of the frame wraps around.\n"
+"If true, windmove-up from the top window selects the bottom window, and so on."
+msgstr ""
+"ウィンドウの端を越えて動くとき, 反対側へ回るか.\n"
+"真なら, 一番上のウィンドウで windmove-up すると, 一番下のウィンドウを選ぶ (ほかの向きも同じ)."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--edges"
+msgid "Return the edges (left top right bottom) of WINDOW, or those of the minibuffer if WINDOW is minibuffer."
+msgstr "WINDOW の端 (左, 上, 右, 下) を返す. WINDOW が minibuffer なら, ミニバッファの端."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--at-side-p"
+msgid "Return #t if WINDOW is at SIDE (left, top, right or bottom) of the frame."
+msgstr "WINDOW がフレームの SIDE (left, top, right, bottom のどれか) の端にあれば, #t を返す."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove--in-direction-2"
+msgid "The distance of WINDOW from POSN, across the direction (rows if HOR, columns otherwise)."
+msgstr "POSN からの WINDOW の, 向きと交わる方向の隔たり (HOR なら行, そうでなければ桁)."
+
+#: lisp/windmove.scm
+msgctxt "function:window-in-direction"
+msgid ""
+"Return the window in DIRECTION (above, below, left or right; up and down too) from WINDOW.\n"
+"The optional arguments are WINDOW (default: the selected one), IGNORE, SIGN, WRAP and MINIBUF.\n"
+"SIGN negative means to look from the bottom or right edge of WINDOW, otherwise from the top or left edge.\n"
+"WRAP true means to wrap around the edges of the frame.  MINIBUF true means the result may be the\n"
+"symbol minibuffer, for the minibuffer below the windows.  Return #f if there is no such window."
+msgstr ""
+"WINDOW から見て, DIRECTION (above, below, left, right. up と down も) の向きにあるウィンドウを返す.\n"
+"省略できる引数は, WINDOW (既定は選んでいるウィンドウ), IGNORE, SIGN, WRAP, MINIBUF.\n"
+"SIGN が負なら, WINDOW の下か右の端から見る. そうでなければ, 上か左の端から見る.\n"
+"WRAP が真なら, フレームの端で反対側へ回る. MINIBUF が真なら, ウィンドウの下のミニバッファを表す\n"
+"記号 minibuffer を返すことがある. そのようなウィンドウが無ければ, #f を返す."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-find-other-window"
+msgid ""
+"Return the window in direction DIR (left, up, right or down) from WINDOW (default: the selected one).\n"
+"ARG, if negative, means to look from the right or bottom edge of WINDOW."
+msgstr ""
+"WINDOW (既定は選んでいるウィンドウ) から見て, DIR (left, up, right, down のどれか) の向きにあるウィンドウを返す.\n"
+"ARG が負なら, WINDOW の右か下の端から見る."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-do-window-select"
+msgid "Select the window in direction DIR from WINDOW; signal an error if there is none."
+msgstr "WINDOW から見て DIR の向きにあるウィンドウを選ぶ. 無ければ, エラーにする."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-left"
+msgid ""
+"Select the window to the left of the current one.\n"
+"With a positive prefix argument, \"left\" is relative to the top edge of the current\n"
+"window; with a negative one, to the bottom edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+"今のウィンドウの左のウィンドウを選ぶ.\n"
+"前置引数が正なら, 今のウィンドウの上端から見た「左」.\n"
+"負なら, 下端から見た「左」.\n"
+"その位置にウィンドウが無ければ, エラーにする."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-up"
+msgid ""
+"Select the window above the current one.\n"
+"With a positive prefix argument, \"up\" is relative to the left edge of the current\n"
+"window; with a negative one, to the right edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+"今のウィンドウの上のウィンドウを選ぶ.\n"
+"前置引数が正なら, 今のウィンドウの左端から見た「上」.\n"
+"負なら, 右端から見た「上」.\n"
+"その位置にウィンドウが無ければ, エラーにする."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-right"
+msgid ""
+"Select the window to the right of the current one.\n"
+"With a positive prefix argument, \"right\" is relative to the top edge of the current\n"
+"window; with a negative one, to the bottom edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+"今のウィンドウの右のウィンドウを選ぶ.\n"
+"前置引数が正なら, 今のウィンドウの上端から見た「右」.\n"
+"負なら, 下端から見た「右」.\n"
+"その位置にウィンドウが無ければ, エラーにする."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-down"
+msgid ""
+"Select the window below the current one.\n"
+"With a positive prefix argument, \"down\" is relative to the left edge of the current\n"
+"window; with a negative one, to the right edge.\n"
+"If no window is at the desired location, an error is signaled."
+msgstr ""
+"今のウィンドウの下のウィンドウを選ぶ.\n"
+"前置引数が正なら, 今のウィンドウの左端から見た「下」.\n"
+"負なら, 右端から見た「下」.\n"
+"その位置にウィンドウが無ければ, エラーにする."
+
+#: lisp/windmove.scm
+msgctxt "function:windmove-default-keybindings"
+msgid ""
+"Set up keybindings for windmove: MODIFIERS-{left,right,up,down}.\n"
+"MODIFIERS is a modifier (shift, control, meta, super or hyper) or a list of them;\n"
+"the default is shift.  If MODIFIERS is none, bind the arrow keys themselves."
+msgstr ""
+"windmove のキー MODIFIERS-{left,right,up,down} を割り当てる.\n"
+"MODIFIERS は修飾キー (shift, control, meta, super, hyper のどれか) か, そのリスト.\n"
+"既定は shift. MODIFIERS が none なら, 矢印のキーそのものに割り当てる."
+
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"
 msgid "Return the name of a buffer other than the current one, or #f if there is none."
@@ -8884,12 +9000,91 @@ msgid ""
 "Display buffer BUFFER-OR-NAME in the selected window.\n"
 "If there is no buffer named BUFFER-OR-NAME, create one.\n"
 "Interactively, read the name in the minibuffer with completion;\n"
-"the default is another buffer."
+"the default is another buffer.\n"
+"If the selected window is strongly dedicated to its buffer, signal an error;\n"
+"if it is dedicated in another way, stop dedicating it."
 msgstr ""
 "バッファ BUFFER-OR-NAME を, 選んでいるウィンドウに出す.\n"
 "BUFFER-OR-NAME という名前のバッファが無ければ, 作る.\n"
 "対話的には, 名前をミニバッファで, 補完しながら読む.\n"
-"既定は, ほかのバッファ."
+"既定は, ほかのバッファ.\n"
+"選んでいるウィンドウがバッファに強く専用なら, エラーにする.\n"
+"ほかの専用なら, 専用をやめる."
+
+#: lisp/window.scm
+msgctxt "variable:window--override-next"
+msgid "How the next command displays a buffer: other (in another window), same (in the selected window), or #f."
+msgstr "次のコマンドがバッファを出す所: other (別のウィンドウ), same (選んでいるウィンドウ), または #f."
+
+#: lisp/window.scm
+msgctxt "variable:window--override-command"
+msgid "The command that set `window--override-next'."
+msgstr "`window--override-next' を設定したコマンド."
+
+#: lisp/window.scm
+msgctxt "function:window--override-post-command"
+msgid "Forget the override of `other-window-prefix' or `same-window-prefix' after the next command."
+msgstr "次のコマンドの後で, `other-window-prefix' か `same-window-prefix' の指定を忘れる."
+
+#: lisp/window.scm
+msgctxt "function:window--display-overridden"
+msgid ""
+"Display buffer NAME as `other-window-prefix' or `same-window-prefix' asked, and forget the request.\n"
+"Return #f if there is no such request."
+msgstr ""
+"`other-window-prefix' か `same-window-prefix' の指定のとおりに, バッファ NAME を出し, 指定を忘れる.\n"
+"指定が無ければ, #f を返す."
+
+#: lisp/window.scm
+msgctxt "function:pop-to-buffer-same-window"
+msgid ""
+"Display buffer NAME in the selected window and make it current.\n"
+"After `other-window-prefix' or `same-window-prefix', display it as they asked."
+msgstr ""
+"バッファ NAME を選んでいるウィンドウに出し, 今のバッファにする.\n"
+"`other-window-prefix' か `same-window-prefix' の後なら, その指定のとおりに出す."
+
+#: lisp/window.scm
+msgctxt "function:other-window-prefix"
+msgid ""
+"Display the buffer of the next command in a new window.\n"
+"The next buffer is the buffer displayed by the next command invoked\n"
+"immediately after this command (ignoring reading from the minibuffer)."
+msgstr ""
+"次のコマンドのバッファを, 新しいウィンドウに出す.\n"
+"次のバッファは, このコマンドのすぐ後のコマンドが出すバッファ\n"
+"(ミニバッファで読むことは数えない)."
+
+#: lisp/window.scm
+msgctxt "function:same-window-prefix"
+msgid ""
+"Display the buffer of the next command in the same window.\n"
+"The next buffer is the buffer displayed by the next command invoked\n"
+"immediately after this command (ignoring reading from the minibuffer)."
+msgstr ""
+"次のコマンドのバッファを, 同じウィンドウに出す.\n"
+"次のバッファは, このコマンドのすぐ後のコマンドが出すバッファ\n"
+"(ミニバッファで読むことは数えない)."
+
+#: lisp/window.scm
+msgctxt "variable:toggle-window-dedicated-flag"
+msgid "What `toggle-window-dedicated' passes to `set-window-dedicated-p' by default."
+msgstr "`toggle-window-dedicated' が, 既定で `set-window-dedicated-p' に渡すもの."
+
+#: lisp/window.scm
+msgctxt "function:toggle-window-dedicated"
+msgid ""
+"Toggle whether WINDOW is dedicated to its current buffer.\n"
+"WINDOW defaults to the selected one.  If FLAG is t (interactively, the\n"
+"prefix argument), make the window \"strongly\" dedicated to its buffer.\n"
+"If INTERACTIVE is true, print a message describing the dedication\n"
+"status of WINDOW, after toggling it."
+msgstr ""
+"WINDOW を今のバッファに専用にするかを切り替える.\n"
+"WINDOW の既定は, 選んでいるウィンドウ. FLAG が t (対話的には,\n"
+"前置引数) なら, ウィンドウをバッファに「強く」専用にする.\n"
+"INTERACTIVE が真なら, 切り替えた後で, WINDOW の専用の状態を\n"
+"メッセージに出す."
 
 #: lisp/window.scm
 msgctxt "function:window--other-window-for-scrolling"
@@ -8903,8 +9098,12 @@ msgstr "WINDOW を選んで THUNK を呼び, 前に選んでいた窓を選び�
 
 #: lisp/window.scm
 msgctxt "function:window--pop-to-buffer-other-window"
-msgid "Show buffer NAME in another window (splitting if there is only one) and select that window."
-msgstr "バッファ NAME を別の窓に出し (1 つだけなら分ける), その窓を選ぶ."
+msgid ""
+"Show buffer NAME in another window (splitting if there is only one) and select that window.\n"
+"After `other-window-prefix' or `same-window-prefix', display it as they asked."
+msgstr ""
+"バッファ NAME を別の窓に出し (1 つだけなら分ける), その窓を選ぶ.\n"
+"`other-window-prefix' か `same-window-prefix' の後なら, その指定のとおりに出す."
 
 #: lisp/window.scm
 msgctxt "function:window--default-buffer-name"
@@ -9127,6 +9326,82 @@ msgstr ""
 msgctxt "function:project-tree"
 msgid "Show or hide the tree of the files of the project in the side bar."
 msgstr "サイドバーのプロジェクトのファイルの木を, 出すか隠す."
+
+#: lisp/winner.scm
+msgctxt "variable:winner--on"
+msgid "True if Winner mode is enabled (`winner-mode' of Emacs; here the name is the command)."
+msgstr "Winner モードが有効なら真 (Emacs の `winner-mode'. ここでは, その名前はコマンド)."
+
+#: lisp/winner.scm
+msgctxt "variable:winner-ring-size"
+msgid "Maximum number of stored window configurations."
+msgstr "覚えるウィンドウの設定の最大の数."
+
+#: lisp/winner.scm
+msgctxt "variable:winner-boring-buffers"
+msgid "List of buffer names whose windows `winner-undo' will not restore."
+msgstr "`winner-undo' が, そのウィンドウを戻さないバッファの名前のリスト."
+
+#: lisp/winner.scm
+msgctxt "variable:winner--ring"
+msgid ""
+"The stored configurations, the newest first.  Each is (CONFIGURATION DATA),\n"
+"where DATA lists the edges and the buffer of each window."
+msgstr ""
+"覚えた設定 (新しいものが先). それぞれは (CONFIGURATION DATA).\n"
+"DATA は, それぞれのウィンドウの端とバッファのリスト."
+
+#: lisp/winner.scm
+msgctxt "function:winner--drop-index"
+msgid "Return ITEMS without the element at INDEX."
+msgstr "ITEMS から, INDEX の要素を除いたものを返す."
+
+#: lisp/winner.scm
+msgctxt "function:winner--ring-remove"
+msgid "Remove the configuration at INDEX of the ring and return it."
+msgstr "環の INDEX の設定を除き, それを返す."
+
+#: lisp/winner.scm
+msgctxt "function:winner-save-old-configurations"
+msgid "Store the window configuration before the last change (in post-command-hook)."
+msgstr "最後に変わる前のウィンドウの設定を覚える (post-command-hook の中で)."
+
+#: lisp/winner.scm
+msgctxt "function:winner--set"
+msgid "Restore the configuration CONF, except windows of boring buffers.  The selected window stays if it is in CONF."
+msgstr "設定 CONF に戻す. 退屈なバッファのウィンドウは除く. 選んでいるウィンドウは, CONF にあれば変えない."
+
+#: lisp/winner.scm
+msgctxt "function:winner-mode"
+msgid ""
+"Toggle Winner mode on or off.\n"
+"Winner mode is a global minor mode that records the changes in\n"
+"the window configuration (i.e. how the frames are partitioned\n"
+"into windows) so that the changes can be \"undone\" using the\n"
+"command `winner-undo'.  By default this one is bound to the key\n"
+"sequence C-c <left>.  If you change your mind (while undoing),\n"
+"you can press C-c <right> (calling `winner-redo')."
+msgstr ""
+"Winner モードを切り替える.\n"
+"Winner モードは, ウィンドウの設定 (フレームをどのように\n"
+"ウィンドウに分けているか) の変化を覚え, コマンド `winner-undo' で\n"
+"変化を「元に戻せる」ようにする, 全体のマイナーモード. 既定では, キー\n"
+"C-c <left> に割り当てる. (元に戻している間に) 気が変わったら,\n"
+"C-c <right> (`winner-redo' を呼ぶ) を押せる."
+
+#: lisp/winner.scm
+msgctxt "function:winner-undo"
+msgid ""
+"Switch back to an earlier window configuration saved by Winner mode.\n"
+"In other words, \"undo\" changes in window configuration."
+msgstr ""
+"Winner モードが覚えた, 前のウィンドウの設定に戻す.\n"
+"つまり, ウィンドウの設定の変化を「元に戻す」."
+
+#: lisp/winner.scm
+msgctxt "function:winner-redo"
+msgid "Restore a more recent window configuration saved by Winner mode."
+msgstr "Winner モードが覚えた, より新しいウィンドウの設定に戻す."
 
 #: lisp/xref.scm
 msgctxt "variable:xref--back-stack"

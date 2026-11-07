@@ -133,6 +133,36 @@ fn test_windows() {
 }
 
 #[test]
+fn test_window_edges_and_dedicated_windows() {
+    let mut editor = Editor::new();
+    editor.set_screen_size(25, 80);
+    editor.get_buffer_create("a");
+    assert_eq!(editor.window_edges(1), Some([0, 0, 80, 24]));
+    editor.split_window(Direction::Right);
+    editor.select_window(2).unwrap();
+    editor.split_window(Direction::Below);
+    assert_eq!(editor.window_edges(1), Some([0, 0, 40, 24]));
+    assert_eq!(editor.window_edges(2), Some([40, 0, 80, 12]));
+    assert_eq!(editor.window_edges(3), Some([40, 12, 80, 24]));
+    assert_eq!(editor.window_edges(9), None);
+    // 強く専用のウィンドウには, 別のバッファを出せない (同じバッファは出せる)
+    editor.dedicated.insert(1, "t".to_string());
+    assert_eq!(
+        editor.set_window_buffer(1, "a").unwrap_err(),
+        "Window is dedicated to ‘*scratch*’"
+    );
+    editor.set_window_buffer(1, SCRATCH).unwrap();
+    // ほかの専用は, 別のバッファを出すと外れる
+    editor.dedicated.insert(3, "interactive".to_string());
+    editor.set_window_buffer(3, "a").unwrap();
+    assert!(!editor.dedicated.contains_key(&3));
+    // display-buffer は, 選んでいない専用でないウィンドウを使う. 無ければ分ける
+    assert_eq!(editor.window_for_display(), 3);
+    editor.dedicated.insert(3, "t".to_string());
+    assert_eq!(editor.window_for_display(), 4);
+}
+
+#[test]
 fn test_delete_windows() {
     let mut editor = Editor::new();
     editor.split_window(Direction::Below);

@@ -13,7 +13,13 @@
   "Display buffer BUFFER-OR-NAME in the selected window.
 If there is no buffer named BUFFER-OR-NAME, create one.
 Interactively, read the name in the minibuffer with completion;
-the default is another buffer."
+the default is another buffer.
+If the selected window is strongly dedicated to its buffer, signal an error;
+if it is dedicated in another way, stop dedicating it."
+  (if (and (null? args) (not window--override-next))
+      (cond ((eq? (window-dedicated-p) #t)
+             (user-error "Cannot switch buffers in a dedicated window"))
+            ((window-dedicated-p) (set-window-dedicated-p (selected-window) #f))))
   (let ((name (if (null? args)
                   (let ((default (window--other-buffer)))
                     (completing-read (if default
@@ -25,6 +31,96 @@ the default is another buffer."
       (pop-to-buffer-same-window name))))
 
 (define window--display-buffer display-buffer)
+(define window--pop-to-buffer-same-window pop-to-buffer-same-window)
+
+;;; Displaying the buffer of the next command in another or the same window
+
+(define window--override-next #f
+  "How the next command displays a buffer: other (in another window), same (in the selected window), or #f.")
+
+(define window--override-command #f
+  "The command that set `window--override-next'.")
+
+(define (window--override-post-command)
+  "Forget the override of `other-window-prefix' or `same-window-prefix' after the next command."
+  (unless (eq? this-command window--override-command)
+    (window--override-clear)))
+
+(define (window--override-clear)
+  (set! window--override-next #f)
+  (remove-hook 'post-command-hook 'window--override-post-command))
+
+(define (window--override-next-command how)
+  (set! window--override-next how)
+  (set! window--override-command this-command)
+  (add-hook 'post-command-hook 'window--override-post-command))
+
+(define (window--display-overridden name)
+  "Display buffer NAME as `other-window-prefix' or `same-window-prefix' asked, and forget the request.
+Return #f if there is no such request."
+  (let ((how window--override-next))
+    (cond ((eq? how 'other)
+           (window--override-clear)
+           (get-buffer-create name)
+           (window--pop-to-buffer-other-window-1 name)
+           #t)
+          ((eq? how 'same)
+           (window--override-clear)
+           (window--pop-to-buffer-same-window name)
+           #t)
+          (else #f))))
+
+(define (pop-to-buffer-same-window name . args)
+  "Display buffer NAME in the selected window and make it current.
+After `other-window-prefix' or `same-window-prefix', display it as they asked."
+  (or (window--display-overridden name)
+      (window--pop-to-buffer-same-window name)))
+
+(define-command (other-window-prefix . args)
+  "Display the buffer of the next command in a new window.
+The next buffer is the buffer displayed by the next command invoked
+immediately after this command (ignoring reading from the minibuffer)."
+  (window--override-next-command 'other)
+  (message "Display next command buffer in a new window..."))
+
+(define-command (same-window-prefix . args)
+  "Display the buffer of the next command in the same window.
+The next buffer is the buffer displayed by the next command invoked
+immediately after this command (ignoring reading from the minibuffer)."
+  (window--override-next-command 'same)
+  (message "Display next command buffer in the same window..."))
+
+;;; Dedicated windows
+
+(define toggle-window-dedicated-flag 'interactive
+  "What `toggle-window-dedicated' passes to `set-window-dedicated-p' by default.")
+
+(define-command (toggle-window-dedicated . args)
+  "Toggle whether WINDOW is dedicated to its current buffer.
+WINDOW defaults to the selected one.  If FLAG is t (interactively, the
+prefix argument), make the window \"strongly\" dedicated to its buffer.
+If INTERACTIVE is true, print a message describing the dedication
+status of WINDOW, after toggling it."
+  (let* ((window (if (and (pair? args) (car args)) (car args) (selected-window)))
+         (flag (cond ((and (pair? args) (pair? (cdr args))) (cadr args))
+                     ((null? args) (current-prefix-arg))
+                     (else #f)))
+         (interactive (if (and (pair? args) (pair? (cdr args)) (pair? (cddr args)))
+                          (caddr args)
+                          (null? args)))
+         (flag (cond ((pair? flag) (if (eq? toggle-window-dedicated-flag #t) 'interactive #t))
+                     ((not flag) toggle-window-dedicated-flag)
+                     (else flag))))
+    (if (window-dedicated-p window)
+        (set-window-dedicated-p window #f)
+        (set-window-dedicated-p window flag))
+    (if interactive
+        (message "Window is %s dedicated to buffer %s"
+                 (let ((status (window-dedicated-p window)))
+                   (cond ((not status) "no longer")
+                         ((eq? status #t) "now strongly")
+                         (else "now")))
+                 (window-buffer window)))))
 
 (define (window--other-window-for-scrolling)
   "Return the window after the selected one, the one the scrolling commands act on."
@@ -43,7 +139,12 @@ the default is another buffer."
       (if (member old (window-list)) (select-window old)))))
 
 (define (window--pop-to-buffer-other-window name)
-  "Show buffer NAME in another window (splitting if there is only one) and select that window."
+  "Show buffer NAME in another window (splitting if there is only one) and select that window.
+After `other-window-prefix' or `same-window-prefix', display it as they asked."
+  (or (window--display-overridden name)
+      (window--pop-to-buffer-other-window-1 name)))
+
+(define (window--pop-to-buffer-other-window-1 name)
   (window--display-buffer name)
   (let ((selected (selected-window)))
     (let loop ((windows (window-list)))
@@ -73,8 +174,18 @@ If there is only one window, split it.  If there is no buffer named BUFFER-OR-NA
 If there is only one window, split it.  Interactively, read the name in the minibuffer."
   (let ((name (window--default-buffer-name args "Display buffer")))
     (unless (equal? name "")
-      (apply window--display-buffer name (if (pair? args) (cdr args) '())))))
-
+      (let ((how window--override-next))
+        (cond ((eq? how 'other)
+               (window--override-clear)
+               (get-buffer-create name)
+               (window--call-in-window (selected-window)
+                                       (lambda () (window--pop-to-buffer-other-window-1 name))))
+              ((eq? how 'same)
+               (window--override-clear)
+               (get-buffer-create name)
+               (set-window-buffer (selected-window) name))
+              (else
+               (apply window--display-buffer name (if (pair? args) (cdr args) '()))))))))
 (define (window--buffer-names)
   "Return the names of the buffers that `next-buffer' and `previous-buffer' may show."
   (filter (lambda (name) (not (and (> (string-length name) 0) (equal? (substring name 0 1) " "))))
@@ -88,7 +199,7 @@ If there is only one window, split it.  Interactively, read the name in the mini
             ((equal? (car rest) (buffer-name))
              (if (= count 1)
                  (error "No other buffer to show")
-                 (pop-to-buffer-same-window (list-ref names (modulo (+ i step) count)))))
+                 (window--pop-to-buffer-same-window (list-ref names (modulo (+ i step) count)))))
             (else (loop (+ i 1) (cdr rest)))))))
 
 (define-command (next-buffer . args)
@@ -122,7 +233,7 @@ If it is the only window, show another buffer in it instead."
 (define (window--show-buffer window name)
   "Show buffer NAME in WINDOW; if WINDOW is the selected one, make the buffer current too."
   (if (= window (selected-window))
-      (pop-to-buffer-same-window name)
+      (window--pop-to-buffer-same-window name)
       (set-window-buffer window name)))
 
 (define (window--other-buffer-than name)
@@ -170,7 +281,7 @@ With a prefix argument, kill the buffer instead of burying it."
         (kill (simple--raw-arg args)))
     (if (null? (cdr (window-list)))
         (let ((other (window--other-buffer-than name)))
-          (if other (pop-to-buffer-same-window other)))
+          (if other (window--pop-to-buffer-same-window other)))
         (delete-window (selected-window)))
     (if (and kill (get-buffer name)) (kill-buffer name))))
 
