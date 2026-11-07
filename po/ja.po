@@ -505,9 +505,117 @@ msgstr ""
 "前置引数 FILES-ONLY が 0 以上なら, ファイルを訪れているバッファだけを出す."
 
 #: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--line-index"
+msgid "Return the index in `Buffer-menu--names' of the current line, or #f on the title line or after the list."
+msgstr "今の行の, `Buffer-menu--names' の中の番号を返す. 見出しの行か, 一覧の後なら #f."
+
+#: lisp/buff-menu.scm
 msgctxt "function:Buffer-menu-buffer"
-msgid "Return the name of the buffer described by the current Buffer Menu line."
-msgstr "今の Buffer Menu の行が表すバッファの名前を返す."
+msgid ""
+"Return the name of the buffer described by the current Buffer Menu line.\n"
+"If there is no buffer here, return nil if ERROR-IF-NON-EXISTENT-P\n"
+"is nil or omitted, and signal an error otherwise."
+msgstr ""
+"今の Buffer Menu の行が表すバッファの名前を返す.\n"
+"ここにバッファが無ければ, ERROR-IF-NON-EXISTENT-P が nil か省いたなら nil を返し, そうでなければエラーにする."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--set-col"
+msgid "Replace the column COL (0 for the mark, 1 for read-only, 2 for modified) of the current line with DESC."
+msgstr "今の行の COL 番目の欄 (0 は印, 1 は読み出し専用, 2 は書き換え) を DESC に置き換える."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--col"
+msgid "Return the column COL of the current line."
+msgstr "今の行の COL 番目の欄を返す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--delete-entry"
+msgid "Delete the current line and its buffer name from the list."
+msgstr "今の行と, そのバッファの名前を, 一覧から消す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-delete"
+msgid ""
+"Mark the buffer on this Buffer Menu buffer line for deletion.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will delete it.\n"
+"\n"
+"If prefix argument ARG is non-nil, it specifies the number of\n"
+"buffers to delete; a negative ARG means to delete backwards."
+msgstr ""
+"この Buffer Menu の行のバッファに, 消す印を付ける.\n"
+"あとで \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] のコマンドが消す.\n"
+"\n"
+"前置引数 ARG が nil でなければ, 消すバッファの数. 負の ARG なら, 上へ向かって印を付ける."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-delete-backwards"
+msgid ""
+"Mark the buffer on this Buffer Menu line for deletion, and move up.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command\n"
+"will delete the marked buffer.  Prefix ARG means move that many lines."
+msgstr ""
+"この Buffer Menu の行のバッファに消す印を付け, 上へ動く.\n"
+"あとで \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] のコマンドが, 印のバッファを消す.\n"
+"前置引数 ARG は, 動く行の数."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-save"
+msgid ""
+"Mark the buffer on this Buffer Menu line for saving.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will save it."
+msgstr ""
+"この Buffer Menu の行のバッファに, 保存の印を付ける.\n"
+"あとで \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] のコマンドが保存する."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-unmark"
+msgid ""
+"Cancel all requested operations on buffer on this line and move down.\n"
+"Optional prefix arg means move up."
+msgstr ""
+"この行のバッファへの頼みを全て取り消し, 下へ動く.\n"
+"前置引数があれば, 上へ動く."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-unmark-all"
+msgid "Cancel all requested operations on buffers."
+msgstr "全てのバッファへの頼みを取り消す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-backup-unmark"
+msgid "Move up and cancel all requested operations on buffer on line above."
+msgstr "上へ動き, 上の行のバッファへの頼みを全て取り消す."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-not-modified"
+msgid ""
+"Mark the buffer on this line as unmodified (no changes to save).\n"
+"If ARG is non-nil (interactively, with a prefix argument), mark\n"
+"it as modified."
+msgstr ""
+"この行のバッファを, 書き換えていない (保存する変更が無い) ことにする.\n"
+"ARG が nil でなければ (対話的には, 前置引数があれば), 書き換えたことにする."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-toggle-read-only"
+msgid ""
+"Toggle read-only status of buffer on this line.\n"
+"This behaves like invoking \\[read-only-mode] in that buffer."
+msgstr ""
+"この行のバッファの, 読み出し専用を切り替える.\n"
+"そのバッファで \\[read-only-mode] を呼んだのと同じように動く."
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-execute"
+msgid ""
+"Save and/or delete marked buffers in the Buffer Menu.\n"
+"Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-save] are saved.\n"
+"Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-delete] are deleted."
+msgstr ""
+"Buffer Menu で印を付けたバッファを, 保存するか消す.\n"
+"\\<Buffer-menu-mode-map>\\[Buffer-menu-save] で印を付けたバッファは保存する.\n"
+"\\<Buffer-menu-mode-map>\\[Buffer-menu-delete] で印を付けたバッファは消す."
 
 #: lisp/buff-menu.scm
 msgctxt "function:Buffer-menu-this-window"

@@ -286,7 +286,7 @@
 
 - [x] `C-x x t` (toggle-truncate-lines): キーを割り当てる。
 - [x] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`。`lisp/uniquify.scm`)。dired のバッファは分けない (Emacs は分ける)。
-- [ ] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`s`、`x`、`u`、`~` など)。今は、`RET`、`f`、`o`、`q`、`n`、`p`、`SPC` だけ (`lisp/buff-menu.scm`)。
+- [x] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`k`、`C-k`、`C-d`、`s`、`x`、`u`、`U`、`DEL`、`~`、`%`。`lisp/buff-menu.scm`)。`m`、`v`、`1`、`2`、`T` などは無い。
 - [ ] `ibuffer`。
 - [ ] `C-x 4 4` (other-window-prefix)。
 - [x] `C-x ^` / `C-x {` / `C-x }` / `C-x -` / `C-x +` (enlarge-window, shrink-window-horizontally, enlarge-window-horizontally,
@@ -681,7 +681,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。クリップボード (`select-enable-clipboard`) は、画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない。`hippie-expand` (`lisp/hippie-exp.scm`) は、Emacs の既定の `hippie-expand-try-functions-list` の関数を全て持つ。違い: `try-expand-dabbrev-visible` と `try-expand-whole-kill` は無い。ファイルの名前の補完は `completion-ignored-extensions` を使わない。`try-expand-dabbrev-from-kill` は、kill-ring を `yank-pop` で回した後は、回した位置から読む。
 - [x] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`。dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。小〜中。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
-- [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
+- [x] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [ ] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
 - [ ] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
 - [ ] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。

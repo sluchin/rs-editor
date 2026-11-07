@@ -51,7 +51,7 @@ This editor has no header line, so the titles are the first line of the buffer."
         (size (with-current-buffer name (buffer-size)))
         (dialect (with-current-buffer name (syntax-dialect))))
     (string-append (if (equal? name old) "." " ")
-                   " "
+                   (if (with-current-buffer name (buffer-read-only)) "%" " ")
                    (if (buffer-modified-p name) "*" " ")
                    " "
                    (buff-menu--column name Buffer-menu-name-width #f)
@@ -84,9 +84,13 @@ If FILES-ONLY is non-nil, show only the buffers that visit files."
     (set-buffer-modified-p #f)
     (set-buffer-read-only #t)
     (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
-              '(("RET" Buffer-menu-this-window) ("f" Buffer-menu-this-window)
+              '(("RET" Buffer-menu-this-window) ("f" Buffer-menu-this-window) ("e" Buffer-menu-this-window)
                 ("o" Buffer-menu-other-window) ("q" quit-window)
-                ("n" next-line) ("p" previous-line) ("SPC" next-line)))
+                ("n" next-line) ("p" previous-line) ("SPC" next-line)
+                ("d" Buffer-menu-delete) ("k" Buffer-menu-delete) ("C-k" Buffer-menu-delete)
+                ("C-d" Buffer-menu-delete-backwards) ("s" Buffer-menu-save) ("x" Buffer-menu-execute)
+                ("u" Buffer-menu-unmark) ("U" Buffer-menu-unmark-all) ("DEL" Buffer-menu-backup-unmark)
+                ("~" Buffer-menu-not-modified) ("%" Buffer-menu-toggle-read-only)))
     (switch-to-buffer old)
     "*Buffer List*"))
 
@@ -99,12 +103,166 @@ With a non-negative prefix argument FILES-ONLY, show only the buffers that visit
   (display-buffer (list-buffers-noselect (if (pair? args) (car args) (current-prefix-arg))))
   #f)
 
-(define (Buffer-menu-buffer)
-  "Return the name of the buffer described by the current Buffer Menu line."
+(define (Buffer-menu--line-index)
+  "Return the index in `Buffer-menu--names' of the current line, or #f on the title line or after the list."
   (let ((n (- (simple--count-lines (point-min) (line-beginning-position)) 1)))
-    (if (and (>= n 0) (< n (length Buffer-menu--names)))
-        (list-ref Buffer-menu--names n)
-        (user-error "No buffer on this line"))))
+    (and (>= n 0) (< n (length Buffer-menu--names)) n)))
+
+(define (Buffer-menu-buffer . args)
+  "Return the name of the buffer described by the current Buffer Menu line.
+If there is no buffer here, return nil if ERROR-IF-NON-EXISTENT-P
+is nil or omitted, and signal an error otherwise."
+  (let* ((error-if-non-existent-p (or (null? args) (car args)))
+         (n (Buffer-menu--line-index))
+         (name (and n (list-ref Buffer-menu--names n))))
+    (cond ((not name) (if error-if-non-existent-p (user-error "No buffer on this line") #f))
+          ((not (member name (buffer-list)))
+           (if error-if-non-existent-p (error "This buffer has been killed") #f))
+          (else name))))
+
+(define (Buffer-menu--set-col col desc)
+  "Replace the column COL (0 for the mark, 1 for read-only, 2 for modified) of the current line with DESC."
+  (save-excursion
+    (set-buffer-read-only #f)
+    (goto-char (+ (line-beginning-position) col))
+    (delete-char 1)
+    (insert desc)
+    (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)))
+
+(define (Buffer-menu--col col)
+  "Return the column COL of the current line."
+  (let ((pos (+ (line-beginning-position) col)))
+    (if (< pos (line-end-position)) (buffer-substring pos (+ pos 1)) "")))
+
+(define (Buffer-menu--delete-entry)
+  "Delete the current line and its buffer name from the list."
+  (let ((n (Buffer-menu--line-index)))
+    (set! Buffer-menu--names
+          (let loop ((names Buffer-menu--names) (i 0))
+            (cond ((null? names) '())
+                  ((= i n) (cdr names))
+                  (else (cons (car names) (loop (cdr names) (+ i 1)))))))
+    (set-buffer-read-only #f)
+    (delete-region (line-beginning-position) (min (point-max) (+ (line-end-position) 1)))
+    (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)))
+
+(define (Buffer-menu--unmark)
+  (Buffer-menu--set-col 0 " ")
+  (let ((buf (Buffer-menu-buffer #f)))
+    (when buf
+      (Buffer-menu--set-col 2 (if (buffer-modified-p buf) "*" " ")))))
+
+(define-command (Buffer-menu-delete . args)
+  "Mark the buffer on this Buffer Menu buffer line for deletion.
+A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will delete it.
+
+If prefix argument ARG is non-nil, it specifies the number of
+buffers to delete; a negative ARG means to delete backwards."
+  (let loop ((arg (let ((n (simple--arg args))) (if (= n 0) 1 n))))
+    (cond ((> arg 0)
+           (if (Buffer-menu-buffer #f) (Buffer-menu--set-col 0 "D"))
+           (forward-line 1)
+           (loop (- arg 1)))
+          ((< arg 0)
+           (if (Buffer-menu-buffer #f) (Buffer-menu--set-col 0 "D"))
+           (forward-line -1)
+           (loop (+ arg 1)))))
+  #f)
+
+(define-command (Buffer-menu-delete-backwards . args)
+  "Mark the buffer on this Buffer Menu line for deletion, and move up.
+A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command
+will delete the marked buffer.  Prefix ARG means move that many lines."
+  (Buffer-menu-delete (- (simple--arg args))))
+
+(define-command (Buffer-menu-save)
+  "Mark the buffer on this Buffer Menu line for saving.
+A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will save it."
+  (if (Buffer-menu-buffer #f) (Buffer-menu--set-col 2 "S"))
+  (forward-line 1)
+  #f)
+
+(define-command (Buffer-menu-unmark . args)
+  "Cancel all requested operations on buffer on this line and move down.
+Optional prefix arg means move up."
+  (if (Buffer-menu--line-index) (Buffer-menu--unmark))
+  (forward-line (if (simple--raw-arg args) -1 1))
+  #f)
+
+(define-command (Buffer-menu-unmark-all)
+  "Cancel all requested operations on buffers."
+  (save-excursion
+    (goto-char (point-min))
+    (let loop ()
+      (unless (eobp)
+        (if (Buffer-menu--line-index) (Buffer-menu--unmark))
+        (forward-line 1)
+        (loop))))
+  #f)
+
+(define-command (Buffer-menu-backup-unmark)
+  "Move up and cancel all requested operations on buffer on line above."
+  (forward-line -1)
+  (let loop ()
+    (when (and (not (Buffer-menu--line-index)) (not (bobp)))
+      (forward-line -1)
+      (loop)))
+  (unless (bobp) (Buffer-menu--unmark))
+  #f)
+
+(define-command (Buffer-menu-not-modified . args)
+  "Mark the buffer on this line as unmodified (no changes to save).
+If ARG is non-nil (interactively, with a prefix argument), mark
+it as modified."
+  (let ((arg (simple--raw-arg args)))
+    (with-current-buffer (Buffer-menu-buffer #t)
+      (set-buffer-modified-p (and arg #t)))
+    (Buffer-menu--set-col 2 (if arg "*" " ")))
+  #f)
+
+(define-command (Buffer-menu-toggle-read-only)
+  "Toggle read-only status of buffer on this line.
+This behaves like invoking \\[read-only-mode] in that buffer."
+  (let ((read-only (with-current-buffer (Buffer-menu-buffer #t)
+                     (set-buffer-read-only (not (buffer-read-only)))
+                     (buffer-read-only))))
+    (Buffer-menu--set-col 1 (if read-only "%" " ")))
+  #f)
+
+(define-command (Buffer-menu-execute)
+  "Save and/or delete marked buffers in the Buffer Menu.
+Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-save] are saved.
+Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-delete] are deleted."
+  (save-excursion
+    (goto-char (point-min))
+    (let loop ()
+      (unless (eobp)
+        (let ((n (Buffer-menu--line-index)))
+          (cond ((not n) (forward-line 1))
+                ((not (Buffer-menu-buffer #f)) (Buffer-menu--delete-entry))
+                (else
+                 (let ((buffer (Buffer-menu-buffer #f))
+                       (delete (equal? (Buffer-menu--col 0) "D")))
+                   (when (equal? (Buffer-menu--col 2) "S")
+                     (condition-case e
+                         (begin
+                           (with-current-buffer buffer (save-buffer))
+                           (Buffer-menu--set-col 2 " "))
+                       (error (message (format "Error saving %s" buffer)))))
+                   (if (and delete
+                            (not (equal? buffer (buffer-name)))
+                            (begin
+                              (when (and (buffer-file-name buffer) (buffer-modified-p buffer))
+                                (if (yes-or-no-p (format "Buffer %s modified; kill anyway? " buffer))
+                                    (with-current-buffer buffer (set-buffer-modified-p #f))))
+                              (and (not (and (buffer-file-name buffer) (buffer-modified-p buffer)))
+                                   (begin (kill-buffer buffer) #t))))
+                       (Buffer-menu--delete-entry)
+                       (forward-line 1)))))
+          (loop)))))
+  #f)
 
 (define-command (Buffer-menu-this-window)
   "Select this line's buffer in this window."

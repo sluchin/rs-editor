@@ -762,6 +762,20 @@ fn test_list_buffers_shows_the_list_in_another_window() {
 }
 
 #[test]
+fn test_buffer_menu_marks_and_kills_buffers() {
+    let mut fx = Fixture::new();
+    fx.app
+        .eval("(get-buffer-create \"zz\") (list-buffers)")
+        .unwrap();
+    // 一覧の窓へ移り, zz の行に消す印を付けて, 消す
+    fx.press("C-x o M-> C-p d");
+    assert!(fx.text().lines().any(|line| line.starts_with("D   zz")));
+    fx.press("x");
+    assert!(fx.app.host().editor().get_buffer("zz").is_none());
+    assert!(!fx.text().contains("zz"));
+}
+
+#[test]
 fn test_dired_starts_from_the_directory_of_the_file() {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("a.txt");

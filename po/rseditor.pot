@@ -407,8 +407,96 @@ msgid ""
 msgstr ""
 
 #: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--line-index"
+msgid "Return the index in `Buffer-menu--names' of the current line, or #f on the title line or after the list."
+msgstr ""
+
+#: lisp/buff-menu.scm
 msgctxt "function:Buffer-menu-buffer"
-msgid "Return the name of the buffer described by the current Buffer Menu line."
+msgid ""
+"Return the name of the buffer described by the current Buffer Menu line.\n"
+"If there is no buffer here, return nil if ERROR-IF-NON-EXISTENT-P\n"
+"is nil or omitted, and signal an error otherwise."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--set-col"
+msgid "Replace the column COL (0 for the mark, 1 for read-only, 2 for modified) of the current line with DESC."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--col"
+msgid "Return the column COL of the current line."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu--delete-entry"
+msgid "Delete the current line and its buffer name from the list."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-delete"
+msgid ""
+"Mark the buffer on this Buffer Menu buffer line for deletion.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will delete it.\n"
+"\n"
+"If prefix argument ARG is non-nil, it specifies the number of\n"
+"buffers to delete; a negative ARG means to delete backwards."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-delete-backwards"
+msgid ""
+"Mark the buffer on this Buffer Menu line for deletion, and move up.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command\n"
+"will delete the marked buffer.  Prefix ARG means move that many lines."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-save"
+msgid ""
+"Mark the buffer on this Buffer Menu line for saving.\n"
+"A subsequent \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command will save it."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-unmark"
+msgid ""
+"Cancel all requested operations on buffer on this line and move down.\n"
+"Optional prefix arg means move up."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-unmark-all"
+msgid "Cancel all requested operations on buffers."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-backup-unmark"
+msgid "Move up and cancel all requested operations on buffer on line above."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-not-modified"
+msgid ""
+"Mark the buffer on this line as unmodified (no changes to save).\n"
+"If ARG is non-nil (interactively, with a prefix argument), mark\n"
+"it as modified."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-toggle-read-only"
+msgid ""
+"Toggle read-only status of buffer on this line.\n"
+"This behaves like invoking \\[read-only-mode] in that buffer."
+msgstr ""
+
+#: lisp/buff-menu.scm
+msgctxt "function:Buffer-menu-execute"
+msgid ""
+"Save and/or delete marked buffers in the Buffer Menu.\n"
+"Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-save] are saved.\n"
+"Buffers marked with \\<Buffer-menu-mode-map>\\[Buffer-menu-delete] are deleted."
 msgstr ""
 
 #: lisp/buff-menu.scm
