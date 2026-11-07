@@ -2506,9 +2506,13 @@ If second arg UNIQUE is nil or omitted, it is an error if a buffer named NEWNAME
 If UNIQUE is non-nil, come up with a new name using `generate-new-buffer-name'.
 Interactively, you can set UNIQUE with a prefix argument.
 Return the name actually given to the buffer."
-  (if (null? args)
-      (simple--rename-buffer (read-string "Rename buffer (to new name): ") (and (current-prefix-arg) #t))
-      (simple--rename-buffer (car args) (and (pair? (cdr args)) (cadr args)))))
+  (let* ((newname (if (null? args) (read-string "Rename buffer (to new name): ") (car args)))
+         (unique (if (null? args) (and (current-prefix-arg) #t) (and (pair? (cdr args)) (cadr args))))
+         (old (buffer-name)))
+    (simple--rename-buffer newname unique)
+    (if (fboundp 'uniquify--rename-buffer-advice)
+        (uniquify--rename-buffer-advice old newname unique))
+    (buffer-name)))
 
 (define (simple--clone-name name)
   "Return NAME without a trailing <N>."

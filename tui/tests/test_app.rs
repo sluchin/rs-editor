@@ -791,6 +791,29 @@ fn test_dired_starts_from_the_directory_of_the_file() {
 }
 
 #[test]
+fn test_buffers_of_files_with_the_same_name_are_told_apart_by_the_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    for sub in ["p", "q"] {
+        std::fs::create_dir(dir.path().join(sub)).unwrap();
+        std::fs::write(dir.path().join(sub).join("a.txt"), sub).unwrap();
+    }
+    let p = dir.path().join("p/a.txt");
+    let q = dir.path().join("q/a.txt");
+    let mut fx = Fixture::sized(12, 60, &[p.to_str().unwrap().to_string()]).unwrap();
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "a.txt");
+    fx.app
+        .eval(&format!("(find-file \"{}\")", q.display()))
+        .unwrap();
+    assert_eq!(fx.app.host().editor().current_buffer_name(), "a.txt<q>");
+    assert!(fx.app.host().editor().get_buffer("a.txt<p>").is_some());
+    // 消すと, 残りは元の名前に戻る
+    fx.feed("RET");
+    fx.press("C-x k");
+    assert!(fx.app.host().editor().get_buffer("a.txt").is_some());
+    assert!(fx.app.host().editor().get_buffer("a.txt<p>").is_none());
+}
+
+#[test]
 fn test_bookmark_set_and_jump_with_the_keys() {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("a.txt");

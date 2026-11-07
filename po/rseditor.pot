@@ -904,6 +904,17 @@ msgid "Return the buffer visiting file FILENAME, or #f if there is none."
 msgstr ""
 
 #: lisp/files.scm
+msgctxt "function:create-file-buffer"
+msgid ""
+"Create a suitably named buffer for visiting FILENAME, and return it.\n"
+"FILENAME (sans directory) is used unchanged if that name is free;\n"
+"otherwise the buffer is renamed according to\n"
+"`uniquify-buffer-name-style' to get an unused name.\n"
+"To avoid confusion when visiting a file whose name begins with a space,\n"
+"this function prepends a \"|\" to the final result if necessary."
+msgstr ""
+
+#: lisp/files.scm
 msgctxt "function:find-file-noselect"
 msgid ""
 "Read file FILENAME into a buffer and return the buffer.\n"
@@ -990,12 +1001,36 @@ msgid ""
 "Change the name of the file visited in the current buffer to FILENAME.\n"
 "The buffer is renamed after the file, and marked as modified (the new file is not saved yet).\n"
 "If FILENAME is #f, the buffer visits no file.\n"
+"The third argument ALONG-WITH-FILE non-#f means the file was renamed along with the buffer:\n"
+"the buffer keeps its modified flag.\n"
 "Interactively, read FILENAME in the minibuffer; the initial input is the current file."
 msgstr ""
 
 #: lisp/files.scm
 msgctxt "function:files--set-visited-file-name"
 msgid "Make the current buffer visit FILENAME (see `set-visited-file-name')."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:append-to-file"
+msgid ""
+"Append the contents of the region to the end of file FILENAME.\n"
+"When called from a function, expects three arguments,\n"
+"START, END and FILENAME.  START and END are normally buffer positions\n"
+"specifying the part of the buffer to write.\n"
+"If START is nil, that means to use the entire buffer contents.\n"
+"If START is a string, then output that string to the file\n"
+"instead of any buffer contents; END is ignored."
+msgstr ""
+
+#: lisp/files.scm
+msgctxt "function:rename-visited-file"
+msgid ""
+"Rename the file visited by the current buffer to NEW-LOCATION.\n"
+"This command also sets the visited file name.  If the buffer\n"
+"isn't visiting any file, that's all it does.\n"
+"\n"
+"Interactively, this prompts for NEW-LOCATION."
 msgstr ""
 
 #: lisp/files.scm
@@ -7469,6 +7504,117 @@ msgctxt "function:funcall"
 msgid "Call FUNCTION with the remaining arguments."
 msgstr ""
 
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-buffer-name-style"
+msgid ""
+"How to construct unique buffer names for files with the same base name.\n"
+"The value can be one of: `forward', `reverse', `post-forward',\n"
+"`post-forward-angle-brackets', or nil."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-after-kill-buffer-p"
+msgid "If non-nil, rerationalize buffer names after a buffer has been killed."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-ignore-buffers-re"
+msgid "Regular expression matching buffer names that should not be uniquified."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-min-dir-content"
+msgid "Minimum number of directory name components included in buffer name."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-separator"
+msgid ""
+"String separator for buffer name components.\n"
+"When `uniquify-buffer-name-style' is `post-forward', separates\n"
+"base file name from directory part in buffer names (default \"|\").\n"
+"When `uniquify-buffer-name-style' is `reverse', separates all\n"
+"file name components (default \"\\\")."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-strip-common-suffix"
+msgid ""
+"If non-nil, strip common directory suffixes of conflicting files.\n"
+"E.g. if you open /a1/b/c/d and /a2/b/c/d, the buffer names will say\n"
+"\"d|a1\" and \"d|a2\" instead of \"d|a1/b/c\" and \"d|a2/b/c\"."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--box"
+msgid "Return the box of the buffer NAME: a procedure returning the buffer's current name."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--renamed"
+msgid "Note that the buffer OLD is now called NEW."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--forget"
+msgid "Forget the buffer NAME (it was killed)."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--managed"
+msgid "Return the conflicting items of the buffer BOX (Emacs's buffer-local `uniquify-managed')."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--make-item"
+msgid "Return an item: a procedure taking a field name (and a new value for dirname and proposed)."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--directory-file-name"
+msgid "Return DIR without its trailing slash (but \"/\" stays)."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-buffer-file-name"
+msgid "Return the directory of the file visited by BUFFER, or #f."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-rationalize-file-buffer-names"
+msgid ""
+"Make file buffer names unique by adding segments from file name.\n"
+"Arguments BASE, DIRNAME, and NEWBUF specify the new buffer that causes\n"
+"this rationalization."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-get-proposed-name"
+msgid "Return the name proposed for the buffer visiting BASE in DIRNAME, with DEPTH directories."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-rename-buffer"
+msgid "Rename the buffer of ITEM to NEWNAME (a unique name), without rationalizing again."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-maybe-rerationalize-w/o-cb"
+msgid "Re-rationalize the buffers conflicting with the current one, without it."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-kill-buffer-function"
+msgid ""
+"Re-rationalize buffer names, ignoring current buffer.\n"
+"For use on `kill-buffer-hook'."
+msgstr ""
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--rename-buffer-advice"
+msgid "Rationalize after the current buffer was renamed from OLD to NEWNAME (UNIQUE as `rename-buffer')."
+msgstr ""
+
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"
 msgid "Return the name of a buffer other than the current one, or #f if there is none."
@@ -7546,6 +7692,11 @@ msgstr ""
 #: lisp/window.scm
 msgctxt "function:window--show-buffer"
 msgid "Show buffer NAME in WINDOW; if WINDOW is the selected one, make the buffer current too."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:window--kill-buffer-with-hook"
+msgid "Kill the buffer NAME, running `kill-buffer-hook' in it first (unless it visits a modified file)."
 msgstr ""
 
 #: lisp/window.scm

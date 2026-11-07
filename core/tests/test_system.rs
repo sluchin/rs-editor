@@ -637,6 +637,11 @@ fn test_editor_settings() {
             "generate-new-buffer \"x.txt\"".to_string(),
             "current-buffer".to_string(),
             "set-buffer \"/home/a.txt\"".to_string(),
+            // create-file-buffer (名前を返す)
+            "buffer-name".to_string(),
+            "set-buffer \"/home/a.txt\"".to_string(),
+            "current-buffer".to_string(),
+            "set-buffer \"/home/a.txt\"".to_string(),
             format!(
                 "files--set-buffer-file-name {:?}",
                 home.join("x.txt").to_string_lossy()
@@ -725,6 +730,10 @@ fn test_buffer_operations() {
             "buffer-list".to_string(),
             "buffer-modified-p".to_string(),
             "buffer-modified-p \"b\"".to_string(),
+            // kill-buffer-hook を走らせるかを確かめる
+            "buffer-list".to_string(),
+            "buffer-file-name \"b\"".to_string(),
+            "buffer-modified-p \"b\"".to_string(),
             "kill-buffer \"b\"".to_string(),
             "buffer-file-name \"b\"".to_string(),
             "kill-new \"k\"".to_string(),
@@ -735,6 +744,10 @@ fn test_buffer_operations() {
             "buffer-list".to_string(),
             "buffer-file-name \"b\"".to_string(),
             "generate-new-buffer \"y\"".to_string(),
+            "current-buffer".to_string(),
+            "set-buffer \"b\"".to_string(),
+            "buffer-name".to_string(),
+            "set-buffer \"b\"".to_string(),
             "current-buffer".to_string(),
             "set-buffer \"b\"".to_string(),
             format!(

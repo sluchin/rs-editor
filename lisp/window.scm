@@ -133,12 +133,18 @@ If it is the only window, show another buffer in it instead."
 
 (define window--kill-buffer kill-buffer)
 
+(define (window--kill-buffer-with-hook name)
+  "Kill the buffer NAME, running `kill-buffer-hook' in it first (unless it visits a modified file)."
+  (when (and (string? name) (member name (buffer-list)) (not (and (buffer-file-name name) (buffer-modified-p name))))
+    (with-current-buffer name (run-hooks 'kill-buffer-hook)))
+  (window--kill-buffer name))
+
 (define-command (kill-buffer . args)
   "Kill the buffer named by the argument.  Interactively, read the name in the minibuffer.
 The default is the current buffer.  Ask before killing a modified file buffer.
 Called from Lisp with a name, kill the buffer without asking (an error if it visits a modified file)."
   (if (pair? args)
-      (window--kill-buffer (car args))
+      (window--kill-buffer-with-hook (car args))
       (let* ((asked (completing-read (format "Kill buffer (default %s): " (buffer-name))
                                      (buffer-list)))
              (name (if (equal? asked "") (buffer-name) asked)))
@@ -147,7 +153,7 @@ Called from Lisp with a name, kill the buffer without asking (an error if it vis
                    (not (yes-or-no-p (format "Buffer %s modified; kill anyway? " name))))
           (signal 'quit '()))
         (with-current-buffer name (set-buffer-modified-p #f))
-        (window--kill-buffer name))))
+        (window--kill-buffer-with-hook name))))
 
 (define-command (kill-buffer-and-window . args)
   "Kill the current buffer and delete the selected window."

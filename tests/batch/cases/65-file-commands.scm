@@ -1,0 +1,38 @@
+(define (file-text file) (read-file-string file))
+(let* ((dir (string-append (make-temp-file "fc" #t) "/"))
+       (a (string-append dir "a.txt"))
+       (sub (string-append dir "sub/")))
+  (make-directory sub)
+  (write-file-string a "first\n")
+  ;; append-to-file: リージョンをファイルの終わりに足す
+  (switch-to-buffer (generate-new-buffer "x"))
+  (insert "one two three")
+  (append-to-file 5 8 a)
+  (append-to-file "\n" #f a)
+  (append-to-file #f #f a)
+  (princ (format "append: %S\n" (file-text a)))
+  (set-mark 1)
+  (goto-char 4)
+  (execute-kbd-macro (kbd (string-append "M-x append-to-file RET " dir "new.txt RET")))
+  (princ (format "append new: %S\n" (file-text (string-append dir "new.txt"))))
+  ;; rename-visited-file: ファイルの名前を変え, バッファもそれを訪れる
+  (find-file a)
+  (rename-visited-file (string-append dir "b.txt"))
+  (princ (format "rename: %s %s %s %s %S\n" (buffer-name) (file-name-nondirectory (buffer-file-name))
+                 (file-exists? a) (buffer-modified-p) (file-text (string-append dir "b.txt"))))
+  ;; ディレクトリを指すと, その中へ同じ名前で
+  (rename-visited-file sub)
+  (princ (format "rename dir: %s %s %s\n" (buffer-name) (substring (buffer-file-name) (string-length dir))
+                 (file-exists? (string-append dir "b.txt"))))
+  ;; キーから
+  (execute-kbd-macro (kbd (string-append "M-x rename-visited-file RET C-a C-k " dir "c.txt RET")))
+  (princ (format "rename key: %s %s\n" (buffer-name) (file-exists? (string-append dir "c.txt"))))
+  ;; ファイルを訪れていないバッファ: 名前を付けるだけ
+  (switch-to-buffer (generate-new-buffer "y"))
+  (insert "y")
+  (rename-visited-file (string-append dir "y.txt"))
+  (princ (format "no file: %s %s %s\n" (buffer-name) (file-exists? (string-append dir "y.txt")) (buffer-modified-p)))
+  (condition-case err
+      (begin (switch-to-buffer (generate-new-buffer "z")) (rename-visited-file sub))
+    (error (princ (format "error: %s\n" (car err)))))
+  (delete-directory dir #t))

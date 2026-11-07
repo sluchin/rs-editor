@@ -279,13 +279,13 @@
 - [x] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」。書き換えの入口 `ensure_writable` が `file-supersession-threat` のエラーを返し、`EditorHost` が聞いてやり直す)。
 - [ ] ファイルの錠 (`.#名前`。`create-lockfiles`)。
 - [ ] `recover-session` (前のセッションの自動保存から、まとめて読み直す), `recentf-open` (最近のファイル)。
-- [ ] `append-to-file`, `rename-visited-file`。
+- [x] `append-to-file`, `rename-visited-file`。
 - [ ] `find-file` のワイルドカード (`*.scm` で、全てを開く) と、ディレクトリを開いたら dired にする。
 
 ### バッファ・ウィンドウ
 
 - [x] `C-x x t` (toggle-truncate-lines): キーを割り当てる。
-- [ ] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`)。今は、同じ名前になる。
+- [x] 同じ名前のファイルのバッファの名前を分ける (`a.scm<src>` など。 `uniquify`。`lisp/uniquify.scm`)。dired のバッファは分けない (Emacs は分ける)。
 - [ ] `C-x C-b` の一覧 (Buffer Menu) の中のキー (`d`、`s`、`x`、`u`、`~` など)。今は、`RET`、`f`、`o`、`q`、`n`、`p`、`SPC` だけ (`lisp/buff-menu.scm`)。
 - [ ] `ibuffer`。
 - [ ] `C-x 4 4` (other-window-prefix)。
@@ -679,7 +679,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - [x] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
 - [x] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。クリップボード (`select-enable-clipboard`) は、画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない。`hippie-expand` (`lisp/hippie-exp.scm`) は、Emacs の既定の `hippie-expand-try-functions-list` の関数を全て持つ。違い: `try-expand-dabbrev-visible` と `try-expand-whole-kill` は無い。ファイルの名前の補完は `completion-ignored-extensions` を使わない。`try-expand-dabbrev-from-kill` は、kill-ring を `yank-pop` で回した後は、回した位置から読む。
-- [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。
+- [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。完了: `uniquify` (dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。未完了: ターミナルのアプリの 30 秒の自動保存。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [ ] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。

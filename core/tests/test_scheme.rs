@@ -459,6 +459,8 @@ fn test_define_command_and_global_set_key() {
             "copy-file",
             "do-auto-save",
             "set-visited-file-name",
+            "append-to-file",
+            "rename-visited-file",
             "basic-save-buffer",
             "write-file",
             "save-buffer",

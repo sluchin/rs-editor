@@ -1048,6 +1048,21 @@ msgid "Return the buffer visiting file FILENAME, or #f if there is none."
 msgstr "ファイル FILENAME を訪れているバッファを返す. 無ければ #f."
 
 #: lisp/files.scm
+msgctxt "function:create-file-buffer"
+msgid ""
+"Create a suitably named buffer for visiting FILENAME, and return it.\n"
+"FILENAME (sans directory) is used unchanged if that name is free;\n"
+"otherwise the buffer is renamed according to\n"
+"`uniquify-buffer-name-style' to get an unused name.\n"
+"To avoid confusion when visiting a file whose name begins with a space,\n"
+"this function prepends a \"|\" to the final result if necessary."
+msgstr ""
+"FILENAME を訪れるための, 適した名前のバッファを作って返す.\n"
+"FILENAME (ディレクトリを除いたもの) の名前が空いていれば, そのまま使う.\n"
+"そうでなければ, `uniquify-buffer-name-style' に従って, 空いている名前に変える.\n"
+"空白で始まる名前のファイルを訪れるときは, 紛れないように, 名前の前に \"|\" を付ける."
+
+#: lisp/files.scm
 msgctxt "function:find-file-noselect"
 msgid ""
 "Read file FILENAME into a buffer and return the buffer.\n"
@@ -1163,17 +1178,52 @@ msgid ""
 "Change the name of the file visited in the current buffer to FILENAME.\n"
 "The buffer is renamed after the file, and marked as modified (the new file is not saved yet).\n"
 "If FILENAME is #f, the buffer visits no file.\n"
+"The third argument ALONG-WITH-FILE non-#f means the file was renamed along with the buffer:\n"
+"the buffer keeps its modified flag.\n"
 "Interactively, read FILENAME in the minibuffer; the initial input is the current file."
 msgstr ""
 "今のバッファが訪れるファイルの名前を FILENAME に変える.\n"
 "バッファの名前はファイルの名前にし, 書き換えたことにする (新しいファイルには, まだ保存していない).\n"
 "FILENAME が #f なら, ファイルを訪れない.\n"
+"3 つ目の引数 ALONG-WITH-FILE が #f でなければ, ファイルもバッファと一緒に名前を変えたことを表す:\n"
+"バッファの書き換えの印は, そのままにする.\n"
 "対話的に呼ぶと, ミニバッファで FILENAME を聞く (始めの入力は今のファイル)."
 
 #: lisp/files.scm
 msgctxt "function:files--set-visited-file-name"
 msgid "Make the current buffer visit FILENAME (see `set-visited-file-name')."
 msgstr "今のバッファに, ファイル FILENAME を訪れさせる (`set-visited-file-name` を見る)."
+
+#: lisp/files.scm
+msgctxt "function:append-to-file"
+msgid ""
+"Append the contents of the region to the end of file FILENAME.\n"
+"When called from a function, expects three arguments,\n"
+"START, END and FILENAME.  START and END are normally buffer positions\n"
+"specifying the part of the buffer to write.\n"
+"If START is nil, that means to use the entire buffer contents.\n"
+"If START is a string, then output that string to the file\n"
+"instead of any buffer contents; END is ignored."
+msgstr ""
+"リージョンの中身を, ファイル FILENAME の終わりに足す.\n"
+"関数から呼ぶときは, 3 つの引数 START, END, FILENAME を渡す. START と END は, 普通は,\n"
+"書き出すバッファの部分を指す位置.\n"
+"START が nil なら, バッファ全体を使う.\n"
+"START が文字列なら, バッファの中身でなく, その文字列をファイルに書く (END は使わない)."
+
+#: lisp/files.scm
+msgctxt "function:rename-visited-file"
+msgid ""
+"Rename the file visited by the current buffer to NEW-LOCATION.\n"
+"This command also sets the visited file name.  If the buffer\n"
+"isn't visiting any file, that's all it does.\n"
+"\n"
+"Interactively, this prompts for NEW-LOCATION."
+msgstr ""
+"今のバッファが訪れるファイルの名前を NEW-LOCATION に変える.\n"
+"訪れるファイルの名前も変える. バッファがファイルを訪れていなければ, それだけをする.\n"
+"\n"
+"対話的に呼ぶと, NEW-LOCATION を聞く."
 
 #: lisp/files.scm
 msgctxt "variable:mode-require-final-newline"
@@ -8512,6 +8562,129 @@ msgctxt "function:funcall"
 msgid "Call FUNCTION with the remaining arguments."
 msgstr "FUNCTION を, 残りの引数で呼ぶ."
 
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-buffer-name-style"
+msgid ""
+"How to construct unique buffer names for files with the same base name.\n"
+"The value can be one of: `forward', `reverse', `post-forward',\n"
+"`post-forward-angle-brackets', or nil."
+msgstr ""
+"同じ名前のファイルのバッファに, 分けた名前を付ける形.\n"
+"値は `forward', `reverse', `post-forward', `post-forward-angle-brackets', nil のどれか."
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-after-kill-buffer-p"
+msgid "If non-nil, rerationalize buffer names after a buffer has been killed."
+msgstr "nil でなければ, バッファを消したあとに, バッファの名前を付け直す."
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-ignore-buffers-re"
+msgid "Regular expression matching buffer names that should not be uniquified."
+msgstr "名前を分けないバッファの名前に合う正規表現."
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-min-dir-content"
+msgid "Minimum number of directory name components included in buffer name."
+msgstr "バッファの名前に入れる, ディレクトリの名前の部分の少なくとも数."
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-separator"
+msgid ""
+"String separator for buffer name components.\n"
+"When `uniquify-buffer-name-style' is `post-forward', separates\n"
+"base file name from directory part in buffer names (default \"|\").\n"
+"When `uniquify-buffer-name-style' is `reverse', separates all\n"
+"file name components (default \"\\\")."
+msgstr ""
+"バッファの名前の部分を区切る文字列.\n"
+"`uniquify-buffer-name-style' が `post-forward' なら, ファイルの名前とディレクトリの部分を区切る (既定は \"|\").\n"
+"`reverse' なら, ファイルの名前の全ての部分を区切る (既定は \"\\\")."
+
+#: lisp/uniquify.scm
+msgctxt "variable:uniquify-strip-common-suffix"
+msgid ""
+"If non-nil, strip common directory suffixes of conflicting files.\n"
+"E.g. if you open /a1/b/c/d and /a2/b/c/d, the buffer names will say\n"
+"\"d|a1\" and \"d|a2\" instead of \"d|a1/b/c\" and \"d|a2/b/c\"."
+msgstr ""
+"nil でなければ, ぶつかるファイルのディレクトリの, 共通の後ろの部分を除く.\n"
+"例えば /a1/b/c/d と /a2/b/c/d を開くと, バッファの名前は \"d|a1/b/c\" と \"d|a2/b/c\" でなく,\n"
+"\"d|a1\" と \"d|a2\" になる."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--box"
+msgid "Return the box of the buffer NAME: a procedure returning the buffer's current name."
+msgstr "バッファ NAME の箱を返す: バッファの今の名前を返す手続き."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--renamed"
+msgid "Note that the buffer OLD is now called NEW."
+msgstr "バッファ OLD の名前が NEW になったことを覚える."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--forget"
+msgid "Forget the buffer NAME (it was killed)."
+msgstr "バッファ NAME (消した) を忘れる."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--managed"
+msgid "Return the conflicting items of the buffer BOX (Emacs's buffer-local `uniquify-managed')."
+msgstr "バッファの箱 BOX の, ぶつかる項目を返す (Emacs のバッファローカルな `uniquify-managed')."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--make-item"
+msgid "Return an item: a procedure taking a field name (and a new value for dirname and proposed)."
+msgstr "項目を返す: フィールドの名前 (と, dirname と proposed なら新しい値) を取る手続き."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--directory-file-name"
+msgid "Return DIR without its trailing slash (but \"/\" stays)."
+msgstr "DIR の終わりのスラッシュを除いて返す (\"/\" はそのまま)."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-buffer-file-name"
+msgid "Return the directory of the file visited by BUFFER, or #f."
+msgstr "BUFFER が訪れるファイルのディレクトリを返す. 無ければ #f."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-rationalize-file-buffer-names"
+msgid ""
+"Make file buffer names unique by adding segments from file name.\n"
+"Arguments BASE, DIRNAME, and NEWBUF specify the new buffer that causes\n"
+"this rationalization."
+msgstr ""
+"ファイルの名前の部分を足して, ファイルのバッファの名前を分ける.\n"
+"引数 BASE, DIRNAME, NEWBUF は, 付け直しのきっかけになった新しいバッファを表す."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-get-proposed-name"
+msgid "Return the name proposed for the buffer visiting BASE in DIRNAME, with DEPTH directories."
+msgstr "DIRNAME の BASE を訪れるバッファに勧める名前を, DEPTH 個のディレクトリで返す."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-rename-buffer"
+msgid "Rename the buffer of ITEM to NEWNAME (a unique name), without rationalizing again."
+msgstr "ITEM のバッファの名前を NEWNAME (空いている名前) に変える. 付け直しは, もうしない."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-maybe-rerationalize-w/o-cb"
+msgid "Re-rationalize the buffers conflicting with the current one, without it."
+msgstr "今のバッファとぶつかるバッファの名前を, 今のバッファを除いて付け直す."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify-kill-buffer-function"
+msgid ""
+"Re-rationalize buffer names, ignoring current buffer.\n"
+"For use on `kill-buffer-hook'."
+msgstr ""
+"今のバッファを除いて, バッファの名前を付け直す.\n"
+"`kill-buffer-hook' に使う."
+
+#: lisp/uniquify.scm
+msgctxt "function:uniquify--rename-buffer-advice"
+msgid "Rationalize after the current buffer was renamed from OLD to NEWNAME (UNIQUE as `rename-buffer')."
+msgstr "今のバッファの名前が OLD から NEWNAME に変わったあとに, 付け直す (UNIQUE は `rename-buffer' と同じ)."
+
 #: lisp/window.scm
 msgctxt "function:window--other-buffer"
 msgid "Return the name of a buffer other than the current one, or #f if there is none."
@@ -8604,6 +8777,11 @@ msgstr ""
 msgctxt "function:window--show-buffer"
 msgid "Show buffer NAME in WINDOW; if WINDOW is the selected one, make the buffer current too."
 msgstr "バッファ NAME を WINDOW に出す. WINDOW が選んでいる窓なら, そのバッファを今のバッファにもする."
+
+#: lisp/window.scm
+msgctxt "function:window--kill-buffer-with-hook"
+msgid "Kill the buffer NAME, running `kill-buffer-hook' in it first (unless it visits a modified file)."
+msgstr "バッファ NAME を消す. 先に, そのバッファで `kill-buffer-hook' を走らせる (書き換えたファイルのバッファでなければ)."
 
 #: lisp/window.scm
 msgctxt "function:kill-buffer"

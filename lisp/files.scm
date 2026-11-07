@@ -62,6 +62,22 @@ See `auto-mode-alist'."
     (let ((names (filter (lambda (name) (equal? (buffer-file-name name) file)) (buffer-list))))
       (and (pair? names) (car names)))))
 
+(define (create-file-buffer filename)
+  "Create a suitably named buffer for visiting FILENAME, and return it.
+FILENAME (sans directory) is used unchanged if that name is free;
+otherwise the buffer is renamed according to
+`uniquify-buffer-name-style' to get an unused name.
+To avoid confusion when visiting a file whose name begins with a space,
+this function prepends a \"|\" to the final result if necessary."
+  (let* ((lastname (file-name-nondirectory filename))
+         (lastname (if (equal? lastname "") filename lastname))
+         (basename (if (string-prefix? " " lastname) (string-append "|" lastname) lastname))
+         (buf (generate-new-buffer basename)))
+    (with-current-buffer buf
+      (if (fboundp 'uniquify--create-file-buffer-advice)
+          (uniquify--create-file-buffer-advice buf filename basename))
+      (buffer-name))))
+
 (define (find-file-noselect filename . args)
   "Read file FILENAME into a buffer and return the buffer.
 If a buffer exists visiting FILENAME, return that one.  A new buffer is named after the file,
@@ -71,7 +87,7 @@ If FILENAME is a directory, return a Dired buffer (`dired-noselect')."
   (let ((file (expand-file-name filename)))
     (or (and (file-directory? file) (dired-noselect file))
         (find-buffer-visiting file)
-        (let ((name (generate-new-buffer (file-name-nondirectory file))))
+        (let ((name (create-file-buffer file)))
           (with-current-buffer name
             (if (file-exists? file)
                 ;; 読めなければ, 作ったバッファを消して失敗する
@@ -186,11 +202,14 @@ and prints \"Auto-saving...done\" if anything was saved."
   "Change the name of the file visited in the current buffer to FILENAME.
 The buffer is renamed after the file, and marked as modified (the new file is not saved yet).
 If FILENAME is #f, the buffer visits no file.
+The third argument ALONG-WITH-FILE non-#f means the file was renamed along with the buffer:
+the buffer keeps its modified flag.
 Interactively, read FILENAME in the minibuffer; the initial input is the current file."
   (files--set-visited-file-name
-   (if (null? args) (read-file-name "Set visited file name: " (or (buffer-file-name) "")) (car args))))
+   (if (null? args) (read-file-name "Set visited file name: " (or (buffer-file-name) "")) (car args))
+   (and (pair? args) (pair? (cdr args)) (pair? (cddr args)) (caddr args))))
 
-(define (files--set-visited-file-name filename)
+(define (files--set-visited-file-name filename . along-with-file)
   "Make the current buffer visit FILENAME (see `set-visited-file-name')."
   (let ((file (and filename (expand-file-name filename))))
     (files--set-buffer-file-name file)
@@ -198,7 +217,40 @@ Interactively, read FILENAME in the minibuffer; the initial input is the current
       (let ((base (file-name-nondirectory file)))
         (unless (equal? base (buffer-name))
           (rename-buffer base #t)))
-      (set-buffer-modified-p #t))))
+      (unless (and (pair? along-with-file) (car along-with-file))
+        (set-buffer-modified-p #t)))))
+
+(define-command (append-to-file . args)
+  "Append the contents of the region to the end of file FILENAME.
+When called from a function, expects three arguments,
+START, END and FILENAME.  START and END are normally buffer positions
+specifying the part of the buffer to write.
+If START is nil, that means to use the entire buffer contents.
+If START is a string, then output that string to the file
+instead of any buffer contents; END is ignored."
+  (if (null? args)
+      (let* ((start (region-beginning))
+             (end (region-end)))
+        (write-region start end (read-file-name "Append to file: ") #t))
+      (write-region (car args) (cadr args) (caddr args) #t)))
+
+(define-command (rename-visited-file . args)
+  "Rename the file visited by the current buffer to NEW-LOCATION.
+This command also sets the visited file name.  If the buffer
+isn't visiting any file, that's all it does.
+
+Interactively, this prompts for NEW-LOCATION."
+  (let ((new-location (cond ((pair? args) (car args))
+                            ((buffer-file-name) (read-file-name "Rename visited file to: "))
+                            (else (read-file-name "Set visited file name: " #f
+                                                  (expand-file-name (file-name-nondirectory (buffer-name))))))))
+    (when (file-directory? new-location)
+      (unless (buffer-file-name)
+        (user-error "Can’t rename buffer to a directory file name"))
+      (set! new-location (expand-file-name (file-name-nondirectory (buffer-file-name)) new-location)))
+    (when (and (buffer-file-name) (file-exists? (buffer-file-name)))
+      (rename-file (buffer-file-name) new-location))
+    (set-visited-file-name new-location #f #t)))
 
 (define mode-require-final-newline #t
   "Non-#f means a file-visiting buffer gets a final newline when it is saved (if it is not empty).")
