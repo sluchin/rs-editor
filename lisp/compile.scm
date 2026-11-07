@@ -19,7 +19,7 @@
   "The position where the locations of `next-error-last-buffer' end.")
 
 (define compile--sources '()
-  "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep or compilation.")
+  "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep, compilation or occur.")
 
 (define (compile--set-source name directory start end . kind)
   "Make the buffer NAME the source of `next-error': its locations lie between START and END.
@@ -121,33 +121,48 @@ If there is none, leave point where it was and return #f."
     (goto-char (point-min))
     (forward-line (- (cadr hit) 1))
     (if (and (pair? (cddr hit)) (caddr hit))
-        (move-to-column (max 0 (- (caddr hit) 1))))
-    (message "")))
+        (move-to-column (max 0 (- (caddr hit) 1))))))
 
 (define (compile--past-message kind forward)
   (if (eq? kind 'compilation)
       (if forward "Past last error" "Moved back before first error")
       (if forward "Moved past last grep hit" "Moved back before first grep hit")))
 
+(define (compile--locus-message kind)
+  "Show `KIND locus from BUFFER' like the `next-error' of Emacs (`next-error-verbose')."
+  (message (format "%s locus from %s" kind next-error-last-buffer)))
+
 (define (compile--next-error forward . args)
   "Visit the next (or previous) location of `next-error-last-buffer'.
-With a number in ARGS, move that many locations."
+With a number in ARGS, move that many locations; with a third element true, start from the first."
   (let ((name next-error-last-buffer)
-        (count (if (pair? args) (car args) 1)))
+        (count (if (pair? args) (car args) 1))
+        (reset (and (pair? args) (pair? (cdr args)) (cadr args))))
     (if (not (and name (get-buffer name)))
         (user-error "No buffers contain error message locations"))
     (compile--use-source name)
-    (let* ((forward (if (< count 0) (not forward) forward))
-           (hit (with-current-buffer name
-                  (let loop ((n (max 1 (abs count))) (hit #f))
-                    (if (= n 0)
-                        hit
-                        (let ((next (compile--scan forward)))
-                          (if next (loop (- n 1) next) #f)))))))
-      (if (not hit)
-          (user-error (compile--past-message (compile--kind name) forward)))
-      (compile--visit hit (equal? (buffer-name) name)))
+    (if (eq? (compile--kind name) 'occur)
+        (let ((target (with-current-buffer name (occur-next-error (if forward count (- count))))))
+          (if (equal? (buffer-name) name)
+              (window--pop-to-buffer-other-window (car target))
+              (pop-to-buffer-same-window (car target)))
+          (goto-char (cadr target)))
+        (compile--next-error-1 name forward count))
+    (compile--locus-message (cond (reset "First") ((eq? forward (< count 0)) "Previous") (else "Next")))
     #f))
+
+(define (compile--next-error-1 name forward count)
+  "Visit the COUNTth next (or previous) location of the grep or compilation results in the buffer NAME."
+  (let* ((forward (if (< count 0) (not forward) forward))
+         (hit (with-current-buffer name
+                (let loop ((n (max 1 (abs count))) (hit #f))
+                  (if (= n 0)
+                      hit
+                      (let ((next (compile--scan forward)))
+                        (if next (loop (- n 1) next) #f)))))))
+    (if (not hit)
+        (user-error (compile--past-message (compile--kind name) forward)))
+    (compile--visit hit (equal? (buffer-name) name))))
 
 (define-command (next-error . args)
   "Visit the next location of the compilation, grep (or xref) results.
@@ -165,7 +180,7 @@ With a numeric argument N, move N locations back (forward if N is negative)."
     (if (not (and name (get-buffer name)))
         (user-error "No buffers contain error message locations"))
     (with-current-buffer name (goto-char (point-min)))
-    (compile--next-error #t)))
+    (compile--next-error #t 1 #t)))
 
 (define (compile--no-select thunk)
   "Call THUNK (that visits a location), then select the window of `next-error-last-buffer' again."
@@ -192,6 +207,7 @@ With a numeric argument N, move N locations back."
         (user-error "No error here"))
     (compile--use-source (buffer-name))
     (compile--visit hit #t)
+    (compile--locus-message "Current")
     #f))
 
 ;;; compile

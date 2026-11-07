@@ -649,8 +649,8 @@ msgstr "`next-error-last-buffer' の場所が終わる位置."
 
 #: lisp/compile.scm
 msgctxt "variable:compile--sources"
-msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep or compilation."
-msgstr "場所のあるバッファ. それぞれは (NAME DIRECTORY START END KIND). KIND は grep か compilation."
+msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep, compilation or occur."
+msgstr "場所のあるバッファ. それぞれは (NAME DIRECTORY START END KIND). KIND は grep か compilation か occur."
 
 #: lisp/compile.scm
 msgctxt "function:compile--set-source"
@@ -728,13 +728,23 @@ msgid "Visit the file, line and column (if any) of HIT, in another window if OTH
 msgstr "HIT のファイルと行と桁 (あれば) を訪ねる. OTHER-WINDOW なら別の窓で."
 
 #: lisp/compile.scm
+msgctxt "function:compile--locus-message"
+msgid "Show `KIND locus from BUFFER' like the `next-error' of Emacs (`next-error-verbose')."
+msgstr "Emacs の `next-error' のように, `KIND locus from BUFFER' を出す (`next-error-verbose')."
+
+#: lisp/compile.scm
 msgctxt "function:compile--next-error"
 msgid ""
 "Visit the next (or previous) location of `next-error-last-buffer'.\n"
-"With a number in ARGS, move that many locations."
+"With a number in ARGS, move that many locations; with a third element true, start from the first."
 msgstr ""
 "`next-error-last-buffer' の, 次(前)の場所を訪ねる.\n"
-"ARGS に数があれば, その数だけ動く."
+"ARGS に数があれば, その数だけ動く. 3 つ目の要素が真なら, 初めから始める."
+
+#: lisp/compile.scm
+msgctxt "function:compile--next-error-1"
+msgid "Visit the COUNTth next (or previous) location of the grep or compilation results in the buffer NAME."
+msgstr "バッファ NAME の grep か compilation の結果の, COUNT 番目に次(前)の場所を訪ねる."
 
 #: lisp/compile.scm
 msgctxt "function:next-error"
@@ -6412,8 +6422,12 @@ msgstr "*Occur* バッファと, その対象の alist: (BUFFER-NAME (OCCUR-LINE
 
 #: lisp/replace.scm
 msgctxt "function:occur--collect"
-msgid "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES), and the number of matches."
-msgstr "今のバッファで一致した行を (LINE TEXT POSITION MATCHES) のリストとして, 一致の数とともに返す."
+msgid ""
+"Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES LAST-LINE SPANS), and the number of matches.\n"
+"SPANS are the matches in TEXT, as lists (START END) of offsets."
+msgstr ""
+"今のバッファで一致した行を (LINE TEXT POSITION MATCHES LAST-LINE SPANS) のリストとして, 一致の数とともに返す.\n"
+"SPANS は TEXT の中の一致で, 位置 (文字の数) のリスト (START END)."
 
 #: lisp/replace.scm
 msgctxt "function:occur--indent-continuation"
@@ -6426,15 +6440,83 @@ msgid "Return the line numbers to show: each matching line (in TEXT-LINES, with 
 msgstr "出す行の番号を返す: 一致した各行 (TEXT-LINES の中で, その行が覆う行とともに) と, その前後の NLINES 行."
 
 #: lisp/replace.scm
+msgctxt "function:occur--counts"
+msgid "Return `N matches' with ` in M lines' when the numbers differ."
+msgstr "`N matches' を返す. 数が違えば ` in M lines' を付ける."
+
+#: lisp/replace.scm
+msgctxt "function:occur--span-offset"
+msgid "Return where the OFFSET of TEXT lies after the lines of TEXT are prefixed (8 characters each)."
+msgstr "TEXT の各行の前に (8 文字の) 印を付けたとき, TEXT の OFFSET がある所を返す."
+
+#: lisp/replace.scm
+msgctxt "function:occur--chunk"
+msgid ""
+"Return the occur output for the buffer SOURCE as (TEXT TARGETS SPANS MATCHES LINES), or #f if nothing matches.\n"
+"TARGETS are (LINE SOURCE POSITION) with LINE counted from 1 in TEXT, SPANS are (START END) offsets in TEXT."
+msgstr ""
+"バッファ SOURCE の occur の出力を (TEXT TARGETS SPANS MATCHES LINES) として返す. 一致が無ければ #f.\n"
+"TARGETS は (LINE SOURCE POSITION) (LINE は TEXT の中で 1 から数える), SPANS は TEXT の中の位置 (START END)."
+
+#: lisp/replace.scm
+msgctxt "variable:occur--spans"
+msgid "Alist of the occur buffers and the positions of the matches in them: (BUFFER-NAME (START END) ...)."
+msgstr "occur のバッファと, その中の一致の位置の連想リスト: (BUFFER-NAME (START END) ...)."
+
+#: lisp/replace.scm
+msgctxt "function:occur--run"
+msgid "Show the lines of BUFFERS (default: the current buffer) that match REGEXP in *Occur*."
+msgstr "BUFFERS (既定は今のバッファ) の REGEXP に一致する行を *Occur* に出す."
+
+#: lisp/replace.scm
 msgctxt "function:occur"
 msgid ""
 "Show all lines in the current buffer containing a match for REGEXP, in the *Occur* buffer.\n"
 "With a numeric prefix argument NLINES, also show NLINES lines of context around each match.\n"
-"In the *Occur* buffer, RET goes to the match on the current line."
+"In the *Occur* buffer, RET goes to the match on the current line, and \\[next-error] visits the matches."
 msgstr ""
 "今のバッファで REGEXP に一致する全ての行を, *Occur* バッファに出す.\n"
 "前置の数の引数 NLINES があれば, 各一致の前後 NLINES 行の文脈も出す.\n"
-"*Occur* バッファでは, RET で今の行の一致へ行く."
+"*Occur* バッファでは, RET で今の行の一致へ行き, \\[next-error] で一致を訪ねる."
+
+#: lisp/replace.scm
+msgctxt "function:multi-occur"
+msgid ""
+"Show all lines in the buffers BUFS containing a match for REGEXP, like `occur'.\n"
+"Arguments: BUFS REGEXP [NLINES].  Interactively, read the buffer names one by one (an empty name ends)."
+msgstr ""
+"`occur' のように, バッファ BUFS で REGEXP に一致する全ての行を出す.\n"
+"引数: BUFS REGEXP [NLINES]. 対話的には, バッファの名前を 1 つずつ読む (空の名前で終わる)."
+
+#: lisp/replace.scm
+msgctxt "function:multi-occur-in-matching-buffers"
+msgid ""
+"Show all lines matching REGEXP in the buffers whose file names match BUFREGEXP.\n"
+"Arguments: BUFREGEXP REGEXP [ALLBUFS].  With ALLBUFS (interactively, a prefix argument), match the\n"
+"buffer names instead, including the buffers that do not visit files."
+msgstr ""
+"ファイルの名前が BUFREGEXP に一致するバッファで, REGEXP に一致する全ての行を出す.\n"
+"引数: BUFREGEXP REGEXP [ALLBUFS]. ALLBUFS (対話的には, 前置引数) があれば, 代わりにバッファの\n"
+"名前を比べ, ファイルを訪れていないバッファも含める."
+
+#: lisp/replace.scm
+msgctxt "function:occur--next-change"
+msgid ""
+"Return where the matches of the *Occur* buffer begin or end next after (or before) POSITION, or #f.\n"
+"This is `next-single-property-change' (or `previous-...') of the property `occur-match'."
+msgstr ""
+"*Occur* バッファの一致が, POSITION の後 (か前) で次に始まるか終わる所を返す. 無ければ #f.\n"
+"プロパティ `occur-match' の `next-single-property-change' (か `previous-...') に当たる."
+
+#: lisp/replace.scm
+msgctxt "function:occur--find-match"
+msgid "Move point over N matches of the *Occur* buffer, forward or backward (`occur-find-match')."
+msgstr "*Occur* バッファの一致 N 個を, 前か後ろへ越えて, ポイントを動かす (`occur-find-match')."
+
+#: lisp/replace.scm
+msgctxt "function:occur-next-error"
+msgid "Move to the Nth (backward if N is negative) next match of the current *Occur* buffer, and return its target (SOURCE POSITION)."
+msgstr "今の *Occur* バッファの, N 番目に次の (N が負なら前の) 一致へ動き, その行き先 (SOURCE POSITION) を返す."
 
 #: lisp/replace.scm
 msgctxt "function:occur--current-target"

@@ -592,6 +592,47 @@ fn test_query_replace_and_occur() {
 }
 
 #[test]
+fn test_multi_occur_and_next_error() {
+    let mut fx = Fixture::new();
+    fx.app
+        .eval("(begin (switch-to-buffer \"o2\") (insert \"xfoo\\nfoo\") (switch-to-buffer \"o1\") (insert \"a\\nfoo\") (goto-char 1))")
+        .unwrap();
+    // 初めのバッファは, 今のバッファ (既定の値). 空の名前で, 読むのを終える
+    fx.feed("m u l t i - o c c u r RET RET o 2 RET RET f o o RET");
+    fx.press("M-x");
+    let occur = || "(with-current-buffer \"*Occur*\" (buffer-string))";
+    assert_eq!(
+        fx.app.eval(occur()).unwrap(),
+        "\"3 matches total for \\\"foo\\\":\\n2 matches in buffer: o2\\n      1:xfoo\\n      2:foo\\n1 match in buffer: o1\\n      2:foo\\n\""
+    );
+    // M-g n は, *Occur* の行を順にたどる
+    fx.press("M-g n");
+    assert_eq!(
+        fx.app.eval("(list (buffer-name) (point))").unwrap(),
+        "(\"o2\" 2)"
+    );
+    fx.press("M-g n");
+    fx.press("M-g n");
+    assert_eq!(
+        fx.app.eval("(list (buffer-name) (point))").unwrap(),
+        "(\"o1\" 3)"
+    );
+    fx.press("M-g n");
+    assert_eq!(fx.app.message(), "No more matches");
+    // 名前の合うバッファで探す (前置引数: ファイルでなく, バッファの名前を見る)
+    fx.feed("m u l t i - o c c u r - i n - m a t c h i n g - b u f f e r s RET o 1 RET a RET");
+    fx.press("C-u M-x");
+    assert_eq!(
+        fx.app.eval(occur()).unwrap(),
+        "\"1 match for \\\"a\\\" in buffer: o1\\n      1:a\\n\""
+    );
+    // ファイルを訪れていないバッファは, 前置引数が無ければ選ばない
+    fx.feed("m u l t i - o c c u r - i n - m a t c h i n g - b u f f e r s RET o RET a RET");
+    fx.press("M-x");
+    assert_eq!(fx.app.eval("(get-buffer \"*Occur*\")").unwrap(), "#f");
+}
+
+#[test]
 fn test_highlighted_text_is_underlined() {
     let mut fx = Fixture::new();
     fx.press("f o o SPC b a r");

@@ -531,7 +531,7 @@ msgstr ""
 
 #: lisp/compile.scm
 msgctxt "variable:compile--sources"
-msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep or compilation."
+msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep, compilation or occur."
 msgstr ""
 
 #: lisp/compile.scm
@@ -600,10 +600,20 @@ msgid "Visit the file, line and column (if any) of HIT, in another window if OTH
 msgstr ""
 
 #: lisp/compile.scm
+msgctxt "function:compile--locus-message"
+msgid "Show `KIND locus from BUFFER' like the `next-error' of Emacs (`next-error-verbose')."
+msgstr ""
+
+#: lisp/compile.scm
 msgctxt "function:compile--next-error"
 msgid ""
 "Visit the next (or previous) location of `next-error-last-buffer'.\n"
-"With a number in ARGS, move that many locations."
+"With a number in ARGS, move that many locations; with a third element true, start from the first."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--next-error-1"
+msgid "Visit the COUNTth next (or previous) location of the grep or compilation results in the buffer NAME."
 msgstr ""
 
 #: lisp/compile.scm
@@ -5722,7 +5732,9 @@ msgstr ""
 
 #: lisp/replace.scm
 msgctxt "function:occur--collect"
-msgid "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES), and the number of matches."
+msgid ""
+"Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES LAST-LINE SPANS), and the number of matches.\n"
+"SPANS are the matches in TEXT, as lists (START END) of offsets."
 msgstr ""
 
 #: lisp/replace.scm
@@ -5736,11 +5748,70 @@ msgid "Return the line numbers to show: each matching line (in TEXT-LINES, with 
 msgstr ""
 
 #: lisp/replace.scm
+msgctxt "function:occur--counts"
+msgid "Return `N matches' with ` in M lines' when the numbers differ."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--span-offset"
+msgid "Return where the OFFSET of TEXT lies after the lines of TEXT are prefixed (8 characters each)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--chunk"
+msgid ""
+"Return the occur output for the buffer SOURCE as (TEXT TARGETS SPANS MATCHES LINES), or #f if nothing matches.\n"
+"TARGETS are (LINE SOURCE POSITION) with LINE counted from 1 in TEXT, SPANS are (START END) offsets in TEXT."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:occur--spans"
+msgid "Alist of the occur buffers and the positions of the matches in them: (BUFFER-NAME (START END) ...)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--run"
+msgid "Show the lines of BUFFERS (default: the current buffer) that match REGEXP in *Occur*."
+msgstr ""
+
+#: lisp/replace.scm
 msgctxt "function:occur"
 msgid ""
 "Show all lines in the current buffer containing a match for REGEXP, in the *Occur* buffer.\n"
 "With a numeric prefix argument NLINES, also show NLINES lines of context around each match.\n"
-"In the *Occur* buffer, RET goes to the match on the current line."
+"In the *Occur* buffer, RET goes to the match on the current line, and \\[next-error] visits the matches."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:multi-occur"
+msgid ""
+"Show all lines in the buffers BUFS containing a match for REGEXP, like `occur'.\n"
+"Arguments: BUFS REGEXP [NLINES].  Interactively, read the buffer names one by one (an empty name ends)."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:multi-occur-in-matching-buffers"
+msgid ""
+"Show all lines matching REGEXP in the buffers whose file names match BUFREGEXP.\n"
+"Arguments: BUFREGEXP REGEXP [ALLBUFS].  With ALLBUFS (interactively, a prefix argument), match the\n"
+"buffer names instead, including the buffers that do not visit files."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--next-change"
+msgid ""
+"Return where the matches of the *Occur* buffer begin or end next after (or before) POSITION, or #f.\n"
+"This is `next-single-property-change' (or `previous-...') of the property `occur-match'."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur--find-match"
+msgid "Move point over N matches of the *Occur* buffer, forward or backward (`occur-find-match')."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:occur-next-error"
+msgid "Move to the Nth (backward if N is negative) next match of the current *Occur* buffer, and return its target (SOURCE POSITION)."
 msgstr ""
 
 #: lisp/replace.scm

@@ -207,7 +207,8 @@
 - [x] `M-r` (move-to-window-line-top-bottom): カーソルを、画面の中、上、下の行へ。
 - [x] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置、桁へ (`tests/batch/cases/60-key-commands`)。
 - [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 15)。
-- [ ] `next-error` で、`occur` の結果も使う (`compile` の結果は完了)。`*grep*` の中の、今の行の印 (`=>`) と強調。
+- [x] `next-error` で、`occur` と `multi-occur` の結果も使う (Emacs の `occur-next-error` と同じく、一致の始めと終わりを越えて動く)。
+- [ ] `*grep*` の中の、今の行の印 (`=>`) と強調。
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
 - [x] `C-x C-@` (pop-global-mark)。
@@ -260,7 +261,7 @@
       合わないときの `C-g` (合った所までに戻す), 本文の端で折り返す (`Wrapped I-search`)。
 - [ ] isearch の、合った所の全てを強調する (`isearch-lazy-highlight`) と、合った数を出す (`isearch-lazy-count`)。
 - [x] `M-s w` (isearch-forward-word), `M-s _` (isearch-forward-symbol), `M-s .` (isearch-forward-symbol-at-point), `M-s M-.` (isearch-forward-thing-at-point)。
-- [ ] `multi-occur`。
+- [x] `multi-occur`、`multi-occur-in-matching-buffers` (`lisp/replace.scm`)。Emacs と同じく、後のバッファを先に出し、一致が無ければ `*Occur*` を消す。
 - [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
 - [ ] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く), `zrgrep`、`find-grep`。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
@@ -693,7 +694,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
 - [x] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
 - [x] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
-- [ ] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
+- [x] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
 - [ ] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)

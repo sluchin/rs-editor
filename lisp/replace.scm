@@ -183,7 +183,8 @@ See `query-replace' for the keys."
           (else (loop (+ i 1) n)))))
 
 (define (occur--collect regexp)
-  "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES), and the number of matches."
+  "Return the matching lines of the current buffer as a list of (LINE TEXT POSITION MATCHES LAST-LINE SPANS), and the number of matches.
+SPANS are the matches in TEXT, as lists (START END) of offsets."
   (save-excursion
     (goto-char (point-min))
     (let ((line 1) (line-pos (point-min)) (total 0))
@@ -193,12 +194,14 @@ See `query-replace' for the keys."
                    (me (match-end 0))
                    (begpt (save-excursion (goto-char mb) (line-beginning-position)))
                    (endpt (save-excursion (goto-char me) (line-end-position)))
-                   (matches 1))
+                   (matches 1)
+                   (spans (list (list (- mb begpt) (- me begpt)))))
               (if (= mb me) (if (< (point) endpt) (forward-char 1)))
               ;; 同じ行の, 続きの一致を数える
               (let more ()
                 (when (and (< (point) endpt) (re-search-forward regexp endpt #t))
                   (set! matches (+ matches 1))
+                  (set! spans (cons (list (- (match-beginning 0) begpt) (- (match-end 0) begpt)) spans))
                   (if (= (match-beginning 0) (match-end 0)) (if (< (point) endpt) (forward-char 1)))
                   (more)))
               (set! line (+ line (occur--count-newlines (buffer-substring line-pos begpt))))
@@ -207,7 +210,7 @@ See `query-replace' for the keys."
               (goto-char (max (point) endpt))
               (if (< (point) (point-max)) (forward-char 1))
               (loop (cons (let ((text (buffer-substring begpt endpt)))
-                            (list line text mb matches (+ line (occur--count-newlines text))))
+                            (list line text mb matches (+ line (occur--count-newlines text)) (reverse spans)))
                           acc)))
             (list (reverse acc) total))))))
 
@@ -236,77 +239,213 @@ See `query-replace' for the keys."
                 (loop (cdr rest) shown)
                 (fill (+ i 1) (cons i shown))))))))
 
-(define (occur--run regexp nlines)
-  (let* ((source (buffer-name))
-         (fold (and case-fold-search (replace--no-upper-p regexp #t)))
-         (saved case-fold-search)
-         (found (begin (set! case-fold-search fold)
-                       (unwind-protect (occur--collect regexp) (set! case-fold-search saved))))
-         (matches (car found))
-         (total (cadr found)))
-    (if (null? matches)
-        (message (format "Searched 1 buffer; no matches for \"%s\"" regexp))
-        (let* ((lines (split-string (buffer-string) "\n"))
-               (all-lines (if (equal? (car (reverse lines)) "") (- (length lines) 1) (length lines)))
-               (context (and nlines (> nlines 0) nlines))
-               (header (format "%d match%s%s for \"%s\" in buffer: %s\n"
-                               total (if (= total 1) "" "es")
-                               (if (not (= (length matches) total))
-                                   (format " in %d line%s" (length matches) (if (= (length matches) 1) "" "s"))
-                                   "")
-                               regexp source))
-               (targets '())
+;; 結果は, バッファごとのまとまり (chunk) を作って並べる. Emacs と同じく, 後のバッファが先に来る.
+
+(define (occur--plural n word)
+  (if (= n 1) word (string-append word (if (equal? word "match") "es" "s"))))
+
+(define (occur--counts matches lines)
+  "Return `N matches' with ` in M lines' when the numbers differ."
+  (string-append (format "%d %s" matches (occur--plural matches "match"))
+                 (if (= matches lines) "" (format " in %d %s" lines (occur--plural lines "line")))))
+
+(define (occur--span-offset text offset)
+  "Return where the OFFSET of TEXT lies after the lines of TEXT are prefixed (8 characters each)."
+  (+ 8 offset (* 8 (occur--count-newlines (substring text 0 offset)))))
+
+(define (occur--chunk source regexp nlines multi)
+  "Return the occur output for the buffer SOURCE as (TEXT TARGETS SPANS MATCHES LINES), or #f if nothing matches.
+TARGETS are (LINE SOURCE POSITION) with LINE counted from 1 in TEXT, SPANS are (START END) offsets in TEXT."
+  (with-current-buffer source
+    (let* ((fold (and case-fold-search (replace--no-upper-p regexp #t)))
+           (saved case-fold-search)
+           (found (begin (set! case-fold-search fold)
+                         (unwind-protect (occur--collect regexp) (set! case-fold-search saved))))
+           (matches (car found))
+           (total (cadr found)))
+      (if (null? matches)
+          #f
+          (let* ((lines (split-string (buffer-string) "\n"))
+                 (all-lines (if (equal? (car (reverse lines)) "") (- (length lines) 1) (length lines)))
+                 (context (and nlines (> nlines 0) nlines))
+                 (out (format "%s%s in buffer: %s\n"
+                              (occur--counts total (length matches))
+                              (if multi "" (format " for \"%s\"" regexp))
+                              source))
+                 (targets '())
+                 (spans '())
+                 (out-line 2))
+            (define (add-hit! hit)
+              (set! targets (cons (list out-line source (caddr hit)) targets))
+              (let ((base (string-length out)))
+                (for-each (lambda (span)
+                            (set! spans (cons (list (+ base (occur--span-offset (cadr hit) (car span)))
+                                                    (+ base (occur--span-offset (cadr hit) (cadr span))))
+                                              spans)))
+                          (list-ref hit 5))))
+            (if context
+                ;; 前後の行も出す. 離れた組の間は, 線で分ける
+                (let loop ((shown (occur--lines-of matches all-lines context)) (previous #f))
+                  (when (pair? shown)
+                    (let* ((n (car shown))
+                           (hit (assoc n matches)))
+                      (if (and previous (<= n previous))
+                          (loop (cdr shown) previous)
+                          (begin
+                            (when (and previous (> n (+ previous 1)))
+                              (set! out (string-append out "-------\n"))
+                              (set! out-line (+ out-line 1)))
+                            (if hit (add-hit! hit))
+                            (set! out (string-append out
+                                                     (if hit (occur--pad n) "       :")
+                                                     (occur--indent-continuation (if hit (cadr hit) (list-ref lines (- n 1))))
+                                                     "\n"))
+                            (set! out-line (+ out-line 1 (if hit (- (list-ref hit 4) n) 0)))
+                            (loop (cdr shown) (if hit (list-ref hit 4) n)))))))
+                (for-each (lambda (m)
+                            (add-hit! m)
+                            (set! out (string-append out (occur--pad (car m)) (occur--indent-continuation (cadr m)) "\n"))
+                            (set! out-line (+ out-line 1 (- (list-ref m 4) (car m)))))
+                          matches))
+            (list out (reverse targets) (reverse spans) total (length matches)))))))
+
+(define occur--spans '()
+  "Alist of the occur buffers and the positions of the matches in them: (BUFFER-NAME (START END) ...).")
+
+(define (occur--run regexp nlines . buffers)
+  "Show the lines of BUFFERS (default: the current buffer) that match REGEXP in *Occur*."
+  (if (equal? regexp "")
+      (error "Occur doesn't work with the empty regexp"))
+  (let* ((origin (buffer-name))
+         (names (filter get-buffer (if (pair? buffers) (car buffers) (list origin))))
+         (multi (> (length names) 1))
+         (chunks (filter (lambda (c) c) (map (lambda (name) (occur--chunk name regexp nlines multi)) names)))
+         (total (apply + (map (lambda (c) (list-ref c 3)) chunks)))
+         (name "*Occur*"))
+    (message (format "Searched %d %s; %s %s for \"%s\""
+                     (length names) (occur--plural (length names) "buffer")
+                     (if (= total 0) "no" (number->string total)) (occur--plural total "match") regexp))
+    (if (= total 0)
+        (if (get-buffer name) (kill-buffer name))
+        (let* ((header (if multi
+                           (format "%s total for \"%s\":\n"
+                                   (occur--counts total (apply + (map (lambda (c) (list-ref c 4)) chunks)))
+                                   regexp)
+                           ""))
                (out header)
-               (out-line 2))
-          (if context
-              ;; 前後の行も出す. 離れた組の間は, 線で分ける
-              (let loop ((shown (occur--lines-of matches all-lines context)) (previous #f))
-                (when (pair? shown)
-                  (let* ((n (car shown))
-                         (hit (assoc n matches)))
-                    (if (and previous (<= n previous))
-                        (loop (cdr shown) previous)
-                        (begin
-                          (when (and previous (> n (+ previous 1)))
-                            (set! out (string-append out "-------\n"))
-                            (set! out-line (+ out-line 1)))
-                          (if hit
-                              (set! targets (cons (list out-line source (caddr hit)) targets)))
-                          (set! out (string-append out
-                                                   (if hit (occur--pad n) "       :")
-                                                   (occur--indent-continuation (if hit (cadr hit) (list-ref lines (- n 1))))
-                                                   "\n"))
-                          (set! out-line (+ out-line 1 (if hit (- (list-ref hit 4) n) 0)))
-                          (loop (cdr shown) (if hit (list-ref hit 4) n)))))))
-              (for-each (lambda (m)
-                          (set! targets (cons (list out-line source (caddr m)) targets))
-                          (set! out (string-append out (occur--pad (car m)) (occur--indent-continuation (cadr m)) "\n"))
-                          (set! out-line (+ out-line 1 (- (list-ref m 4) (car m)))))
-                        matches))
-          (let ((name "*Occur*"))
-            (switch-to-buffer name)
-            (delete-region (point-min) (point-max))
-            (insert out)
-            (goto-char (point-min))
-            (set-buffer-modified-p #f)
-            (set! occur--targets (cons (cons name (reverse targets))
-                                       (filter (lambda (e) (not (equal? (car e) name))) occur--targets)))
-            (local-set-key "RET" 'occur-mode-goto-occurrence)
-            (local-set-key "n" 'occur-next)
-            (local-set-key "p" 'occur-prev)
-            (switch-to-buffer source)
-            (display-buffer name 1)
-            (message (format "Searched 1 buffer; %d match%s for \"%s\"" total (if (= total 1) "" "es") regexp)))))))
+               (targets '())
+               (spans '()))
+          ;; 後のバッファを先に置く
+          (for-each (lambda (chunk)
+                      (let ((line (+ 1 (occur--count-newlines out)))
+                            (offset (string-length out)))
+                        (set! targets (append targets
+                                              (map (lambda (t) (cons (+ (car t) line -1) (cdr t))) (cadr chunk))))
+                        (set! spans (append spans
+                                            (map (lambda (sp) (list (+ (car sp) offset 1) (+ (cadr sp) offset 1)))
+                                                 (caddr chunk))))
+                        (set! out (string-append out (car chunk)))))
+                    (reverse chunks))
+          (switch-to-buffer name)
+          (set-buffer-read-only #f)
+          (delete-region (point-min) (point-max))
+          (insert out)
+          (goto-char (point-min))
+          (set-buffer-modified-p #f)
+          (set! occur--targets (cons (cons name targets)
+                                     (filter (lambda (e) (not (equal? (car e) name))) occur--targets)))
+          (set! occur--spans (cons (cons name spans)
+                                   (filter (lambda (e) (not (equal? (car e) name))) occur--spans)))
+          (local-set-key "RET" 'occur-mode-goto-occurrence)
+          (local-set-key "n" 'occur-next)
+          (local-set-key "p" 'occur-prev)
+          (switch-to-buffer origin)
+          (display-buffer name 1)
+          ;; next-error は, この結果をたどる (compile.scm を読んでいれば)
+          (if (fboundp 'compile--set-source)
+              (compile--set-source name "" 1 1 'occur))))))
 
 (define-command (occur . args)
   "Show all lines in the current buffer containing a match for REGEXP, in the *Occur* buffer.
 With a numeric prefix argument NLINES, also show NLINES lines of context around each match.
-In the *Occur* buffer, RET goes to the match on the current line."
+In the *Occur* buffer, RET goes to the match on the current line, and \\[next-error] visits the matches."
   (let ((regexp (if (null? args) (read-string "List lines matching regexp: ") (car args)))
         (nlines (if (or (null? args) (null? (cdr args)))
                     (let ((p (if (null? args) (current-prefix-arg) #f))) (and p (prefix-numeric-value p)))
                     (cadr args))))
     (occur--run regexp nlines)))
+
+(define-command (multi-occur . args)
+  "Show all lines in the buffers BUFS containing a match for REGEXP, like `occur'.
+Arguments: BUFS REGEXP [NLINES].  Interactively, read the buffer names one by one (an empty name ends)."
+  (if (pair? args)
+      (occur--run (cadr args) (if (pair? (cddr args)) (caddr args) #f) (map occur--buffer-name (car args)))
+      (let* ((first (completing-read "First buffer to search: " (buffer-list) #f #t #f #f (buffer-name)))
+             (bufs (let loop ((bufs (list first)))
+                     (let ((next (completing-read "Next buffer to search (RET to end): " (buffer-list) #f #t)))
+                       (if (equal? next "")
+                           (reverse bufs)
+                           (loop (if (member next bufs) bufs (cons next bufs)))))))
+             (regexp (read-string "List lines matching regexp: "))
+             (p (current-prefix-arg)))
+        (occur--run regexp (and p (prefix-numeric-value p)) bufs))))
+
+(define-command (multi-occur-in-matching-buffers . args)
+  "Show all lines matching REGEXP in the buffers whose file names match BUFREGEXP.
+Arguments: BUFREGEXP REGEXP [ALLBUFS].  With ALLBUFS (interactively, a prefix argument), match the
+buffer names instead, including the buffers that do not visit files."
+  (let* ((allbufs (if (pair? args) (and (pair? (cddr args)) (caddr args)) (current-prefix-arg)))
+         (bufregexp (if (pair? args)
+                        (car args)
+                        (read-string (if allbufs
+                                         "List lines in buffers whose names match regexp: "
+                                         "List lines in buffers whose filenames match regexp: "))))
+         (regexp (if (pair? args) (cadr args) (read-string "List lines matching regexp: "))))
+    (occur--run regexp #f
+                (filter (lambda (name)
+                          (let ((file (with-current-buffer name (buffer-file-name))))
+                            (if allbufs
+                                (string-match bufregexp name)
+                                (and file (string-match bufregexp file)))))
+                        (buffer-list)))))
+
+(define (occur--buffer-name buffer)
+  (if (string? buffer) buffer (buffer-name buffer)))
+
+;;; next-error in the *Occur* buffer (`occur-next-error')
+
+(define (occur--next-change position forward)
+  "Return where the matches of the *Occur* buffer begin or end next after (or before) POSITION, or #f.
+This is `next-single-property-change' (or `previous-...') of the property `occur-match'."
+  (let ((spans (let ((entry (assoc (buffer-name) occur--spans))) (if entry (cdr entry) '()))))
+    (if forward
+        (let loop ((rest spans))
+          (cond ((null? rest) #f)
+                ((> (cadr (car rest)) position) (if (<= (caar rest) position) (cadr (car rest)) (caar rest)))
+                (else (loop (cdr rest)))))
+        (let loop ((rest (reverse spans)))
+          (cond ((null? rest) #f)
+                ((< (caar rest) position) (if (<= position (cadr (car rest))) (caar rest) (cadr (car rest))))
+                (else (loop (cdr rest))))))))
+
+(define (occur--in-match? position)
+  (let ((entry (assoc (buffer-name) occur--spans)))
+    (and entry (pair? (filter (lambda (span) (and (<= (car span) position) (< position (cadr span)))) (cdr entry))))))
+
+(define (occur--find-match n forward)
+  "Move point over N matches of the *Occur* buffer, forward or backward (`occur-find-match')."
+  (let loop ((n n))
+    (when (> n 0)
+      (let* ((r (occur--next-change (point) forward))
+             (r (if (and r (occur--in-match? r)) (occur--next-change r forward) r)))
+        (if r (goto-char r) (user-error "No more matches"))
+        (loop (- n 1))))))
+
+(define (occur-next-error n)
+  "Move to the Nth (backward if N is negative) next match of the current *Occur* buffer, and return its target (SOURCE POSITION)."
+  (goto-char (if (< n 0) (line-beginning-position) (line-end-position)))
+  (occur--find-match (abs n) (> n 0))
+  (or (occur--current-target) (error "No occurrence on this line")))
 
 (define (occur--current-target)
   "Return (SOURCE POSITION) of the occurrence on the current line of the *Occur* buffer, or #f."
