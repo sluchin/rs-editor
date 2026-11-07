@@ -205,6 +205,9 @@ With a numeric argument N, move N locations back."
 (define compilation-directory #f
   "The directory of the last `compile' (or of the compilation buffer), used by `recompile'.")
 
+(define compile--directory #f
+  "The directory `compile' runs in instead of that of the current buffer, or #f (`project-compile' sets it).")
+
 (define compilation-arguments #f
   "The command of the last compilation, as a list (COMMAND), or #f.")
 
@@ -286,7 +289,7 @@ true; otherwise uses `compile-command'.  With a prefix argument, always prompts.
                        (else compile-command))))
     (set! compile-command command)
     (compile--save-buffers)
-    (set! compilation-directory #f)
+    (set! compilation-directory compile--directory)
     (compilation-start command)
     #f))
 

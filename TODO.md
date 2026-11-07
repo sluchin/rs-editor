@@ -341,8 +341,10 @@
 - [x] `compile`、`recompile` (`lisp/compile.scm`)。`*compilation*` (compilation-mode) の中の `RET`、`C-c C-c`、`C-o`、`n`、`p`、`M-n`、`M-p`、
       `TAB`、`S-TAB`、`M-{`、`M-}`、`g`、`q`。`next-error` も、その結果をたどる。違い: コマンドは、終わるまで待つ (Emacs は裏で動かす。
       `kill-compilation` は無い)。見つけるメッセージは、GNU の形 (`FILE:LINE:COL:`) と Python の形 (`File "FILE", line LINE`) だけ。
-- [ ] `C-x p ...` (project. `C-x p f` (プロジェクトのファイルを開く), `C-x p g` (プロジェクトの中を探す) など)。
-      プロジェクトの根を探すのは、サイドバーのツリーで実装した (`.git` のある所)。
+- [x] `C-x p ...` (project. `lisp/project.scm`): `f`、`F`、`b`、`d`、`D`、`c`、`k`、`p`、`g`、`G`、`!`、`&`。根は `.git` か `.hg` のある所。
+      ファイルの一覧は、Git なら `git ls-files` (.gitignore のファイルは除く)、そうでなければ根の下の全て。
+      違い: `s`、`e`、`v`、`r`、`x`、`o`、`C-b` は無い。`C-x p p` のメニューは `f`、`g`、`d`、`D`、`b`、`c`。
+      使ったプロジェクトは、ファイルに覚えない (このセッションの間だけ)。`C-x p g` の `*xref*` は `ファイル:行:本文` の行 (Emacs はファイルごとにまとめる)。
 - [ ] `C-x v ...` (vc. バージョン管理。 `C-x v v`、`C-x v =`、`C-x v l` など), `diff`、`ediff`。
 - [ ] `M-$` (ispell-word), `flyspell-mode`: 綴り。
 - [ ] `C-x *` (calc), `calendar`, `C-x m` (compose-mail), `eww`, `M-s M-w` (eww-search-words)。
@@ -689,7 +691,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [x] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [x] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
-- [ ] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
+- [x] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
 - [x] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
 - [ ] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
 - [ ] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。

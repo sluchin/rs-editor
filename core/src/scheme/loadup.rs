@@ -67,4 +67,8 @@ pub const EDITOR_FILES: &[(&str, &str)] = &[
     ),
     ("lisp/xref.scm", include_str!("../../../lisp/xref.scm")),
     ("lisp/info.scm", include_str!("../../../lisp/info.scm")),
+    (
+        "lisp/project.scm",
+        include_str!("../../../lisp/project.scm"),
+    ),
 ];

@@ -854,6 +854,52 @@ fn test_compile_and_next_error() {
 }
 
 #[test]
+fn test_project_commands() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().join("pj");
+    std::fs::create_dir_all(root.join(".git")).unwrap();
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/a.txt"), "foo\n").unwrap();
+    std::fs::write(root.join("b.txt"), "bar foo\n").unwrap();
+    let a = root.join("src/a.txt");
+    let mut fx = Fixture::sized(24, 80, &[a.to_str().unwrap().to_string()]).unwrap();
+    // Git の無い .git (ls-files が失敗する) なら, ディレクトリの下の全てのファイル
+    assert_eq!(
+        fx.app
+            .eval("(map (lambda (f) (file-name-nondirectory f)) (project-files (project-current)))")
+            .unwrap(),
+        "(\"b.txt\" \"a.txt\")"
+    );
+    // C-x p p: プロジェクトを選び, 出したメニューのキーでコマンドを動かす
+    fx.feed("RET x f b . t x t RET");
+    fx.press("C-x p p");
+    assert_eq!(fx.app.eval("(buffer-name)").unwrap(), "\"b.txt\"");
+    // C-x p g: 根から探して, *xref* に出す
+    fx.feed("f o o RET");
+    fx.press("C-x p g");
+    assert!(fx
+        .app
+        .eval("(with-current-buffer \"*xref*\" (buffer-string))")
+        .unwrap()
+        .contains("src/a.txt:1:foo"));
+    // C-x p k: 消すかを尋ねる
+    fx.feed("y e s RET");
+    fx.press("C-x p k");
+    assert_eq!(
+        fx.app.eval("(member \"b.txt\" (buffer-list))").unwrap(),
+        "#f"
+    );
+    // プロジェクトの外では, 使ったプロジェクト (既定は, 最後のもの) かディレクトリを読む
+    assert_eq!(fx.app.eval("(project-current)").unwrap(), "#f");
+    fx.feed("RET");
+    fx.press("C-x p k");
+    assert_eq!(fx.app.message(), "No buffers to kill");
+    fx.feed("RET");
+    fx.press("C-x p D");
+    assert_eq!(fx.app.eval("(buffer-name)").unwrap(), "\"pj\"");
+}
+
+#[test]
 fn test_dired_starts_from_the_directory_of_the_file() {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("a.txt");

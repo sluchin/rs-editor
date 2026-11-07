@@ -2464,12 +2464,15 @@ This command assumes point is not in a string or comment."
              (goto-char (point-min))
              (display-buffer name))))))
 
+(define simple--shell-directory #f
+  "The directory the shell commands run in, or #f for the directory of this editor (`project-shell-command' sets it).")
+
 (define (simple--call-shell-region start end command delete)
   "Run COMMAND with the text from START to END as input, and insert the output at point.
 If DELETE is true, delete that text first.  Return the exit code."
   (let* ((from (min start end))
          (to (max start end))
-         (result (call-shell-command command (buffer-substring from to) #f)))
+         (result (call-shell-command command (buffer-substring from to) simple--shell-directory)))
     (if delete (delete-region from to))
     (insert (cadr result))
     (car result)))
@@ -2520,7 +2523,7 @@ If REPLACE is non-nil, delete the region and insert the output in its place."
                 (with-current-buffer name
                   (set-buffer-read-only #f)
                   (erase-buffer)
-                  (let ((result (call-shell-command command input #f)))
+                  (let ((result (call-shell-command command input simple--shell-directory)))
                     (insert (cadr result))
                     (set! exit-status (car result))))))
           (if (> (with-current-buffer name (buffer-size)) 0)
@@ -2547,7 +2550,7 @@ given), insert the output in the current buffer after point leaving mark after i
            (let* ((start (car (car (regexp-match-positions "[ \t]*&[ \t]*$" command))))
                   (command (substring command 0 start))
                   (name (if (string? output-buffer) output-buffer shell-command-buffer-name-async))
-                  (result (call-shell-command command #f #f)))
+                  (result (call-shell-command command #f simple--shell-directory)))
              (get-buffer-create name)
              (with-current-buffer name
                (set-buffer-read-only #f)
@@ -2563,7 +2566,7 @@ given), insert the output in the current buffer after point leaving mark after i
            ;; Synchronous command with output in the current buffer.
            (barf-if-buffer-read-only)
            (push-mark (point) #t)
-           (let ((result (call-shell-command command #f #f)))
+           (let ((result (call-shell-command command #f simple--shell-directory)))
              (insert (cadr result)))
            ;; Like `exchange-point-and-mark', but without activating the mark.
            (let ((end (point)))

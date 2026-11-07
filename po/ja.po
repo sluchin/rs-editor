@@ -803,6 +803,11 @@ msgid "The directory of the last `compile' (or of the compilation buffer), used 
 msgstr "最後の `compile' (かコンパイルのバッファ) のディレクトリ. `recompile' が使う."
 
 #: lisp/compile.scm
+msgctxt "variable:compile--directory"
+msgid "The directory `compile' runs in instead of that of the current buffer, or #f (`project-compile' sets it)."
+msgstr "`compile' が, 今のバッファのディレクトリの代わりに動く所. 無ければ #f (`project-compile' が設定する)."
+
+#: lisp/compile.scm
 msgctxt "variable:compilation-arguments"
 msgid "The command of the last compilation, as a list (COMMAND), or #f."
 msgstr "最後のコンパイルのコマンド (リスト (COMMAND)). 無ければ #f."
@@ -5818,6 +5823,194 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr "Org のバッファに移る."
 
+#: lisp/project.scm
+msgctxt "variable:project-vc-markers"
+msgid "The names whose presence in a directory makes the directory the root of a project."
+msgstr "ディレクトリにあれば, そのディレクトリをプロジェクトの根にする名前."
+
+#: lisp/project.scm
+msgctxt "variable:project-switch-commands"
+msgid "The commands `project-switch-project' offers: each is (COMMAND LABEL KEY)."
+msgstr "`project-switch-project' が出すコマンド. それぞれは (COMMAND LABEL KEY)."
+
+#: lisp/project.scm
+msgctxt "variable:project--override"
+msgid "The root `project-switch-project' runs its command in, or #f."
+msgstr "`project-switch-project' がコマンドを動かす根. 無ければ #f."
+
+#: lisp/project.scm
+msgctxt "variable:project--list"
+msgid "The roots of the projects used in this session, the newest first."
+msgstr "このセッションで使ったプロジェクトの根 (新しいものが先)."
+
+#: lisp/project.scm
+msgctxt "function:project--directory-name"
+msgid "Return DIR expanded, with a slash at the end."
+msgstr "DIR を広げ, 最後にスラッシュを付けて返す."
+
+#: lisp/project.scm
+msgctxt "function:project--parent"
+msgid "Return the parent of the directory DIR (with a slash at the end), or #f for the root."
+msgstr "ディレクトリ DIR の親 (最後にスラッシュ) を返す. 根なら #f."
+
+#: lisp/project.scm
+msgctxt "function:project--find-root"
+msgid "Return the nearest directory at or above DIR that has one of `project-vc-markers', or #f."
+msgstr "DIR かその上で, `project-vc-markers' のどれかがある一番近いディレクトリを返す. 無ければ #f."
+
+#: lisp/project.scm
+msgctxt "function:project--default-directory"
+msgid "Return the directory of the current buffer (of the Dired buffer, of the visited file, or the home)."
+msgstr "今のバッファのディレクトリ (Dired のバッファの, 訪ねたファイルの, またはホーム) を返す."
+
+#: lisp/project.scm
+msgctxt "function:project--read-directory"
+msgid "Read the root of a project: one of `project--list' or another directory."
+msgstr "プロジェクトの根を読む: `project--list' のどれか, またはほかのディレクトリ."
+
+#: lisp/project.scm
+msgctxt "function:project-current"
+msgid ""
+"Return the project of DIRECTORY (default: that of the current buffer), as (vc BACKEND ROOT).\n"
+"If there is none and MAYBE-PROMPT is true, read a directory and use it as the root; otherwise return #f.\n"
+"The arguments are MAYBE-PROMPT and DIRECTORY."
+msgstr ""
+"DIRECTORY (既定は今のバッファのもの) のプロジェクトを, (vc BACKEND ROOT) として返す.\n"
+"無ければ, MAYBE-PROMPT が真ならディレクトリを読んで根にする. そうでなければ #f を返す.\n"
+"引数は MAYBE-PROMPT と DIRECTORY."
+
+#: lisp/project.scm
+msgctxt "function:project-root"
+msgid "Return the root directory of PROJECT."
+msgstr "PROJECT の根のディレクトリを返す."
+
+#: lisp/project.scm
+msgctxt "function:project-name"
+msgid "Return the name of PROJECT: the name of its root directory."
+msgstr "PROJECT の名前 (根のディレクトリの名前) を返す."
+
+#: lisp/project.scm
+msgctxt "function:project-files"
+msgid ""
+"Return the files of PROJECT (absolute names).\n"
+"For Git, the files `git ls-files' lists (tracked, and untracked but not ignored); otherwise all the files\n"
+"below the root."
+msgstr ""
+"PROJECT のファイル (絶対の名前) を返す.\n"
+"Git なら, `git ls-files' が並べるファイル (管理しているもの, 管理していないが無視しないもの). そうでなければ,\n"
+"根の下の全てのファイル."
+
+#: lisp/project.scm
+msgctxt "function:project-find-file"
+msgid ""
+"Visit a file (with completion) in the current project.\n"
+"The completion candidates are the files of the project, relative to its root."
+msgstr ""
+"今のプロジェクトのファイルを (補完しながら) 訪ねる.\n"
+"補完の候補は, プロジェクトのファイル (根からの名前)."
+
+#: lisp/project.scm
+msgctxt "function:project-or-external-find-file"
+msgid "Visit a file (with completion) in the current project (this editor has no external roots)."
+msgstr "今のプロジェクトのファイルを (補完しながら) 訪ねる (このエディタには, 外の根は無い)."
+
+#: lisp/project.scm
+msgctxt "function:project--directories"
+msgid "Return the directories of the files of PROJECT, and the root, relative to the root."
+msgstr "PROJECT のファイルのディレクトリと根を, 根からの名前で返す."
+
+#: lisp/project.scm
+msgctxt "function:project-find-dir"
+msgid "Start Dired in a directory inside the current project."
+msgstr "今のプロジェクトの中のディレクトリで, Dired を始める."
+
+#: lisp/project.scm
+msgctxt "function:project-dired"
+msgid "Start Dired in the current project's root."
+msgstr "今のプロジェクトの根で, Dired を始める."
+
+#: lisp/project.scm
+msgctxt "function:project--buffer-directory"
+msgid "Return the directory of the buffer NAME: of its file, or of its Dired listing; #f otherwise."
+msgstr "バッファ NAME のディレクトリ (ファイルの, または Dired の一覧の) を返す. そうでなければ #f."
+
+#: lisp/project.scm
+msgctxt "function:project--buffers"
+msgid "Return the names of the buffers of PROJECT: those that visit a file or a directory under its root."
+msgstr "PROJECT のバッファ (根の下のファイルかディレクトリを訪ねるもの) の名前を返す."
+
+#: lisp/project.scm
+msgctxt "function:project-switch-to-buffer"
+msgid ""
+"Display buffer BUFFER-OR-NAME in the selected window.\n"
+"Interactively, read the name among the buffers of the current project; the default is\n"
+"another buffer of the project."
+msgstr ""
+"バッファ BUFFER-OR-NAME を, 選んでいるウィンドウに出す.\n"
+"対話的には, 今のプロジェクトのバッファから名前を読む. 既定は,\n"
+"プロジェクトのほかのバッファ."
+
+#: lisp/project.scm
+msgctxt "function:project-kill-buffers"
+msgid ""
+"Kill the buffers that belong to the current project (those that visit a file or a directory under it).\n"
+"Ask first, unless NO-CONFIRM is true."
+msgstr ""
+"今のプロジェクトのバッファ (根の下のファイルかディレクトリを訪ねるもの) を消す.\n"
+"NO-CONFIRM が真でなければ, 先に尋ねる."
+
+#: lisp/project.scm
+msgctxt "function:project--call-in-root"
+msgid "Call THUNK with the shell commands and `compile' running in the root of PROJECT."
+msgstr "シェルのコマンドと `compile' を PROJECT の根で動かすようにして, THUNK を呼ぶ."
+
+#: lisp/project.scm
+msgctxt "function:project-shell-command"
+msgid "Run `shell-command' in the current project's root directory."
+msgstr "今のプロジェクトの根のディレクトリで, `shell-command' を動かす."
+
+#: lisp/project.scm
+msgctxt "function:project-async-shell-command"
+msgid "Run `async-shell-command' in the current project's root directory."
+msgstr "今のプロジェクトの根のディレクトリで, `async-shell-command' を動かす."
+
+#: lisp/project.scm
+msgctxt "function:project-compile"
+msgid "Run `compile' in the project root."
+msgstr "プロジェクトの根で, `compile' を動かす."
+
+#: lisp/project.scm
+msgctxt "function:project-find-regexp"
+msgid ""
+"Find all matches for REGEXP in the current project's files.\n"
+"Interactively, read the regexp (the default is the symbol at point).  The matches are listed\n"
+"in the *xref* buffer as FILE:LINE:TEXT; \\[next-error] visits them."
+msgstr ""
+"今のプロジェクトのファイルの中で, REGEXP に合う所を全て探す.\n"
+"対話的には, 正規表現を読む (既定は, カーソルの所のシンボル). 合った所は *xref* バッファに\n"
+"FILE:LINE:TEXT として並べる. \\[next-error] で, そこを訪ねる."
+
+#: lisp/project.scm
+msgctxt "function:project-or-external-find-regexp"
+msgid "Find all matches for REGEXP in the current project's files (this editor has no external roots)."
+msgstr "今のプロジェクトのファイルの中で, REGEXP に合う所を全て探す (このエディタには, 外の根は無い)."
+
+#: lisp/project.scm
+msgctxt "function:project-switch-project"
+msgid ""
+"\"Switch\" to another project by running an Emacs command.\n"
+"Read the root of the project, then a key of `project-switch-commands', and run its command\n"
+"in that project."
+msgstr ""
+"Emacs のコマンドを動かして, ほかのプロジェクトへ「切り替える」.\n"
+"プロジェクトの根を読み, 次に `project-switch-commands' のキーを読んで, そのコマンドを\n"
+"そのプロジェクトで動かす."
+
+#: lisp/project.scm
+msgctxt "function:project-forget-project"
+msgid "Remove the root of a project (read in the minibuffer) from the list of known projects."
+msgstr "(ミニバッファで読んだ) プロジェクトの根を, 知っているプロジェクトの一覧から除く."
+
 #: lisp/rect.scm
 msgctxt "variable:killed-rectangle"
 msgid "Rectangle for `yank-rectangle' to insert: a list of strings, one for each line."
@@ -8322,6 +8515,11 @@ msgstr "TEXT を WIDTH 桁で出したときの画面の行数を返す."
 msgctxt "function:simple--display-message-or-buffer"
 msgid "Show the text of the buffer NAME in the echo area if it is short, otherwise display the buffer."
 msgstr "バッファ NAME の本文が短ければエコー領域に出し, そうでなければバッファを出す."
+
+#: lisp/simple.scm
+msgctxt "variable:simple--shell-directory"
+msgid "The directory the shell commands run in, or #f for the directory of this editor (`project-shell-command' sets it)."
+msgstr "シェルのコマンドを動かすディレクトリ. #f なら, このエディタのディレクトリ (`project-shell-command' が設定する)."
 
 #: lisp/simple.scm
 msgctxt "function:simple--call-shell-region"
