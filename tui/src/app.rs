@@ -14,7 +14,7 @@ use rseditor_core::scheme::value::Value;
 
 use crate::render::{render_with, Display};
 use crate::screen::Screen;
-use crate::ui::{next_key, UiHost, UiState};
+use crate::ui::{next_key, wait_key, UiHost, UiState};
 use rseditor_core::sync::LockExt;
 
 /// ターミナルのエディタ.
@@ -115,6 +115,11 @@ impl App {
     pub fn run(&mut self) {
         loop {
             self.draw();
+            // 入力が 30 秒止まったら, 自動保存する (Emacs の `auto-save-timeout`)
+            if !wait_key(&self.state, files::AUTO_SAVE_TIMEOUT) {
+                self.auto_save();
+                continue;
+            }
             match next_key(&self.state) {
                 Some((key, from_screen)) => {
                     // 新しいコマンドの始めのキーは, マクロを終えるコマンドのキーを除くために, 覚える前に知らせる

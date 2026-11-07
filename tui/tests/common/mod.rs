@@ -31,6 +31,16 @@ impl Screen for FakeScreen {
         self.keys.lock().unwrap().pop_front()
     }
 
+    fn wait_key(&mut self, _timeout: std::time::Duration) -> bool {
+        // `<idle>` は, 入力が止まったことにする
+        let mut keys = self.keys.lock().unwrap();
+        let idle = keys.front().is_some_and(|key| key == "<idle>");
+        if idle {
+            keys.pop_front();
+        }
+        !idle
+    }
+
     fn interrupted(&mut self) -> bool {
         let mut keys = self.keys.lock().unwrap();
         let pressed = keys.front().is_some_and(|key| key == "C-g");

@@ -146,6 +146,23 @@ impl Screen for NcursesScreen {
         refresh();
     }
 
+    fn wait_key(&mut self, wait: std::time::Duration) -> bool {
+        timeout(i32::try_from(wait.as_millis()).unwrap_or(i32::MAX));
+        let code = get_wch();
+        timeout(-1);
+        match code {
+            Some(WchResult::Char(code)) => {
+                unget_wch(code);
+                true
+            }
+            Some(WchResult::KeyCode(code)) => {
+                ungetch(code);
+                true
+            }
+            None => false,
+        }
+    }
+
     fn interrupted(&mut self) -> bool {
         timeout(0);
         let code = get_wch();

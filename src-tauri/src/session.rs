@@ -517,7 +517,7 @@ impl<F: Front> Session<F> {
 }
 
 /// 入力が無いまま, 自動保存するまでの時間 (Emacs の `auto-save-timeout`).
-pub const AUTO_SAVE_TIMEOUT: Duration = Duration::from_secs(30);
+pub const AUTO_SAVE_TIMEOUT: Duration = rseditor_core::files::AUTO_SAVE_TIMEOUT;
 
 /// 画面のエディタを動かします: 作って, 初期設定ファイルを読み, 描いてから, 入力を順に処理します.
 /// 入力が `auto_save_timeout` の間無ければ, 自動保存します. 入力の送り手が無くなったら, 終わります.

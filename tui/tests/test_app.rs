@@ -1310,6 +1310,23 @@ fn test_auto_save_every_300_keys() {
 }
 
 #[test]
+fn test_auto_save_when_the_input_stops() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("a.txt");
+    std::fs::write(&file, "hi\n").unwrap();
+    let mut fx = Fixture::sized(12, 30, &[file.to_string_lossy().into_owned()]).unwrap();
+    let auto = dir.path().join("#a.txt#");
+    fx.feed("x");
+    fx.app.run();
+    assert!(!auto.exists());
+    // 入力が止まると, 自動保存する. キーボードマクロのキーは, 待たない
+    fx.feed("<idle>");
+    fx.app.run();
+    assert_eq!(std::fs::read_to_string(&auto).unwrap(), "xhi\n");
+    assert_eq!(fx.app.message(), "Auto-saving...done");
+}
+
+#[test]
 fn test_c_g_stops_a_macro_that_never_fails() {
     let mut fx = Fixture::new();
     // 失敗しないマクロを、失敗するまで繰り返す。画面で C-g を押していれば、止める

@@ -165,7 +165,7 @@
 - [ ] `C-x s` (save-some-buffers): Emacs の問いは、`C-r` (バッファを見る), `C-f`、`d` (違いを見る), `C-h` も受ける。
       バッファの名前とファイルの名前が違えば、両方を出す。
 - [x] 自動保存: Emacs は、300 回キーを押すごとにも保存する (`auto-save-interval`)。今は、書き換えが 30 秒止まったときだけ。
-- [ ] ターミナルのアプリは、入力が 30 秒止まったときの自動保存が無い (300 回キーを押すごとの自動保存だけ。ncurses のキーの読み取りが待ち続けるため)。
+- [x] ターミナルのアプリも、入力が 30 秒止まったときに自動保存する (`Screen::wait_key`)。
       バッファを消すときと、Emacs を終えるときの扱い (`delete-auto-save-files`) も、まだ。
 - [ ] バックアップ: Emacs は、前の版の名前を変えて `名前~` にする (`backup-by-copying` が `nil`)。今は、写す。
 - [ ] `recover-this-file`: Emacs の問いは、`diff` (違いを見る) も受け、自動保存のファイルの一覧を見せる。
@@ -679,7 +679,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] コマンドごと足すもの: `C-x z` (repeat)、`C-x ESC ESC`、`C-u C-SPC` (mark-ring)。小。
 - [x] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
 - [x] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。クリップボード (`select-enable-clipboard`) は、画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない。`hippie-expand` (`lisp/hippie-exp.scm`) は、Emacs の既定の `hippie-expand-try-functions-list` の関数を全て持つ。違い: `try-expand-dabbrev-visible` と `try-expand-whole-kill` は無い。ファイルの名前の補完は `completion-ignored-extensions` を使わない。`try-expand-dabbrev-from-kill` は、kill-ring を `yank-pop` で回した後は、回した位置から読む。
-- [ ] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`)、`rename-visited-file`、`append-to-file`。小〜中。完了: `uniquify` (dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。未完了: ターミナルのアプリの 30 秒の自動保存。
+- [x] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`。dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。小〜中。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [ ] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [ ] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。

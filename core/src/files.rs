@@ -145,6 +145,9 @@ pub fn write_region(
 /// 自動保存するまでのキーの数 (Emacs の `auto-save-interval`).
 pub const AUTO_SAVE_INTERVAL: usize = 300;
 
+/// 入力が無いまま, 自動保存するまでの時間 (Emacs の `auto-save-timeout`).
+pub const AUTO_SAVE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
 /// 画面から読んだキーを 1 つ数えます (キーボードマクロのキーは数えない. Emacs の `num_nonmacro_input_events` と同じ).
 ///
 /// # Arguments

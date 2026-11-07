@@ -74,6 +74,16 @@ impl UiState {
     }
 }
 
+/// キーが来るまで, `timeout` の間だけ待ちます. 打ったことにするキー (キーボードマクロ) があれば, 待たない.
+///
+/// # Returns
+///
+/// キーが来たか (入力が終わったときも `true`).
+pub fn wait_key(state: &Mutex<UiState>, timeout: std::time::Duration) -> bool {
+    let mut state = state.lock_recover();
+    !state.macro_keys.is_empty() || !state.macro_loop.is_empty() || state.screen.wait_key(timeout)
+}
+
 /// キーを 1 つ読みます. キーボードマクロを動かしているなら, そのキー. なければ, 画面から読みます.
 ///
 /// # Returns

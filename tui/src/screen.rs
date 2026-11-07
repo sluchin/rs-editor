@@ -158,6 +158,13 @@ pub trait Screen: Send {
     /// キー. 入力が終わったら `None`.
     fn read_key(&mut self) -> Option<String>;
 
+    /// キーが来るまで、`timeout` の間だけ待ちます. 来たキーは、次の `read_key` が読めるように残します.
+    ///
+    /// # Returns
+    ///
+    /// キーが来たか (入力が終わったときも `true`. 次の `read_key` が `None` を返す).
+    fn wait_key(&mut self, timeout: std::time::Duration) -> bool;
+
     /// 待たずに、`C-g` を押したかを確かめます (キーボードマクロを繰り返している間に、止めるため).
     /// `C-g` なら、読んで捨てて `true`. ほかのキーなら、次の `read_key` が読めるように残して `false`.
     fn interrupted(&mut self) -> bool;
