@@ -823,6 +823,37 @@ fn test_window_prefix_dedication_windmove_and_winner() {
 }
 
 #[test]
+fn test_compile_and_next_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dir.path().join("a.c");
+    std::fs::write(&a, "one\ntwo\nthree\n").unwrap();
+    let mut fx = Fixture::sized(24, 80, &[a.to_str().unwrap().to_string()]).unwrap();
+    // コマンドを動かした出力を *compilation* に出す (コマンドを読まない設定)
+    fx.app
+        .eval("(set! compile-command \"printf 'a.c:3:2: error: e\\\\n'\") (set! compilation-read-command #f)")
+        .unwrap();
+    fx.feed("c o m p i l e RET");
+    fx.press("M-x");
+    assert_eq!(fx.app.message(), "Compilation finished");
+    assert!(fx
+        .app
+        .eval("(with-current-buffer \"*compilation*\" (buffer-string))")
+        .unwrap()
+        .contains("a.c:3:2: error: e"));
+    // C-x ` で, エラーの所へ
+    fx.press("C-x `");
+    assert_eq!(
+        fx.app
+            .eval("(list (buffer-name) (line-number-at-pos) (current-column))")
+            .unwrap(),
+        "(\"a.c\" 3 1)"
+    );
+    // *compilation* の中の g は, もう一度動かす
+    fx.press("C-x o g");
+    assert_eq!(fx.app.message(), "Compilation finished");
+}
+
+#[test]
 fn test_dired_starts_from_the_directory_of_the_file() {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("a.txt");

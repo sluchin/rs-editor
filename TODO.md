@@ -207,7 +207,7 @@
 - [x] `M-r` (move-to-window-line-top-bottom): カーソルを、画面の中、上、下の行へ。
 - [x] `M-g c` (goto-char), `M-g TAB` (move-to-column): 位置、桁へ (`tests/batch/cases/60-key-commands`)。
 - [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 15)。
-- [ ] `next-error` で、`compile` と `occur` の結果も使う。`*grep*` の中の、今の行の印 (`=>`) と強調。
+- [ ] `next-error` で、`occur` の結果も使う (`compile` の結果は完了)。`*grep*` の中の、今の行の印 (`=>`) と強調。
 - [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
 - [x] `C-x C-@` (pop-global-mark)。
@@ -338,7 +338,10 @@
 - [ ] `delete-selection-mode`、`electric-pair-mode`、`electric-indent-mode` (既定で有効。 `RET` で字下げする、は実装済み), `show-paren-mode` の設定。
 - [ ] `prog-mode`。
 - [ ] `shell`, `eshell`, `term`。
-- [ ] `compile`、`recompile`、`C-x p ...` (project. `C-x p f` (プロジェクトのファイルを開く), `C-x p g` (プロジェクトの中を探す) など)。
+- [x] `compile`、`recompile` (`lisp/compile.scm`)。`*compilation*` (compilation-mode) の中の `RET`、`C-c C-c`、`C-o`、`n`、`p`、`M-n`、`M-p`、
+      `TAB`、`S-TAB`、`M-{`、`M-}`、`g`、`q`。`next-error` も、その結果をたどる。違い: コマンドは、終わるまで待つ (Emacs は裏で動かす。
+      `kill-compilation` は無い)。見つけるメッセージは、GNU の形 (`FILE:LINE:COL:`) と Python の形 (`File "FILE", line LINE`) だけ。
+- [ ] `C-x p ...` (project. `C-x p f` (プロジェクトのファイルを開く), `C-x p g` (プロジェクトの中を探す) など)。
       プロジェクトの根を探すのは、サイドバーのツリーで実装した (`.git` のある所)。
 - [ ] `C-x v ...` (vc. バージョン管理。 `C-x v v`、`C-x v =`、`C-x v l` など), `diff`、`ediff`。
 - [ ] `M-$` (ispell-word), `flyspell-mode`: 綴り。

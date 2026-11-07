@@ -648,9 +648,50 @@ msgid "The position where the locations of `next-error-last-buffer' end."
 msgstr "`next-error-last-buffer' の場所が終わる位置."
 
 #: lisp/compile.scm
+msgctxt "variable:compile--sources"
+msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep or compilation."
+msgstr "場所のあるバッファ. それぞれは (NAME DIRECTORY START END KIND). KIND は grep か compilation."
+
+#: lisp/compile.scm
 msgctxt "function:compile--set-source"
-msgid "Make the buffer NAME the source of `next-error': its locations lie between START and END."
-msgstr "バッファ NAME を `next-error' の元にする. 場所は START から END の間にある."
+msgid ""
+"Make the buffer NAME the source of `next-error': its locations lie between START and END.\n"
+"KIND is grep (the default; lines `FILE:LINE:TEXT') or compilation (lines that match\n"
+"`compilation-error-regexp-alist')."
+msgstr ""
+"バッファ NAME を `next-error' の元にする. 場所は START から END の間にある.\n"
+"KIND は grep (既定. `FILE:LINE:TEXT' の行) か compilation\n"
+"(`compilation-error-regexp-alist' に合う行)."
+
+#: lisp/compile.scm
+msgctxt "function:compile--source"
+msgid "Return the entry of `compile--sources' for the buffer NAME, or #f."
+msgstr "バッファ NAME の `compile--sources' の要素を返す. 無ければ #f."
+
+#: lisp/compile.scm
+msgctxt "function:compile--use-source"
+msgid "Make the buffer NAME `next-error-last-buffer', with its directory and region of locations."
+msgstr "バッファ NAME を, そのディレクトリと場所の範囲とともに, `next-error-last-buffer' にする."
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-error-regexp-alist"
+msgid ""
+"The messages `compile' and `next-error' find in the compilation output.\n"
+"Each is (REGEXP FILE LINE COLUMN): the numbers of the groups of the file name, the line and the\n"
+"column (#f if there is none).  The default forms are those of Python (`File \"FILE\", line LINE')\n"
+"and GNU (`FILE:LINE:COL:', `FILE:LINE.COL:' or `FILE:LINE:').  For the messages of Rust, add\n"
+"(\"^ *--> ([^:\\n ]+):([0-9]+):([0-9]+)\" 1 2 3)."
+msgstr ""
+"`compile' と `next-error' が, コンパイルの出力の中で見つけるメッセージ.\n"
+"それぞれは (REGEXP FILE LINE COLUMN). ファイルの名前, 行, 桁 (無ければ #f) の\n"
+"括弧の番号. 既定の形は, Python (`File \"FILE\", line LINE')\n"
+"と GNU (`FILE:LINE:COL:', `FILE:LINE.COL:', `FILE:LINE:'). Rust のメッセージには,\n"
+"(\"^ *--> ([^:\\n ]+):([0-9]+):([0-9]+)\" 1 2 3) を足す."
+
+#: lisp/compile.scm
+msgctxt "function:compile--compilation-hit"
+msgid "Return (FILE LINE COLUMN) if the line TEXT is a message of `compilation-error-regexp-alist', or #f."
+msgstr "行 TEXT が `compilation-error-regexp-alist' のメッセージなら, (FILE LINE COLUMN) を返す. そうでなければ #f."
 
 #: lisp/compile.scm
 msgctxt "function:compile--hit"
@@ -661,6 +702,11 @@ msgstr "行 TEXT が `FILE:LINE:TEXT' なら (FILE LINE) を返す. 違えば #f
 msgctxt "function:compile--line-hit"
 msgid "Return the location on the line at point, or #f if the line is outside the locations."
 msgstr "点の行にある場所を返す. 行が場所の範囲の外なら #f."
+
+#: lisp/compile.scm
+msgctxt "function:compile--kind"
+msgid "Return the kind (grep or compilation) of the locations of the buffer NAME."
+msgstr "バッファ NAME の場所の種類 (grep か compilation) を返す."
 
 #: lisp/compile.scm
 msgctxt "function:compile--scan"
@@ -678,33 +724,200 @@ msgstr "`grep' が始めるディレクトリを返す (Dired のバッファな
 
 #: lisp/compile.scm
 msgctxt "function:compile--visit"
-msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
-msgstr "HIT のファイルと行を訪ねる. OTHER-WINDOW なら別の窓で."
+msgid "Visit the file, line and column (if any) of HIT, in another window if OTHER-WINDOW."
+msgstr "HIT のファイルと行と桁 (あれば) を訪ねる. OTHER-WINDOW なら別の窓で."
 
 #: lisp/compile.scm
 msgctxt "function:compile--next-error"
-msgid "Visit the next (or previous) location of `next-error-last-buffer'."
-msgstr "`next-error-last-buffer' の, 次(前)の場所を訪ねる."
+msgid ""
+"Visit the next (or previous) location of `next-error-last-buffer'.\n"
+"With a number in ARGS, move that many locations."
+msgstr ""
+"`next-error-last-buffer' の, 次(前)の場所を訪ねる.\n"
+"ARGS に数があれば, その数だけ動く."
 
 #: lisp/compile.scm
 msgctxt "function:next-error"
-msgid "Visit the next location of the grep (or xref) results."
-msgstr "grep (か xref)の結果の, 次の場所を訪ねる."
+msgid ""
+"Visit the next location of the compilation, grep (or xref) results.\n"
+"With a numeric argument N, move N locations (backward if N is negative)."
+msgstr ""
+"コンパイル, grep (か xref)の結果の, 次の場所を訪ねる.\n"
+"数の引数 N があれば, N 個動く (負なら後ろへ)."
 
 #: lisp/compile.scm
 msgctxt "function:previous-error"
-msgid "Visit the previous location of the grep (or xref) results."
-msgstr "grep (か xref)の結果の, 前の場所を訪ねる."
+msgid ""
+"Visit the previous location of the compilation, grep (or xref) results.\n"
+"With a numeric argument N, move N locations back (forward if N is negative)."
+msgstr ""
+"コンパイル, grep (か xref)の結果の, 前の場所を訪ねる.\n"
+"数の引数 N があれば, N 個戻る (負なら前へ)."
 
 #: lisp/compile.scm
 msgctxt "function:first-error"
-msgid "Visit the first location of the grep (or xref) results."
-msgstr "grep (か xref)の結果の, 最初の場所を訪ねる."
+msgid "Visit the first location of the compilation, grep (or xref) results."
+msgstr "コンパイル, grep (か xref)の結果の, 最初の場所を訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:compile--no-select"
+msgid "Call THUNK (that visits a location), then select the window of `next-error-last-buffer' again."
+msgstr "THUNK (場所を訪ねる) を呼び, `next-error-last-buffer' の窓を選び直す."
+
+#: lisp/compile.scm
+msgctxt "function:next-error-no-select"
+msgid ""
+"Move point to the next location in the results, and display the source in another window.\n"
+"With a numeric argument N, move N locations."
+msgstr ""
+"結果の次の場所へカーソルを動かし, 元を別の窓に出す.\n"
+"数の引数 N があれば, N 個動く."
+
+#: lisp/compile.scm
+msgctxt "function:previous-error-no-select"
+msgid ""
+"Move point to the previous location in the results, and display the source in another window.\n"
+"With a numeric argument N, move N locations back."
+msgstr ""
+"結果の前の場所へカーソルを動かし, 元を別の窓に出す.\n"
+"数の引数 N があれば, N 個戻る."
 
 #: lisp/compile.scm
 msgctxt "function:compile-goto-error"
 msgid "Visit the location on the current line of the results, in another window."
 msgstr "結果の今の行にある場所を, 別の窓で訪ねる."
+
+#: lisp/compile.scm
+msgctxt "variable:compile-command"
+msgid "The last shell command used to do a compilation; default for next compilation."
+msgstr "最後のコンパイルに使ったシェルのコマンド. 次のコンパイルの既定."
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-read-command"
+msgid "True means `compile' reads the compilation command to use (otherwise, only with a prefix argument)."
+msgstr "真なら, `compile' は使うコマンドを読む (偽なら, 前置引数があるときだけ)."
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-directory"
+msgid "The directory of the last `compile' (or of the compilation buffer), used by `recompile'."
+msgstr "最後の `compile' (かコンパイルのバッファ) のディレクトリ. `recompile' が使う."
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-arguments"
+msgid "The command of the last compilation, as a list (COMMAND), or #f."
+msgstr "最後のコンパイルのコマンド (リスト (COMMAND)). 無ければ #f."
+
+#: lisp/compile.scm
+msgctxt "function:compile--duration"
+msgid "Return the duration ELAPSED (seconds) as Emacs writes it: `0.12 s', `12.3 s' or `1:02:03'."
+msgstr "かかった時間 ELAPSED (秒) を, Emacs の書き方 (`0.12 s', `12.3 s', `1:02:03') で返す."
+
+#: lisp/compile.scm
+msgctxt "function:compile--fixed"
+msgid "Return X rounded to 1/SCALE (10 or 100), with the digits after the point."
+msgstr "X を 1/SCALE (10 か 100) に丸めて, 小数点の後の数字とともに返す."
+
+#: lisp/compile.scm
+msgctxt "function:compile--save-buffers"
+msgid "Ask whether to save the modified file buffers, if there are any."
+msgstr "変更したファイルのバッファがあれば, 保存するかを尋ねる."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-start"
+msgid ""
+"Run COMMAND in the shell and show its output in the *compilation* buffer.\n"
+"The output shows in another window; `next-error' visits the messages in it.  Return the buffer name."
+msgstr ""
+"シェルで COMMAND を動かし, その出力を *compilation* バッファに出す.\n"
+"出力は別の窓に出る. `next-error' は, その中のメッセージを訪ねる. バッファの名前を返す."
+
+#: lisp/compile.scm
+msgctxt "function:compile"
+msgid ""
+"Compile the program including the current buffer.  Default: run `make'.\n"
+"Runs COMMAND, a shell command, in the directory of the current buffer, and shows the\n"
+"output in the buffer `*compilation*'.  You can then use the command \\[next-error]\n"
+"to find the next error message and move to the source code that caused it.\n"
+"Interactively, prompts for the command if the variable `compilation-read-command' is\n"
+"true; otherwise uses `compile-command'.  With a prefix argument, always prompts."
+msgstr ""
+"今のバッファを含むプログラムをコンパイルする. 既定は `make' を動かす.\n"
+"シェルのコマンド COMMAND を今のバッファのディレクトリで動かし, その出力を\n"
+"バッファ `*compilation*' に出す. その後, コマンド \\[next-error] で\n"
+"次のエラーのメッセージを見つけ, その元のコードへ移れる.\n"
+"対話的には, 変数 `compilation-read-command' が真ならコマンドを読む.\n"
+"そうでなければ `compile-command' を使う. 前置引数があれば, いつも読む."
+
+#: lisp/compile.scm
+msgctxt "function:recompile"
+msgid ""
+"Re-compile the program including the current buffer.\n"
+"Run the command of the last compilation again in its directory (otherwise, `compile-command'\n"
+"in the directory of the current buffer).  With a prefix argument, edit the command first."
+msgstr ""
+"今のバッファを含むプログラムを, もう一度コンパイルする.\n"
+"最後のコンパイルのコマンドを, そのディレクトリでもう一度動かす (無ければ, `compile-command'\n"
+"を今のバッファのディレクトリで). 前置引数があれば, 先にコマンドを直す."
+
+#: lisp/compile.scm
+msgctxt "function:compile--scan-in-buffer"
+msgid "Move point to the COUNTth next (or previous) message in this buffer, without visiting it."
+msgstr "このバッファの COUNT 番目の次(前)のメッセージへカーソルを動かす. 元は訪ねない."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-next-error"
+msgid ""
+"Move point to the next error in the compilation buffer.\n"
+"With a numeric argument N, move N errors (backward if N is negative).\n"
+"Does not visit the source."
+msgstr ""
+"コンパイルのバッファの, 次のエラーへカーソルを動かす.\n"
+"数の引数 N があれば, N 個動く (負なら後ろへ).\n"
+"元は訪ねない."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-previous-error"
+msgid ""
+"Move point to the previous error in the compilation buffer.\n"
+"With a numeric argument N, move N errors back (forward if N is negative).\n"
+"Does not visit the source."
+msgstr ""
+"コンパイルのバッファの, 前のエラーへカーソルを動かす.\n"
+"数の引数 N があれば, N 個戻る (負なら前へ).\n"
+"元は訪ねない."
+
+#: lisp/compile.scm
+msgctxt "function:compile--file-step"
+msgid "Move to the first message (going FORWARD or back) about another file than the message at point."
+msgstr "(FORWARD なら前へ, そうでなければ後ろへ) カーソルの所のメッセージと別のファイルの, 最初のメッセージへ動く."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-next-file"
+msgid "Move point to the next error for a different file than the current one."
+msgstr "今のものと別のファイルの, 次のエラーへカーソルを動かす."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-previous-file"
+msgid "Move point to the previous error for a different file than the current one."
+msgstr "今のものと別のファイルの, 前のエラーへカーソルを動かす."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-display-error"
+msgid "Display the source for current error in another window, without selecting it."
+msgstr "今のエラーの元を別の窓に出す (その窓は選ばない)."
+
+#: lisp/compile.scm
+msgctxt "function:compilation-mode"
+msgid ""
+"Major mode for compilation log buffers.\n"
+"RET visits the source of the error message on the line, n and p move to the next and previous\n"
+"messages and show their source, M-n and M-p (also TAB and S-TAB) only move, M-{ and M-}\n"
+"move to the messages of another file, g runs the compilation again, and q quits the window."
+msgstr ""
+"コンパイルの記録のバッファのメジャーモード.\n"
+"RET は行のエラーのメッセージの元を訪ね, n と p は次と前の\n"
+"メッセージへ動いて元を出し, M-n と M-p (TAB と S-TAB も) は動くだけ, M-{ と M-} は\n"
+"別のファイルのメッセージへ動き, g はコンパイルをもう一度動かし, q は窓をやめる."
 
 #: lisp/compile.scm
 msgctxt "function:grep--home-name"

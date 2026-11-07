@@ -530,8 +530,41 @@ msgid "The position where the locations of `next-error-last-buffer' end."
 msgstr ""
 
 #: lisp/compile.scm
+msgctxt "variable:compile--sources"
+msgid "The buffers with locations: each is (NAME DIRECTORY START END KIND), where KIND is grep or compilation."
+msgstr ""
+
+#: lisp/compile.scm
 msgctxt "function:compile--set-source"
-msgid "Make the buffer NAME the source of `next-error': its locations lie between START and END."
+msgid ""
+"Make the buffer NAME the source of `next-error': its locations lie between START and END.\n"
+"KIND is grep (the default; lines `FILE:LINE:TEXT') or compilation (lines that match\n"
+"`compilation-error-regexp-alist')."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--source"
+msgid "Return the entry of `compile--sources' for the buffer NAME, or #f."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--use-source"
+msgid "Make the buffer NAME `next-error-last-buffer', with its directory and region of locations."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-error-regexp-alist"
+msgid ""
+"The messages `compile' and `next-error' find in the compilation output.\n"
+"Each is (REGEXP FILE LINE COLUMN): the numbers of the groups of the file name, the line and the\n"
+"column (#f if there is none).  The default forms are those of Python (`File \"FILE\", line LINE')\n"
+"and GNU (`FILE:LINE:COL:', `FILE:LINE.COL:' or `FILE:LINE:').  For the messages of Rust, add\n"
+"(\"^ *--> ([^:\\n ]+):([0-9]+):([0-9]+)\" 1 2 3)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--compilation-hit"
+msgid "Return (FILE LINE COLUMN) if the line TEXT is a message of `compilation-error-regexp-alist', or #f."
 msgstr ""
 
 #: lisp/compile.scm
@@ -542,6 +575,11 @@ msgstr ""
 #: lisp/compile.scm
 msgctxt "function:compile--line-hit"
 msgid "Return the location on the line at point, or #f if the line is outside the locations."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--kind"
+msgid "Return the kind (grep or compilation) of the locations of the buffer NAME."
 msgstr ""
 
 #: lisp/compile.scm
@@ -558,32 +596,168 @@ msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:compile--visit"
-msgid "Visit the file and line of HIT, in another window if OTHER-WINDOW."
+msgid "Visit the file, line and column (if any) of HIT, in another window if OTHER-WINDOW."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:compile--next-error"
-msgid "Visit the next (or previous) location of `next-error-last-buffer'."
+msgid ""
+"Visit the next (or previous) location of `next-error-last-buffer'.\n"
+"With a number in ARGS, move that many locations."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:next-error"
-msgid "Visit the next location of the grep (or xref) results."
+msgid ""
+"Visit the next location of the compilation, grep (or xref) results.\n"
+"With a numeric argument N, move N locations (backward if N is negative)."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:previous-error"
-msgid "Visit the previous location of the grep (or xref) results."
+msgid ""
+"Visit the previous location of the compilation, grep (or xref) results.\n"
+"With a numeric argument N, move N locations back (forward if N is negative)."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:first-error"
-msgid "Visit the first location of the grep (or xref) results."
+msgid "Visit the first location of the compilation, grep (or xref) results."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--no-select"
+msgid "Call THUNK (that visits a location), then select the window of `next-error-last-buffer' again."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:next-error-no-select"
+msgid ""
+"Move point to the next location in the results, and display the source in another window.\n"
+"With a numeric argument N, move N locations."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:previous-error-no-select"
+msgid ""
+"Move point to the previous location in the results, and display the source in another window.\n"
+"With a numeric argument N, move N locations back."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:compile-goto-error"
 msgid "Visit the location on the current line of the results, in another window."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:compile-command"
+msgid "The last shell command used to do a compilation; default for next compilation."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-read-command"
+msgid "True means `compile' reads the compilation command to use (otherwise, only with a prefix argument)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-directory"
+msgid "The directory of the last `compile' (or of the compilation buffer), used by `recompile'."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "variable:compilation-arguments"
+msgid "The command of the last compilation, as a list (COMMAND), or #f."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--duration"
+msgid "Return the duration ELAPSED (seconds) as Emacs writes it: `0.12 s', `12.3 s' or `1:02:03'."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--fixed"
+msgid "Return X rounded to 1/SCALE (10 or 100), with the digits after the point."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--save-buffers"
+msgid "Ask whether to save the modified file buffers, if there are any."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-start"
+msgid ""
+"Run COMMAND in the shell and show its output in the *compilation* buffer.\n"
+"The output shows in another window; `next-error' visits the messages in it.  Return the buffer name."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile"
+msgid ""
+"Compile the program including the current buffer.  Default: run `make'.\n"
+"Runs COMMAND, a shell command, in the directory of the current buffer, and shows the\n"
+"output in the buffer `*compilation*'.  You can then use the command \\[next-error]\n"
+"to find the next error message and move to the source code that caused it.\n"
+"Interactively, prompts for the command if the variable `compilation-read-command' is\n"
+"true; otherwise uses `compile-command'.  With a prefix argument, always prompts."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:recompile"
+msgid ""
+"Re-compile the program including the current buffer.\n"
+"Run the command of the last compilation again in its directory (otherwise, `compile-command'\n"
+"in the directory of the current buffer).  With a prefix argument, edit the command first."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--scan-in-buffer"
+msgid "Move point to the COUNTth next (or previous) message in this buffer, without visiting it."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-next-error"
+msgid ""
+"Move point to the next error in the compilation buffer.\n"
+"With a numeric argument N, move N errors (backward if N is negative).\n"
+"Does not visit the source."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-previous-error"
+msgid ""
+"Move point to the previous error in the compilation buffer.\n"
+"With a numeric argument N, move N errors back (forward if N is negative).\n"
+"Does not visit the source."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compile--file-step"
+msgid "Move to the first message (going FORWARD or back) about another file than the message at point."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-next-file"
+msgid "Move point to the next error for a different file than the current one."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-previous-file"
+msgid "Move point to the previous error for a different file than the current one."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-display-error"
+msgid "Display the source for current error in another window, without selecting it."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:compilation-mode"
+msgid ""
+"Major mode for compilation log buffers.\n"
+"RET visits the source of the error message on the line, n and p move to the next and previous\n"
+"messages and show their source, M-n and M-p (also TAB and S-TAB) only move, M-{ and M-}\n"
+"move to the messages of another file, g runs the compilation again, and q quits the window."
 msgstr ""
 
 #: lisp/compile.scm
