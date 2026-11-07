@@ -324,9 +324,9 @@
 ### Lisp
 
 - [x] `M-.` / `M-,` / `M-?` / `C-M-.` (xref-find-definitions など): 定義へ移る。
-- [ ] `C-M-x` (eval-defun), `eval-buffer`、`eval-region`、`load-file`、`C-u C-x C-e` (結果を本文に入れる)。
-- [ ] `ielm` (Lisp の対話の画面), `*scratch*` での `C-j` (eval-print-last-sexp)。
-- [ ] `eldoc-mode` (関数の引数をミニバッファに出す), `check-parens`。
+- [x] `C-M-x` (eval-defun), `eval-buffer`、`eval-region`、`load-file`、`C-u C-x C-e` (結果を本文に入れる)。メジャーモードのキー (`keymap::mode_keymap`) で、`lisp-interaction-mode` と `scheme-mode` の `C-M-x`。値の整数の書き方 (`7 (#o7, #x7, ?\C-g)`) は無い。
+- [ ] `ielm` (Lisp の対話の画面)。`*scratch*` での `C-j` (eval-print-last-sexp) は完了。
+- [ ] `eldoc-mode` (関数の引数をミニバッファに出す)。`check-parens` は完了。
 
 ### モードとそのほか
 
@@ -682,7 +682,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`。dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。小〜中。
 - [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
 - [x] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
-- [ ] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
+- [x] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
 - [ ] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
 - [ ] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
 - [ ] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。

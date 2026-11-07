@@ -277,16 +277,19 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 読んでいるキーを引きます. バッファだけのキー (`local-set-key`) を, 全体の割り当てより先に引く.
     fn lookup_keys(&self) -> Lookup {
-        let local = self.host.editor().current_buffer().local_keys().to_vec();
-        if !local.is_empty() {
-            let mut keymap = Keymap::empty();
-            for (keys, command) in &local {
-                keymap.bind(keys, command);
-            }
-            let found = keymap.lookup(&self.pending.lock_recover());
-            if found != Lookup::Unbound {
-                return found;
-            }
+        let (local, mode) = {
+            let editor = self.host.editor();
+            let buffer = editor.current_buffer();
+            (buffer.local_keys().to_vec(), buffer.major_mode())
+        };
+        // バッファのキー (`local-set-key`), メジャーモードのキー, 全体のキーの順に引く
+        let mut keymap = crate::keymap::mode_keymap(&mode);
+        for (keys, command) in &local {
+            keymap.bind(keys, command);
+        }
+        let found = keymap.lookup(&self.pending.lock_recover());
+        if found != Lookup::Unbound {
+            return found;
         }
         self.keymap
             .lock_recover()

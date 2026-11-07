@@ -1,6 +1,6 @@
 //! キーの割り当て (`keymap`) のテスト.
 
-use rseditor_core::keymap::{from_codemirror, unshifted, Keymap, Lookup};
+use rseditor_core::keymap::{from_codemirror, mode_keymap, unshifted, Keymap, Lookup};
 
 fn keys(text: &str) -> Vec<String> {
     text.split(' ').map(str::to_string).collect()
@@ -78,6 +78,28 @@ fn test_unshifted() {
     assert_eq!(unshifted("C-v"), None);
     assert_eq!(unshifted("S"), None);
     assert_eq!(unshifted("s-a"), None);
+}
+
+#[test]
+fn test_mode_keymap() {
+    let keys = |keys: &str| keys.split(' ').map(str::to_string).collect::<Vec<_>>();
+    let interaction = mode_keymap("lisp-interaction-mode");
+    assert_eq!(
+        interaction.lookup(&keys("C-j")),
+        Lookup::Command("eval-print-last-sexp".to_string())
+    );
+    assert_eq!(
+        mode_keymap("scheme-mode").lookup(&keys("C-M-x")),
+        Lookup::Command("eval-defun".to_string())
+    );
+    assert_eq!(
+        mode_keymap("scheme-mode").lookup(&keys("C-j")),
+        Lookup::Unbound
+    );
+    assert_eq!(
+        mode_keymap("text-mode").lookup(&keys("C-M-x")),
+        Lookup::Unbound
+    );
 }
 
 #[test]

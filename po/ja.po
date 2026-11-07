@@ -7937,8 +7937,88 @@ msgstr "式をミニバッファで読んで, 評価して, 値を出す."
 
 #: lisp/simple.scm
 msgctxt "function:eval-last-sexp"
-msgid "Evaluate the sexp before point and show its value in the echo area."
-msgstr "カーソルの前の S 式を評価し, 値をエコー領域に出す."
+msgid ""
+"Evaluate sexp before point; print value in the echo area.\n"
+"If EVAL-LAST-SEXP-ARG-INTERNAL (interactively, the prefix argument) is non-nil,\n"
+"print the value into the current buffer instead.  Return the value."
+msgstr ""
+"点の前の S 式を評価し, 値をエコー領域に出す.\n"
+"EVAL-LAST-SEXP-ARG-INTERNAL (対話的には, 前置引数) が nil でなければ, 値を今のバッファに入れる. 値を返す."
+
+#: lisp/simple.scm
+msgctxt "function:eval-print-last-sexp"
+msgid "Evaluate sexp before point; print value into current buffer."
+msgstr "点の前の S 式を評価し, 値を今のバッファに入れる."
+
+#: lisp/simple.scm
+msgctxt "function:simple--eval-forms"
+msgid ""
+"Evaluate the forms between START and END in order; message each value if PRINTFLAG.\n"
+"Return the value of the last form."
+msgstr ""
+"START から END までの式を順に評価する. PRINTFLAG なら, それぞれの値をエコー領域に出す.\n"
+"最後の式の値を返す."
+
+#: lisp/simple.scm
+msgctxt "function:eval-region"
+msgid ""
+"Execute the region as Lisp code.\n"
+"When called from programs, expects two arguments,\n"
+"giving starting and ending indices in the current buffer\n"
+"of the text to be executed.\n"
+"Programs can pass third argument PRINTFLAG which controls output:\n"
+" nil means discard it; anything else, show each value in the echo area."
+msgstr ""
+"リージョンを Lisp のコードとして実行する.\n"
+"プログラムから呼ぶときは, 実行する本文の, 今のバッファの中の始まりと終わりの位置の 2 つの引数を渡す.\n"
+"3 つ目の引数 PRINTFLAG は出力を決める:\n"
+" nil なら捨てる. それ以外なら, それぞれの値をエコー領域に出す."
+
+#: lisp/simple.scm
+msgctxt "function:eval-buffer"
+msgid ""
+"Execute the accessible portion of current buffer as Lisp code.\n"
+"When called from a Lisp program (i.e., not interactively), this\n"
+"function accepts up to two optional arguments: BUFFER, the buffer\n"
+"to evaluate (nil means use current buffer), and PRINTFLAG,\n"
+"which controls output (see `eval-region')."
+msgstr ""
+"今のバッファの見えている部分を, Lisp のコードとして実行する.\n"
+"Lisp のプログラムから (対話的でなく) 呼ぶときは, 2 つまでの省ける引数を取る: BUFFER は評価するバッファ\n"
+"(nil なら今のバッファ), PRINTFLAG は出力を決める (`eval-region' を見よ)."
+
+#: lisp/simple.scm
+msgctxt "function:load-file"
+msgid "Load the Lisp file named FILE."
+msgstr "FILE という名前の Lisp のファイルを読み込む."
+
+#: lisp/simple.scm
+msgctxt "function:eval-defun"
+msgid ""
+"Evaluate the top-level form containing point, or after point.\n"
+"If point isn't in a top-level form, evaluate the first top-level\n"
+"form after point.  If there is no top-level form after point,\n"
+"evaluate the first preceding top-level form.\n"
+"The result of evaluation is displayed in the echo area, and returned."
+msgstr ""
+"点を含む, または点の後ろの, 一番外側の式を評価する.\n"
+"点が一番外側の式の中に無ければ, 点の後ろの最初の一番外側の式を評価する.\n"
+"点の後ろに無ければ, 前の最初の一番外側の式を評価する.\n"
+"評価の結果は, エコー領域に出し, 返す."
+
+#: lisp/simple.scm
+msgctxt "function:check-parens"
+msgid ""
+"Check for unbalanced parentheses in the current buffer.\n"
+"More accurately, check the narrowed part of the buffer for unbalanced\n"
+"expressions (\"sexps\") in general.  This is done according to the\n"
+"current syntax table and will find unbalanced brackets or quotes as\n"
+"appropriate.  If imbalance is found, an error is signaled and point\n"
+"is left at the first unbalanced character."
+msgstr ""
+"今のバッファの括弧の対が合っているかを確かめる.\n"
+"正しくは, ナローイングした部分の式 (「S 式」) の釣り合いを確かめる. 今の構文表に従うので,\n"
+"合わない括弧と引用符を見つける. 合わないものが有れば, エラーにし, 点を最初の合わない文字に置く."
 
 #: lisp/simple.scm
 msgctxt "function:electric-newline-and-maybe-indent"

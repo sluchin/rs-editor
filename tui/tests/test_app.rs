@@ -762,6 +762,22 @@ fn test_list_buffers_shows_the_list_in_another_window() {
 }
 
 #[test]
+fn test_scratch_evaluates_with_c_j_and_c_m_x() {
+    let mut fx = Fixture::new();
+    // *scratch* は lisp-interaction-mode: C-j は値を入れ, C-M-x は値を出す
+    fx.app.eval("(erase-buffer) (insert \"(+ 1 2)\")").unwrap();
+    fx.press("C-j");
+    assert_eq!(fx.text(), "(+ 1 2)\n3\n");
+    fx.press("M-< C-M-x");
+    assert_eq!(fx.app.message(), "3");
+    // ほかのモードの C-j は, 改行
+    fx.feed("f o o RET");
+    fx.press("C-x b");
+    fx.press("C-j");
+    assert_eq!(fx.text(), "\n");
+}
+
+#[test]
 fn test_buffer_menu_marks_and_kills_buffers() {
     let mut fx = Fixture::new();
     fx.app

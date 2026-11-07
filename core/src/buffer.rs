@@ -393,6 +393,18 @@ impl Buffer {
         self.match_seq
     }
 
+    /// `major-mode` の名前 (決めていなければ, 構文の方言から: `fundamental-mode`, `emacs-lisp-mode`, `scheme-mode`).
+    pub fn major_mode(&self) -> String {
+        self.mode_name.clone().unwrap_or_else(|| {
+            match self.dialect {
+                Dialect::Fundamental => "fundamental-mode",
+                Dialect::Elisp => "emacs-lisp-mode",
+                Dialect::Scheme => "scheme-mode",
+            }
+            .to_string()
+        })
+    }
+
     /// `major-mode` の名前を決めます (Lisp の `set-major-mode-name`. 方言だけでは決まらないモード用).
     pub fn set_mode_name(&mut self, name: &str) {
         self.mode_name = Some(name.to_string());

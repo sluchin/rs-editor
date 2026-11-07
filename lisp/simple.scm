@@ -2247,11 +2247,99 @@ With the argument N, use the Nth previous command (1 is the last)."
     (message (format "%s" (eval (read expression))))))
 
 (define-command (eval-last-sexp . args)
-  "Evaluate the sexp before point and show its value in the echo area."
+  "Evaluate sexp before point; print value in the echo area.
+If EVAL-LAST-SEXP-ARG-INTERNAL (interactively, the prefix argument) is non-nil,
+print the value into the current buffer instead.  Return the value."
   (let* ((end (point))
          (start (save-excursion (simple--forward-sexp -1) (point))))
     (if (>= start end) (user-error "No sexp before point"))
-    (message (format "%S" (eval (read (buffer-substring start end)))))))
+    (let ((value (eval (read (buffer-substring start end)))))
+      (if (simple--raw-arg args)
+          (insert (format "%S" value))
+          (message (format "%S" value)))
+      value)))
+
+(define-command (eval-print-last-sexp . args)
+  "Evaluate sexp before point; print value into current buffer."
+  (insert "\n")
+  (eval-last-sexp (or (simple--raw-arg args) #t))
+  (insert "\n"))
+
+(define (simple--eval-forms start end printflag)
+  "Evaluate the forms between START and END in order; message each value if PRINTFLAG.
+Return the value of the last form."
+  (save-excursion
+    (goto-char start)
+    (let loop ((value #f))
+      ;; 空白とコメントを飛ばす (読み手と同じく, バッファの構文表に依らない)
+      (let skip ()
+        (skip-chars-forward " \t\n")
+        (when (looking-at ";")
+          (end-of-line)
+          (skip)))
+      (if (>= (point) end)
+          value
+          (let* ((from (point))
+                 (to (begin (simple--forward-sexp 1) (point)))
+                 (result (eval (read (buffer-substring from to)))))
+            (if printflag (message (format "%S" result)))
+            (loop result))))))
+
+(define-command (eval-region . args)
+  "Execute the region as Lisp code.
+When called from programs, expects two arguments,
+giving starting and ending indices in the current buffer
+of the text to be executed.
+Programs can pass third argument PRINTFLAG which controls output:
+ nil means discard it; anything else, show each value in the echo area."
+  (if (null? args)
+      (simple--eval-forms (region-beginning) (region-end) #f)
+      (simple--eval-forms (car args) (cadr args) (and (pair? (cddr args)) (caddr args))))
+  #f)
+
+(define-command (eval-buffer . args)
+  "Execute the accessible portion of current buffer as Lisp code.
+When called from a Lisp program (i.e., not interactively), this
+function accepts up to two optional arguments: BUFFER, the buffer
+to evaluate (nil means use current buffer), and PRINTFLAG,
+which controls output (see `eval-region')."
+  (let ((buffer (or (and (pair? args) (car args)) (buffer-name)))
+        (printflag (and (pair? args) (pair? (cdr args)) (cadr args))))
+    (with-current-buffer buffer
+      (simple--eval-forms (point-min) (point-max) printflag)))
+  #f)
+
+(define-command (load-file . args)
+  "Load the Lisp file named FILE."
+  (load (expand-file-name (if (null? args) (read-file-name "Load file: ") (car args)))))
+
+(define-command (eval-defun . args)
+  "Evaluate the top-level form containing point, or after point.
+If point isn't in a top-level form, evaluate the first top-level
+form after point.  If there is no top-level form after point,
+evaluate the first preceding top-level form.
+The result of evaluation is displayed in the echo area, and returned."
+  (let* ((beg (save-excursion
+                (simple--end-of-defun 1 #f)
+                (goto-char (beginning-of-defun-position (point)))
+                (point)))
+         (end (save-excursion (goto-char beg) (simple--forward-sexp 1) (point)))
+         (value (eval (read (buffer-substring beg end)))))
+    (message (format "%S" value))
+    value))
+
+(define-command (check-parens)
+  "Check for unbalanced parentheses in the current buffer.
+More accurately, check the narrowed part of the buffer for unbalanced
+expressions (\"sexps\") in general.  This is done according to the
+current syntax table and will find unbalanced brackets or quotes as
+appropriate.  If imbalance is found, an error is signaled and point
+is left at the first unbalanced character."
+  (condition-case data
+      (scan-sexps (point-min) (point-max))
+    (scan-error (push-mark)
+                (goto-char (caddr data))
+                (user-error "Unmatched bracket or quote"))))
 
 (define-command (electric-newline-and-maybe-indent . args)
   "Insert a newline without indenting it, as `electric-indent-mode' makes C-j do.

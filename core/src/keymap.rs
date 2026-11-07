@@ -326,6 +326,23 @@ pub struct Keymap {
     entries: Vec<(Vec<String>, String)>,
 }
 
+/// メジャーモードの割り当て (Emacs の `lisp-interaction-mode-map` などに当たる. モード, キー, コマンド).
+/// Scheme はこのエディタの Lisp なので, `scheme-mode` でも評価する.
+const MODE_KEYS: &[(&str, &str, &str)] = &[
+    ("lisp-interaction-mode", "C-j", "eval-print-last-sexp"),
+    ("lisp-interaction-mode", "C-M-x", "eval-defun"),
+    ("scheme-mode", "C-M-x", "eval-defun"),
+];
+
+/// メジャーモード `mode` の割り当てを返します.
+pub fn mode_keymap(mode: &str) -> Keymap {
+    let mut keymap = Keymap::empty();
+    for (_, keys, command) in MODE_KEYS.iter().filter(|(m, _, _)| *m == mode) {
+        keymap.bind(keys, command);
+    }
+    keymap
+}
+
 impl Default for Keymap {
     fn default() -> Self {
         let mut keymap = Keymap {

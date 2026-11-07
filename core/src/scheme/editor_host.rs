@@ -1527,14 +1527,7 @@ impl<U: Host> EditorHost<U> {
                 }
                 .to_string(),
             ),
-            "major-mode-name" => Value::Symbol(b.mode_name.clone().unwrap_or_else(|| {
-                match b.dialect() {
-                    Dialect::Fundamental => "fundamental-mode",
-                    Dialect::Elisp => "emacs-lisp-mode",
-                    Dialect::Scheme => "scheme-mode",
-                }
-                .to_string()
-            })),
+            "major-mode-name" => Value::Symbol(b.major_mode()),
             // 1 行目の `-*- mode: NAME -*-` の NAME (無ければ #f)
             "file-local-mode" => match b.file_variables().mode {
                 Some(mode) => Value::String(mode),
