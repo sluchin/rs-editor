@@ -389,7 +389,7 @@
 | [x] | `C-i` | self-insert-command | 1432 | タブを入れる |
 | [x] | `M-g` | goto-line | 1443 | |
 | [~] | `C-c ;` | comment-or-uncomment-region | 1446 | `M-;` (comment-dwim) のリージョンの働きとして有る。コマンドとしては無い |
-| [~] | `C-<return>` / `C-x j` | cua-set-rectangle-mark | 2666, 2667 | 矩形の選択は無い。`C-x r k` などは有る |
+| [~] | `C-<return>` / `C-x j` | cua-set-rectangle-mark | 2666, 2667 | `C-x SPC` (rectangle-mark-mode) で矩形を選び、`C-w` と `M-w` で切る・写す。強調と `C-<return>` は無い。`C-x r k` などは有る |
 | [ ] | `C-c C-m` | mark-symbol | 2978 | |
 | [~] | `C-c C-w` | mark-word* | 2979 | `M-@` (mark-word) は有る |
 | [ ] | `C-c C-s` | mark-string | 2980 | |
