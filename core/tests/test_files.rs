@@ -460,7 +460,7 @@ fn test_set_buffer_text_and_revert_dired_arguments() {
     assert_eq!(
         ev.eval_with("(files--set-buffer-text \"a\")", &editor)
             .unwrap_err(),
-        "files--set-buffer-text expects 2 arguments, given 1"
+        "Wrong number of arguments: files--set-buffer-text, 1"
     );
     assert!(ev
         .eval_with("(files--set-buffer-text 1 #f)", &editor)

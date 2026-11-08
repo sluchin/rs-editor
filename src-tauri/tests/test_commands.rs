@@ -5,7 +5,7 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    home_dir, init_file_candidates, init_file_path, list_directory, project_root,
+    choose_init_file, home_dir, init_file_candidates, init_file_path, list_directory, project_root,
 };
 
 #[test]
@@ -55,4 +55,35 @@ fn test_project_root_finds_git() {
     fs::create_dir_all(dir.path().join("a/b")).unwrap();
     let sub = dir.path().join("a/b").to_string_lossy().into_owned();
     assert_eq!(project_root(sub), dir.path().to_string_lossy());
+}
+
+#[test]
+fn test_choose_init_file_follows_the_startup_options() {
+    use rseditor_core::startup::Options;
+    use std::path::PathBuf;
+
+    let dir = tempdir().unwrap();
+    let default = Some(PathBuf::from("/home/u/.rseditor"));
+    // 引数が無ければ, 既定のファイル
+    assert_eq!(
+        choose_init_file(&Options::default(), default.clone()),
+        default
+    );
+    // -q と -Q は, 読まない
+    let quiet = Options {
+        no_init_file: true,
+        ..Options::default()
+    };
+    assert_eq!(choose_init_file(&quiet, default.clone()), None);
+    // --init-directory は, そのディレクトリの init.scm (あれば)
+    let options = Options {
+        init_directory: Some(dir.path().to_string_lossy().into_owned()),
+        ..Options::default()
+    };
+    assert_eq!(choose_init_file(&options, default.clone()), None);
+    fs::write(dir.path().join("init.scm"), "").unwrap();
+    assert_eq!(
+        choose_init_file(&options, default),
+        Some(dir.path().join("init.scm"))
+    );
 }

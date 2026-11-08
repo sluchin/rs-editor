@@ -8,7 +8,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use rseditor_core::frame::Frame;
 use tauri::{AppHandle, Emitter, State};
 
-use crate::commands::{init_file_path, EDITOR_REQUEST_EVENT};
+use crate::commands::{choose_init_file, init_file_path, startup_options, EDITOR_REQUEST_EVENT};
 use crate::scheme::host::Bridge;
 use crate::scheme::value::Value;
 use crate::session::{self, Front, Input};
@@ -85,7 +85,8 @@ pub fn session_input(
             .spawn(move || {
                 if let Err(error) = session::run(
                     front,
-                    init_file_path().as_deref(),
+                    choose_init_file(startup_options(), init_file_path()).as_deref(),
+                    startup_options(),
                     rx,
                     session::AUTO_SAVE_TIMEOUT,
                 ) {

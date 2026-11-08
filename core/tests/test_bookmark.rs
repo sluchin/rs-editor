@@ -219,3 +219,47 @@ fn test_bookmark_bmenu_list_unsorted_and_empty() {
     assert!(text.starts_with("    b ") && text.contains("\n    a "));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn test_delete_and_rename() {
+    let (ev, host, dir) = setup("delete");
+    let file = dir.join("d.txt");
+    std::fs::write(&file, "0123456789\n").unwrap();
+    visit(&ev, &host, &file);
+    for err in ["(bookmark-delete)", "(bookmark-rename)"] {
+        assert!(ev
+            .eval_with(err, &host)
+            .unwrap_err()
+            .contains("No bookmarks"));
+    }
+    ev.eval_with("(bookmark-set \"a\")", &host).unwrap();
+    ev.eval_with("(bookmark-set \"b\")", &host).unwrap();
+    ev.eval_with("(bookmark-rename \"b\" \"c\")", &host)
+        .unwrap();
+    let names = |ev: &Evaluator| {
+        ev.eval_with("(map car bookmark-alist)", &host)
+            .unwrap()
+            .to_string()
+    };
+    assert_eq!(names(&ev), "(\"c\" \"a\")");
+    ev.eval_with("(bookmark-rename \"a\" \"z\")", &host)
+        .unwrap();
+    assert!(ev
+        .eval_with("(bookmark-rename \"nope\" \"x\")", &host)
+        .unwrap_err()
+        .contains("Invalid bookmark nope"));
+    assert!(ev
+        .eval_with("(bookmark-rename \"c\" \"\")", &host)
+        .unwrap_err()
+        .contains("cannot be empty"));
+    ev.eval_with("(bookmark-delete \"c\")", &host).unwrap();
+    assert_eq!(names(&ev), "(\"z\")");
+    // 保存されている
+    let saved = std::fs::read_to_string(dir.join("sub").join("bookmarks")).unwrap();
+    assert!(saved.contains("\"z\"") && !saved.contains("\"c\""));
+    assert!(ev
+        .eval_with("(bookmark-delete \"c\")", &host)
+        .unwrap_err()
+        .contains("Invalid bookmark c"));
+    std::fs::remove_dir_all(dir).unwrap();
+}

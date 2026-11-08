@@ -249,12 +249,13 @@
 ### リージョン・矩形・レジスタ・ブックマーク
 
 - [x] `M-h` (mark-paragraph)。
-- [ ] `C-x SPC` (rectangle-mark-mode): 矩形を選ぶ。
+- [x] `C-x SPC` (rectangle-mark-mode): 矩形を選ぶ。`C-w` と `M-w` が矩形を切る・写す。
+- [ ] rectangle-mark-mode の続き: 矩形の強調、`C-y` で矩形を貼る、`C-o` / `C-t`、`C-x C-x` で角を回す。
 - [x] `C-x r c` (clear-rectangle), `C-x r d` (delete-rectangle), `C-x r o` (open-rectangle),
       `C-x r M-w` (copy-rectangle-as-kill), `C-x r N` (rectangle-number-lines)。
 - [x] `C-x r SPC` / `C-x r j` (point-to-register / jump-to-register): 位置のレジスタ。
-- [ ] `C-x C-k x` (kmacro-to-register)。
-- [ ] `bookmark-delete`、`bookmark-rename`。
+- [x] `C-x C-k x` (kmacro-to-register)。`jump-to-register` で動かす。
+- [x] `bookmark-delete`、`bookmark-rename`。
 - [x] `C-x n g` (goto-line-relative): キーを割り当てる。
 
 ### 検索・置換
@@ -269,7 +270,8 @@
 - [x] `M-s w` (isearch-forward-word), `M-s _` (isearch-forward-symbol), `M-s .` (isearch-forward-symbol-at-point), `M-s M-.` (isearch-forward-thing-at-point)。
 - [x] `multi-occur`、`multi-occur-in-matching-buffers` (`lisp/replace.scm`)。Emacs と同じく、後のバッファを先に出し、一致が無ければ `*Occur*` を消す。
 - [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
-- [ ] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く), `zrgrep`、`find-grep`。
+- [x] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く)。
+- [ ] `zrgrep`、`find-grep`。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
 - [x] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `e` / `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
       `u` / `U` (置き換えを戻す), `?` (説明), `C-l`、`C-v` / `M-v`。ほかのキーは、置き換えを終えて、普通のキーとして動かす。
@@ -306,7 +308,9 @@
       違い: windmove の基準の位置は、ポイントの位置でなく窓の上端か左端。winner は、窓の変化に、コマンドの後で前のコマンドの後と比べて気付く
       (Emacs は描き直すとき。バッチでは、どちらも気付かない)。ミニバッファを開いたときには覚えない。消したバッファの窓は、消さずに今のバッファを出す。
       `display-buffer` は、ウィンドウが 2 つ以上あれば分けずに使う (Emacs は、大きい窓なら分けることがある)。
-- [ ] `C-x 5 ...` (フレーム) と `C-x t ...` (タブ)。
+- [ ] `C-x 5 ...` (フレーム)。
+- [x] `C-x t ...` (タブ): `tab-new` (2)、`tab-close` (0)、`tab-close-other` (1)、`tab-next` (o)、`tab-previous` (O)、`tab-switch` (RET)、`tab-rename` (r)、`tab-move` (m)。`lisp/tab-bar.scm`。画面 (Tauri) はタブの行を出す。ターミナルは出さない。
+- [ ] タブ: ターミナルのタブの行、`tab-undo`、`tab-duplicate`、`tab-detach`、`switch-to-buffer-other-tab` などの `C-x t` のほかのキー、タブの閉じるボタン。
 
 ### 前置引数とキーボードマクロ
 
@@ -317,8 +321,8 @@
 ### ヘルプ
 
 - [~] `C-h f` / `C-h v` / `C-h o` / `C-h x` (describe-function / describe-variable / describe-symbol / describe-command) (Phase 18)。`C-h f` は完了。
-- [ ] `C-h m` (describe-mode)。
-- [ ] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。
+- [x] `C-h m` (describe-mode)。今のメジャーモードの名前と docstring を出す (モードごとの説明やキーの一覧は、まだ)。
+- [x] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。検索語は、正規表現でなく、文字列として探す。
 - [x] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
 - [ ] `C-h t` (チュートリアル), `C-h q` (help-quick-toggle。今は `help-quit`)。
 - [ ] `*Help*` バッファの中のキー (`q`、`l`、`r`、リンクを開く)。
@@ -413,7 +417,7 @@
 | [ ] | `<f4>` | toggle-auto-complete-mode | 5256 | |
 | [ ] | `<f5>` | toggle-yas-minor-mode | 5401 | |
 | [ ] | `M-2` | se/make-summary-buffer | 5221 | |
-| [ ] | `C-x t` | (nil) | 3785 | 外しているだけ |
+| [x] | `C-x t` | (nil) | 3785 | タブの前置き (`lisp/tab-bar.scm`) |
 
 ### ファイル、ディレクトリ、バッファ
 
@@ -487,9 +491,12 @@
 - [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー。 `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で、出すか消す。
       根は、バッファのディレクトリから上へたどって `.git` のある所 (無ければ、バッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
       ファイルを押すと、選んでいるウィンドウに開く。今のバッファのファイルを強調する。`.git` は出さない。↻ で読み直す。
-- [ ] ツリー: キーで動かす (フォーカスを移して、`n`、`p`、`RET` など), 幅を変える、今のファイルまで開く (VS Code の Reveal),
+- [x] ツリー: 今のファイルまで開く (VS Code の Reveal。ファイルを切り替えるたびに、そこまでのディレクトリを開き、見える所へ動かす)。
+- [x] ツリー: キーで動かす (`F9` か `M-x project-tree-focus` でフォーカスを移し、`n`、`p`、`RET`、`f`、`b`、`g`、`q`)。
+- [ ] ツリー: 幅を変える,
       ファイルを作る・名前を変える・消す、ファイルが変わったら読み直す、根を選ぶコマンド、起動のときに出す設定 (今は、初期設定ファイルで `(call-interactively 'project-tree)`)。
-- [ ] `*grep*` の中のキー: `n` / `p` (next-error-no-select など), `g` (探し直す), `TAB` / `S-TAB` (次・前のファイル), `C-c C-k` (止める)。
+- [x] `*grep*` の中のキー: `n` / `p`, `g` (探し直す), `TAB` / `S-TAB`, `M-{` / `M-}`, `q`。
+- [ ] `*grep*` の `C-c C-k` (止める)。
 - [ ] grep: 探しているあいだに、見つけた行を順に出す (今は、終わってから出す)。止める (`C-c C-k`)。
 
 ## Phase 16: 起動の引数 (Emacs の Initial options)
@@ -497,17 +504,17 @@
 Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを、`rseditor` の起動の引数でできるようにする。
 今は、起動の引数を読んでいない (初期設定ファイルは、必ず `~/.rseditor` か `~/.rseditor.d/init.scm` を読む)。
 
-- [ ] 起動の引数を読む仕組み (Rust の `std::env::args` か `tauri-plugin-cli`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。
+- [x] 起動の引数を読む仕組み (`core/src/startup.rs` の `parse`。画面のアプリは `commands::startup_options`、ターミナルは `tui/src/main.rs`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。画面のアプリも、引数のファイルを開く。
       引数の値は、`--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
-- [ ] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
-- [ ] `--quick`、`-Q`: `-q --no-site-file --no-site-lisp --no-splash --no-x-resources` と同じ。
+- [x] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
+- [x] `--quick`、`-Q`: `-q --no-splash` と同じ (`--no-site-file`、`--no-site-lisp`、`--no-x-resources` は、まだ無い機能なので、受けない)。
 - [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に、rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
 - [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
-- [ ] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR から探す (`user-emacs-directory` に当たる変数も足す)。
+- [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` は、まだ変えない)。
 - [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
-- [ ] `--debug-init`: 初期設定ファイルの失敗で、止まった所 (式と、呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。
-- [ ] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
-- [ ] `--no-splash`: 始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
+- [ ] `--debug-init`: 初期設定ファイルの失敗で、止まった所 (式と、呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。変数 `init-file-debug` は足した (`--debug-init` で `#t`)。止まった所を出すには、評価器が呼び出しの跡を持つ必要がある。
+- [x] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
+- [x] `--no-splash`: 受ける (始めの画面がまだ無いので、何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
 - [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
 - [x] `--batch`: 画面を出さずに動かす (`-q` を含む)。Lisp の `message` は標準エラーに出し、終わったら終える。`noninteractive` に当たる変数を足す。
 - [x] `--script FILE`: 画面を出さずに、Scheme のファイルを動かして終える (`--batch -l FILE` に当たる)。`-x` は、`#!/usr/bin/rseditor -x` で使う `-Q --script`。
@@ -647,8 +654,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 ### バッチモードの Emacs との違い (レビューから)
 
 - [x] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、失敗するまで繰り返す。繰り返している間に `C-g` を押すと、止める (画面のアプリは、`session_input` が `C-g` を旗で知らせる。ターミナルのアプリは、`Screen::interrupted` で、待たずに確かめる)。
-- [ ] 引数の数の違いを、`wrong-number-of-arguments` (データは手続きと個数) にする。今は種類が `error` で、メッセージは `car expects 1 argument, given 2`。
-- [ ] `list-ref` など、Emacs に無い手続きの範囲外を、`args-out-of-range` にする (今は種類が `error`)。
+- [x] 引数の数の違いを、`wrong-number-of-arguments` (データは手続きと個数) にする (`Error::wrong_number_of_arguments`。`tests/batch/cases/76-wrong-number`)。手続きごとの手書きのメッセージ (`expects 1 or 2 arguments`) は、種類が `error` のまま。
+- [x] `list-ref` と `regexp-match` の範囲外を、`args-out-of-range` にする (データは、対象と位置)。
 - [x] ロックの `lock().unwrap()` を、panic のあとでも続けられるようにする (`core/src/sync.rs` の `LockExt::lock_recover`)。評価の panic で poisoned になったロックで、以後のキーが全て失敗することは無くなった。
 - [ ] 開発用の依存の `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (今は `markdownlint-cli2@0.23.3` と、`markdown-it` の `overrides` で、high は 0 件)。
 
@@ -712,12 +719,12 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
-- [ ] ヘルプ: `C-h m` / `a` / `d` / `t`、`*Help*` の中のキー (Phase 14, 18)。中。
-- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--debug-init`、`--no-splash` (Phase 16)。小。引数を読む仕組みを先に (`--batch` と `--script` は完了)。
-- [ ] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
-- [ ] grep: `rgrep` / `lgrep`、`*grep*` の中のキー、探しながら出す、止める (Phase 12, 14, 15)。中。
-- [ ] ツリー (サイドバー): キーで動かす、今のファイルまで開く (Phase 15)。中。
-- [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) (Phase 14)。小〜中。
+- [ ] ヘルプ: `C-h m` / `a` / `d` は完了。残りは `C-h t`、`*Help*` の中のキー (Phase 14, 18)。中。
+- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。残りは `--debug-init` の、止まった所の表示 (Phase 16)。小。
+- [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
+- [ ] grep: `rgrep` / `lgrep` と `*grep*` の中のキーは完了。残りは、探しながら出す、止める (Phase 12, 14, 15)。中。
+- [ ] ツリー (サイドバー): 今のファイルまで開くことと、キーで動かすことは完了。残りは、幅を変える、ファイルの作成・名前の変更・削除など (Phase 15)。小。
+- [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。残りは、rectangle-mark-mode の矩形の強調など (Phase 14)。小。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
 - [ ] キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 14)。中。
 - [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。
@@ -730,7 +737,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 ### P3: 使う場面が限られる、または大きい (後回し)
 
 - [ ] バージョン管理 (`C-x v ...`)、`diff`、`ediff`、綴り (`ispell`、`flyspell`)、`calc`、`calendar`、メール、`eww` / w3m、`shell`、`eshell`、`term` (Phase 14, 21)。大。外のツールで足りる。
-- [ ] フレームとタブ (`C-x 5 ...`、`C-x t ...`)、`C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 14)。中〜大。
+- [ ] フレーム (`C-x 5 ...`)。タブ (`C-x t ...`) は画面 (Tauri) で完了。残り: `C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 14)。中〜大。
 - [ ] 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--user`、`--no-desktop`、`--dump-file` など (Phase 16)。先の機能 (server、`-nw`) を決めてから。
 - [ ] Scheme のインタプリタを、独立したクレートにする (Phase 21)。大。
 - [ ] 画面 (Tauri) の `*Messages*`、Web のページを見る機能 (Phase 21)。調べてから決める。

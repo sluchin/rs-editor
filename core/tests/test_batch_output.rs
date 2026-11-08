@@ -73,11 +73,11 @@ fn test_output_goes_to_the_sink_in_batch_mode() {
     // 引数の数
     assert_eq!(
         ev.eval_with("(princ)", &host).map_err(|e| e.to_string()),
-        Err("princ expects 1 argument, given 0".to_string())
+        Err("Wrong number of arguments: princ, 0".to_string())
     );
     assert_eq!(
         ev.eval_with("(terpri 1)", &host).map_err(|e| e.to_string()),
-        Err("terpri expects 0 arguments, given 1".to_string())
+        Err("Wrong number of arguments: terpri, 1".to_string())
     );
 }
 
@@ -96,7 +96,7 @@ fn test_buffer_name_takes_a_buffer() {
     assert_eq!(
         ev.eval_with("(buffer-name \"a\" \"b\")", &host)
             .map_err(|e| e.to_string()),
-        Err("buffer-name expects 1 argument, given 2".to_string())
+        Err("Wrong number of arguments: buffer-name, 2".to_string())
     );
 }
 

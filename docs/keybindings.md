@@ -115,6 +115,7 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 
 | キー | コマンド | 説明 |
 |------|---------|------|
+| `C-x SPC` | rectangle-mark-mode | 領域を矩形として扱う（印が無ければ、カーソルに付ける）。入っている間は、`C-w` が kill-rectangle、`M-w` が copy-rectangle-as-kill になる。矩形の強調はまだ出さない |
 | `C-x r k` | kill-rectangle | マークとカーソルを角とする矩形を消して、覚える（kill-ring には入れない） |
 | `C-x r y` | yank-rectangle | 最後に消した矩形を、カーソルを左上の角として入れる |
 | `C-x r t` | string-rectangle | 矩形の各行を、ミニバッファで入力した文字で置き換える |
@@ -122,6 +123,8 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `C-x r i` / `C-x r g` | insert-register | 次に押す文字のレジスタの中身を入れる（カーソルは、入れた文字の前） |
 | `C-x r m` | bookmark-set | ファイルの今の位置に、名前を付けて覚える（既定の名前は、ファイルの名前） |
 | `C-x r b` | bookmark-jump | ブックマークのファイルを開いて、位置へ動く（Tab で名前を補完） |
+| なし | bookmark-delete | 名前を選んで、ブックマークを消す（Tab で補完。保存し直す） |
+| なし | bookmark-rename | ブックマークの名前を変える（保存し直す） |
 
 矩形の桁は、タブを `tab-width` の倍数まで、全角の文字を 2 桁と数えます。ブックマークは `~/.config/rseditor/bookmarks` に保存し、次に起動したときも使えます。
 
@@ -147,6 +150,13 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `M-x grep` | grep | 正規表現とディレクトリを聞き、ディレクトリの下（深くまで）のファイルから探して、結果を `*grep*` バッファに出す（外のコマンドは使わない） |
+| `M-x rgrep` | rgrep | 正規表現、ファイル名の形（`*.ts *.tsx` のように空白で区切る。`*` と `?` が使える）、ディレクトリを聞き、下（深くまで）のファイルから探す |
+| `M-x lgrep` | lgrep | `rgrep` と同じ聞き方で、そのディレクトリの直下のファイルだけから探す |
+| `g` （`*grep*`） | grep-again | 最後の `grep` `rgrep` `lgrep` をもう一度行う |
+| `n` / `p` （`*grep*`） | next-error-no-select / previous-error-no-select | 次・前の合った行のファイルを、ほかのウィンドウに出す（カーソルは動かさない） |
+| `M-n` / `M-p` / `TAB` / `S-TAB` （`*grep*`） | compilation-next-error / compilation-previous-error | 次・前の合った行へ動く |
+| `M-{` / `M-}` （`*grep*`） | compilation-previous-file / compilation-next-file | 前・次のファイルの合った行へ動く |
+| `q` （`*grep*`） | quit-window | ウィンドウを閉じる |
 | `RET` （`*grep*`） | compile-goto-error | その行のファイルを、ほかのウィンドウに開く |
 | `M-g n` / `M-g M-n` / `` C-x ` `` | next-error | 次の合った行へ |
 | `M-g p` / `M-g M-p` | previous-error | 前の合った行へ |
@@ -216,6 +226,23 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `C-x 0` | delete-window | 選んでいるウィンドウを消す |
 | `C-x 1` | delete-other-windows | ほかのウィンドウを消す |
 
+### タブ
+
+タブごとに、ウィンドウの配置を持ちます。タブが 2 つ以上あるとき、画面の上にタブの行を出します（押すと切り替わります。`+` で新しいタブ）。タブの名前は、付けなければ、選んでいるウィンドウのバッファの名前です。
+
+| キー | コマンド | 説明 |
+|------|---------|------|
+| `C-x t 2` | tab-new | 次に新しいタブを作る（今のバッファを 1 つのウィンドウに出す） |
+| `C-x t 0` | tab-close | タブを閉じる（残りが 1 つなら閉じられない） |
+| `C-x t 1` | tab-close-other | ほかのタブを全て閉じる |
+| `C-x t o` | tab-next | 次のタブへ（前置引数 N で N 個先。端まで行くと回る） |
+| `C-x t O` | tab-previous | 前のタブへ |
+| `C-x t RET` | tab-switch | 名前を選んで切り替える |
+| `C-x t r` | tab-rename | 名前を付ける（空なら、バッファの名前に戻す） |
+| `C-x t m` | tab-move | 右へ動かす（前置引数 N で N 個。負なら左） |
+
+ターミナルのアプリは、タブの行を出しません（コマンドとキーは同じ）。
+
 同じバッファを 2 つのウィンドウに出すと、一方での書き換えは、もう一方にも写ります（カーソルと、元に戻す履歴は、ウィンドウごと）。
 
 ## Scheme 評価
@@ -240,6 +267,9 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `C-h f` | describe-function | 関数とコマンドの説明 (定義したファイル、キー、引数、docstring) を `*Help*` に出す（`lisp/help-fns.scm`。docstring は `help-language` の言語に訳す） |
 | `C-h k` | describe-key | 次に押すキーのコマンドを、実行せずにミニバッファに出す |
 | `C-h b` | describe-bindings | キーの割り当ての一覧を `*Help*` バッファに出す（Lisp の割り当てを含む） |
+| `C-h m` | describe-mode | 今のメジャーモードの説明を `*Help*` バッファに出す |
+| `C-h a` | apropos-command | 名前に入力した文字を含むコマンドを、キーと説明の最初の行つきで `*Help*` バッファに出す |
+| `C-h d` | apropos-documentation | 説明に入力した文字を含む関数とコマンドを `*Help*` バッファに出す |
 
 ## その他
 
@@ -249,6 +279,7 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `C-g` （ミニバッファで） | abort-minibuffers | ミニバッファの入力（`M-x`、`C-x C-f`, Lisp の `read-string` など）をやめる（Quit メッセージ表示） |
 | `C-]` | abort-recursive-edit | ミニバッファの入力をやめる（エディタに移っていても。使っていなければ `No recursive edit is in progress`） |
 | `F8` | project-tree | 左のサイドバーに、プロジェクト（`.git` のある所）のファイルのツリーを出すか消す（ディレクトリを押すと開き、ファイルを押すと開く） |
+| `F9` | project-tree-focus | ツリーを出して（出ていなければ）、フォーカスを移す。ツリーの中では、`n` / `p` / `↓` / `↑` で動き、`<` / `>` で先頭と末尾、`RET` / `SPC` でディレクトリを開閉しファイルを開き、`f` / `→` でディレクトリを開き、`b` / `←` で閉じる（閉じていれば親へ）、`g` で読み直し、`q` / `Esc` / `C-g` でエディタに戻る |
 
 ## Dired（ディレクトリの編集）
 

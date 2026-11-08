@@ -4,7 +4,7 @@
  * ディレクトリは, 開いたときに読みます (開くたびに読み直す). `.git` は出しません.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import '../styles/ProjectTree.css'
 
 /** 出さない名前. */
@@ -20,6 +20,18 @@ interface ProjectTreeProps {
   listDirectory: (path: string) => Promise<string[]>
   /** ファイルを選んだときに呼びます. */
   onOpenFile: (path: string) => void
+  /** 増えるたびに, キーで動かすために, フォーカスをツリーへ移す. */
+  focusSignal?: number
+}
+
+/** 見えている行 (キーで動かす). */
+interface VisibleRow {
+  /** パス. */
+  path: string
+  /** ディレクトリか. */
+  isDirectory: boolean
+  /** 1 つ上のディレクトリ. */
+  parent: string
 }
 
 /**
@@ -54,6 +66,7 @@ export default function ProjectTree({
   currentFile,
   listDirectory,
   onOpenFile,
+  focusSignal = 0,
 }: ProjectTreeProps) {
   // 読んだディレクトリの中の名前 (読めなければ, 理由)
   const [entries, setEntries] = useState<Record<string, string[] | { error: string }>>({})
@@ -85,6 +98,125 @@ export default function ProjectTree({
     setExpanded(new Set())
     void load(root)
   }, [root, load])
+
+  // 今のファイルまでのディレクトリを開く (VS Code の Reveal. ファイルを切り替えるたびに行う)
+  useEffect(() => {
+    if (!currentFile || !currentFile.startsWith(joinPath(root, ''))) return
+    const parts = currentFile.slice(joinPath(root, '').length).split('/')
+    parts.pop()
+    const dirs: string[] = []
+    let dir = root
+    for (const part of parts) {
+      dir = joinPath(dir, part)
+      dirs.push(dir)
+    }
+    if (dirs.length === 0) return
+    setExpanded((prev) => new Set([...prev, ...dirs]))
+    for (const d of dirs) void load(d)
+  }, [root, currentFile, load])
+
+  // 今のファイルが見える所へ動かす
+  const body = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    body.current?.querySelector('.project-tree-current')?.scrollIntoView?.({ block: 'nearest' })
+  }, [currentFile, entries, expanded])
+
+  // キーで動かす行 (パス)
+  const [cursor, setCursor] = useState<string | null>(null)
+  const container = useRef<HTMLDivElement>(null)
+
+  // 頼まれたら, フォーカスを移す (行は, 今のファイルから始める)
+  useEffect(() => {
+    if (focusSignal === 0) return
+    container.current?.focus()
+    setCursor((prev) => prev ?? currentFile)
+  }, [focusSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * 見えている行を, 上から順に並べます.
+   *
+   * @param dir - ディレクトリ.
+   * @returns 行.
+   */
+  const visibleRows = (dir: string): VisibleRow[] => {
+    const names = entries[dir]
+    if (!Array.isArray(names)) return []
+    return names.flatMap((name) => {
+      const isDirectory = name.endsWith('/')
+      const path = joinPath(dir, isDirectory ? name.slice(0, -1) : name)
+      const row = { path, isDirectory, parent: dir }
+      return expanded.has(path) && isDirectory ? [row, ...visibleRows(path)] : [row]
+    })
+  }
+
+  /**
+   * ツリーにフォーカスがあるときのキー (n, p, RET, f, b, g, q).
+   *
+   * @param event - キー.
+   */
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    // エディタへ渡すキー (C-x など) は, ここで止めない
+    const rows = visibleRows(root)
+    const index = rows.findIndex((r) => r.path === cursor)
+    const row = rows[index] as VisibleRow | undefined
+    if (event.altKey || event.metaKey) return
+    const key = event.ctrlKey ? `C-${event.key}` : event.key
+    const move = (to: number) => {
+      if (rows.length > 0) setCursor(rows[Math.max(0, Math.min(rows.length - 1, to))].path)
+    }
+    switch (key) {
+      case 'n':
+      case 'C-n':
+      case 'ArrowDown':
+        move(index + 1)
+        break
+      case 'p':
+      case 'C-p':
+      case 'ArrowUp':
+        move(index < 0 ? rows.length : index - 1)
+        break
+      case '<':
+      case 'Home':
+        move(0)
+        break
+      case '>':
+      case 'End':
+        move(rows.length)
+        break
+      case 'Enter':
+      case ' ':
+        if (!row) break
+        if (row.isDirectory) toggle(row.path)
+        else {
+          onOpenFile(row.path)
+          container.current?.blur()
+        }
+        break
+      case 'f':
+      case 'ArrowRight':
+        if (!row?.isDirectory) break
+        if (!expanded.has(row.path)) toggle(row.path)
+        else move(index + 1)
+        break
+      case 'b':
+      case 'ArrowLeft':
+        if (!row) break
+        if (row.isDirectory && expanded.has(row.path)) toggle(row.path)
+        else if (row.parent !== root) setCursor(row.parent)
+        break
+      case 'g':
+        refresh()
+        break
+      case 'q':
+      case 'Escape':
+      case 'C-g':
+        container.current?.blur()
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+  }
 
   /**
    * ディレクトリを開くか, 閉じます. 開くときは, 読み直します.
@@ -135,6 +267,7 @@ export default function ProjectTree({
         isDirectory ? 'project-tree-directory' : 'project-tree-file',
       ]
       if (path === currentFile) classes.push('project-tree-current')
+      if (path === cursor) classes.push('project-tree-cursor')
       return (
         <div key={path}>
           <div
@@ -154,7 +287,14 @@ export default function ProjectTree({
 
   return (
     // 押してもフォーカスを取らない (キーは, エディタのまま)
-    <div className="project-tree" aria-label="Project" onMouseDown={(e) => e.preventDefault()}>
+    <div
+      className="project-tree"
+      aria-label="Project"
+      tabIndex={-1}
+      ref={container}
+      onKeyDown={handleKeyDown}
+      onMouseDown={(e) => e.preventDefault()}
+    >
       <div className="project-tree-header">
         <span className="project-tree-title" title={root}>
           {baseName(root).toUpperCase()}
@@ -163,7 +303,9 @@ export default function ProjectTree({
           ↻
         </button>
       </div>
-      <div className="project-tree-body">{renderDirectory(root, 0)}</div>
+      <div className="project-tree-body" ref={body}>
+        {renderDirectory(root, 0)}
+      </div>
     </div>
   )
 }

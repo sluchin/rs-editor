@@ -1,0 +1,7 @@
+(defun wn (thunk) (condition-case e (funcall thunk) (wrong-number-of-arguments (concat (format "%S" e) " | " (error-message-string e)))))
+(princ (format "%s\n" (wn (lambda () (car 1 2)))))
+(princ (format "%s\n" (wn (lambda () (cons 1)))))
+(princ (format "%s\n" (wn (lambda () (abs)))))
+(princ (format "%s\n" (wn (lambda () (length 1 2)))))
+(princ (format "%S\n" (condition-case e (car 1 2) (error (car e)))))
+(princ (format "%S\n" (condition-case e (car 1 2) (wrong-number-of-arguments (cdr e)))))

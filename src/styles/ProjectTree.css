@@ -57,6 +57,16 @@
   background: rgba(38, 110, 199, 0.35);
 }
 
+/* キーで動かしている行 (フォーカスがあるときだけ) */
+.project-tree:focus {
+  outline: none;
+}
+
+.project-tree:focus .project-tree-cursor {
+  outline: 1px solid rgba(86, 156, 255, 0.9);
+  outline-offset: -1px;
+}
+
 .project-tree-twisty {
   display: inline-block;
   width: 1em;

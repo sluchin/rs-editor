@@ -14,6 +14,8 @@ impl Host for Quiet {
     fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
         match op {
             "message" => Ok(Value::Nil),
+            // 打ったことにするキーは, 文字列にして返す
+            "execute-kbd-macro" => Ok(Value::Nil),
             other => Err(format!("ui: {other}").into()),
         }
     }
@@ -99,5 +101,63 @@ fn test_increment_register_errors() {
     assert_eq!(
         eval("(point-to-register \"p\") (append-to-register \"p\" 1 1)"),
         "error: Register does not contain text"
+    );
+}
+
+#[test]
+fn test_kmacro_to_register_stores_and_runs_the_macro() {
+    assert_eq!(
+        eval("(kmacro-to-register \"m\")"),
+        "error: No keyboard macro defined"
+    );
+    assert_eq!(
+        eval(
+            "(set! last-kbd-macro '(\"a\" \"b\")) (kmacro-to-register \"m\") (get-register \"m\")"
+        ),
+        "(kbd-macro (\"a\" \"b\"))"
+    );
+    // 戻ると, マクロを動かす (動かすのは画面なので, ここでは, 失敗しない所まで)
+    assert_eq!(
+        eval(
+            "(set! last-kbd-macro '(\"a\")) (kmacro-to-register \"m\") (jump-to-register \"m\") 7"
+        ),
+        "7"
+    );
+}
+
+#[test]
+fn test_rectangle_mark_mode_kills_and_saves_the_rectangle() {
+    let setup = "(insert \"abcd\\nefgh\\nijkl\\n\") (goto-char 2) (push-mark (point)) (activate-mark) (goto-char 13) ";
+    // 切る: 2 列目の 1 文字, 3 行 (消すのを頼むだけなので, 領域はまだ生きている)
+    assert_eq!(
+        eval(&format!(
+            "{setup} (rectangle-mark-mode) (kill-region) (list (buffer-string) killed-rectangle rectangle-mark-mode--on (region-active-p))"
+        )),
+        "(\"acd\\negh\\nikl\\n\" (\"b\" \"f\" \"j\") #f #t)"
+    );
+    // 写す: 本文は変わらない
+    assert_eq!(
+        eval(&format!(
+            "{setup} (rectangle-mark-mode) (kill-ring-save) (list (buffer-string) killed-rectangle rectangle-mark-mode--on)"
+        )),
+        "(\"abcd\\nefgh\\nijkl\\n\" (\"b\" \"f\" \"j\") #f)"
+    );
+    // 引数で入り切りし, 切ると普通の領域に戻る
+    assert_eq!(
+        eval(&format!(
+            "{setup} (rectangle-mark-mode 1) (rectangle-mark-mode 0) (kill-region) (buffer-string)"
+        )),
+        "\"akl\\n\""
+    );
+    // もう一度で切る. 領域が無ければ, 印を付けて入る
+    assert_eq!(
+        eval(&format!(
+            "{setup} (rectangle-mark-mode) (rectangle-mark-mode) rectangle-mark-mode--on"
+        )),
+        "#f"
+    );
+    assert_eq!(
+        eval("(rectangle-mark-mode) (list rectangle-mark-mode--on (region-active-p))"),
+        "(#t #t)"
     );
 }

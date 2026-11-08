@@ -108,6 +108,10 @@ export interface Frame {
   buffers: BufferFrame[]
   /** エコー領域. */
   message: string
+  /** タブの名前 (タブが 2 つ未満なら空. 空ならタブの行を出さない). */
+  tabs: string[]
+  /** 選んでいるタブの番号 (0 から). */
+  tab: number
 }
 
 /** 画面からの入力. */
@@ -117,6 +121,7 @@ export type Input =
   | { kind: 'point'; window: number; pos: number; anchor: number | null }
   | { kind: 'command'; name: string }
   | { kind: 'find-file'; path: string }
+  | { kind: 'select-tab'; number: number }
   | { kind: 'resize'; heights: [number, number][] }
   | { kind: 'redraw' }
 

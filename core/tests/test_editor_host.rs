@@ -327,7 +327,7 @@ const CASES: &[(&str, &str)] = &[
     (r##"(read-key "x")"##, r##"ERR ui: read-key"##),
     (
         r##"(forward-char 1 2)"##,
-        r##"ERR forward-char expects 0 to 1 arguments"##,
+        r##"ERR Wrong number of arguments: forward-char, 2"##,
     ),
     (
         r##"(forward-char "a")"##,
@@ -335,7 +335,7 @@ const CASES: &[(&str, &str)] = &[
     ),
     (
         r##"(delete-char)"##,
-        r##"ERR delete-char expects 1 arguments"##,
+        r##"ERR Wrong number of arguments: delete-char, 0"##,
     ),
 ];
 
@@ -1074,5 +1074,15 @@ fn test_editing_a_file_changed_on_disk_in_batch_mode() {
     assert_eq!(
         host.ui().messages.lock().unwrap().last().unwrap(),
         "s.txt changed on disk; really edit the buffer? (y, n, r or C-h) "
+    );
+}
+
+#[test]
+fn test_set_tab_bar_takes_a_list_of_names() {
+    assert_eq!(run_last("(set-tab-bar '(\"a\" \"b\") 1)"), "nil");
+    // 名前の並びでなければ、タブの行を出さない
+    assert_eq!(run_last("(set-tab-bar 5 0)"), "nil");
+    assert!(
+        run_last("(set-tab-bar '(1) 0)").starts_with("ERR set-tab-bar: tab names must be strings")
     );
 }

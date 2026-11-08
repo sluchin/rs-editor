@@ -474,7 +474,7 @@ impl Host for FakeEditor {
                 *self.file_changed.lock().unwrap() = false;
                 Value::Nil
             }
-            "set-syntax-dialect" | "set-major-mode-name" => Value::Nil,
+            "set-syntax-dialect" | "set-major-mode-name" | "set-tab-bar" => Value::Nil,
             // 偽のエディタのファイルには、ファイルの変数が無い
             "file-local-mode" => Value::Boolean(false),
             "rename-buffer" => {

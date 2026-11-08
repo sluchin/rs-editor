@@ -131,8 +131,18 @@ Use jump-to-register to restore the configuration."
     (set-register register (list 'window-configuration (current-window-configuration) (buffer-name) (point-marker)))
     #f))
 
+(define-command (kmacro-to-register . args)
+  "Store the last keyboard macro in the register REGISTER.
+Use `jump-to-register' to run the macro."
+  (let ((register (if (null? args) (register--read "Kmacro to register: ") (car args))))
+    (unless last-kbd-macro
+      (error "No keyboard macro defined"))
+    (set-register register (list 'kbd-macro last-kbd-macro))
+    #f))
+
 (define-command (jump-to-register . args)
-  "Go to the location stored in REGISTER, or restore the configuration stored there.
+  "Go to the location stored in REGISTER, restore the configuration stored there,
+or run the keyboard macro stored there.
 Push the mark if going to the location moves point, unless called in succession."
   (let* ((register (if (null? args) (register--read "Jump to register: ") (car args)))
          (value (get-register register)))
@@ -148,6 +158,8 @@ Push the mark if going to the location moves point, unless called in succession.
            (when (get-buffer (caddr value))
              (with-current-buffer (caddr value)
                (goto-char (marker-position (list-ref value 3))))))
+          ((and (pair? value) (eq? (car value) 'kbd-macro))
+           (execute-kbd-macro (cadr value) 1))
           (else (error "Register doesn’t contain a buffer position or configuration")))
     #f))
 

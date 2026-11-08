@@ -155,6 +155,27 @@ Return it as a list of strings, one for each line of the rectangle."
                         start end)
     (reverse lines)))
 
+;; rectangle-mark-mode は, 領域を矩形として扱う (印を付けて, `C-w` と `M-w` が矩形を切る・写す). 矩形の強調は, まだ出さない.
+(define-command (rectangle-mark-mode . args)
+  "Toggle the region as a rectangle.
+With a positive argument, turn it on; with zero or a negative one, turn it off.
+When on, the region is a rectangle between point and the mark: \\[kill-region] kills it
+like `kill-rectangle', and \\[kill-ring-save] saves it like `copy-rectangle-as-kill'.
+Turning it on without an active region sets the mark at point."
+  (let* ((arg (simple--raw-arg args))
+         (on (if arg (> (prefix-numeric-value arg) 0) (not (simple--rectangle-region-p)))))
+    (cond (on
+           (unless (region-active-p)
+             (push-mark (point))
+             (activate-mark))
+           (set! rectangle-mark-mode--on #t)
+           (message "Rectangle mark mode enabled"))
+          (else
+           (set! rectangle-mark-mode--on #f)
+           (deactivate-mark)
+           (message "Rectangle mark mode disabled")))
+    #f))
+
 (define-command (copy-rectangle-as-kill . args)
   "Copy the region-rectangle and save it as the last killed one."
   (let ((bounds (rect--args args)))

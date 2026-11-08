@@ -42,6 +42,60 @@ Interactively, read VARIABLE in the minibuffer with completion."
     (help-show (help-variable-text variable))
     #f))
 
+(define (help--first-line text)
+  "Return the first line of TEXT, or \"Not documented.\" if TEXT is #f."
+  (if text (car (split-string text "\n")) "Not documented."))
+
+(define (help--apropos-text title names)
+  "Return the text of an apropos result with TITLE, listing NAMES (symbols)."
+  (string-append
+   title "\n\n"
+   (if (null? names)
+       "No matches.\n"
+       (apply string-append
+              (map (lambda (name)
+                     (let ((keys (where-is-internal name)))
+                       (format "%s%s\n  %s\n" name
+                               (if (null? keys) "" (format " (%s)" (string-join keys ", ")))
+                               (help--first-line (and (fboundp name) (documentation name))))))
+                   names)))))
+
+(define (help--read-pattern prompt args)
+  "Return the pattern given in ARGS, or read one with PROMPT."
+  (if (null? args) (read-string prompt) (car args)))
+
+(define-command (apropos-command . args)
+  "Show the commands whose names contain PATTERN, with their keys and the first line of the documentation.
+Interactively, read PATTERN in the minibuffer."
+  (let* ((pattern (help--read-pattern "Apropos command: " args))
+         (names (filter (lambda (name) (string-search pattern name))
+                        (help--command-names))))
+    (help-show (help--apropos-text (format "Commands matching \"%s\":" pattern)
+                                   (map string->symbol names)))
+    #f))
+
+(define-command (apropos-documentation . args)
+  "Show the functions and commands whose documentation contains PATTERN.
+Interactively, read PATTERN in the minibuffer."
+  (let* ((pattern (help--read-pattern "Apropos documentation: " args))
+         (names (filter (lambda (name)
+                          (let ((doc (and (fboundp (string->symbol name))
+                                          (documentation (string->symbol name)))))
+                            (and doc (string-search pattern doc))))
+                        (help-function-names))))
+    (help-show (help--apropos-text (format "Documentation matching \"%s\":" pattern)
+                                   (map string->symbol names)))
+    #f))
+
+(define-command (describe-mode . args)
+  "Display the documentation of the major mode of the current buffer."
+  (let* ((mode major-mode)
+         (doc (and (fboundp mode) (documentation mode))))
+    (help-show (string-append (format "Major mode: %s\n\n" mode)
+                              (or doc "Not documented.")
+                              "\n"))
+    #f))
+
 (define-command (describe-command . args)
   "Display the full documentation of COMMAND (a symbol).
 Interactively, read COMMAND in the minibuffer with completion."

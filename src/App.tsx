@@ -12,6 +12,7 @@ import Minibuffer, {
   type MinibufferState,
 } from './components/Minibuffer'
 import ProjectTree from './components/ProjectTree'
+import TabBar from './components/TabBar'
 import { completeFileName } from './lib/complete'
 import { type DocEntry, DocStore } from './lib/docs'
 import type { Highlight, Token } from './lib/faces'
@@ -36,7 +37,7 @@ import './App.css'
 const DEFAULT_FACE = 'hi-yellow'
 
 /** 始めの描く内容 (エディタから受けるまで). */
-const EMPTY_FRAME: Frame = { windows: [], selected: 0, buffers: [], message: '' }
+const EMPTY_FRAME: Frame = { windows: [], selected: 0, buffers: [], message: '', tabs: [], tab: 0 }
 
 /** ミニバッファで答えを待っている問い. */
 interface Question {
@@ -144,6 +145,8 @@ function App() {
   const [inputState, setInputState] = useState<MinibufferInputState | null>(null)
   const [histories, setHistories] = useState<Record<string, string[]>>({})
   const [treeRoot, setTreeRoot] = useState<string | null>(null)
+  // ツリーへフォーカスを移す頼みの数 (増えるたびに移す)
+  const [treeFocus, setTreeFocus] = useState(0)
   const views = useRef(new Map<number, WindowHandle>())
   const home = useRef('/')
   const heights = useRef('')
@@ -290,15 +293,20 @@ function App() {
           typeof args[1] === 'number' ? args[1] : null,
         )
         return null
-      case 'toggle-project-tree':
+      case 'toggle-project-tree': {
+        // 'focus なら, 消さずに, ツリーへフォーカスを移す
+        const focus = args[0] === 'focus'
         if (treeRoot !== null) {
-          setTreeRoot(null)
+          if (focus) setTreeFocus((n) => n + 1)
+          else setTreeRoot(null)
           return null
         }
         return projectRoot(defaultDirectory(selectedBuffer)).then((dir) => {
           setTreeRoot(dir.replace(/\/+$/, '') || '/')
+          if (focus) setTreeFocus((n) => n + 1)
           return null
         })
+      }
       // クリップボード (Emacs の gui-set-selection, gui-selection-value). 使えなければ, 何もしない (nil)
       case 'gui-set-selection':
         return Promise.resolve()
@@ -448,6 +456,12 @@ function App() {
 
   return (
     <div className="app">
+      <TabBar
+        tabs={frame.tabs}
+        current={frame.tab}
+        onSelect={(number) => send({ kind: 'select-tab', number })}
+        onNew={() => send({ kind: 'command', name: 'tab-new' })}
+      />
       <div className="main">
         {treeRoot !== null && (
           <ProjectTree
@@ -455,6 +469,7 @@ function App() {
             currentFile={selectedBuffer?.file ?? null}
             listDirectory={listDirectory}
             onOpenFile={(path) => send({ kind: 'find-file', path })}
+            focusSignal={treeFocus}
           />
         )}
         <div className="windows">

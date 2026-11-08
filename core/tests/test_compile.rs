@@ -194,3 +194,64 @@ fn test_next_error_follows_xref_references() {
     ]);
     assert_eq!(result, "(\"a.txt\" \"bar foo\")");
 }
+
+/// `*grep*` の本文を返す式.
+const GREP_TEXT: &str = "(with-current-buffer \"*grep*\" (buffer-string))";
+
+#[test]
+fn test_rgrep_selects_files_by_wildcard() {
+    let (_dir, path) = project();
+    fs::write(format!("{path}/c.md"), "foo md\n").unwrap();
+    let (text, _) = run(&[&format!("(rgrep \"foo\" \"*.txt\" \"{path}\")"), GREP_TEXT]);
+    assert!(text.contains("a.txt:1:foo"), "{text}");
+    assert!(text.contains("sub/b.txt:2:foo"), "{text}");
+    assert!(!text.contains("c.md"), "{text}");
+    let (text, _) = run(&[
+        &format!("(rgrep \"foo\" \"*.md b.t?t\" \"{path}\")"),
+        GREP_TEXT,
+    ]);
+    assert!(text.contains("c.md:1:foo md"), "{text}");
+    assert!(text.contains("sub/b.txt:2:foo"), "{text}");
+    assert!(!text.contains("a.txt"), "{text}");
+}
+
+#[test]
+fn test_lgrep_stays_in_the_directory() {
+    let (_dir, path) = project();
+    let (text, messages) = run(&[&format!("(lgrep \"foo\" \"*\" \"{path}\")"), GREP_TEXT]);
+    assert!(text.contains("a.txt:2:bar foo"), "{text}");
+    assert!(!text.contains("sub/"), "{text}");
+    assert_eq!(messages, vec!["Grep finished with 2 matches found"]);
+}
+
+#[test]
+fn test_rgrep_reads_the_wildcard_and_directory_interactively() {
+    let (_dir, path) = project();
+    // 偽の画面は read-string を知らないので、失敗の内容で、聞いた順を確かめる
+    let (result, _) = run(&["(rgrep \"foo\")"]);
+    assert!(result.starts_with("error:"), "{result}");
+    let (text, _) = run(&[
+        &format!("(rgrep \"foo\" \"*.txt\" \"{path}/sub\")"),
+        GREP_TEXT,
+    ]);
+    assert!(text.contains("b.txt:2:foo"), "{text}");
+    assert!(!text.contains("a.txt"), "{text}");
+}
+
+#[test]
+fn test_grep_again_runs_the_last_search() {
+    let (_dir, path) = project();
+    let (result, _) = run(&["(grep-again)"]);
+    assert_eq!(result, "error: No grep to run again");
+    let (text, messages) = run(&[
+        &format!("(lgrep \"foo\" \"*.txt\" \"{path}\")"),
+        &format!("(write-region \"foo foo\\n\" #f \"{path}/d.txt\")"),
+        "(grep-again)",
+        GREP_TEXT,
+    ]);
+    assert!(text.contains("d.txt:1:foo foo"), "{text}");
+    assert_eq!(
+        messages.last().unwrap(),
+        "Grep finished with 3 matches found"
+    );
+}

@@ -161,6 +161,7 @@ Emacs と rs-editor で、コマンドと関数の結果 (本文、カーソル�
 | E-50 | `50-args-range` | 範囲外の位置: `buffer-substring`、`delete-region`、`kill-region`、`upcase-region`、`narrow-to-region` に 1 より小さい位置や本文の外の位置 (引数の順のまま報せる)、`string-search` の始め、`goto-char` は丸める、`car` と `cdr` の nil |
 | E-51 | `51-nil-printing` | `format`、`princ`、`prin1`、`print`、`message` の `nil` と `t` (偽と空のリストは `nil`、真は `t`。入れ子のリストの中も、`%s` では文字列に引用符を付けない)、`null`、`string=` |
 | E-52 | `52-error-conditions` | エラーの種類とデータを持つ型: `signal` (種類とデータ、`nil` と `(種類 . データ)` での投げ直し)、`define-error` (説明と親の種類)、`user-error`、`condition-case` が受ける条件 (`error-conditions`: `file-missing` は `file-error`、`text-read-only` は `buffer-read-only`、`quit` は `error` に入らない、`t` は何でも受ける)、`error` のメッセージが文の書き出し (`End of buffer` など) で種類を変えないこと、`error-message-string` (`file-error` と `end-of-file` と `user-error` のデータは引用符なし) |
+| E-53 | `76-wrong-number` | 引数の数が合わないエラー (`wrong-number-of-arguments`): 種類、データ (手続きの名前と、渡した個数)、`error-message-string`。`car` `cons` `abs` `length` |
 
 ## 5. 比べない違い
 

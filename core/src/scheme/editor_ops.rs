@@ -184,6 +184,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("set-window-dedicated-p", &[Kind::Number, Kind::Any], 1),
     ("delete-window", &[Kind::Number], 0),
     ("delete-other-windows", &[], 0),
+    ("set-tab-bar", &[Kind::Any, Kind::Number], 2),
     ("current-window-configuration", &[], 0),
     ("set-window-configuration", &[Kind::Number], 1),
     ("other-window", &[Kind::Number], 0),
@@ -236,7 +237,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("move-to-window-line", &[Kind::Number], 0),
     ("recenter", &[], 0),
     ("kill-emacs", &[Kind::Any], 0),
-    ("toggle-project-tree", &[], 0),
+    ("toggle-project-tree", &[Kind::Any], 0),
     ("gui-set-selection", &[Kind::Text], 1),
     ("gui-selection-value", &[], 0),
 ];
@@ -351,6 +352,7 @@ pub const NAMES: &[&str] = &[
     "set-window-dedicated-p",
     "delete-window",
     "delete-other-windows",
+    "set-tab-bar",
     "current-window-configuration",
     "set-window-configuration",
     "other-window",
@@ -395,11 +397,7 @@ pub const NAMES: &[&str] = &[
 /// 引数が決まりに合うか確かめます.
 fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<(), Error> {
     if args.len() < required || args.len() > kinds.len() {
-        return Err(if required == kinds.len() {
-            format!("{name} expects {required} arguments").into()
-        } else {
-            format!("{name} expects {required} to {} arguments", kinds.len()).into()
-        });
+        return Err(Error::wrong_number_of_arguments(name, args.len()));
     }
     for (arg, kind) in args.iter().zip(kinds) {
         // 省ける引数は, nil でもよい

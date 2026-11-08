@@ -93,6 +93,10 @@ pub struct Frame {
     pub buffers: Vec<BufferFrame>,
     /// エコー領域.
     pub message: String,
+    /// タブの名前 (タブが 2 つ未満なら空. 空ならタブの行を出さない).
+    pub tabs: Vec<String>,
+    /// 選んでいるタブの番号.
+    pub tab: usize,
 }
 
 /// 描く内容を作るもの (前に本文を送ったバッファを覚える).
@@ -190,6 +194,8 @@ impl FrameBuilder {
             selected: editor.selected_window(),
             buffers,
             message: message.to_string(),
+            tabs: editor.tab_bar().0.to_vec(),
+            tab: editor.tab_bar().1,
         }
     }
 }

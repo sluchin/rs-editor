@@ -426,6 +426,12 @@ With a numeric argument N, put point at the beginning of line N of the window
   "Show or hide the tree of the files of the project in the side bar."
   (toggle-project-tree))
 
+(define-command (project-tree-focus . args)
+  "Show the project tree in the side bar if it is hidden, and move the focus to it.
+In the tree, n and p move, RET opens, f and b open and close a directory,
+g reads again, and q or C-g returns to the editor."
+  (toggle-project-tree 'focus))
+
 (provide 'window)
 
 ;;; window.scm ends here

@@ -117,6 +117,13 @@ impl Evaluator {
         global.define("case-fold-search", Value::Boolean(true));
         // 読んだ初期設定ファイル (読む前と, 無いときは #f)
         global.define("user-init-file", Value::Boolean(false));
+        // 初期設定ファイルのディレクトリ (Emacs の user-emacs-directory. `--init-directory` で変わる)
+        global.define(
+            "user-emacs-directory",
+            Value::String("~/.rseditor.d/".to_string()),
+        );
+        // `--debug-init` で起動したか (Emacs の init-file-debug)
+        global.define("init-file-debug", Value::Boolean(false));
         // エディタが実行するフック (find-file-hook, after-save-hook)
         for hook in hooks::EDITOR_HOOKS {
             global.define(hook, Value::List(Vec::new().into()));
@@ -1236,19 +1243,7 @@ fn bind(lambda: &Lambda, args: Vec<Value>) -> Result<Env, Error> {
     };
     if !fits {
         let name = lambda.name.as_deref().unwrap_or("#<procedure>");
-        let at_least = if lambda.rest.is_some() {
-            "at least "
-        } else {
-            ""
-        };
-        return Err(format!(
-            "{} expects {}{} arguments, given {}",
-            name,
-            at_least,
-            count,
-            args.len()
-        )
-        .into());
+        return Err(Error::wrong_number_of_arguments(name, args.len()));
     }
     let env = lambda.env.child();
     let mut args = args.into_iter();

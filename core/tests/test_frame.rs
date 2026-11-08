@@ -171,3 +171,20 @@ fn test_frame_sends_syntax_tokens_for_shown_buffers_in_utf16() {
         ]
     );
 }
+
+#[test]
+fn test_frame_carries_the_tab_bar() {
+    let mut editor = Editor::new();
+    let mut frames = FrameBuilder::new();
+    let frame = frames.build(&mut editor, "");
+    assert!(frame.tabs.is_empty());
+    assert_eq!(frame.tab, 0);
+    editor.set_tab_bar(vec!["a".to_string(), "b".to_string()], 1);
+    assert_eq!(
+        editor.tab_bar(),
+        (&["a".to_string(), "b".to_string()][..], 1)
+    );
+    let frame = frames.build(&mut editor, "");
+    assert_eq!(frame.tabs, vec!["a", "b"]);
+    assert_eq!(frame.tab, 1);
+}

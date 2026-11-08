@@ -159,6 +159,46 @@ If the text of the file has changed, find the position again from the text aroun
       (set! bookmark-current-bookmark name)
       #f)))
 
+(define (bookmark--read-name prompt)
+  "Read the name of an existing bookmark in the minibuffer, with PROMPT."
+  (bookmark-maybe-load-default-file)
+  (when (null? bookmark-alist)
+    (error "No bookmarks"))
+  (completing-read prompt (map car bookmark-alist) #f #t))
+
+(define-command (bookmark-delete . args)
+  "Delete the bookmark named BOOKMARK-NAME, and save the bookmarks.
+Interactively, read the name in the minibuffer with completion.
+Every bookmark of that name is deleted."
+  (let ((name (if (null? args) (bookmark--read-name "Delete bookmark: ") (car args))))
+    (bookmark-maybe-load-default-file)
+    (unless (assoc name bookmark-alist)
+      (error "Invalid bookmark %s" name))
+    (set! bookmark-alist (filter (lambda (b) (not (equal? (car b) name))) bookmark-alist))
+    (when (equal? bookmark-current-bookmark name)
+      (set! bookmark-current-bookmark #f))
+    (if bookmark-save-flag (bookmark-save))
+    #f))
+
+(define-command (bookmark-rename . args)
+  "Change the name of the bookmark OLD to NEW, and save the bookmarks.
+Interactively, read both names in the minibuffer.  An error is signaled if NEW is empty."
+  (let* ((old (if (null? args) (bookmark--read-name "Old bookmark name: ") (car args)))
+         (new (if (and (pair? args) (pair? (cdr args)))
+                  (cadr args)
+                  (read-string (format "New name (default %s): " old)))))
+    (bookmark-maybe-load-default-file)
+    (unless (assoc old bookmark-alist)
+      (error "Invalid bookmark %s" old))
+    (when (equal? new "")
+      (error "A bookmark name cannot be empty"))
+    (set! bookmark-alist
+          (map (lambda (b) (if (equal? (car b) old) (cons new (cdr b)) b)) bookmark-alist))
+    (when (equal? bookmark-current-bookmark old)
+      (set! bookmark-current-bookmark new))
+    (if bookmark-save-flag (bookmark-save))
+    #f))
+
 (define bookmark-sort-flag #t
   "Non-nil means that bookmarks are sorted by name in the bookmark list.")
 

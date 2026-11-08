@@ -200,9 +200,9 @@ fn test_errors() {
         ),
         (
             "(ert-delete-all-tests 1)",
-            "ert-delete-all-tests expects 0 arguments, given 1",
+            "Wrong number of arguments: ert-delete-all-tests, 1",
         ),
-        ("(ert-fail)", "ert-fail expects 1 argument, given 0"),
+        ("(ert-fail)", "Wrong number of arguments: ert-fail, 0"),
         ("(unwind-protect)", "unwind-protect expects a body form"),
     ] {
         assert_eq!(ev.eval(code).unwrap_err(), error, "{}", code);

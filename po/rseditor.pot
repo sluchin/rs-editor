@@ -311,6 +311,26 @@ msgid ""
 msgstr ""
 
 #: lisp/bookmark.scm
+msgctxt "function:bookmark--read-name"
+msgid "Read the name of an existing bookmark in the minibuffer, with PROMPT."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-delete"
+msgid ""
+"Delete the bookmark named BOOKMARK-NAME, and save the bookmarks.\n"
+"Interactively, read the name in the minibuffer with completion.\n"
+"Every bookmark of that name is deleted."
+msgstr ""
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-rename"
+msgid ""
+"Change the name of the bookmark OLD to NEW, and save the bookmarks.\n"
+"Interactively, read both names in the minibuffer.  An error is signaled if NEW is empty."
+msgstr ""
+
+#: lisp/bookmark.scm
 msgctxt "variable:bookmark-sort-flag"
 msgid "Non-nil means that bookmarks are sorted by name in the bookmark list."
 msgstr ""
@@ -791,11 +811,55 @@ msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window;
 msgstr ""
 
 #: lisp/compile.scm
+msgctxt "variable:grep--last"
+msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--glob->regexp"
+msgid "Return a regexp that matches a file name matching the shell wildcard GLOB (* ? and literal characters)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--glob-match"
+msgid "Return true if NAME matches one of GLOBS (a list of wildcards)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--select"
+msgid "Return the FILES below DIRECTORY that match GLOB (wildcards separated by spaces); only those directly in it unless RECURSIVE."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--run"
+msgid "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
+msgstr ""
+
+#: lisp/compile.scm
 msgctxt "function:grep"
 msgid ""
 "Search the files below a directory for lines that match a regexp.\n"
 "Interactively, read the regexp and the directory in the minibuffer.\n"
 "The matches are listed in the *grep* buffer; \\[next-error] visits them."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:rgrep"
+msgid ""
+"Search the files matching GLOB below a directory for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:lgrep"
+msgid ""
+"Search the files matching GLOB in a directory (not below it) for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep-again"
+msgid "Run the last grep, rgrep or lgrep again."
 msgstr ""
 
 #: lisp/dabbrev.scm
@@ -1804,6 +1868,40 @@ msgctxt "function:describe-variable"
 msgid ""
 "Display the full documentation of VARIABLE (a symbol).\n"
 "Interactively, read VARIABLE in the minibuffer with completion."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:help--first-line"
+msgid "Return the first line of TEXT, or \"Not documented.\" if TEXT is #f."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:help--apropos-text"
+msgid "Return the text of an apropos result with TITLE, listing NAMES (symbols)."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:help--read-pattern"
+msgid "Return the pattern given in ARGS, or read one with PROMPT."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:apropos-command"
+msgid ""
+"Show the commands whose names contain PATTERN, with their keys and the first line of the documentation.\n"
+"Interactively, read PATTERN in the minibuffer."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:apropos-documentation"
+msgid ""
+"Show the functions and commands whose documentation contains PATTERN.\n"
+"Interactively, read PATTERN in the minibuffer."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:describe-mode"
+msgid "Display the documentation of the major mode of the current buffer."
 msgstr ""
 
 #: lisp/help.scm
@@ -5739,6 +5837,16 @@ msgid ""
 msgstr ""
 
 #: lisp/rect.scm
+msgctxt "function:rectangle-mark-mode"
+msgid ""
+"Toggle the region as a rectangle.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"When on, the region is a rectangle between point and the mark: \\[kill-region] kills it\n"
+"like `kill-rectangle', and \\[kill-ring-save] saves it like `copy-rectangle-as-kill'.\n"
+"Turning it on without an active region sets the mark at point."
+msgstr ""
+
+#: lisp/rect.scm
 msgctxt "function:copy-rectangle-as-kill"
 msgid "Copy the region-rectangle and save it as the last killed one."
 msgstr ""
@@ -5880,9 +5988,17 @@ msgid ""
 msgstr ""
 
 #: lisp/register.scm
+msgctxt "function:kmacro-to-register"
+msgid ""
+"Store the last keyboard macro in the register REGISTER.\n"
+"Use `jump-to-register' to run the macro."
+msgstr ""
+
+#: lisp/register.scm
 msgctxt "function:jump-to-register"
 msgid ""
-"Go to the location stored in REGISTER, or restore the configuration stored there.\n"
+"Go to the location stored in REGISTER, restore the configuration stored there,\n"
+"or run the keyboard macro stored there.\n"
 "Push the mark if going to the location moves point, unless called in succession."
 msgstr ""
 
@@ -6750,17 +6866,34 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:rectangle-mark-mode--on"
+msgid "Non-nil while the region is a rectangle; see `rectangle-mark-mode'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--rectangle-region-p"
+msgid "Return true if the active region is a rectangle."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--rectangle-done"
+msgid "Leave `rectangle-mark-mode' after a command used the rectangle."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:kill-region"
 msgid ""
 "Kill the text between point and the mark, or between the two positions FROM and TO.\n"
-"The killed text is saved in the kill ring."
+"The killed text is saved in the kill ring.\n"
+"In `rectangle-mark-mode', kill the rectangle instead, like `kill-rectangle'."
 msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:kill-ring-save"
 msgid ""
 "Save the region in the kill ring, without killing it.\n"
-"Called from Lisp with START and END, save the text between them."
+"Called from Lisp with START and END, save the text between them.\n"
+"In `rectangle-mark-mode', save the rectangle instead, like `copy-rectangle-as-kill'."
 msgstr ""
 
 #: lisp/simple.scm
@@ -8414,6 +8547,121 @@ msgctxt "function:funcall"
 msgid "Call FUNCTION with the remaining arguments."
 msgstr ""
 
+#: lisp/tab-bar.scm
+msgctxt "variable:tab-bar--tabs"
+msgid ""
+"The tabs, in order.  Each is (NAME CONFIGURATION CAPTION): NAME is the name given\n"
+"by `tab-rename' or #f, CONFIGURATION the window configuration saved when the tab\n"
+"was left, and CAPTION the buffer name at that time."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "variable:tab-bar--current"
+msgid "The index (from 0) of the current tab."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-ref"
+msgid "Return the element INDEX of ITEMS."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-set"
+msgid "Return ITEMS with the element INDEX replaced by VALUE."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-remove"
+msgid "Return ITEMS without the element INDEX."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-insert"
+msgid "Return ITEMS with VALUE inserted before the element INDEX."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--ensure"
+msgid "Make the first tab, for the current window configuration, if there is none."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--save-current"
+msgid "Store the window configuration of the current tab."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--names"
+msgid "Return the names shown for the tabs."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--update"
+msgid "Tell the screen the names of the tabs and the current one."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--select"
+msgid "Make the tab INDEX (from 0) the current one."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--count-arg"
+msgid "Return the count given in ARGS or by the prefix argument (1 if none)."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--wrap"
+msgid "Return INDEX wrapped into the range of the tabs."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-new"
+msgid "Create a new tab, right after the current one, that shows the current buffer in one window."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-close"
+msgid ""
+"Close the tab N (the current one if none; N counts from 1) and show the next one.\n"
+"It is an error to close the only tab."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-close-other"
+msgid "Close all the tabs but the current one."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-next"
+msgid "Switch to the next tab, or N tabs ahead (back if N is negative), wrapping around."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-previous"
+msgid "Switch to the previous tab, or N tabs back (ahead if N is negative), wrapping around."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar-select-tab"
+msgid "Switch to the tab NUMBER (from 1)."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-switch"
+msgid "Switch to the tab named NAME.  Interactively, read the name in the minibuffer with completion."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-rename"
+msgid "Give the current tab the name NAME.  An empty name gives it the buffer name again."
+msgstr ""
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-move"
+msgid "Move the current tab N places ahead (back if N is negative), wrapping around."
+msgstr ""
+
 #: lisp/uniquify.scm
 msgctxt "variable:uniquify-buffer-name-style"
 msgid ""
@@ -8895,6 +9143,14 @@ msgstr ""
 #: lisp/window.scm
 msgctxt "function:project-tree"
 msgid "Show or hide the tree of the files of the project in the side bar."
+msgstr ""
+
+#: lisp/window.scm
+msgctxt "function:project-tree-focus"
+msgid ""
+"Show the project tree in the side bar if it is hidden, and move the focus to it.\n"
+"In the tree, n and p move, RET opens, f and b open and close a directory,\n"
+"g reads again, and q or C-g returns to the editor."
 msgstr ""
 
 #: lisp/winner.scm

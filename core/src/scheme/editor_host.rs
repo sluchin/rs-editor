@@ -711,6 +711,20 @@ impl<U: Host> EditorHost<U> {
                 ed.delete_window(w)?;
                 Value::Nil
             }
+            "set-tab-bar" => {
+                let names = match args.first() {
+                    Some(Value::List(items)) => items
+                        .iter()
+                        .map(|item| match item {
+                            Value::String(name) => Ok(name.clone()),
+                            _ => Err(format!("{op}: tab names must be strings")),
+                        })
+                        .collect::<Result<Vec<_>, _>>()?,
+                    _ => Vec::new(),
+                };
+                ed.set_tab_bar(names, int(op, args, 1)?.max(0) as usize);
+                Value::Nil
+            }
             "current-window-configuration" => Value::Number(ed.save_window_configuration() as f64),
             "set-window-configuration" => {
                 ed.restore_window_configuration(int(op, args, 0)?.max(0) as usize)?;

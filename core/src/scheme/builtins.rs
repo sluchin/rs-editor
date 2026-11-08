@@ -323,7 +323,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             list(name, &v)?
                 .get(index)
                 .cloned()
-                .ok_or_else(|| format!("{}: index out of range", name).into())
+                .ok_or_else(|| Error::args_out_of_range(vec![v.clone(), k.clone()]))
         }
         "map" | "for-each" => {
             let Some((procedure, lists)) = args.split_first() else {
@@ -1441,26 +1441,7 @@ fn or_default(input: String, default: Option<String>) -> String {
 pub(crate) fn fixed<const N: usize>(name: &str, args: Vec<Value>) -> Result<[Value; N], Error> {
     let count = args.len();
     args.try_into()
-        .map_err(|_| arity_error(name, N, count).into())
-}
-
-/// 引数の数が違うときの, 失敗の内容を作ります.
-///
-/// # Arguments
-///
-/// * `name` - 手続きの名前.
-/// * `expected` - 求める引数の数.
-/// * `given` - 渡された引数の数.
-///
-/// # Returns
-///
-/// 失敗の内容.
-fn arity_error(name: &str, expected: usize, given: usize) -> String {
-    let plural = if expected == 1 { "" } else { "s" };
-    format!(
-        "{} expects {} argument{}, given {}",
-        name, expected, plural, given
-    )
+        .map_err(|_| Error::wrong_number_of_arguments(name, count))
 }
 
 /// 数を取り出します.

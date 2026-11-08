@@ -10,6 +10,7 @@ use rseditor::session::{
 };
 use rseditor_core::editor::Editor;
 use rseditor_core::frame::Frame;
+use rseditor_core::startup::Options;
 
 /// 偽の画面.
 #[derive(Default)]
@@ -400,7 +401,14 @@ fn test_init_file_and_run() {
         })
         .unwrap();
     drop(sender);
-    run(front.clone(), None, receiver, AUTO_SAVE_TIMEOUT).unwrap();
+    run(
+        front.clone(),
+        None,
+        &Options::default(),
+        receiver,
+        AUTO_SAVE_TIMEOUT,
+    )
+    .unwrap();
     let frames = front.frames.lock().unwrap();
     assert_eq!(frames.len(), 2);
     assert!(frames[1].buffers[0].changes[0].insert == "x");
@@ -467,7 +475,14 @@ fn test_auto_save_and_backup() {
         std::thread::sleep(Duration::from_millis(50));
         drop(sender);
     });
-    run(front.clone(), None, receiver, Duration::from_millis(5)).unwrap();
+    run(
+        front.clone(),
+        None,
+        &Options::default(),
+        receiver,
+        Duration::from_millis(5),
+    )
+    .unwrap();
     thread.join().unwrap();
 }
 
@@ -519,4 +534,115 @@ fn test_screen_answers_and_recent_keys() {
         key(&mut session, "C-f");
     }
     assert_eq!(session.eval("(length (recent-keys))").unwrap(), "300");
+}
+
+#[test]
+fn test_apply_startup_sets_the_directories_and_the_debug_flag() {
+    let (mut session, _front) = setup();
+    assert_eq!(session.eval("init-file-debug").unwrap(), "#f");
+    assert_eq!(
+        session.eval("user-emacs-directory").unwrap(),
+        "\"~/.rseditor.d/\""
+    );
+
+    session.apply_startup(&Options {
+        debug_init: true,
+        chdir: Some("/tmp".to_string()),
+        init_directory: Some("/tmp/conf".to_string()),
+        ..Options::default()
+    });
+
+    assert_eq!(session.eval("init-file-debug").unwrap(), "#t");
+    assert_eq!(
+        session.eval("user-emacs-directory").unwrap(),
+        "\"/tmp/conf/\""
+    );
+    assert_eq!(
+        session.eval("(expand-file-name \"x\")").unwrap(),
+        "\"/tmp/x\""
+    );
+    // 末尾に `/` があれば, そのまま
+    session.apply_startup(&Options {
+        init_directory: Some("/tmp/conf2/".to_string()),
+        ..Options::default()
+    });
+    assert_eq!(
+        session.eval("user-emacs-directory").unwrap(),
+        "\"/tmp/conf2/\""
+    );
+}
+
+#[test]
+fn test_open_files_visits_each_file_and_shows_the_last() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dir.path().join("a.txt");
+    let b = dir.path().join("b.txt");
+    std::fs::write(&a, "A").unwrap();
+    std::fs::write(&b, "B").unwrap();
+    let (mut session, _front) = setup();
+
+    session.open_files(&[
+        a.to_string_lossy().into_owned(),
+        b.to_string_lossy().into_owned(),
+    ]);
+
+    assert_eq!(session.eval("(buffer-name)").unwrap(), "\"b.txt\"");
+    assert_eq!(session.eval("(buffer-string)").unwrap(), "\"B\"");
+}
+
+#[test]
+fn test_tabs_are_created_switched_renamed_moved_and_closed() {
+    let (mut session, front) = setup();
+    // タブが 1 つの間は、タブの行を出さない
+    key(&mut session, "C-x t 2");
+    let frame = last(&front);
+    assert_eq!(frame.tabs, vec!["*scratch*", "*scratch*"]);
+    assert_eq!(frame.tab, 1);
+    // 2 つめのタブで窓を分けて、別のバッファを出す
+    key(&mut session, "C-x 2");
+    session.eval("(switch-to-buffer \"other\")").unwrap();
+    key(&mut session, "C-x t r");
+    session.eval("(tab-rename \"work\")").unwrap();
+    assert_eq!(last(&front).tabs, vec!["*scratch*", "work"]);
+    // 番号で切り替えると、窓の配置が戻る
+    session.handle(Input::SelectTab { number: 1 });
+    let frame = last(&front);
+    assert_eq!((frame.tab, frame.windows.len()), (0, 1));
+    session.handle(Input::SelectTab { number: 2 });
+    assert_eq!(last(&front).windows.len(), 2);
+    // 範囲の外の番号は、エコー領域に出す
+    session.handle(Input::SelectTab { number: 9 });
+    assert_eq!(last(&front).message, "No such tab");
+    // 次、前、移動
+    key(&mut session, "C-x t o");
+    assert_eq!(last(&front).tab, 0);
+    key(&mut session, "C-x t O");
+    assert_eq!(last(&front).tab, 1);
+    session.eval("(tab-move 1)").unwrap();
+    let frame = last(&front);
+    assert_eq!((frame.tabs[0].as_str(), frame.tab), ("work", 0));
+    // 名前で切り替える
+    session.eval("(tab-switch \"*scratch*\")").unwrap();
+    assert_eq!(last(&front).tab, 1);
+    session.handle(Input::Command {
+        name: "tab-new".to_string(),
+    });
+    assert_eq!(last(&front).tabs.len(), 3);
+    session.eval("(tab-switch \"nothing\")").unwrap_err();
+    // 閉じる: 他を閉じ，残りの 1 つは閉じられない
+    key(&mut session, "C-x t 0");
+    assert_eq!(last(&front).tabs.len(), 2);
+    session.eval("(tab-close 1)").unwrap();
+    assert!(last(&front).tabs.is_empty());
+    session.eval("(tab-close)").unwrap_err();
+    session.eval("(tab-close 7)").unwrap_err();
+    key(&mut session, "C-x t 2");
+    key(&mut session, "C-x t 2");
+    key(&mut session, "C-x t 1");
+    assert!(last(&front).tabs.is_empty());
+    // 閉じたタブより後ろを選んでいたとき、番号がずれない
+    key(&mut session, "C-x t 2");
+    key(&mut session, "C-x t 2");
+    session.eval("(tab-close 1)").unwrap();
+    assert_eq!(last(&front).tab, 1);
 }

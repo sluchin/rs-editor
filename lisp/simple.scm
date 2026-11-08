@@ -817,20 +817,38 @@ If the previous command was a kill, append the text to its kill."
     (set! this-command 'kill-region)
     (set-deactivate-mark #t)))
 
+(define rectangle-mark-mode--on #f
+  "Non-nil while the region is a rectangle; see `rectangle-mark-mode'.")
+
+(define (simple--rectangle-region-p)
+  "Return true if the active region is a rectangle."
+  (and rectangle-mark-mode--on (region-active-p)))
+
+(define (simple--rectangle-done)
+  "Leave `rectangle-mark-mode' after a command used the rectangle."
+  (set! rectangle-mark-mode--on #f)
+  (set-deactivate-mark #t))
+
 (define-command (kill-region . args)
   "Kill the text between point and the mark, or between the two positions FROM and TO.
-The killed text is saved in the kill ring."
-  (if (null? args)
-      (simple--kill (region-beginning) (region-end))
-      (simple--kill (car args) (cadr args))))
+The killed text is saved in the kill ring.
+In `rectangle-mark-mode', kill the rectangle instead, like `kill-rectangle'."
+  (cond ((and (null? args) (simple--rectangle-region-p))
+         (kill-rectangle)
+         (simple--rectangle-done))
+        ((null? args) (simple--kill (region-beginning) (region-end)))
+        (else (simple--kill (car args) (cadr args)))))
 
 (define-command (kill-ring-save . args)
   "Save the region in the kill ring, without killing it.
-Called from Lisp with START and END, save the text between them."
-  (let ((start (if (null? args) (region-beginning) (car args)))
-        (end (if (null? args) (region-end) (cadr args))))
-    (kill-new (buffer-substring (min start end) (max start end)))
-    (set-deactivate-mark #t)))
+Called from Lisp with START and END, save the text between them.
+In `rectangle-mark-mode', save the rectangle instead, like `copy-rectangle-as-kill'."
+  (if (and (null? args) (simple--rectangle-region-p))
+      (begin (copy-rectangle-as-kill) (simple--rectangle-done))
+      (let ((start (if (null? args) (region-beginning) (car args)))
+            (end (if (null? args) (region-end) (cadr args))))
+        (kill-new (buffer-substring (min start end) (max start end)))
+        (set-deactivate-mark #t))))
 
 (define-command (kill-line . args)
   "Kill the rest of the line; if there are no nonblanks there, kill through the newline.

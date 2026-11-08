@@ -62,6 +62,8 @@ pub struct Editor {
     pub global_mark_ring: Vec<(String, usize)>,
     /// 覚えたウィンドウの設定 (Emacs の `current-window-configuration`. 番号で引く).
     window_configurations: Vec<WindowConfiguration>,
+    /// タブの名前 (タブが 2 つ未満なら空. 画面がタブの行を出す)と, 選んでいるタブの番号.
+    tab_bar: (Vec<String>, usize),
     /// 文字列に `string-match` した結果の括弧の範囲 (文字の位置. 0 から)と, 決めた順番.
     pub string_match: Option<(Groups, u64)>,
     /// バッファに専用のウィンドウ (Emacs の `window-dedicated-p`). 値は `t` (強く専用) か, 記号の名前.
@@ -109,6 +111,7 @@ impl Editor {
             prefix_arg: None,
             global_mark_ring: Vec::new(),
             window_configurations: Vec::new(),
+            tab_bar: (Vec::new(), 0),
             string_match: None,
             dedicated: BTreeMap::new(),
         }
@@ -536,6 +539,16 @@ impl Editor {
         } else {
             Err(format!("Cannot resize window {window}"))
         }
+    }
+
+    /// タブの名前と、選んでいるタブの番号を決めます (Lisp の `set-tab-bar`. 名前が空なら、タブの行を出さない).
+    pub fn set_tab_bar(&mut self, names: Vec<String>, current: usize) {
+        self.tab_bar = (names, current);
+    }
+
+    /// タブの名前と、選んでいるタブの番号を返します.
+    pub fn tab_bar(&self) -> (&[String], usize) {
+        (&self.tab_bar.0, self.tab_bar.1)
     }
 
     /// 今のウィンドウの設定を覚えます (Emacs の `current-window-configuration`).

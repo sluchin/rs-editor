@@ -3,6 +3,8 @@
 //! 画面に頼んだ操作の返事です.
 
 use std::path::{Path, PathBuf};
+
+use rseditor_core::startup::Options;
 #[cfg(not(tarpaulin_include))]
 use std::sync::Arc;
 
@@ -48,6 +50,45 @@ pub fn init_file_path() -> Option<PathBuf> {
     init_file_candidates(dirs::home_dir().as_deref(), dirs::config_dir().as_deref())
         .into_iter()
         .find(|path| path.exists())
+}
+
+/// 起動の引数に従って, 読む初期設定ファイルを決めます.
+///
+/// # Arguments
+///
+/// * `options` - 起動の引数.
+/// * `default` - 引数が無いときに読むファイル (`init_file_path`).
+///
+/// # Returns
+///
+/// `-q` と `-Q` では `None`. `--init-directory` があれば, そのディレクトリの `init.scm` (無ければ `None`).
+/// どちらも無ければ `default`.
+pub fn choose_init_file(options: &Options, default: Option<PathBuf>) -> Option<PathBuf> {
+    if options.no_init_file {
+        return None;
+    }
+    match &options.init_directory {
+        Some(dir) => Some(Path::new(dir).join("init.scm")).filter(|path| path.exists()),
+        None => default,
+    }
+}
+
+/// 起動の引数を返します (初めに呼んだときに, 環境の引数から読む. 読めなければ, 引数は無いものとする).
+///
+/// # Returns
+///
+/// 起動の引数.
+// 実際のプロセスの引数を読むため, カバレッジの対象外にする (読み方は `rseditor_core::startup::parse` で検証する).
+#[cfg(not(tarpaulin_include))]
+pub fn startup_options() -> &'static Options {
+    static OPTIONS: std::sync::OnceLock<Options> = std::sync::OnceLock::new();
+    OPTIONS.get_or_init(|| {
+        let args: Vec<String> = std::env::args().skip(1).collect();
+        rseditor_core::startup::parse(&args).unwrap_or_else(|error| {
+            log::warn!("Could not read the arguments: {error}");
+            Options::default()
+        })
+    })
 }
 
 /// 画面からの, エディタの操作の返事を受け取ります.

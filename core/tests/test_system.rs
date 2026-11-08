@@ -418,7 +418,7 @@ fn test_time() {
     );
     assert_eq!(
         eval_err("(current-time 1)"),
-        "current-time expects 0 arguments, given 1"
+        "Wrong number of arguments: current-time, 1"
     );
 }
 
@@ -450,7 +450,7 @@ fn test_regexp() {
     );
     assert_eq!(
         eval_err("(regexp-match \"a\" \"ab\" 3)"),
-        "regexp-match: index out of range"
+        "Args out of range: \"ab\", 3"
     );
     assert_eq!(
         eval_err("(regexp-match \"a\")"),
@@ -806,15 +806,15 @@ fn test_buffer_operations() {
             "buffer-file-name expects 0 or 1 arguments",
         ),
         ("(kill-buffer 1)", "Wrong type argument: stringp, 1"),
-        ("(key-binding)", "key-binding expects 1 argument, given 0"),
+        ("(key-binding)", "Wrong number of arguments: key-binding, 0"),
         ("(key-binding 1)", "Wrong type argument: stringp, 1"),
         (
             "(all-key-bindings 1)",
-            "all-key-bindings expects 0 arguments, given 1",
+            "Wrong number of arguments: all-key-bindings, 1",
         ),
         (
             "(recent-keys 1)",
-            "recent-keys expects 0 arguments, given 1",
+            "Wrong number of arguments: recent-keys, 1",
         ),
     ] {
         assert_eq!(ev.eval_with(code, &nothing).unwrap_err(), error, "{}", code);
@@ -933,7 +933,7 @@ fn test_hooks() {
         ("(add-hook 1 'f)", "add-hook expects a hook symbol, given 1"),
         (
             "(remove-hook 'h)",
-            "remove-hook expects 2 arguments, given 1",
+            "Wrong number of arguments: remove-hook, 1",
         ),
         ("(run-hooks 1)", "run-hooks expects a hook symbol, given 1"),
         ("(run-hook-with-args)", "run-hook-with-args expects a hook"),

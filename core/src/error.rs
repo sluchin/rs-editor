@@ -250,6 +250,19 @@ impl Error {
         )
     }
 
+    /// `wrong-number-of-arguments`: 引数の数が合わない (データは, 手続きの名前と, 渡された個数).
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - 手続きの名前.
+    /// * `given` - 渡された引数の個数.
+    pub fn wrong_number_of_arguments(name: &str, given: usize) -> Self {
+        Self::new(
+            "wrong-number-of-arguments",
+            vec![Value::Symbol(name.to_string()), Value::Number(given as f64)],
+        )
+    }
+
     /// `args-out-of-range`: 範囲の外の引数.
     ///
     /// # Arguments

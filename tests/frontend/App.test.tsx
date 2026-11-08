@@ -94,6 +94,8 @@ const sendFrame = (frame: Partial<Frame> = {}) =>
         selected: 1,
         buffers: [buf('*scratch*', { text: ';; scratch' })],
         message: '',
+        tabs: [],
+        tab: 0,
         ...frame,
       },
     }),
@@ -216,6 +218,18 @@ describe('App (描く内容)', () => {
     expect(view.container.querySelector('.window-left-of')).not.toBeNull()
     expect(view.container.querySelector('.cm-content')?.textContent).toBe('x;; scratch')
     expect(view.container.querySelector('.minibuffer')?.textContent).toBe('hello')
+  })
+
+  it('タブがあれば、タブの行を出し、押すとタブを選び、+ で新しいタブを作ること', async () => {
+    const view = await setup()
+    expect(view.container.querySelector('.tab-bar')).toBeNull()
+    sendFrame({ tabs: ['one', 'two'], tab: 1 })
+    const tabs = view.container.querySelectorAll('.tab-bar-tab')
+    expect([...tabs].map((t) => t.textContent)).toEqual(['one', 'two'])
+    fireEvent.click(tabs[0])
+    expect(inputs()).toContainEqual({ kind: 'select-tab', number: 1 })
+    fireEvent.click(view.container.querySelector('.tab-bar-new') as HTMLElement)
+    expect(inputs()).toContainEqual({ kind: 'command', name: 'tab-new' })
   })
 
   it('見えている行の数を知らせ, 変わらなければ知らせないこと', async () => {
@@ -472,6 +486,16 @@ describe('App (画面だけの操作)', () => {
     })
     fireEvent.click(file)
     expect(inputs()).toContainEqual({ kind: 'find-file', path: '/proj/a.txt' })
+    await request('toggle-project-tree')
+    expect(view.container.querySelector('.project-tree')).toBeNull()
+    // 'focus なら, 出していなければ出して, フォーカスを移す
+    expect((await request('toggle-project-tree', ['focus'])).error).toBeNull()
+    const tree = view.container.querySelector('.project-tree') as HTMLElement
+    await vi.waitFor(() => expect(document.activeElement).toBe(tree))
+    tree.blur()
+    // 出していれば, 消さずにフォーカスだけ移す
+    await request('toggle-project-tree', ['focus'])
+    await vi.waitFor(() => expect(document.activeElement).toBe(tree))
     await request('toggle-project-tree')
     expect(view.container.querySelector('.project-tree')).toBeNull()
     // 根が / なら, そのまま

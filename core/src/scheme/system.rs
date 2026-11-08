@@ -806,7 +806,10 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, Error> {
     let text = string(name, text)?;
     let count = text.chars().count();
     if start > count {
-        return Err("regexp-match: index out of range".to_string().into());
+        return Err(Error::args_out_of_range(vec![
+            Value::String(text.to_string()),
+            Value::Number(start as f64),
+        ]));
     }
     let offset = text
         .char_indices()

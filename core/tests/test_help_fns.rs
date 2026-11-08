@@ -262,6 +262,71 @@ fn test_help_builtins() {
     );
     assert_eq!(
         ev.eval("(editor-command-names 1)").unwrap_err(),
-        "editor-command-names expects 0 arguments, given 1"
+        "Wrong number of arguments: editor-command-names, 1"
+    );
+}
+
+/// *Help* の本文を返す.
+fn help_text(editor: &FakeEditor) -> String {
+    editor.buffers.lock().unwrap()["*Help*"]
+        .text
+        .iter()
+        .collect()
+}
+
+#[test]
+fn test_apropos_command_lists_matching_commands() {
+    let (ev, editor) = setup();
+    ev.eval_with("(apropos-command \"describe-func\")", &editor)
+        .unwrap();
+    let text = help_text(&editor);
+    assert!(
+        text.starts_with("Commands matching \"describe-func\":"),
+        "{}",
+        text
+    );
+    assert!(text.contains("describe-function\n"), "{}", text);
+    assert!(!text.contains("describe-variable"), "{}", text);
+}
+
+#[test]
+fn test_apropos_command_without_match_and_interactively() {
+    let (ev, editor) = setup();
+    ev.eval_with("(apropos-command \"no-such-command-xyz\")", &editor)
+        .unwrap();
+    assert!(help_text(&editor).contains("No matches."));
+    editor
+        .answers
+        .lock()
+        .unwrap()
+        .push("describe-var".to_string());
+    ev.run_command("apropos-command", &editor).unwrap();
+    assert_eq!(*editor.prompts.lock().unwrap(), vec!["Apropos command: "]);
+    assert!(help_text(&editor).contains("describe-variable"));
+}
+
+#[test]
+fn test_apropos_documentation_searches_the_docstrings() {
+    let (ev, editor) = setup();
+    ev.eval_with(
+        "(apropos-documentation \"Display the full documentation of FUNCTION\")",
+        &editor,
+    )
+    .unwrap();
+    let text = help_text(&editor);
+    assert!(text.contains("describe-function"), "{}", text);
+    assert!(!text.contains("view-lossage"), "{}", text);
+}
+
+#[test]
+fn test_describe_mode_shows_the_major_mode() {
+    let (ev, editor) = setup();
+    ev.eval("(define major-mode 'scheme-mode)").unwrap();
+    ev.run_command("describe-mode", &editor).unwrap();
+    let text = help_text(&editor);
+    assert!(
+        text.starts_with("Major mode: scheme-mode\n\nNot documented."),
+        "{}",
+        text
     );
 }

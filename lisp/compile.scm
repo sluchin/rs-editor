@@ -428,10 +428,68 @@ move to the messages of another file, g runs the compilation again, and q quits 
       (goto-char (point-min))
       (set-buffer-modified-p #f)
       (set-buffer-read-only #t)
-      (local-set-key "RET" 'compile-goto-error))
+      (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
+                '(("RET" compile-goto-error) ("C-o" compilation-display-error)
+                  ("n" next-error-no-select) ("p" previous-error-no-select)
+                  ("M-n" compilation-next-error) ("M-p" compilation-previous-error)
+                  ("TAB" compilation-next-error) ("S-TAB" compilation-previous-error)
+                  ("M-{" compilation-previous-file) ("M-}" compilation-next-file)
+                  ("g" grep-again) ("q" quit-window)
+                  ("SPC" scroll-up-command) ("DEL" scroll-down-command)
+                  ("<" beginning-of-buffer) (">" end-of-buffer))))
     (compile--set-source "*grep*" directory start end)
     (display-buffer "*grep*")
     "*grep*"))
+
+(define grep--last #f
+  "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'.")
+
+(define (grep--glob->regexp glob)
+  "Return a regexp that matches a file name matching the shell wildcard GLOB (* ? and literal characters)."
+  (string-append
+   "^"
+   (let loop ((i 0) (result ""))
+     (if (= i (string-length glob))
+         result
+         (let ((c (substring glob i (+ i 1))))
+           (loop (+ i 1)
+                 (string-append result
+                                (cond ((equal? c "*") "[^/]*")
+                                      ((equal? c "?") "[^/]")
+                                      (else (regexp-quote c))))))))
+   "$"))
+
+(define (grep--glob-match globs name)
+  "Return true if NAME matches one of GLOBS (a list of wildcards)."
+  (let loop ((globs globs))
+    (cond ((null? globs) #f)
+          ((regexp-match (grep--glob->regexp (car globs)) name) #t)
+          (else (loop (cdr globs))))))
+
+(define (grep--select files directory glob recursive)
+  "Return the FILES below DIRECTORY that match GLOB (wildcards separated by spaces); only those directly in it unless RECURSIVE."
+  (let ((globs (filter (lambda (g) (not (equal? g ""))) (split-string glob " "))))
+    (filter (lambda (file)
+              (let ((relative (substring file (string-length directory) (string-length file))))
+                (and (or recursive (not (string-search "/" relative)))
+                     (grep--glob-match globs (file-name-nondirectory file)))))
+            files)))
+
+(define (grep--run pattern dir glob recursive)
+  "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
+  (let* ((directory (let ((expanded (expand-file-name dir)))
+                      (if (string-suffix? "/" expanded) expanded (string-append expanded "/"))))
+         (hits (map (lambda (hit)
+                      (list (substring (car hit) (string-length directory) (string-length (car hit)))
+                            (cadr hit)
+                            (caddr hit)))
+                    (rust-grep pattern
+                               (grep--select (grep--files directory) directory glob recursive)))))
+    (set! grep--last (list pattern dir glob recursive))
+    (grep--show directory pattern hits)
+    (message (format "Grep finished with %s found"
+                     (cond ((null? hits) "no matches") ((null? (cdr hits)) "1 match") (else (format "%d matches" (length hits))))))
+    #f))
 
 (define-command (grep . args)
   "Search the files below a directory for lines that match a regexp.
@@ -440,18 +498,38 @@ The matches are listed in the *grep* buffer; \\[next-error] visits them."
   (let* ((pattern (if (pair? args) (car args) (read-string "Run grep (regexp): ")))
          (dir (if (and (pair? args) (pair? (cdr args)))
                   (cadr args)
-                  (read-file-name "In directory: " (compile--default-directory))))
-         (directory (let ((expanded (expand-file-name dir)))
-                      (if (string-suffix? "/" expanded) expanded (string-append expanded "/"))))
-         (hits (map (lambda (hit)
-                      (list (substring (car hit) (string-length directory) (string-length (car hit)))
-                            (cadr hit)
-                            (caddr hit)))
-                    (rust-grep pattern (grep--files directory)))))
-    (grep--show directory pattern hits)
-    (message (format "Grep finished with %s found"
-                     (cond ((null? hits) "no matches") ((null? (cdr hits)) "1 match") (else (format "%d matches" (length hits))))))
-    #f))
+                  (read-file-name "In directory: " (compile--default-directory)))))
+    (grep--run pattern dir "*" #t)))
+
+(define-command (rgrep . args)
+  "Search the files matching GLOB below a directory for lines that match a regexp.
+Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+  (let* ((pattern (if (pair? args) (car args) (read-string "Search for (regexp): ")))
+         (glob (if (and (pair? args) (pair? (cdr args)))
+                   (cadr args)
+                   (read-string "Files (wildcards): " "*")))
+         (dir (if (and (pair? args) (pair? (cdr args)) (pair? (cddr args)))
+                  (caddr args)
+                  (read-file-name "Base directory: " (compile--default-directory)))))
+    (grep--run pattern dir glob #t)))
+
+(define-command (lgrep . args)
+  "Search the files matching GLOB in a directory (not below it) for lines that match a regexp.
+Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+  (let* ((pattern (if (pair? args) (car args) (read-string "Search for (regexp): ")))
+         (glob (if (and (pair? args) (pair? (cdr args)))
+                   (cadr args)
+                   (read-string "Files (wildcards): " "*")))
+         (dir (if (and (pair? args) (pair? (cdr args)) (pair? (cddr args)))
+                  (caddr args)
+                  (read-file-name "Directory: " (compile--default-directory)))))
+    (grep--run pattern dir glob #f)))
+
+(define-command (grep-again . args)
+  "Run the last grep, rgrep or lgrep again."
+  (if grep--last
+      (apply grep--run grep--last)
+      (error "No grep to run again")))
 
 (provide 'compile)
 

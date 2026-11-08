@@ -145,6 +145,22 @@ impl Host for FakeEditor {
 }
 
 #[test]
+fn test_error_kinds_of_arity_and_range() {
+    assert_eq!(
+        eval("(condition-case e (car 1 2) (wrong-number-of-arguments (cdr e)))"),
+        "(car 2)"
+    );
+    assert_eq!(
+        eval("(condition-case e (list-ref '(1) 1) (args-out-of-range (cdr e)))"),
+        "((1) 1)"
+    );
+    assert_eq!(
+        eval("(condition-case e ((lambda (x) x)) (wrong-number-of-arguments (car e)))"),
+        "wrong-number-of-arguments"
+    );
+}
+
+#[test]
 fn test_define_lambda_and_closures() {
     let ev = Evaluator::new();
     assert_eq!(ev.eval("(define (square x) (* x x))").unwrap(), "square");
@@ -454,6 +470,7 @@ fn test_define_command_and_global_set_key() {
             "fit-window-to-buffer",
             "move-to-window-line-top-bottom",
             "project-tree",
+            "project-tree-focus",
             "find-file",
             "find-file-other-window",
             "find-alternate-file",
@@ -492,7 +509,13 @@ fn test_define_command_and_global_set_key() {
             "compilation-display-error",
             "compilation-mode",
             "grep",
+            "rgrep",
+            "lgrep",
+            "grep-again",
             "describe-variable",
+            "apropos-command",
+            "apropos-documentation",
+            "describe-mode",
             "describe-command",
             "describe-symbol",
             "describe-key",
@@ -548,6 +571,8 @@ fn test_define_command_and_global_set_key() {
             "bookmark-set",
             "bookmark-set-no-overwrite",
             "bookmark-jump",
+            "bookmark-delete",
+            "bookmark-rename",
             "bookmark-bmenu-list",
             "list-buffers",
             "Buffer-menu-delete",
@@ -657,24 +682,24 @@ fn test_evaluator_reports_the_errors() {
         ("(when)", "when expects a test"),
         (
             "((lambda (a) a))",
-            "#<procedure> expects 1 arguments, given 0",
+            "Wrong number of arguments: #<procedure>, 0",
         ),
         (
             "(define (f a . r) a) (f)",
-            "f expects at least 1 arguments, given 0",
+            "Wrong number of arguments: f, 0",
         ),
         ("(< 'a)", "Wrong type argument: number-or-marker-p, a"),
         ("(<)", "< expects at least one argument"),
         ("(max)", "max expects at least one argument"),
-        ("(abs 1 2)", "abs expects 1 argument, given 2"),
-        ("(eq? 1)", "eq? expects 2 arguments, given 1"),
-        ("(point 1)", "point expects 0 arguments, given 1"),
+        ("(abs 1 2)", "Wrong number of arguments: abs, 2"),
+        ("(eq? 1)", "Wrong number of arguments: eq?, 1"),
+        ("(point 1)", "Wrong number of arguments: point, 1"),
         ("(modulo 1 0)", "Arithmetic error"),
         ("(zero? 'a)", "Wrong type argument: number-or-marker-p, a"),
         ("(car 1)", "Wrong type argument: listp, 1"),
         ("(cons 1 2)", "cons expects a list as the second argument"),
         ("(length 1)", "Wrong type argument: sequencep, 1"),
-        ("(list-ref '(1) 1)", "list-ref: index out of range"),
+        ("(list-ref '(1) 1)", "Args out of range: (1), 1"),
         ("(list-ref '(1) -1)", "Wrong type argument: integerp, -1"),
         ("(map car)", "map expects a procedure and lists"),
         ("(map)", "map expects a procedure and lists"),

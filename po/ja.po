@@ -393,6 +393,31 @@ msgstr ""
 "ファイルの本文が変わっていれば, 周りの文字から位置を探し直す."
 
 #: lisp/bookmark.scm
+msgctxt "function:bookmark--read-name"
+msgid "Read the name of an existing bookmark in the minibuffer, with PROMPT."
+msgstr "ミニバッファで, PROMPT を出して, 今あるブックマークの名前を読む."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-delete"
+msgid ""
+"Delete the bookmark named BOOKMARK-NAME, and save the bookmarks.\n"
+"Interactively, read the name in the minibuffer with completion.\n"
+"Every bookmark of that name is deleted."
+msgstr ""
+"名前が BOOKMARK-NAME のブックマークを消し, ブックマークを保存する.\n"
+"対話的には, ミニバッファで補完しながら名前を読む.\n"
+"同じ名前のブックマークは, 全て消える."
+
+#: lisp/bookmark.scm
+msgctxt "function:bookmark-rename"
+msgid ""
+"Change the name of the bookmark OLD to NEW, and save the bookmarks.\n"
+"Interactively, read both names in the minibuffer.  An error is signaled if NEW is empty."
+msgstr ""
+"ブックマーク OLD の名前を NEW に変え, ブックマークを保存する.\n"
+"対話的には, ミニバッファで 2 つの名前を読む.  NEW が空ならエラー."
+
+#: lisp/bookmark.scm
 msgctxt "variable:bookmark-sort-flag"
 msgid "Non-nil means that bookmarks are sorted by name in the bookmark list."
 msgstr "非 nil なら, ブックマークの一覧を名前で並べる."
@@ -950,6 +975,31 @@ msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window;
 msgstr "HITS ((FILE LINE TEXT) ...) を *grep* バッファに入れて, 別の窓に出す. バッファの名前を返す."
 
 #: lisp/compile.scm
+msgctxt "variable:grep--last"
+msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'."
+msgstr "最後の検索の引数 (PATTERN DIRECTORY GLOB RECURSIVE)。`grep-again' が使う。"
+
+#: lisp/compile.scm
+msgctxt "function:grep--glob->regexp"
+msgid "Return a regexp that matches a file name matching the shell wildcard GLOB (* ? and literal characters)."
+msgstr "シェルのワイルドカード GLOB (`*` と `?` と、そのままの文字) に合うファイル名に合う正規表現を返す。"
+
+#: lisp/compile.scm
+msgctxt "function:grep--glob-match"
+msgid "Return true if NAME matches one of GLOBS (a list of wildcards)."
+msgstr "NAME が GLOBS (ワイルドカードのリスト) のどれかに合うなら、真を返す。"
+
+#: lisp/compile.scm
+msgctxt "function:grep--select"
+msgid "Return the FILES below DIRECTORY that match GLOB (wildcards separated by spaces); only those directly in it unless RECURSIVE."
+msgstr "DIRECTORY の下の FILES のうち、GLOB (空白で区切ったワイルドカード) に合うものを返す。RECURSIVE が偽なら、直下のものだけ。"
+
+#: lisp/compile.scm
+msgctxt "function:grep--run"
+msgid "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
+msgstr "GLOB に合うファイルから PATTERN を探し (DIR とその下。RECURSIVE が偽なら DIR の直下だけ)、*grep* に出す。"
+
+#: lisp/compile.scm
 msgctxt "function:grep"
 msgid ""
 "Search the files below a directory for lines that match a regexp.\n"
@@ -959,6 +1009,29 @@ msgstr ""
 "ディレクトリの下のファイルから, 正規表現に合う行を探す.\n"
 "対話では, 正規表現とディレクトリをミニバッファで読む.\n"
 "合った行は *grep* バッファに並べる. \\[next-error] で順に訪ねる."
+
+#: lisp/compile.scm
+msgctxt "function:rgrep"
+msgid ""
+"Search the files matching GLOB below a directory for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+"ディレクトリの下の、GLOB に合うファイルから、正規表現に合う行を探す。\n"
+"対話的に呼ぶと、正規表現、ファイル名のワイルドカード (空白で区切る)、ディレクトリを聞く。"
+
+#: lisp/compile.scm
+msgctxt "function:lgrep"
+msgid ""
+"Search the files matching GLOB in a directory (not below it) for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+"ディレクトリの直下の、GLOB に合うファイルから、正規表現に合う行を探す。\n"
+"対話的に呼ぶと、正規表現、ファイル名のワイルドカード (空白で区切る)、ディレクトリを聞く。"
+
+#: lisp/compile.scm
+msgctxt "function:grep-again"
+msgid "Run the last grep, rgrep or lgrep again."
+msgstr "最後の grep、rgrep、lgrep をもう一度行う。"
 
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"
@@ -2162,6 +2235,44 @@ msgid ""
 msgstr ""
 "VARIABLE (記号)の完全な説明を出す.\n"
 "対話では, VARIABLE をミニバッファで (補完しながら) 聞く."
+
+#: lisp/help.scm
+msgctxt "function:help--first-line"
+msgid "Return the first line of TEXT, or \"Not documented.\" if TEXT is #f."
+msgstr "TEXT の最初の行を返す。TEXT が #f なら \"Not documented.\" を返す。"
+
+#: lisp/help.scm
+msgctxt "function:help--apropos-text"
+msgid "Return the text of an apropos result with TITLE, listing NAMES (symbols)."
+msgstr "TITLE の見出しで、NAMES (シンボル) を並べた apropos の結果の文字列を返す。"
+
+#: lisp/help.scm
+msgctxt "function:help--read-pattern"
+msgid "Return the pattern given in ARGS, or read one with PROMPT."
+msgstr "ARGS に渡された検索語を返す。無ければ PROMPT でミニバッファから読む。"
+
+#: lisp/help.scm
+msgctxt "function:apropos-command"
+msgid ""
+"Show the commands whose names contain PATTERN, with their keys and the first line of the documentation.\n"
+"Interactively, read PATTERN in the minibuffer."
+msgstr ""
+"名前に PATTERN を含むコマンドを、キーとドキュメントの最初の行つきで表示する。\n"
+"対話的に呼ぶと、PATTERN をミニバッファから読む。"
+
+#: lisp/help.scm
+msgctxt "function:apropos-documentation"
+msgid ""
+"Show the functions and commands whose documentation contains PATTERN.\n"
+"Interactively, read PATTERN in the minibuffer."
+msgstr ""
+"ドキュメントに PATTERN を含む関数とコマンドを表示する。\n"
+"対話的に呼ぶと、PATTERN をミニバッファから読む。"
+
+#: lisp/help.scm
+msgctxt "function:describe-mode"
+msgid "Display the documentation of the major mode of the current buffer."
+msgstr "現在のバッファのメジャーモードのドキュメントを表示する。"
 
 #: lisp/help.scm
 msgctxt "function:describe-command"
@@ -6424,6 +6535,21 @@ msgstr ""
 "矩形の各行を 1 つずつの文字列にした一覧で返す."
 
 #: lisp/rect.scm
+msgctxt "function:rectangle-mark-mode"
+msgid ""
+"Toggle the region as a rectangle.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"When on, the region is a rectangle between point and the mark: \\[kill-region] kills it\n"
+"like `kill-rectangle', and \\[kill-ring-save] saves it like `copy-rectangle-as-kill'.\n"
+"Turning it on without an active region sets the mark at point."
+msgstr ""
+"領域を矩形として扱うかどうかを切り替える.\n"
+"正の引数なら入り, 0 か負の引数なら出る.\n"
+"入っている間は, 点とマークを角とする矩形が領域になり, \\\\[kill-region] は\n"
+"`kill-rectangle' のように切り, \\\\[kill-ring-save] は `copy-rectangle-as-kill' のように写す.\n"
+"領域が無いまま入ると, 点にマークを付ける."
+
+#: lisp/rect.scm
 msgctxt "function:copy-rectangle-as-kill"
 msgid "Copy the region-rectangle and save it as the last killed one."
 msgstr "リージョンの矩形をコピーして, 最後に kill したものとして覚える."
@@ -6602,13 +6728,23 @@ msgstr ""
 "構成を戻すには jump-to-register を使う."
 
 #: lisp/register.scm
+msgctxt "function:kmacro-to-register"
+msgid ""
+"Store the last keyboard macro in the register REGISTER.\n"
+"Use `jump-to-register' to run the macro."
+msgstr ""
+"最後のキーボードマクロをレジスタ REGISTER に入れる.\n"
+"マクロを動かすには `jump-to-register' を使う."
+
+#: lisp/register.scm
 msgctxt "function:jump-to-register"
 msgid ""
-"Go to the location stored in REGISTER, or restore the configuration stored there.\n"
+"Go to the location stored in REGISTER, restore the configuration stored there,\n"
+"or run the keyboard macro stored there.\n"
 "Push the mark if going to the location moves point, unless called in succession."
 msgstr ""
-"REGISTER に入れた位置へ行く. 構成が入っていれば, それを戻す.\n"
-"位置へ行くとポイントが動くときは, 続けて呼んだ場合を除き, マークを積む."
+"REGISTER に入れた位置へ行くか, 入れた構成を戻すか, 入れたキーボードマクロを動かす.\n"
+"位置へ行くと点が動くときは, 続けて呼んだ場合を除き, マークを積む."
 
 #: lisp/register.scm
 msgctxt "function:prepend-to-register"
@@ -7636,22 +7772,41 @@ msgstr ""
 "前のコマンドも kill だったなら, その kill に足す."
 
 #: lisp/simple.scm
+msgctxt "variable:rectangle-mark-mode--on"
+msgid "Non-nil while the region is a rectangle; see `rectangle-mark-mode'."
+msgstr "領域が矩形である間は non-nil.  `rectangle-mark-mode' を見よ."
+
+#: lisp/simple.scm
+msgctxt "function:simple--rectangle-region-p"
+msgid "Return true if the active region is a rectangle."
+msgstr "有効な領域が矩形なら真を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--rectangle-done"
+msgid "Leave `rectangle-mark-mode' after a command used the rectangle."
+msgstr "コマンドが矩形を使ったあとで, `rectangle-mark-mode' から出る."
+
+#: lisp/simple.scm
 msgctxt "function:kill-region"
 msgid ""
 "Kill the text between point and the mark, or between the two positions FROM and TO.\n"
-"The killed text is saved in the kill ring."
+"The killed text is saved in the kill ring.\n"
+"In `rectangle-mark-mode', kill the rectangle instead, like `kill-rectangle'."
 msgstr ""
 "点とマークの間か, 2 つの位置 FROM と TO の間の本文を kill する.\n"
-"kill した本文は kill-ring に入る."
+"kill した本文は kill-ring に入る.\n"
+"`rectangle-mark-mode' では, 代わりに `kill-rectangle' のように矩形を切る."
 
 #: lisp/simple.scm
 msgctxt "function:kill-ring-save"
 msgid ""
 "Save the region in the kill ring, without killing it.\n"
-"Called from Lisp with START and END, save the text between them."
+"Called from Lisp with START and END, save the text between them.\n"
+"In `rectangle-mark-mode', save the rectangle instead, like `copy-rectangle-as-kill'."
 msgstr ""
-"リージョンを kill-ring に保存する (消さない).\n"
-"Lisp から START と END を渡すと, その間の文字を保存する."
+"領域を kill-ring に保存する (消さない).\n"
+"Lisp から START と END を渡すと, その間の文字を保存する.\n"
+"`rectangle-mark-mode' では, 代わりに `copy-rectangle-as-kill' のように矩形を写す."
 
 #: lisp/simple.scm
 msgctxt "function:kill-line"
@@ -9633,6 +9788,123 @@ msgctxt "function:funcall"
 msgid "Call FUNCTION with the remaining arguments."
 msgstr "FUNCTION を, 残りの引数で呼ぶ."
 
+#: lisp/tab-bar.scm
+msgctxt "variable:tab-bar--tabs"
+msgid ""
+"The tabs, in order.  Each is (NAME CONFIGURATION CAPTION): NAME is the name given\n"
+"by `tab-rename' or #f, CONFIGURATION the window configuration saved when the tab\n"
+"was left, and CAPTION the buffer name at that time."
+msgstr "タブの並び。各タブは (NAME CONFIGURATION CAPTION)。NAME は `tab-rename' で付けた名前か #f、CONFIGURATION はタブを離れたときのウィンドウの設定、CAPTION はそのときのバッファの名前。"
+
+#: lisp/tab-bar.scm
+msgctxt "variable:tab-bar--current"
+msgid "The index (from 0) of the current tab."
+msgstr "選んでいるタブの番号 (0 から)。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-ref"
+msgid "Return the element INDEX of ITEMS."
+msgstr "ITEMS の INDEX 番目の要素を返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-set"
+msgid "Return ITEMS with the element INDEX replaced by VALUE."
+msgstr "ITEMS の INDEX 番目の要素を VALUE に替えたものを返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-remove"
+msgid "Return ITEMS without the element INDEX."
+msgstr "ITEMS から INDEX 番目の要素を除いたものを返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--list-insert"
+msgid "Return ITEMS with VALUE inserted before the element INDEX."
+msgstr "ITEMS の INDEX 番目の前に VALUE を入れたものを返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--ensure"
+msgid "Make the first tab, for the current window configuration, if there is none."
+msgstr "タブが無ければ、今のウィンドウの設定で、最初のタブを作る。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--save-current"
+msgid "Store the window configuration of the current tab."
+msgstr "選んでいるタブのウィンドウの設定を覚える。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--names"
+msgid "Return the names shown for the tabs."
+msgstr "タブに出す名前を返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--update"
+msgid "Tell the screen the names of the tabs and the current one."
+msgstr "タブの名前と選んでいるタブを、画面に知らせる。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--select"
+msgid "Make the tab INDEX (from 0) the current one."
+msgstr "INDEX 番目 (0 から) のタブを選ぶ。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--count-arg"
+msgid "Return the count given in ARGS or by the prefix argument (1 if none)."
+msgstr "ARGS か前置引数で渡された数を返す (無ければ 1)。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar--wrap"
+msgid "Return INDEX wrapped into the range of the tabs."
+msgstr "INDEX を、タブの範囲に収めて返す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-new"
+msgid "Create a new tab, right after the current one, that shows the current buffer in one window."
+msgstr "選んでいるタブの次に、今のバッファを 1 つのウィンドウに出した新しいタブを作る。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-close"
+msgid ""
+"Close the tab N (the current one if none; N counts from 1) and show the next one.\n"
+"It is an error to close the only tab."
+msgstr ""
+"N 番目 (1 から。無ければ選んでいるタブ) のタブを閉じて、次のタブを出す。\n"
+"1 つしかないタブは閉じられない (エラー)。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-close-other"
+msgid "Close all the tabs but the current one."
+msgstr "選んでいるタブ以外のタブを、全て閉じる。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-next"
+msgid "Switch to the next tab, or N tabs ahead (back if N is negative), wrapping around."
+msgstr "次のタブ (N を渡すと N 個先。負なら戻る) に切り替える。端まで行くと、反対側に回る。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-previous"
+msgid "Switch to the previous tab, or N tabs back (ahead if N is negative), wrapping around."
+msgstr "前のタブ (N を渡すと N 個前。負なら進む) に切り替える。端まで行くと、反対側に回る。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-bar-select-tab"
+msgid "Switch to the tab NUMBER (from 1)."
+msgstr "NUMBER 番目 (1 から) のタブに切り替える。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-switch"
+msgid "Switch to the tab named NAME.  Interactively, read the name in the minibuffer with completion."
+msgstr "NAME という名前のタブに切り替える。対話的に呼ぶと、ミニバッファで補完しながら名前を読む。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-rename"
+msgid "Give the current tab the name NAME.  An empty name gives it the buffer name again."
+msgstr "選んでいるタブに NAME という名前を付ける。空の名前なら、バッファの名前に戻す。"
+
+#: lisp/tab-bar.scm
+msgctxt "function:tab-move"
+msgid "Move the current tab N places ahead (back if N is negative), wrapping around."
+msgstr "選んでいるタブを N 個先 (負なら戻る) に動かす。端まで行くと、反対側に回る。"
+
 #: lisp/uniquify.scm
 msgctxt "variable:uniquify-buffer-name-style"
 msgid ""
@@ -10209,6 +10481,17 @@ msgstr ""
 msgctxt "function:project-tree"
 msgid "Show or hide the tree of the files of the project in the side bar."
 msgstr "サイドバーのプロジェクトのファイルの木を, 出すか隠す."
+
+#: lisp/window.scm
+msgctxt "function:project-tree-focus"
+msgid ""
+"Show the project tree in the side bar if it is hidden, and move the focus to it.\n"
+"In the tree, n and p move, RET opens, f and b open and close a directory,\n"
+"g reads again, and q or C-g returns to the editor."
+msgstr ""
+"サイドバーのプロジェクトの木が隠れていれば出して, フォーカスを木へ移す.\n"
+"木の中では, n と p で動き, RET で開き, f と b でディレクトリを開け閉めし,\n"
+"g で読み直し, q か C-g でエディタへ戻る."
 
 #: lisp/winner.scm
 msgctxt "variable:winner--on"

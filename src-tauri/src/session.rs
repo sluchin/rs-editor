@@ -19,6 +19,7 @@ use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
+use rseditor_core::startup::Options;
 use rseditor_core::sync::LockExt;
 use rseditor_core::syntax::Dialect;
 use serde::Deserialize;
@@ -85,6 +86,11 @@ pub enum Input {
     FindFile {
         /// パス.
         path: String,
+    },
+    /// タブを選ぶ (タブの行から).
+    SelectTab {
+        /// タブの番号 (1 から).
+        number: usize,
     },
     /// ウィンドウの見えている行の数 (`window-body-height`. ウィンドウの番号と行の数).
     Resize {
@@ -418,6 +424,33 @@ impl<F: Front> Session<F> {
         result
     }
 
+    /// 起動の引数を当てます: 始めのディレクトリ (`--chdir`), `user-emacs-directory` (`--init-directory`),
+    /// `init-file-debug` (`--debug-init`). 初期設定ファイルを読む前に呼びます.
+    pub fn apply_startup(&mut self, options: &Options) {
+        let global = self.commands.evaluator().global();
+        if let Some(dir) = &options.chdir {
+            self.commands
+                .evaluator()
+                .set_default_directory(std::path::PathBuf::from(dir));
+        }
+        if let Some(dir) = &options.init_directory {
+            let dir = if dir.ends_with('/') {
+                dir.clone()
+            } else {
+                format!("{dir}/")
+            };
+            global.define("user-emacs-directory", Value::String(dir));
+        }
+        global.define("init-file-debug", Value::Boolean(options.debug_init));
+    }
+
+    /// 起動の引数のファイルを開きます (最後のファイルが、出ているバッファになる. Emacs と同じ).
+    pub fn open_files(&mut self, files: &[String]) {
+        for file in files {
+            let _ = self.eval(&format!("(find-file {})", Value::String(file.clone())));
+        }
+    }
+
     /// 初期設定ファイルを読みます (`user-init-file` にする). 無ければ, 何もしません.
     /// 失敗したら, エコー領域と `*Warnings*` に出します (Emacs と同じ).
     pub fn load_init(&mut self, path: Option<&Path>) {
@@ -492,6 +525,12 @@ impl<F: Front> Session<F> {
                     .eval(&code)
                     .map_err(|e| self.host().ui().show_message(&e));
             }
+            Input::SelectTab { number } => {
+                let _ = self
+                    .commands
+                    .eval(&format!("(tab-bar-select-tab {number})"))
+                    .map_err(|e| self.host().ui().show_message(&e));
+            }
             Input::Resize { heights } => self.host().ui().state().heights = heights,
             Input::Redraw => self.host().ui().state().frames.reset(),
         }
@@ -522,7 +561,7 @@ impl<F: Front> Session<F> {
 /// 入力が無いまま, 自動保存するまでの時間 (Emacs の `auto-save-timeout`).
 pub const AUTO_SAVE_TIMEOUT: Duration = rseditor_core::files::AUTO_SAVE_TIMEOUT;
 
-/// 画面のエディタを動かします: 作って, 初期設定ファイルを読み, 描いてから, 入力を順に処理します.
+/// 画面のエディタを動かします: 作って, 起動の引数を当て, 初期設定ファイルを読み, 引数のファイルを開き, 描いてから, 入力を順に処理します.
 /// 入力が `auto_save_timeout` の間無ければ, 自動保存します. 入力の送り手が無くなったら, 終わります.
 ///
 /// # Errors
@@ -531,11 +570,14 @@ pub const AUTO_SAVE_TIMEOUT: Duration = rseditor_core::files::AUTO_SAVE_TIMEOUT;
 pub fn run<F: Front>(
     front: Arc<F>,
     init_file: Option<&Path>,
+    startup: &Options,
     inputs: Receiver<Input>,
     auto_save_timeout: Duration,
 ) -> Result<(), Error> {
     let mut session = Session::new(front)?;
+    session.apply_startup(startup);
     session.load_init(init_file);
+    session.open_files(&startup.files);
     session.host().ui().send_frame();
     loop {
         match inputs.recv_timeout(auto_save_timeout) {

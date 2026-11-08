@@ -1,0 +1,36 @@
+/* タブの行 (Emacs の tab-bar. 2 つ以上のタブがあるときの, 画面の上) */
+
+.tab-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  background: var(--mode-line-inactive-background);
+  border-bottom: 1px solid #999999;
+  font-family: var(--font-family);
+  font-size: 13px;
+  user-select: none;
+}
+
+.tab-bar-tab,
+.tab-bar-new {
+  flex: 0 0 auto;
+  max-width: 220px;
+  padding: 2px 12px;
+  border: none;
+  border-right: 1px solid #999999;
+  background: transparent;
+  color: var(--mode-line-inactive-foreground);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 選んでいるタブ */
+.tab-bar-current {
+  background: var(--background);
+  color: var(--foreground);
+  font-weight: bold;
+}
