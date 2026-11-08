@@ -252,32 +252,33 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 
 ## Dired（ディレクトリの編集）
 
-Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。**rs-editor の dired は、`C-x d` でディレクトリの一覧（`ls -al`）を出すだけで、dired の中のキーは、全て未実装です。**
-一覧は `M-x revert-buffer` で作り直せます。
+Emacs 30 の dired の既定のキーです（`emacs -Q` の `dired-mode-map` から取り出した）。rs-editor の dired は `lisp/dired.scm` で、一覧は `ls -al` で作ります。
+`C-x C-f` などでディレクトリを開いても dired になります。一覧のバッファは読み込み専用で、割り当ての無い文字は `undefined`（`z is undefined`）、数字と `-` は前置引数です。
+`tests/batch/cases/42-dired-keys`、`48-dired-add`、`74-dired-marks`、`75-dired-visit` で、Emacs と同じに動くことを確かめています。
 rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) にまとめています。
 
 ### Dired を開く
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `C-x d` | dired | ディレクトリを開く | 実装済み（一覧を出すだけ） |
-| `C-x 4 d` | dired-other-window | 別のウィンドウでディレクトリを開く | 未実装 |
+| `C-x d` | dired | ディレクトリを開く | 実装済み |
+| `C-x 4 d` | dired-other-window | 別のウィンドウでディレクトリを開く | 実装済み |
 | `C-x 5 d` | dired-other-frame | 別のフレームでディレクトリを開く | 未実装 |
-| `C-x C-j` | dired-jump | 今のファイルのディレクトリを開き、そのファイルにカーソルを合わせる | 未実装 |
-| `C-x 4 C-j` | dired-jump-other-window | `C-x C-j` を別のウィンドウで | 未実装 |
+| `C-x C-j` | dired-jump | 今のファイルのディレクトリを開き、そのファイルにカーソルを合わせる | 実装済み |
+| `C-x 4 C-j` | dired-jump-other-window | `C-x C-j` を別のウィンドウで | 実装済み |
 
 ### 移動
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `n` / `SPC` / `C-n` | dired-next-line | 次の行へ | 未実装 |
-| `p` / `S-SPC` / `C-p` | dired-previous-line | 前の行へ | 未実装 |
-| `>` | dired-next-dirline | 次のディレクトリの行へ | 未実装 |
-| `<` | dired-prev-dirline | 前のディレクトリの行へ | 未実装 |
-| `j` | dired-goto-file | 名前を入れて、そのファイルの行へ | 未実装 |
-| `^` | dired-up-directory | 親ディレクトリへ | 未実装 |
-| `M-}` / `* C-n` | dired-next-marked-file | 次のマークしたファイルへ | 未実装 |
-| `M-{` / `* C-p` | dired-prev-marked-file | 前のマークしたファイルへ | 未実装 |
+| `n` / `SPC` / `C-n` | dired-next-line | 次の行へ | 実装済み |
+| `p` / `S-SPC` / `C-p` | dired-previous-line | 前の行へ | 実装済み |
+| `>` | dired-next-dirline | 次のディレクトリの行へ | 実装済み |
+| `<` | dired-prev-dirline | 前のディレクトリの行へ | 実装済み |
+| `j` | dired-goto-file | 名前を入れて、そのファイルの行へ | 実装済み |
+| `^` | dired-up-directory | 親ディレクトリへ | 実装済み（親の一覧の、元のディレクトリの行へ） |
+| `M-}` / `* C-n` | dired-next-marked-file | 次のマークしたファイルへ | 実装済み |
+| `M-{` / `* C-p` | dired-prev-marked-file | 前のマークしたファイルへ | 実装済み |
 | `C-M-n` | dired-next-subdir | 次のサブディレクトリの見出しへ | 未実装 |
 | `C-M-p` | dired-prev-subdir | 前のサブディレクトリの見出しへ | 未実装 |
 | `C-M-u` | dired-tree-up | 上のサブディレクトリの見出しへ | 未実装 |
@@ -288,10 +289,10 @@ rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) �
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `RET` / `e` / `f` | dired-find-file | ファイルを開く（ディレクトリなら、その dired） | 未実装 |
-| `o` | dired-find-file-other-window | 別のウィンドウで開く | 未実装 |
-| `C-o` | dired-display-file | 別のウィンドウに出す（カーソルは dired に残る） | 未実装 |
-| `v` | dired-view-file | 読むだけのモードで開く | 未実装 |
+| `RET` / `e` / `f` | dired-find-file | ファイルを開く（ディレクトリなら、その dired） | 実装済み |
+| `o` | dired-find-file-other-window | 別のウィンドウで開く | 実装済み |
+| `C-o` | dired-display-file | 別のウィンドウに出す（カーソルは dired に残る） | 実装済み |
+| `v` | dired-view-file | 読むだけのモードで開く | 一部（読み込み専用で開く。view-mode は無い） |
 | `a` | dired-find-alternate-file | dired のバッファを、開いたファイルに置き換える（既定では無効） | 未実装 |
 | `E` | dired-do-open | 外部のアプリで開く | 未実装 |
 | `W` | browse-url-of-dired-file | ブラウザで開く | 未実装 |
@@ -299,28 +300,28 @@ rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) �
 | `i` | dired-maybe-insert-subdir | サブディレクトリの中身を、同じバッファの下に足す | 未実装 |
 | `$` | dired-hide-subdir | サブディレクトリを畳む / 開く | 未実装 |
 | `M-$` | dired-hide-all | 全てのサブディレクトリを畳む / 開く | 未実装 |
-| `k` | dired-do-kill-lines | マークした行を表示から消す（ファイルは消さない） | 未実装 |
-| `l` | dired-do-redisplay | マークした行を読み直す | 未実装 |
-| `g` | revert-buffer | 一覧を読み直す | 未実装（`M-x revert-buffer` で作り直せる） |
+| `k` | dired-do-kill-lines | マークした行を表示から消す（ファイルは消さない） | 実装済み |
+| `l` | dired-do-redisplay | マークした行を読み直す | 一部（全ての行を読み直す。行の順と印は残す） |
+| `g` | revert-buffer | 一覧を読み直す | 実装済み（印と、カーソルのファイルは残る） |
 | `s` | dired-sort-toggle-or-edit | 名前順と日付順を切り替える | 未実装 |
 | `(` | dired-hide-details-mode | 詳細（権限、サイズ、日付）を隠す / 出す | 未実装 |
-| `w` | dired-copy-filename-as-kill | ファイル名を kill-ring にコピー（`C-u 0 w` でフルパス） | 未実装 |
+| `w` | dired-copy-filename-as-kill | ファイル名を kill-ring にコピー（`C-u 0 w` でフルパス） | 実装済み（サブディレクトリが無いので、`C-u w` は `w` と同じ） |
 
 ### マーク
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `m` / `* m` | dired-mark | マークする | 未実装 |
-| `u` / `* u` | dired-unmark | マークを外す | 未実装 |
-| `DEL` / `* DEL` | dired-unmark-backward | 前の行のマークを外す | 未実装 |
-| `U` / `* !` | dired-unmark-all-marks | 全てのマークを外す | 未実装 |
-| `M-DEL` / `* ?` | dired-unmark-all-files | 指定した文字のマークを全て外す | 未実装 |
-| `t` / `* t` | dired-toggle-marks | マークを反転 | 未実装 |
-| `* *` | dired-mark-executables | 実行できるファイルをマーク | 未実装 |
-| `* /` | dired-mark-directories | ディレクトリをマーク | 未実装 |
-| `* @` | dired-mark-symlinks | シンボリックリンクをマーク | 未実装 |
+| `m` / `* m` | dired-mark | マークする | 実装済み |
+| `u` / `* u` | dired-unmark | マークを外す | 実装済み |
+| `DEL` / `* DEL` | dired-unmark-backward | 前の行のマークを外す | 実装済み |
+| `U` / `* !` | dired-unmark-all-marks | 全てのマークを外す | 実装済み |
+| `M-DEL` / `* ?` | dired-unmark-all-files | 指定した文字のマークを全て外す | 実装済み（前置引数で 1 つずつ聞くのは、無い） |
+| `t` / `* t` | dired-toggle-marks | マークを反転 | 実装済み |
+| `* *` | dired-mark-executables | 実行できるファイルをマーク | 実装済み |
+| `* /` | dired-mark-directories | ディレクトリをマーク | 実装済み |
+| `* @` | dired-mark-symlinks | シンボリックリンクをマーク | 実装済み |
 | `* s` | dired-mark-subdir-files | 今のサブディレクトリのファイルを全てマーク | 未実装 |
-| `* %` / `% m` | dired-mark-files-regexp | 名前が正規表現に合うファイルをマーク | 未実装 |
+| `* %` / `% m` | dired-mark-files-regexp | 名前が正規表現に合うファイルをマーク | 実装済み |
 | `% g` | dired-mark-files-containing-regexp | 中身が正規表現に合うファイルをマーク | 未実装 |
 | `* c` | dired-change-marks | マークの文字を変える | 未実装 |
 | `* N` | dired-number-of-marked-files | マークした数とサイズを表示 | 未実装 |
@@ -329,22 +330,22 @@ rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) �
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `d` | dired-flag-file-deletion | 削除のフラグ（`D`）を付ける | 未実装 |
-| `x` | dired-do-flagged-delete | フラグを付けたファイルを削除 | 未実装 |
-| `#` | dired-flag-auto-save-files | 自動保存のファイルにフラグ | 未実装 |
-| `~` | dired-flag-backup-files | バックアップのファイルにフラグ | 未実装 |
+| `d` | dired-flag-file-deletion | 削除のフラグ（`D`）を付ける | 実装済み |
+| `x` | dired-do-flagged-delete | フラグを付けたファイルを削除 | 実装済み |
+| `#` | dired-flag-auto-save-files | 自動保存のファイルにフラグ | 実装済み |
+| `~` | dired-flag-backup-files | バックアップのファイルにフラグ | 実装済み |
 | `.` | dired-clean-directory | 古い番号付きのバックアップにフラグ | 未実装 |
-| `% d` | dired-flag-files-regexp | 名前が正規表現に合うファイルにフラグ | 未実装 |
-| `% &` | dired-flag-garbage-files | 要らないファイル（`.o` など）にフラグ | 未実装 |
+| `% d` | dired-flag-files-regexp | 名前が正規表現に合うファイルにフラグ | 実装済み |
+| `% &` | dired-flag-garbage-files | 要らないファイル（`.o` など）にフラグ | 実装済み |
 
 ### ファイルの操作（マークしたファイル、無ければカーソルの行）
 
 | キー | コマンド | 説明 | 状況 |
 |------|---------|------|------|
-| `C` | dired-do-copy | コピー | 未実装 |
-| `R` | dired-do-rename | 名前の変更・移動 | 未実装 |
-| `D` | dired-do-delete | 削除（確認あり） | 未実装 |
-| `+` | dired-create-directory | ディレクトリを作る | 未実装 |
+| `C` | dired-do-copy | コピー | 実装済み |
+| `R` | dired-do-rename | 名前の変更・移動 | 実装済み |
+| `D` | dired-do-delete | 削除（確認あり） | 実装済み |
+| `+` | dired-create-directory | ディレクトリを作る | 実装済み |
 | `H` | dired-do-hardlink | ハードリンクを作る | 未実装 |
 | `S` | dired-do-symlink | シンボリックリンクを作る | 未実装 |
 | `Y` | dired-do-relsymlink | 相対パスのシンボリックリンクを作る | 未実装 |
@@ -381,7 +382,7 @@ rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) �
 | `M-s a C-s` / `M-s a C-M-s` | dired-do-isearch(-regexp) | マークしたファイルの中身を isearch | 未実装 |
 | `?` | dired-summary | 主なキーを 1 行で表示 | 未実装 |
 | `h` | describe-mode | dired の説明を表示 | 未実装 |
-| `q` | quit-window | dired のウィンドウを閉じる | 未実装 |
+| `q` | quit-window | dired のウィンドウを閉じる | 実装済み |
 
 ## 実装状況
 
@@ -407,7 +408,7 @@ rs-filer のキーとの違いは [dired_vs_rs_filer.md](dired_vs_rs_filer.md) �
 ### 未実装
 
 - そのほかのヘルプ（C-h f, C-h v など）
-- Dired の中の全てのキー（C-x d は、一覧を出すだけ）
+- Dired の、サブディレクトリ（`i`）、並べ替え（`s`）、詳細を隠す（`(`）、ファイルの属性の変更（`M`、`G`、`O`、`T`）、リンク、シェルのコマンド、正規表現で名前を変えるもの、wdired
 
 ## howm (`lisp/howm.scm` を読み込んだとき)
 

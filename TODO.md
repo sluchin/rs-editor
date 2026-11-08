@@ -169,8 +169,14 @@
       バッファを消すときと、Emacs を終えるときの扱い (`delete-auto-save-files`) も、まだ。
 - [ ] バックアップ: Emacs は、前の版の名前を変えて `名前~` にする (`backup-by-copying` が `nil`)。今は、写す。
 - [ ] `recover-this-file`: Emacs の問いは、`diff` (違いを見る) も受け、自動保存のファイルの一覧を見せる。
-- [ ] `C-x d` (dired): 一覧を出すだけで、dired の中のキー (`RET`、`^`、`g`、`m`、`d` など) と、読み込み専用は、まだ。
-      Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は、出さない。
+- [x] `C-x d` (dired): dired の中のキー (`RET`、`^`、`g`、`m`、`d` など) と、読み込み専用 (`tests/batch/cases/74-dired-marks`、`75-dired-visit`)。
+- [ ] dired: Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は、出さない。
+- [ ] dired の `v` (dired-view-file): Emacs は view-mode で開く (`SPC` で送り、`q` で dired に戻る)。今は、読み込み専用で開くだけ。
+- [ ] dired の `s` (並べ替え)、`i` (サブディレクトリを足す)、`(` (詳細を隠す)、`M`、`G`、`O`、`T` (属性を変える)、`S`、`H` (リンク)、`!` (シェルのコマンド)、`% R` など (正規表現で名前を変える)、wdired (`C-x C-q`)。
+- [ ] dired の `l` (dired-do-redisplay): Emacs は印を付けた行だけを読み直す。今は、全ての行を読み直す (行の順と印は残す)。
+- [ ] `default-directory`: Emacs はバッファごとに持ち、相対パス (`(find-file ".")` など) は、そこから読む。今は、変数が無く、エディタを動かしたディレクトリから読む。
+- [ ] `window-list`: Emacs は選んだウィンドウから並べる。今は、画面の上から並べる。
+- [ ] `quit-window`: Emacs は、ウィンドウに前に出していたバッファに戻す。今は、`buffer-list` の他のバッファを出す。
 - [x] isearch の `M-p`、`M-n`: Emacs (`search-ring-update` が `nil`) と同じく、履歴の文字を、ミニバッファで直させる (`tests/batch/cases/59-isearch-edit`)。
 - [x] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら、今のファイルの名前など) を出す。今は、出さない。
 - [ ] `M-x grep`: Emacs は、grep のコマンドの行 (`grep --color=auto -nH --null -e`) を聞き、外の grep を動かす。今は、正規表現とディレクトリを聞き、      エディタが、ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ、大文字と小文字を区別しない
@@ -276,14 +282,15 @@
 
 - [x] `C-x C-r` (find-file-read-only), `C-x C-q` (read-only-mode)。
 - [x] `C-x C-d` (list-directory), `C-x C-j` (dired-jump), `C-x 4 d` (dired-other-window)。
-- [ ] dired の中のキー (docs/keybindings.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+` など)。
+- [x] dired の中のキー (docs/keybindings.md の Dired の表。 `RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`、`t`、`* /`、`% m`、`k`、`w`、`o`、`C-o`、`j`、`<`、`>`、`M-}` など。前置引数も)。
 - [ ] `auto-revert-mode` (ファイルが書き換わったら読み直す)。
 - [x] 保存するときに、ファイルが外で書き換わっていないか確かめる (`verify-visited-file-modtime`、`set-visited-file-modtime`。Emacs の「X has changed since visited or saved.  Save anyway?」)。
 - [x] 外で書き換わったファイルのバッファを、初めて書き換えるときに確かめる (`ask-user-about-supersession-threat`。「X changed on disk; really edit the buffer? (y, n, r or C-h)」。書き換えの入口 `ensure_writable` が `file-supersession-threat` のエラーを返し、`EditorHost` が聞いてやり直す)。
 - [ ] ファイルの錠 (`.#名前`。`create-lockfiles`)。
 - [ ] `recover-session` (前のセッションの自動保存から、まとめて読み直す), `recentf-open` (最近のファイル)。
 - [x] `append-to-file`, `rename-visited-file`。
-- [ ] `find-file` のワイルドカード (`*.scm` で、全てを開く) と、ディレクトリを開いたら dired にする。
+- [x] `find-file` でディレクトリを開いたら dired にする。
+- [ ] `find-file` のワイルドカード (`*.scm` で、全てを開く)。
 
 ### バッファ・ウィンドウ
 
@@ -693,7 +700,9 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] キーの無いコマンドのうち `untabify`、`tabify` (Phase 14「削除・編集」)。小。
 - [x] クリップボードのキー: `<C-insert>`、`S-DEL`、`<S-insert>` と、`hippie-expand` (`C-;`)、`backward-delete-char-untabify` (dotfiles の表)。小。クリップボード (`select-enable-clipboard`) は、画面のアプリは、kill をクリップボードにも書き、yank はほかのアプリが書いた文字を使う。ターミナルとバッチは、Emacs の端末と同じく、使わない。`hippie-expand` (`lisp/hippie-exp.scm`) は、Emacs の既定の `hippie-expand-try-functions-list` の関数を全て持つ。違い: `try-expand-dabbrev-visible` と `try-expand-whole-kill` は無い。ファイルの名前の補完は `completion-ignored-extensions` を使わない。`try-expand-dabbrev-from-kill` は、kill-ring を `yank-pop` で回した後は、回した位置から読む。
 - [x] ファイル・バッファ: ターミナルのアプリの 30 秒の自動保存、同名のファイルのバッファの名前を分ける (`uniquify`。dired のバッファは分けない)、`rename-visited-file`、`append-to-file`。小〜中。
-- [ ] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。大。毎日使うなら、P1 の最後に進める。
+- [x] dired の中のキー (`RET`、`^`、`g`、`m`、`u`、`d`、`x`、`C`、`R`、`D`、`+`) と、ディレクトリを開いたら dired にする (Phase 12, 14)。
+      一覧は読み込み専用で、前置引数、`t`、`* /`、`% m`、`~`、`#`、`k`、`w`、`o`、`C-o`、`v`、`j`、`<`、`>`、`M-}` も使える。
+      `key-binding` は、バッファのキー (`local-set-key`) を先に引く。
 - [x] Buffer Menu の中のキー (`d`、`s`、`x`、`u`、`~`) (Phase 14)。小。
 - [x] Lisp の作業: `C-M-x` (eval-defun)、`eval-buffer`、`eval-region`、`load-file`、`*scratch*` の `C-j`、`check-parens` (Phase 14「Lisp」)。小〜中。
 - [x] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。

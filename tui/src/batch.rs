@@ -293,7 +293,13 @@ impl Host for BatchUi {
                     .split(' ')
                     .map(str::to_string)
                     .collect();
-                let found = commands.keymap().lock_recover().lookup(&keys);
+                let local =
+                    rseditor_core::keymap::buffer_keymap(commands.host().editor().current_buffer());
+                let found = rseditor_core::keymap::lookup_in(
+                    &local,
+                    &commands.keymap().lock_recover(),
+                    &keys,
+                );
                 Ok(match found {
                     Lookup::Command(command) => Value::String(command),
                     Lookup::Prefix => Value::Boolean(true),

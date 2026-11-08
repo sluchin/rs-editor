@@ -1089,9 +1089,19 @@ msgid "Return the text of the Dired buffer of DIR: the directory, then the `ls -
 msgstr "DIR の dired のバッファの本文を返す: ディレクトリ, 続けて `ls -al' の行を 2 文字字下げして."
 
 #: lisp/dired.scm
+msgctxt "function:dired--trivial-p"
+msgid "Return true if NAME is \".\", \"..\" or starts with \"#\" or \".#\" (Emacs's `dired-trivial-filenames')."
+msgstr "NAME が「.」か「..」か, 「#」か「.#」で始まれば真を返す (Emacs の `dired-trivial-filenames')."
+
+#: lisp/dired.scm
 msgctxt "function:dired--goto-first-file"
-msgid "Move point to the name of the first file (after \".\" and \"..\"), or to the end if there is none."
-msgstr "最初のファイル (「.」と「..」の次) の名前へ点を動かす. 無ければ終わりへ."
+msgid "Move point to the name of the first nontrivial file (`dired--trivial-p'), or to the end if there is none."
+msgstr "初めの, 目立たないものでないファイル (`dired--trivial-p') の名前へ点を動かす. 無ければ終わりへ."
+
+#: lisp/dired.scm
+msgctxt "function:dired--writable"
+msgid "Call THUNK with the current buffer writable, then make it read-only and unmodified again."
+msgstr "今のバッファを書き換えられるようにして THUNK を呼び, その後, 読み込み専用で, 書き換えていないものに戻す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--fill"
@@ -1135,8 +1145,8 @@ msgstr "ディレクトリ DIRNAME を「編集」する. `dired' と同じだ�
 
 #: lisp/dired.scm
 msgctxt "function:dired--goto-file"
-msgid "Move point to the name NAME in the current Dired buffer.  Return #f if the listing has no such file."
-msgstr "今の Dired のバッファで, 名前 NAME にカーソルを移す. 一覧に無ければ #f を返す."
+msgid "Move point to the name NAME in the current Dired buffer.  Return #f, without moving, if the listing has no such file."
+msgstr "今の Dired のバッファで, 名前 NAME にカーソルを移す. 一覧に無ければ, 動かずに #f を返す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--jump"
@@ -1174,8 +1184,12 @@ msgstr "`dired-jump' と同じだが, 別のウィンドウに出す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--revert"
-msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
-msgstr "今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す."
+msgid ""
+"List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer.\n"
+"The marks stay, and point stays on the same file (Emacs's `dired-revert')."
+msgstr ""
+"今の dired のバッファのディレクトリを一覧し直し, 真を返す. dired のバッファでなければ偽を返す.\n"
+"印は残し, 点は同じファイルに置く (Emacs の `dired-revert')."
 
 #: lisp/dired.scm
 msgctxt "variable:dired--filename-regexp"
@@ -1188,6 +1202,21 @@ msgid "Return the position of the file name on the current line, or #f if the li
 msgstr "今の行のファイルの名前の位置を返す. 行にファイルが無ければ #f."
 
 #: lisp/dired.scm
+msgctxt "function:dired--type"
+msgid "Return the file type character of the current line (\"-\", \"d\", \"l\" ...) or #f if it lists no file."
+msgstr "今の行のファイルの種類の文字 (\"-\", \"d\", \"l\" など) を返す. ファイルの行でなければ #f."
+
+#: lisp/dired.scm
+msgctxt "function:dired--name-at"
+msgid "Return the file name that starts at START, without the target of a symbolic link."
+msgstr "START で始まるファイルの名前を返す. シンボリックリンクの先は除く."
+
+#: lisp/dired.scm
+msgctxt "function:dired--name-here"
+msgid "Return the file name on the current line (without the directory), or #f."
+msgstr "今の行のファイルの名前 (ディレクトリを除く) を返す. 無ければ #f."
+
+#: lisp/dired.scm
 msgctxt "function:dired-get-filename"
 msgid "Return the name of the file on the current line, or #f.  With LOCALP non-nil, without the directory."
 msgstr "今の行のファイルの名前を返す (無ければ #f). LOCALP が空でなければ, ディレクトリを付けない."
@@ -1196,6 +1225,11 @@ msgstr "今の行のファイルの名前を返す (無ければ #f). LOCALP が
 msgctxt "function:dired--directory"
 msgid "Return the directory of the current Dired buffer."
 msgstr "今の Dired バッファのディレクトリを返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--line-mark"
+msgid "Return the mark (the first character) of the current line."
+msgstr "今の行の印 (初めの文字) を返す."
 
 #: lisp/dired.scm
 msgctxt "function:dired-next-line"
@@ -1208,29 +1242,200 @@ msgid "Move up lines then position at the file name."
 msgstr "何行か上へ動き, ファイルの名前の所に置く."
 
 #: lisp/dired.scm
+msgctxt "function:dired--search-line"
+msgid ""
+"Move to the Nth next line (previous if N is negative) for which MATCH? is true, at the file name.\n"
+"Signal an error with MESSAGE, without moving, if there are not so many."
+msgstr ""
+"MATCH? が真になる, N 番目の次の行 (N が負なら前の行) のファイルの名前へ動く.\n"
+"それだけの行が無ければ, 動かずに, MESSAGE のエラーにする."
+
+#: lisp/dired.scm
+msgctxt "function:dired-next-dirline"
+msgid "Goto ARGth next directory file line."
+msgstr "ARG 番目の次のディレクトリの行へ動く."
+
+#: lisp/dired.scm
+msgctxt "function:dired-prev-dirline"
+msgid "Goto ARGth previous directory file line."
+msgstr "ARG 番目の前のディレクトリの行へ動く."
+
+#: lisp/dired.scm
+msgctxt "function:dired--next-marked-file"
+msgid "Move to the Nth next marked file; at the end, wrap around (Emacs's `dired-next-marked-file' with WRAP)."
+msgstr "N 番目の次の印の付いたファイルへ動く. 終わりまで無ければ, 初めに戻って探す (Emacs の WRAP 付きの `dired-next-marked-file')."
+
+#: lisp/dired.scm
+msgctxt "function:dired-next-marked-file"
+msgid "Move to the ARGth next marked file, wrapping around to the beginning."
+msgstr "ARG 番目の次の印の付いたファイルへ動く. 終わりまで無ければ, 初めに戻って探す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-prev-marked-file"
+msgid "Move to the ARGth previous marked file, wrapping around to the end."
+msgstr "ARG 番目の前の印の付いたファイルへ動く. 初めまで無ければ, 終わりに戻って探す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-goto-file"
+msgid "Go to line describing file FILE in this Dired buffer."
+msgstr "この Dired のバッファで, ファイル FILE の行へ動く."
+
+#: lisp/dired.scm
 msgctxt "function:dired--mark-line"
 msgid "Put the mark CHAR in the first column of the current line, if it lists a file."
 msgstr "今の行にファイルがあれば, 最初の桁に印 CHAR を入れる."
 
 #: lisp/dired.scm
+msgctxt "function:dired--repeat-over-lines"
+msgid ""
+"Call FUNCTION on the next N file lines (the previous -N lines if N is negative), then move to the file name.\n"
+"Like Emacs's `dired-repeat-over-lines'."
+msgstr ""
+"次の N 個のファイルの行 (N が負なら, 前の -N 個の行) で FUNCTION を呼び, ファイルの名前へ動く.\n"
+"Emacs の `dired-repeat-over-lines' と同じ."
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-lines"
+msgid "Put CHAR on the next N file lines.  \".\" and \"..\" are not flagged for deletion."
+msgstr "次の N 個のファイルの行に CHAR を付ける. 「.」と「..」には, 消す印を付けない."
+
+#: lisp/dired.scm
 msgctxt "function:dired-mark"
-msgid "Mark the file at point in the Dired buffer, then move to the next line."
-msgstr "Dired バッファの点のファイルに印を付け, 次の行へ動く."
+msgid ""
+"Mark the file at point in the Dired buffer, then move to the next line.\n"
+"With a prefix arg, mark files on the next ARG lines (the previous lines if ARG is negative)."
+msgstr ""
+"Dired バッファの点のファイルに印を付け, 次の行へ動く.\n"
+"前置引数があれば, 次の ARG 行のファイルに付ける (ARG が負なら, 前の行)."
 
 #: lisp/dired.scm
 msgctxt "function:dired-flag-file-deletion"
-msgid "In Dired, flag the current line's file for deletion, then move to the next line."
-msgstr "Dired で, 今の行のファイルに消す印を付け, 次の行へ動く."
+msgid ""
+"In Dired, flag the current line's file for deletion, then move to the next line.\n"
+"With a prefix arg, flag files on the next ARG lines."
+msgstr ""
+"Dired で, 今の行のファイルに消す印を付け, 次の行へ動く.\n"
+"前置引数があれば, 次の ARG 行のファイルに付ける."
 
 #: lisp/dired.scm
 msgctxt "function:dired-unmark"
-msgid "Unmark the file at point in the Dired buffer, then move to the next line."
-msgstr "Dired バッファの点のファイルの印を外し, 次の行へ動く."
+msgid ""
+"Unmark the file at point in the Dired buffer, then move to the next line.\n"
+"With a prefix arg, unmark files on the next ARG lines."
+msgstr ""
+"Dired バッファの点のファイルの印を外し, 次の行へ動く.\n"
+"前置引数があれば, 次の ARG 行のファイルの印を外す."
 
 #: lisp/dired.scm
-msgctxt "function:dired--marked"
-msgid "Return the file names (without the directory) of the lines marked with CHAR."
-msgstr "印 CHAR の付いた行のファイルの名前 (ディレクトリ無し) を返す."
+msgctxt "function:dired-unmark-backward"
+msgid ""
+"In Dired, move up lines and remove marks or deletion flags there.\n"
+"Optional prefix ARG says how many lines to unmark/unflag; default is one line."
+msgstr ""
+"Dired で, 上の行へ動き, その行の印か消す印を外す.\n"
+"前置引数 ARG は, 外す行の数 (既定は 1 行)."
+
+#: lisp/dired.scm
+msgctxt "function:dired-toggle-marks"
+msgid ""
+"Toggle marks: marked files become unmarked, and vice versa.\n"
+"Flagged files (indicated with flags such as `C' and `D', not with `*') are not affected,\n"
+"and `.' and `..' are never toggled."
+msgstr ""
+"印を入れ替える: 印の付いたファイルは外し, 付いていないファイルには付ける.\n"
+"`*' 以外の印 (`C' や `D' など) の付いたファイルは変えない. 「.」と「..」も変えない."
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-if"
+msgid ""
+"Put CHAR on the lines whose file satisfies PREDICATE (called with the name, point on the line).\n"
+"MSG names the kind of the files in the messages.  Return the count, or #f if it is 0 (Emacs's `dired-mark-if')."
+msgstr ""
+"ファイルが PREDICATE (名前を受け, 点はその行) を満たす行に CHAR を付ける.\n"
+"MSG は, メッセージに出すファイルの種類. 付けた数を返す. 0 なら #f (Emacs の `dired-mark-if')."
+
+#: lisp/dired.scm
+msgctxt "function:dired--unflag-char"
+msgid "Return \" \" if there is a prefix argument (in ARGS or the current one), else CHAR."
+msgstr "前置引数 (ARGS か, 今のもの) があれば \" \" を, 無ければ CHAR を返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-directories"
+msgid ""
+"Mark all directory file lines except `.' and `..'.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+"「.」と「..」を除く, 全てのディレクトリの行に印を付ける.\n"
+"前置引数があれば, それらの印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-executables"
+msgid ""
+"Mark all executable files.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+"全ての実行できるファイルに印を付ける.\n"
+"前置引数があれば, それらの印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-symlinks"
+msgid ""
+"Mark all symbolic links.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+"全てのシンボリックリンクに印を付ける.\n"
+"前置引数があれば, それらの印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-files-regexp"
+msgid ""
+"Mark all files matching REGEXP for use in later commands.\n"
+"A prefix argument means to unmark them instead.  `.' and `..' are never marked."
+msgstr ""
+"名前が REGEXP に合う全てのファイルに, 後のコマンドのための印を付ける.\n"
+"前置引数があれば, 印を外す. 「.」と「..」には付けない."
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-files-regexp"
+msgid ""
+"In Dired, flag all files containing the specified REGEXP for deletion.\n"
+"`.' and `..' are never flagged."
+msgstr ""
+"Dired で, 名前が REGEXP に合う全てのファイルに, 消す印を付ける.\n"
+"「.」と「..」には付けない."
+
+#: lisp/dired.scm
+msgctxt "variable:dired-garbage-files-regexp"
+msgid "Regular expression to match \"garbage\" files for `dired-flag-garbage-files'."
+msgstr "`dired-flag-garbage-files' が消す印を付ける, 要らないファイルに合う正規表現."
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-garbage-files"
+msgid "Flag for deletion all files that match `dired-garbage-files-regexp'."
+msgstr "`dired-garbage-files-regexp' に合う全てのファイルに, 消す印を付ける."
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-backup-files"
+msgid ""
+"Flag all backup files (names ending with `~') for deletion.\n"
+"With prefix argument, unmark or unflag these files."
+msgstr ""
+"全てのバックアップのファイル (名前が `~' で終わるもの) に, 消す印を付ける.\n"
+"前置引数があれば, それらの印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-auto-save-files"
+msgid ""
+"Flag for deletion files whose names suggest they are auto save files.\n"
+"A prefix argument says to unmark or unflag those files instead."
+msgstr ""
+"名前が自動保存のファイルらしいファイルに, 消す印を付ける.\n"
+"前置引数があれば, それらの印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--unmark-all"
+msgid "Remove MARK (or any mark if it is #f) from every file, and report the count."
+msgstr "全てのファイルから, 印 MARK (#f なら, どの印も) を外し, 外した数を知らせる."
 
 #: lisp/dired.scm
 msgctxt "function:dired-unmark-all-marks"
@@ -1238,9 +1443,28 @@ msgid "Remove all marks from all files in the Dired buffer."
 msgstr "Dired バッファの全てのファイルの印を外す."
 
 #: lisp/dired.scm
+msgctxt "function:dired-unmark-all-files"
+msgid ""
+"Remove a specific mark (or any mark) from every file.\n"
+"After this command, type the mark character to remove, or type RET to remove all marks."
+msgstr ""
+"全てのファイルから, ある印 (か, どの印も) を外す.\n"
+"このコマンドの後に, 外す印の文字を打つ. RET なら, 全ての印を外す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked"
+msgid "Return the file names (without the directory) of the lines marked with CHAR."
+msgstr "印 CHAR の付いた行のファイルの名前 (ディレクトリ無し) を返す."
+
+#: lisp/dired.scm
 msgctxt "function:dired--marks"
 msgid "Return a list of (NAME MARK) of the marked lines."
 msgstr "印の付いた行の (名前 印) の並びを返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--put-marks"
+msgid "Put back MARKS (a list of (NAME MARK)) on the lines of the names."
+msgstr "MARKS ((名前 印) の並び) の印を, それぞれの名前の行に戻す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--anchor"
@@ -1276,10 +1500,47 @@ msgstr ""
 msgctxt "function:dired--relist"
 msgid ""
 "List the directory again, keep the order of the lines, then put MARKS (a list of (NAME MARK)) back.\n"
-"PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR."
+"PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR.  Point stays on the same file;\n"
+"if it is gone, point goes to ANCHOR (the next file that remains)."
 msgstr ""
 "ディレクトリの一覧を作り直し, 行の順を保って, MARKS ((名前 印) の並び) の印を戻す.\n"
-"PLACE は (ANCHOR NAMES): NAMES の行を, ANCHOR の行の前に置く."
+"PLACE は (ANCHOR NAMES): NAMES の行を, ANCHOR の行の前に置く. 点は同じファイルに置く.\n"
+"そのファイルが無くなっていれば, ANCHOR (残っている次のファイル) へ."
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-redisplay"
+msgid "Redisplay the Dired buffer, keeping the marks and the order of the lines."
+msgstr "Dired バッファを作り直す (印と行の順は残す)."
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-kill-lines"
+msgid ""
+"Remove all marked lines, or the next ARG lines.\n"
+"The files or directories on those lines are _not_ deleted.  Only the Dired listing is affected.\n"
+"To restore the removals, use \\[revert-buffer]."
+msgstr ""
+"印の付いた全ての行か, 次の ARG 行を, 一覧から除く.\n"
+"それらの行のファイルやディレクトリは, 消さない. 変わるのは, Dired の一覧だけ.\n"
+"戻すには, \\[revert-buffer] を使う."
+
+#: lisp/dired.scm
+msgctxt "function:dired--next-names"
+msgid "Return the names of the next N files (the previous -N files if N is negative), starting at this line."
+msgstr "この行から, 次の N 個 (N が負なら, 前の -N 個) のファイルの名前を返す."
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked-or-current"
+msgid ""
+"Return the files to operate on: with a numeric prefix argument, the next ARG files;\n"
+"with another prefix argument, the current file; else the files marked with `*', or the current file."
+msgstr ""
+"扱うファイルを返す: 数の前置引数があれば, 次の ARG 個のファイル.\n"
+"他の前置引数なら, 今のファイル. 無ければ, `*' の印の付いたファイルか, 今のファイル."
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-prompt"
+msgid "Return the name of the files NAMES in a prompt: the name, \"[next N files]\" or \"* [N files]\" (Emacs's `dired-mark-prompt')."
+msgstr "問いに出す, ファイル NAMES の名前を返す: 名前, \"[next N files]\" か \"* [N files]\" (Emacs の `dired-mark-prompt')."
 
 #: lisp/dired.scm
 msgctxt "function:dired--delete"
@@ -1292,19 +1553,18 @@ msgid "In Dired, delete the files flagged for deletion."
 msgstr "Dired で, 消す印の付いたファイルを消す."
 
 #: lisp/dired.scm
-msgctxt "function:dired--marked-or-current"
-msgid "Return the files marked with `*', or the current file."
-msgstr "`*' の印の付いたファイルを返す. 無ければ今のファイル."
-
-#: lisp/dired.scm
 msgctxt "function:dired-do-delete"
 msgid "Delete all marked (or next ARG) files."
 msgstr "印の付いた (または次の ARG 個の) ファイルを消す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--target"
-msgid "Read the target for NAME with PROMPT.  Return its absolute name (inside the directory if it is one)."
-msgstr "NAME の行き先を PROMPT で読む. 絶対パスで返す (ディレクトリなら, その中)."
+msgid ""
+"Read the target with PROMPT.  For one file NAME, return its absolute name (inside the directory if it is one).\n"
+"For several files (NAME is #f), return the directory."
+msgstr ""
+"行き先を PROMPT で読む. 1 つのファイル NAME なら, その絶対パスを返す (ディレクトリなら, その中).\n"
+"幾つかのファイル (NAME が #f) なら, ディレクトリを返す."
 
 #: lisp/dired.scm
 msgctxt "function:dired--transfer"
@@ -1327,9 +1587,16 @@ msgid "Create a directory called DIRECTORY."
 msgstr "DIRECTORY という名前のディレクトリを作る."
 
 #: lisp/dired.scm
-msgctxt "function:dired-do-redisplay"
-msgid "Redisplay the Dired buffer, keeping the marks."
-msgstr "Dired バッファを作り直す (印は残す)."
+msgctxt "function:dired-copy-filename-as-kill"
+msgid ""
+"Copy names of marked (or next ARG) files into the kill ring.\n"
+"If there are several names, they will be separated by a space, and file names that have\n"
+"spaces or quote characters in them will be quoted (with double quotes).\n"
+"With a zero prefix arg, use the absolute file name of each marked file."
+msgstr ""
+"印の付いた (か, 次の ARG 個の) ファイルの名前を, kill ring に写す.\n"
+"幾つかの名前は, 空白で区切り, 空白や引用符を含む名前は, 二重引用符で囲む.\n"
+"前置引数が 0 なら, それぞれのファイルの絶対パスを使う."
 
 #: lisp/dired.scm
 msgctxt "function:dired-find-file"
@@ -1337,14 +1604,38 @@ msgid "In Dired, visit the file or directory named on this line."
 msgstr "Dired で, この行のファイルかディレクトリを開く."
 
 #: lisp/dired.scm
+msgctxt "function:dired-find-file-other-window"
+msgid "In Dired, visit this file or directory in another window."
+msgstr "Dired で, このファイルかディレクトリを, 別のウィンドウで開く."
+
+#: lisp/dired.scm
+msgctxt "function:dired-display-file"
+msgid "In Dired, display this file or directory in another window."
+msgstr "Dired で, このファイルかディレクトリを, 別のウィンドウに出す."
+
+#: lisp/dired.scm
+msgctxt "function:dired-view-file"
+msgid "In Dired, examine a file read-only.  A directory is shown with Dired."
+msgstr "Dired で, ファイルを読み込み専用で開く. ディレクトリなら Dired で出す."
+
+#: lisp/dired.scm
 msgctxt "function:dired-up-directory"
-msgid "Run Dired on the parent directory of the current directory."
-msgstr "今のディレクトリの親のディレクトリで Dired を動かす."
+msgid "Run Dired on the parent directory of the current directory, with point on the directory."
+msgstr "今のディレクトリの親のディレクトリで Dired を動かし, 点をそのディレクトリの行に置く."
+
+#: lisp/dired.scm
+msgctxt "variable:dired--keys"
+msgid "The keys of the Dired buffers (part of Emacs's `dired-mode-map')."
+msgstr "Dired のバッファのキー (Emacs の `dired-mode-map' の一部)."
 
 #: lisp/dired.scm
 msgctxt "function:dired--set-keys"
-msgid "Give the current Dired buffer its keys."
-msgstr "今の Dired バッファにキーを割り当てる."
+msgid ""
+"Give the current Dired buffer its keys.  The other printable characters are `undefined', and the digits\n"
+"and `-' make a prefix argument (like Emacs's `suppress-keymap')."
+msgstr ""
+"今の Dired バッファにキーを割り当てる. 他の文字は `undefined' にし, 数字と `-' は\n"
+"前置引数にする (Emacs の `suppress-keymap' と同じ)."
 
 #: lisp/files.scm
 msgctxt "variable:auto-mode-alist"
@@ -7834,6 +8125,11 @@ msgstr "前置引数を 4 倍にする (C-u の後の C-u). 数字の後なら, 
 msgctxt "function:digit-argument"
 msgid "Part of the numeric argument for the next command: add the digit of the key."
 msgstr "次のコマンドの数の引数の一部: キーの数字を加える."
+
+#: lisp/simple.scm
+msgctxt "function:undefined"
+msgid "Beep to tell the user this binding is undefined."
+msgstr "ベルを鳴らして, このキーには割り当てが無いことを知らせる."
 
 #: lisp/simple.scm
 msgctxt "function:negative-argument"

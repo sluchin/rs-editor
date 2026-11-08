@@ -16,7 +16,7 @@ use crate::render::{render_with, Display, Minibuffer};
 use crate::screen::Screen;
 use rseditor_core::command_loop::LoopUi;
 pub use rseditor_core::command_loop::{printable, read_key_name};
-use rseditor_core::keymap::{Keymap, Lookup};
+use rseditor_core::keymap::{buffer_keymap, lookup_in, Keymap, Lookup};
 use rseditor_core::sync::LockExt;
 
 /// 画面とその状態.
@@ -503,11 +503,14 @@ impl Host for UiHost {
             // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
             "key-binding" => {
                 let keys: Vec<String> = text(&args, 0).split(' ').map(str::to_string).collect();
-                Ok(match self.keymap.lock_recover().lookup(&keys) {
-                    Lookup::Command(command) => Value::String(command),
-                    Lookup::Prefix => Value::Boolean(true),
-                    Lookup::Unbound => Value::Boolean(false),
-                })
+                let local = buffer_keymap(self.editor.lock_recover().current_buffer());
+                Ok(
+                    match lookup_in(&local, &self.keymap.lock_recover(), &keys) {
+                        Lookup::Command(command) => Value::String(command),
+                        Lookup::Prefix => Value::Boolean(true),
+                        Lookup::Unbound => Value::Boolean(false),
+                    },
+                )
             }
             // 全ての割り当て: (キー コマンド) のリスト
             "all-key-bindings" => Ok(Value::List(

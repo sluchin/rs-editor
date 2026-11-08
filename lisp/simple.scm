@@ -1438,6 +1438,11 @@ C-u without digits or minus sign provides 4 as argument."
                            (else digit)))
     (set! universal-argument-mode #t)))
 
+(define-command (undefined)
+  "Beep to tell the user this binding is undefined."
+  (ding)
+  (message "%s is undefined" last-command-event))
+
 (define-command (negative-argument . args)
   "Begin a negative numeric argument for the next command, or negate it."
   (let ((arg (simple--raw-arg args)))

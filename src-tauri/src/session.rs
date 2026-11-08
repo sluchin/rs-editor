@@ -14,7 +14,7 @@ use std::time::Duration;
 use rseditor_core::command_loop::{read_key_name, CommandLoop, LoopUi};
 use rseditor_core::editor::Editor;
 use rseditor_core::frame::{Frame, FrameBuilder};
-use rseditor_core::keymap::{Keymap, Lookup};
+use rseditor_core::keymap::{buffer_keymap, lookup_in, Keymap, Lookup};
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
@@ -315,11 +315,14 @@ impl<F: Front> Host for SessionUi<F> {
             )),
             "key-binding" => {
                 let keys: Vec<String> = text(&args, 0).split(' ').map(str::to_string).collect();
-                Ok(match self.keymap.lock_recover().lookup(&keys) {
-                    Lookup::Command(command) => Value::String(command),
-                    Lookup::Prefix => Value::Boolean(true),
-                    Lookup::Unbound => Value::Boolean(false),
-                })
+                let local = buffer_keymap(self.editor.lock_recover().current_buffer());
+                Ok(
+                    match lookup_in(&local, &self.keymap.lock_recover(), &keys) {
+                        Lookup::Command(command) => Value::String(command),
+                        Lookup::Prefix => Value::Boolean(true),
+                        Lookup::Unbound => Value::Boolean(false),
+                    },
+                )
             }
             "all-key-bindings" => Ok(Value::List(
                 self.keymap

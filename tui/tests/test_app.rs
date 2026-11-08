@@ -1792,3 +1792,38 @@ fn test_defun_motions_and_insertions_set_the_mark_without_selecting() {
     fx.press("C-x C-x");
     assert_ne!(fx.point(), after);
 }
+
+#[test]
+fn test_dired_buffer_is_read_only_and_has_its_own_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), "from a").unwrap();
+    std::fs::write(dir.path().join("b.txt"), "from b").unwrap();
+    let dir_arg = [dir.path().to_str().unwrap().to_string()];
+    let mut fx = Fixture::sized(12, 60, &dir_arg).unwrap();
+    let listing = fx.text();
+    // 割り当てない文字は, 入れずに知らせる
+    fx.press("z");
+    assert_eq!(fx.app.message(), "z is undefined");
+    assert_eq!(fx.text(), listing);
+    // 数字は前置引数. 印は, 読み込み専用のバッファにも付く
+    fx.press("2 m");
+    assert_eq!(fx.text().matches("\n* ").count(), 2);
+    // バッファのキー (M-}) は, 全体のキーより先に引く
+    let found = fx
+        .app
+        .host()
+        .call("key-binding", vec![Value::String("M-}".to_string())])
+        .unwrap();
+    assert_eq!(found.to_string(), "\"dired-next-marked-file\"");
+    fx.press("U");
+    // v は, 読み込み専用で開く
+    fx.press("M-< n n n v");
+    assert_eq!(fx.text(), "from a");
+    fx.press("x");
+    assert_eq!(fx.text(), "from a");
+    assert!(
+        fx.app.message().contains("read-only"),
+        "{}",
+        fx.app.message()
+    );
+}

@@ -911,8 +911,18 @@ msgid "Return the text of the Dired buffer of DIR: the directory, then the `ls -
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired--trivial-p"
+msgid "Return true if NAME is \".\", \"..\" or starts with \"#\" or \".#\" (Emacs's `dired-trivial-filenames')."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired--goto-first-file"
-msgid "Move point to the name of the first file (after \".\" and \"..\"), or to the end if there is none."
+msgid "Move point to the name of the first nontrivial file (`dired--trivial-p'), or to the end if there is none."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--writable"
+msgid "Call THUNK with the current buffer writable, then make it read-only and unmodified again."
 msgstr ""
 
 #: lisp/dired.scm
@@ -952,7 +962,7 @@ msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired--goto-file"
-msgid "Move point to the name NAME in the current Dired buffer.  Return #f if the listing has no such file."
+msgid "Move point to the name NAME in the current Dired buffer.  Return #f, without moving, if the listing has no such file."
 msgstr ""
 
 #: lisp/dired.scm
@@ -984,7 +994,9 @@ msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired--revert"
-msgid "List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer."
+msgid ""
+"List the directory of the current Dired buffer again, and return #t.  Return #f if it is not a Dired buffer.\n"
+"The marks stay, and point stays on the same file (Emacs's `dired-revert')."
 msgstr ""
 
 #: lisp/dired.scm
@@ -998,6 +1010,21 @@ msgid "Return the position of the file name on the current line, or #f if the li
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired--type"
+msgid "Return the file type character of the current line (\"-\", \"d\", \"l\" ...) or #f if it lists no file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--name-at"
+msgid "Return the file name that starts at START, without the target of a symbolic link."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--name-here"
+msgid "Return the file name on the current line (without the directory), or #f."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired-get-filename"
 msgid "Return the name of the file on the current line, or #f.  With LOCALP non-nil, without the directory."
 msgstr ""
@@ -1005,6 +1032,11 @@ msgstr ""
 #: lisp/dired.scm
 msgctxt "function:dired--directory"
 msgid "Return the directory of the current Dired buffer."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--line-mark"
+msgid "Return the mark (the first character) of the current line."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1018,28 +1050,169 @@ msgid "Move up lines then position at the file name."
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired--search-line"
+msgid ""
+"Move to the Nth next line (previous if N is negative) for which MATCH? is true, at the file name.\n"
+"Signal an error with MESSAGE, without moving, if there are not so many."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-next-dirline"
+msgid "Goto ARGth next directory file line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-prev-dirline"
+msgid "Goto ARGth previous directory file line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--next-marked-file"
+msgid "Move to the Nth next marked file; at the end, wrap around (Emacs's `dired-next-marked-file' with WRAP)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-next-marked-file"
+msgid "Move to the ARGth next marked file, wrapping around to the beginning."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-prev-marked-file"
+msgid "Move to the ARGth previous marked file, wrapping around to the end."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-goto-file"
+msgid "Go to line describing file FILE in this Dired buffer."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired--mark-line"
 msgid "Put the mark CHAR in the first column of the current line, if it lists a file."
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired--repeat-over-lines"
+msgid ""
+"Call FUNCTION on the next N file lines (the previous -N lines if N is negative), then move to the file name.\n"
+"Like Emacs's `dired-repeat-over-lines'."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-lines"
+msgid "Put CHAR on the next N file lines.  \".\" and \"..\" are not flagged for deletion."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired-mark"
-msgid "Mark the file at point in the Dired buffer, then move to the next line."
+msgid ""
+"Mark the file at point in the Dired buffer, then move to the next line.\n"
+"With a prefix arg, mark files on the next ARG lines (the previous lines if ARG is negative)."
 msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired-flag-file-deletion"
-msgid "In Dired, flag the current line's file for deletion, then move to the next line."
+msgid ""
+"In Dired, flag the current line's file for deletion, then move to the next line.\n"
+"With a prefix arg, flag files on the next ARG lines."
 msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired-unmark"
-msgid "Unmark the file at point in the Dired buffer, then move to the next line."
+msgid ""
+"Unmark the file at point in the Dired buffer, then move to the next line.\n"
+"With a prefix arg, unmark files on the next ARG lines."
 msgstr ""
 
 #: lisp/dired.scm
-msgctxt "function:dired--marked"
-msgid "Return the file names (without the directory) of the lines marked with CHAR."
+msgctxt "function:dired-unmark-backward"
+msgid ""
+"In Dired, move up lines and remove marks or deletion flags there.\n"
+"Optional prefix ARG says how many lines to unmark/unflag; default is one line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-toggle-marks"
+msgid ""
+"Toggle marks: marked files become unmarked, and vice versa.\n"
+"Flagged files (indicated with flags such as `C' and `D', not with `*') are not affected,\n"
+"and `.' and `..' are never toggled."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-if"
+msgid ""
+"Put CHAR on the lines whose file satisfies PREDICATE (called with the name, point on the line).\n"
+"MSG names the kind of the files in the messages.  Return the count, or #f if it is 0 (Emacs's `dired-mark-if')."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--unflag-char"
+msgid "Return \" \" if there is a prefix argument (in ARGS or the current one), else CHAR."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-directories"
+msgid ""
+"Mark all directory file lines except `.' and `..'.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-executables"
+msgid ""
+"Mark all executable files.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-symlinks"
+msgid ""
+"Mark all symbolic links.\n"
+"With prefix argument, unmark or unflag all those files."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-mark-files-regexp"
+msgid ""
+"Mark all files matching REGEXP for use in later commands.\n"
+"A prefix argument means to unmark them instead.  `.' and `..' are never marked."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-files-regexp"
+msgid ""
+"In Dired, flag all files containing the specified REGEXP for deletion.\n"
+"`.' and `..' are never flagged."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "variable:dired-garbage-files-regexp"
+msgid "Regular expression to match \"garbage\" files for `dired-flag-garbage-files'."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-garbage-files"
+msgid "Flag for deletion all files that match `dired-garbage-files-regexp'."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-backup-files"
+msgid ""
+"Flag all backup files (names ending with `~') for deletion.\n"
+"With prefix argument, unmark or unflag these files."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-flag-auto-save-files"
+msgid ""
+"Flag for deletion files whose names suggest they are auto save files.\n"
+"A prefix argument says to unmark or unflag those files instead."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--unmark-all"
+msgid "Remove MARK (or any mark if it is #f) from every file, and report the count."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1048,8 +1221,25 @@ msgid "Remove all marks from all files in the Dired buffer."
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired-unmark-all-files"
+msgid ""
+"Remove a specific mark (or any mark) from every file.\n"
+"After this command, type the mark character to remove, or type RET to remove all marks."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked"
+msgid "Return the file names (without the directory) of the lines marked with CHAR."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired--marks"
 msgid "Return a list of (NAME MARK) of the marked lines."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--put-marks"
+msgid "Put back MARKS (a list of (NAME MARK)) on the lines of the names."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1081,7 +1271,38 @@ msgstr ""
 msgctxt "function:dired--relist"
 msgid ""
 "List the directory again, keep the order of the lines, then put MARKS (a list of (NAME MARK)) back.\n"
-"PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR."
+"PLACE is (ANCHOR NAMES): the lines of NAMES go before the line of ANCHOR.  Point stays on the same file;\n"
+"if it is gone, point goes to ANCHOR (the next file that remains)."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-redisplay"
+msgid "Redisplay the Dired buffer, keeping the marks and the order of the lines."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-do-kill-lines"
+msgid ""
+"Remove all marked lines, or the next ARG lines.\n"
+"The files or directories on those lines are _not_ deleted.  Only the Dired listing is affected.\n"
+"To restore the removals, use \\[revert-buffer]."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--next-names"
+msgid "Return the names of the next N files (the previous -N files if N is negative), starting at this line."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--marked-or-current"
+msgid ""
+"Return the files to operate on: with a numeric prefix argument, the next ARG files;\n"
+"with another prefix argument, the current file; else the files marked with `*', or the current file."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired--mark-prompt"
+msgid "Return the name of the files NAMES in a prompt: the name, \"[next N files]\" or \"* [N files]\" (Emacs's `dired-mark-prompt')."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1095,18 +1316,15 @@ msgid "In Dired, delete the files flagged for deletion."
 msgstr ""
 
 #: lisp/dired.scm
-msgctxt "function:dired--marked-or-current"
-msgid "Return the files marked with `*', or the current file."
-msgstr ""
-
-#: lisp/dired.scm
 msgctxt "function:dired-do-delete"
 msgid "Delete all marked (or next ARG) files."
 msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired--target"
-msgid "Read the target for NAME with PROMPT.  Return its absolute name (inside the directory if it is one)."
+msgid ""
+"Read the target with PROMPT.  For one file NAME, return its absolute name (inside the directory if it is one).\n"
+"For several files (NAME is #f), return the directory."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1130,8 +1348,12 @@ msgid "Create a directory called DIRECTORY."
 msgstr ""
 
 #: lisp/dired.scm
-msgctxt "function:dired-do-redisplay"
-msgid "Redisplay the Dired buffer, keeping the marks."
+msgctxt "function:dired-copy-filename-as-kill"
+msgid ""
+"Copy names of marked (or next ARG) files into the kill ring.\n"
+"If there are several names, they will be separated by a space, and file names that have\n"
+"spaces or quote characters in them will be quoted (with double quotes).\n"
+"With a zero prefix arg, use the absolute file name of each marked file."
 msgstr ""
 
 #: lisp/dired.scm
@@ -1140,13 +1362,35 @@ msgid "In Dired, visit the file or directory named on this line."
 msgstr ""
 
 #: lisp/dired.scm
+msgctxt "function:dired-find-file-other-window"
+msgid "In Dired, visit this file or directory in another window."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-display-file"
+msgid "In Dired, display this file or directory in another window."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "function:dired-view-file"
+msgid "In Dired, examine a file read-only.  A directory is shown with Dired."
+msgstr ""
+
+#: lisp/dired.scm
 msgctxt "function:dired-up-directory"
-msgid "Run Dired on the parent directory of the current directory."
+msgid "Run Dired on the parent directory of the current directory, with point on the directory."
+msgstr ""
+
+#: lisp/dired.scm
+msgctxt "variable:dired--keys"
+msgid "The keys of the Dired buffers (part of Emacs's `dired-mode-map')."
 msgstr ""
 
 #: lisp/dired.scm
 msgctxt "function:dired--set-keys"
-msgid "Give the current Dired buffer its keys."
+msgid ""
+"Give the current Dired buffer its keys.  The other printable characters are `undefined', and the digits\n"
+"and `-' make a prefix argument (like Emacs's `suppress-keymap')."
 msgstr ""
 
 #: lisp/files.scm
@@ -6911,6 +7155,11 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:digit-argument"
 msgid "Part of the numeric argument for the next command: add the digit of the key."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:undefined"
+msgid "Beep to tell the user this binding is undefined."
 msgstr ""
 
 #: lisp/simple.scm

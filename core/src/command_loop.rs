@@ -277,23 +277,9 @@ impl<U: Host + LoopUi> CommandLoop<U> {
 
     /// 読んでいるキーを引きます. バッファだけのキー (`local-set-key`) を, 全体の割り当てより先に引く.
     fn lookup_keys(&self) -> Lookup {
-        let (local, mode) = {
-            let editor = self.host.editor();
-            let buffer = editor.current_buffer();
-            (buffer.local_keys().to_vec(), buffer.major_mode())
-        };
-        // バッファのキー (`local-set-key`), メジャーモードのキー, 全体のキーの順に引く
-        let mut keymap = crate::keymap::mode_keymap(&mode);
-        for (keys, command) in &local {
-            keymap.bind(keys, command);
-        }
-        let found = keymap.lookup(&self.pending.lock_recover());
-        if found != Lookup::Unbound {
-            return found;
-        }
-        self.keymap
-            .lock_recover()
-            .lookup(&self.pending.lock_recover())
+        let local = crate::keymap::buffer_keymap(self.host.editor().current_buffer());
+        let pending = self.pending.lock_recover().clone();
+        crate::keymap::lookup_in(&local, &self.keymap.lock_recover(), &pending)
     }
 
     /// 文字を入れます (前置引数の数だけ繰り返す). 画面の IME で確定した文字も, ここから入れる.

@@ -359,6 +359,24 @@ pub fn mode_keymap(mode: &str) -> Keymap {
     keymap
 }
 
+/// バッファ `buffer` のキー (`local-set-key`) とメジャーモードのキーの割り当てを返します. 全体の割り当てより先に引く
+/// (Emacs の `key-binding` と同じく, [`lookup_in`] で引く).
+pub fn buffer_keymap(buffer: &crate::buffer::Buffer) -> Keymap {
+    let mut keymap = mode_keymap(&buffer.major_mode());
+    for (local, command) in buffer.local_keys() {
+        keymap.bind(local, command);
+    }
+    keymap
+}
+
+/// キーの並び `keys` を, バッファの割り当て `local` ([`buffer_keymap`]), 全体の割り当て `global` の順に引きます.
+pub fn lookup_in(local: &Keymap, global: &Keymap, keys: &[String]) -> Lookup {
+    match local.lookup(keys) {
+        Lookup::Unbound => global.lookup(keys),
+        found => found,
+    }
+}
+
 impl Default for Keymap {
     fn default() -> Self {
         let mut keymap = Keymap {
