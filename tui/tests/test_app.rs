@@ -592,6 +592,22 @@ fn test_query_replace_and_occur() {
 }
 
 #[test]
+fn test_query_replace_edits_in_a_recursive_edit() {
+    let mut fx = Fixture::new();
+    fx.press("a SPC a SPC a");
+    fx.press("C-a");
+    // C-r で再帰編集に入り, C-M-c で戻る. C-] は, 置き換えを止める
+    fx.feed("a RET X RET C-r C-e z C-x C-z C-z C-M-c y C-r C-]");
+    fx.press("M-%");
+    assert_eq!(fx.text(), "X a az");
+    // 正規表現の置換の \, と \#
+    fx.press("C-a");
+    fx.feed("[ a - z ] RET \\ , ( u p c a s e SPC \\ & ) \\ # RET !");
+    fx.press("C-M-%");
+    assert_eq!(fx.text(), "X0 A1 A2Z3");
+}
+
+#[test]
 fn test_multi_occur_and_next_error() {
     let mut fx = Fixture::new();
     fx.app

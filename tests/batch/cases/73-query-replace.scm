@@ -1,0 +1,33 @@
+(define (show title)
+  (princ (format "%s: %S %d\n" title (buffer-string) (point))))
+(define (fresh text)
+  (erase-buffer) (insert text) (goto-char (point-min)))
+(switch-to-buffer "qr")
+;; e: 置き換える文字列を直す (続きの一致にも使う)
+(fresh "a a a a")
+(execute-kbd-macro (kbd "M-% a RET b RET y e x RET n y q"))
+(show "e")
+;; E: 大文字と小文字を、そのまま使う
+(fresh "A A")
+(execute-kbd-macro (kbd "M-% a RET b RET E C RET y"))
+(show "E")
+;; C-r: 再帰編集 (C-M-c で戻る)
+(fresh "a b\na c\n")
+(execute-kbd-macro (kbd "M-% a RET X RET C-r C-e z z C-M-c y y"))
+(show "C-r")
+;; C-w: 一致を消して, 再帰編集
+(fresh "a b a c")
+(execute-kbd-macro (kbd "M-% a RET X RET C-w Q Q C-M-c y q"))
+(show "C-w")
+;; ほかのキーは, 置き換えを終えて, 普通のキーとして動かす
+(fresh "a b a c")
+(execute-kbd-macro (kbd "M-% a RET X RET y C-f C-f"))
+(show "other")
+;; \, と \#: 正規表現の置換の式
+(fresh "ab cd")
+(execute-kbd-macro (kbd "C-M-% [a-z] RET \\,(upcase SPC \\&)\\# RET !"))
+(show "eval")
+;; ?: 説明
+(fresh "a a")
+(execute-kbd-macro (kbd "M-% a RET b RET ? q"))
+(princ (with-current-buffer "*Help*" (buffer-string)))

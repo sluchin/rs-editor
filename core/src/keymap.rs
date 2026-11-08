@@ -300,6 +300,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-M-q", "indent-sexp"),
     ("M-@", "mark-word"),
     ("C-]", "abort-recursive-edit"),
+    ("C-M-c", "exit-recursive-edit"),
     ("<f8>", "project-tree"),
     ("M-X", "execute-extended-command-for-buffer"),
     ("C-x M-:", "repeat-complex-command"),

@@ -265,10 +265,12 @@
 - [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
 - [ ] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く), `zrgrep`、`find-grep`。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
-- [ ] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
-      `u` / `U` (置き換えを戻す), `?` (説明)。大文字と小文字を合わせる置換 (`case-replace`)。
-- [ ] 置き換える文字の `\,(...)` (Lisp の式) と `\#` (置き換えた数)。
-- [ ] `C-M-%` などで、リージョンがあれば、リージョンの中だけを置き換える。
+- [x] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `e` / `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
+      `u` / `U` (置き換えを戻す), `?` (説明), `C-l`、`C-v` / `M-v`。ほかのキーは、置き換えを終えて、普通のキーとして動かす。
+      大文字と小文字を合わせる置換 (`case-replace`)。
+- [x] 置き換える文字の `\,(...)` (Lisp の式) と `\#` (置き換えた数) (`query-replace-compile-replacement`)。式は Scheme で書く。
+      式の中の `\&`、`\N`、`\#&`、`\#N`、`\#` も使える。
+- [x] `C-M-%` などで、リージョンがあれば、リージョンの中だけを置き換える。
 
 ### ファイル
 
@@ -320,7 +322,9 @@
 - [x] `M-n` の既定の値 (future history)。`read-string` と `read-file-name` の既定の値を出す。
 - [ ] `*Completions*` バッファで選ぶ (`M-v`、`M-<up>`、`M-<down>`、`RET`)。補完のスタイル (`partial-completion` の `f-f` など)。
 - [x] `yes-or-no-p` で、`yes` と `no` のほかの答えには、聞き直す (「Please answer yes or no.」)。今は、`no` とする。
-- [ ] `M-ESC ESC` (keyboard-escape-quit), 再帰編集 (`C-M-c`)。
+- [ ] `M-ESC ESC` (keyboard-escape-quit)。
+- [x] 再帰編集 (`recursive-edit`、`C-M-c`、`C-]`)。違い: コマンドループを入れ子に動かさず、キーを読んで、キーの並びの割り当てのコマンドを呼ぶ。
+      前置引数、キーボードマクロの記録、`pre-command-hook` などは、再帰編集の中では使えない。
 - [ ] `M-X` (execute-extended-command-for-buffer), `M-x` で、コマンドのキーを知らせる (「You can run the command ... with C-x ...」)。
 - [ ] `C-u M-x` などの、前置引数を付けたコマンドの実行。
 - [ ] ミニバッファの中での、エディタのキー (`C-a`、`C-k`、`M-d`、`C-y` など)。今は、入力欄 (`input`) のキーだけ。
@@ -695,7 +699,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] 外のツール: `compile`、`recompile`、`C-x p ...` (project) (Phase 14「モードとそのほか」)。中。
 - [x] ウィンドウ: `C-x 4 4`、`C-x w ...` の残り (`toggle-window-dedicated`、`winner-mode`、`windmove`) (Phase 14)。小〜中。
 - [x] `next-error` で `compile` と `occur` の結果も使う、`multi-occur` (Phase 14)。中。
-- [ ] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。
+- [x] 置換: query-replace の `^`、`,`、`E`、`C-r` / `C-w`、`\,(...)`、`\#`、リージョンの中だけ (Phase 14)。中。
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 

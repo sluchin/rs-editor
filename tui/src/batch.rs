@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex, Weak};
 use crate::history::{HistoryArgs, Navigator};
 use rseditor_core::command_loop::{read_key_name, CommandLoop, LoopUi};
 use rseditor_core::editor::Editor;
-use rseditor_core::keymap::Keymap;
+use rseditor_core::keymap::{Keymap, Lookup};
 use rseditor_core::scheme::editor_host::EditorHost;
 use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
@@ -282,6 +282,24 @@ impl Host for BatchUi {
                 Err("kill-emacs".to_string().into())
             }
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
+            "key-binding" => {
+                // キーの並びの割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
+                let commands = self
+                    .commands
+                    .lock_recover()
+                    .upgrade()
+                    .ok_or_else(|| "The batch mode has no command loop".to_string())?;
+                let keys: Vec<String> = crate::ui::text(&args, 0)
+                    .split(' ')
+                    .map(str::to_string)
+                    .collect();
+                let found = commands.keymap().lock_recover().lookup(&keys);
+                Ok(match found {
+                    Lookup::Command(command) => Value::String(command),
+                    Lookup::Prefix => Value::Boolean(true),
+                    Lookup::Unbound => Value::Boolean(false),
+                })
+            }
             // 色, 下線, 隠すこと: バッチモードでは何もしない
             "highlight-regexp"
             | "unhighlight-regexp"

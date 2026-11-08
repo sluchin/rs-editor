@@ -38,9 +38,119 @@
   "Shift every position of the match data DATA by DELTA."
   (map (lambda (p) (and p (+ p delta))) data))
 
+(define (replace--drop items n)
+  "Return ITEMS without the first N elements (`nthcdr')."
+  (if (or (= n 0) (null? items)) items (replace--drop (cdr items) (- n 1))))
+
+(define query-replace-help
+  "Type SPC or y to replace one match, Delete or n to skip to next,
+RET or q to exit, Period to replace one match and exit,
+, to replace but not move point immediately,
+! to replace all remaining matches in this buffer with no more questions,
+C-r to enter recursive edit (C-M-c to get out again),
+C-w to delete match and then enter recursive edit,
+^ to move point back to previous match,
+u to undo previous replacement,
+U to undo all replacements,
+e to edit the replacement string.
+E to edit the replacement string with exact case.
+C-l to clear the screen, redisplay, and offer same replacement again,
+Y to replace all remaining matches in all remaining buffers (in
+multi-buffer replacements) with no more questions,
+N (in multi-buffer replacements) to skip to the next buffer without
+replacing remaining matches in the current buffer.
+Any other character exits the interactive replacement loop, and is then
+re-executed as a normal key sequence."
+  "Help message while in `query-replace'.")
+
+(define query-replace-map
+  '((" " act) ("y" act) ("Y" act) ("Backspace" skip) ("Delete" skip) ("n" skip) ("N" skip)
+    ("e" edit-replacement) ("E" edit-replacement-exact-case) ("," act-and-show)
+    ("q" exit) ("Enter" exit) ("." act-and-exit) ("C-r" edit) ("C-w" delete-and-edit)
+    ("C-l" recenter) ("!" automatic) ("^" backup) ("u" undo) ("U" undo-all)
+    ("C-h" help) ("<f1>" help) ("?" help) ("C-g" quit) ("C-]" quit)
+    ("C-v" scroll-up) ("M-v" scroll-down) ("<next>" scroll-up) ("<prior>" scroll-down))
+  "The answers of `query-replace': each is (KEY ACTION), with KEY as `read-key' names it.")
+
+(define (replace--key-sequence key)
+  "Return KEY (a name of `read-key') as `execute-kbd-macro' takes it."
+  (let ((name (assoc key '(("Enter" "RET") (" " "SPC") ("Backspace" "DEL") ("Delete" "<delete>") ("Escape" "ESC")))))
+    (list (if name (cadr name) key))))
+
+;; TO を Lisp にする (Emacs の `query-replace-compile-replacement'). `\,(式)' は式の値に, `\#' は置き換えた数になる.
+;; 式の中の `\&' は (match-string 0), `\N' は (match-string N), `\#&' と `\#N' はその数, `\#' は replace-count.
+
+(define replace-count 0
+  "The number of replacements done so far, while a replacement expression (`\\,') is evaluated.")
+
+(define (replace--sexp-end text)
+  "Return the end of the first expression of TEXT (as an offset), or signal an error."
+  (let ((work (generate-new-buffer " *replace-sexp*")))
+    (unwind-protect
+        (with-current-buffer work
+          (insert text)
+          (goto-char (point-min))
+          (forward-sexp 1)
+          (- (point) 1))
+      (kill-buffer work))))
+
+(define (replace--expand-symbols text)
+  "Replace \\&, \\N, \\#&, \\#N and \\# in the expression TEXT by the forms they stand for."
+  (let* ((text (replace-regexp-in-string "\\\\#&" "(string->number (match-string 0))" text #t #t))
+         (text (replace-regexp-in-string "\\\\#\\([0-9]+\\)" "(string->number (match-string \\1))" text #t))
+         (text (replace-regexp-in-string "\\\\&" "(match-string 0)" text #t #t))
+         (text (replace-regexp-in-string "\\\\\\([0-9]+\\)" "(match-string \\1)" text #t)))
+    (replace-regexp-in-string "\\\\#" "replace-count" text #t #t)))
+
+(define (replace--quote value)
+  "Return VALUE as a string with each backslash doubled (`replace-quote')."
+  (replace-regexp-in-string "\\\\" "\\\\\\\\" (if (string? value) value (format "%s" value)) #t #t))
+
+(define (query-replace-compile-replacement to regexp)
+  "Return TO for `perform-replace': if REGEXP and TO has \\, or \\#, a procedure of the count that
+returns the replacement; otherwise TO itself."
+  (if (not (and regexp (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#]" to)))
+      to
+      (let loop ((to to) (parts '()))
+        (if (not (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#]" to))
+            (let ((parts (filter (lambda (p) (not (equal? p ""))) (reverse (cons to parts)))))
+              (lambda (count)
+                (apply string-append
+                       (map (lambda (part)
+                              (cond ((string? part) part)
+                                    ((eq? (car part) 'count) (number->string count))
+                                    (else
+                                     (set! replace-count count)
+                                     (replace--quote
+                                      (condition-case err
+                                          (eval (cadr part))
+                                        (error (error (format "Error evaluating replacement expression: %S" err))))))))
+                            parts))))
+            (let* ((pos (match-end 0))
+                   (head (substring to 0 (- pos 2)))
+                   (char (substring to (- pos 1) pos))
+                   (rest (substring to pos (string-length to))))
+              (if (equal? char "#")
+                  (loop rest (cons (list 'count) (cons head parts)))
+                  (let* ((end (replace--sexp-end rest))
+                         (text (substring rest 0 end))
+                         (form (read (replace--expand-symbols text)))
+                         ;; 記号の後の空白は 1 つ呑む
+                         (end (if (and (or (symbol? form)
+                                           (and (pair? form) (eq? (car form) 'quote)
+                                                (not (string-prefix? "(" rest))))
+                                       (< end (string-length rest))
+                                       (equal? (substring rest end (+ end 1)) " "))
+                                  (+ end 1)
+                                  end)))
+                    (loop (substring rest end (string-length rest))
+                          (cons (list 'eval form) (cons head parts))))))))))
+
 (define (perform-replace from to query regexp delimited start end backward)
   "Replace some occurrences of FROM with TO, and return #f.
 QUERY means ask about each match.  REGEXP means FROM is a regexp, and TO may use \\& and \\N.
+TO may also be a procedure of the number of replacements so far that returns the replacement
+(see `query-replace-compile-replacement').
 DELIMITED means match only whole words.  START and END (or #f) bound the replacement; BACKWARD searches backward."
   (let* ((saved-fold case-fold-search)
          (fold (and case-fold-search (replace--no-upper-p from regexp)))
@@ -52,7 +162,13 @@ DELIMITED means match only whole words.  START and END (or #f) bound the replace
          (count 0)
          (match-again #t)
          (keep-going #t)
-         (query-flag query))
+         (query-flag query)
+         (next-replacement (if (procedure? to) #f to))
+         (stack '())
+         (update-stack #t)
+         (last-was-undo #f)
+         (last-was-act-and-show #f)
+         (unread #f))
     (define (limit-pos) (and limit (marker-position limit)))
     (define (can-continue)
       (if backward
@@ -74,16 +190,25 @@ DELIMITED means match only whole words.  START and END (or #f) bound the replace
                    (match-data)
                    (begin (goto-char opoint) #f))))
             (else #f)))
-    (define (replace-here data)
-      "Replace the match DATA.  Return the change in length."
+    (define (replace-with data replacement nocasify literal)
+      "Replace the match DATA by REPLACEMENT.  Return the match data of the replacement."
       (let ((old-end (cadr data)))
         (set-match-data data)
-        (replace-match to nocasify literal)
+        (replace-match replacement nocasify literal)
         (if backward (goto-char (car data)))
-        (let ((delta (- (cadr (match-data)) old-end)))
-          (set! count (+ count 1))
+        (let* ((new (match-data))
+               (delta (- (cadr new) old-end)))
           (if (pair? match-again) (set! match-again (replace--shift match-again delta)))
-          delta)))
+          new)))
+    (define (replace-here data)
+      "Replace the match DATA, count it, and return the match data of the replacement."
+      (set! count (+ count 1))
+      (replace-with data next-replacement nocasify literal))
+    (define (looking-at-data position pattern)
+      (save-excursion
+        (goto-char position)
+        (looking-at pattern)
+        (match-data)))
     (set! case-fold-search fold)
     (unwind-protect
         (begin
@@ -100,36 +225,152 @@ DELIMITED means match only whole words.  START and END (or #f) bound the replace
                                       (looking-at from)
                                       (let ((m (match-data)))
                                         (and (not (= (car m) (cadr m))) m))))))
+                  (when (procedure? to)
+                    (set-match-data data)
+                    (set! next-replacement (to count)))
                   (if (not query-flag)
                       (replace-here data)
-                      (let ask ((replaced #f))
-                        (set-match-data data)
-                        (let ((key (read-key (replace--prompt from (match-substitute-replacement to nocasify literal) regexp delimited backward))))
-                          (cond ((member key '(" " "y"))
-                                 (if (not replaced) (replace-here data)))
-                                ((member key '("Backspace" "Delete" "n")) #f)
-                                ((member key '("Enter" "q")) (set! keep-going #f))
-                                ((equal? key ".")
-                                 (if (not replaced) (replace-here data))
-                                 (set! keep-going #f))
-                                ((equal? key ",")
-                                 (if (not replaced) (replace-here data))
-                                 (ask #t))
-                                ((equal? key "!")
-                                 (if (not replaced) (replace-here data))
-                                 (set! query-flag #f))
-                                (else (ask replaced))))))
+                      (let ((done #f) (replaced #f) (searched #f) (shown #f))
+                        (let ask ()
+                          (set-match-data data)
+                          (when (and last-was-undo regexp)
+                            (set! last-was-undo #f)
+                            (set! data (looking-at-data (car data) from)))
+                          (set-match-data data)
+                          (set! searched (buffer-substring (car data) (cadr data)))
+                          (set! shown (match-substitute-replacement next-replacement nocasify literal))
+                          (let* ((key (read-key (replace--prompt from shown regexp delimited backward)))
+                                 (entry (assoc key query-replace-map))
+                                 (def (if entry (cadr entry) #f)))
+                            (set-match-data data)
+                            (case def
+                              ((help)
+                               (help-show (string-append "Query replacing " (if backward "backward " "")
+                                                         (if delimited "word " "") (if regexp "regexp " "")
+                                                         from " with " next-replacement ".\n\n" query-replace-help "\n")))
+                              ((exit) (set! keep-going #f) (set! done #t))
+                              ((backup)
+                               (if (pair? stack)
+                                   (let ((elt (car stack)))
+                                     (set! stack (cdr stack))
+                                     (goto-char (car elt))
+                                     (set! replaced (cadr elt))
+                                     (set! data (caddr elt)))
+                                   (begin (message "No previous match") (ding))))
+                              ((undo undo-all)
+                               (if (null? stack)
+                                   (begin (message "Nothing to undo") (ding))
+                                   (let ((len (length stack)) (num 0))
+                                     (let undo ((idx 0))
+                                       (when (and (< idx len) (pair? stack) (or (not replaced) last-was-act-and-show))
+                                         (let* ((elt (list-ref stack idx))
+                                                (idx (+ idx 1))
+                                                (was (cadr elt))
+                                                (search (list-ref elt (if was 4 3)))
+                                                (last (list-ref elt (if was 3 4))))
+                                           (set! replaced was)
+                                           (set! searched search)
+                                           (set! shown last)
+                                           (set! last-was-act-and-show #f)
+                                           (if (and (= idx len) (not was) (= num 0))
+                                               (begin (message "Nothing to undo") (ding)))
+                                           (if (not was)
+                                               (undo idx)
+                                               (begin
+                                                 (set! stack (replace--drop stack idx))
+                                                 (goto-char (car elt))
+                                                 (let ((at (looking-at-data (car (caddr elt)) (regexp-quote search))))
+                                                   (replace-with at last #t literal))
+                                                 (set! count (- count 1))
+                                                 (set! data (looking-at-data (car (caddr elt))
+                                                                             (if regexp last (regexp-quote last))))
+                                                 (if regexp (set! next-replacement (list-ref elt 4)))
+                                                 (if (eq? def 'undo-all)
+                                                     (begin
+                                                       (set! replaced #f)
+                                                       (set! len (- len idx))
+                                                       (set! num (+ num 1))
+                                                       (undo 0))))))))
+                                     (when (and (eq? def 'undo-all) (> num 0))
+                                       (message (format "Undid %d replacement%s" num (if (= num 1) "" "s")))
+                                       (ding))))
+                               (set! replaced #f)
+                               (set! last-was-undo #t)
+                               (set! last-was-act-and-show #f))
+                              ((act)
+                               (if (not replaced) (replace-here data))
+                               (set! done #t) (set! replaced #t)
+                               (set! update-stack (not last-was-act-and-show)))
+                              ((act-and-exit)
+                               (if (not replaced) (replace-here data))
+                               (set! keep-going #f) (set! done #t) (set! replaced #t))
+                              ((act-and-show)
+                               (when (not replaced)
+                                 (set! data (replace-here data))
+                                 (set! replaced #t)
+                                 (set! last-was-act-and-show #t)
+                                 (set! stack (cons (list (point) #t (list (car data) (cadr data)) searched shown) stack))))
+                              ((automatic)
+                               (if (not replaced) (replace-here data))
+                               (set! done #t) (set! query-flag #f) (set! replaced #t))
+                              ((skip)
+                               (set! done #t)
+                               (set! update-stack (not last-was-act-and-show)))
+                              ((recenter) (recenter-top-bottom))
+                              ((scroll-up) (condition-case e (scroll-up-command) (error #f)))
+                              ((scroll-down) (condition-case e (scroll-down-command) (error #f)))
+                              ((quit) (keyboard-quit))
+                              ((edit)
+                               (let ((opos (point-marker)))
+                                 (goto-char (car data))
+                                 (save-excursion (recursive-edit))
+                                 (goto-char (marker-position opos))
+                                 (marker-release opos))
+                               (if (and regexp nonempty)
+                                   (set! match-again (and (looking-at from) (match-data)))))
+                              ((edit-replacement edit-replacement-exact-case)
+                               (set! next-replacement
+                                     (read-string (format "Edit replacement string%s: "
+                                                          (if (eq? def 'edit-replacement-exact-case) " (exact case)" ""))
+                                                  next-replacement))
+                               (if replaced
+                                   (set-match-data data)
+                                   (begin
+                                     (set! data (replace-with data next-replacement
+                                                              (or (eq? def 'edit-replacement-exact-case) nocasify)
+                                                              literal))
+                                     (set! replaced #t)
+                                     (set! shown next-replacement)))
+                               (set! done #t))
+                              ((delete-and-edit)
+                               (set! data (replace-with data "" #t #t))
+                               (save-excursion (recursive-edit))
+                               (set! replaced #t))
+                              (else
+                               ;; ほかのキーは, 置き換えを終えて, 普通のキーとして動かす
+                               (set! keep-going #f)
+                               (set! unread key)
+                               (set! done #t))))
+                          (if (not done) (ask)))
+                        (if update-stack
+                            (set! stack (cons (list (point) replaced
+                                                    (if replaced (list (car (match-data)) (cadr (match-data))) data)
+                                                    searched shown)
+                                              stack)))
+                        (set! last-was-act-and-show #f)))
                   (loop))))))
       (set! case-fold-search saved-fold)
       (if limit (marker-release limit)))
-    (message (format "Replaced %d occurrence%s" count (if (= count 1) "" "s")))
+    (if unread
+        (execute-kbd-macro (replace--key-sequence unread))
+        (message (format "Replaced %d occurrence%s" count (if (= count 1) "" "s"))))
     #f))
 
 (define (replace--read-args regexp)
   "Read the string to replace and its replacement from the minibuffer.  Return (FROM TO)."
   (let* ((from (read-string (if regexp "Replace regexp: " "Replace string: ")))
          (to (read-string (format "Replace %s with: " from))))
-    (list from to)))
+    (list from (query-replace-compile-replacement to regexp))))
 
 (define (replace--region-bounds)
   "Return (START END) of the active region, or (#f #f)."

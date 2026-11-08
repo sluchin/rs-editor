@@ -373,3 +373,10 @@ fn condition_case_binds_the_emacs_data_of_each_kind() {
         );
     }
 }
+
+#[test]
+fn length_counts_the_characters_of_a_string() {
+    let eval = Evaluator::new();
+    assert_eq!(eval.eval("(length \"aあb\")").unwrap(), "3");
+    assert_eq!(eval.eval("(length '(1 2))").unwrap(), "2");
+}

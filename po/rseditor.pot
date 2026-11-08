@@ -5675,10 +5675,59 @@ msgid "Shift every position of the match data DATA by DELTA."
 msgstr ""
 
 #: lisp/replace.scm
+msgctxt "function:replace--drop"
+msgid "Return ITEMS without the first N elements (`nthcdr')."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:query-replace-help"
+msgid "Help message while in `query-replace'."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:query-replace-map"
+msgid "The answers of `query-replace': each is (KEY ACTION), with KEY as `read-key' names it."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--key-sequence"
+msgid "Return KEY (a name of `read-key') as `execute-kbd-macro' takes it."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "variable:replace-count"
+msgid "The number of replacements done so far, while a replacement expression (`\\,') is evaluated."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--sexp-end"
+msgid "Return the end of the first expression of TEXT (as an offset), or signal an error."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--expand-symbols"
+msgid "Replace \\&, \\N, \\#&, \\#N and \\# in the expression TEXT by the forms they stand for."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:replace--quote"
+msgid "Return VALUE as a string with each backslash doubled (`replace-quote')."
+msgstr ""
+
+#: lisp/replace.scm
+msgctxt "function:query-replace-compile-replacement"
+msgid ""
+"Return TO for `perform-replace': if REGEXP and TO has \\, or \\#, a procedure of the count that\n"
+"returns the replacement; otherwise TO itself."
+msgstr ""
+
+#: lisp/replace.scm
 msgctxt "function:perform-replace"
 msgid ""
 "Replace some occurrences of FROM with TO, and return #f.\n"
 "QUERY means ask about each match.  REGEXP means FROM is a regexp, and TO may use \\& and \\N.\n"
+"TO may also be a procedure of the number of replacements so far that returns the replacement\n"
+"(see `query-replace-compile-replacement').\n"
 "DELIMITED means match only whole words.  START and END (or #f) bound the replacement; BACKWARD searches backward."
 msgstr ""
 
@@ -7495,6 +7544,34 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "variable:recursive-edit--depth"
+msgid "The number of recursive edits in progress."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "variable:recursive-edit--exit"
+msgid "How the innermost recursive edit ends: #f (not yet), exit or abort."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:recursive-edit--key-name"
+msgid "Return KEY (a name of `read-key') as the key maps name it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:recursive-edit"
+msgid ""
+"Invoke the editor command loop recursively.\n"
+"To get out of the recursive edit, use C-M-c (`exit-recursive-edit'); C-] (`abort-recursive-edit')\n"
+"gets out and quits the command that called it."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:exit-recursive-edit"
+msgid "Exit from the innermost recursive edit or minibuffer."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:abort-recursive-edit"
 msgid "Abort the command that requested this recursive edit or minibuffer input."
 msgstr ""
@@ -7943,6 +8020,16 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:lisp-interaction-mode"
 msgid "Major mode for typing and evaluating Lisp forms (Scheme forms, in this editor)."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:upcase"
+msgid "Convert OBJECT (a string) to upper case and return that."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:downcase"
+msgid "Convert OBJECT (a string) to lower case and return that."
 msgstr ""
 
 #: lisp/simple.scm

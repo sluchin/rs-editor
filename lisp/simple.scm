@@ -2349,9 +2349,56 @@ With argument N, insert N newlines."
       (insert "\n")
       (loop (- n 1)))))
 
+;; 再帰編集. Emacs は, コマンドループを入れ子に動かす. ここでは, キーを読み, キーの並びが
+;; コマンドになるたびに, それを呼ぶ (割り当ての無い文字のキーは, その文字を入れる).
+
+(define recursive-edit--depth 0
+  "The number of recursive edits in progress.")
+
+(define recursive-edit--exit #f
+  "How the innermost recursive edit ends: #f (not yet), exit or abort.")
+
+(define (recursive-edit--key-name key)
+  "Return KEY (a name of `read-key') as the key maps name it."
+  (let ((name (assoc key '(("Enter" "RET") (" " "SPC") ("Backspace" "DEL") ("Delete" "<delete>") ("Escape" "ESC")))))
+    (if name (cadr name) key)))
+
+(define-command (recursive-edit . args)
+  "Invoke the editor command loop recursively.
+To get out of the recursive edit, use C-M-c (`exit-recursive-edit'); C-] (`abort-recursive-edit')
+gets out and quits the command that called it."
+  (set! recursive-edit--depth (+ recursive-edit--depth 1))
+  (set! recursive-edit--exit #f)
+  (unwind-protect
+      (let loop ((keys '()))
+        (let* ((keys (append keys (list (recursive-edit--key-name (read-key "")))))
+               (sequence (string-join keys " "))
+               (binding (key-binding sequence)))
+          (cond ((eq? binding #t) (loop keys))
+                (else
+                 (condition-case err
+                     (cond (binding (command-execute binding))
+                           ((equal? sequence "SPC") (insert " "))
+                           ((= (string-length sequence) 1) (insert sequence))
+                           (else (message (format "%s is undefined" sequence))))
+                   (error (message (error-message-string err))))
+                 (cond ((eq? recursive-edit--exit 'exit) #f)
+                       ((eq? recursive-edit--exit 'abort) (signal 'quit '()))
+                       (else (loop '())))))))
+    (set! recursive-edit--exit #f)
+    (set! recursive-edit--depth (- recursive-edit--depth 1))))
+
+(define-command (exit-recursive-edit . args)
+  "Exit from the innermost recursive edit or minibuffer."
+  (if (= recursive-edit--depth 0)
+      (user-error "No recursive edit is in progress")
+      (set! recursive-edit--exit 'exit)))
+
 (define-command (abort-recursive-edit . args)
   "Abort the command that requested this recursive edit or minibuffer input."
-  (user-error "No recursive edit is in progress"))
+  (if (= recursive-edit--depth 0)
+      (user-error "No recursive edit is in progress")
+      (set! recursive-edit--exit 'abort)))
 
 (provide 'simple)
 
@@ -3077,6 +3124,14 @@ Comments, strings, template literals, regexps, keywords, types and names are hig
   (set-syntax-dialect 'scheme)
   (set-major-mode-name 'lisp-interaction-mode)
   #f)
+
+(define (upcase object)
+  "Convert OBJECT (a string) to upper case and return that."
+  (string-upcase object))
+
+(define (downcase object)
+  "Convert OBJECT (a string) to lower case and return that."
+  (string-downcase object))
 
 (define (string-match regexp string . rest)
   "Return the index of the start of the first match for REGEXP in STRING, or nil.

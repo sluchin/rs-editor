@@ -355,7 +355,7 @@ fn file_candidates(input: &str) -> Vec<String> {
 }
 
 /// 文字列の引数.
-fn text(args: &[Value], i: usize) -> String {
+pub(crate) fn text(args: &[Value], i: usize) -> String {
     match args.get(i) {
         Some(Value::String(s)) => s.clone(),
         _ => String::new(),

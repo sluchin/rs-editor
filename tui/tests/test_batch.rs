@@ -482,3 +482,21 @@ fn test_dired_keys_delete_copy_rename_and_create() {
     assert_eq!(status, 0);
     assert_eq!(out, "(. .. f3 f8 f9 new)");
 }
+
+#[test]
+fn test_key_binding_looks_up_the_keymap() {
+    let code =
+        "(princ (list (key-binding \"C-f\") (key-binding \"C-x\") (key-binding \"C-x C-z C-z\")))";
+    assert_eq!(out_of(code, ""), "(forward-char t nil)");
+}
+
+#[test]
+fn test_recursive_edit_runs_the_keys_until_exit() {
+    // C-r で再帰編集に入り, 打ったキーを動かして, C-M-c で戻る. 割り当ての無いキーは, 知らせる
+    let code = concat!(
+        "(begin (switch-to-buffer (generate-new-buffer \"b\")) (insert \"a a\") (goto-char 1)",
+        " (execute-kbd-macro (kbd \"M-% a RET X RET C-r C-e z C-x C-z C-z C-M-c y q\"))",
+        " (princ (list (buffer-string) (condition-case e (exit-recursive-edit) (error (cadr e))))))",
+    );
+    assert_eq!(out_of(code, ""), "(X az No recursive edit is in progress)");
+}

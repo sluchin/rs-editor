@@ -2,7 +2,7 @@
 ;; 本文の全ての位置から, 置換のコマンドを fundamental-mode で動かし, 結果を書く.
 ;; 形: [[名前, 本文, 位置, マーク または null, Scheme の式, [キー], 結果], ...].
 ;;   結果: [本文, カーソル, マーク または null, 出したメッセージ または null, mark-active] または ["error", メッセージ, 本文, カーソル].
-;;   キーは, 問い (y-or-n など) に答えるキーの名前 (" ", "y", "n", "Enter", "Backspace", "!", ".", ",", "q"). 位置は 0 から数える.
+;;   キーは, 問い (y-or-n など) に答えるキーの名前 (" ", "y", "n", "Enter", "Backspace", "!", ".", ",", "q", "^", "u", "U"). 位置は 0 から数える.
 
 (require 'json)
 (require 'cl-lib)
@@ -36,7 +36,20 @@
     ("qr/dot" "(query-replace \"a\" \"b\")" "(query-replace \"a\" \"b\")" ("n" ".") nil)
     ("qr/comma" "(query-replace \"a\" \"b\")" "(query-replace \"a\" \"b\")" ("," "n") nil)
     ("qr/space-del" "(query-replace \"foo\" \"X\")" "(query-replace \"foo\" \"X\")" (" " "Backspace" "Enter") nil)
-    ("qrr/yn" "(query-replace-regexp \"a+\" \"<\\\\&>\")" "(query-replace-regexp \"a+\" \"<\\\\&>\")" ("n" "y" "y") nil)))
+    ("qrr/yn" "(query-replace-regexp \"a+\" \"<\\\\&>\")" "(query-replace-regexp \"a+\" \"<\\\\&>\")" ("n" "y" "y") nil)
+    ("qr/backup" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("y" "n" "^" "^" "y" "y") nil)
+    ("qr/backup-none" "(query-replace \"a\" \"b\")" "(query-replace \"a\" \"b\")" ("^" "y") nil)
+    ("qr/undo" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("y" "n" "y" "u" "n") nil)
+    ("qr/undo-twice" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("y" "y" "u" "u" "y") nil)
+    ("qr/undo-all" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("y" "n" "y" "U" "n") nil)
+    ("qr/undo-none" "(query-replace \"a\" \"b\")" "(query-replace \"a\" \"b\")" ("u" "y") nil)
+    ("qr/comma-undo" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("," "u" "y") nil)
+    ("qr/comma-backup" "(query-replace \"a\" \"bb\")" "(query-replace \"a\" \"bb\")" ("y" "," "^" "y") nil)
+    ("qrr/undo" "(query-replace-regexp \"\\\\(a\\\\)\\\\(b\\\\)?\" \"[\\\\2\\\\1]\")" "(query-replace-regexp \"\\\\(a\\\\)\\\\(b\\\\)?\" \"[\\\\2\\\\1]\")" ("y" "u" "y" "y") nil)
+    ("rr/count" "(replace-regexp \"a\" (query-replace-compile-replacement \"<\\\\#>\" t))" "(replace-regexp \"a\" (query-replace-compile-replacement \"<\\\\#>\" #t))" nil nil)
+    ("rr/eval" "(replace-regexp \"\\\\(.\\\\)\\\\(.\\\\)\" (query-replace-compile-replacement \"\\\\,(upcase \\\\2)\\\\1\" t))" "(replace-regexp \"\\\\(.\\\\)\\\\(.\\\\)\" (query-replace-compile-replacement \"\\\\,(upcase \\\\2)\\\\1\" #t))" nil nil)
+    ("rr/eval-count" "(replace-regexp \"[a-z]+\" (query-replace-compile-replacement \"\\\\,(length \\\\&)-\\\\#\" t))" "(replace-regexp \"[a-z]+\" (query-replace-compile-replacement \"\\\\,(length \\\\&)-\\\\#\" #t))" nil nil)
+    ("qrr/eval" "(query-replace-regexp \"[a-z]\" (query-replace-compile-replacement \"\\\\,\\\\# \\\\&\" t))" "(query-replace-regexp \"[a-z]\" (query-replace-compile-replacement \"\\\\,\\\\# \\\\&\" #t))" ("y" "n" "y" "u" "y") nil)))
 
 (defun key-event (key)
   (cond ((equal key "Enter") ?\r) ((equal key "Backspace") 127) ((equal key " ") ?\s) (t (aref key 0))))

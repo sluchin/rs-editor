@@ -299,7 +299,11 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
         }
         "list" => Ok(Value::List(args.into())),
         "length" => {
+            // リストの要素の数. Emacs と同じく, 文字列なら文字の数
             let [v] = fixed::<1>(name, args)?;
+            if let Value::String(text) = &v {
+                return Ok(Value::Number(text.chars().count() as f64));
+            }
             Ok(Value::Number(list(name, &v)?.len() as f64))
         }
         "append" => {
