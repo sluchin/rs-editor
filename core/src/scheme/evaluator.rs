@@ -31,6 +31,9 @@ use crate::sync::LockExt;
 /// 評価の入れ子の深さの上限.
 pub const MAX_DEPTH: usize = 10_000;
 
+/// 呼び出しの跡に出す式の, 文字数の上限.
+const TRACE_WIDTH: usize = 200;
+
 /// 評価に使うスレッドのスタックの大きさ ([`MAX_DEPTH`] まで入れ子にできるように, 大きくする).
 const STACK_SIZE: usize = 256 * 1024 * 1024;
 
@@ -556,9 +559,30 @@ impl<'a> Machine<'a> {
             return Err("Too deep recursion".to_string().into());
         }
         self.depth += 1;
-        let result = self.eval_tail(expr.clone(), env.clone());
+        let mut result = self.eval_tail(expr.clone(), env.clone());
         self.depth -= 1;
+        if let Err(error) = &mut result {
+            self.trace_failure(error, expr);
+        }
         result
+    }
+
+    /// `init-file-debug` が真なら, 失敗した式を, エラーの呼び出しの跡に足します (長い式は切る).
+    fn trace_failure(&self, error: &mut Error, expr: &Value) {
+        if !matches!(
+            self.evaluator.global().get("init-file-debug"),
+            Some(Value::Boolean(true))
+        ) {
+            return;
+        }
+        let mut text = builtins::print_string(expr, true);
+        if text.chars().count() > TRACE_WIDTH {
+            text = text.chars().take(TRACE_WIDTH).collect::<String>() + "...";
+        }
+        // 同じ式を 2 度続けて足さない (末尾の式が, 置き換える前と同じとき)
+        if error.trace().last() != Some(&text) {
+            error.push_trace(text);
+        }
     }
 
     /// リストでない式の値. 変数 `major-mode` は, 定義が無ければ, 今のバッファの構文の方言から決める (Emacs の名前で).
@@ -584,34 +608,52 @@ impl<'a> Machine<'a> {
     /// 値, または失敗の内容.
     fn eval_tail(&mut self, mut expr: Value, mut env: Env) -> Result<Value, Error> {
         loop {
-            let items = match &expr {
-                Value::List(items) if !items.is_empty() => items.clone(),
-                atom => return self.atom(atom, &env),
-            };
-            let special = match &items[0] {
-                Value::Symbol(op) => self.special_form(op, &items[1..], &env)?,
-                _ => None,
-            };
-            let step = match special {
-                Some(step) => step,
-                None => {
-                    // 呼ぶ手続きの記号が無いのは, void-function
-                    if let Value::Symbol(name) = &items[0] {
-                        if env.get(name).is_none() {
-                            return Err(Error::void_function(name));
-                        }
-                    }
-                    let procedure = self.eval(&items[0], &env)?;
-                    let args = self.eval_all(&items[1..], &env)?;
-                    self.apply_step(procedure, args)?
-                }
-            };
-            match step {
-                Step::Done(value) => return Ok(value),
-                Step::Tail(next, next_env) => {
+            match self.eval_step(&expr, &env) {
+                Ok(Step::Done(value)) => return Ok(value),
+                Ok(Step::Tail(next, next_env)) => {
                     expr = next;
                     env = next_env;
                 }
+                // 末尾で置き換えた式の失敗も, 跡に残す (置き換える前の式は, `eval` が足す)
+                Err(mut error) => {
+                    self.trace_failure(&mut error, &expr);
+                    return Err(error);
+                }
+            }
+        }
+    }
+
+    /// 式を 1 段だけ評価します (末尾の式は, `Step::Tail` で返す).
+    ///
+    /// # Arguments
+    ///
+    /// * `expr` - 式.
+    /// * `env` - 評価する環境.
+    ///
+    /// # Returns
+    ///
+    /// 値か次の末尾の式, または失敗の内容.
+    fn eval_step(&mut self, expr: &Value, env: &Env) -> Result<Step, Error> {
+        let items = match expr {
+            Value::List(items) if !items.is_empty() => items.clone(),
+            atom => return self.atom(atom, env).map(Step::Done),
+        };
+        let special = match &items[0] {
+            Value::Symbol(op) => self.special_form(op, &items[1..], env)?,
+            _ => None,
+        };
+        match special {
+            Some(step) => Ok(step),
+            None => {
+                // 呼ぶ手続きの記号が無いのは, void-function
+                if let Value::Symbol(name) = &items[0] {
+                    if env.get(name).is_none() {
+                        return Err(Error::void_function(name));
+                    }
+                }
+                let procedure = self.eval(&items[0], env)?;
+                let args = self.eval_all(&items[1..], env)?;
+                self.apply_step(procedure, args)
             }
         }
     }

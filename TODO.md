@@ -325,7 +325,7 @@
 - [x] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。検索語は、正規表現でなく、文字列として探す。
 - [x] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
 - [ ] `C-h t` (チュートリアル), `C-h q` (help-quick-toggle。今は `help-quit`)。
-- [ ] `*Help*` バッファの中のキー (`q`、`l`、`r`、リンクを開く)。
+- [x] `*Help*` バッファの中のキー (`q`、`l`、`r`、`RET`、`TAB` / `S-TAB`、`SPC` / `DEL`)。リンクは、`名前'` の形の名前だけ (ボタンの色付けと、クリックはまだ)。
 
 ### ミニバッファと補完
 
@@ -512,7 +512,7 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを�
 - [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
 - [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` は、まだ変えない)。
 - [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
-- [ ] `--debug-init`: 初期設定ファイルの失敗で、止まった所 (式と、呼び出しの跡) を出す (`debug-on-error` に当たる変数も足す)。変数 `init-file-debug` は足した (`--debug-init` で `#t`)。止まった所を出すには、評価器が呼び出しの跡を持つ必要がある。
+- [x] `--debug-init`: 初期設定ファイルの失敗で、`*Warnings*` に `Backtrace:` と、失敗した式 (内側から外側へ、最大 30 個、長い式は 200 文字で切る) を出す。変数 `init-file-debug` が `#t` のとき、評価器がエラーに式を足す (`core/src/error.rs` の `trace`)。画面 (Tauri) だけ。ターミナルは、初期設定ファイルを読む処理がまだ無い。`debug-on-error` に当たる変数は、まだ。
 - [x] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
 - [x] `--no-splash`: 受ける (始めの画面がまだ無いので、何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
 - [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
@@ -719,8 +719,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
-- [ ] ヘルプ: `C-h m` / `a` / `d` は完了。残りは `C-h t`、`*Help*` の中のキー (Phase 14, 18)。中。
-- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。残りは `--debug-init` の、止まった所の表示 (Phase 16)。小。
+- [ ] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。残りは `C-h t` と、`*Help*` のリンクの色付けとクリック (Phase 14, 18)。小。
+- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了 (画面のアプリだけ)。残りは、ターミナルと `debug-on-error` (Phase 16)。小。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [ ] grep: `rgrep` / `lgrep` と `*grep*` の中のキーは完了。残りは、探しながら出す、止める (Phase 12, 14, 15)。中。
 - [ ] ツリー (サイドバー): 今のファイルまで開くことと、キーで動かすことは完了。残りは、幅を変える、ファイルの作成・名前の変更・削除など (Phase 15)。小。

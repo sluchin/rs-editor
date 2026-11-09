@@ -458,13 +458,21 @@ impl<F: Front> Session<F> {
             return;
         };
         log::info!("Loading {}", path.display());
+        let options_debug = matches!(
+            self.commands.evaluator().global().get("init-file-debug"),
+            Some(Value::Boolean(true))
+        );
         self.commands.evaluator().global().define(
             "user-init-file",
             Value::String(path.to_string_lossy().into_owned()),
         );
         let outcome = std::fs::read_to_string(path)
             .map_err(|e| e.to_string())
-            .and_then(|code| self.commands.eval(&code).map_err(|e| e.to_string()));
+            .and_then(|code| {
+                self.commands
+                    .eval(&code)
+                    .map_err(|e| init_error_text(&e, options_debug))
+            });
         if let Err(error) = outcome {
             log::warn!("Could not load {}: {}", path.display(), error);
             let error = format!("{}: {}", path.display(), error);
@@ -586,4 +594,27 @@ pub fn run<F: Front>(
             Err(RecvTimeoutError::Disconnected) => return Ok(()),
         }
     }
+}
+
+/// 初期設定ファイルの失敗を, 文にします. `--debug-init` (`debug` が真) なら, 失敗した式を内側から並べます
+/// (Emacs の `debug-on-error` の, バックトレースに当たる).
+///
+/// # Arguments
+///
+/// * `error` - 失敗.
+/// * `debug` - 呼び出しの跡を付けるか.
+///
+/// # Returns
+///
+/// 失敗の文 (跡があれば, 改行して `Backtrace:` と式を続ける).
+pub fn init_error_text(error: &rseditor_core::error::Error, debug: bool) -> String {
+    let mut text = error.to_string();
+    if debug && !error.trace().is_empty() {
+        text.push_str("\nBacktrace:");
+        for form in error.trace() {
+            text.push_str("\n  ");
+            text.push_str(form);
+        }
+    }
+    text
 }

@@ -646,3 +646,41 @@ fn test_tabs_are_created_switched_renamed_moved_and_closed() {
     session.eval("(tab-close 1)").unwrap();
     assert_eq!(last(&front).tab, 1);
 }
+
+#[test]
+fn test_debug_init_shows_the_failing_forms() {
+    let dir = tempfile::tempdir().unwrap();
+    let init = dir.path().join("init.scm");
+    std::fs::write(&init, "(define (f) (car 1))\n(f)").unwrap();
+    macro_rules! warnings {
+        ($session:expr) => {
+            $session
+                .host()
+                .editor()
+                .get_buffer("*Warnings*")
+                .unwrap()
+                .text()
+        };
+    }
+    // 普通は, 失敗の文だけ
+    let (mut session, _front) = setup();
+    session.load_init(Some(&init));
+    assert!(!warnings!(session).contains("Backtrace:"));
+    // --debug-init なら, 失敗した式を内側から並べる
+    let (mut session, _front) = setup();
+    session.apply_startup(&Options {
+        debug_init: true,
+        ..Options::default()
+    });
+    session.load_init(Some(&init));
+    let text = warnings!(session);
+    let at = text.find("Backtrace:").expect(&text);
+    let trace: Vec<&str> = text[at..].lines().skip(1).map(str::trim).collect();
+    assert_eq!(trace[0], "(car 1)");
+    assert!(trace.contains(&"(f)"));
+    // 跡が無い失敗 (読めないファイルなど) は, 文だけ
+    assert_eq!(
+        rseditor::session::init_error_text(&"plain".into(), true),
+        "plain"
+    );
+}

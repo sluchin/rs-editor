@@ -2194,9 +2194,83 @@ msgid "Return the text of the help of FUNCTION (a symbol)."
 msgstr "FUNCTION (記号) のヘルプの文を返す"
 
 #: lisp/help-fns.scm
+msgctxt "variable:help--history"
+msgid "The texts shown in *Help* before the current one, the latest first."
+msgstr "*Help* に今の文の前に出した文. 新しい順."
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--forward"
+msgid "The texts that `help-go-back' went back from, the nearest first."
+msgstr "`help-go-back' で戻る前にいた文. 近い順."
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--current"
+msgid "The text now shown in *Help*, or #f."
+msgstr "今 *Help* に出している文, または #f."
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--link-regexp"
+msgid "Regexp (Rust syntax) that matches a name quoted as `NAME' in a help text; group 1 is the name."
+msgstr "ヘルプの文の中の `NAME' の形の名前に合う正規表現 (Rust の書き方). 第 1 グループが名前."
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--link-search-regexp"
+msgid "Like `help--link-regexp', in the syntax of `re-search-forward'."
+msgstr "`help--link-regexp' と同じで, `re-search-forward' の書き方."
+
+#: lisp/help-fns.scm
+msgctxt "function:help--link-p"
+msgid "Return true if the text NAME names a function or a variable that has help."
+msgstr "文字列 NAME が, ヘルプのある関数か変数の名前なら真を返す."
+
+#: lisp/help-fns.scm
+msgctxt "function:help--put"
+msgid "Put TEXT in the *Help* buffer, and bind the keys of the buffer."
+msgstr "TEXT を *Help* バッファに入れ, バッファのキーを割り当てる."
+
+#: lisp/help-fns.scm
 msgctxt "function:help-show"
-msgid "Show TEXT in the *Help* buffer, in another window."
-msgstr "TEXT を *Help* バッファに入れ, ほかのウィンドウに出す"
+msgid ""
+"Show TEXT in the *Help* buffer, in another window.\n"
+"The text before it is remembered, so that `help-go-back' can show it again."
+msgstr ""
+"TEXT を *Help* バッファに入れ, ほかのウィンドウに出す.\n"
+"前の文は覚えておき, `help-go-back' でもう一度出せる."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-go-back"
+msgid "Go back to the previous help text in the *Help* buffer."
+msgstr "*Help* バッファで, 前のヘルプの文へ戻る."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-go-forward"
+msgid "Go forward to the help text that `help-go-back' went back from."
+msgstr "`help-go-back' で戻る前にいたヘルプの文へ進む."
+
+#: lisp/help-fns.scm
+msgctxt "function:help--name-at-point"
+msgid "Return the name at point: the `NAME' quoted on the line, or else the symbol under point, or #f."
+msgstr "点の所の名前を返す: 行の中の `NAME' の形か, なければ点の下の記号. 無ければ #f."
+
+#: lisp/help-fns.scm
+msgctxt "function:help--symbol-at"
+msgid "Return the run of symbol characters of LINE that covers COLUMN, or #f."
+msgstr "行 LINE の, 桁 COLUMN を含む記号の文字の連なりを返す. 無ければ #f."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-follow"
+msgid "Show the help of the function or variable named at point in the *Help* buffer."
+msgstr "点の所の名前の関数か変数のヘルプを, *Help* バッファに出す."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-next-link"
+msgid "Move point to the next link (a quoted name that has help) in the *Help* buffer."
+msgstr "*Help* バッファで, 点を次のリンク (ヘルプのある, 引用した名前) に動かす."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-previous-link"
+msgid "Move point to the previous link in the *Help* buffer."
+msgstr "*Help* バッファで, 点を前のリンクに動かす."
 
 #: lisp/help-fns.scm
 msgctxt "function:describe-function"

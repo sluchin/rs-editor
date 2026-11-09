@@ -270,6 +270,7 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `C-h m` | describe-mode | 今のメジャーモードの説明を `*Help*` バッファに出す |
 | `C-h a` | apropos-command | 名前に入力した文字を含むコマンドを、キーと説明の最初の行つきで `*Help*` バッファに出す |
 | `C-h d` | apropos-documentation | 説明に入力した文字を含む関数とコマンドを `*Help*` バッファに出す |
+| `*Help*` の中 | help-go-back ほか | `l` 前の説明へ戻る、`r` 進む、`RET` 点の所の名前（`名前'` の形か、記号）の説明を出す、`TAB` / `n` 次のリンク、`S-TAB` / `p` 前のリンク、`SPC` / `DEL` スクロール、`<` / `>` 先頭と末尾、`q` 閉じる |
 
 ## その他
 

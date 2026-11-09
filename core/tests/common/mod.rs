@@ -577,6 +577,8 @@ impl Host for FakeEditor {
                 });
                 Value::Nil
             }
+            // 偽のエディタは, 読むだけのバッファを持たない
+            "set-buffer-read-only" => Value::Nil,
             "set-buffer-modified-p" => {
                 let modified = args[0].is_true();
                 self.with_buffer(|b| b.modified = modified);

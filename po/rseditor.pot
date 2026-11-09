@@ -1832,8 +1832,80 @@ msgid "Return the text of the help of FUNCTION (a symbol)."
 msgstr ""
 
 #: lisp/help-fns.scm
+msgctxt "variable:help--history"
+msgid "The texts shown in *Help* before the current one, the latest first."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--forward"
+msgid "The texts that `help-go-back' went back from, the nearest first."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--current"
+msgid "The text now shown in *Help*, or #f."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--link-regexp"
+msgid "Regexp (Rust syntax) that matches a name quoted as `NAME' in a help text; group 1 is the name."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--link-search-regexp"
+msgid "Like `help--link-regexp', in the syntax of `re-search-forward'."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--link-p"
+msgid "Return true if the text NAME names a function or a variable that has help."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--put"
+msgid "Put TEXT in the *Help* buffer, and bind the keys of the buffer."
+msgstr ""
+
+#: lisp/help-fns.scm
 msgctxt "function:help-show"
-msgid "Show TEXT in the *Help* buffer, in another window."
+msgid ""
+"Show TEXT in the *Help* buffer, in another window.\n"
+"The text before it is remembered, so that `help-go-back' can show it again."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-go-back"
+msgid "Go back to the previous help text in the *Help* buffer."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-go-forward"
+msgid "Go forward to the help text that `help-go-back' went back from."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--name-at-point"
+msgid "Return the name at point: the `NAME' quoted on the line, or else the symbol under point, or #f."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--symbol-at"
+msgid "Return the run of symbol characters of LINE that covers COLUMN, or #f."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-follow"
+msgid "Show the help of the function or variable named at point in the *Help* buffer."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-next-link"
+msgid "Move point to the next link (a quoted name that has help) in the *Help* buffer."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-previous-link"
+msgid "Move point to the previous link in the *Help* buffer."
 msgstr ""
 
 #: lisp/help-fns.scm

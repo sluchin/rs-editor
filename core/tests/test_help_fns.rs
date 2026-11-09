@@ -330,3 +330,122 @@ fn test_describe_mode_shows_the_major_mode() {
         text
     );
 }
+
+mod help_keys {
+    use rseditor_core::editor::Editor;
+    use rseditor_core::scheme::editor_host::EditorHost;
+    use rseditor_core::scheme::evaluator::Evaluator;
+    use rseditor_core::scheme::host::Host;
+    use rseditor_core::scheme::value::Value;
+
+    /// 窓を出すことと, メッセージだけ受ける画面の偽物.
+    struct Quiet;
+
+    impl Host for Quiet {
+        fn call(&self, op: &str, _args: Vec<Value>) -> Result<Value, rseditor_core::error::Error> {
+            match op {
+                "message" | "display-buffer" => Ok(Value::Nil),
+                "where-is-internal" => Ok(Value::List(Vec::new().into())),
+                other => Err(format!("ui: {other}").into()),
+            }
+        }
+    }
+
+    /// `*Help*` のキーを試す評価器.
+    fn setup() -> (Evaluator, EditorHost<Quiet>) {
+        let ev = Evaluator::new();
+        let host = EditorHost::new(Editor::new(), Quiet);
+        for source in [
+            include_str!("../../lisp/simple.scm"),
+            include_str!("../../lisp/help-fns.scm"),
+        ] {
+            ev.eval_with(source, &host).unwrap();
+        }
+        ev.eval_with("(set! help-language \"en\")", &host).unwrap();
+        // 窓は無いので, バッファを選ぶだけにする
+        ev.eval_with(
+            "(define (switch-to-buffer name) (set-buffer (get-buffer-create name)))
+             (define (display-buffer . args) #f)
+             (define (describe-function f) (help-show (format \"function %s\" f)))
+             (define (describe-variable v) (help-show (format \"variable %s\" v)))",
+            &host,
+        )
+        .unwrap();
+        (ev, host)
+    }
+
+    fn eval(ev: &Evaluator, host: &EditorHost<Quiet>, code: &str) -> String {
+        match ev.eval_with(code, host) {
+            Ok(value) => value.to_string(),
+            Err(message) => format!("error: {message}"),
+        }
+    }
+
+    #[test]
+    fn test_help_keys_go_back_and_forward() {
+        let (ev, host) = setup();
+        let first = |code: &str| eval(&ev, &host, code);
+        assert_eq!(first("(help-go-back)"), "error: No previous help");
+        assert_eq!(first("(help-go-forward)"), "error: No next help");
+        first("(help-show \"car text\")");
+        first("(help-show \"cdr text\")");
+        // 同じ文をもう一度出しても, 履歴は増えない
+        first("(help-show \"cdr text\")");
+        let text = |name: &str| {
+            first(&format!(
+                "(with-current-buffer \"*Help*\" (substring (buffer-string) 0 {}))",
+                name.len()
+            ))
+        };
+        assert_eq!(text("cdr"), "\"cdr\"");
+        first("(help-go-back)");
+        assert_eq!(text("car"), "\"car\"");
+        assert_eq!(first("(help-go-back)"), "error: No previous help");
+        first("(help-go-forward)");
+        assert_eq!(text("cdr"), "\"cdr\"");
+        // 新しく出すと, 進む先は消える
+        first("(help-go-back)");
+        first("(help-show \"length text\")");
+        assert_eq!(first("(help-go-forward)"), "error: No next help");
+    }
+
+    #[test]
+    fn test_help_follow_and_links() {
+        let (ev, host) = setup();
+        let run = |code: &str| eval(&ev, &host, code);
+        run("(define (helper) \"Help for HELPER.\" 1) (define helper-var 5 \"A variable.\")");
+        run("(help-show \"See `helper' and `helper-var' and `nothing'.\\nPlain car here.\\nxx\")");
+        let in_help = |code: &str| run(&format!("(with-current-buffer \"*Help*\" {code})"));
+        // 次のリンクへ (ヘルプのあるものだけ)
+        in_help("(help-next-link)");
+        assert_eq!(in_help("(point)"), "6");
+        in_help("(help-next-link)");
+        assert_eq!(in_help("(point)"), "19");
+        assert_eq!(in_help("(help-next-link)"), "error: No more links");
+        assert_eq!(in_help("(point)"), "19");
+        in_help("(help-previous-link)");
+        assert_eq!(in_help("(point)"), "6");
+        assert_eq!(in_help("(help-previous-link)"), "error: No more links");
+        // RET: 関数, 変数, 引用の外の名前, 何も無い所
+        in_help("(goto-char 8)");
+        run("(with-current-buffer \"*Help*\" (help-follow))");
+        assert!(in_help("(buffer-string)").starts_with("\"function helper"));
+        run("(help-show \"See `helper-var'.\")");
+        in_help("(goto-char 8)");
+        in_help("(help-follow)");
+        assert!(in_help("(buffer-string)").starts_with("\"variable helper-var"));
+        run("(help-show \"See `nothing' and car.\\n\\n\")");
+        in_help("(goto-char 8)");
+        assert_eq!(in_help("(help-follow)"), "error: No help for nothing");
+        in_help("(goto-char 21)");
+        in_help("(help-follow)");
+        assert!(in_help("(buffer-string)").starts_with("\"function car"));
+        run("(help-show \"See `nothing' and car.\\n\\n\")");
+        in_help("(goto-char 3)");
+        assert_eq!(in_help("(help-follow)"), "error: No help for See");
+        in_help("(goto-char 4)");
+        assert_eq!(in_help("(help-follow)"), "error: No symbol here");
+        in_help("(goto-char (point-max))");
+        assert_eq!(in_help("(help-follow)"), "error: No symbol here");
+    }
+}

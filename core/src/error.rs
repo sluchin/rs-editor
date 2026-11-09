@@ -22,7 +22,19 @@ pub struct Error {
     conditions: Vec<String>,
     /// 表示する文 (`error-message-string` と同じ).
     message: String,
+    /// 失敗した式 (内側から外側へ. `init-file-debug` のときだけ, 評価器が足す).
+    trace: Option<Box<Trace>>,
 }
+
+/// 失敗した式の並び (`Error` を小さく保つため, 箱に入れて持つ).
+#[derive(Clone, Default)]
+struct Trace {
+    /// 式を表した文字列 (内側から外側へ).
+    forms: Vec<String>,
+}
+
+/// 呼び出しの跡に覚える式の数の上限.
+const MAX_TRACE: usize = 30;
 
 /// 組み込みの種類の, 説明 (`error-message`) と, 親の種類 (`error-conditions` の 2 番目から).
 const KINDS: &[(&str, &str, &[&str])] = &[
@@ -131,7 +143,27 @@ impl Error {
             data,
             conditions,
             message,
+            trace: None,
         }
+    }
+
+    /// 失敗した式を, 呼び出しの跡に足します (内側の式から順に呼ぶ). 長い跡は, 外側を足さない.
+    ///
+    /// # Arguments
+    ///
+    /// * `form` - 式を表した文字列.
+    pub fn push_trace(&mut self, form: String) {
+        let trace = self.trace.get_or_insert_with(Default::default);
+        if trace.forms.len() < MAX_TRACE {
+            trace.forms.push(form);
+        }
+    }
+
+    /// 呼び出しの跡 (失敗した式. 内側から外側へ).
+    pub fn trace(&self) -> &[String] {
+        self.trace
+            .as_deref()
+            .map_or(&[], |trace| trace.forms.as_slice())
     }
 
     /// 普通のエラー (`error` の種類で, データはメッセージ 1 つ).
