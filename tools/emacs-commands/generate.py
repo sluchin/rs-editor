@@ -159,13 +159,13 @@ def plan_lines(essential, all_commands, rs):
                  '画面 (Tauri) の TypeScript のコマンドは, 全て消した (画面は核の frame を描くだけ。`docs/core_migration.md`)。')
     lines.append('')
     lines.append('| 段階 | 内容 | コマンド | 新しく書く | Rust から移す |')
-    lines.append('|---|---|---|---|---|')
+    lines.append('| --- | --- | --- | --- | --- |')
     for number, title, _ in plan.STEPS:
         total, new, move = counts[number]
         lines.append(f'| {number} | {title} | {total or "-"} | {new or "-"} | {move or "-"} |')
     lines.append('')
     for number, title, body in plan.STEPS:
-        lines.append(f'**{number}. {title}**')
+        lines.append(f'#### {number}. {title}')
         lines.append('')
         lines.extend(f'- {text}' for text in body)
         lines.append('')
@@ -216,7 +216,7 @@ def main():
     w(f'### 組み込みのコマンド ({len(commands)} 個. 実装済み {implemented} 個: {languages(commands)}. Edwin にもある: {edwin_builtin} 個)')
     w('')
     w('| コマンド | Edwin | 既定のキー | rs-editor | rs-editor のキー | 実装 |')
-    w('|---|---|---|---|---|---|')
+    w('| --- | --- | --- | --- | --- | --- |')
     for c in commands:
         done = c in rs
         w(f'| {code(c)} | {"◯" if c in edwin else ""} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '
@@ -229,7 +229,7 @@ def main():
       f'実装済み {essential_implemented} 個: {languages(essential)}. Edwin にもある: {edwin_essential} 個)')
     w('')
     w('| コマンド | Edwin | ライブラリ | 既定のキー | rs-editor | rs-editor のキー | 実装 | 計画 |')
-    w('|---|---|---|---|---|---|---|---|')
+    w('| --- | --- | --- | --- | --- | --- | --- | --- |')
     for c in essential:
         done = c in rs
         w(f'| {code(c)} | {"◯" if c in edwin else ""} | {all_commands[c]} | {default_keys_cell(c, keys.get(c, []))} | {"実装済み" if done else ""} | '

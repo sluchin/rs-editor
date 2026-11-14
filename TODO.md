@@ -377,7 +377,7 @@
 ### 編集と移動
 
 | 状態 | キー | 関数 | 行 | 備考 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | [x] | (tty の erase) | backward-delete-char-untabify | 473 | タブを空白に崩して消す (キーは無い) |
 | [~] | `C-x %` | (括弧の対へ移る lambda) | 1269 | `forward-list` / `backward-list`。rs-editor は `C-M-f` / `C-M-b` (forward-sexp) で代わりになる |
 | [x] | `C-;` / `C-x ;` | hippie-expand | 1367, 1368 | Emacs と同じく、既定のキーは無い (初期設定ファイルで `(global-set-key "C-;" 'hippie-expand)`) |
@@ -405,7 +405,7 @@
 ### 表示とモード
 
 | 状態 | キー | 関数 | 行 | 備考 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | [ ] | `M-1` | toggle-which-func-mode | 631 | |
 | [ ] | `<f11>` | resize-frame-interactively | 763 | |
 | [ ] | `<f2>` | toggle-debug-on-error | 1262 | |
@@ -423,7 +423,7 @@
 ### ファイル、ディレクトリ、バッファ
 
 | 状態 | キー | 関数 | 行 | 備考 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | [~] | `C-c r` | bookmark-choice | 1063 | `C-x r m` / `C-x r b` は有る |
 | [~] | `C-x C-o` | occur-by-moccur | 1123 | howm の `C-c , o` (howm-occur) は有る。occur, moccur は無い |
 | [ ] | `<f9>` / `<S-f9>` | desktop-recover / desktop-save* | 1346, 1353 | |
@@ -445,7 +445,7 @@
 ### 調べる、外のツール
 
 | 状態 | キー | 関数 | 行 | 備考 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | [ ] | `C-c C-i` | info-apropos-region-or-word | 779 | |
 | [ ] | `C-h C-i` | info-lookup-symbol | 780 | |
 | [ ] | `<f1>` | (manual-entry (current-word)) | 826 | |
@@ -470,7 +470,7 @@
 ### cscope
 
 | 状態 | キー | 関数 | 行 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | [ ] | `C-<f3>` | cscope-set-initial-directory | 5133 |
 | [ ] | `C-<f4>` | cscope-unset-initial-directory | 5134 |
 | [ ] | `C-<f5>` | cscope-find-this-symbol | 5135 |

@@ -140,7 +140,7 @@ cargo run -p rseditor-tui -- ファイル...
 
 ### 開発ワークフロー (Lint / Format / Test)
 
-**ローカル開発 (TypeScript のみ):**
+#### ローカル開発 (TypeScript のみ)
 
 ```bash
 # TypeScript 静的解析 (ESLint)
@@ -166,7 +166,7 @@ npm run format
 npm run format:check
 ```
 
-**Rust も含めて完全にチェック (CI 相当):**
+#### Rust も含めて完全にチェック (CI 相当)
 
 ```bash
 # TypeScript + Rust の static analysis (ESLint + cargo clippy)
@@ -179,7 +179,7 @@ npm run test:all
 npm run check
 ```
 
-**注:**
+#### 注
 
 - `npm run lint` はローカル環境で実行可能 (TypeScript のみ)
 - `npm run lint:all` と `npm run test:all` は Rust のビルド環境が必要
@@ -233,7 +233,7 @@ M-:            ; ミニバッファが開く
 位置は、Emacs と同じく 1 から数えます。
 
 | 関数 | 内容 |
-|------|------|
+| ------ | ------ |
 | `(point)` / `(point-min)` / `(point-max)` | カーソルの位置 / 先頭 / 末尾 |
 | `(goto-char pos)` | カーソルを動かす |
 | `(insert "文字" ...)` | カーソルの位置に入れる |
@@ -260,7 +260,7 @@ M-:            ; ミニバッファが開く
 ### ファイル、時刻、文字列の関数
 
 | 関数 | 内容 |
-|------|------|
+| ------ | ------ |
 | `(load "path")` | ファイルを読んで評価する (相対パスは、読み込んでいるファイルのディレクトリから。見つからなければ、`load-path` のディレクトリから探す。`.scm` は省ける) |
 | `(require 'name)` / `(provide 'name)` / `(featurep 'name)` | `load-path` から `name.scm` を 1 度だけ読む / 読んだことにする / 読んだか |
 | `load-path` | ファイルを探すディレクトリのリスト (始めは `("~/.rseditor.d/lisp" "~/.rseditor.d")`) |
@@ -364,12 +364,12 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 
 ### よく使うショートカット
 
-**ファイル操作**
+#### ファイル操作
 
 - `C-x C-f` - ファイルを開く
 - `C-x C-s` - ファイルを保存
 
-**カーソル移動**
+#### カーソル移動
 
 - `C-f` / `C-b` - 前後に移動
 - `C-n` / `C-p` - 上下に移動
@@ -378,7 +378,7 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - `C-l` - カーソルの行を画面の中央へ
 - `M-g g` - 入れた行へ移動
 
-**編集**
+#### 編集
 
 - `C-d` - 文字を削除
 - `C-k` - 行を削除
@@ -388,17 +388,17 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - `C-/` - 取り消し (undo)
 - `C-x C-/` - やり直し (redo)
 
-**Scheme 評価**
+#### Scheme 評価
 
 - `C-x C-e` - カーソル直前の S 式を評価
 - `M-:` - ミニバッファで式を直接入力して評価
 
-**検索**
+#### 検索
 
 - `C-s` - 前方に検索
 - `C-r` - 後方に検索
 
-**バッファ管理**
+#### バッファ管理
 
 - `C-x b` - バッファを切り替え
 - `C-x k` - バッファを閉じる
@@ -432,7 +432,7 @@ npm run tauri:dev
 
 実行時のエラーメッセージを確認:
 
-1. **`cargo` がない** → Rust をインストール: https://rustup.rs/
+1. **`cargo` がない** → Rust をインストール: <https://rustup.rs/>
 2. **`node_modules` がない** → `npm install` を実行
 3. **ポート 5173 が使用中** → 別のターミナルで `npm run dev` が実行されていないか確認
 
