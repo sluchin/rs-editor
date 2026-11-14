@@ -69,7 +69,7 @@
     "eslint-plugin-react-refresh": "^0.5",
     "globals": "^17",
     "jsdom": "^30",
-    "markdownlint-cli2": "^0.24.0",
+    "markdownlint-cli2": "^0.24.1",
     "prettier": "^3",
     "typedoc": "^0.28.20",
     "typescript": "^6",
