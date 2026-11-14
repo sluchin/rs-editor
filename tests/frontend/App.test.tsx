@@ -265,14 +265,14 @@ describe('App (描く内容)', () => {
     const tokens = [{ from: 0, to: 2, kind: 'comment-delimiter' }]
     sendFrame({ buffers: [buf('*scratch*', { tokens })] })
     expect(view.container.querySelector('.cm-tok-comment-delimiter')?.textContent).toBe(';;')
-    // 内容が同じなら (長さも、中身も)、引き直さない
+    // 内容が同じなら (長さも中身も), 引き直さない
     sendFrame({ buffers: [buf('*scratch*', { tokens: tokens.map((t) => ({ ...t })) })] })
     expect(view.container.querySelector('.cm-tok-comment-delimiter')?.textContent).toBe(';;')
-    // 中身が違っても、長さが同じなら、引き直す
+    // 中身が違っても, 長さが同じなら, 引き直す
     sendFrame({ buffers: [buf('*scratch*', { tokens: [{ from: 3, to: 10, kind: 'string' }] })] })
     expect(view.container.querySelector('.cm-tok-comment-delimiter')).toBeNull()
     expect(view.container.querySelector('.cm-tok-string')?.textContent).toBe('scratch')
-    // 長さが違えば、引き直す
+    // 長さが違えば, 引き直す
     sendFrame({ buffers: [buf('*scratch*', { tokens: [] })] })
     expect(view.container.querySelector('.cm-tok-string')).toBeNull()
   })

@@ -1,9 +1,9 @@
 //! Rust の色付け (`core/src/highlight/rust.rs`) のテスト.
-//! 期待値は、rust-lang/rust-mode の font-lock の結果 (`tests/rust-highlight/cases/` で、同じ入力を Emacs と比べる).
+//! 期待値は, rust-lang/rust-mode の font-lock の結果 (`tests/rust-highlight/cases/` で, 同じ入力を Emacs と比べる).
 
 use rseditor_core::highlight::{tokenize, Language};
 
-/// 本文の色付けを、(文字列, 種類の名前) の並びにする.
+/// 本文の色付けを, (文字列, 種類の名前) の並びにする.
 fn kinds(text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
     tokenize(Language::Rust, text)
@@ -36,9 +36,9 @@ fn test_comments() {
             ("/**/", "doc"),
         ])
     );
-    // 閉じないコメントは、本文の終わりまで
+    // 閉じないコメントは, 本文の終わりまで
     assert_eq!(kinds("/* a"), expect(&[("/* a", "comment")]));
-    // 3 文字に満たないものは、ドキュメントではない
+    // 3 文字に満たないものは, ドキュメントではない
     assert_eq!(kinds("//"), expect(&[("//", "comment")]));
     assert_eq!(kinds("/// "), expect(&[("/// ", "doc")]));
     assert_eq!(kinds("/**"), expect(&[("/**", "comment")]));
@@ -58,13 +58,13 @@ fn test_strings_and_chars() {
             ("'é'", "string"),
         ])
     );
-    // 閉じない文字列は、本文の終わりまで. 行をまたぐ文字列は、行ごとに分ける
+    // 閉じない文字列は, 本文の終わりまで. 行をまたぐ文字列は, 行ごとに分ける
     assert_eq!(kinds("\"a"), expect(&[("\"a", "string")]));
     assert_eq!(
         kinds("\"a\nb\""),
         expect(&[("\"a", "string"), ("b\"", "string")])
     );
-    // 文字として閉じないもの (ライフタイム、壊れた逃れ) は、文字ではない
+    // 文字として閉じないもの (ライフタイム, 壊れた逃れ) は, 文字ではない
     assert_eq!(kinds("'a "), expect(&[("a", "variable-name")]));
     assert_eq!(kinds("'\\q'"), expect(&[]));
     assert_eq!(kinds("'\\u{zz}'"), expect(&[]));
@@ -84,7 +84,7 @@ fn test_raw_strings() {
             ("r##\"d\"##", "string"),
         ])
     );
-    // 閉じない生の文字列は、本文の終わりまで. `r` の後が引用符でなければ、ただの名前
+    // 閉じない生の文字列は, 本文の終わりまで. `r` の後が引用符でなければ, ただの名前
     assert_eq!(kinds("r#\"a"), expect(&[("r#\"a", "string")]));
     assert_eq!(kinds("r#x"), expect(&[]));
 }

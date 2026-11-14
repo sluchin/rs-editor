@@ -64,7 +64,7 @@ fn eval_with(answers: &[&str], code: &str) -> (String, Vec<String>) {
     (result, messages)
 }
 
-/// 式を評価して, 最後の行を返す.
+/// 式を評価して最後の行を返す.
 fn eval(code: &str) -> String {
     eval_with(&[], code).0
 }

@@ -156,7 +156,7 @@ pub(crate) fn special_form(
     Ok(Some(value))
 }
 
-/// `(ert-deftest 名前 () [説明] [キーワード 値]... 本体...)` を評価して, テストを覚えます.
+/// `(ert-deftest 名前 () [説明] [キーワード 値]... 本体...)` を評価してテストを覚えます.
 ///
 /// # Arguments
 ///
@@ -414,7 +414,7 @@ fn selector_name(selector: &Value) -> String {
     }
 }
 
-/// 数に合わせて, 複数形にします.
+/// 数に合わせて複数形にします.
 ///
 /// # Arguments
 ///

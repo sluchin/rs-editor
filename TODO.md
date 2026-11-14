@@ -1,12 +1,12 @@
 # TODO: Emacs 相当機能の実装手順
 
 このファイルは、rseditor を Emacs ライクなエディタに近づけるための実装ステップをまとめたもの。
-`.claude/CLAUDE.md` に記載の TODO（演算子追加、制御構文など Scheme インタプリタ側）とは別に、
+`.claude/CLAUDE.md` に記載の TODO (演算子追加、制御構文など Scheme インタプリタ側) とは別に、
 **エディタ UI / キーバインド側**の作業をフェーズ分けして記載する。
 
 ## 現状整理
 
-- Phase 1 から Phase 13 までと、Phase 15 の必須の項目は、実装した ([x])。Phase 13 は、全て完了。Phase 12 は、実装したコマンドの、Emacs 30 と違うところ。
+- Phase 1 から Phase 13 までと、Phase 15 の必須の項目は実装した ([x])。Phase 13 は全て完了。Phase 12 は、実装したコマンドの、Emacs 30 と違うところ。
 - エディタは CodeMirror 6 (Phase 8)。Phase 1 から Phase 7 の、`<textarea>` と `prefixKeymap.ts`、`emacsKeymap.ts` などの記述は、当時のもの
   (今は `src/components/CodeEditor.tsx` と `src/lib/emacs.ts`)。
 - まだ無い Emacs の標準機能は、Phase 14 に並べた。
@@ -15,52 +15,52 @@
 
 - [x] `prefixKeymap.ts` と `emacsKeymap.ts` の `C-x` プレフィックス処理が重複しているため統合する。
       方針: `emacsKeymap.ts` を「単一キー・M- キーバインド」専用にし、`C-x` 系プレフィックスは
-      `prefixKeymap.ts` に一本化する（`onFindFile` / `onSaveBuffer` に加えて、Phase 4 で追加する
-      `C-x b` / `C-x k` / `C-x 2` などもここに集約）。
+      `prefixKeymap.ts` に一本化する (`onFindFile` / `onSaveBuffer` に加えて、Phase 4 で追加する
+      `C-x b` / `C-x k` / `C-x 2` などもここに集約)。
 - [x] `CodeEditor.tsx` に `useEmacsKeymap` を接続し、`onKeyDown` で
       `prefixKeyDown(e) || bracketAutoCloseKeyDown(e) || emacsKeyDown(e)` の優先順位で処理する。
-      （プレフィックスキー処理 → 括弧自動補完 → Emacs カーソル/編集コマンド、の順で `preventDefault` の競合を避ける）
+      (プレフィックスキー処理 → 括弧自動補完 → Emacs カーソル/編集コマンド、の順で `preventDefault` の競合を避ける)
 - [x] `useBracketAutoClose` を `CodeEditor.tsx` に接続する。
 - [x] `App.tsx` の `handleEditorChange` は `(value: string) => void` だが、`useEmacsKeymap` /
       `useBracketAutoClose` はカーソル位置も一緒に返す `(value, cursorPos) => void` を要求しているため、
       `CodeEditor` 側でカーソル位置を `setSelectionRange` してから `onChange` を呼ぶよう調整する
-      （React の再レンダー後に `selectionStart` が飛ばないよう `useLayoutEffect` 等で反映）。
-- [x] 上記3ファイルの単体テストを追加・拡充する（`bracketMatch.test.ts` / `schemeTokenizer.test.ts` に倣う）。
+      (React の再レンダー後に `selectionStart` が飛ばないよう `useLayoutEffect` 等で反映)。
+- [x] 上記3ファイルの単体テストを追加・拡充する (`bracketMatch.test.ts` / `schemeTokenizer.test.ts` に倣う)。
 
 ## Phase 2: シンタックスハイライト
 
 (この Phase の `<textarea>` と `<pre>` の作りは、Phase 8 で CodeMirror 6 に置き換え、色分けは Phase 10 で Emacs と同じにした。)
 
 - [x] `CodeEditor.tsx` を「透明な `<textarea>` を実入力に使い、背後に色付き `<pre>` を重ねる」構成に変更する
-      （スクロール位置を `onScroll` で同期）。既存の `bracketAutoClose` / `emacsKeymap` はそのまま `<textarea>` に効かせる。
+      (スクロール位置を `onScroll` で同期)。既存の `bracketAutoClose` / `emacsKeymap` はそのまま `<textarea>` に効かせる。
 - [x] `schemeTokenizer.tokenize()` の結果を使い、トークン種別ごとに `<span>` でラップして色付けする
-      （`keyword` / `string` / `comment` / `number` / `boolean` / `paren` / `symbol`）。
+      (`keyword` / `string` / `comment` / `number` / `boolean` / `paren` / `symbol`)。
 - [x] `bracketMatch.findMatchingBracket()` を使い、カーソルに隣接する括弧とその対応括弧をハイライトする
-      （Emacs の `show-paren-mode` 相当）。
+      (Emacs の `show-paren-mode` 相当)。
 - [x] `bracketMatch.findUnmatchedClose()` を使い、閉じ括弧の対応が取れていない箇所をエラー表示する。
-- [x] パフォーマンス確認: 大きめのバッファでも `tokenize()` が入力毎に重くならないか（必要なら debounce）。
+- [x] パフォーマンス確認: 大きめのバッファでも `tokenize()` が入力毎に重くならないか (必要なら debounce)。
 
 ## Phase 3: ミニバッファ / コマンド実行の拡張
 
 - [x] `Minibuffer.tsx` の `MinibufferState` に `mode: 'isearch'` を追加し、`C-s` / `C-r` によるインクリメンタル検索を実装する。
       - マッチ箇所へのカーソル移動、`C-s` 連打で次のマッチへ、`C-g` でキャンセルして元の位置に戻る。
 - [x] `M-x` (execute-extended-command) を実装する。
-      - コマンド名を文字列で受け取り、内部の「コマンドレジストリ」（`{name, run}` のマップ）から実行する。
+      - コマンド名を文字列で受け取り、内部の「コマンドレジストリ」 (`{name, run}` のマップ) から実行する。
       - 最初は `find-file` / `save-buffer` / `save-buffers-kill-terminal` 程度から始め、Phase 4/5 のバッファ/REPL 系コマンドを順次登録する。
-- [x] `M-x` と `C-x b` の補完（前方一致する候補の、共通する先頭の部分まで Tab で補完し、候補が複数なら一覧を出す）。
+- [x] `M-x` と `C-x b` の補完 (前方一致する候補の、共通する先頭の部分まで Tab で補完し、候補が複数なら一覧を出す)。
 - [x] `keyboard-quit` (`C-g`) 実行時に `Quit` メッセージをミニバッファに表示する。
 
 ## Phase 4: 編集コマンドの強化
 
 - [x] Undo / Redo: `C-/` (undo), `C-x C-/`または `M-_` 相当の redo。
       `<textarea>` のネイティブ undo に頼らず、独自の undo スタックを持たせるか検討する
-      （kill-ring や mark と同様、バッファごとの状態として `App.tsx` か新規 hook で管理）。
+      (kill-ring や mark と同様、バッファごとの状態として `App.tsx` か新規 hook で管理)。
 - [x] Kill-ring の多段化: 現在 `emacsKeymap.ts` の `killRing` は単一の `useRef<string>`。
       Emacs の `M-y` (yank-pop) を実装するには配列化してリングにする必要がある。
 - [x] `C-t` (transpose-chars) を追加する。
 - [x] `M-<` / `M->` (buffer-start / buffer-end) を追加する。
 - [x] `C-x h` (mark-whole-buffer) を追加する。
-- [x] Scheme 向けの構造編集コマンド（あると差別化になる）:
+- [x] Scheme 向けの構造編集コマンド (あると差別化になる):
       - `C-M-f` / `C-M-b` (forward-sexp / backward-sexp) … `bracketMatch` のロジックを流用して S 式単位の移動を実装。
       - `C-M-k` (kill-sexp)
 
@@ -69,22 +69,22 @@
 - [x] 複数バッファをサポートする。`App.tsx` の `code` / `filePath` / `modified` を単一バッファの状態として
       `{ id, name, filePath, content, modified }[]` の配列に置き換える。
 - [x] `C-x b` (switch-to-buffer): ミニバッファでバッファ名を入力して切り替え。
-- [x] `C-x k` (kill-buffer): 現在のバッファを閉じる（未保存なら確認を挟む）。
+- [x] `C-x k` (kill-buffer): 現在のバッファを閉じる (未保存なら確認を挟む)。
 - [x] `C-x C-b` (list-buffers): バッファ一覧を表示するビュー。
 - [x] ウィンドウ分割: `C-x 2` (上下に分ける) / `C-x 3` (左右に分ける) / `C-x o` (他ウィンドウへ移動) / `C-x 0` / `C-x 1`。同じバッファを出すウィンドウには、書き換えを写す。
-      React 側は「ペインのレイアウトツリー」を持たせ、各ペインに独立した `CodeEditor` インスタンス（同一バッファ参照可）を描画する。
+      React 側は「ペインのレイアウトツリー」を持たせ、各ペインに独立した `CodeEditor` インスタンス (同一バッファ参照可) を描画する。
 
 ## Phase 6: REPL / Scheme 統合
 
-- [x] `REPL.tsx` を `App.tsx` にマウントする（下ペイン、もしくは `C-x C-e` 実行結果をミニバッファ/エコーエリアに出す方式でも可）。
-- [x] `C-x C-e` (eval-last-sexp): カーソル直前の S 式を `bracketMatch` で特定し、`eval_scheme` コマンド（`src-tauri/src/main.rs`）
+- [x] `REPL.tsx` を `App.tsx` にマウントする (下ペイン、もしくは `C-x C-e` 実行結果をミニバッファ/エコーエリアに出す方式でも可)。
+- [x] `C-x C-e` (eval-last-sexp): カーソル直前の S 式を `bracketMatch` で特定し、`eval_scheme` コマンド (`src-tauri/src/main.rs`)
       に渡して評価、結果をミニバッファに表示する。
-- [x] `M-:` (eval-expression): ミニバッファに Scheme 式を直接入力して評価するモードを追加（Phase 3 の `M-x` 基盤を流用）。
-- [x] REPL 履歴とエディタの kill-ring / undo 履歴が競合しないよう、フォーカス管理（テキストエリア vs REPL 入力欄）を整理する。
+- [x] `M-:` (eval-expression): ミニバッファに Scheme 式を直接入力して評価するモードを追加 (Phase 3 の `M-x` 基盤を流用)。
+- [x] REPL 履歴とエディタの kill-ring / undo 履歴が競合しないよう、フォーカス管理 (テキストエリア vs REPL 入力欄) を整理する。
 
 ## Phase 7: モードライン / 仕上げ
 
-- [x] `ModeLine.tsx` に現在の mark 状態（リージョン選択中かどうか）、isearch 状態などを表示する。
+- [x] `ModeLine.tsx` に現在の mark 状態 (リージョン選択中かどうか)、isearch 状態などを表示する。
 - [x] `C-h k` (describe-key) でキーの説明をミニバッファに出し、`C-h b` (describe-bindings) でキーの割り当ての一覧を `*Help*` バッファに出す。
 - [x] キーバインドの一覧をドキュメント化し `README.md` に追記する。
 - [x] 各フェーズの hook ごとに Vitest でのテストを追加し、`npm run check` を通すこと。
@@ -101,7 +101,7 @@
 ## Phase 9: Lisp でのカスタマイズ
 
 - [x] Scheme の処理系に、言語の核を足す: `define`、`lambda`、`let` (名前付きも), `let*`、`letrec`、`if` / `cond` / `case`、`and` / `or` / `when` / `unless`、比較、文字列とリストの操作。
-      定義は、アプリが持ち続ける処理系 (`Evaluator`) の環境に覚える。末尾の呼び出しは、深さを使わない。
+      定義は、アプリが持ち続ける処理系 (`Evaluator`) の環境に覚える。末尾の呼び出しは深さを使わない。
 - [x] Lisp からエディタを操作する関数を用意する: `point`、`point-min`、`point-max`、`goto-char`、`insert`、`delete-region`、`buffer-string`、`buffer-substring`、`buffer-name`、`message`。
       評価は Rust で行い、エディタの操作は、画面に頼んで返事を待つ (`core/src/scheme/host.rs` と `src/lib/lisp.ts`)。
 - [x] Lisp から、既にあるコマンドを名前で呼べるようにする (`call-interactively`、`command-execute`)。
@@ -116,7 +116,7 @@
 - [x] シンタックスハイライト (Emacs の font-lock)。Emacs 30 の scheme-mode と emacs-lisp-mode と同じ所に、Emacs の既定の色を付ける
       (今は核の `core/src/highlight/lisp.rs`。以前は `src/lib/lispMode.ts`)。コメント、文字列、`(` の直後の特別な形、定義する名前、`:key` など。Emacs Lisp では、      文字列の中の正規表現のグループと要らない `\`、閉じた括弧の後ろに続く引数の警告も。`emacs -Q --batch` で付けた色と、1 文字ずつ比べて確かめた。
 - [x] メジャーモード (核の `lisp/files.scm` の `auto-mode-alist` と `core/src/mode.rs`): Emacs の `auto-mode-alist` と同じく、`*scratch*` は Lisp Interaction, `.scm` などは Scheme,
-      `.el` と `.emacs` などは ELisp/l か ELisp/d, `.dir-locals.el` などは Lisp-Data (この 4 つは色を付ける), ほかは Fundamental。
+      `.el` と `.emacs` などは ELisp/l か ELisp/d, `.dir-locals.el` などは Lisp-Data (この 4 つは色を付ける)、ほかは Fundamental。
       モードラインに名前を出す。
 
 ## Phase 11: 字下げと、括弧の強調
@@ -128,7 +128,7 @@
 - [x] タブを使うかと、タブの幅 (Emacs の既定は、タブを使い、幅は 8)。ファイルの 1 行目の `-*- ... -*-` の
       `mode`、`lexical-binding`、`indent-tabs-mode`、`tab-width` を読む。
 - [x] 括弧の強調 (`src/lib/showParen.ts`. Emacs の show-paren-mode): カーソルの前の閉じる括弧か、後ろの開く括弧と、対に色を付ける。
-      対が無いか、種類が違えば、合わない色にする。
+      対が無いか、種類が違えば合わない色にする。
 
 ## Phase 12: Emacs と違うところ
 
@@ -137,23 +137,23 @@
 - [x] `M-q` (fill-paragraph): Lisp の文字列 (docstring) の中を詰める。
 - [x] `M-q` (fill-paragraph): リージョンがあれば、リージョンの全ての段落を詰める (Emacs の `fill-region`)。
 - [x] 前置引数を、繰り返しでなく、引数として渡す。
-  - [x] `M-SPC` (just-one-space): `C-u 3 M-SPC` で空白を 3 つ残す。負の数なら、改行も消す。
+  - [x] `M-SPC` (just-one-space): `C-u 3 M-SPC` で空白を 3 つ残す。負の数なら改行も消す。
   - [x] `M-\` (delete-horizontal-space): 前置引数があれば、カーソルの前の空白だけを消す。
-  - [x] `M-^` (delete-indentation): 前置引数があれば、次の行とつなげる。リージョンがあれば、リージョンの行をつなげる。
+  - [x] `M-^` (delete-indentation): 前置引数があれば次の行とつなげる。リージョンがあればリージョンの行をつなげる。
 - [x] `C-x C-u` (upcase-region) と `C-x C-l` (downcase-region): Emacs と同じく、既定で使えない (disabled) コマンドで、初めて押すと使うかを確かめる (`n` `y` `SPC` `!`)。確かめる画面は、`*Disabled Command*` のバッファでなく、エコー領域の問い。`y` で永続的に有効にする (初期設定ファイルへの書き込み) はしない。
 - [x] `C-q` (quoted-insert): `C-q` の後の、`C-x`、`C-h`、`M-g` などの前置きのキーを、制御文字としてそのまま入れる。
 - [x] `C-q RET` と `C-q C-m`: Emacs と同じく `^M` (CR) を入れる。
 - [x] `C-q` の後の `M-a` などの、Meta を付けたキー: Emacs と同じく、8 ビット目を立てた文字を入れる。
-- [ ] `C-u M-=` (count-words-region): 前置引数があれば、バッファ全体を数える。
+- [ ] `C-u M-=` (count-words-region): 前置引数があればバッファ全体を数える。
 - [x] `M-f`、`M-b` などの単語: Emacs と同じく、書記体系で単語を切る (日本語は、漢字と送りがなを 1 つの単語にする、など。`tests/batch/cases/56-word-motion`)。
-- [x] kill-ring, 消した矩形 (`C-x r k`), レジスタ: Emacs と同じく、全てのウィンドウで共通。
+- [x] kill-ring, 消した矩形 (`C-x r k`)、レジスタ: Emacs と同じく、全てのウィンドウで共通。
 - [x] `C-x r y` (yank-rectangle) と `C-x r i` (insert-register): Emacs は、入れた範囲の端にマークを置く (リージョンは選ばない)。
 - [ ] 矩形とレジスタの前置引数: `C-u C-x r k` (短い行も空白で埋める), `C-u C-x r s` (リージョンを消す),
       `C-u C-x r i` (カーソルを入れた文字の後ろに置く)。
 - [ ] `C-x r t` (string-rectangle): Emacs は、入力しているあいだ、置き換えた結果を見せる (`rectangle-preview`)。
-- [ ] ブックマーク: Emacs は、`~/.emacs.d/bookmarks` に、Lisp の形で、終わるときに保存する。
-      今は、`~/.config/rseditor/bookmarks` に、JSON で、付けるたびに保存する。位置は、Emacs と違い、0 から数える (UTF-16 の位置)。
-- [ ] `C-x r b` (bookmark-jump): ファイルが無いとき、Emacs は、新しい場所を聞く。今は、読めないと知らせるだけ。
+- [ ] ブックマーク: Emacs は、`~/.emacs.d/bookmarks` に、Lisp の形で終わるときに保存する。
+      今は、`~/.config/rseditor/bookmarks` に、JSON で付けるたびに保存する。位置は、Emacs と違い、0 から数える (UTF-16 の位置)。
+- [ ] `C-x r b` (bookmark-jump): ファイルが無いとき、Emacs は新しい場所を聞く。今は読めないと知らせるだけ。
 - [x] `C-M-a` (beginning-of-defun) と `C-M-e` (end-of-defun): Emacs は、動く前の位置にマークを置く (リージョンは選ばない)。
 - [x] `C-x C-n` (set-goal-column): Emacs と同じく、既定で使えない (disabled) コマンド。
 - [x] `C-n`、`C-p` (`C-x C-n` で桁を決めていないとき): Emacs と同じく、表示の桁 (タブと全角の文字の幅) を保つ (`tests/batch/cases/55-line-column`)。
@@ -167,18 +167,18 @@
 - [x] 自動保存: Emacs は、300 回キーを押すごとにも保存する (`auto-save-interval`)。今は、書き換えが 30 秒止まったときだけ。
 - [x] ターミナルのアプリも、入力が 30 秒止まったときに自動保存する (`Screen::wait_key`)。
       バッファを消すときと、Emacs を終えるときの扱い (`delete-auto-save-files`) も、まだ。
-- [ ] バックアップ: Emacs は、前の版の名前を変えて `名前~` にする (`backup-by-copying` が `nil`)。今は、写す。
+- [ ] バックアップ: Emacs は、前の版の名前を変えて `名前~` にする (`backup-by-copying` が `nil`)。今は写す。
 - [ ] `recover-this-file`: Emacs の問いは、`diff` (違いを見る) も受け、自動保存のファイルの一覧を見せる。
 - [x] `C-x d` (dired): dired の中のキー (`RET`、`^`、`g`、`m`、`d` など) と、読み込み専用 (`tests/batch/cases/74-dired-marks`、`75-dired-visit`)。
-- [ ] dired: Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は、出さない。
-- [ ] dired の `v` (dired-view-file): Emacs は view-mode で開く (`SPC` で送り、`q` で dired に戻る)。今は、読み込み専用で開くだけ。
+- [ ] dired: Emacs 30 は、始めの行に空きの量 (`available`) を出す。今は出さない。
+- [ ] dired の `v` (dired-view-file): Emacs は view-mode で開く (`SPC` で送り、`q` で dired に戻る)。今は読み込み専用で開くだけ。
 - [ ] dired の `s` (並べ替え)、`i` (サブディレクトリを足す)、`(` (詳細を隠す)、`M`、`G`、`O`、`T` (属性を変える)、`S`、`H` (リンク)、`!` (シェルのコマンド)、`% R` など (正規表現で名前を変える)、wdired (`C-x C-q`)。
 - [ ] dired の `l` (dired-do-redisplay): Emacs は印を付けた行だけを読み直す。今は、全ての行を読み直す (行の順と印は残す)。
 - [ ] `default-directory`: Emacs はバッファごとに持ち、相対パス (`(find-file ".")` など) は、そこから読む。今は、変数が無く、エディタを動かしたディレクトリから読む。
-- [ ] `window-list`: Emacs は選んだウィンドウから並べる。今は、画面の上から並べる。
+- [ ] `window-list`: Emacs は選んだウィンドウから並べる。今は画面の上から並べる。
 - [ ] `quit-window`: Emacs は、ウィンドウに前に出していたバッファに戻す。今は、`buffer-list` の他のバッファを出す。
 - [x] isearch の `M-p`、`M-n`: Emacs (`search-ring-update` が `nil`) と同じく、履歴の文字を、ミニバッファで直させる (`tests/batch/cases/59-isearch-edit`)。
-- [x] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら、今のファイルの名前など) を出す。今は、出さない。
+- [x] ミニバッファの `M-n`: Emacs は、履歴の先で、既定の値 (`C-x C-f` なら今のファイルの名前など) を出す。今は出さない。
 - [ ] `M-x grep`: Emacs は、grep のコマンドの行 (`grep --color=auto -nH --null -e`) を聞き、外の grep を動かす。今は、正規表現とディレクトリを聞き、      エディタが、ディレクトリの下を深くまで探す (`rgrep` に近い)。正規表現は Rust の regex の書き方。大文字が無ければ、大文字と小文字を区別しない
       (Emacs の `rgrep` の `case-fold-search` と同じ)。`.` で始まるディレクトリ、`node_modules`、`target` と、文字のファイルでないものは、探さない。
       既定の正規表現 (カーソルの所の言葉) は、まだ。
@@ -188,11 +188,11 @@
 - [x] 初期設定ファイルを `~/.rseditor` にする (無ければ、前の `~/.config/rseditor/init.scm`)。
 - [x] 色とフォントを、初期設定ファイルで変える: `set-background-color`、`set-foreground-color`、`set-frame-font`、`set-face-attribute` (`default` の `:family`、`:height`、`:foreground`、`:background`)。
       背景が暗いと、色分けを Emacs の暗い背景の face の色にする (`src/lib/theme.ts`、`src/index.css`)。
-- [x] Lisp の手続きを足す: `load`、ファイル (`read-file-string`、`write-file-string`、`directory-files-recursively` など), 時刻 (`format-time-string`、`date-to-time`),
-      正規表現 (`regexp-match`、`grep`), 文字列 (`string-search`、`split-string` など), `sort`、`cadr` など、`random`。
+- [x] Lisp の手続きを足す: `load`、ファイル (`read-file-string`、`write-file-string`、`directory-files-recursively` など)、時刻 (`format-time-string`、`date-to-time`),
+      正規表現 (`regexp-match`、`grep`)、文字列 (`string-search`、`split-string` など), `sort`、`cadr` など、`random`。
       エディタの操作: `find-file`、`switch-to-buffer`、`buffer-file-name`、`set-buffer-modified-p`、`read-string`、`local-set-key`。
 - [x] howm を Scheme で書き直す (`lisp/howm.scm`)。`M-x howm` でメニュー、メモを作る、一覧、検索、今日と昨日、予定と todo, リンク (`>>>`、`<<<`)。
-- [x] howm の、まだ移していない機能: 下線 (action-lock の色付け), 一覧の窓 (中身の表示), `[複製]`、`[速記]`、ローマ字検索 (migemo), `[前後]`、`[履歴]`、`[酔歩]`、      キーワードの補完、日付の入力 (`[日↓]`、`[時↓]`), タイトルとファイル名のコピー、`[全消]`、メニューの `%eval%`、`%call%`、別のメニュー (`%○○%`),
+- [x] howm の、まだ移していない機能: 下線 (action-lock の色付け)、一覧の窓 (中身の表示), `[複製]`、`[速記]`、ローマ字検索 (migemo), `[前後]`、`[履歴]`、`[酔歩]`、      キーワードの補完、日付の入力 (`[日↓]`、`[時↓]`)、タイトルとファイル名のコピー、`[全消]`、メニューの `%eval%`、`%call%`、別のメニュー (`%○○%`),
       保存したときのメニューの更新 (`after-save-hook`), `C-x C-f` で開いたメモの howm-mode (`find-file-hook`)。
       フック (`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-args`) を足し、エディタが、ファイルを開いたバッファを初めて出したときと、保存したときに実行する。
 - [x] `read-string` の補完と、既定の値 (Emacs の `completing-read`)。`read-string` と `completing-read` は、Emacs と同じ引数
@@ -203,7 +203,7 @@
 ## Phase 14: Emacs の標準機能で、まだ無いもの
 
 `emacs -Q` (Emacs 30.2) の既定のキーの割り当て (`global-map`) と比べて、rs-editor に無いもの (2026-10-25 に洗い出した)。
-マウス、メニュー、ファンクションキー、入力メソッド、文字コード、フレーム、タブは、除いた。
+マウス、メニュー、ファンクションキー、入力メソッド、文字コード、フレーム、タブは除いた。
 キーの無いコマンドと、isearch, ミニバッファ、query-replace の中のキーも加えた。
 
 ### 移動
@@ -230,7 +230,7 @@
 - [x] `C-x TAB` (indent-rigidly): リージョンを、桁の数だけ字下げする。
 - [x] `C-x C-;` (comment-line), `C-x ;` (comment-set-column)。
 - [x] `C-x 8 RET` (insert-char): 文字を番号 (16 進、`#x`、`#o`、`#10r` など) で入れる。
-- [ ] `C-x 8 RET` で、Unicode の名前で入れる (Emacs は、名前を補完する。今は、`Invalid character`)。`C-x 8` で始まる、そのほかの文字。
+- [ ] `C-x 8 RET` で、Unicode の名前で入れる (Emacs は名前を補完する。今は、`Invalid character`)。`C-x 8` で始まる、そのほかの文字。
 - [ ] `read-number`: 既定の値が無く、`M-n` の値だけがあるとき、Emacs は空の入力を聞き直す。今は、`M-n` の最初の値を返す。
 - [x] `C-x =` (what-cursor-position): カーソルの文字と位置を出す。
 - [x] `C-x z` (repeat), `C-x ESC ESC` (repeat-complex-command): 前のコマンドの繰り返し。続けて `z` を押すと、また繰り返す。
@@ -262,20 +262,20 @@
 
 - [x] isearch の大文字と小文字: 探す文字が小文字だけなら、大文字と小文字を区別しない (`case-fold-search`、`search-upper-case`)。`M-c` で区別を切り替える。
 - [x] isearch の中の `M-c` (大文字と小文字), `M-r` (正規表現との切り替え)。
-- [x] isearch の中の `M-e` (文字をミニバッファで直す。ミニバッファの `M-p` は、検索の履歴)。
+- [x] isearch の中の `M-e` (文字をミニバッファで直す。ミニバッファの `M-p` は検索の履歴)。
 - [ ] isearch の中の `C-q`、`M-%` (置換へ),
-      `M-s o` (occur へ), `C-M-w` / `C-M-y` (1 文字削る・足す), `DEL` で 1 つ前の状態に戻る (今は、文字を消すだけ),
-      合わないときの `C-g` (合った所までに戻す), 本文の端で折り返す (`Wrapped I-search`)。
+      `M-s o` (occur へ), `C-M-w` / `C-M-y` (1 文字削る・足す), `DEL` で 1 つ前の状態に戻る (今は文字を消すだけ),
+      合わないときの `C-g` (合った所までに戻す)、本文の端で折り返す (`Wrapped I-search`)。
 - [ ] isearch の、合った所の全てを強調する (`isearch-lazy-highlight`) と、合った数を出す (`isearch-lazy-count`)。
 - [x] `M-s w` (isearch-forward-word), `M-s _` (isearch-forward-symbol), `M-s .` (isearch-forward-symbol-at-point), `M-s M-.` (isearch-forward-thing-at-point)。
 - [x] `multi-occur`、`multi-occur-in-matching-buffers` (`lisp/replace.scm`)。Emacs と同じく、後のバッファを先に出し、一致が無ければ `*Occur*` を消す。
 - [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
 - [x] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く)。
 - [x] `zrgrep` (`.gz` を展開して探す。`.bz2` / `.xz` は未対応)、`find-grep` (`find` は動かさず、下のすべてのファイルから探す)。
-- [x] grep: 探しながら出す (50 ファイルごとに `*grep*` に足して描き直す)、`C-g` で止める (`quit-requested-p` と `redisplay`)、`C-c C-k` (kill-compilation)。外のプロセスで探すのではないので、本当の非同期ではない (止めるのは、次の描き直しのとき)。
+- [x] grep: 探しながら出す (50 ファイルごとに `*grep*` に足して描き直す)、`C-g` で止める (`quit-requested-p` と `redisplay`)、`C-c C-k` (kill-compilation)。外のプロセスで探すのではないので、本当の非同期ではない (止めるのは次の描き直しのとき)。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
-- [x] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `e` / `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
-      `u` / `U` (置き換えを戻す), `?` (説明), `C-l`、`C-v` / `M-v`。ほかのキーは、置き換えを終えて、普通のキーとして動かす。
+- [x] query-replace の中の `^` (前へ戻る), `,` (置き換えて止まる), `e` / `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
+      `u` / `U` (置き換えを戻す), `?` (説明), `C-l`、`C-v` / `M-v`。ほかのキーは、置き換えを終えて普通のキーとして動かす。
       大文字と小文字を合わせる置換 (`case-replace`)。
 - [x] 置き換える文字の `\,(...)` (Lisp の式) と `\#` (置き換えた数) (`query-replace-compile-replacement`)。式は Scheme で書く。
       式の中の `\&`、`\N`、`\#&`、`\#N`、`\#` も使える。
@@ -293,7 +293,7 @@
 - [ ] `recover-session` (前のセッションの自動保存から、まとめて読み直す), `recentf-open` (最近のファイル)。
 - [x] `append-to-file`, `rename-visited-file`。
 - [x] `find-file` でディレクトリを開いたら dired にする。
-- [ ] `find-file` のワイルドカード (`*.scm` で、全てを開く)。
+- [ ] `find-file` のワイルドカード (`*.scm` で全てを開く)。
 
 ### バッファ・ウィンドウ
 
@@ -307,7 +307,7 @@
 - [x] `C-M-S-v` (scroll-other-window-down、`M-<prior>` も) / `C-M-S-l`: キーを割り当てる。
 - [x] `C-x w d` (toggle-window-dedicated)、`winner-mode` (`C-c <left>` / `C-c <right>`。`lisp/winner.scm`)、`windmove` (`windmove-default-keybindings` で `S-<矢印>`。`lisp/windmove.scm`)。
       違い: windmove の基準の位置は、ポイントの位置でなく窓の上端か左端。winner は、窓の変化に、コマンドの後で前のコマンドの後と比べて気付く
-      (Emacs は描き直すとき。バッチでは、どちらも気付かない)。ミニバッファを開いたときには覚えない。消したバッファの窓は、消さずに今のバッファを出す。
+      (Emacs は描き直すとき。バッチではどちらも気付かない)。ミニバッファを開いたときには覚えない。消したバッファの窓は、消さずに今のバッファを出す。
       `display-buffer` は、ウィンドウが 2 つ以上あれば分けずに使う (Emacs は、大きい窓なら分けることがある)。
 - [ ] `C-x 5 ...` (フレーム)。
 - [x] `C-x t ...` (タブ): `tab-new` (2)、`tab-close` (0)、`tab-close-other` (1)、`tab-next` (o)、`tab-previous` (O)、`tab-switch` (RET)、`tab-rename` (r)、`tab-move` (m)。`lisp/tab-bar.scm`。画面 (Tauri) はタブの行を出す。ターミナルは出さない。
@@ -315,8 +315,8 @@
 
 ### 前置引数とキーボードマクロ
 
-- [ ] `C-x C-k ...` (kmacro): マクロの環 (`C-x C-k C-n` など), 数え上げ (`C-x C-k TAB`、`C-x C-k C-c`),
-      キーに割り当てる (`C-x C-k b`), 直す (`C-x C-k RET`、`C-x C-k e`), 1 つずつ動かす (`C-x C-k SPC`)。
+- [ ] `C-x C-k ...` (kmacro): マクロの環 (`C-x C-k C-n` など)、数え上げ (`C-x C-k TAB`、`C-x C-k C-c`),
+      キーに割り当てる (`C-x C-k b`)、直す (`C-x C-k RET`、`C-x C-k e`), 1 つずつ動かす (`C-x C-k SPC`)。
 - [ ] `C-x C-k r` (apply-macro-to-region-lines), `C-x q` (kbd-macro-query)。
 
 ### ヘルプ
@@ -339,7 +339,7 @@
       前置引数、キーボードマクロの記録、`pre-command-hook` などは、再帰編集の中では使えない。
 - [ ] `M-X` (execute-extended-command-for-buffer), `M-x` で、コマンドのキーを知らせる (「You can run the command ... with C-x ...」)。
 - [ ] `C-u M-x` などの、前置引数を付けたコマンドの実行。
-- [ ] ミニバッファの中での、エディタのキー (`C-a`、`C-k`、`M-d`、`C-y` など)。今は、入力欄 (`input`) のキーだけ。
+- [ ] ミニバッファの中での、エディタのキー (`C-a`、`C-k`、`M-d`、`C-y` など)。今は入力欄 (`input`) のキーだけ。
 
 ### Lisp
 
@@ -488,9 +488,9 @@
 
 - [x] `M-x grep`: 外のコマンドを使わず、エディタ (Lisp の `lisp/compile.scm` が `rust-grep` で) が、ディレクトリの下のファイルから探す。
       正規表現とディレクトリを聞き、結果を `*grep*` バッファ (Emacs の grep-mode の形。 `ファイル:行:行の文字`) に、ほかのウィンドウに出す。
-      `RET` (compile-goto-error) で、その行のファイルを、ほかのウィンドウに開く。`M-g n`、`M-g p`、`` C-x ` `` で、次・前の合った行へ。
+      `RET` (compile-goto-error) で、その行のファイルを、ほかのウィンドウに開く。`M-g n`、`M-g p`、`` C-x ` `` で次・前の合った行へ。
 - [x] サイドバーのプロジェクトのツリー (VS Code のエクスプローラー。 `src/components/ProjectTree.tsx`)。`F8` か `M-x project-tree` で、出すか消す。
-      根は、バッファのディレクトリから上へたどって `.git` のある所 (無ければ、バッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
+      根は、バッファのディレクトリから上へたどって `.git` のある所 (無ければバッファのディレクトリ)。ディレクトリを押すと開き (開くたびに読み直す),
       ファイルを押すと、選んでいるウィンドウに開く。今のバッファのファイルを強調する。`.git` は出さない。↻ で読み直す。
 - [x] ツリー: 今のファイルまで開く (VS Code の Reveal。ファイルを切り替えるたびに、そこまでのディレクトリを開き、見える所へ動かす)。
 - [x] ツリー: キーで動かす (`F9` か `M-x project-tree-focus` でフォーカスを移し、`n`、`p`、`RET`、`f`、`b`、`g`、`q`)。
@@ -498,24 +498,24 @@
       ファイルを作る・名前を変える・消す、ファイルが変わったら読み直す、根を選ぶコマンド、起動のときに出す設定 (今は、初期設定ファイルで `(call-interactively 'project-tree)`)。
 - [x] `*grep*` の中のキー: `n` / `p`, `g` (探し直す), `TAB` / `S-TAB`, `M-{` / `M-}`, `q`。
 - [ ] `*grep*` の `C-c C-k` (止める)。
-- [ ] grep: 探しているあいだに、見つけた行を順に出す (今は、終わってから出す)。止める (`C-c C-k`)。
+- [ ] grep: 探しているあいだに、見つけた行を順に出す (今は終わってから出す)。止める (`C-c C-k`)。
 
 ## Phase 16: 起動の引数 (Emacs の Initial options)
 
 Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを、`rseditor` の起動の引数でできるようにする。
 今は、起動の引数を読んでいない (初期設定ファイルは、必ず `~/.rseditor` か `~/.rseditor.d/init.scm` を読む)。
 
-- [x] 起動の引数を読む仕組み (`core/src/startup.rs` の `parse`。画面のアプリは `commands::startup_options`、ターミナルは `tui/src/main.rs`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。画面のアプリも、引数のファイルを開く。
+- [x] 起動の引数を読む仕組み (`core/src/startup.rs` の `parse`。画面のアプリは `commands::startup_options`、ターミナルは `tui/src/main.rs`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。画面のアプリも引数のファイルを開く。
       引数の値は、`--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
 - [x] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
-- [x] `--quick`、`-Q`: `-q --no-splash` と同じ (`--no-site-file`、`--no-site-lisp`、`--no-x-resources` は、まだ無い機能なので、受けない)。
+- [x] `--quick`、`-Q`: `-q --no-splash` と同じ (`--no-site-file`、`--no-site-lisp`、`--no-x-resources` は、まだ無い機能なので受けない)。
 - [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に、rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
 - [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
-- [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` は、まだ変えない)。
+- [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` はまだ変えない)。
 - [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
 - [x] `--debug-init`: 初期設定ファイルの失敗で、`*Warnings*` に `Backtrace:` と、失敗した式 (内側から外側へ、最大 30 個、長い式は 200 文字で切る) を出す。変数 `init-file-debug` が `#t` のとき、評価器がエラーに式を足す (`core/src/error.rs` の `trace`)。画面 (Tauri) だけ。ターミナルは、初期設定ファイルを読む処理がまだ無い。`debug-on-error` に当たる変数は、まだ。
 - [x] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
-- [x] `--no-splash`: 受ける (始めの画面がまだ無いので、何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
+- [x] `--no-splash`: 受ける (始めの画面がまだ無いので何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
 - [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
 - [x] `--batch`: 画面を出さずに動かす (`-q` を含む)。Lisp の `message` は標準エラーに出し、終わったら終える。`noninteractive` に当たる変数を足す。
 - [x] `--script FILE`: 画面を出さずに、Scheme のファイルを動かして終える (`--batch -l FILE` に当たる)。`-x` は、`#!/usr/bin/rseditor -x` で使う `-Q --script`。
@@ -523,7 +523,7 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを�
 - [ ] `--no-window-system`、`-nw`: 端末の中で動かす。画面が Tauri (WebView) なので、作れるかを調べてから決める。
 - [ ] `--display DISPLAY`、`-d DISPLAY`: 窓を出す X のディスプレイを変える (Tauri に環境変数 `DISPLAY` を渡す)。
 - [ ] `--terminal DEVICE`、`-t DEVICE`: 端末の装置を変える (`-nw` を作ってから)。
-- [ ] `--no-x-resources`: X のリソース (`~/.Xresources` の `Emacs.font` など) を読まない。先に、X のリソースを読むかを決める (読まないなら、受けて何もしない)。
+- [ ] `--no-x-resources`: X のリソース (`~/.Xresources` の `Emacs.font` など) を読まない。先に、X のリソースを読むかを決める (読まないなら受けて何もしない)。
 - [ ] Emacs の作り方のための引数 (`--dump-file`、`--no-loadup` / `-nl`、`--fingerprint`、`--seccomp`、`--no-build-details`、`--module-assertions`):
       rs-editor には、当たるもの (Lisp の状態を書き出したファイル、loadup.el, 動的なモジュール) が無い。受けて何もしないか、`--fingerprint` などは版を出すかを決める。
 
@@ -535,7 +535,7 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
 
 - [x] 起動のときに読む、既定の Lisp のファイル (Emacs の `loadup.el` で読む `simple.el`、`files.el` などに当たる) を決める (`lisp/` に置き、アプリに入れる)。
       `core/src/scheme/loadup.rs` に並べたファイル (`lisp/subr.scm`、`lisp/window.scm`、`lisp/files.scm`、`lisp/help-fns.scm`) を、ビルドのときに埋め込み、評価器を作るときに評価する。
-      コマンドは、引数を省くと (キーと M-x から呼ぶと), ミニバッファで聞く (Emacs の `interactive` に当たる)。
+      コマンドは、引数を省くと (キーと M-x から呼ぶと)、ミニバッファで聞く (Emacs の `interactive` に当たる)。
 - [x] `find-file` (`C-x C-f`) を Lisp に移した (`lisp/files.scm`。`read-file-name`、`find-file-noselect`、`pop-to-buffer-same-window` を使う)。
 - [x] よく使うファイルとバッファのコマンドを Lisp に移した: `save-buffer` (`C-x C-s`), `write-file` (`C-x C-w`), `insert-file` (`C-x i`),
       `find-alternate-file` (`C-x C-v`), `save-some-buffers` (`C-x s`) (`lisp/files.scm`), `switch-to-buffer` (`C-x b`. `lisp/window.scm`)。
@@ -544,11 +544,11 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
 - [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
       組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。
 - [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
-      `kill-buffer` は、Emacs で C の関数なので、組み込みのまま残す。
+      `kill-buffer` は、Emacs で C の関数なので組み込みのまま残す。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル、文字、行、マーク、窓、バッファなど。 Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (docs/functions.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
       進め方は、docs/functions.md の「実装の計画」(段階 1 から 12。表の「計画」の列の番号。計画は `tools/emacs-commands/plan.py`)。
-      目標は、今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
+      目標は今の画面 (Tauri) と、ターミナル (ncurses) の両方で動かすこと。そのため、段階 1 で、エディタの核 (バッファ、マーク、undo, kill-ring, 窓) を Rust に作る
       (1.1 から 1.11. 進み方は、docs/functions.md の「実装の計画」)。
       1.1 (クレートの分割: `core/`) と、1.2 から 1.8 の Rust の部品 (`Buffer`、`KillRing`、`search`、`syntax`、`window`、`Editor`), 1.9 の `EditorHost` (評価器が核を直接動かす), 1.10 のターミナルのアプリ (`tui/`) は完了。1.11 (今の画面 (Tauri) を核につなぐ) は完了 (`docs/core_migration.md`。画面の TypeScript のコマンドは全て消し、画面は核の frame を描いてキーを送るだけにした)。段階 2 (動き) と段階 3 (消す、切る、貼る、元に戻す) の Lisp 版 (`lisp/simple.scm`) は完了で、Emacs の結果と全位置で一致する (`core/tests/test_motion.rs`、`test_edit.rs`、`test_undo.rs`)。段階 4 (マーク、前置引数、実行) は、マークと前置引数と情報のコマンドの Lisp 版 (`push-mark-command`、`set-mark-command`、`exchange-point-and-mark`、`mark-word`、`universal-argument`、`digit-argument`、`what-cursor-position`、`count-words-region` など) と、バッファをまたぐマークの履歴 (`global-mark-pop`) が完了 (Emacs の結果と一致する)。ターミナルのアプリは Lisp の前置引数 (`prefix-arg`、`universal-argument-map`) とコマンドの終わりのマークの解除につないだ。`truncate-lines` と `selective-display` の描画、`repeat-complex-command`、`execute-extended-command-for-buffer` も完了 (段階 4 の画面 (Tauri) 側は、画面をつないだ後)。`next-error` と `previous-error` は TypeScript のまま。段階 5 (S 式、段落、ページ) は、式、defun, 段落、文の Lisp 版 (計算は `core/src/sexp.rs` と `core/src/paragraph.rs`) が完了で、Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。ページ (`forward-page`、`mark-page`) と `transpose-sexps`、`transpose-sentences`、`transpose-paragraphs` も完了 (`transpose-sexps` は、バックスラッシュで quote した文字と `##` `,@` の前後だけ Emacs と違う)。`narrow-to-page` と `count-lines-page` は残り (ナローイングを核に入れてから)。`condition-case` を評価器に足した。段階 6 (字下げ、整形、コメント) は、字下げ (`TAB`、`indent-region`、`indent-sexp`、`RET` の字下げ)、`indent-rigidly`、`tab-to-tab-stop`、整形 (`M-q`、`set-fill-prefix`)、コメント (`M-;`、`C-x C-;`、`C-x ;`) の Lisp 版が完了 (計算は `core/src/indent.rs`、`core/src/fill.rs`、`core/src/comment.rs`。字下げ、整形、`comment-dwim`、`comment-line` は Emacs の結果と全位置で一致する (`core/tests/test_lisp.rs`)。違いは docs/functions.md の「実装の計画」)。ターミナルのアプリのキーにつないだ。段階 7 (検索、置換、強調) は、isearch (`lisp/isearch.scm`)、`replace-string`、`replace-regexp`、`query-replace`、`query-replace-regexp`、`occur` (`lisp/replace.scm`)、強調 (hi-lock のコマンド。核の `Buffer::highlights`) の Lisp 版が完了で、Emacs の結果と一致する (`core/tests/test_isearch.rs`、`test_replace.rs`、`test_occur.rs`)。ターミナルのアプリは、`C-s`、`M-%`、`M-s o` などにつないだ。
       速さが要るもの (`self-insert-command`、カーソルを動かすもの) は、動かして比べてから決める。
@@ -572,7 +572,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
   2. Lisp の `documentation` が、Lisp の docstring が無ければ、表の文を返す。`lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。
   3. `tools/po/update.py` が表も集め (`msgctxt` は `function:名前`)、`po/ja.po` に訳を足す。表の文も、Lisp の docstring と同じく `help-language` の訳で出る。
   4. テスト: 組み込みの名前 (`builtins::NAMES` など) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
-- [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`), 割り当てたキー (`where-is-internal`),
+- [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`)、割り当てたキー (`where-is-internal`),
       引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
       候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。
 - [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。カーソルの所の名前を既定にする。
@@ -580,16 +580,16 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
       引数の形は、Emacs の書き方 (`&optional`) にする (今は、残りの引数で受けて `&rest ARGS`)。
 - [x] `lisp/howm.scm` の `;;` の説明を、docstring (英語) に書き直す (元の日本語は、`po/ja.po` の翻訳にした)。
 - [x] `lisp/org.scm` の `;;` の説明を、docstring (英語) に書き直す (訳は `po/ja.po`)。
-- [ ] 多言語化の仕組み (Emacs には無い。 rs-editor で足す). 翻訳のファイルは gettext の PO 形式にし、読むのは Rust で行う
+- [ ] 多言語化の仕組み (Emacs には無い。 rs-editor で足す)。翻訳のファイルは gettext の PO 形式にし、読むのは Rust で行う
       (gettext の実行時の仕組み (libintl, `setlocale`) は使わない。エディタの中で言語を変えるため、C のライブラリに頼らないため):
   - docstring は、Emacs と同じく英語で書く (元の文。翻訳が無ければ、これを出す)。
   - 翻訳は `po/ja.po` のように、言語ごとの PO のファイルに置く。`msgctxt` は名前 (`org-cycle` など。関数と変数は `function:` と `variable:` を前に付ける),
     `msgid` は英語の docstring, `msgstr` は翻訳。
   - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り、各言語の PO に混ぜる道具 (`tools/po/update.py`。`npm run po:update`)。
-    元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず、英語を出す。
+    元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず英語を出す。
     `npm run po:check` (`npm run check` で動く) で、作り直していない PO を見つける。
   - [ ] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
-  - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む), 名前と元の文から翻訳を引く。
+  - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む)、名前と元の文から翻訳を引く。
     Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
   - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。
   - [ ] `*Help*` に、元の文 (英語) を見るボタンを付ける。
@@ -604,18 +604,18 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] 字下げの決まりを、エディタ (`src/lib/lispIndent.ts`、`lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
       Rust で書くなら、決まりの表をファイル (JSON か Scheme) にして、両方から読む。
 - [ ] 整形の道具 (例: `cargo run --bin scmfmt -- FILE...`): 字下げを直し、行の終わりの空白、閉じ括弧だけの行、空行の重なりを消す。
-      コメント (`;`、`;;`、`;;;` の位置。 Emacs の決まり) と、文字列の中は変えない。長い行を分けるかは、はじめは変えない。
-- [ ] `--check` (直す所があれば、失敗にする) を付け、`npm run format` と `npm run check` に入れる。
+      コメント (`;`、`;;`、`;;;` の位置。 Emacs の決まり) と、文字列の中は変えない。長い行を分けるかははじめは変えない。
+- [ ] `--check` (直す所があれば失敗にする) を付け、`npm run format` と `npm run check` に入れる。
 - [ ] エディタの `M-x indent-region` と結果が同じことを、テストで確かめる。
 
 ## Phase 20: Scheme の lint
 
 `lisp/*.scm` と `tests/lisp/*.scm` の誤りを、動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
 
-- [ ] 定義していない名前 (変数と関数), 引数の数の違い (定義した関数と、組み込みの関数)。
-- [ ] 使っていない変数 (`let` と引数), 同じ名前の定義の重なり。
-- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので、同じ名前の変数と関数は、後のものが前のものを消す。 org.scm の `org-agenda-files` で起きた)。
-- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`、`cons` の 2 つ目がリストでない), `cond` の `=>`、      `format` の `%s`、`%S`、`%d`、`%%` 以外 (`%5d` など), ベクタ、文字 (`#\a`)。
+- [ ] 定義していない名前 (変数と関数)、引数の数の違い (定義した関数と、組み込みの関数)。
+- [ ] 使っていない変数 (`let` と引数)、同じ名前の定義の重なり。
+- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので、同じ名前の変数と関数は後のものが前のものを消す。 org.scm の `org-agenda-files` で起きた)。
+- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`、`cons` の 2 つ目がリストでない), `cond` の `=>`、      `format` の `%s`、`%S`、`%d`、`%%` 以外 (`%5d` など)、ベクタ、文字 (`#\a`)。
 - [ ] `'()` を偽として使った所 (`(if '() ...)` は真)。
 - [ ] docstring (Phase 18): コマンド (`define-command`) と、外から使う関数の docstring が無い所。Emacs の `checkdoc` の決まり (1 行目は文で終える、引数は大文字で書くなど)。
 - [ ] 翻訳 (Phase 18): `.pot` が docstring と合っているか、PO の翻訳の無いものと fuzzy (元の docstring が変わった) の翻訳。
@@ -654,9 +654,9 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### バッチモードの Emacs との違い (レビューから)
 
-- [x] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、失敗するまで繰り返す。繰り返している間に `C-g` を押すと、止める (画面のアプリは、`session_input` が `C-g` を旗で知らせる。ターミナルのアプリは、`Screen::interrupted` で、待たずに確かめる)。
+- [x] キーボードマクロを `C-g` で止める: `execute-kbd-macro` の回数 0 (と負の数) は、失敗するまで繰り返す。繰り返している間に `C-g` を押すと、止める (画面のアプリは、`session_input` が `C-g` を旗で知らせる。ターミナルのアプリは、`Screen::interrupted` で待たずに確かめる)。
 - [x] 引数の数の違いを、`wrong-number-of-arguments` (データは手続きと個数) にする (`Error::wrong_number_of_arguments`。`tests/batch/cases/76-wrong-number`)。手続きごとの手書きのメッセージ (`expects 1 or 2 arguments`) は、種類が `error` のまま。
-- [x] `list-ref` と `regexp-match` の範囲外を、`args-out-of-range` にする (データは、対象と位置)。
+- [x] `list-ref` と `regexp-match` の範囲外を、`args-out-of-range` にする (データは対象と位置)。
 - [x] ロックの `lock().unwrap()` を、panic のあとでも続けられるようにする (`core/src/sync.rs` の `LockExt::lock_recover`)。評価の panic で poisoned になったロックで、以後のキーが全て失敗することは無くなった。
 - [ ] 開発用の依存の `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (今は `markdownlint-cli2@0.23.3` と、`markdown-it` の `overrides` で、high は 0 件)。
 
@@ -673,7 +673,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 各 Phase の未完了 (`- [ ]`) は 120 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
-各項目の大きさは、小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
+各項目の大きさは小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
 ### P0: 固まる、データを失う、落ちる
 
@@ -748,8 +748,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 - Phase 16 の `--batch` と `--script FILE` は、実装済み (`tui/src/batch.rs`、`tests/batch/` の `cli-script`)。Phase 14 の完了項目は、`fboundp` とキーの割り当てで確かめて、チェックを付けてある。Phase 12 の「Emacs と違うところ」は、動きを一つずつ確かめていない。
 - 同じ内容が、Phase 12 と Phase 14 の両方にある項目 (`M-n` の既定の値、`C-x C-n` など) は、片方に寄せる。
-- この節の項目は、チェックボックスで進み具合を示す。項目を完了したら、各 Phase の項目と、この節の項目を、同じ変更で `[x]` にする (消さない)。この節の項目は、全て完了してから、最後にまとめて削除する。この節の項目は、未完了の数 (上の件数) には数えない。
+- この節の項目は、チェックボックスで進み具合を示す。項目を完了したら、各 Phase の項目と、この節の項目を、同じ変更で `[x]` にする (消さない)。この節の項目は、全て完了してから最後にまとめて削除する。この節の項目は未完了の数 (上の件数) には数えない。
 
 ## 実装順序の目安
 
-Phase 1 から Phase 12 は、完了。これからは、上の「Phase 22: 優先度つきの進め方」の順 (P0 から P3) で進める。
+Phase 1 から Phase 12 は完了。これからは、上の「Phase 22: 優先度つきの進め方」の順 (P0 から P3) で進める。

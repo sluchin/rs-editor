@@ -52,7 +52,7 @@ fn setup() -> (Evaluator, EditorHost<FakeUi>) {
     )
 }
 
-/// 始めに入れる本文: `ab\ncde\n\nf` で, カーソルは始め.
+/// 始めに入れる本文: `ab\ncde\n\nf` でカーソルは始め.
 const SETUP: &str = "(insert \"ab\\ncde\\n\\nf\") (goto-char 1) ";
 
 /// 評価した最後の結果 (失敗なら `ERR 内容`).
@@ -719,12 +719,12 @@ fn test_undo_list_can_be_replaced_and_markers_follow_the_text() {
         run_last("(insert \"ab\") (undo-boundary) (insert \"cd\") (set-buffer-undo-list (list (list 1 3))) (buffer-undo-list)"),
         "((1 3))"
     );
-    // 位置の記録 (数) は、履歴に入り, 元に戻すと, カーソルを置く
+    // 位置の記録 (数) は, 履歴に入り, 元に戻すと, カーソルを置く
     assert_eq!(
         run_last("(insert \"abc\") (primitive-undo 1 '(2))  (point)"),
         "2"
     );
-    // マーカーは、本文を書き換えると、位置を追う
+    // マーカーは, 本文を書き換えると, 位置を追う
     assert_eq!(
         run_last("(insert \"abcdef\") (goto-char 4) (let ((m (point-marker))) (goto-char 1) (insert \"XX\") (list (marker-position m) (begin (marker-release m) (marker-position m))))"),
         "(6 #f)"
@@ -865,7 +865,7 @@ fn test_major_mode_variable_follows_the_dialect() {
 
 #[test]
 fn test_major_mode_name_override() {
-    // 始めの *scratch* は lisp-interaction-mode. 方言を決めると、方言の名前に戻る
+    // 始めの *scratch* は lisp-interaction-mode. 方言を決めると, 方言の名前に戻る
     assert_eq!(run_last("(major-mode-name)"), "lisp-interaction-mode");
     assert_eq!(
         run_last("(set-major-mode-name 'text-mode) major-mode"),
@@ -879,7 +879,7 @@ fn test_major_mode_name_override() {
 
 #[test]
 fn test_region_positions_out_of_range() {
-    // 1 より小さい位置と、本文の外の位置は範囲外 (引数の順のまま). goto-char は丸める
+    // 1 より小さい位置と, 本文の外の位置は範囲外 (引数の順のまま). goto-char は丸める
     let cases = [
         (
             "(buffer-substring 0 2)",
@@ -919,11 +919,11 @@ fn test_visited_file_modtime() {
             .map(|out| out.lines().last().unwrap_or("").to_string())
             .unwrap_or_else(|e| format!("ERR {e}"))
     };
-    // ファイルを訪れていないバッファは、同じとする
+    // ファイルを訪れていないバッファは, 同じとする
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
     eval(&format!("(set-buffer (find-file-noselect {p}))"));
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
-    // 外で書き換わった (更新時刻が変わった) ら，偽。確かめる問いは、画面に頼む (ここでは、頼めない)
+    // 外で書き換わった (更新時刻が変わった) ら，偽. 確かめる問いは, 画面に頼む (ここでは, 頼めない)
     let later = std::time::SystemTime::now() + std::time::Duration::from_secs(60);
     let touch = || {
         std::fs::File::options()
@@ -938,20 +938,20 @@ fn test_visited_file_modtime() {
     assert_eq!(eval("(verify-visited-file-modtime)"), "#f");
     assert_eq!(eval("(basic-save-buffer)"), "ERR ui: read-string");
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "disk\n");
-    // 今の更新時刻を覚えれば、同じになる。書けば、書いたあとの更新時刻を覚える
+    // 今の更新時刻を覚えれば, 同じになる. 書けば, 書いたあとの更新時刻を覚える
     eval("(set-visited-file-modtime)");
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
     eval("(basic-save-buffer)");
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "xdisk\n");
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
-    // 別の名前を訪れるときは、前のファイルの更新時刻と比べない
+    // 別の名前を訪れるときは, 前のファイルの更新時刻と比べない
     touch();
     let other = quoted(dir.path().join("o.txt").to_str().unwrap());
     eval(&format!("(files--set-buffer-file-name {other})"));
     assert_eq!(eval("(verify-visited-file-modtime)"), "#t");
 }
 
-/// 外で書き換わったファイルを訪れたエディタ. 更新時刻を進めて、書き換えたことにする.
+/// 外で書き換わったファイルを訪れたエディタ. 更新時刻を進めて書き換えたことにする.
 fn stale_file(
     text: &str,
 ) -> (
@@ -994,7 +994,7 @@ fn test_editing_a_file_changed_on_disk_asks_first() {
         host.ui().prompts.lock().unwrap().clear();
     };
     let name = path.to_str().unwrap().to_string();
-    // n: 書き換えない。? や C-h は説明を出して聞き直し、ほかのキーも聞き直す
+    // n: 書き換えない. ? や C-h は説明を出して聞き直し, ほかのキーも聞き直す
     keys(&["?", "C-h", "q", "n"]);
     assert_eq!(
         eval("(insert \"x\")"),
@@ -1012,7 +1012,7 @@ fn test_editing_a_file_changed_on_disk_asks_first() {
         eval("(condition-case e (insert \"x\") (file-error (car e)))"),
         "file-supersession"
     );
-    // y: 書き換える。続きの書き換えは、聞かない
+    // y: 書き換える. 続きの書き換えは, 聞かない
     keys(&["y"]);
     assert_eq!(
         eval("(insert \"x\") (insert \"y\") (buffer-string)"),
@@ -1040,7 +1040,7 @@ fn test_editing_a_file_changed_on_disk_can_revert_it() {
         .unwrap()
         .set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(120))
         .unwrap();
-    // r: ファイルを読み直して、書き換えは取り消す
+    // r: ファイルを読み直して, 書き換えは取り消す
     *host.ui().keys.lock().unwrap() = vec!["r".to_string()];
     let name = path.to_str().unwrap();
     assert_eq!(eval("(insert \"x\")"), format!("ERR File reverted: {name}"));
@@ -1048,13 +1048,13 @@ fn test_editing_a_file_changed_on_disk_can_revert_it() {
         eval("(list (buffer-string) (buffer-modified-p))"),
         "(\"newer\\n\" #f)"
     );
-    // 読み直したあとは、聞かずに書き換えられる
+    // 読み直したあとは, 聞かずに書き換えられる
     assert_eq!(eval("(insert \"x\") (buffer-string)"), "\"xnewer\\n\"");
-    // 読み直せない (ファイルを読めない) ときは、失敗する
+    // 読み直せない (ファイルを読めない) ときは, 失敗する
     let (_dir2, path2, ev2, host2) = stale_file("a\n");
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(&path2, std::fs::Permissions::from_mode(0o000)).unwrap();
-    // 管理者は、読めてしまう
+    // 管理者は, 読めてしまう
     if std::fs::read_to_string(&path2).is_err() {
         *host2.ui().keys.lock().unwrap() = vec!["r".to_string()];
         let error = ev2.eval_with("(insert \"x\")", &host2).unwrap_err();
@@ -1080,7 +1080,7 @@ fn test_editing_a_file_changed_on_disk_in_batch_mode() {
 #[test]
 fn test_set_tab_bar_takes_a_list_of_names() {
     assert_eq!(run_last("(set-tab-bar '(\"a\" \"b\") 1)"), "nil");
-    // 名前の並びでなければ、タブの行を出さない
+    // 名前の並びでなければ, タブの行を出さない
     assert_eq!(run_last("(set-tab-bar 5 0)"), "nil");
     assert!(
         run_last("(set-tab-bar '(1) 0)").starts_with("ERR set-tab-bar: tab names must be strings")

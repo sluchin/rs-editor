@@ -206,9 +206,9 @@ describe('WindowView', () => {
 
   it('核が返した字句 (種類と範囲) を、種類ごとのクラスで色付けすること', () => {
     const { rerender, view } = setup()
-    // 字句が無ければ、印は付かない
+    // 字句が無ければ, 印は付かない
     expect(view.container.querySelector('[class*="cm-tok-"]')).toBeNull()
-    // 本文 `(foo bar)\nline 2` (長さ 16). 空の範囲と、本文より先へ出る範囲は、飛ばす
+    // 本文 `(foo bar)\nline 2` (長さ 16). 空の範囲と, 本文より先へ出る範囲は, 飛ばす
     rerender({
       tokens: [
         { from: 1, to: 4, kind: 'keyword' },
@@ -223,7 +223,7 @@ describe('WindowView', () => {
     expect(view.container.querySelector('.cm-tok-comment')?.textContent).toBe('line')
     expect(view.container.querySelector('.cm-tok-string')).toBeNull()
     expect(view.container.querySelector('.cm-tok-type')).toBeNull()
-    // 本文の長さが変わったら、作り直す (さっき飛ばした範囲が、収まる)
+    // 本文の長さが変わったら, 作り直す (さっき飛ばした範囲が, 収まる)
     rerender({ entry: entryOf('(foo bar)\nline 2 and more text') })
     expect(view.container.querySelector('.cm-tok-type')?.textContent).toBe('ne 2 and more text')
     view.unmount()

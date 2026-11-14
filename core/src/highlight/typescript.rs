@@ -1,16 +1,16 @@
-//! TypeScript のシンタックスハイライト. emacs-typescript/typescript-mode (`typescript-mode.el` 0.4 以降) の font-lock と同じ所に、同じ色を付けます.
+//! TypeScript のシンタックスハイライト. emacs-typescript/typescript-mode (`typescript-mode.el` 0.4 以降) の font-lock と同じ所に, 同じ色を付けます.
 //!
-//! typescript-mode は、構文表 (コメントと文字列) と、`typescript-syntax-propertize` (正規表現のリテラル) と、
-//! `typescript--font-lock-keywords-4` (正規表現と、括弧を読む関数の並び) で色を付けます. ここでも同じ形です.
-//! 構文を先に読み (`syntax`)、次に規則を上から順に当てて、文字ごとの種類を決めます (`paint.rs`. 先に付いた色を上書きしない決まりも、Emacs と同じ).
+//! typescript-mode は, 構文表 (コメントと文字列) と, `typescript-syntax-propertize` (正規表現のリテラル) と,
+//! `typescript--font-lock-keywords-4` (正規表現と, 括弧を読む関数の並び) で色を付けます. ここでも同じ形です.
+//! 構文を先に読み (`syntax`), 次に規則を上から順に当てて, 文字ごとの種類を決めます (`paint.rs`. 先に付いた色を上書きしない決まりも, Emacs と同じ).
 //!
-//! 色が付く所 (Emacs の face): キーワードと、`this.`、修飾子 (`private` など)、組み込みの型 `number` など、`=>`、`${` と `}` (keyword)、
-//! `true` `null` `undefined` など (constant)、`class` `interface` `type` `enum` `extends` `new` の次の名前と、`: Foo` の型 (type)、
-//! `function` の名前と、`name(` の呼び出しと、`@decorator` (function-name)、`const` の名前と、`function` と method の引数 (variable-name)、
+//! 色が付く所 (Emacs の face): キーワードと, `this.`, 修飾子 (`private` など), 組み込みの型 `number` など, `=>`, `${` と `}` (keyword),
+//! `true` `null` `undefined` など (constant), `class` `interface` `type` `enum` `extends` `new` の次の名前と, `: Foo` の型 (type),
+//! `function` の名前と, `name(` の呼び出しと, `@decorator` (function-name), `const` の名前と, `function` と method の引数 (variable-name),
 //! `// tslint:...` (preprocessor).
 //!
-//! 移していないもの (今は、色が付かない): JSDoc の `@param` などの色 (typescript-mode は独自の face)、アロー関数の引数、
-//! `class` の framework (Dojo, ExtJS など) の宣言、`implements` と型引数の細かい形.
+//! 移していないもの (今は, 色が付かない): JSDoc の `@param` などの色 (typescript-mode は独自の face), アロー関数の引数,
+//! `class` の framework (Dojo, ExtJS など) の宣言, `implements` と型引数の細かい形.
 
 use std::sync::OnceLock;
 
@@ -251,7 +251,7 @@ const CONSTANTS: &[&str] = &[
 /// 識別子 (`typescript--name-re`).
 const NAME: &str = r"[a-zA-Z_$][\w$]*";
 
-/// 型の名前 (`typescript--type-name-re`. 大文字で始まり、2 文字以上).
+/// 型の名前 (`typescript--type-name-re`. 大文字で始まり, 2 文字以上).
 const TYPE_NAME: &str = r"(?:[A-Z][A-Za-z0-9]+\.)*(?:[A-Z][A-Za-z0-9]+)";
 
 /// 空白 (構文表の空白. 改行は含まない).
@@ -416,10 +416,10 @@ enum Class {
     Regex,
 }
 
-/// 正規表現の括弧 1 つの色 (括弧の番号, 種類 (`None` は、色を消す), 色の付け方).
+/// 正規表現の括弧 1 つの色 (括弧の番号, 種類 (`None` は, 色を消す), 色の付け方).
 type Group = (usize, Option<TokenKind>, Fill);
 
-/// 本文と、文字ごとの種類と、構文.
+/// 本文と, 文字ごとの種類と, 構文.
 struct Ts<'a> {
     /// 本文.
     text: &'a str,
@@ -427,11 +427,11 @@ struct Ts<'a> {
     p: Painter,
     /// 文字ごとの構文上の種類.
     class: Vec<Class>,
-    /// 文字を含む、コメントか文字列の終わり (コード、は、その文字の次).
+    /// 文字を含む, コメントか文字列の終わり (コード, は, その文字の次).
     run_end: Vec<usize>,
 }
 
-/// 語の文字か (構文表の語. `_` と `$` は、記号).
+/// 語の文字か (構文表の語. `_` と `$` は, 記号).
 fn is_word(c: char) -> bool {
     c.is_alphanumeric()
 }
@@ -454,7 +454,7 @@ impl Ts<'_> {
             .unwrap_or(self.len())
     }
 
-    /// 構文を読んで、コメントと文字列と正規表現のリテラルに、種類を付けます.
+    /// 構文を読んで, コメントと文字列と正規表現のリテラルに, 種類を付けます.
     fn syntax(&mut self) {
         let n = self.len();
         let mut i = 0;
@@ -497,7 +497,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `from` から `to` の前までを、種類 `class` にします.
+    /// `from` から `to` の前までを, 種類 `class` にします.
     ///
     /// # Returns
     ///
@@ -513,7 +513,7 @@ impl Ts<'_> {
         to
     }
 
-    /// `i` の `/` が、正規表現のリテラルの始まりか (`typescript-syntax-propagate` の規則).
+    /// `i` の `/` が, 正規表現のリテラルの始まりか (`typescript-syntax-propagate` の規則).
     fn regex_starts(&self, i: usize) -> bool {
         let next = self.p.at(i + 1);
         if i + 1 >= self.len() || next == '/' || next == '*' {
@@ -529,7 +529,7 @@ impl Ts<'_> {
             return true;
         }
         if at_line_start {
-            // 行の始め (空白があれば、前のコードの終わりが、式の始まりのときだけ)
+            // 行の始め (空白があれば, 前のコードの終わりが, 式の始まりのときだけ)
             if k == i {
                 return true;
             }
@@ -544,7 +544,7 @@ impl Ts<'_> {
         chars[start..word_end].iter().collect::<String>() == "return"
     }
 
-    /// `pos` の前の、空白とコメントを除いた文字が、`=({[,:;` か、本文の始め.
+    /// `pos` の前の, 空白とコメントを除いた文字が, `=({[,:;` か, 本文の始め.
     fn after_operator(&self, pos: usize) -> bool {
         let mut k = pos;
         while k > 0 {
@@ -599,29 +599,29 @@ impl Ts<'_> {
                 j += 1;
             }
         }
-        // 閉じない (次の、正規表現の始まりの `/` までが、文字列. 他の `/` には、文字列の終わりの印が付かない)
+        // 閉じない (次の, 正規表現の始まりの `/` までが, 文字列. 他の `/` には, 文字列の終わりの印が付かない)
         (j..n)
             .find(|&k| chars[k] == '/' && self.regex_starts(k))
             .map_or(n, |k| k + 1)
     }
 
-    /// 正規表現で見つけた範囲 (バイト) を、文字の範囲にします.
+    /// 正規表現で見つけた範囲 (バイト) を, 文字の範囲にします.
     fn span_of(&self, m: regex::Match<'_>) -> (usize, usize) {
         (self.p.char_of[m.start()], self.p.char_of[m.end()])
     }
 
-    /// 規則 1 つを、本文の全体に当てます.
+    /// 規則 1 つを, 本文の全体に当てます.
     ///
     /// # Arguments
     ///
-    /// * `groups` - (括弧の番号, 種類 (`None` は、色を消す), 色の付け方).
+    /// * `groups` - (括弧の番号, 種類 (`None` は, 色を消す), 色の付け方).
     fn apply(&mut self, re: &Regex, groups: &[Group]) {
         for caps in re.captures_iter(self.text) {
             self.paint_groups(&caps, groups);
         }
     }
 
-    /// 1 回の一致の、括弧ごとの色を付けます.
+    /// 1 回の一致の, 括弧ごとの色を付けます.
     fn paint_groups(&mut self, caps: &Captures<'_>, groups: &[Group]) {
         for &(group, kind, fill) in groups {
             if let Some(m) = caps.get(group) {
@@ -631,7 +631,7 @@ impl Ts<'_> {
         }
     }
 
-    /// 空白とコメントを、`limit` まで読み飛ばします (Emacs の `forward-comment`).
+    /// 空白とコメントを, `limit` まで読み飛ばします (Emacs の `forward-comment`).
     fn forward_comment(&self, mut pos: usize, limit: usize) -> usize {
         while pos < limit
             && (self.p.chars[pos].is_whitespace() || self.class[pos] == Class::Comment)
@@ -645,8 +645,8 @@ impl Ts<'_> {
         pos
     }
 
-    /// 次の式の終わり (Emacs の `forward-sexp`). 閉じ括弧に当たるか、括弧が閉じなければ `None`.
-    /// 式が無ければ、`limit`.
+    /// 次の式の終わり (Emacs の `forward-sexp`). 閉じ括弧に当たるか, 括弧が閉じなければ `None`.
+    /// 式が無ければ, `limit`.
     fn forward_sexp(&self, mut pos: usize, limit: usize) -> Option<usize> {
         while pos < limit {
             let c = self.p.chars[pos];
@@ -698,7 +698,7 @@ impl Ts<'_> {
         None
     }
 
-    /// 括弧の中の `pos` から、それを囲む閉じ括弧の次 (Emacs の `up-list`). 無ければ `None`.
+    /// 括弧の中の `pos` から, それを囲む閉じ括弧の次 (Emacs の `up-list`). 無ければ `None`.
     fn up_list(&self, mut pos: usize) -> Option<usize> {
         let mut depth = 0usize;
         while pos < self.len() {
@@ -721,7 +721,7 @@ impl Ts<'_> {
         None
     }
 
-    /// `pos` から `limit` の手前までに、名前があれば、その終わり.
+    /// `pos` から `limit` の手前までに, 名前があればその終わり.
     fn name_at(&self, pos: usize, limit: usize) -> Option<usize> {
         let c = *self.p.chars.get(pos).filter(|_| pos < limit)?;
         if !(c.is_ascii_alphabetic() || c == '_' || c == '$') {
@@ -738,11 +738,11 @@ impl Ts<'_> {
     ///
     /// # Arguments
     ///
-    /// * `paint` - 名前に、変数の色を付けるか.
+    /// * `paint` - 名前に, 変数の色を付けるか.
     ///
     /// # Returns
     ///
-    /// 閉じる括弧まで読めたか. 読んだ所まで、`pos` を進める.
+    /// 閉じる括弧まで読めたか. 読んだ所まで, `pos` を進める.
     fn destructuring(&mut self, pos: &mut usize, limit: usize, paint: bool) -> bool {
         match self.p.at(*pos) {
             '[' if *pos < limit => {
@@ -807,7 +807,7 @@ impl Ts<'_> {
         }
     }
 
-    /// 変数の名前に、色を付けます (`paint` が真のとき).
+    /// 変数の名前に, 色を付けます (`paint` が真のとき).
     fn paint_variable(&mut self, from: usize, to: usize, paint: bool) {
         if paint {
             self.p
@@ -815,11 +815,11 @@ impl Ts<'_> {
         }
     }
 
-    /// 式 1 つを、行の終わりか、`, ; ] ) }` まで読み飛ばします (`typescript--forward-expression`. 行をまたぐ式は読まない).
+    /// 式 1 つを, 行の終わりか, `, ; ]) }` まで読み飛ばします (`typescript--forward-expression`. 行をまたぐ式は読まない).
     ///
     /// # Returns
     ///
-    /// 読めたか (括弧が閉じなければ、偽).
+    /// 読めたか (括弧が閉じなければ偽).
     fn forward_expression(&self, pos: &mut usize, limit: usize) -> bool {
         *pos = self.forward_comment(*pos, limit);
         loop {
@@ -837,7 +837,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `const` `let` `var` の次の、変数の名前 (`typescript--variable-decl-matcher`. 行の終わりまでを読む).
+    /// `const` `let` `var` の次の, 変数の名前 (`typescript--variable-decl-matcher`. 行の終わりまでを読む).
     fn variable_declaration(&mut self, start: usize) {
         let limit = self.line_end(start);
         let mut pos = self.forward_comment(start, limit);
@@ -886,7 +886,7 @@ impl Ts<'_> {
             if ender.as_str() != ":" {
                 continue;
             }
-            // 型の指定を、次の引数か、引数の終わりまで読み飛ばす
+            // 型の指定を, 次の引数か, 引数の終わりまで読み飛ばす
             while let Some(m) = res.argument_type.find_at(hay, at) {
                 if m.as_str().contains("=>") {
                     at = m.end();
@@ -898,11 +898,11 @@ impl Ts<'_> {
         }
     }
 
-    /// `name(` の `(` の直後 `after` が、メソッドの定義の引数か (`typescript--font-lock-keywords-3` の最後の規則).
+    /// `name(` の `(` の直後 `after` が, メソッドの定義の引数か (`typescript--font-lock-keywords-3` の最後の規則).
     ///
     /// # Returns
     ///
-    /// 引数の並びの終わり `close` (`)` の次) が、メソッドの定義なら真.
+    /// 引数の並びの終わり `close` (`)` の次) が, メソッドの定義なら真.
     fn method_definition(&self, after: usize, close: usize) -> bool {
         let n = self.len();
         let mut k = close;
@@ -914,7 +914,7 @@ impl Ts<'_> {
         if !(brace || colon) {
             return false;
         }
-        // 名前の語がキーワードなら、定義ではない (`if (x) {` など)
+        // 名前の語がキーワードなら, 定義ではない (`if (x) {` など)
         let mut end = after - 1;
         while end > 0 && !is_word(self.p.chars[end - 1]) {
             end -= 1;
@@ -926,7 +926,7 @@ impl Ts<'_> {
         end == 0 || self.p.kinds[word] != Some(TokenKind::Keyword)
     }
 
-    /// `(` の位置 `open` の前の式の、さらに前の文字が、`?` でないか (三項演算子ではないか).
+    /// `(` の位置 `open` の前の式の, さらに前の文字が, `?` でないか (三項演算子ではないか).
     fn not_ternary(&self, open: usize) -> bool {
         // 名前 (語と記号の並び) の始めまで戻る
         let mut k = open;
@@ -942,7 +942,7 @@ impl Ts<'_> {
         !(k > 0 && self.p.chars[k - 1] == '?')
     }
 
-    /// 型の引数の規則 (`NAME<T` の後ろの、行の終わりまでの名前を、型にする).
+    /// 型の引数の規則 (`NAME<T` の後ろの, 行の終わりまでの名前を, 型にする).
     fn generics(&mut self) {
         let res = res();
         let mut at = 0;
@@ -961,7 +961,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `implements A, B` の名前を、型にする.
+    /// `implements A, B` の名前を, 型にする.
     fn implements(&mut self) {
         let res = res();
         for m in res.implements.find_iter(self.text) {
@@ -976,7 +976,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `{ class: 1 }` のように、キーになるキーワードの色を消す.
+    /// `{ class: 1 }` のように, キーになるキーワードの色を消す.
     fn brace_keys(&mut self) {
         let res = res();
         for (open, c) in self.p.chars.clone().into_iter().enumerate() {
@@ -996,7 +996,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `pos` の前の、空白とコメントを読み飛ばした位置 (`typescript--backward-syntactic-ws`).
+    /// `pos` の前の, 空白とコメントを読み飛ばした位置 (`typescript--backward-syntactic-ws`).
     fn back_ws(&self, mut pos: usize) -> usize {
         while pos > 0 {
             if self.p.chars[pos - 1].is_whitespace() {
@@ -1069,7 +1069,7 @@ impl Ts<'_> {
         Some(0)
     }
 
-    /// ジェネリクスの `>` の位置 `close` から戻って、対応する `<` の位置 (`typescript--backward-over-generic-parameter-list`).
+    /// ジェネリクスの `>` の位置 `close` から戻って, 対応する `<` の位置 (`typescript--backward-over-generic-parameter-list`).
     fn back_over_generic(&self, close: usize) -> Option<usize> {
         let mut depth = 1usize;
         let mut k = close;
@@ -1088,7 +1088,7 @@ impl Ts<'_> {
         Some(k)
     }
 
-    /// 関数の本体の `{` (位置 `brace`) から戻って、引数の並びの終わり (`)` の次) を探す (`typescript--backward-to-parameter-list`).
+    /// 関数の本体の `{` (位置 `brace`) から戻って, 引数の並びの終わり (`)` の次) を探す (`typescript--backward-to-parameter-list`).
     fn back_to_parameters(&self, brace: usize) -> Option<usize> {
         let res = res();
         // 戻り値の型の指定がある形
@@ -1145,7 +1145,7 @@ impl Ts<'_> {
         })
     }
 
-    /// `pos` の前の語が、`if (` などの制御構文か.
+    /// `pos` の前の語が, `if (` などの制御構文か.
     fn control_before(&self, pos: usize) -> bool {
         let mut end = pos;
         while end > 0 && !is_word(self.p.chars[end - 1]) {
@@ -1155,7 +1155,7 @@ impl Ts<'_> {
         while word > 0 && is_word(self.p.chars[word - 1]) {
             word -= 1;
         }
-        // `backward-word` は、語の始めへ. そこから前向きに照合する
+        // `backward-word` は, 語の始めへ. そこから前向きに照合する
         let hay = &self.text[self.p.byte_of[word]..];
         res().control_call.is_match(hay)
     }
@@ -1174,7 +1174,7 @@ impl Ts<'_> {
         }
     }
 
-    /// `function` の引数と、メソッドの定義の引数.
+    /// `function` の引数と, メソッドの定義の引数.
     fn arguments(&mut self) {
         let res = res();
         for m in res.function.find_iter(self.text) {
@@ -1182,7 +1182,7 @@ impl Ts<'_> {
             let limit = self.up_list(end).unwrap_or(end);
             self.function_arguments(end.saturating_sub(1), limit);
         }
-        // アロー関数 (`=> {`) の `=>` は、キーワード. 引数は、そこから戻って探す
+        // アロー関数 (`=> {`) の `=>` は, キーワード. 引数は, そこから戻って探す
         self.apply(
             &res.arrow_block,
             &[(1, Some(TokenKind::Keyword), Fill::Whole)],
@@ -1193,7 +1193,7 @@ impl Ts<'_> {
             if self.class[end - 1] != Class::Code {
                 continue;
             }
-            // メソッドの定義なら、引数の並びを読む. そうでなければ、`)` の後ろから行の終わりまでを読む (Emacs は、探す範囲の限界を行の終わりにする)
+            // メソッドの定義なら引数の並びを読む. そうでなければ, `)` の後ろから行の終わりまでを読む (Emacs は, 探す範囲の限界を行の終わりにする)
             let close = self.up_list(end);
             match close.filter(|&close| self.method_definition(end, close)) {
                 Some(close) => self.function_arguments(end, close),
@@ -1210,7 +1210,7 @@ impl Ts<'_> {
 ///
 /// # Returns
 ///
-/// 範囲の並び (始まりの順. 重ならない. 行をまたがない. 続く同じ種類の範囲は、1 つにする).
+/// 範囲の並び (始まりの順. 重ならない. 行をまたがない. 続く同じ種類の範囲は, 1 つにする).
 pub(super) fn tokenize(text: &str) -> Vec<Span> {
     let p = Painter::new(text);
     let n = p.chars.len();
@@ -1226,7 +1226,7 @@ pub(super) fn tokenize(text: &str) -> Vec<Span> {
 }
 
 impl Ts<'_> {
-    /// 規則を、`typescript--font-lock-keywords-4` の並びで当てます.
+    /// 規則を, `typescript--font-lock-keywords-4` の並びで当てます.
     fn rules(&mut self) {
         use Fill::{Over, Whole};
         use TokenKind::{Constant, FunctionName, Keyword, Type, VariableName};
@@ -1294,7 +1294,7 @@ impl Ts<'_> {
         }
     }
 
-    /// 位置 `pos` (文字の間) が、`/**` で始まるコメントの中か.
+    /// 位置 `pos` (文字の間) が, `/**` で始まるコメントの中か.
     fn in_documentation(&self, pos: usize) -> bool {
         if pos == 0 || self.class[pos - 1] != Class::Comment {
             return false;

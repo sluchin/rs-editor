@@ -28,7 +28,7 @@ impl KillRing {
         self.items.is_empty()
     }
 
-    /// kill-ring の先頭 (一番新しい kill. Emacs の `(car kill-ring)`). 次に貼るものとは、限らない.
+    /// kill-ring の先頭 (一番新しい kill. Emacs の `(car kill-ring)`). 次に貼るものとは, 限らない.
     pub fn head(&self) -> Option<&str> {
         self.items.first().map(String::as_str)
     }
@@ -49,7 +49,7 @@ impl KillRing {
         self.pointer = 0;
     }
 
-    /// 先頭のものに文字を足します (Emacs の `kill-append`). 空なら, 新しく入れる.
+    /// 先頭のものに文字を足します (Emacs の `kill-append`). 空なら新しく入れる.
     ///
     /// # Arguments
     ///

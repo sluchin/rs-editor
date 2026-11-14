@@ -32,7 +32,7 @@ fn line_end(source: &Source, pos: usize) -> usize {
     p
 }
 
-/// 次の行の始めを返します (Emacs の `(forward-line 1)`. 最後の行なら, 本文の終わり).
+/// 次の行の始めを返します (Emacs の `(forward-line 1)`. 最後の行なら本文の終わり).
 fn next_line(source: &Source, pos: usize) -> usize {
     let end = line_end(source, pos);
     if end < source.size() {
@@ -46,7 +46,7 @@ fn next_line(source: &Source, pos: usize) -> usize {
 ///
 /// # Returns
 ///
-/// 越えた後の位置. 式が無ければ, 範囲の終わり.
+/// 越えた後の位置. 式が無ければ範囲の終わり.
 ///
 /// # Errors
 ///
@@ -90,7 +90,7 @@ pub fn up_list(source: &Source, pos: usize, count: i64) -> Result<usize, MotionE
             Ok(Some(found)) => pos = found,
             _ => {
                 let start = state.start.unwrap_or(0);
-                // コメントの後ろ (閉じていなければ, まだコメントの中)
+                // コメントの後ろ (閉じていなければまだコメントの中)
                 let after = if state.in_comment && inc > 0 {
                     source.forward_comment(start, 1)
                 } else {
@@ -112,7 +112,7 @@ pub fn up_list(source: &Source, pos: usize, count: i64) -> Result<usize, MotionE
                     pos = after;
                     arg += inc;
                 } else {
-                    // コメントの中なら, コメントの外 (閉じていなければ, 終わり) まで動いてから失敗する
+                    // コメントの中なら, コメントの外 (閉じていなければ終わり) まで動いてから失敗する
                     if state.in_comment {
                         pos = after;
                     }
@@ -144,7 +144,7 @@ fn starts_defun(source: &Source, at: usize) -> bool {
 ///
 /// # Returns
 ///
-/// 見つけた括弧の位置と, 見つけたか. 見つからなければ, 本文の端.
+/// 見つけた括弧の位置と, 見つけたか. 見つからなければ本文の端.
 fn beginning_of_defun_raw(source: &Source, pos: usize, forward: bool) -> (usize, bool) {
     let len = source.size();
     let mut p = if forward && pos < len { pos + 1 } else { pos };
@@ -169,7 +169,7 @@ fn beginning_of_defun_raw(source: &Source, pos: usize, forward: bool) -> (usize,
 ///
 /// # Returns
 ///
-/// 動いた後の位置. defun が無ければ, 本文の始め.
+/// 動いた後の位置. defun が無ければ本文の始め.
 pub fn beginning_of_defun(source: &Source, pos: usize) -> usize {
     beginning_of_defun_raw(source, pos, false).0
 }

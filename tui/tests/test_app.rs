@@ -1,4 +1,4 @@
-//! ターミナルのエディタ (`app`) のテスト: キーを送って、本文、カーソル、画面、エコー領域を確かめる.
+//! ターミナルのエディタ (`app`) のテスト: キーを送って, 本文, カーソル, 画面, エコー領域を確かめる.
 
 mod common;
 use common::Fixture;
@@ -71,7 +71,7 @@ fn test_lines_and_the_goal_column() {
     let mut fx = Fixture::new();
     fx.press("a b c d e RET a RET a b c");
     assert_eq!(fx.text(), "abcde\na\nabc");
-    // 短い行を通っても、元の桁に戻る
+    // 短い行を通っても, 元の桁に戻る
     fx.press("C-p C-p");
     assert_eq!(fx.point(), 3);
     fx.press("C-n");
@@ -117,13 +117,13 @@ fn test_kill_yank_and_undo() {
     fx.press("a b c RET d e f");
     fx.press("C-p C-a C-k");
     assert_eq!(fx.text(), "\ndef");
-    // 続けて殺すと、1 つにまとまる
+    // 続けて殺すと, 1 つにまとまる
     fx.press("C-k");
     assert_eq!(fx.text(), "def");
     fx.press("C-y");
     assert_eq!(fx.text(), "abc\ndef");
     assert_eq!(fx.point(), 4);
-    // 殺して、文字を入れ、貼る。yank-pop で前のものに替える
+    // 殺して, 文字を入れ, 貼る. yank-pop で前のものに替える
     fx.press("C-a C-k");
     assert_eq!(fx.text(), "abc\n");
     fx.press("x y");
@@ -132,7 +132,7 @@ fn test_kill_yank_and_undo() {
     assert_eq!(fx.text(), "abc\nxydef");
     fx.press("M-y");
     assert_eq!(fx.text(), "abc\nxyabc\n");
-    // undo を続けると、1 つずつ戻る
+    // undo を続けると, 1 つずつ戻る
     fx.press("C-/");
     assert_eq!(fx.text(), "abc\nxydef");
     fx.press("C-/");
@@ -140,7 +140,7 @@ fn test_kill_yank_and_undo() {
     fx.press("C-/ C-/");
     assert_eq!(fx.text(), "abc\n");
     assert_eq!(fx.app.message(), "Undo");
-    // 別のコマンドを挟むと、最初から (戻したことも、戻せる)
+    // 別のコマンドを挟むと, 最初から (戻したことも戻せる)
     fx.press("C-a C-/");
     assert_eq!(fx.text(), "abc\nx");
 }
@@ -210,7 +210,7 @@ fn test_prefix_arguments() {
     fx.press("C-u 2 C-u C-f");
     assert_eq!(fx.app.eval("prefix-arg").unwrap(), "#f");
     assert_eq!(fx.app.host().editor().prefix_arg, None);
-    // 数字は前置引数が無ければ、文字
+    // 数字は前置引数が無ければ, 文字
     fx.press("5");
     assert_eq!(fx.text().chars().nth(fx.point() - 1), Some('5'));
 }
@@ -243,7 +243,7 @@ fn test_lisp_key_bindings_and_eval() {
     assert_eq!(fx.text(), "hello");
     assert_eq!(fx.app.eval("(+ 1 2)").unwrap(), "3");
     assert!(fx.app.eval("(car 1)").is_err());
-    // this-command を数にするコマンドでも、前のコマンドは名前になる
+    // this-command を数にするコマンドでも, 前のコマンドは名前になる
     fx.app
         .eval("(define-command (weird) (set! this-command 5))")
         .unwrap();
@@ -301,7 +301,7 @@ fn test_run_loop_and_quit() {
     fx.feed("a b C-x C-c");
     fx.app.run();
     assert_eq!(fx.text(), "ab");
-    // 変更したが、ファイルのバッファでないので、聞かずに終わる
+    // 変更したが, ファイルのバッファでないので, 聞かずに終わる
     assert!(fx.app.quit());
     // 入力が終わっても終わる
     let mut fx = Fixture::new();
@@ -330,12 +330,12 @@ fn test_opening_files_from_the_arguments() {
         fx.app.host().editor().buffer_list(),
         vec!["*scratch*", "a.txt", "b.txt"]
     );
-    // 開けないものは、始められない
+    // 開けないものは, 始められない
     let bad = dir.path().join("bad.bin");
     std::fs::write(&bad, [0xff, 0xfe]).unwrap();
     let bad_arg = [bad.to_str().unwrap().to_string()];
     assert!(Fixture::sized(12, 30, &bad_arg).is_err());
-    // ディレクトリは、dired で開く
+    // ディレクトリは, dired で開く
     let dir_arg = [dir.path().to_str().unwrap().to_string()];
     assert!(Fixture::sized(12, 30, &dir_arg).is_ok());
 }
@@ -349,7 +349,7 @@ fn test_editing_keys_of_step_3() {
     assert_eq!(fx.text(), "abdc");
     fx.press("SPC e f SPC g h M-b M-t");
     assert_eq!(fx.text(), "abdc gh ef");
-    // C-o: 改行を入れて、カーソルは前. C-M-o: 行を分ける
+    // C-o: 改行を入れてカーソルは前. C-M-o: 行を分ける
     let mut fx = Fixture::new();
     fx.press("a b c d");
     fx.press("C-b C-b C-o");
@@ -463,7 +463,7 @@ fn test_kill_append_buffer_insert_and_redo_keys() {
     fx.press("a b c SPC d e f");
     fx.press("C-a M-d C-M-w M-d");
     fx.press("C-y");
-    // 続けて 2 つ殺して、1 つにまとめる (C-M-w)
+    // 続けて 2 つ殺して, 1 つにまとめる (C-M-w)
     assert_eq!(fx.text(), "abc def");
     // undo-redo (C-M-_): 元に戻したことをやり直す
     fx.press("C-/");
@@ -485,7 +485,7 @@ fn test_kill_append_buffer_insert_and_redo_keys() {
     fx.feed("o t h e r RET");
     fx.press("C-x x i");
     assert_eq!(fx.text(), "OTHER");
-    // M-j: 改行して、空白を整える
+    // M-j: 改行して, 空白を整える
     let mut fx = Fixture::new();
     fx.press("a SPC SPC b C-b C-b M-j");
     assert_eq!(fx.text(), "a\nb");
@@ -562,7 +562,7 @@ fn test_incremental_search() {
     // 2 つ目の foo の後ろ
     assert_eq!(fx.point(), 11);
     fx.press("C-a");
-    // 見つからなければ, 最後に合った所のまま. C-g で戻って, C-g でやめる
+    // 見つからなければ最後に合った所のまま. C-g で戻って, C-g でやめる
     fx.feed("f o x C-g C-g");
     fx.press("C-s");
     assert_eq!(fx.point(), 0);
@@ -1242,7 +1242,7 @@ fn test_scroll_other_window_and_move_to_window_line() {
     assert_eq!(fx.point(), 27);
     fx.press("M-r");
     assert_eq!(fx.point(), 15);
-    // 数を付けると, その行 (負なら, 下から)
+    // 数を付けると, その行 (負なら下から)
     assert_eq!(fx.app.eval("(move-to-window-line 3)").unwrap(), "3");
     assert_eq!(fx.point(), 9);
     assert_eq!(fx.app.eval("(move-to-window-line -2)").unwrap(), "8");
@@ -1489,7 +1489,7 @@ fn test_auto_save_every_300_keys() {
     std::fs::write(&file, "hi\n").unwrap();
     let mut fx = Fixture::sized(12, 30, &[file.to_string_lossy().into_owned()]).unwrap();
     let auto = dir.path().join("#a.txt#");
-    // 画面から読んだ 300 個のキーの、1 個目で本文を書き換え、あとは動くだけ
+    // 画面から読んだ 300 個のキーの, 1 個目で本文を書き換え, あとは動くだけ
     fx.feed("x");
     for _ in 1..299 {
         fx.feed("C-f");
@@ -1500,7 +1500,7 @@ fn test_auto_save_every_300_keys() {
     fx.app.run();
     assert_eq!(std::fs::read_to_string(&auto).unwrap(), "xhi\n");
     assert_eq!(fx.app.message(), "Auto-saving...done");
-    // 書いたら、数え直す
+    // 書いたら, 数え直す
     assert_eq!(fx.app.host().editor().keys_since_auto_save, 0);
 }
 
@@ -1524,13 +1524,13 @@ fn test_auto_save_when_the_input_stops() {
 #[test]
 fn test_c_g_stops_a_macro_that_never_fails() {
     let mut fx = Fixture::new();
-    // 失敗しないマクロを、失敗するまで繰り返す。画面で C-g を押していれば、止める
+    // 失敗しないマクロを, 失敗するまで繰り返す. 画面で C-g を押していれば, 止める
     fx.app.eval("(execute-kbd-macro '(\"x\") 0)").unwrap();
     fx.feed("C-g");
     fx.app.run();
     assert_eq!(fx.text(), "");
     assert_eq!(fx.app.message(), "Quit");
-    // C-g 以外のキーは、読まずに残す
+    // C-g 以外のキーは, 読まずに残す
     fx.app.eval("(execute-kbd-macro '(\"y\") 2)").unwrap();
     fx.feed("a");
     fx.app.run();
@@ -1772,7 +1772,7 @@ fn test_defun_motions_and_insertions_set_the_mark_without_selecting() {
     fx.feed(&typed("scheme-mode\n"));
     fx.press("M-x");
     fx.press(&typed("(defun a ()\n  1)\n\n(defun b ()\n  2)\n"));
-    // C-M-a は、動く前の位置にマークを置く (リージョンは選ばない)
+    // C-M-a は, 動く前の位置にマークを置く (リージョンは選ばない)
     fx.press("C-p");
     let before = fx.point();
     fx.press("C-M-a");

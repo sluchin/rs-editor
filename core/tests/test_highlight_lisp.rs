@@ -1,5 +1,5 @@
 //! Lisp (Scheme と Emacs Lisp) のシンタックスハイライト (`core/src/highlight/lisp.rs`) のテスト.
-//! 期待値は、Emacs 30 の `scheme-mode` と `emacs-lisp-mode` の font-lock の結果 (`tests/lisp-highlight/` で、同じ入力を Emacs と比べる).
+//! 期待値は, Emacs 30 の `scheme-mode` と `emacs-lisp-mode` の font-lock の結果 (`tests/lisp-highlight/` で, 同じ入力を Emacs と比べる).
 
 use rseditor_core::editor::Editor;
 use rseditor_core::highlight::{tokenize, Language};
@@ -8,7 +8,7 @@ use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
-/// 字句に分けて、(本文の中の文字列, 種類の名前) の並びにする (括弧と、色の付かない字句は含まない).
+/// 字句に分けて, (本文の中の文字列, 種類の名前) の並びにする (括弧と, 色の付かない字句は含まない).
 fn lex(language: Language, lines: &[&str]) -> Vec<(String, &'static str)> {
     let text = lines.join("\n");
     let chars: Vec<char> = text.chars().collect();
@@ -59,7 +59,7 @@ fn test_scheme_special_forms_and_defined_names() {
         scheme(&["(define-module (a b))"]),
         tokens(&[("define-module", "keyword"), ("a", "type")])
     );
-    // define-command は、Emacs と同じく色を付けない
+    // define-command は, Emacs と同じく色を付けない
     assert_eq!(
         scheme(&["(define-command hello (lambda () 1))"]),
         tokens(&[("lambda", "keyword")])
@@ -80,14 +80,14 @@ fn test_scheme_special_forms_and_defined_names() {
             ("import", "keyword"),
         ])
     );
-    // ( の直後でなければ、キーワードでも色を付けない. [ の後も付けない
+    // (の直後でなければ, キーワードでも色を付けない. [ の後も付けない
     assert_eq!(scheme(&["(list if 'define) [if]"]), vec![]);
-    // `'(define y)` は、Emacs と同じく色を付ける
+    // `'(define y)` は, Emacs と同じく色を付ける
     assert_eq!(
         scheme(&["'(define y)"]),
         tokens(&[("define", "keyword"), ("y", "function-name")])
     );
-    // 定義する名前は、次の字句で、同じ行にあるものだけ
+    // 定義する名前は, 次の字句で, 同じ行にあるものだけ
     assert_eq!(
         scheme(&["(define \"x\" y)", "(define", " z)"]),
         tokens(&[
@@ -124,7 +124,7 @@ fn test_scheme_define_family() {
             ("<c>", "type"),
         ])
     );
-    // 仲間でない名前と、`define` で始まらない名前
+    // 仲間でない名前と, `define` で始まらない名前
     assert_eq!(scheme(&["(define-foo x) (defin x) (undefine x)"]), vec![]);
 }
 
@@ -158,7 +158,7 @@ fn test_scheme_comments_and_strings_across_lines() {
             ("or", "keyword"),
         ])
     );
-    // 閉じない `#|` は、本文の終わりまで
+    // 閉じない `#|` は, 本文の終わりまで
     assert_eq!(
         scheme(&["#| a", "(if"]),
         tokens(&[("#| a", "comment"), ("(if", "comment")])
@@ -182,13 +182,13 @@ fn test_scheme_datum_comments() {
     assert_eq!(comments("#; 'x (if)"), "#; 'x");
     assert_eq!(comments("#;\"abc"), "#;\"abc");
     assert_eq!(comments("#;[a] (if)"), "#;[a]");
-    // 引用の印と、`,` `` ` `` も
+    // 引用の印と, `,` `` ` `` も
     assert_eq!(comments("#;`(a ,b) (if)"), "#;`(a ,b)");
 }
 
 #[test]
 fn test_scheme_characters_and_non_words() {
-    // `#\(` は文字なので、次の `(if` は ( の直後
+    // `#\(` は文字なので, 次の `(if` は (の直後
     assert_eq!(
         scheme(&["(list #\\( `(if ,x))"]),
         tokens(&[("if", "keyword")])
@@ -217,7 +217,7 @@ fn test_elisp_definitions() {
             ("my", "type"),
         ])
     );
-    // `(` の後の名前は、関数なら色を付けず、型なら付ける
+    // `(` の後の名前は, 関数なら色を付けず, 型なら付ける
     assert_eq!(
         elisp(&["(defun (f)) (cl-defstruct (st (:copier nil)))"]),
         tokens(&[
@@ -227,7 +227,7 @@ fn test_elisp_definitions() {
             (":copier", "builtin"),
         ])
     );
-    // 仲間でない名前と、`&` と `:` だけの名前
+    // 仲間でない名前と, `&` と `:` だけの名前
     assert_eq!(elisp(&["(defunx a) (a & :)"]), vec![]);
 }
 
@@ -264,7 +264,7 @@ fn test_elisp_quoted_lists_and_let_bindings() {
             ("progn", "keyword"),
         ])
     );
-    // `` `( `` と `#'(` は、関数を呼ぶリスト
+    // `` `(`` と `#'(` は, 関数を呼ぶリスト
     assert_eq!(
         elisp(&["`(when ,(progn 1)) #'(lambda () 1)"]),
         tokens(&[
@@ -277,7 +277,7 @@ fn test_elisp_quoted_lists_and_let_bindings() {
 
 #[test]
 fn test_elisp_strings() {
-    // 正規表現のグループ. `\\\\` は、正規表現の `\` そのもの
+    // 正規表現のグループ. `\\\\` は, 正規表現の `\` そのもの
     assert_eq!(
         elisp(&[r#""\\(a\\|b\\)\\(?:c\\) \\\\(d""#]),
         tokens(&[
@@ -292,7 +292,7 @@ fn test_elisp_strings() {
             (r#" \\\\(d""#, "string"),
         ])
     );
-    // キー、キーマップ、`\\=`、`name'、要らない `\`
+    // キー, キーマップ, `\\=`, `name'、要らない `\`
     assert_eq!(
         elisp(&[r#""\\[cmd] \\<map> \\= `name' \. \n""#]),
         tokens(&[
@@ -309,7 +309,7 @@ fn test_elisp_strings() {
             (r#". \n""#, "string"),
         ])
     );
-    // 名前の中の `\` で始まる 2 文字は、名前の一部 (`\]` の次の `]` で、名前が終わる)
+    // 名前の中の `\` で始まる 2 文字は, 名前の一部 (`\]` の次の `]` で名前が終わる)
     assert_eq!(
         elisp(&[r#""\\[a\]b] ""#]),
         tokens(&[
@@ -318,12 +318,12 @@ fn test_elisp_strings() {
             (r#"] ""#, "string"),
         ])
     );
-    // 行の始めの `\(` は、要るもの
+    // 行の始めの `\(` は, 要るもの
     assert_eq!(
         elisp(&["\"a", "\\(b\""]),
         tokens(&[("\"a", "string"), ("\\(b\"", "string")])
     );
-    // 数字つきのグループ、`{map}`、‘name’
+    // 数字つきのグループ, `{map}`, ‘name’
     assert_eq!(
         elisp(&[r#""\\(?12:x\\) \\{map} ‘sym’""#]),
         tokens(&[
@@ -338,7 +338,7 @@ fn test_elisp_strings() {
             ("’\"", "string"),
         ])
     );
-    // 形が崩れていれば、色を分けない (`(?x` は数字も `:` も無い、閉じない `\\[`、`\\` の後が `(` でない)
+    // 形が崩れていれば, 色を分けない (`(?x` は数字も `:` も無い, 閉じない `\\[`, `\\` の後が `(` でない)
     assert_eq!(
         elisp(&[r#""\\(?x \\[ab \\<c \\a `d "#]),
         tokens(&[
@@ -362,7 +362,7 @@ fn test_elisp_comments() {
             ("when", "keyword"),
         ])
     );
-    // 閉じない `name は、そのまま
+    // 閉じない `name は, そのまま
     assert_eq!(elisp(&[";; `open"]), tokens(&[(";; `open", "comment")]));
 }
 
@@ -376,14 +376,14 @@ fn test_elisp_arguments_after_a_closed_multiline_list() {
         elisp(&["(foo (a", "      b)) c"]),
         tokens(&[("c", "warning")])
     );
-    // 閉じる括弧と、コメントと、行の終わりは、警告しない
+    // 閉じる括弧と, コメントと, 行の終わりは, 警告しない
     assert_eq!(
         elisp(&["(foo (a", "      b) ; x", "  b))"]),
         tokens(&[("; x", "comment")])
     );
-    // 同じ行で開いた括弧は、警告しない
+    // 同じ行で開いた括弧は, 警告しない
     assert_eq!(elisp(&["(foo (a b) c)"]), vec![]);
-    // 空白だけが続いても、警告しない (後ろの字句から)
+    // 空白だけが続いても, 警告しない (後ろの字句から)
     assert_eq!(elisp(&["(foo (a", "      b)   "]), vec![]);
 }
 
@@ -428,7 +428,7 @@ fn setup(text: &str) -> (Evaluator, EditorHost<NoUi>) {
 #[test]
 fn test_buffer_language_follows_the_syntax_dialect() {
     let (ev, host) = setup("(define x 1)");
-    // 始めの `*scratch*` は、lisp-interaction-mode (方言は Fundamental のままでも、色は Scheme)
+    // 始めの `*scratch*` は, lisp-interaction-mode (方言は Fundamental のままでも, 色は Scheme)
     assert_eq!(
         host.editor().current_buffer().highlight_language(),
         Some(Language::Scheme)
@@ -449,7 +449,7 @@ fn test_buffer_language_follows_the_syntax_dialect() {
         host.editor().current_buffer().highlight_language(),
         Some(Language::Elisp)
     );
-    // `*scratch*` の lisp-interaction-mode は、Scheme (方言も Scheme)
+    // `*scratch*` の lisp-interaction-mode は, Scheme (方言も Scheme)
     ev.eval_with("(lisp-interaction-mode)", &host).unwrap();
     assert_eq!(
         host.editor().current_buffer().highlight_language(),
@@ -463,7 +463,7 @@ fn test_buffer_language_follows_the_syntax_dialect() {
         ev.eval_with("(token-spans)", &host).unwrap(),
         "((2 8 keyword) (9 10 function-name))"
     );
-    // C は、方言が Fundamental で、`major-mode` の名前で決まる
+    // C は, 方言が Fundamental で, `major-mode` の名前で決まる
     ev.eval_with("(c-mode)", &host).unwrap();
     assert_eq!(
         host.editor().current_buffer().highlight_language(),

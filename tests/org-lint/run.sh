@@ -1,14 +1,14 @@
 #!/bin/sh
-# Emacs の org-lint と rs-editor の org-lint (lisp/org-lint.scm) を, 同じ .org のファイルで動かし、結果を比べる.
+# Emacs の org-lint と rs-editor の org-lint (lisp/org-lint.scm) を, 同じ .org のファイルで動かし, 結果を比べる.
 #
 # 使い方: tests/org-lint/run.sh [-v] [試験の名前の一部...]
-#   -v  成功したものも、結果を出す
+#   -v  成功したものも, 結果を出す
 # 環境変数:
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
-# 試験は cases/NAME.org. 各ファイルを、cases のディレクトリで動かす (ファイルの有無を調べるチェッカーのため)。
-# 比べるのは、行、信頼度、チェッカーの名前、警告の 4 つ (dump.el と dump.scm が、同じ形で出す).
+# 試験は cases/NAME.org. 各ファイルを, cases のディレクトリで動かす (ファイルの有無を調べるチェッカーのため).
+# 比べるのは, 行, 信頼度, チェッカーの名前, 警告の 4 つ (dump.el と dump.scm が, 同じ形で出す).
 set -u
 LC_ALL=C
 export LC_ALL

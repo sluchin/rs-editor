@@ -29,8 +29,8 @@ fn modtime(path: &str) -> Option<std::time::SystemTime> {
     std::fs::metadata(path).and_then(|m| m.modified()).ok()
 }
 
-/// バッファが訪れているファイルの更新時刻が、訪れたとき（最後に保存したとき）と同じか (Emacs の `verify-visited-file-modtime`).
-/// ファイルを訪れていないバッファと、更新時刻を覚えていないバッファは、同じとする.
+/// バッファが訪れているファイルの更新時刻が, 訪れたとき (最後に保存したとき) と同じか (Emacs の `verify-visited-file-modtime`).
+/// ファイルを訪れていないバッファと, 更新時刻を覚えていないバッファは, 同じとする.
 pub fn verify_visited_file_modtime(buffer: &Buffer) -> bool {
     match (buffer.file(), buffer.visited_modtime()) {
         (Some(path), Some(recorded)) => modtime(path) == Some(recorded),
@@ -108,7 +108,7 @@ pub enum Region<'a> {
 /// * `buffer` - バッファ.
 /// * `region` - 書く本文.
 /// * `path` - ファイルのパス.
-/// * `append` - 真なら, ファイルの後ろに足す.
+/// * `append` - 真ならファイルの後ろに足す.
 /// * `visit_file` - 訪れるファイル (Emacs の VISIT が `t` か文字列). バッファはそのファイルを訪れ, 書き換えていないことになる.
 ///
 /// # Errors

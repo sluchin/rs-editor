@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex, Weak};
 use crate::scheme::value::Value;
 use crate::sync::LockExt;
 
-/// 環境. 複製しても, 同じ環境を指します.
+/// 環境. 複製しても同じ環境を指します.
 #[derive(Clone, Default)]
 pub struct Env(Arc<Mutex<Frame>>);
 
@@ -21,7 +21,7 @@ struct Frame {
     vars: HashMap<String, Value>,
     /// 外側の環境. 一番外側では [`None`].
     parent: Option<Env>,
-    /// 一番外側の環境の下に作った環境 (一番外側と, その下の全ての環境で, 同じものを指す).
+    /// 一番外側の環境の下に作った環境 (一番外側と, その下の全ての環境で同じものを指す).
     registry: Arc<Mutex<Registry>>,
 }
 
@@ -60,7 +60,7 @@ impl Env {
             registry: registry.clone(),
         })));
         let mut registry = registry.lock_recover();
-        // 放した環境は, 覚えている数が倍になるたびに除く (長い評価でも, 増え続けないように)
+        // 放した環境は, 覚えている数が倍になるたびに除く (長い評価でも増え続けないように)
         if registry.frames.len() >= registry.prune_at.max(PRUNE_AT) {
             registry.frames.retain(|frame| frame.strong_count() > 0);
             registry.prune_at = registry.frames.len() * 2;
@@ -120,7 +120,7 @@ impl Env {
             .count()
     }
 
-    /// 一番外側の環境が覚えている環境の数 (放した環境も, 掃除するまでは数える).
+    /// 一番外側の環境が覚えている環境の数 (放した環境も掃除するまでは数える).
     pub fn registered_frames(&self) -> usize {
         let registry = self.0.lock_recover().registry.clone();
         let registry = registry.lock_recover();
@@ -161,7 +161,7 @@ impl Env {
         names
     }
 
-    /// 同じ環境か (複製したものも, 同じ環境).
+    /// 同じ環境か (複製したものも同じ環境).
     ///
     /// # Arguments
     ///
@@ -174,7 +174,7 @@ impl Env {
         Arc::ptr_eq(&self.0, &other.0)
     }
 
-    /// この環境に, 変数を作ります (あれば, 値を変えます).
+    /// この環境に, 変数を作ります (あれば値を変えます).
     ///
     /// # Arguments
     ///

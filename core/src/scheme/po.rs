@@ -75,7 +75,7 @@ impl Entry {
 ///
 /// # Returns
 ///
-/// 中身. `"` で囲んでいなければ, 空.
+/// 中身. `"` で囲んでいなければ空.
 pub fn unquote(quoted: &str) -> String {
     let inner = quoted
         .trim()

@@ -1,13 +1,13 @@
 #!/bin/sh
-# Emacs の c-mode の font-lock と rs-editor のシンタックスハイライト (core/src/highlight) を, 同じ C のファイルで動かし、結果を比べる.
+# Emacs の c-mode の font-lock と rs-editor のシンタックスハイライト (core/src/highlight) を, 同じ C のファイルで動かし, 結果を比べる.
 #
 # 使い方: tests/c-highlight/run.sh [-v] [試験の名前の一部...]
-#   -v  成功したものも、結果を出す
+#   -v  成功したものも, 結果を出す
 # 環境変数:
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
-# 試験は cases/NAME.c, cases/NAME.h (C) と cases/NAME.cpp (C++). 比べるのは、範囲 (始まりと終わり) と種類 (dump.el と dump.scm が、同じ形で出す).
+# 試験は cases/NAME.c, cases/NAME.h (C) と cases/NAME.cpp (C++). 比べるのは, 範囲 (始まりと終わり) と種類 (dump.el と dump.scm が, 同じ形で出す).
 # 宣言の名前の色も比べる (扱う形は core/src/highlight/decl.rs).
 set -u
 LC_ALL=C

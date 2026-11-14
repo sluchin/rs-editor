@@ -73,7 +73,7 @@ pub fn choose_init_file(options: &Options, default: Option<PathBuf>) -> Option<P
     }
 }
 
-/// 起動の引数を返します (初めに呼んだときに, 環境の引数から読む. 読めなければ, 引数は無いものとする).
+/// 起動の引数を返します (初めに呼んだときに, 環境の引数から読む. 読めなければ引数は無いものとする).
 ///
 /// # Returns
 ///
@@ -152,7 +152,7 @@ pub fn home_dir() -> Result<String, String> {
         .ok_or_else(|| "No home directory".to_string())
 }
 
-/// プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
+/// プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければそのディレクトリ) を返します.
 ///
 /// # Arguments
 ///

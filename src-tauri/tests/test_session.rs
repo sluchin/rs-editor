@@ -21,7 +21,7 @@ struct FakeFront {
     requests: Mutex<Vec<String>>,
     /// 問いの答え (無ければ Quit).
     answers: Mutex<VecDeque<Value>>,
-    /// `C-g` を押したか (`interrupted` が、1 度だけ真を返す).
+    /// `C-g` を押したか (`interrupted` が, 1 度だけ真を返す).
     interrupt: std::sync::atomic::AtomicBool,
 }
 
@@ -245,7 +245,7 @@ fn test_keys_bindings_heights_and_macros() {
 fn test_c_g_stops_a_macro_that_never_fails() {
     let (mut session, front) = setup();
     session.eval("(erase-buffer)").unwrap();
-    // 失敗しないマクロを、失敗するまで繰り返す。繰り返している間に C-g を押すと、止める
+    // 失敗しないマクロを, 失敗するまで繰り返す. 繰り返している間に C-g を押すと, 止める
     front
         .interrupt
         .store(true, std::sync::atomic::Ordering::SeqCst);
@@ -253,10 +253,10 @@ fn test_c_g_stops_a_macro_that_never_fails() {
     key(&mut session, "a");
     assert_eq!(text(&session), "a");
     assert_eq!(last(&front).message, "Quit");
-    // 止めたあとは、続けて打てる
+    // 止めたあとは, 続けて打てる
     key(&mut session, "b");
     assert_eq!(text(&session), "ab");
-    // C-g の順番が来たら、押したことは忘れる (次のマクロを、止めない)
+    // C-g の順番が来たら, 押したことは忘れる (次のマクロを, 止めない)
     front
         .interrupt
         .store(true, std::sync::atomic::Ordering::SeqCst);
@@ -593,27 +593,27 @@ fn test_open_files_visits_each_file_and_shows_the_last() {
 #[test]
 fn test_tabs_are_created_switched_renamed_moved_and_closed() {
     let (mut session, front) = setup();
-    // タブが 1 つの間は、タブの行を出さない
+    // タブが 1 つの間は, タブの行を出さない
     key(&mut session, "C-x t 2");
     let frame = last(&front);
     assert_eq!(frame.tabs, vec!["*scratch*", "*scratch*"]);
     assert_eq!(frame.tab, 1);
-    // 2 つめのタブで窓を分けて、別のバッファを出す
+    // 2 つめのタブで窓を分けて, 別のバッファを出す
     key(&mut session, "C-x 2");
     session.eval("(switch-to-buffer \"other\")").unwrap();
     key(&mut session, "C-x t r");
     session.eval("(tab-rename \"work\")").unwrap();
     assert_eq!(last(&front).tabs, vec!["*scratch*", "work"]);
-    // 番号で切り替えると、窓の配置が戻る
+    // 番号で切り替えると, 窓の配置が戻る
     session.handle(Input::SelectTab { number: 1 });
     let frame = last(&front);
     assert_eq!((frame.tab, frame.windows.len()), (0, 1));
     session.handle(Input::SelectTab { number: 2 });
     assert_eq!(last(&front).windows.len(), 2);
-    // 範囲の外の番号は、エコー領域に出す
+    // 範囲の外の番号は, エコー領域に出す
     session.handle(Input::SelectTab { number: 9 });
     assert_eq!(last(&front).message, "No such tab");
-    // 次、前、移動
+    // 次, 前, 移動
     key(&mut session, "C-x t o");
     assert_eq!(last(&front).tab, 0);
     key(&mut session, "C-x t O");
@@ -640,7 +640,7 @@ fn test_tabs_are_created_switched_renamed_moved_and_closed() {
     key(&mut session, "C-x t 2");
     key(&mut session, "C-x t 1");
     assert!(last(&front).tabs.is_empty());
-    // 閉じたタブより後ろを選んでいたとき、番号がずれない
+    // 閉じたタブより後ろを選んでいたとき, 番号がずれない
     key(&mut session, "C-x t 2");
     key(&mut session, "C-x t 2");
     session.eval("(tab-close 1)").unwrap();

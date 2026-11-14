@@ -249,7 +249,7 @@ fn test_write_region_is_silent() {
 
 #[test]
 fn test_message_after_output_starts_a_new_line() {
-    // 標準出力に書いた後の、初めの message の前に、標準エラー出力に改行を出す (Emacs と同じ)
+    // 標準出力に書いた後の, 初めの message の前に, 標準エラー出力に改行を出す (Emacs と同じ)
     let (_, out, err) = batch(
         &[
             "--eval",
@@ -358,7 +358,7 @@ fn test_kmacro_counter_and_end_macro_without_argument() {
     assert!(err.contains("New macro counter value: 2 (2)"), "{err}");
 }
 
-/// 1 つの式を動かして, 標準出力を返す.
+/// 1 つの式を動かして標準出力を返す.
 fn out_of(code: &str, input: &str) -> String {
     batch(&["--eval", code], input).1
 }
@@ -385,7 +385,7 @@ fn test_typed_keys_are_read_by_commands() {
         " (execute-kbd-macro (kbd \"C-c k x C-c r a b DEL SPC c d C-a RET C-c r\"))",
         " (princ got))",
     );
-    // 最後の read-string は、キーが尽きたので標準入力から
+    // 最後の read-string は, キーが尽きたので標準入力から
     assert_eq!(out_of(code, "tail\n"), "p: (tail a cd x)");
 }
 
@@ -427,7 +427,7 @@ fn test_macro_messages_and_end_key_are_quiet_while_executing() {
     let (_, out, err) = batch(&["--eval", code], "");
     assert_eq!(out, "(aZ t nil)");
     assert_eq!(err, "");
-    // マクロを動かしている間の end-kbd-macro は、何も知らせない
+    // マクロを動かしている間の end-kbd-macro は, 何も知らせない
     let code = concat!(
         "(begin (define-command (ee) (end-kbd-macro)) (global-set-key \"C-c e\" 'ee)",
         " (start-kbd-macro) (execute-kbd-macro (kbd \"C-c e\")) (princ (kbd-macro-defining-p)))",
@@ -441,7 +441,7 @@ fn test_macro_messages_and_end_key_are_quiet_while_executing() {
 fn test_ding_writes_the_bell_to_standard_output() {
     let (_, out, err) = batch(&["--eval", "(begin (ding) (message \"m\"))"], "");
     assert_eq!(out, "\u{7}");
-    // 標準出力に出した後の message は、改行から始まる
+    // 標準出力に出した後の message は, 改行から始まる
     assert_eq!(err, "\nm\n");
 }
 
@@ -498,7 +498,7 @@ fn test_key_binding_looks_up_the_keymap() {
 
 #[test]
 fn test_recursive_edit_runs_the_keys_until_exit() {
-    // C-r で再帰編集に入り, 打ったキーを動かして, C-M-c で戻る. 割り当ての無いキーは, 知らせる
+    // C-r で再帰編集に入り, 打ったキーを動かして C-M-c で戻る. 割り当ての無いキーは, 知らせる
     let code = concat!(
         "(begin (switch-to-buffer (generate-new-buffer \"b\")) (insert \"a a\") (goto-char 1)",
         " (execute-kbd-macro (kbd \"M-% a RET X RET C-r C-e z C-x C-z C-z C-M-c y q\"))",

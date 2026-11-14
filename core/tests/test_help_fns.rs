@@ -44,7 +44,7 @@ fn test_describe_function_interactively() {
     editor.answers.lock().unwrap().push("find-file".to_string());
     ev.run_command("describe-function", &editor).unwrap();
     assert_eq!(*editor.prompts.lock().unwrap(), vec!["Describe function: "]);
-    // 候補は, Lisp と Rust の関数と, 画面のコマンド (重ならず, 名前の順)
+    // 候補は, Lisp と Rust の関数と, 画面のコマンド (重ならず名前の順)
     let completions = editor.completions.lock().unwrap().clone();
     for name in ["car", "describe-function", "find-file", "goto-line"] {
         assert_eq!(

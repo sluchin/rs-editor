@@ -15,78 +15,78 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 - C-v, M-v - ページ単位のスクロール
 - C-l - 画面を中央にスクロール (続けて押すと、上、下)
 - M-g g - 指定行へジャンプ
-- M-m - 行の字下げの後ろへ（back-to-indentation）
-- M-{, M-} - 段落の移動（backward-paragraph, forward-paragraph）
-- M-a, M-e - 文の移動（backward-sentence, forward-sentence）
-- C-x C-n - 上下に移るときの桁を決める（set-goal-column）
+- M-m - 行の字下げの後ろへ (back-to-indentation)
+- M-{, M-} - 段落の移動 (backward-paragraph, forward-paragraph)
+- M-a, M-e - 文の移動 (backward-sentence, forward-sentence)
+- C-x C-n - 上下に移るときの桁を決める (set-goal-column)
 - C-M-f, C-M-b - S 式単位の移動
-- C-M-u, C-M-d - リストの外と中へ（backward-up-list, down-list。M-x up-list）
-- C-M-a, C-M-e - defun の始めと終わり（beginning-of-defun, end-of-defun）
+- C-M-u, C-M-d - リストの外と中へ (backward-up-list, down-list。M-x up-list)
+- C-M-a, C-M-e - defun の始めと終わり (beginning-of-defun, end-of-defun)
 
 **削除・編集**
 
 - C-d - 1 文字削除
-- C-k - 行削除（kill-line。続けたキルは 1 つにつなげる）
-- M-d, M-DEL - 単語削除（kill-word, backward-kill-word）
-- C-M-k - S 式削除（kill-sexp）
-- M-k - 文の削除（kill-sentence）
-- C-w, M-w - 選択範囲の削除とコピー（kill-region, kill-ring-save）
-- C-y - 貼り付け（yank）
-- M-y - 別の削除内容を貼り付け（yank-pop）
+- C-k - 行削除 (kill-line。続けたキルは 1 つにつなげる)
+- M-d, M-DEL - 単語削除 (kill-word, backward-kill-word)
+- C-M-k - S 式削除 (kill-sexp)
+- M-k - 文の削除 (kill-sentence)
+- C-w, M-w - 選択範囲の削除とコピー (kill-region, kill-ring-save)
+- C-y - 貼り付け (yank)
+- M-y - 別の削除内容を貼り付け (yank-pop)
 - C-t, M-t, C-x C-t - 文字、単語、行の入れ替え
 - M-u, M-l, M-c - 単語の大文字・小文字
-- C-x C-u, C-x C-l - リージョンの大文字・小文字（upcase-region, downcase-region）
-- C-q - キーをそのまま入れる（quoted-insert）
-- M-= - 行、文、単語、文字の数（count-words-region. M-x count-words）
-- C-x r k, C-x r y, C-x r t - 矩形（kill-rectangle, yank-rectangle, string-rectangle）
-- C-x r s, C-x r i - レジスタ（copy-to-register, insert-register. 文字だけ）
-- C-x r m, C-x r b - ブックマーク（bookmark-set, bookmark-jump）
-- C-o - 改行を入れる（open-line）
-- M-; - コメントの付け外し（comment-dwim）
-- M-/ - 単語の補完（dabbrev-expand。今のバッファの中だけを探す）
-- M-z - 文字までキル（zap-to-char）
-- M-q - 段落を詰める（fill-paragraph。Lisp では、コメントを詰める。文字列は詰めない）
-- M-SPC, M-\, M-^, C-x C-o - 空白と空の行を消す（just-one-space, delete-horizontal-space, delete-indentation, delete-blank-lines）
-- C-/, C-x C-/ - Undo / Redo（バッファごと）
+- C-x C-u, C-x C-l - リージョンの大文字・小文字 (upcase-region, downcase-region)
+- C-q - キーをそのまま入れる (quoted-insert)
+- M-= - 行、文、単語、文字の数 (count-words-region. M-x count-words)
+- C-x r k, C-x r y, C-x r t - 矩形 (kill-rectangle, yank-rectangle, string-rectangle)
+- C-x r s, C-x r i - レジスタ (copy-to-register, insert-register. 文字だけ)
+- C-x r m, C-x r b - ブックマーク (bookmark-set, bookmark-jump)
+- C-o - 改行を入れる (open-line)
+- M-; - コメントの付け外し (comment-dwim)
+- M-/ - 単語の補完 (dabbrev-expand。今のバッファの中だけを探す)
+- M-z - 文字までキル (zap-to-char)
+- M-q - 段落を詰める (fill-paragraph。Lisp ではコメントを詰める。文字列は詰めない)
+- M-SPC, M-\, M-^, C-x C-o - 空白と空の行を消す (just-one-space, delete-horizontal-space, delete-indentation, delete-blank-lines)
+- C-/, C-x C-/ - Undo / Redo (バッファごと)
 
 **改行と字下げ**
 
-- RET, C-j - 改行（RET は字下げもする）
-- TAB, C-M-q, C-M-\ - 字下げ（Emacs の scheme-mode と emacs-lisp-mode と同じ計算）
-- 括弧の強調（show-paren-mode）、シンタックスハイライト（font-lock）
+- RET, C-j - 改行 (RET は字下げもする)
+- TAB, C-M-q, C-M-\ - 字下げ (Emacs の scheme-mode と emacs-lisp-mode と同じ計算)
+- 括弧の強調 (show-paren-mode)、シンタックスハイライト (font-lock)
 
 **リージョン選択**
 
-- C-SPC - マーク設定（移動で範囲が広がる。transient-mark-mode）
+- C-SPC - マーク設定 (移動で範囲が広がる。transient-mark-mode)
 - C-x C-x - カーソルとマークの入れ替え
 - C-x h - バッファ全体選択
-- M-@, C-M-SPC, C-M-h - 単語、S 式、defun を選ぶ（mark-word, mark-sexp, mark-defun）
+- M-@, C-M-SPC, C-M-h - 単語、S 式、defun を選ぶ (mark-word, mark-sexp, mark-defun)
 
 **検索と置換**
 
-- C-s, C-r - 前方・後方検索（isearch）
+- C-s, C-r - 前方・後方検索 (isearch)
 - C-M-s, C-M-r - 正規表現の検索
-- isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み、検索の履歴（isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance）
-- M-%, C-M-% - 置換（query-replace, query-replace-regexp）。 M-x replace-string, replace-regexp
+- isearch 中の C-w, M-y, M-p, M-n - 単語とキルした文字の取り込み、検索の履歴 (isearch-yank-word-or-char, isearch-yank-pop-only, isearch-ring-retreat, isearch-ring-advance)
+- M-%, C-M-% - 置換 (query-replace, query-replace-regexp)。 M-x replace-string, replace-regexp
 
 **ファイル操作**
 
-- C-x C-f - ファイルを開く（find-file。Tab でファイルの名前を補完）
-- C-x C-s - 保存（save-buffer）
-- C-x C-w - 別のファイルに保存（write-file）
-- C-x C-v - 別のファイルを開き直す（find-alternate-file）
-- C-x i - ファイルの中身を入れる（insert-file）
-- C-x s - 変更したバッファを保存（save-some-buffers）
+- C-x C-f - ファイルを開く (find-file。Tab でファイルの名前を補完)
+- C-x C-s - 保存 (save-buffer)
+- C-x C-w - 別のファイルに保存 (write-file)
+- C-x C-v - 別のファイルを開き直す (find-alternate-file)
+- C-x i - ファイルの中身を入れる (insert-file)
+- C-x s - 変更したバッファを保存 (save-some-buffers)
 - M-x revert-buffer, M-x recover-this-file - ファイル、自動保存のファイルから読み直す
-- 自動保存（`#名前#`）と、バックアップ（`名前~`）
-- C-x d - ディレクトリの一覧（dired。一覧を出すだけ）
+- 自動保存 (`#名前#`) と、バックアップ (`名前~`)
+- C-x d - ディレクトリの一覧 (dired。一覧を出すだけ)
 
 **バッファ管理**
 
 - C-x b - バッファ切り替え
 - C-x k - バッファを閉じる
 - C-x C-b - バッファ一覧
-- C-x C-c - 終了（保存していないバッファがあれば確認）
+- C-x C-c - 終了 (保存していないバッファがあれば確認)
 
 **ウィンドウ**
 
@@ -95,21 +95,21 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **Lisp**
 
-- C-x C-e, M-: - 式の評価（eval-last-sexp, eval-expression）
-- 初期設定ファイル（`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`、`~/.config/rseditor/init.scm`）、Lisp で作るコマンド（define-command）とキー（global-set-key, local-set-key）、load, require, load-path
-- 色とフォント（set-background-color, set-foreground-color, set-frame-font, set-face-attribute）
-- howm（`lisp/howm.scm`。`(require 'howm)` で読む。M-x howm, C-c , ,）
-- ERT（`ert-deftest`、`should`、`M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`）
+- C-x C-e, M-: - 式の評価 (eval-last-sexp, eval-expression)
+- 初期設定ファイル (`~/.rseditor`。無ければ `~/.rseditor.d/init.scm`、`~/.config/rseditor/init.scm`)、Lisp で作るコマンド (define-command) とキー (global-set-key, local-set-key)、load, require, load-path
+- 色とフォント (set-background-color, set-foreground-color, set-frame-font, set-face-attribute)
+- howm (`lisp/howm.scm`。`(require 'howm)` で読む。M-x howm, C-c , ,)
+- ERT (`ert-deftest`、`should`、`M-x ert`。`tests/lisp/*.scm` は `npm run test:scheme`)
 
 **検索とプロジェクト**
 
-- M-x grep（外のコマンドを使わず、エディタが探す）、`*grep*` の RET（compile-goto-error）、M-g n, M-g p, C-x `（next-error, previous-error）
+- M-x grep (外のコマンドを使わずエディタが探す)、`*grep*` の RET (compile-goto-error)、M-g n, M-g p, C-x ` (next-error, previous-error)
 - F8, M-x project-tree - 左のサイドバーの、プロジェクトのファイルのツリー
 
 **ヘルプ**
 
-- C-h k - キーの説明（describe-key）
-- C-h b - キーの割り当ての一覧（describe-bindings）
+- C-h k - キーの説明 (describe-key)
+- C-h b - キーの割り当ての一覧 (describe-bindings)
 
 **前置引数とマクロ**
 
@@ -118,9 +118,9 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 **その他**
 
-- M-x - コマンド実行（Tab で補完）
-- ミニバッファの M-p, M-n - 入力の履歴（previous-history-element, next-history-element）
-- C-g - キャンセル（keyboard-quit）
+- M-x - コマンド実行 (Tab で補完)
+- ミニバッファの M-p, M-n - 入力の履歴 (previous-history-element, next-history-element)
+- C-g - キャンセル (keyboard-quit)
 
 ---
 
@@ -141,7 +141,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 | キー | コマンド | 説明 |
 |------|---------|------|
 | `C-M-n` / `C-M-p` | forward-list / backward-list | リストの単位の移動 |
-| `C-x .` | set-fill-prefix | 段落の行の始めの文字を決める（段落の移動と `M-q` で使う） |
+| `C-x .` | set-fill-prefix | 段落の行の始めの文字を決める (段落の移動と `M-q` で使う) |
 
 ### ファイル・バッファ・ウィンドウ
 
@@ -150,7 +150,7 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 | `C-x ^` / `C-x {` / `C-x }` / `C-x +` | enlarge-window など | ウィンドウの大きさ |
 | `C-M-v` | scroll-other-window | ほかのウィンドウをスクロール |
 | `C-x 4 ...` / `C-x 5 ...` | find-file-other-window など | ほかのウィンドウ、フレームで開く |
-| dired の中のキー | dired-find-file など | dired での、ファイルを開く、マーク、削除、コピーなど（`C-x d` は、一覧を出すだけ） |
+| dired の中のキー | dired-find-file など | dired での、ファイルを開く、マーク、削除、コピーなど (`C-x d` は、一覧を出すだけ) |
 
 ### 検索
 
@@ -199,10 +199,10 @@ rs-editor が、Emacs の初期状態 (`emacs -Q`) の機能のうち、実装�
 
 ## まとめ
 
-rs-editor は、Emacs の基本的な編集（移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ）と、Lisp のモード（字下げ、色、括弧の強調、評価）を実装しています。
+rs-editor は、Emacs の基本的な編集 (移動、kill-ring、Undo/Redo、検索と置換、ファイル、バッファ、ウィンドウ) と、Lisp のモード (字下げ、色、括弧の強調、評価) を実装しています。
 
 次の候補は、よく使い、手間の小さいものから:
 
 1. Lisp の移動: `C-M-n`、`C-M-p`
 2. ヘルプ: `C-h f`、`C-h v`
-3. Dired の中のキー（`RET` で開く、`^` で親へ、`g` で作り直す）
+3. Dired の中のキー (`RET` で開く、`^` で親へ、`g` で作り直す)

@@ -16,7 +16,7 @@ struct Ui {
     messages: Mutex<Vec<String>>,
     /// 描き直した回数 (`redisplay`).
     redisplays: Mutex<usize>,
-    /// `C-g` を押したことにする描き直しの回数 (0 なら, 押さない).
+    /// `C-g` を押したことにする描き直しの回数 (0 なら押さない).
     quit_after: Mutex<usize>,
 }
 
@@ -241,7 +241,7 @@ fn test_lgrep_stays_in_the_directory() {
 #[test]
 fn test_rgrep_reads_the_wildcard_and_directory_interactively() {
     let (_dir, path) = project();
-    // 偽の画面は read-string を知らないので、失敗の内容で、聞いた順を確かめる
+    // 偽の画面は read-string を知らないので, 失敗の内容で, 聞いた順を確かめる
     let (result, _) = run(&["(rgrep \"foo\")"]);
     assert!(result.starts_with("error:"), "{result}");
     let (text, _) = run(&[

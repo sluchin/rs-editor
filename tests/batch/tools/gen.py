@@ -33,13 +33,13 @@ def convert(text):
 
 for el in sorted(cases.glob('*.el')):
     name = el.stem
-    # 01-17 の .scm は、手で書いたもの (作り直さない)
+    # 01-17 の .scm は, 手で書いたもの (作り直さない)
     if int(name.split('-')[0]) < 20 and not names:
         continue
     if names and name not in names:
         continue
     scm = el.with_suffix('.scm')
-    # 手で直した .scm (先頭が ";;; hand-written") は、作り直さない
+    # 手で直した .scm (先頭が ";;; hand-written") は, 作り直さない
     if scm.exists() and scm.read_text().startswith(';;; hand-written'):
         continue
     if scm.exists() and not force and not names:

@@ -94,7 +94,7 @@ fn boundary(c1: char, c2: char) -> bool {
 ///
 /// # Returns
 ///
-/// 動いた先. 単語が足りなければ, 範囲の端.
+/// 動いた先. 単語が足りなければ範囲の端.
 pub fn forward_word(chars: &[char], pos: usize, n: i64, lo: usize, hi: usize) -> usize {
     let mut at = pos;
     for _ in 0..n.unsigned_abs() {

@@ -40,7 +40,7 @@ pub struct EditorHost<U: Host> {
     ui: U,
     /// 作った正規表現 (正規表現, 大文字と小文字を区別しないか).
     patterns: Mutex<HashMap<(String, bool, bool, Dialect), Pattern>>,
-    /// `princ` などの出力先 (無ければ, エコー領域に出す. バッチモードは標準出力).
+    /// `princ` などの出力先 (無ければエコー領域に出す. バッチモードは標準出力).
     output: Mutex<Option<Output>>,
 }
 
@@ -65,7 +65,7 @@ impl<U: Host> EditorHost<U> {
     }
 
     /// `princ`, `prin1`, `print`, `terpri` の出力先を決めます (バッチモードは標準出力).
-    /// 決めなければ, エコー領域 (`message`) に出す. 決めると、バッチモードとして、`write-region` が `Wrote ...` を出さない (Emacs と同じ).
+    /// 決めなければ, エコー領域 (`message`) に出す. 決めると, バッチモードとして, `write-region` が `Wrote ...` を出さない (Emacs と同じ).
     pub fn set_output(&self, output: Output) {
         *self.output.lock_recover() = Some(output);
     }
@@ -128,7 +128,7 @@ impl<U: Host> Host for EditorHost<U> {
                 self.dispatch(&mut editor, op, &args)
             };
             match result {
-                // 外で書き換わったファイルのバッファを、初めて書き換えるときは、聞いてから (yes なら) やり直す
+                // 外で書き換わったファイルのバッファを, 初めて書き換えるときは, 聞いてから (yes なら) やり直す
                 Err(error) if error.kind() == "file-supersession-threat" => {
                     self.resolve_supersession(&error)?;
                 }
@@ -149,7 +149,7 @@ impl<U: Host> Host for EditorHost<U> {
 }
 
 impl<U: Host> EditorHost<U> {
-    /// 外で書き換わったファイルのバッファを書き換えてよいか、使う人に聞きます (Emacs の `ask-user-about-supersession-threat`).
+    /// 外で書き換わったファイルのバッファを書き換えてよいか, 使う人に聞きます (Emacs の `ask-user-about-supersession-threat`).
     ///
     /// # Errors
     ///
@@ -182,7 +182,7 @@ impl<U: Host> EditorHost<U> {
                     let mut editor = self.editor.lock_recover();
                     let buffer = editor.current_buffer_mut();
                     buffer.allow_supersession();
-                    // 保存すると、今のファイルは、バックアップになる
+                    // 保存すると, 今のファイルは, バックアップになる
                     buffer.set_backed_up(false);
                     drop(editor);
                     return self
@@ -204,7 +204,7 @@ impl<U: Host> EditorHost<U> {
                         std::fs::read_to_string(&path).map_err(|e| Error::open_input(&e, &path))?;
                     let mut editor = self.editor.lock_recover();
                     let buffer = editor.current_buffer_mut();
-                    // 読み直すのは、確かめずに (更新時刻を合わせてから)
+                    // 読み直すのは, 確かめずに (更新時刻を合わせてから)
                     files::set_visited_file_modtime(buffer);
                     replace_text(buffer, &text);
                     buffer.set_modified(false);
@@ -274,7 +274,7 @@ fn sexp_end_for_indent(source: &Source, point: usize) -> Result<usize, Error> {
     while eol < source.size() && source.char_at(eol) != Some('\n') {
         eol += 1;
     }
-    // 行の終わりが式の中にあれば, 行の終わりを越えるまで, 式を読み続ける (読めなければ, そこまで)
+    // 行の終わりが式の中にあれば, 行の終わりを越えるまで, 式を読み続ける (読めなければそこまで)
     if end < eol && source.parse_state(eol).depth > source.parse_state(end).depth {
         while end < eol {
             match forward_sexp(source, end) {
@@ -321,7 +321,7 @@ fn match_view(ed: &Editor) -> (Vec<Option<(usize, usize)>>, Position) {
     }
 }
 
-/// 位置があれば, 位置の値. 無ければ nil.
+/// 位置があれば位置の値. 無ければ nil.
 fn at_opt(pos: Option<usize>) -> Value {
     pos.map_or_else(nil, at)
 }
@@ -342,7 +342,7 @@ fn int(op: &str, args: &[Value], i: usize) -> Result<i64, Error> {
     number(op, args, i).map(|n| n as i64)
 }
 
-/// 省ける整数 (無いか nil なら, 既定の値).
+/// 省ける整数 (無いか nil なら既定の値).
 fn int_or(op: &str, args: &[Value], i: usize, default: i64) -> Result<i64, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => int(op, args, i),
@@ -413,7 +413,7 @@ fn name<'a>(op: &str, args: &'a [Value], i: usize) -> Result<&'a str, Error> {
     }
 }
 
-/// バッファの引数 (名前. 無いか nil なら, 今のバッファ) を, 名前にします.
+/// バッファの引数 (名前. 無いか nil なら今のバッファ) を, 名前にします.
 fn buffer_name(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<String, Error> {
     Ok(match text_opt(op, args, i)? {
         Some(name) => name.to_string(),
@@ -421,7 +421,7 @@ fn buffer_name(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<St
     })
 }
 
-/// ウィンドウの引数 (無いか nil なら, 選んでいるウィンドウ).
+/// ウィンドウの引数 (無いか nil なら選んでいるウィンドウ).
 fn window(editor: &Editor, op: &str, args: &[Value], i: usize) -> Result<usize, Error> {
     match args.get(i) {
         Some(v) if v.is_non_nil() => Ok(int(op, args, i)? as usize),
@@ -457,7 +457,7 @@ fn class_char(class: Class) -> &'static str {
     }
 }
 
-/// 元に戻す記録を, 評価器の値にします (Emacs の `buffer-undo-list`. ドット対は無いので, 2 つの要素のリスト).
+/// 元に戻す記録を, 評価器の値にします (Emacs の `buffer-undo-list`. ドット対は無いので 2 つの要素のリスト).
 /// 入れた文字は `(開始 終了)`, 消した文字は `(文字 位置)` (カーソルが終わりにあったときは, 位置が負), 区切りは nil.
 fn entry_value(entry: &UndoEntry) -> Value {
     match entry {
@@ -821,12 +821,12 @@ impl<U: Host> EditorHost<U> {
             }
             "files--set-buffer-file-name" => {
                 // (files--set-buffer-file-name FILENAME): バッファが訪れるファイルを変える (Emacs の (setq buffer-file-name ...)).
-                // nil なら, 訪れない. 変えたら, バックアップを作り直せるようにする
+                // nil なら訪れない. 変えたら, バックアップを作り直せるようにする
                 let file = text_opt(op, args, 0)?.map(str::to_string);
                 let b = ed.current_buffer_mut();
                 if b.file() != file.as_deref() {
                     b.set_backed_up(false);
-                    // 別のファイルの更新時刻とは、比べない
+                    // 別のファイルの更新時刻とは, 比べない
                     b.set_visited_modtime(None);
                 }
                 b.set_file(file);

@@ -56,7 +56,7 @@ fn text_of(args: &[Value]) -> String {
 /// 表の 1 行: 名前, 本文, Scheme の式, キー, 位置ごとの結果.
 type Row = (String, String, String, Vec<String>, Vec<Json>);
 
-/// 式を動かして, 結果を表の形にする.
+/// 式を動かして結果を表の形にする.
 fn run(ev: &Evaluator, host: &EditorHost<FakeUi>, row: &Row, pos: usize) -> Json {
     {
         let mut editor = host.editor();

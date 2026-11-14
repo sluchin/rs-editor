@@ -1,14 +1,14 @@
-//! 宣言の名前 (関数、変数、型) を決めます. Emacs の cc-mode の宣言の推測 (`c-font-lock-declarations`) の、よく使う形だけの版です.
+//! 宣言の名前 (関数, 変数, 型) を決めます. Emacs の cc-mode の宣言の推測 (`c-font-lock-declarations`) の, よく使う形だけの版です.
 //!
-//! 字句解析器が覚えた、コードの語と記号の並び (コメントとプリプロセッサの行を除く) を、文の始まりから読みます.
-//! 型の並びと宣言子 (名前、`*`、`[]`、`()`、`:`、`=`) の形に合えば宣言として、合わなければ式として読み飛ばします.
+//! 字句解析器が覚えた, コードの語と記号の並び (コメントとプリプロセッサの行を除く) を, 文の始まりから読みます.
+//! 型の並びと宣言子 (名前, `*`, `[]`, `()`, `:`, `=`) の形に合えば宣言として, 合わなければ式として読み飛ばします.
 //!
-//! 扱う形: 変数 (複数、配列、初期化、ビットフィールド)、関数の宣言と定義、関数ポインタ、引数、`typedef`、
-//! `struct` `union` `enum` (`class`) の名前と本体、ラベルと `goto`.
+//! 扱う形: 変数 (複数, 配列, 初期化, ビットフィールド), 関数の宣言と定義, 関数ポインタ, 引数, `typedef`,
+//! `struct` `union` `enum` (`class`) の名前と本体, ラベルと `goto`.
 //!
-//! C++ では、さらに、修飾した名前 (`std::string`。`::` の前は定数の色)、`namespace` の名前、`enum class`、クラスの継承、
-//! コンストラクタとデストラクタ、メソッドの定義 (`void A::f()`)、`using 名前 = 型;`、テンプレートの引数と仮引数を読みます.
-//! 演算子の関数 (`operator+`)、`typename T::x`、配列へのポインタと参照 `int (&a)[4]`、`if` `while` `switch` の条件の中の宣言も読みます.
+//! C++ では, さらに, 修飾した名前 (`std::string`. `::` の前は定数の色), `namespace` の名前, `enum class`, クラスの継承,
+//! コンストラクタとデストラクタ, メソッドの定義 (`void A::f()`), `using 名前 = 型;`, テンプレートの引数と仮引数を読みます.
+//! 演算子の関数 (`operator+`), `typename T::x`, 配列へのポインタと参照 `int (&a)[4]`, `if` `while` `switch` の条件の中の宣言も読みます.
 
 use super::{Class, LanguageSpec, Span, Tok, TokenKind};
 
@@ -33,7 +33,7 @@ const SPECIFIERS: &[&str] = &[
     "volatile",
 ];
 
-/// 後ろに括弧が付く、宣言の前の語 (`__attribute__((unused))`).
+/// 後ろに括弧が付く, 宣言の前の語 (`__attribute__((unused))`).
 const ATTRIBUTES: &[&str] = &["__attribute__", "__declspec"];
 
 /// 後ろの括弧の式が型になる語 (`typeof(x) y;`).
@@ -52,7 +52,7 @@ const AGGREGATES: &[&str] = &["class", "enum", "struct", "union"];
 ///
 /// # Returns
 ///
-/// 名前の範囲 (型の名前、関数の名前、変数の名前、ラベル). 並びの順は決まっていない.
+/// 名前の範囲 (型の名前, 関数の名前, 変数の名前, ラベル). 並びの順は決まっていない.
 pub(super) fn declarations(spec: &LanguageSpec, chars: &[char], toks: &[Tok]) -> Vec<Span> {
     let words = toks
         .iter()
@@ -80,7 +80,7 @@ pub(super) fn declarations(spec: &LanguageSpec, chars: &[char], toks: &[Tok]) ->
 struct Parser<'a> {
     /// 言語の表.
     spec: &'a LanguageSpec,
-    /// C++ か (修飾した名前、テンプレート、クラスの本体を読む).
+    /// C++ か (修飾した名前, テンプレート, クラスの本体を読む).
     cpp: bool,
     /// 本文.
     chars: &'a [char],
@@ -93,7 +93,7 @@ struct Parser<'a> {
 }
 
 impl Parser<'_> {
-    /// 位置 `j` の記号 (記号でなければ、字句の外も、`'\0'`).
+    /// 位置 `j` の記号 (記号でなければ, 字句の外も, `'\0'`).
     fn punct(&self, j: usize) -> char {
         match self.toks.get(j) {
             Some(t) if t.class == Class::Punct => self.chars[t.start],
@@ -101,40 +101,40 @@ impl Parser<'_> {
         }
     }
 
-    /// 位置 `j` が、キーワードでない語 (識別子) か.
+    /// 位置 `j` が, キーワードでない語 (識別子) か.
     fn is_name(&self, j: usize) -> bool {
         self.words
             .get(j)
             .is_some_and(|w| !w.is_empty() && !self.spec.is_keyword(w))
     }
 
-    /// 位置 `j` が、`list` の語で、この言語のキーワードか.
+    /// 位置 `j` が, `list` の語で, この言語のキーワードか.
     fn is_word_in(&self, j: usize, list: &[&str]) -> bool {
         self.words
             .get(j)
             .is_some_and(|w| list.contains(&w.as_str()) && self.spec.is_keyword(w))
     }
 
-    /// 位置 `j` が、宣言の前に付く語か.
+    /// 位置 `j` が, 宣言の前に付く語か.
     fn is_specifier(&self, j: usize) -> bool {
         self.words
             .get(j)
             .is_some_and(|w| SPECIFIERS.contains(&w.as_str()) && self.spec.is_keyword(w))
     }
 
-    /// 位置 `j` が、`struct` など名前と本体を持つ型の語か.
+    /// 位置 `j` が, `struct` など名前と本体を持つ型の語か.
     fn is_aggregate(&self, j: usize) -> bool {
         self.words
             .get(j)
             .is_some_and(|w| AGGREGATES.contains(&w.as_str()) && self.spec.is_keyword(w))
     }
 
-    /// 位置 `j` が、キーワードの語か.
+    /// 位置 `j` が, キーワードの語か.
     fn is_keyword(&self, j: usize) -> bool {
         self.words.get(j).is_some_and(|w| self.spec.is_keyword(w))
     }
 
-    /// 位置 `j` の字句を、名前として足します.
+    /// 位置 `j` の字句を, 名前として足します.
     fn name(&mut self, j: usize, kind: TokenKind) {
         let tok = self.toks[j];
         self.out.push(Span {
@@ -144,7 +144,7 @@ impl Parser<'_> {
         });
     }
 
-    /// 位置 `j` の名前から続く、修飾した名前 (`a::b::c`) の、最後の名前の位置 (修飾が無ければ `j`).
+    /// 位置 `j` の名前から続く, 修飾した名前 (`a::b::c`) の, 最後の名前の位置 (修飾が無ければ `j`).
     fn chain_end(&self, mut j: usize) -> usize {
         while self.cpp
             && self.punct(j + 1) == ':'
@@ -156,7 +156,7 @@ impl Parser<'_> {
         j
     }
 
-    /// 修飾した名前 (`first` から `last`) に色を付けます. `::` の前は定数の色、最後は `kind`.
+    /// 修飾した名前 (`first` から `last`) に色を付けます. `::` の前は定数の色, 最後は `kind`.
     fn name_chain(&mut self, first: usize, last: usize, kind: TokenKind) {
         let mut k = first;
         while k < last {
@@ -166,7 +166,7 @@ impl Parser<'_> {
         self.name(last, kind);
     }
 
-    /// 位置 `open` の `<` から、対応する `>` の次までの位置 (文の終わりや括弧の外れに先に着けば `None`).
+    /// 位置 `open` の `<` から, 対応する `>` の次までの位置 (文の終わりや括弧の外れに先に着けば `None`).
     fn angle_end(&self, open: usize) -> Option<usize> {
         let mut depth = 0usize;
         for k in open..self.toks.len() {
@@ -185,12 +185,12 @@ impl Parser<'_> {
         None
     }
 
-    /// テンプレートの引数 (`<` の位置から `close` の前まで) の名前に、型の色を付けます.
+    /// テンプレートの引数 (`<` の位置から `close` の前まで) の名前に, 型の色を付けます.
     fn angle_args(&mut self, open: usize, close: usize) {
         let mut k = open + 1;
         while k < close {
             if self.is_name(k) {
-                // Emacs は、`::` の前の名前と、`<` が続く名前だけに色を付ける (`Foo<Bar>` の `Bar` には付けない)
+                // Emacs は, `::` の前の名前と, `<` が続く名前だけに色を付ける (`Foo<Bar>` の `Bar` には付けない)
                 let last = self.chain_end(k);
                 let mut q = k;
                 while q < last {
@@ -206,7 +206,7 @@ impl Parser<'_> {
         }
     }
 
-    /// 位置 `j` の開き括弧から、対応する閉じ括弧の次までの位置 (閉じなければ、字句の終わり).
+    /// 位置 `j` の開き括弧から, 対応する閉じ括弧の次までの位置 (閉じなければ字句の終わり).
     fn skip_balanced(&self, j: usize) -> usize {
         let mut depth = 0usize;
         for k in j..self.toks.len() {
@@ -224,7 +224,7 @@ impl Parser<'_> {
         self.toks.len()
     }
 
-    /// 位置 `j` から、`stops` のどれかの記号 (括弧の外) か、対応しない閉じ括弧の位置まで進みます.
+    /// 位置 `j` から, `stops` のどれかの記号 (括弧の外) か, 対応しない閉じ括弧の位置まで進みます.
     fn skip_expr(&self, mut j: usize, stops: &[char]) -> usize {
         while j < self.toks.len() {
             let c = self.punct(j);
@@ -240,7 +240,7 @@ impl Parser<'_> {
         j
     }
 
-    /// 文の始まりから、本文の終わり (`stop` なら、対応する `}` の次) まで読みます.
+    /// 文の始まりから, 本文の終わり (`stop` なら, 対応する `}` の次) まで読みます.
     ///
     /// # Returns
     ///
@@ -293,7 +293,7 @@ impl Parser<'_> {
                     }
                     "using" if self.cpp && self.is_name(i + 1) && self.punct(i + 2) == '=' => {
                         self.name(i + 1, TokenKind::Type);
-                        // `using Vec = std::vector<int>;` の、右辺の型
+                        // `using Vec = std::vector<int>;` の, 右辺の型
                         let mark = self.out.len();
                         if self.type_specifier(i + 3, true).is_none() {
                             self.out.truncate(mark);
@@ -315,7 +315,7 @@ impl Parser<'_> {
                     }
                     "case" => case = true,
                     "for" if self.punct(i + 1) == '(' => {
-                        // `for (int i = 0; ...)` の、初めの式
+                        // `for (int i = 0; ...)` の, 初めの式
                         i += 1;
                         start = true;
                     }
@@ -327,7 +327,7 @@ impl Parser<'_> {
         i
     }
 
-    /// `template <typename T, class U>` の仮引数の名前 (`typename` と `class` の次) に、型の色を付けます.
+    /// `template <typename T, class U>` の仮引数の名前 (`typename` と `class` の次) に, 型の色を付けます.
     fn template_params(&mut self, open: usize, close: usize) {
         for k in open + 2..close {
             if !self.is_name(k) {
@@ -344,12 +344,12 @@ impl Parser<'_> {
         }
     }
 
-    /// 型の無い関数の宣言と定義 (C++ のコンストラクタとデストラクタ) を読みます. クラスの本体の中か、修飾した名前
-    /// (`A::A(int x) : v(x) {}`) の、`(` が続くときだけです.
+    /// 型の無い関数の宣言と定義 (C++ のコンストラクタとデストラクタ) を読みます. クラスの本体の中か, 修飾した名前
+    /// (`A::A(int x) : v(x) {}`) の, `(` が続くときだけです.
     ///
     /// # Returns
     ///
-    /// 宣言の次の位置 (定義なら、本体の `{` の位置). 宣言でなければ `None`.
+    /// 宣言の次の位置 (定義なら, 本体の `{` の位置). 宣言でなければ `None`.
     fn constructor(&mut self, i: usize, in_class: bool) -> Option<usize> {
         if !self.cpp {
             return None;
@@ -387,11 +387,11 @@ impl Parser<'_> {
         end
     }
 
-    /// 関数の引数の並び (`(` の位置から) と、後ろの `const` など、初期化子の並び (`: v(x)`)、`= default` を読みます.
+    /// 関数の引数の並び (`(` の位置から) と, 後ろの `const` など, 初期化子の並び (`: v(x)`), `= default` を読みます.
     ///
     /// # Returns
     ///
-    /// `;` の次の位置 (定義なら、本体の `{` の位置).
+    /// `;` の次の位置 (定義なら, 本体の `{` の位置).
     fn function_tail(&mut self, open: usize) -> Option<usize> {
         let mut j = self.params(open)?;
         j = self.after_params(j);
@@ -405,7 +405,7 @@ impl Parser<'_> {
         }
     }
 
-    /// 引数の並びの後ろの、`const` や `__attribute__((...))`、コンストラクタの初期化子の並び (`: v(x)`) を、読み飛ばします.
+    /// 引数の並びの後ろの, `const` や `__attribute__((...))`, コンストラクタの初期化子の並び (`: v(x)`) を, 読み飛ばします.
     fn after_params(&self, mut j: usize) -> usize {
         while self.is_keyword(j) {
             j += 1;
@@ -419,11 +419,11 @@ impl Parser<'_> {
         j
     }
 
-    /// 位置 `i` から宣言を読みます. 宣言でなければ、見つけた名前を捨てます.
+    /// 位置 `i` から宣言を読みます. 宣言でなければ, 見つけた名前を捨てます.
     ///
     /// # Returns
     ///
-    /// 宣言の次の位置 (関数の定義なら、本体の `{` の位置). 宣言でなければ `None`.
+    /// 宣言の次の位置 (関数の定義なら, 本体の `{` の位置). 宣言でなければ `None`.
     fn try_decl(&mut self, i: usize) -> Option<usize> {
         let mark = self.out.len();
         let end = self.declaration(i);
@@ -433,7 +433,7 @@ impl Parser<'_> {
         end
     }
 
-    /// 型と、`,` で区切った宣言子を読みます.
+    /// 型と, `,` で区切った宣言子を読みます.
     fn declaration(&mut self, i: usize) -> Option<usize> {
         let (mut j, typedef) = self.type_specifier(i, false)?;
         if self.punct(j) == ';' {
@@ -441,7 +441,7 @@ impl Parser<'_> {
             return Some(j + 1);
         }
         if j >= self.toks.len() {
-            // 閉じない本体で、本文が終わった
+            // 閉じない本体で, 本文が終わった
             return Some(j);
         }
         loop {
@@ -450,7 +450,7 @@ impl Parser<'_> {
             match self.punct(j) {
                 ',' => j += 1,
                 ';' => return Some(j + 1),
-                // 本文の終わりで、`;` が無い
+                // 本文の終わりで, `;` が無い
                 '\0' if j >= self.toks.len() => return Some(j),
                 '{' if function => return Some(j),
                 // C++ の `for (auto x : v)`
@@ -460,7 +460,7 @@ impl Parser<'_> {
         }
     }
 
-    /// 継承の並び (`:` の次から `{` か `;` の前まで) の名前に、型の色を付けます.
+    /// 継承の並び (`:` の次から `{` か `;` の前まで) の名前に, 型の色を付けます.
     ///
     /// # Returns
     ///
@@ -477,19 +477,19 @@ impl Parser<'_> {
         j
     }
 
-    /// 型 (前に付く語、組み込みの型、`struct 名前 { ... }`、型の名前) を読みます.
-    /// 型の名前は、後ろが名前か `*` `&` (`bare` なら `,` `)` も) のときだけ、型として色を付けます.
+    /// 型 (前に付く語, 組み込みの型, `struct 名前 { ... }`, 型の名前) を読みます.
+    /// 型の名前は, 後ろが名前か `*` `&` (`bare` なら `,` `)` も) のときだけ, 型として色を付けます.
     ///
     /// # Returns
     ///
-    /// 型の次の位置と、`typedef` が付いていたか (型が無ければ `None`).
+    /// 型の次の位置と, `typedef` が付いていたか (型が無ければ `None`).
     fn type_specifier(&mut self, mut j: usize, bare: bool) -> Option<(usize, bool)> {
         let mut typedef = false;
         let mut seen = false;
         loop {
             if self.is_specifier(j) {
                 typedef |= self.words[j] == "typedef";
-                // C++ の `auto x = ...;` は、`auto` が型の代わり
+                // C++ の `auto x = ...;` は, `auto` が型の代わり
                 seen |= self.words[j] == "auto";
                 j += 1;
             } else if self.cpp && self.is_word_in(j, &["typename"]) && self.is_name(j + 1) {
@@ -501,7 +501,7 @@ impl Parser<'_> {
                 j = self.skip_balanced(j + 1);
                 seen = true;
             } else if self.words.get(j).is_some_and(|w| self.spec.is_type(w)) {
-                // Emacs は、`_Complex double z;` の `z` に色を付けない
+                // Emacs は, `_Complex double z;` の `z` に色を付けない
                 if matches!(self.words[j].as_str(), "_Complex" | "_Imaginary") {
                     return None;
                 }
@@ -558,7 +558,7 @@ impl Parser<'_> {
         seen.then_some((j, typedef))
     }
 
-    /// 位置 `j` が、型の名前の次に来られる字句か (`bare` は、引数と `using` の右辺のように、型だけで終われる場合).
+    /// 位置 `j` が, 型の名前の次に来られる字句か (`bare` は, 引数と `using` の右辺のように, 型だけで終われる場合).
     fn type_follows(&self, j: usize, bare: bool) -> bool {
         self.is_name(j)
             || self.is_specifier(j)
@@ -567,11 +567,11 @@ impl Parser<'_> {
             || (bare && matches!(self.punct(j), ',' | ')' | ';'))
     }
 
-    /// 宣言子 (`*` と、名前、`[]`、`()`、`:`、`= 初期値`) を読みます.
+    /// 宣言子 (`*` と, 名前, `[]`, `()`, `:`, `= 初期値`) を読みます.
     ///
     /// # Returns
     ///
-    /// 宣言子の次の位置と、関数の宣言子だったか (宣言子として読めなければ `None`).
+    /// 宣言子の次の位置と, 関数の宣言子だったか (宣言子として読めなければ `None`).
     fn declarator(&mut self, mut j: usize, typedef: bool) -> Option<(usize, bool)> {
         while matches!(self.punct(j), '*' | '&') || self.is_specifier(j) {
             j += 1;
@@ -585,7 +585,7 @@ impl Parser<'_> {
         };
         let open = j;
         if self.punct(j) == '(' && matches!(self.punct(j + 1), '*' | '&') {
-            // 関数ポインタ `(*名前)(引数)` と、配列へのポインタと参照 `(*名前)[4]`
+            // 関数ポインタ `(*名前)(引数)` と, 配列へのポインタと参照 `(*名前)[4]`
             let mut k = j + 1;
             while matches!(self.punct(k), '*' | '&') {
                 k += 1;
@@ -595,7 +595,7 @@ impl Parser<'_> {
             }
             j = k + 2;
             let call = self.punct(j) == '(';
-            // Emacs は、`typedef int (&A)[4];` の `A` に色を付けない
+            // Emacs は, `typedef int (&A)[4];` の `A` に色を付けない
             if !(typedef && !call && self.punct(open + 1) == '&') {
                 self.name(
                     k,
@@ -616,7 +616,7 @@ impl Parser<'_> {
                 }
             }
         } else if let Some(end) = op {
-            // 演算子の関数 `operator+(...)`. 色が付くのは、演算子の記号
+            // 演算子の関数 `operator+(...)`. 色が付くのは, 演算子の記号
             function = true;
             for k in j + 1..end {
                 self.name(k, TokenKind::FunctionName);
@@ -638,7 +638,7 @@ impl Parser<'_> {
                 None
             };
             if let Some(end) = qualified {
-                // `A::operator+(...)`. `::` の前は定数の色で、演算子の記号には色が付かない
+                // `A::operator+(...)`. `::` の前は定数の色で, 演算子の記号には色が付かない
                 function = true;
                 self.name_chain(first, name, TokenKind::Constant);
                 j = self.params(end)?;
@@ -682,7 +682,7 @@ impl Parser<'_> {
         Some((j, function))
     }
 
-    /// 位置 `op` の `operator` の次から続く、演算子の記号 (`+` `==` `()` `[]` `<<`) の次の位置 (記号が無ければ `None`).
+    /// 位置 `op` の `operator` の次から続く, 演算子の記号 (`+` `==` `()` `[]` `<<`) の次の位置 (記号が無ければ `None`).
     fn operator_symbols(&self, op: usize) -> Option<usize> {
         let first = op + 1;
         if matches!(
@@ -698,7 +698,7 @@ impl Parser<'_> {
         (k > first).then_some(k)
     }
 
-    /// `if` `while` `switch` の `(` の位置 `open` から、条件の中の宣言 (`if (int x = f())`、`if (auto it = m.find(k); ...)`) を読みます.
+    /// `if` `while` `switch` の `(` の位置 `open` から, 条件の中の宣言 (`if (int x = f())`, `if (auto it = m.find(k); ...)`) を読みます.
     /// 変数に初期値が付く形 (`=` が 1 つ) だけです.
     ///
     /// # Returns
@@ -713,7 +713,7 @@ impl Parser<'_> {
         end
     }
 
-    /// `condition` の本体 (宣言が読めなければ、色を捨てるのは呼び出し側).
+    /// `condition` の本体 (宣言が読めなければ, 色を捨てるのは呼び出し側).
     fn condition_declaration(&mut self, start: usize) -> Option<usize> {
         let (mut j, _) = self.type_specifier(start, false)?;
         while matches!(self.punct(j), '*' | '&') || self.is_specifier(j) {
@@ -744,7 +744,7 @@ impl Parser<'_> {
         Some(close)
     }
 
-    /// 引数 1 つ (`start` から、`,` か `end` の前まで) を読みます. 型と名前に色を付けられなければ、読み飛ばす.
+    /// 引数 1 つ (`start` から, `,` か `end` の前まで) を読みます. 型と名前に色を付けられなければ, 読み飛ばす.
     ///
     /// # Returns
     ///

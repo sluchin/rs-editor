@@ -383,7 +383,7 @@ fn test_undo_groups_and_primitive_undo() {
     let (entries, _) = buffer.undo_groups(end, 5);
     buffer.primitive_undo(&entries).unwrap();
     assert_eq!(buffer.text(), "");
-    // 履歴を使い切ったら, 何も取り出さない. 範囲の終わりは履歴の長さに収める
+    // 履歴を使い切ったら何も取り出さない. 範囲の終わりは履歴の長さに収める
     let (entries, end) = buffer.undo_groups(0, 3);
     assert!(entries.is_empty());
     assert_eq!(end, 0);
@@ -433,7 +433,7 @@ fn test_line_accessors() {
     assert_eq!(buffer.line_of_position(0), 0);
     assert_eq!(buffer.line_of_position(4), 1);
     assert_eq!(buffer.line_of_position(99), 3);
-    // 終わりの改行の後ろは、空の行
+    // 終わりの改行の後ろは, 空の行
     let buffer = Buffer::with_text("n", "a\n");
     assert_eq!(buffer.line_count(), 2);
     assert_eq!(buffer.line_text(1), "");

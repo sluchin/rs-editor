@@ -1,4 +1,4 @@
-//! コマンドループ: キーを引いて、コマンドを Lisp で動かす (Emacs の `command-loop` に当たる).
+//! コマンドループ: キーを引いて, コマンドを Lisp で動かす (Emacs の `command-loop` に当たる).
 //!
 //! 画面 (Tauri) とターミナルのアプリで共通です. 前置引数, `this-command`, `last-command`,
 //! 元に戻す区切り (`undo-boundary`), 変更した後のマークの解除を受け持ちます.
@@ -55,7 +55,7 @@ fn symbol(name: &str) -> Value {
     Value::Symbol(name.to_string())
 }
 
-/// キーが、入れる文字なら、その文字.
+/// キーが, 入れる文字ならその文字.
 pub fn printable(key: &str) -> Option<char> {
     if key == "SPC" {
         return Some(' ');
@@ -67,7 +67,7 @@ pub fn printable(key: &str) -> Option<char> {
     }
 }
 
-/// キーの名前を, `read-key` が返す名前 (Lisp のコマンドが決まりにしている、画面のキーの名前) にします.
+/// キーの名前を, `read-key` が返す名前 (Lisp のコマンドが決まりにしている, 画面のキーの名前) にします.
 pub fn read_key_name(key: &str) -> String {
     match key {
         "SPC" => " ",
@@ -81,7 +81,7 @@ pub fn read_key_name(key: &str) -> String {
 }
 
 impl<U: Host + LoopUi> CommandLoop<U> {
-    /// エディタの窓口と、評価器と、キーの割り当てから作り, エディタの基本のコマンド (`lisp/simple.scm` など) を読みます.
+    /// エディタの窓口と, 評価器と, キーの割り当てから作り, エディタの基本のコマンド (`lisp/simple.scm` など) を読みます.
     ///
     /// # Errors
     ///
@@ -331,7 +331,7 @@ impl<U: Host + LoopUi> CommandLoop<U> {
     }
 
     /// コマンドの前か後のフック (`pre-command-hook`, `post-command-hook`) を走らせます.
-    /// 手続きが無ければ, 評価しない. 失敗は, エコー領域に出す.
+    /// 手続きが無ければ評価しない. 失敗は, エコー領域に出す.
     fn run_command_hook(&self, hook: &str) {
         let empty = match self.evaluator.global().get(hook) {
             None | Some(Value::Nil) | Some(Value::Boolean(false)) => true,
@@ -348,14 +348,14 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         }
     }
 
-    /// コマンドを終えた後の処理: 失敗を知らせ、元に戻す区切りを入れ,前のコマンドを覚え、マークを外す.
+    /// コマンドを終えた後の処理: 失敗を知らせ, 元に戻す区切りを入れ,前のコマンドを覚え, マークを外す.
     fn finish(&self, command: &str, outcome: Result<(), Error>) {
         if let Err(error) = outcome {
             // マクロは, 失敗したところで止める
             self.host.ui().stop_macro();
             self.say(&error);
         }
-        // 区切りのための呼び出しは、失敗しない
+        // 区切りのための呼び出しは, 失敗しない
         let _ = self.host.call("undo-boundary", vec![]);
         let globals = self.evaluator.global();
         let this = globals

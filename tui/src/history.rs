@@ -10,9 +10,9 @@ use rseditor_core::syntax::Dialect;
 /// 問いの履歴 (核の `read-string` などが渡す, 履歴の名前, 既定の値, 中身, 始めの位置).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct HistoryArgs {
-    /// 履歴の名前 (空なら, 履歴を使わない).
+    /// 履歴の名前 (空なら履歴を使わない).
     pub name: String,
-    /// 既定の値 (`M-n` で, 履歴の先に出す).
+    /// 既定の値 (`M-n` で履歴の先に出す).
     pub defaults: Vec<String>,
     /// 履歴の中身 (Lisp の変数の値. 新しい順). `None` なら, 画面が名前ごとに覚えている履歴を使う.
     pub items: Option<Vec<String>>,

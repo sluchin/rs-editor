@@ -15,7 +15,7 @@ export interface Completion {
  *
  * @param input - 入力.
  * @param candidates - 候補.
- * @returns 補完した入力と, 前方一致する候補 (無ければ, 入力のまま).
+ * @returns 補完した入力と, 前方一致する候補 (無ければ入力のまま).
  */
 export function complete(input: string, candidates: readonly string[]): Completion {
   const matches = [...new Set(candidates.filter((c) => c.startsWith(input)))].sort()

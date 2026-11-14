@@ -61,7 +61,7 @@ pub struct Evaluator {
     keys: Mutex<Vec<KeyBinding>>,
     /// 評価中は, 持ち続けるロック (評価は, 1 度に 1 つ).
     running: Mutex<()>,
-    /// `provide` した機能の名前 (`require` で, 2 度読まない).
+    /// `provide` した機能の名前 (`require` で 2 度読まない).
     features: Mutex<Vec<String>>,
     /// `ert-deftest` で定義したテスト (定義した順).
     tests: Mutex<Vec<ErtTest>>,
@@ -71,7 +71,7 @@ pub struct Evaluator {
     symbol_files: Mutex<HashMap<String, String>>,
     /// `message` が出した文 (Emacs の `*Messages*`). 古いものから.
     message_log: Mutex<Vec<String>>,
-    /// 相対パスの基のディレクトリ (Emacs の `default-directory`. 無ければ, ホームディレクトリ).
+    /// 相対パスの基のディレクトリ (Emacs の `default-directory`. 無ければホームディレクトリ).
     default_directory: Mutex<Option<std::path::PathBuf>>,
     /// `define-error` で決めた種類 (名前, 受ける条件と, 説明).
     error_kinds: Mutex<HashMap<String, (Vec<String>, String)>>,
@@ -250,7 +250,7 @@ impl Evaluator {
         })
     }
 
-    /// 相対パスの基のディレクトリを決めます (バッチモードは, 起動したディレクトリ. 決めなければ, ホームディレクトリ).
+    /// 相対パスの基のディレクトリを決めます (バッチモードは, 起動したディレクトリ. 決めなければホームディレクトリ).
     ///
     /// # Arguments
     ///
@@ -355,7 +355,7 @@ impl Evaluator {
         self.symbol_files.lock_recover().get(name).cloned()
     }
 
-    /// 機能を覚えます (Emacs の `provide`. 覚えていれば, 何もしない).
+    /// 機能を覚えます (Emacs の `provide`. 覚えていれば何もしない).
     ///
     /// # Arguments
     ///
@@ -389,7 +389,7 @@ impl Evaluator {
         self.tests.lock_recover()
     }
 
-    /// コマンドとして覚えます (覚えていれば, 何もしない).
+    /// コマンドとして覚えます (覚えていれば何もしない).
     ///
     /// # Arguments
     ///
@@ -656,7 +656,7 @@ impl<'a> Machine<'a> {
         }
     }
 
-    /// 式を順に評価して, 値を並べます.
+    /// 式を順に評価して値を並べます.
     ///
     /// # Arguments
     ///
@@ -763,7 +763,7 @@ impl<'a> Machine<'a> {
             _ => (None, args),
         };
         let saved = self.host.call("current-buffer", vec![])?;
-        // save-excursion は, 位置を追うマーカーで覚える (画面に頼むときは、マーカーが無いので、位置の数で覚える)
+        // save-excursion は, 位置を追うマーカーで覚える (画面に頼むときは, マーカーが無いので位置の数で覚える)
         let point = if op == "save-excursion" {
             Some(match self.host.call("point-marker", vec![]) {
                 Ok(id) => (true, id),
@@ -812,7 +812,7 @@ impl<'a> Machine<'a> {
         outcome
     }
 
-    /// 式を順に評価して, 最後の値を返します.
+    /// 式を順に評価して最後の値を返します.
     fn eval_body(&mut self, body: &[Value], env: &Env) -> Result<Value, Error> {
         let mut value = Value::Nil;
         for expr in body {

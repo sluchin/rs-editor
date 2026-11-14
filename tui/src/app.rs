@@ -1,4 +1,4 @@
-//! ターミナルのエディタ: キーを受けて、コマンドを動かし (コマンドループは核の [`CommandLoop`])、画面を描く.
+//! ターミナルのエディタ: キーを受けて, コマンドを動かし (コマンドループは核の [`CommandLoop`]), 画面を描く.
 
 use rseditor_core::error::Error;
 use std::collections::{BTreeMap, VecDeque};
@@ -26,7 +26,7 @@ pub struct App {
 }
 
 impl App {
-    /// エディタを作ります. 基本の編集のコマンド (`lisp/simple.scm` など) を読み、ファイルを開く.
+    /// エディタを作ります. 基本の編集のコマンド (`lisp/simple.scm` など) を読み, ファイルを開く.
     ///
     /// # Arguments
     ///
@@ -111,7 +111,7 @@ impl App {
         state.screen.draw(&frame);
     }
 
-    /// 画面を描いて、キーを読み、終わるまで繰り返します.
+    /// 画面を描いて, キーを読み, 終わるまで繰り返します.
     pub fn run(&mut self) {
         loop {
             self.draw();

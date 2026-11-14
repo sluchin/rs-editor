@@ -1,9 +1,9 @@
-//! 宣言の名前 (`core/src/highlight/decl.rs` と、`#define` の名前) のテスト.
-//! 期待値は、Emacs 30 の `c-mode` の font-lock の結果 (`tests/c-highlight/cases/14-decls.c` で、同じ入力を Emacs と比べる).
+//! 宣言の名前 (`core/src/highlight/decl.rs` と, `#define` の名前) のテスト.
+//! 期待値は, Emacs 30 の `c-mode` の font-lock の結果 (`tests/c-highlight/cases/14-decls.c` で, 同じ入力を Emacs と比べる).
 
 use rseditor_core::highlight::{tokenize, Language};
 
-/// 宣言の名前だけを (本文の中の文字列, 種類の名前) の並びにする (キーワード、組み込みの型と定数、数値などは除く).
+/// 宣言の名前だけを (本文の中の文字列, 種類の名前) の並びにする (キーワード, 組み込みの型と定数, 数値などは除く).
 fn names_in(language: Language, text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
     let spec = language.spec().unwrap();
@@ -46,7 +46,7 @@ fn test_variables() {
             ("pp", "variable-name"),
         ])
     );
-    // 型の名前は、型の色. 前後の `const` `static` は、型の名前を邪魔しない
+    // 型の名前は, 型の色. 前後の `const` `static` は, 型の名前を邪魔しない
     assert_eq!(
         names("static const point_t *cp, q; point_t const *r;"),
         expect(&[
@@ -57,7 +57,7 @@ fn test_variables() {
             ("r", "variable-name"),
         ])
     );
-    // 初期値の中の括弧、波括弧、`,` は、宣言を分けない
+    // 初期値の中の括弧, 波括弧, `,` は, 宣言を分けない
     assert_eq!(
         names("int a = f(1, 2), b = (3, 4), c[2] = {5, 6};"),
         expect(&[
@@ -75,9 +75,9 @@ fn test_variables() {
             ("flags", "variable-name"),
         ])
     );
-    // 本文の終わりで、`;` が無くても
+    // 本文の終わりで, `;` が無くても
     assert_eq!(names("int x"), expect(&[("x", "variable-name")]));
-    // `a * b` は、型 a のポインタの宣言と読む (Emacs と同じ)
+    // `a * b` は, 型 a のポインタの宣言と読む (Emacs と同じ)
     assert_eq!(
         names("a * b;"),
         expect(&[("a", "type"), ("b", "variable-name")])
@@ -86,23 +86,23 @@ fn test_variables() {
 
 #[test]
 fn test_not_declarations() {
-    // 式と呼び出しには、色が付かない
+    // 式と呼び出しには, 色が付かない
     assert_eq!(
         names("x = y; foo(x); a * 2; a + b; x.y = 1; r->y = 2;"),
         vec![]
     );
-    // 型の後ろが、宣言子の形でなければ、宣言ではない
+    // 型の後ろが, 宣言子の形でなければ, 宣言ではない
     assert_eq!(names("int x y;"), vec![]);
     assert_eq!(names("int 3;"), vec![]);
     assert_eq!(names("int x {"), vec![]);
-    // 型の名前が単独なら、型の名前ではない
+    // 型の名前が単独なら, 型の名前ではない
     assert_eq!(names("point_t;"), vec![]);
-    // 名前の無い struct は、本体が無ければ宣言ではない
+    // 名前の無い struct は, 本体が無ければ宣言ではない
     assert_eq!(names("struct ; int"), vec![]);
-    // Emacs は、`_Complex double z;` の `z` に色を付けない
+    // Emacs は, `_Complex double z;` の `z` に色を付けない
     assert_eq!(names("_Complex double z;"), vec![]);
     assert_eq!(names("double _Imaginary w;"), vec![]);
-    // 宣言でないと分かったら、読み取った名前は捨てる
+    // 宣言でないと分かったら, 読み取った名前は捨てる
     assert_eq!(names("point_t *3;"), vec![]);
 }
 
@@ -118,7 +118,7 @@ fn test_functions() {
             ("b", "variable-name"),
         ])
     );
-    // 宣言 (本体なし)、`void` だけの引数、型だけの引数、名前の無い引数
+    // 宣言 (本体なし), `void` だけの引数, 型だけの引数, 名前の無い引数
     assert_eq!(
         names("int f1(void); int f2(point_t, int); char *dup(const char *s);"),
         expect(&[
@@ -129,17 +129,17 @@ fn test_functions() {
             ("s", "variable-name"),
         ])
     );
-    // 関数の後ろの `__attribute__` と、複数の宣言子
+    // 関数の後ろの `__attribute__` と, 複数の宣言子
     assert_eq!(
         names("void f(void) __attribute__((noreturn)), g(int);"),
         expect(&[("f", "function-name"), ("g", "function-name")])
     );
-    // 引数の形が崩れていても、読み飛ばす. 色が付くのは、型と名前を読めた引数だけ
+    // 引数の形が崩れていても, 読み飛ばす. 色が付くのは, 型と名前を読めた引数だけ
     assert_eq!(
         names("int f(x + 1, point_t *3, int a);"),
         expect(&[("f", "function-name"), ("a", "variable-name")])
     );
-    // 閉じない引数の並びは、宣言ではない
+    // 閉じない引数の並びは, 宣言ではない
     assert_eq!(names("int f(int a"), vec![]);
     // 引数の中の括弧
     assert_eq!(
@@ -155,17 +155,17 @@ fn test_functions() {
 
 #[test]
 fn test_function_pointers_and_typedefs() {
-    // 関数ポインタの変数は、関数の名前の色. 引数の無い `(**fq)` は、変数の名前の色 (Emacs と同じ)
+    // 関数ポインタの変数は, 関数の名前の色. 引数の無い `(**fq)` は, 変数の名前の色 (Emacs と同じ)
     assert_eq!(
         names("int (*fp)(int, int); int (**fq);"),
         expect(&[("fp", "function-name"), ("fq", "variable-name")])
     );
-    // `typedef` で作る名前は、型の色
+    // `typedef` で作る名前は, 型の色
     assert_eq!(
         names("typedef unsigned long ulong_t; typedef int (*cb_t)(int); typedef void fn_t(int);"),
         expect(&[("ulong_t", "type"), ("cb_t", "type"), ("fn_t", "type"),])
     );
-    // 関数ポインタの形が崩れていれば、宣言ではない
+    // 関数ポインタの形が崩れていれば, 宣言ではない
     assert_eq!(names("int (*3)(int);"), vec![]);
     assert_eq!(names("int (*fp x;"), vec![]);
     assert_eq!(names("int (*fp)(int"), vec![]);
@@ -183,7 +183,7 @@ fn test_aggregates() {
             ("value", "variable-name"),
         ])
     );
-    // 型の名前と、変数の名前
+    // 型の名前と, 変数の名前
     assert_eq!(
         names("typedef struct point { int x, y; } point_t; union u { int i; float f; } v;"),
         expect(&[
@@ -197,7 +197,7 @@ fn test_aggregates() {
             ("v", "variable-name"),
         ])
     );
-    // 列挙子は、変数の名前の色 (Emacs と同じ)
+    // 列挙子は, 変数の名前の色 (Emacs と同じ)
     assert_eq!(
         names("enum color { RED, GREEN = (1 + 2), BLUE, } c; enum { ONLY } o; enum { 1 };"),
         expect(&[
@@ -210,7 +210,7 @@ fn test_aggregates() {
             ("o", "variable-name"),
         ])
     );
-    // 閉じない列挙子の並びは、本文の終わりまで
+    // 閉じない列挙子の並びは, 本文の終わりまで
     assert_eq!(
         names("enum e { A, B"),
         expect(&[
@@ -258,7 +258,7 @@ fn test_statements_in_function_bodies() {
             ("done", "constant"),
         ])
     );
-    // `goto` の次が名前でなければ、色を付けない
+    // `goto` の次が名前でなければ, 色を付けない
     assert_eq!(names("goto 1; goto *p;"), vec![]);
 }
 
@@ -280,19 +280,19 @@ fn test_attributes_typeof_and_auto() {
 
 #[test]
 fn test_code_tokens_skip_comments_directives_and_literals() {
-    // コメント、文字列、プリプロセッサの行の中は、宣言ではない
+    // コメント, 文字列, プリプロセッサの行の中は, 宣言ではない
     assert_eq!(
         names("/* int a; */ // int b;\nchar *s = \"int c;\"; 'x';\n#include <int d;>\n#error int e;\nint f;"),
         expect(&[("s", "variable-name"), ("f", "variable-name")])
     );
     // 数値の次の `:` はラベルではない
     assert_eq!(names("1 : x"), vec![]);
-    // C++ の生の文字列も、字句 1 つ (中の `;` で文が終わらない)
+    // C++ の生の文字列も, 字句 1 つ (中の `;` で文が終わらない)
     assert_eq!(
         names_in(Language::Cpp, "auto s = R\"x(int a; )x\"; int b;"),
         expect(&[("s", "variable-name"), ("b", "variable-name")])
     );
-    // 行の継続のあとの行は、指示の続き
+    // 行の継続のあとの行は, 指示の続き
     assert_eq!(
         names("#define A \\\n  int b;\nint c;"),
         expect(&[("A", "variable-name"), ("c", "variable-name")])
@@ -309,7 +309,7 @@ fn test_define_names() {
             ("INDENTED", "variable-name"),
         ])
     );
-    // 名前の直後に `(` があれば、関数のような形で、名前は関数の名前、引数は変数の名前
+    // 名前の直後に `(` があれば, 関数のような形で, 名前は関数の名前, 引数は変数の名前
     assert_eq!(
         names("#define SQ(x) ((x) * (x))\n#define ADD(a,b) a+b\n#define V(fmt, ...) f(fmt, __VA_ARGS__)\n"),
         expect(&[
@@ -322,9 +322,9 @@ fn test_define_names() {
             ("fmt", "variable-name"),
         ])
     );
-    // 空白があれば、関数のような形ではない
+    // 空白があれば, 関数のような形ではない
     assert_eq!(names("#define F (x)\n"), expect(&[("F", "variable-name")]));
-    // 閉じない引数は、行の終わりまで. 本文の終わりでも
+    // 閉じない引数は, 行の終わりまで. 本文の終わりでも
     assert_eq!(
         names("#define G(a, b\nint c;"),
         expect(&[
@@ -338,12 +338,12 @@ fn test_define_names() {
         names("#define H(a"),
         expect(&[("H", "function-name"), ("a", "variable-name")])
     );
-    // 名前が無い、数字で始まる、キーワードなら、色を付けない
+    // 名前が無い, 数字で始まる, キーワードなら, 色を付けない
     assert_eq!(
         names("#define\n#define 1x y\n#define if 1\n#define \n"),
         vec![]
     );
-    // 引数の数字とキーワードにも、色を付けない
+    // 引数の数字とキーワードにも, 色を付けない
     assert_eq!(
         names("#define K(1, int, z) 1\n"),
         expect(&[("K", "function-name"), ("z", "variable-name")])
@@ -370,7 +370,7 @@ fn test_cpp_qualified_names_and_template_arguments() {
             ("ptr", "variable-name"),
         ])
     );
-    // テンプレートの引数: `::` の前と、`<` が続く名前だけに色を付ける (Emacs と同じ)
+    // テンプレートの引数: `::` の前と, `<` が続く名前だけに色を付ける (Emacs と同じ)
     assert_eq!(
         cpp("const std::vector<int> &r = g(); Foo<Bar> m; std::map<std::string, int> t; std::vector<std::vector<int>> grid;"),
         expect(&[
@@ -390,10 +390,10 @@ fn test_cpp_qualified_names_and_template_arguments() {
             ("grid", "variable-name"),
         ])
     );
-    // `<` が閉じなければ、テンプレートの引数ではない (式の `a < b`)
+    // `<` が閉じなければ, テンプレートの引数ではない (式の `a < b`)
     assert_eq!(cpp("a < b; x < (y; z"), vec![]);
     assert_eq!(cpp("a < b"), vec![]);
-    // C では、`::` も `<` も、特別ではない
+    // C では, `::` も `<` も, 特別ではない
     assert_eq!(names("std::string name;"), vec![]);
 }
 
@@ -431,14 +431,14 @@ fn test_cpp_classes_and_members() {
             ("get", "function-name"),
         ])
     );
-    // 本体の中の関数の呼び出しには、色を付けない. クラスの外の、型の無い呼び出しにも
+    // 本体の中の関数の呼び出しには, 色を付けない. クラスの外の, 型の無い呼び出しにも
     assert_eq!(
         cpp("foo(1); class A { void f() { g(1); } };"),
         expect(&[("A", "type"), ("f", "function-name")])
     );
-    // C では、型の無い宣言を読まない
+    // C では, 型の無い宣言を読まない
     assert_eq!(names("struct s { foo(int x); };"), expect(&[("s", "type")]));
-    // コンストラクタの形が崩れていれば、読まない
+    // コンストラクタの形が崩れていれば, 読まない
     assert_eq!(
         cpp("class A { A(int x) junk ; B(; ~ 1; };"),
         expect(&[("A", "type")])
@@ -464,7 +464,7 @@ fn test_cpp_out_of_class_definitions() {
             ("i", "variable-name"),
         ])
     );
-    // 修飾した名前の呼び出しは、ファイルの先頭でだけ、宣言と読む. 関数の中では読まない
+    // 修飾した名前の呼び出しは, ファイルの先頭でだけ, 宣言と読む. 関数の中では読まない
     assert_eq!(
         cpp("void f() { a::b(c); }"),
         expect(&[("f", "function-name")])
@@ -502,7 +502,7 @@ fn test_cpp_namespace_using_and_templates() {
             ("v", "variable-name"),
         ])
     );
-    // 閉じない `template <` は、読み飛ばす
+    // 閉じない `template <` は, 読み飛ばす
     assert_eq!(cpp("template < int x;"), vec![]);
     // 範囲 for
     assert_eq!(
@@ -517,7 +517,7 @@ fn test_cpp_namespace_using_and_templates() {
 
 #[test]
 fn test_cpp_operator_functions() {
-    // 色が付くのは、演算子の記号 (クラスの中). クラスの外 `A::operator+` は、`::` の前の名前だけ
+    // 色が付くのは, 演算子の記号 (クラスの中). クラスの外 `A::operator+` は, `::` の前の名前だけ
     assert_eq!(
         cpp("struct V { V operator+(const V &o) const; int operator()(int a); V &operator[](int i); bool operator<<(int q) { return q; } };"),
         expect(&[
@@ -547,7 +547,7 @@ fn test_cpp_operator_functions() {
             ("o", "variable-name"),
         ])
     );
-    // 記号の無い `operator` は、宣言ではない
+    // 記号の無い `operator` は, 宣言ではない
     assert_eq!(cpp("operator ;"), vec![]);
 }
 
@@ -589,7 +589,7 @@ fn test_cpp_declarations_in_conditions() {
             ("s", "variable-name"),
         ])
     );
-    // 宣言でない条件は、色を付けない (`a * b == c` の `==` は初期値ではない)
+    // 宣言でない条件は, 色を付けない (`a * b == c` の `==` は初期値ではない)
     assert_eq!(
         cpp("void k() { if (a * b == c) { } if (x == y) { } if (int z) { } if (int w = 1 { } }"),
         expect(&[("k", "function-name")])

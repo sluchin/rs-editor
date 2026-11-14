@@ -1,10 +1,10 @@
 //! TypeScript の色付け (`core/src/highlight/typescript.rs`) のテスト.
-//! 期待値は、emacs-typescript/typescript-mode の font-lock の結果 (`tests/ts-highlight/expected/`).
-//! 同じ入力 (`tests/ts-highlight/cases/`) を、`tests/ts-highlight/run.sh` で、Emacs と直に比べられる.
+//! 期待値は, emacs-typescript/typescript-mode の font-lock の結果 (`tests/ts-highlight/expected/`).
+//! 同じ入力 (`tests/ts-highlight/cases/`) を, `tests/ts-highlight/run.sh` で, Emacs と直に比べられる.
 
 use rseditor_core::highlight::{tokenize, Language};
 
-/// 範囲を、Emacs の出力 (`dump.el`) と同じ形 (始まりと終わりは 1 から数える. タブ区切り) にする.
+/// 範囲を, Emacs の出力 (`dump.el`) と同じ形 (始まりと終わりは 1 から数える. タブ区切り) にする.
 fn dump(text: &str) -> String {
     tokenize(Language::TypeScript, text)
         .iter()
@@ -12,7 +12,7 @@ fn dump(text: &str) -> String {
         .collect()
 }
 
-/// 本文の色付けを、(文字列, 種類の名前) の並びにする.
+/// 本文の色付けを, (文字列, 種類の名前) の並びにする.
 fn kinds(text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
     tokenize(Language::TypeScript, text)
@@ -31,7 +31,7 @@ fn expect(items: &[(&str, &'static str)]) -> Vec<(String, &'static str)> {
     items.iter().map(|(t, k)| (t.to_string(), *k)).collect()
 }
 
-/// 試験の入力と、Emacs の出力を、同じ名前で比べる.
+/// 試験の入力と, Emacs の出力を, 同じ名前で比べる.
 macro_rules! golden {
     ($($test:ident: $name:literal,)*) => {$(
         #[test]
@@ -69,6 +69,6 @@ fn test_mode_name() {
 
 #[test]
 fn test_unbalanced_parentheses_before_an_arrow_are_skipped() {
-    // Emacs は、この入力で `scan-error` になり、色付けを止める. ここでは、引数を探すのをやめるだけ
+    // Emacs は, この入力で `scan-error` になり, 色付けを止める. ここでは, 引数を探すのをやめるだけ
     assert_eq!(kinds("a) => { };"), expect(&[("=>", "keyword")]));
 }

@@ -1,4 +1,4 @@
-//! 画面の組み立て (`render`) と、ホストの細かい操作のテスト.
+//! 画面の組み立て (`render`) と, ホストの細かい操作のテスト.
 
 mod common;
 use common::Fixture;
@@ -22,7 +22,7 @@ fn draw(text: &str, rows: usize, cols: usize) -> (Vec<String>, (usize, usize)) {
 
 #[test]
 fn test_wrapping_tabs_controls_and_wide_characters() {
-    // 折り返す: カーソルは、折り返した行の中
+    // 折り返す: カーソルは, 折り返した行の中
     let (lines, cursor) = draw("abcdefghij", 6, 4);
     assert_eq!(&lines[..3], ["abcd", "efgh", "ij"]);
     assert_eq!(cursor, (2, 2));
@@ -30,7 +30,7 @@ fn test_wrapping_tabs_controls_and_wide_characters() {
     let (lines, _) = draw("a\tb\n\x01\x7f", 6, 20);
     assert_eq!(lines[0], "a       b");
     assert_eq!(lines[1], "^A^?");
-    // 幅の広い文字は 2 マス. 端で割らずに、次の行へ
+    // 幅の広い文字は 2 マス. 端で割らずに, 次の行へ
     let (lines, cursor) = draw("あいう", 6, 5);
     assert_eq!(lines[0], "あい");
     assert_eq!(lines[1], "う");
@@ -43,12 +43,12 @@ fn test_wrapping_tabs_controls_and_wide_characters() {
 #[test]
 fn test_scrolling_keeps_the_cursor_visible() {
     let text: String = (0..20).map(|i| format!("line{i}\n")).collect();
-    // 末尾にカーソルがあれば、末尾が見える
+    // 末尾にカーソルがあれば, 末尾が見える
     let (lines, cursor) = draw(&text, 6, 10);
     assert_eq!(lines[3], "");
     assert!(lines[..4].contains(&"line19".to_string()));
     assert_eq!(cursor.1, 0);
-    // 前に戻ると、一番上の行も戻る
+    // 前に戻ると, 一番上の行も戻る
     let mut editor = Editor::new();
     editor.current_buffer_mut().insert(&text);
     let mut tops = BTreeMap::new();
@@ -58,7 +58,7 @@ fn test_scrolling_keeps_the_cursor_visible() {
     let frame = render(&editor, &mut tops, 6, 10, "", None);
     assert_eq!(tops[&1], 0);
     assert_eq!(frame.line(0), "line0");
-    // 折り返した行が多くても、カーソルの行が見える
+    // 折り返した行が多くても, カーソルの行が見える
     let long = format!("{}\nx", "a".repeat(40));
     let (lines, _) = draw(&long, 4, 5);
     assert_eq!(lines[0], "x");
@@ -78,7 +78,7 @@ fn test_mode_line_and_echo_area() {
     let mode_row = &frames.last().unwrap().cells[10];
     assert!(mode_row.iter().all(|c| c.reverse));
     drop(frames);
-    // メッセージは、最後の行. 幅を越えたら切る
+    // メッセージは, 最後の行. 幅を越えたら切る
     fx.press("C-x C-z");
     fx.app.draw();
     assert_eq!(fx.screen()[11], "C-x C-z is undefined");
@@ -231,12 +231,12 @@ fn test_host_operations_of_the_terminal() {
             .unwrap_err(),
         "Undefined command: no-such-command"
     );
-    // 画面の高さ: 窓が 1 つなら, 行 - 2. 分けると半分
+    // 画面の高さ: 窓が 1 つなら行 - 2. 分けると半分
     assert_eq!(fx.app.eval("(window-body-height)").unwrap(), "10");
     fx.press("C-x 2");
     assert_eq!(fx.app.eval("(window-body-height)").unwrap(), "5");
     let _ = list;
-    // 描き直し, `C-g` を押したか (押していなければ偽. 押していれば真で, 押したことは忘れる)
+    // 描き直し, `C-g` を押したか (押していなければ偽. 押していれば真で押したことは忘れる)
     assert_eq!(fx.app.eval("(redisplay)").unwrap(), "nil");
     assert_eq!(fx.app.eval("(quit-requested-p)").unwrap(), "#f");
     fx.keys.lock().unwrap().push_back("C-g".to_string());
@@ -259,7 +259,7 @@ fn test_a_long_line_is_cut_at_the_bottom_of_the_window() {
 fn test_missing_arguments_and_odd_candidates() {
     let fx = Fixture::new();
     let host = fx.app.host();
-    // 文字列でない引数は、空の文字列として扱う
+    // 文字列でない引数は, 空の文字列として扱う
     assert!(host.call("message", vec![]).is_ok());
     assert_eq!(fx.app.message(), "");
     fx.feed("RET");
@@ -338,7 +338,7 @@ fn test_narrowed_buffer_shows_only_the_accessible_part() {
     assert_eq!(frame.cursor, (1, 3));
 }
 
-/// C のバッファを描いて、行 0 のマスの字句の種類を、文字ごとに文字列にする (無ければ `.`).
+/// C のバッファを描いて, 行 0 のマスの字句の種類を, 文字ごとに文字列にする (無ければ `.`).
 fn token_letters(text: &str, rows: usize, cols: usize, row: usize) -> String {
     use rseditor_core::highlight::TokenKind;
     let mut editor = Editor::new();
@@ -373,11 +373,11 @@ fn test_cells_carry_the_syntax_token_kinds() {
         token_letters("int x; // hi\nreturn \"s\";", 6, 30, 1),
         "kkkkkk.sss."
     );
-    // 複数行のコメントは、次の行も
+    // 複数行のコメントは, 次の行も
     assert_eq!(token_letters("/* a\nb */ int", 6, 30, 1), "cddd.ttt");
-    // 折り返した行と、幅の広い文字の 2 マス目も、同じ種類
+    // 折り返した行と, 幅の広い文字の 2 マス目も, 同じ種類
     assert_eq!(token_letters("int あ; /* い */", 6, 8, 0), "ttt.vv..");
-    // 言語が無ければ、種類は無い
+    // 言語が無ければ, 種類は無い
     let mut editor = Editor::new();
     editor.current_buffer_mut().insert("int x;");
     editor.current_buffer_mut().set_mode_name("text-mode");
@@ -462,7 +462,7 @@ fn test_token_styles_and_color_pairs() {
         token_style(TokenKind::DocValue, 8),
         token_style(TokenKind::VariableName, 8)
     );
-    // 対の番号は、1 から、種類ごとに違う
+    // 対の番号は, 1 から, 種類ごとに違う
     let pairs: Vec<i16> = TokenKind::ALL.iter().map(|k| token_pair(*k)).collect();
     assert_eq!(pairs, (1..=17).collect::<Vec<i16>>());
 }
@@ -473,12 +473,12 @@ fn test_token_styles_in_256_colors() {
     use rseditor_tui::screen::{token_style, RICH_COLORS};
     // 数値には色が無い
     assert_eq!(token_style(TokenKind::Number, RICH_COLORS), None);
-    // 8 色より多くても 256 色に満たなければ、8 色の色を使う
+    // 8 色より多くても 256 色に満たなければ, 8 色の色を使う
     assert_eq!(
         token_style(TokenKind::Keyword, 16),
         token_style(TokenKind::Keyword, 8)
     );
-    // 全ての種類 (数値以外) が、8 以上の番号の色を持つ
+    // 全ての種類 (数値以外) が, 8 以上の番号の色を持つ
     for kind in TokenKind::ALL {
         if kind != TokenKind::Number {
             let style = token_style(kind, RICH_COLORS).unwrap();

@@ -5,7 +5,7 @@
 //! - Lisp でなければ, 空の行で区切った段落を詰めます (Emacs の text-mode).
 //!   続きの行の始め (fill-prefix) は, 2 行目の始めの空白や `>` などから取ります (`adaptive-fill-mode`).
 //! - 語の間の空白は 1 つにし, 文の終わり (`.` `?` `!`) の後に 2 つあった空白は, 2 つのままにします
-//!   (`sentence-end-double-space`). 行をつないだ所が, 文の終わりなら, 空白 2 つにします.
+//!   (`sentence-end-double-space`). 行をつないだ所が, 文の終わりなら空白 2 つにします.
 //! - 日本語 (漢字, かな) は, 空白の無い所でも折り, 行をつなぐときは空白を入れません.
 //!   行の始めに置けない文字 (`。` `」` など) と, 行の終わりに置けない文字 (`「` など) は, 禁則で避けます.
 
@@ -170,7 +170,7 @@ fn comment_paragraph(lines: &[Vec<char>], line: usize, config: &Config) -> Optio
     })
 }
 
-/// 空の行で区切った段落を探します (Lisp でないとき). 空の行なら, 次の段落. `fill_prefix` があれば, 続きの行の始めにする.
+/// 空の行で区切った段落を探します (Lisp でないとき). 空の行なら次の段落. `fill_prefix` があれば続きの行の始めにする.
 fn text_paragraph(
     lines: &[Vec<char>],
     line: usize,
@@ -238,7 +238,7 @@ struct Char {
 struct Gap {
     /// 空白の後の文字の番号 (本文の中).
     index: usize,
-    /// 空白. 空なら, 空白の無い所で折れる.
+    /// 空白. 空なら空白の無い所で折れる.
     text: &'static str,
 }
 
@@ -328,7 +328,7 @@ struct Word {
     parts: Vec<Part>,
     /// 幅.
     width: usize,
-    /// 後ろの, 行の始めに置けない文字の幅 (禁則で, 行を越えて置ける).
+    /// 後ろの, 行の始めに置けない文字の幅 (禁則で行を越えて置ける).
     tail: usize,
 }
 
@@ -343,7 +343,7 @@ impl Word {
     }
 }
 
-/// 本文を, 折れる所で, 語に分けます. 文の終わりでない `.` の後の空白 1 つでは, 折りません (`Mr. Smith`).
+/// 本文を, 折れる所で語に分けます. 文の終わりでない `.` の後の空白 1 つでは, 折りません (`Mr. Smith`).
 /// 語の前の空白 (始めの語は空) も返します.
 fn to_words(chars: &[Char], gaps: &[Gap]) -> (Vec<Word>, Vec<&'static str>) {
     let mut words = Vec::new();
@@ -376,7 +376,7 @@ fn to_words(chars: &[Char], gaps: &[Gap]) -> (Vec<Word>, Vec<&'static str>) {
     (words, spaces)
 }
 
-/// 段落を詰めて, 行に分けます. 新しい本文と, 本文の文字ごとの新しい位置 (段落の始めから) を返します.
+/// 段落を詰めて行に分けます. 新しい本文と, 本文の文字ごとの新しい位置 (段落の始めから) を返します.
 fn break_lines(
     chars: &[Char],
     gaps: &[Gap],
@@ -450,9 +450,9 @@ pub fn fill_paragraph(
     let (text, positions) = break_lines(&chars, &gaps, &paragraph, config, fill_column);
     let from = starts_of_lines[paragraph.first - 1];
     let to = starts_of_lines[paragraph.last - 1] + lines[paragraph.last - 1].len();
-    // カーソルは, 同じ文字の前に置く (段落の始めの行の, 本文の前なら, そのまま)
+    // カーソルは, 同じ文字の前に置く (段落の始めの行の, 本文の前ならそのまま)
     let next = chars.iter().position(|c| c.pos >= pos);
-    // 前の文字と同じ行の, 語の間の空白の中なら, 前の文字からの距離を保つ (空白が変わるなら, 前の文字の後ろに置く)
+    // 前の文字と同じ行の, 語の間の空白の中なら, 前の文字からの距離を保つ (空白が変わるなら前の文字の後ろに置く)
     let line_of = |p: usize| starts_of_lines.partition_point(|&s| s <= p);
     let in_gap = next.filter(|&k| k > 0).filter(|&k| {
         chars[k].pos > pos && chars[k - 1].pos < pos && line_of(chars[k - 1].pos) == line_of(pos)

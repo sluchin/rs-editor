@@ -424,7 +424,7 @@ impl Source {
         }
     }
 
-    /// バッファの本文から作ります (絞り込んでいれば, 見える範囲だけを読む).
+    /// バッファの本文から作ります (絞り込んでいれば見える範囲だけを読む).
     pub fn from_buffer(buffer: &Buffer, dialect: Dialect) -> Self {
         Source::new(&buffer.text(), dialect).narrow(buffer.begv(), buffer.zv())
     }
@@ -476,7 +476,7 @@ impl Source {
         (self.min, self.max)
     }
 
-    /// 位置から, 構文の種類が `classes` の文字 (`negate` なら, 以外の文字) を飛ばします (Emacs の `skip-syntax-forward` と `skip-syntax-backward`).
+    /// 位置から, 構文の種類が `classes` の文字 (`negate` なら以外の文字) を飛ばします (Emacs の `skip-syntax-forward` と `skip-syntax-backward`).
     ///
     /// # Returns
     ///
@@ -588,7 +588,7 @@ impl Source {
         (pos < max && syntax.class == Class::CommentStart).then(|| (1, CommentKind::of(syntax)))
     }
 
-    /// コメントの中の位置 `i` を読みます (Emacs の `forw_comment` の 1 回り). 同じ型の入れ子の印で, 深さを変える.
+    /// コメントの中の位置 `i` を読みます (Emacs の `forw_comment` の 1 回り). 同じ型の入れ子の印で深さを変える.
     ///
     /// # Returns
     ///
@@ -807,7 +807,7 @@ impl Source {
     /// # Arguments
     ///
     /// * `from` - 読み始める位置.
-    /// * `count` - 読む数 (負なら, 前へ).
+    /// * `count` - 読む数 (負なら前へ).
     /// * `depth` - 始めの深さ (`1` で外のリストの終わりまで, `-1` で中のリストの始めまで).
     /// * `sexp` - 記号や文字列も, 式として数えるなら `true` (`scan-sexps`).
     ///
@@ -1081,7 +1081,7 @@ impl Source {
         pos
     }
 
-    /// コメントと空白を `count` 個飛ばします (Emacs の `forward-comment`. `count` が負なら, 前へ).
+    /// コメントと空白を `count` 個飛ばします (Emacs の `forward-comment`. `count` が負なら前へ).
     ///
     /// # Returns
     ///
@@ -1161,7 +1161,7 @@ impl Source {
     }
 }
 
-/// 構文の指定の文字 (`\s-` の `-` など) から, 構文の種類.
+/// 構文の指定の文字 (`\s-` の `-` など) から構文の種類.
 pub fn class_of_designator(designator: char) -> Option<Class> {
     Some(match designator {
         ' ' | '-' => Class::Space,

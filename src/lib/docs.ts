@@ -1,5 +1,5 @@
 /**
- * バッファの本文 (CodeMirror の `Text`). エディタから受けた描く内容 (全体か, 変更) を当てて, 本文を持ちます.
+ * バッファの本文 (CodeMirror の `Text`). エディタから受けた描く内容 (全体か, 変更) を当てて本文を持ちます.
  * ウィンドウは, 前の本文からの変更 (`ChangeSet`) をそのまま当てて, 色分けの状態を作り直さないようにします.
  */
 
@@ -66,7 +66,7 @@ export class DocStore {
    * バッファの本文を返します.
    *
    * @param name - バッファの名前.
-   * @returns 本文. 知らないバッファなら, 空の本文.
+   * @returns 本文. 知らないバッファなら空の本文.
    */
   get(name: string): DocEntry {
     return this.entries.get(name) ?? { doc: Text.empty, prev: Text.empty, changes: null }

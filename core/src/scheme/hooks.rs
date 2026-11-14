@@ -25,7 +25,7 @@ pub const EDITOR_HOOKS: &[&str] = &["find-file-hook", "after-save-hook"];
 ///
 /// # Returns
 ///
-/// 手続き (記号のまま). 変数が無いか, `#f` か, 空なら, 空.
+/// 手続き (記号のまま). 変数が無いか, `#f` か, 空なら空.
 fn functions(global: &Env, hook: &str) -> Vec<Value> {
     match global.get(hook) {
         None | Some(Value::Boolean(false)) | Some(Value::Nil) => Vec::new(),
@@ -61,10 +61,10 @@ fn hook_name(name: &str, hook: &Value) -> Result<String, Error> {
 ///
 /// # Returns
 ///
-/// 成功すれば `Ok`. 手続きが失敗すれば, その内容.
+/// 成功すれば `Ok`. 手続きが失敗すればその内容.
 fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), Error> {
     for function in functions(machine.evaluator.global(), hook) {
-        // 記号は, その名前の手続き (呼ぶときに引く. 後で定義し直しても, 新しいものを呼ぶ)
+        // 記号は, その名前の手続き (呼ぶときに引く. 後で定義し直しても新しいものを呼ぶ)
         let procedure = match &function {
             Value::Symbol(name) => machine
                 .evaluator

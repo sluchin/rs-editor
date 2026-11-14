@@ -146,7 +146,7 @@ fn test_saving_adds_the_final_newline() {
     assert_eq!(std::fs::read_to_string(path("a.txt")).unwrap(), "abc\n");
     assert_eq!(std::fs::read_to_string(path("b.txt")).unwrap(), "abc\n");
     assert_eq!(std::fs::read_to_string(path("c.txt")).unwrap(), "");
-    // 絞り込んでいても、全体の最後に足す. 無効にもできる
+    // 絞り込んでいても全体の最後に足す. 無効にもできる
     eval(&format!(
         "(switch-to-buffer (find-file-noselect {:?})) (insert \"x\") (narrow-to-region 1 1) (save-buffer)",
         path("d.txt")

@@ -4,7 +4,7 @@
 
 ## 1. 目的と範囲
 
-- C と C++ のソースに、色を付けます。Tauri の画面と ncurses の TUI の**両方**で、同じ結果にします。
+- C と C++ のソースに、色を付けます。Tauri の画面と ncurses の TUI の**両方**で同じ結果にします。
 - そのため、字句の解析は、核 (`core/`、Rust) に置きます。TypeScript (CodeMirror の `StreamLanguage`) では、TUI で使えないためです。
 - 手本は Emacs 30 の `c-mode` / `c++-mode` の font-lock です。Emacs の既定は `font-lock-maximum-decoration` が `t` (最も詳しい段階) です。
 - 言語ごとの違いは、データ (`LanguageSpec`、3.1) にして、言語を足せる形にします。
@@ -23,14 +23,14 @@
 
 - 色は、核の `core/src/highlight/` が字句に分けて付けます。言語は C、C++、Rust、TypeScript、Scheme、Emacs Lisp です。Tauri と TUI の両方に、同じ色が付きます。
 - TUI (`tui/src/ncurses_screen.rs`) は、字句の種類ごとに ncurses の色の対を作ります (8 色と 256 色。5 章)。`highlight-regexp` で強調した所は、下線 (`A_UNDERLINE`) を引きます。
-- メジャーモードの判定は、核の 1 か所です。
+- メジャーモードの判定は核の 1 か所です。
   - `lisp/files.scm` の `auto-mode-alist` と `set-auto-mode` が、ファイルの名前と、1 行目の `-*- mode: NAME -*-` から、バッファの方言 (`Dialect`。Fundamental、Elisp、Scheme) と、`major-mode` の名前を決めます。方言は、構文表 (`core/src/syntax.rs`)、字下げ、段落の区切りに使います。
   - `core/src/mode.rs` の `Buffer::mode_info` が、モードラインの名前と、括弧の読み方 (`scheme` / `elisp` / なし)、字下げのタブとタブの幅 (ファイルの変数 `indent-tabs-mode` `tab-width`) を返します。Tauri の画面は `BufferFrame.mode` で受け取り、TUI のモードラインも同じ名前を使います。
   - 画面には、モードを決める処理を置きません。
 
 ## 3. 方針の中心: 核が「範囲と種類」を返す
 
-核は、色を知りません。「本文の、どこからどこまでが、どの種類か」だけを返します。色への割り当ては、各フロントが行います。
+核は色を知りません。「本文の、どこからどこまでが、どの種類か」だけを返します。色への割り当ては各フロントが行います。
 
 ```rust
 /// 字句の種類 (Emacs の font-lock の face に対応する).
@@ -43,9 +43,9 @@ pub enum TokenKind {
     Type,             // font-lock-type-face (int, void ... 組み込みの型)
     Constant,         // font-lock-constant-face (NULL, true, false)
     Preprocessor,     // font-lock-preprocessor-face (行頭の空白から "#include" まで)
-    Number,           // 字句としては返すが、色は既定で付けない (3.2)
-    FunctionName,     // font-lock-function-name-face (宣言と定義の関数、関数ポインタ、関数のような #define)
-    VariableName,     // font-lock-variable-name-face (宣言の変数、引数、メンバー、列挙子、#define)
+    Number,           // 字句としては返すが, 色は既定で付けない (3.2)
+    FunctionName,     // font-lock-function-name-face (宣言と定義の関数, 関数ポインタ, 関数のような #define)
+    VariableName,     // font-lock-variable-name-face (宣言の変数, 引数, メンバー, 列挙子, #define)
 }
 
 /// 本文の範囲 (文字 (char) の位置. `end` は含まない).
@@ -57,9 +57,9 @@ pub fn tokenize(language: Language, text: &str) -> Vec<Span>;
 
 ### 3.1 解析の方式: 本文を 1 回で読む字句解析器
 
-- 正規表現ではなく、手書きの字句解析器 (`core/src/highlight/mod.rs`) にします。ブロックコメント `/* */`、行の継続 (`\` で終わる行。`//` コメント、文字列、プリプロセッサの行が続く) が、行をまたぐためです。行ごとの正規表現では、扱えません。
+- 正規表現ではなく、手書きの字句解析器 (`core/src/highlight/mod.rs`) にします。ブロックコメント `/* */`、行の継続 (`\` で終わる行。`//` コメント、文字列、プリプロセッサの行が続く) が、行をまたぐためです。行ごとの正規表現では扱えません。
 - 本文の先頭から終わりまでを、1 回の走査で読みます。状態 (指示の行の中か、行の始まりか) は、走査の変数で持ちます。
-- バッファ (`Buffer::token_spans`) は、結果を本文の版 (`version`) と言語で覚えます。本文を書き換えるまでは、同じ結果を使い回します。書き換えると、次の要求で、全体を読み直します (行ごとの状態を覚えて、変わった行から先だけを読み直す効率化は、段階 4)。
+- バッファ (`Buffer::token_spans`) は、結果を本文の版 (`version`) と言語で覚えます。本文を書き換えるまでは同じ結果を使い回します。書き換えると、次の要求で、全体を読み直します (行ごとの状態を覚えて、変わった行から先だけを読み直す効率化は、段階 4)。
 - 言語ごとの違い (キーワード、型、定数の表) は、データ (`LanguageSpec`、`core/src/highlight/lang.rs`) にして、字句解析器は 1 つにします。表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` から取りました。
 - `Buffer::line_token_spans(line)` は、行の中の位置に切った範囲を返します (TUI が使います)。
 
@@ -68,28 +68,28 @@ pub fn tokenize(language: Language, text: &str) -> Vec<Span>;
 Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点です。
 
 - 数値 (`0x1F`、`0`) と、関数の呼び出し (`foo()`) には、色が付きません。`Number` は字句としては返しますが、既定では色を付けません。
-- 大文字の名前 (`MAX_LEN`) は、定数の色になりません。`#define MAX_LEN` の名前は、変数の名前の色 (`font-lock-variable-name-face`) です。使う側の `MAX_LEN` には、色が付きません。
-- 宣言の名前には、色が付きます。`int count` の `count`、`struct point { int x; }` の `x` は変数の名前の色、`int main(void)` の `main` は関数の名前の色、`struct point` の `point` と `typedef ... point_t` の `point_t` と `size_t n` の `size_t` は型の色です。これは cc-mode の宣言の推測 (`c-font-lock-declarations`) によるもので、字句だけでは決まりません。段階 3 で扱います (3.3)。
-- コメントの区切り: `/*` は、続く `*` (最後の `*` が `*/` の一部なら除く) と空白まで。`*/` は、前の空白から (終わりの `*` は 1 つだけ)。`//` は、続く `/` と空白まで。本文が空 (空白だけ、`/**/`、`/*****/`) なら、全体が区切りです。
+- 大文字の名前 (`MAX_LEN`) は、定数の色になりません。`#define MAX_LEN` の名前は、変数の名前の色 (`font-lock-variable-name-face`) です。使う側の `MAX_LEN` には色が付きません。
+- 宣言の名前には色が付きます。`int count` の `count`、`struct point { int x; }` の `x` は変数の名前の色、`int main(void)` の `main` は関数の名前の色、`struct point` の `point` と `typedef ... point_t` の `point_t` と `size_t n` の `size_t` は型の色です。これは cc-mode の宣言の推測 (`c-font-lock-declarations`) によるもので、字句だけでは決まりません。段階 3 で扱います (3.3)。
+- コメントの区切り: `/*` は、続く `*` (最後の `*` が `*/` の一部なら除く) と空白まで。`*/` は、前の空白から (終わりの `*` は 1 つだけ)。`//` は続く `/` と空白まで。本文が空 (空白だけ、`/**/`、`/*****/`) なら、全体が区切りです。
 - ドキュメントのコメント: `/**` の次が `/` と `*` 以外なら、区切りも含めた全体が `font-lock-doc-face` です。
 - プリプロセッサ: 行頭の空白から、指示の名前まで (行頭に空白がある `#` から `include` まで) が `font-lock-preprocessor-face` です。`#include <...>` の `<...>` と、`#error` と `#warning` の本文は、文字列の色です。`#if` と `#elif` の行の `defined` は、指示の色で、`_` で区切った部分にも付きます (`__off64_t_defined` の終わりの `defined`)。
 - 閉じない文字列は、始まりの引用符が警告の色で、本文だけが文字列の色です。
-- 比べ方: `emacs -Q --batch` で、`c-mode` の `font-lock-ensure` を実行して、各文字の face を範囲にして、rs-editor の `token-spans` と比べます (`tests/c-highlight/`。`npm run test:c-highlight`)。宣言の名前の色 (関数、変数、型、ラベル) も比べます。ただし、ファイルの名前に `lexical` が付くケースは、C++ の、宣言の名前を扱わない構文 (テンプレート、名前空間、クラスなど) を含むため、字句だけで決まる種類 (コメント、文字列、キーワード、プリプロセッサ) に絞ります。範囲の前後の改行は、含めません。
+- 比べ方: `emacs -Q --batch` で、`c-mode` の `font-lock-ensure` を実行して、各文字の face を範囲にして、rs-editor の `token-spans` と比べます (`tests/c-highlight/`。`npm run test:c-highlight`)。宣言の名前の色 (関数、変数、型、ラベル) も比べます。ただし、ファイルの名前に `lexical` が付くケースは、C++ の宣言の名前を扱わない構文 (テンプレート、名前空間、クラスなど) を含むため、字句だけで決まる種類 (コメント、文字列、キーワード、プリプロセッサ) に絞ります。範囲の前後の改行は含めません。
 - C++ の生の文字列 `R"x(...)x"` (`R` `LR` `uR` `UR` `u8R` の接頭辞): 色が付くのは `(` から `)` までで、引用符と区切りの `x` は付きません。区切りの書き方が正しくなければ (空白、括弧、`\`、引用符を含む、または 16 文字より長い)、普通の文字列です。閉じなければ、`(` の次から本文の終わりまでが文字列です。
-- C++ の数値の区切り (`1'000'000`) は、数値の一部で、文字定数ではありません。
+- C++ の数値の区切り (`1'000'000`) は、数値の一部で文字定数ではありません。
 - キーワードと型の表は、Emacs の `c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key` (`c-mode` で読んだ値) から取っています。
 
 ### 3.3 宣言の名前 (段階 3)
 
-- 字句解析器は、本文を読むときに、コードの字句 (語、数値と文字列、記号 1 文字。コメントとプリプロセッサの行は除く) の並びも覚えます。`core/src/highlight/decl.rs` が、この並びを文の始まりから読み、宣言の名前に色を付けます。結果の範囲は、字句の範囲と合わせて、始まりの順に並べます。名前は、キーワードでない語だけなので、字句の範囲とは重なりません。
+- 字句解析器は、本文を読むときに、コードの字句 (語、数値と文字列、記号 1 文字。コメントとプリプロセッサの行は除く) の並びも覚えます。`core/src/highlight/decl.rs` が、この並びを文の始まりから読み、宣言の名前に色を付けます。結果の範囲は、字句の範囲と合わせて始まりの順に並べます。名前は、キーワードでない語だけなので、字句の範囲とは重なりません。
 - 文の始まりは、本文の先頭と、`;` `{` `}` `else` `do` の次、`for (` の次、`case ...:` と `default:` の次です。文の始まりから、宣言として読めるかを試し、読めなければ式として読み飛ばします (読み取った名前は捨てます)。
 - 宣言は、型と、`,` で区切った宣言子です。
-  - 型: 前に付く語 (`static` `const` `typedef` など)、組み込みの型、`struct` `union` `enum` (`class`) の名前と本体、`typeof(...)`、`__attribute__((...))`、型の名前。型の名前は、後ろが名前か `*` `&` のときだけ型の色にします (`foo(x)` や `x = y` は宣言ではありません)。`auto` は、型の代わりです。
+  - 型: 前に付く語 (`static` `const` `typedef` など)、組み込みの型、`struct` `union` `enum` (`class`) の名前と本体、`typeof(...)`、`__attribute__((...))`、型の名前。型の名前は、後ろが名前か `*` `&` のときだけ型の色にします (`foo(x)` や `x = y` は宣言ではありません)。`auto` は型の代わりです。
   - 宣言子: `*` の後ろの名前、`[...]`、ビットフィールド `: 幅`、`= 初期値` (括弧の外の `,` か `;` まで読み飛ばす)、関数の宣言子 `名前(引数)`、関数ポインタ `(*名前)(引数)`。名前は、`typedef` なら型の色、後ろが `(` なら関数の名前の色 (関数ポインタも)、それ以外は変数の名前の色です。
-  - 引数: 型と名前を読めた引数に色を付けます。名前の無い引数は、型だけです。`...` は読み飛ばします。
-  - 列挙子は、変数の名前の色です。
+  - 引数: 型と名前を読めた引数に色を付けます。名前の無い引数は型だけです。`...` は読み飛ばします。
+  - 列挙子は変数の名前の色です。
 - ラベル (`名前:`) と `goto 名前` の名前は、定数の色です。
-- `#define` の名前は、変数の名前の色、名前の直後に `(` があれば (関数のような形) 関数の名前の色で、引数の名前は変数の名前の色です。`#undef` など、ほかの指示の名前には、色を付けません。
+- `#define` の名前は、変数の名前の色、名前の直後に `(` があれば (関数のような形) 関数の名前の色で、引数の名前は変数の名前の色です。`#undef` など、ほかの指示の名前には色を付けません。
 - Emacs に合わせた癖: `_Complex` と `_Imaginary` が付く宣言には、色を付けません。
 - C++ では、さらに次の形を読みます (Emacs の `c++-mode` と比べて確かめた形です)。
   - 修飾した名前 `std::string`: `::` の前の名前は定数の色、最後の名前は、型、変数、関数の名前の色です。テンプレートの引数 `vector<int>` は、`::` の前の名前と、`<` が続く名前だけに色を付けます (`Foo<Bar>` の `Bar` には付けません)。
@@ -106,7 +106,7 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 ### 3.4 Scheme と Emacs Lisp
 
-- `core/src/highlight/lisp.rs` が、行ごとに、字句を 1 つずつ読みます (状態は、行をまたいで覚えます。字句は、行をまたぎません)。`tokenize(Language::Scheme | Language::Elisp, text)` が呼びます。C と C++ の字句の表 (`LanguageSpec`) は使わないので、`Language::spec()` は `None` を返します。
+- `core/src/highlight/lisp.rs` が、行ごとに、字句を 1 つずつ読みます (状態は行をまたいで覚えます。字句は行をまたぎません)。`tokenize(Language::Scheme | Language::Elisp, text)` が呼びます。C と C++ の字句の表 (`LanguageSpec`) は使わないので、`Language::spec()` は `None` を返します。
 - 色を付けるのは、Emacs の `scheme-font-lock-keywords-2` と `lisp-el-font-lock-keywords-2` と同じ所です: コメント、文字列、`(` の直後の特別な形 (`define`、`defun`、`if` など)、特別な形で定義する名前 (関数、変数、型)、`:key` などの印。`car` などの関数と、数には付けません。Emacs Lisp では、文字列の中の正規表現のグループ (`\\(`)、キーの名前 (`\\[command]`)、要らない `\`、`` `name' ``、閉じた括弧の後ろに続く引数 (見落としやすい。警告の色) にも、付けます。
 - 種類は、C と同じ `TokenKind` に、`Builtin` (`:key`)、`Warning`、`RegexpGroup` を加えたものです。コメントの区切り (`;`) は、コメントと同じ種類です (色が同じ)。
 - 言語は、構文の方言 (`Buffer::dialect`) で決まります (`emacs-lisp-mode` は Emacs Lisp、`scheme-mode` は Scheme)。`*scratch*` の `lisp-interaction-mode` は、Scheme を評価するので、Scheme です (モード名から決め、コマンドは方言も Scheme にします)。
@@ -145,9 +145,9 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 ### Tauri (画面)
 
 - 核は、描画を作るとき、言語があって、ウィンドウに出しているバッファの字句の全体を、`BufferFrame.tokens` (`{ from, to, kind }` の並び。位置は UTF-16) に入れます。画面は、スクロールの範囲を核に知らせないため、表示している行ではなく、全体を送ります。
-- 画面 (`src/lib/faces.ts` の `tokenHighlighting`) は、種類を CSS のクラス `cm-tok-<種類>` にして、装飾にします。色は `src/styles/CodeEditor.css` で、既存の `--font-lock-*` の変数 (明るい / 暗い) から決めます。本文より先へ出る範囲は、飛ばします。
-- 字句が前と同じなら (`src/App.tsx` の `stableTokens`)、同じ配列を渡して、色付けを引き直しません。
-- Scheme と Elisp も、同じ仕組みです (3.4)。
+- 画面 (`src/lib/faces.ts` の `tokenHighlighting`) は、種類を CSS のクラス `cm-tok-<種類>` にして、装飾にします。色は `src/styles/CodeEditor.css` で、既存の `--font-lock-*` の変数 (明るい / 暗い) から決めます。本文より先へ出る範囲は飛ばします。
+- 字句が前と同じなら (`src/App.tsx` の `stableTokens`)、同じ配列を渡して色付けを引き直しません。
+- Scheme と Elisp も同じ仕組みです (3.4)。
 
 ### TUI (ncurses)
 
@@ -159,14 +159,14 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 
 - 核の字句解析器は、単体テストで、種類ごと、行をまたぐ場合ごとに確かめます (`core/tests/test_highlight_c.rs`)。宣言の名前は `core/tests/test_highlight_decl.rs` です。
 - Emacs との比較は、`tests/c-highlight/cases/` の C のファイルを、Emacs と rs-editor の両方で処理して、範囲と種類を比べます。ケースは、コメントの区切りの全ての形、文字列と文字定数のエスケープ、行の継続、プリプロセッサ、キーワード、型、定数、日本語、改行のない終わり、空のファイルを含みます。
-- Tauri の側は、核の `FrameBuilder` (`core/tests/test_frame.rs`) と、画面 (`tests/frontend/`) を単体テストします。TUI の側は、マスの種類と、種類から色への表を単体テストします (`tui/tests/test_render.rs`)。ncurses の描画そのものは、端末が要るので、自動のテストの対象外です。
+- Tauri の側は、核の `FrameBuilder` (`core/tests/test_frame.rs`) と、画面 (`tests/frontend/`) を単体テストします。TUI の側は、マスの種類と、種類から色への表を単体テストします (`tui/tests/test_render.rs`)。ncurses の描画そのものは、端末が要るので自動のテストの対象外です。
 - 100% の行カバレッジ (`npm run coverage:be`、`npm run coverage:fe`) を守ります。
 - ja.po: 新しい公開コマンドと変数の docstring を、`npm run po:update` で足して、日本語に訳します。
 
 ## 7. 決定事項
 
 1. **範囲**: 段階 1 は C だけ、段階 2 で C++ を足す。
-2. **数値の色**: Emacs に合わせて、既定は色なし。
+2. **数値の色**: Emacs に合わせて既定は色なし。
 3. **モード判定**: 核の `auto-mode-alist` と `mode_info` の 1 か所で決める (画面では判定しない)。
 4. **TUI の色**: 8 色を既定にして、256 色以上の端末では Emacs に近い色を使う。
 
@@ -179,4 +179,4 @@ Emacs 30.2 の `c-mode` で、`font-lock-ensure` の結果を確かめた点で�
 5. 済: `tui/` で、ncurses の色を出す。
 6. 済: C++ (`c++-mode`、キーワードと型の表、生の文字列、数値の区切り) と、比較のケース。
 7. 済: 宣言の名前 (段階 3。`core/src/highlight/decl.rs`、`tests/c-highlight/cases/14-decls.c` と `15-cpp-decls.cpp`)。
-8. 未: 再解析の効率化 (段階 4)。測っただけで、実装していない。1.2 MB、3.5 万行の C のファイルの全体の解析が、デバッグビルドで 0.4 秒弱 (起動を含む)。通常のファイルでは気にならないため、遅くなってから行う。
+8. 未: 再解析の効率化 (段階 4)。測っただけで実装していない。1.2 MB、3.5 万行の C のファイルの全体の解析が、デバッグビルドで 0.4 秒弱 (起動を含む)。通常のファイルでは気にならないため、遅くなってから行う。

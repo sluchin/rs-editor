@@ -113,7 +113,7 @@ fn displays_large_numbers_without_overflow() {
         "-9223372036854774784"
     );
     assert_eq!(Value::Number(-0.0).to_string(), "0");
-    // 収まらない数は, i64 にしない (飽和して, 値が変わらないように)
+    // 収まらない数は, i64 にしない (飽和して値が変わらないように)
     assert_eq!(Value::Number(1e19).to_string(), "10000000000000000000");
     assert_eq!(Value::Number(-1e19).to_string(), "-10000000000000000000");
     assert_eq!(Value::Number(f64::INFINITY).to_string(), "inf");

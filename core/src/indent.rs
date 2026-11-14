@@ -52,7 +52,7 @@ pub struct Edit {
     pub insert: String,
 }
 
-/// 変更の計画: 変更 (元の本文の位置. 前から順で, 重ならない) と, 変えた後のカーソル (あれば).
+/// 変更の計画: 変更 (元の本文の位置. 前から順で重ならない) と, 変えた後のカーソル (あれば).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Plan {
     /// 変更.
@@ -93,7 +93,7 @@ fn indent_to(old: &[char], col: usize, config: &Config) -> String {
     let tab = config.tab_width;
     let current = column_at(old, old.len(), tab);
     if current > col {
-        // 桁までを残す (タブの途中なら, タブを空白にする)
+        // 桁までを残す (タブの途中ならタブを空白にする)
         let mut i = 0;
         while column_at(old, i + 1, tab) <= col {
             i += 1;
@@ -349,7 +349,7 @@ impl LispParser {
         }
     }
 
-    /// `#;` でコメントにした式の, 字句を 1 つ読み飛ばします. 式が終わったら, コメントを終えます.
+    /// `#;` でコメントにした式の, 字句を 1 つ読み飛ばします. 式が終わったらコメントを終えます.
     fn skip_datum(&mut self, text: &[char], i: usize) -> usize {
         let ch = text[i];
         // 式の前の印は, 後ろの式と合わせて 1 つ
@@ -599,7 +599,7 @@ pub fn map_pos(edits: &[Edit], pos: usize, after: bool) -> usize {
     (pos as i64 + shift) as usize
 }
 
-/// 字下げを変えた後の, カーソルの位置を返します (字下げの中にあれば, 字下げの後ろへ動かす).
+/// 字下げを変えた後の, カーソルの位置を返します (字下げの中にあれば字下げの後ろへ動かす).
 fn cursor_after_indent(lines: &[Vec<char>], pos: usize, result: &IndentResult) -> usize {
     let starts = line_starts(lines);
     let n = starts.partition_point(|&s| s <= pos);
@@ -636,7 +636,7 @@ fn relative_indent(lines: &[Vec<char>], line: usize, col: usize, tab: usize) -> 
         return None;
     }
     let text = &lines[n - 1];
-    // 桁の所へ (タブの途中なら, タブの始め)
+    // 桁の所へ (タブの途中ならタブの始め)
     let mut i = 0;
     while i < text.len() && column_at(text, i + 1, tab) <= col {
         i += 1;
@@ -755,7 +755,7 @@ pub fn indent_region(
 
 /// 点の位置を, 字下げの変更の後ろへ直します (Emacs の `indent-line-to` と `save-excursion` の印と同じ).
 /// 点が, 行頭の空白を変えた所の中にあれば: 減らすときは文字の始め, 大きく増やすときは空白の始め (空白を入れ直す),
-/// 残して足すだけなら, 空白の中の同じ位置. 行頭でない変更 (コメント) の中なら, 変更の始め.
+/// 残して足すだけなら空白の中の同じ位置. 行頭でない変更 (コメント) の中なら変更の始め.
 fn point_after_edits(lines: &[Vec<char>], edits: &[Edit], point: usize, config: &Config) -> usize {
     let starts = line_starts(lines);
     let tab = config.tab_width;

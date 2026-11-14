@@ -13,7 +13,7 @@ rs-editor の Lisp の関数と変数の docstring は英語で書き、翻訳�
 | `tools/po/update.py` | `lisp/*.scm` から docstring を集めて、POT を作り、各言語の PO に混ぜる (gettext の `xgettext` と `msgmerge` に当たる) |
 | `core/src/scheme/po.rs` | エディタが PO を読む所。PO はビルドのときに埋め込む (`include_str!`) |
 
-PO の 1 つの項目は、次の形です。
+PO の 1 つの項目は次の形です。
 
 ```po
 #: lisp/org.scm
@@ -37,7 +37,7 @@ msgstr "表なら次の欄へ, 見出しなら開け閉め, ほかは字下げ (
     ...)
   ```
 
-  本体が文字列だけの関数では、その文字列は docstring になりません (値です)。docstring を付けるときは、その前に書きます。
+  本体が文字列だけの関数では、その文字列は docstring になりません (値です)。docstring を付けるときはその前に書きます。
 - 変数は、`define` の 3 つ目に書きます。
 
   ```scheme
@@ -92,15 +92,15 @@ npm run check       # po:check (作り直し忘れ) を含む
 ```
 
 - `npm run po:check` (`update.py --check`) は、ファイルを書かずに、作り直しが要れば失敗します。docstring を変えて `npm run po:update` を忘れると、`npm run check` (CI) で見つかります。
-- PO はビルドのときに埋め込むので、アプリで見るには、ビルドし直します。
-- アプリで `C-h f` を押し、関数の名前を入れて、訳が出るかを見ます。英語と比べるときは、`M-:` で `(set! help-language "en")` にします (戻すときは `"ja"`)。
+- PO はビルドのときに埋め込むので、アプリで見るにはビルドし直します。
+- アプリで `C-h f` を押し、関数の名前を入れて訳が出るかを見ます。英語と比べるときは、`M-:` で `(set! help-language "en")` にします (戻すときは `"ja"`)。
 
 ## 言語を足す
 
 例えばフランス語 (`fr`) を足すとき。
 
 1. `po/rseditor.pot` を `po/fr.po` に写す。始めの `#` の行 (説明) をフランス語の訳のものに書き換え、ヘッダの `msgstr` に `"Language: fr\n"` の行を足す (`po/ja.po` のヘッダと同じ形)。
-2. `npm run po:update` を実行する (`po/*.po` は、全て作り直す)。
+2. `npm run po:update` を実行する (`po/*.po` は全て作り直す)。
 3. `core/src/scheme/po.rs` の `LANGUAGES` に、`("fr", include_str!("../../../po/fr.po"))` を足す。
 4. `msgstr` を訳し、上の「4. 確かめる」をする。
 

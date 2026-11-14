@@ -16,14 +16,14 @@ pub struct Minibuffer<'a> {
     pub prompt: &'a str,
     /// 入力.
     pub input: &'a str,
-    /// カーソルの、入力の中の位置 (文字の数).
+    /// カーソルの, 入力の中の位置 (文字の数).
     pub cursor: usize,
 }
 
 /// 画面の出し方の設定 (Lisp の `truncate-lines` と `selective-display`).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Display {
-    /// 真なら, 長い行を折り返さず, 窓の端で切る.
+    /// 真なら, 長い行を折り返さず窓の端で切る.
     pub truncate_lines: bool,
     /// 数 N なら, N 桁以上字下げした行を出さない.
     pub selective_display: Option<usize>,
@@ -69,7 +69,7 @@ fn wrap(line: &str, width: usize) -> Vec<Vec<char>> {
     rows
 }
 
-/// `wrap` と同じに折り返して、マスごとに、文字の位置 `value` で決まる値を返します (幅の広い文字の 2 マスは、同じ値).
+/// `wrap` と同じに折り返して, マスごとに, 文字の位置 `value` で決まる値を返します (幅の広い文字の 2 マスは, 同じ値).
 fn wrap_values<T: Copy>(line: &str, width: usize, value: impl Fn(usize) -> T) -> Vec<Vec<T>> {
     let mut rows: Vec<Vec<T>> = vec![Vec::new()];
     let mut column = 0;
@@ -137,7 +137,7 @@ fn rows_for(line: &str, width: usize, display: Display) -> Vec<Vec<char>> {
     rows
 }
 
-/// カーソルの、行の中の画面の位置 (折り返した行の番号と、桁). 幅の広い文字を割らずに折り返すので、桁の数からは決まらない.
+/// カーソルの, 行の中の画面の位置 (折り返した行の番号と, 桁). 幅の広い文字を割らずに折り返すので, 桁の数からは決まらない.
 fn cursor_cell(buffer: &Buffer, width: usize) -> (usize, usize) {
     let line_start = buffer.line_beginning_position(1);
     let before: String = buffer
@@ -147,7 +147,7 @@ fn cursor_cell(buffer: &Buffer, width: usize) -> (usize, usize) {
         .collect();
     let rows = wrap(&before, width);
     let last = rows.last().map_or(0, Vec::len);
-    // ちょうど行の幅まで来たら、次の行の始め
+    // ちょうど行の幅まで来たら, 次の行の始め
     if last >= width {
         (rows.len(), 0)
     } else {
@@ -165,7 +165,7 @@ fn mode_line(buffer: &Buffer, width: usize) -> String {
     format!("{text}{}", "-".repeat(width.saturating_sub(used)))
 }
 
-/// 窓の枠の位置 (割合 %) を、画面のマスにします.
+/// 窓の枠の位置 (割合 %) を, 画面のマスにします.
 fn to_cells(percent: f64, total: usize) -> usize {
     (percent / 100.0 * total as f64).round() as usize
 }
@@ -175,11 +175,11 @@ fn to_cells(percent: f64, total: usize) -> usize {
 /// # Arguments
 ///
 /// * `editor` - エディタ.
-/// * `tops` - ウィンドウごとの、画面の一番上の行 (カーソルが見えるように、ここで直す).
+/// * `tops` - ウィンドウごとの, 画面の一番上の行 (カーソルが見えるように, ここで直す).
 /// * `rows` - 画面の行の数.
 /// * `cols` - 画面の桁の数.
 /// * `echo` - エコー領域に出す文字.
-/// * `minibuffer` - 入力を読んでいるときの、ミニバッファ.
+/// * `minibuffer` - 入力を読んでいるときの, ミニバッファ.
 pub fn render(
     editor: &Editor,
     tops: &mut BTreeMap<usize, usize>,
@@ -227,7 +227,7 @@ pub fn render_with(
         }
         let width = x1 - x0;
         let text_rows = y1 - y0 - 1;
-        // 窓は、開いているバッファを出している
+        // 窓は, 開いているバッファを出している
         let buffer = editor
             .get_buffer(editor.window_buffer(rect.id).unwrap())
             .unwrap();
@@ -237,7 +237,7 @@ pub fn render_with(
         let point_line = buffer.line_of_position(buffer.point());
         let is_selected = rect.id == selected;
         if is_selected {
-            // カーソルの行が見えるように、一番上の行を直す
+            // カーソルの行が見えるように, 一番上の行を直す
             *top = (*top).min(point_line);
             let in_line = if display.truncate_lines {
                 0

@@ -159,7 +159,7 @@ fn test_file_name_directory() {
 fn test_switch_to_buffer() {
     let ev = Evaluator::new();
     let editor = FakeEditor::new();
-    // バッファが 1 つなら, 既定は無い. 空の入力は, 何もしない
+    // バッファが 1 つなら既定は無い. 空の入力は, 何もしない
     answer(&editor, &[""]);
     ev.run_command("switch-to-buffer", &editor).unwrap();
     assert_eq!(prompts(&editor), vec!["Switch to buffer: "]);
@@ -233,7 +233,7 @@ fn test_save_buffer_asks_when_the_file_changed_on_disk() {
     let editor = FakeEditor::new();
     visit(&editor, &path, "new", true);
     *editor.file_changed.lock().unwrap() = true;
-    // 訪れてから外で書き換わっていれば、確かめる。答えが yes でなければ、書かない
+    // 訪れてから外で書き換わっていれば, 確かめる. 答えが yes でなければ, 書かない
     answer(&editor, &["no"]);
     let error = ev.run_command("save-buffer", &editor).unwrap_err();
     assert!(error.to_string().contains("Save not confirmed"), "{error}");
@@ -243,11 +243,11 @@ fn test_save_buffer_asks_when_the_file_changed_on_disk() {
     );
     assert_eq!(fs::read_to_string(&path).unwrap(), "disk\n");
     assert!(editor.buffer().modified);
-    // yes なら書く。書いたら、外の書き換えは気にしない
+    // yes なら書く. 書いたら, 外の書き換えは気にしない
     answer(&editor, &["yes"]);
     ev.run_command("save-buffer", &editor).unwrap();
     assert_eq!(fs::read_to_string(&path).unwrap(), "new\n");
-    // ファイルが無くなっていれば、確かめずに書く
+    // ファイルが無くなっていれば, 確かめずに書く
     fs::remove_file(&path).unwrap();
     visit(&editor, &path, "again", true);
     *editor.file_changed.lock().unwrap() = true;
@@ -333,7 +333,7 @@ fn test_find_alternate_file() {
     assert_eq!(editor.name(), other);
     assert_eq!(editor.text(), "other");
     assert!(!editor.buffers.lock().unwrap().contains_key(&path));
-    // 書き換えていなければ, 聞かない. 引数で渡す
+    // 書き換えていなければ聞かない. 引数で渡す
     ev.eval_with(&format!("(find-alternate-file {:?})", path), &editor)
         .unwrap();
     assert_eq!(editor.name(), path);
@@ -387,7 +387,7 @@ fn test_save_some_buffers() {
     answer(&editor, &["n", "."]);
     ev.run_command("save-some-buffers", &editor).unwrap();
     assert_eq!(saved(), vec![false, true, false, false]);
-    // q と RET で, 終える (書かなければ, メッセージを消す)
+    // q と RET で, 終える (書かなければメッセージを消す)
     for key in ["q", "Enter"] {
         reset();
         answer(&editor, &[key]);

@@ -541,12 +541,12 @@ impl Editor {
         }
     }
 
-    /// タブの名前と、選んでいるタブの番号を決めます (Lisp の `set-tab-bar`. 名前が空なら、タブの行を出さない).
+    /// タブの名前と, 選んでいるタブの番号を決めます (Lisp の `set-tab-bar`. 名前が空ならタブの行を出さない).
     pub fn set_tab_bar(&mut self, names: Vec<String>, current: usize) {
         self.tab_bar = (names, current);
     }
 
-    /// タブの名前と、選んでいるタブの番号を返します.
+    /// タブの名前と, 選んでいるタブの番号を返します.
     pub fn tab_bar(&self) -> (&[String], usize) {
         (&self.tab_bar.0, self.tab_bar.1)
     }
@@ -565,8 +565,8 @@ impl Editor {
         self.window_configurations.len() - 1
     }
 
-    /// 覚えたウィンドウの設定に戻します (Emacs の `set-window-configuration`). 選ぶウィンドウのバッファが、今のバッファになる.
-    /// その後に消したバッファを出していたウィンドウは、今のバッファを出す.
+    /// 覚えたウィンドウの設定に戻します (Emacs の `set-window-configuration`). 選ぶウィンドウのバッファが, 今のバッファになる.
+    /// その後に消したバッファを出していたウィンドウは, 今のバッファを出す.
     ///
     /// # Errors
     ///
@@ -591,7 +591,7 @@ impl Editor {
                 (window, name)
             })
             .collect();
-        // 設定を覚えた後に作ったウィンドウの番号と、重ならない
+        // 設定を覚えた後に作ったウィンドウの番号と, 重ならない
         self.next_window = self
             .next_window
             .max(self.window_buffers.keys().max().map_or(1, |m| m + 1));
@@ -608,7 +608,7 @@ impl Editor {
     }
 }
 
-/// 窓の枠の位置 (割合 %) を、画面のマスにします.
+/// 窓の枠の位置 (割合 %) を, 画面のマスにします.
 fn to_cells(percent: f64, total: usize) -> usize {
     (percent / 100.0 * total as f64).round() as usize
 }

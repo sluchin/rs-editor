@@ -10,11 +10,11 @@
   - 数: `+`、`-`、`*`、`/`、`=`、`<`、`>`、`<=`、`>=`、`abs`、`min`、`max`、`quotient`、`remainder`、`modulo` など
   - リスト: `car`、`cdr`、`cons`、`list`、`length`、`append`、`reverse`、`map`、`for-each`、`filter`、`apply`、`assoc`、`member` など
   - 文字列: `string-append`、`substring`、`string-length`、`format` など
-  - 末尾の呼び出しは、深さを使わない。それ以外の入れ子は 10000 まで
+  - 末尾の呼び出しは深さを使わない。それ以外の入れ子は 10000 まで
 - 🔧 **Lisp でのカスタマイズ** - Lisp からエディタを動かし、コマンドを作り、キーを割り当てる。起動のときに `~/.rseditor` (または `~/.rseditor.d/init.scm`) を読む (「Lisp でのカスタマイズ」)
 - 📝 **howm** - メモ (howm) の Scheme 版 (`lisp/howm.scm`)。`(require 'howm)` で読み、`M-x howm` でメニューを出す (「howm」)
 - 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み、`.org` のファイルを開くと Org mode になる (「Org mode」)
-- 🔍 **M-x grep** - 外のコマンドを使わず、エディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
+- 🔍 **M-x grep** - 外のコマンドを使わずエディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
 - 🎨 **色付け** - C、C++、Rust、TypeScript、Scheme、Emacs Lisp を、Emacs の font-lock と同じ範囲で色付けする (核の `core/src/highlight/`。画面とターミナルのアプリで同じ。設計は [c_highlight_design.md](docs/c_highlight_design.md))。メジャーモードは、ファイルの名前と 1 行目の `-*- mode: NAME -*-` で決まる
 - 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
@@ -25,26 +25,26 @@
 ```text
 .
 ├── src/                      # React フロントエンド
-│   ├── components/          # ウィンドウ、ミニバッファ、モードライン、プロジェクトのツリー
-│   ├── lib/                 # 核とのやり取り (session.ts)、バッファの本文 (docs.ts)、キーの名前 (keys.ts)、色分けなど
+│   ├── components/          # ウィンドウ, ミニバッファ, モードライン, プロジェクトのツリー
+│   ├── lib/                 # 核とのやり取り (session.ts), バッファの本文 (docs.ts), キーの名前 (keys.ts), 色分けなど
 │   ├── styles/              # コンポーネントスタイルシート
 │   ├── lib/theme.ts         # 色とフォント (set-background-color, set-frame-font)
-│   ├── App.tsx              # メインアプリケーション (核の frame を描き、キーを核に送る)
+│   ├── App.tsx              # メインアプリケーション (核の frame を描き, キーを核に送る)
 │   └── main.tsx             # エントリーポイント
 ├── src-tauri/               # Tauri バックエンド
 │   ├── src/
 │   │   ├── main.rs          # Tauri アプリのエントリーポイント
-│   │   ├── lib.rs           # アプリの起動と、コマンドの登録
-│   │   ├── session.rs       # 画面のエディタ (核を動かし、frame を送る)
-│   │   ├── front.rs         # 画面への窓口 (session_input、frame のイベント)
-│   │   ├── commands.rs      # 画面から呼ぶコマンド (ファイル名の補完、プロジェクトの根)
+│   │   ├── lib.rs           # アプリの起動と, コマンドの登録
+│   │   ├── session.rs       # 画面のエディタ (核を動かし, frame を送る)
+│   │   ├── front.rs         # 画面への窓口 (session_input, frame のイベント)
+│   │   ├── commands.rs      # 画面から呼ぶコマンド (ファイル名の補完, プロジェクトの根)
 │   │   ├── logging.rs       # ログ
-│   │   ├── search.rs        # M-x grep (ディレクトリの下を探す) と、プロジェクトの根を探す
+│   │   ├── search.rs        # M-x grep (ディレクトリの下を探す) と, プロジェクトの根を探す
 │   │   └── scheme/          # Scheme インタプリタ
 │   │       ├── parser.rs    # Scheme パーサー
 │   │       ├── evaluator.rs # Scheme 評価器 (特別な形)
 │   │       ├── builtins.rs  # 組み込みの手続き (エディタの操作を含む)
-│   │       ├── system.rs    # 組み込みの手続き (ファイル、時刻、正規表現、load、require)
+│   │       ├── system.rs    # 組み込みの手続き (ファイル, 時刻, 正規表現, load, require)
 │   │       ├── ert.rs       # テスト (Emacs の ERT と同じ書き方)
 │   │       ├── env.rs       # 変数の環境
 │   │       ├── host.rs      # エディタ (画面) に操作を頼む仕組み
@@ -95,14 +95,14 @@ cd rseditor
 # Node 依存関係をインストール
 npm install
 
-# Tauri CLI をインストール（オプション、すでに devDependencies に含まれています）
+# Tauri CLI をインストール (オプション, すでに devDependencies に含まれています)
 npm install -g @tauri-apps/cli@2
 ```
 
 ### 開発モードで実行
 
 ```bash
-# 開発サーバーを起動（Tauri アプリをビルドして実行）
+# 開発サーバーを起動 (Tauri アプリをビルドして実行)
 npm run tauri:dev
 ```
 
@@ -125,7 +125,7 @@ Linux では、`.deb` / `.rpm` / `.AppImage` も `target/release/bundle/` に作
 
 ### 画面 (Tauri) とエディタの核
 
-エディタの本体 (バッファ、ウィンドウ、キーの割り当て、コマンド) は、Rust の核 (`core/`) と Lisp (`lisp/`) にあります。画面は、核が描く内容 (frame) を CodeMirror で出し、キーと文字を核に送るだけです (設計は `docs/core_migration.md`)。ターミナルのアプリ (`tui/`) と同じ核を使うので、キーとコマンドは画面とターミナルで同じです。
+エディタの本体 (バッファ、ウィンドウ、キーの割り当てコマンド) は、Rust の核 (`core/`) と Lisp (`lisp/`) にあります。画面は核が描く内容 (frame) を CodeMirror で出し、キーと文字を核に送るだけです (設計は `docs/core_migration.md`)。ターミナルのアプリ (`tui/`) と同じ核を使うので、キーとコマンドは画面とターミナルで同じです。
 
 ### ターミナルで動かす (ncurses)
 
@@ -135,22 +135,22 @@ Linux では、`.deb` / `.rpm` / `.AppImage` も `target/release/bundle/` に作
 cargo run -p rseditor-tui -- ファイル...
 ```
 
-- 移動、編集、kill / yank, undo (`C-/`), マーク、前置引数 (`C-u`、`M-数字`), 窓の分割 (`C-x 2`、`C-x 3`、`C-x o`、`C-x 0`、`C-x 1`), ファイルを開く (`C-x C-f`) と保存 (`C-x C-s`), `M-x`、`M-:`、`C-h f`、終了 (`C-x C-c`) が使えます。
+- 移動、編集、kill / yank, undo (`C-/`)、マーク、前置引数 (`C-u`、`M-数字`)、窓の分割 (`C-x 2`、`C-x 3`、`C-x o`、`C-x 0`、`C-x 1`)、ファイルを開く (`C-x C-f`) と保存 (`C-x C-s`), `M-x`、`M-:`、`C-h f`、終了 (`C-x C-c`) が使えます。
 - コマンドは Lisp (`lisp/simple.scm`、`lisp/files.scm` など) で書いてあります。`global-set-key` で割り当てたキーも使えます。
 
-### 開発ワークフロー（Lint / Format / Test）
+### 開発ワークフロー (Lint / Format / Test)
 
-**ローカル開発（TypeScript のみ）:**
+**ローカル開発 (TypeScript のみ):**
 
 ```bash
-# TypeScript 静的解析（ESLint）
+# TypeScript 静的解析 (ESLint)
 npm run lint
 
 # Vitest でテスト実行
 npm run test
 
-# カバレッジ (フロントエンドは @vitest/coverage-v8、バックエンドは cargo tarpaulin。どちらも 100% でなければ失敗する。結果は coverage/index.html と tarpaulin-report.html)
-# Rust 側は、初回のみ `cargo install cargo-tarpaulin` が必要
+# カバレッジ (フロントエンドは @vitest/coverage-v8, バックエンドは cargo tarpaulin. どちらも 100% でなければ失敗する. 結果は coverage/index.html と tarpaulin-report.html)
+# Rust 側は, 初回のみ `cargo install cargo-tarpaulin` が必要
 npm run coverage
 
 # テストをウォッチモードで実行
@@ -159,29 +159,29 @@ npm run test:watch
 # ESLint の自動修正
 npm run lint:fix
 
-# コード整形（Prettier）
+# コード整形 (Prettier)
 npm run format
 
 # 整形済みかどうかチェック
 npm run format:check
 ```
 
-**Rust も含めて完全にチェック（CI 相当）:**
+**Rust も含めて完全にチェック (CI 相当):**
 
 ```bash
-# TypeScript + Rust の static analysis（ESLint + cargo clippy）
+# TypeScript + Rust の static analysis (ESLint + cargo clippy)
 npm run lint:all
 
 # TypeScript + Rust テスト
 npm run test:all
 
-# format:check → lint:all → test:all をまとめて実行
+# format:check -> lint:all -> test:all をまとめて実行
 npm run check
 ```
 
 **注:**
 
-- `npm run lint` はローカル環境で実行可能（TypeScript のみ）
+- `npm run lint` はローカル環境で実行可能 (TypeScript のみ)
 - `npm run lint:all` と `npm run test:all` は Rust のビルド環境が必要
 - GitHub Actions の CI (`.github/workflows/ci.yml`) は `npm run check` を実行し、`main` ブランチへの push・PR ごとに全てのチェックが自動実行されます
 
@@ -207,11 +207,11 @@ npm run check
 
 ```scheme
 ; カーソルを式の直後に置いて C-x C-e で評価
-(+ 2 3)        ; カーソル↑: C-x C-e → ミニバッファに「5」と表示
+(+ 2 3)        ; カーソル↑: C-x C-e -> ミニバッファに"5"と表示
 
 ; または M-: でミニバッファで直接入力
 M-:            ; ミニバッファが開く
-(* 3 4)        ; 式を入力して Enter → ミニバッファに「12」と表示
+(* 3 4)        ; 式を入力して Enter -> ミニバッファに"12"と表示
 ```
 
 ### 定義と手続き
@@ -285,7 +285,7 @@ M-:            ; ミニバッファが開く
 (define-command (insert-hello)
   (insert "Hello, " (buffer-name)))
 
-;; キーを割り当てる (Emacs の書き方: C- は Ctrl、M- は Alt、空白で区切ると続けて押すキー)
+;; キーを割り当てる (Emacs の書き方: C- は Ctrl, M- は Alt, 空白で区切ると続けて押すキー)
 (global-set-key "C-c h" 'insert-hello)
 (global-set-key "<f5>" 'save-buffer)
 ```
@@ -304,7 +304,7 @@ Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-a
 
 ### 初期設定ファイル
 
-起動のときに、`~/.rseditor` を読んで評価します。無ければ `~/.rseditor.d/init.scm` (Emacs の `~/.emacs.d/init.el` と同じ)、それも無ければ `~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。読んだファイルは `user-init-file` に入ります。自分の Lisp のファイルは `~/.rseditor.d/lisp/` (または `~/.rseditor.d/`) に置くと、`(require 'name)` で読めます。どちらもなければ、何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は、評価済みです)。
+起動のときに、`~/.rseditor` を読んで評価します。無ければ `~/.rseditor.d/init.scm` (Emacs の `~/.emacs.d/init.el` と同じ)、それも無ければ `~/.config/rseditor/init.scm` (OS の設定のディレクトリの `rseditor/init.scm`) を読みます。読んだファイルは `user-init-file` に入ります。自分の Lisp のファイルは `~/.rseditor.d/lisp/` (または `~/.rseditor.d/`) に置くと、`(require 'name)` で読めます。どちらもなければ何もしません。誤りがあっても起動は続け、ミニバッファに知らせます (誤りの前の式は評価済みです)。
 
 ```scheme
 ;; ~/.rseditor.d/init.scm
@@ -319,11 +319,11 @@ Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-a
 
 `lisp/howm.scm` は、Emacs の howm (メモ) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/howm.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'howm)` と書くと、`M-x howm` (または `C-c , ,`) でメニューを出します。メモは `~/howm` に置きます (`(set! howm-directory "~/memo")` で変える)。
 
-- メニュー: howm の日本語のメニューと同じです。ボタン (`[新規]` など) の上で `RET`、またはボタンの前の文字 (`c` など) で動かします。`%here%` (予定、todo、最近、ランダムなど)、`%eval%`、`%call%`、`%|...%|` (隠す)、`%"x"` (キー)、`>>> %名前%` (別のメニュー) が使えます。メニューは `~/howm/0000-00-00-000000.txt` から作ります (無ければ、既定のメニューを書く。`[menu 編集]` で直せる)。
+- メニュー: howm の日本語のメニューと同じです。ボタン (`[新規]` など) の上で `RET`、またはボタンの前の文字 (`c` など) で動かします。`%here%` (予定、todo、最近、ランダムなど)、`%eval%`、`%call%`、`%|...%|` (隠す)、`%"x"` (キー)、`>>> %名前%` (別のメニュー) が使えます。メニューは `~/howm/0000-00-00-000000.txt` から作ります (無ければ既定のメニューを書く。`[menu 編集]` で直せる)。
 - メモ: 作る (`C-c , c`)、速記 (`C-c , e`。`C-c C-c` でメモにする)、複製 (`C-c , D`)、題と名前を kill ring へ (`C-c , K`)。
 - 一覧と検索: 一覧 (`a`)、最近 (`l`)、前後 (`A`)、検索 (`s` はキーワードを補完、`g` は正規表現、`m` はローマ字、`o` は今のバッファ)、履歴 (`h`)、酔歩 (`w`)、今日 (`.`)、昨日 (`:`)、予定 (`y`)、todo (`t`)。一覧のバッファ (`*howmS*`) は、`n` と `p` で動くと、別のウィンドウにメモの中身を出し、`RET` でその行のメモを開きます。
 - リンク: `>>> 言葉`、`<<< 言葉`、`[[言葉]]` (wiki)、キーワード、`file://` に下線を引き、その上の `RET` で探す (開く) ことができます。`<<< 言葉` の行を、一覧の先に出します。
-- 予定と todo: 書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。項目の上の `RET` で、済み (`.`)、取り消し、種類、怠け具合を変えます。日付の上の `RET` で、日付を変える (`+1` など)、繰り返して写す (`every` など)、その日付で探すことができます。日付と日時を入れる (`C-c , d`、`C-c , T`)、キーワードを入れる (`C-c , i`)。
+- 予定と todo: 書き方は howm と同じです (`[2026-10-25]@ 予定`、`+` todo、`!` 〆切、`-` 覚書、`~` 保留、`.` 済み)。項目の上の `RET` で済み (`.`)、取り消し、種類、怠け具合を変えます。日付の上の `RET` で日付を変える (`+1` など)、繰り返して写す (`every` など)、その日付で探すことができます。日付と日時を入れる (`C-c , d`、`C-c , T`)、キーワードを入れる (`C-c , i`)。
 - そのほか: howm のバッファを全て消す (`C-c , Q`)、バッファの一覧 (`C-c , b`)、出し直す (`C-c , r`)。
 - フック: `C-x C-f` で開いたメモも、メモのバッファにします (`howm-set-mode-on-find-file`)。メモを保存すると、キーワードを集め直して下線を引き直し、メニューを出していれば出し直します (`howm-refresh-after-save`、`howm-menu-refresh-after-save`、`howm-after-save-hook`)。
 
@@ -332,7 +332,7 @@ Emacs と同じく、`add-hook`、`remove-hook`、`run-hooks`、`run-hook-with-a
 `lisp/org.scm` は、Emacs の Org mode (org 9.7.11) を Scheme で書き直したものです。`~/.rseditor.d/lisp/` に写して (`cp lisp/org.scm ~/.rseditor.d/lisp/`)、初期設定ファイルに `(require 'org)` と書くと、`.org` のファイルを開いたとき Org mode になります (`M-x org-mode` でも)。変数の名前と既定の値は Emacs と同じです (`(set! org-directory "~/org")`、`(set! org-agenda-files '("~/org"))`、`(set! org-todo-keywords '((sequence "TODO" "WAIT" "|" "DONE")))` など)。キーは [keybindings.md](https://github.com/sluchin/rs-editor/blob/main/docs/keybindings.md) の「Org mode」にあります。
 
 - 見出し: `TAB` (見出しごとに FOLDED → CHILDREN → SUBTREE)、`S-TAB` (全体)、`#+STARTUP: overview` など。作る (`M-RET`、`C-RET`)、深さ (`M-左右`、`M-S-左右`)、動かす (`M-上下`)。
-- TODO と優先度とタグ: `C-c C-t` (`(t)` などのキーがあれば、キーで選ぶ)、`S-左右`、`S-上下`、`C-c ,`、`C-c C-q`。`org-log-done` で CLOSED を書き、繰り返し (`+1w`、`++1m`、`.+1d`) の予定は日付を進めます。
+- TODO と優先度とタグ: `C-c C-t` (`(t)` などのキーがあればキーで選ぶ)、`S-左右`、`S-上下`、`C-c ,`、`C-c C-q`。`org-log-done` で CLOSED を書き、繰り返し (`+1w`、`++1m`、`.+1d`) の予定は日付を進めます。
 - 日付と予定: `C-c .`、`C-c !`、`C-c C-s`、`C-c C-d`。日付は Emacs と同じく `+3`、`-1w`、`fri`、`10/30`、`3pm` などで入れられ、`S-上下左右` でカーソルの所 (年、月、日、時、分) を変えます。
 - リストとチェックボックス: `M-RET`、`C-c C-c`、`C-c -`、`[2/3]` と `[66%]` を数え直す。
 - 表: `|` で始まる行。`TAB`、`RET`、`C-c C-c` で揃え (数の多い列は右に。全角は 2 桁)、`M-左右上下`、`M-S-左右上下` で列と行を動かす、消す、足す。`C-c |` で作る。
@@ -385,8 +385,8 @@ rs-editor は Emacs スタイルのキーバインドをサポートしていま
 - `M-d` / `M-DEL` - 単語を削除
 - `M-u` / `M-l` / `M-c` - 単語を大文字/小文字/先頭だけ大文字に
 - `C-y` - 貼り付け
-- `C-/` - 取り消し（undo）
-- `C-x C-/` - やり直し（redo）
+- `C-/` - 取り消し (undo)
+- `C-x C-/` - やり直し (redo)
 
 **Scheme 評価**
 
@@ -438,7 +438,7 @@ npm run tauri:dev
 
 ### テキストエリアに入力できない
 
-1. アプリが完全に起動するまで待つ（Rust コンパイルに時間がかかることがあります）
+1. アプリが完全に起動するまで待つ (Rust コンパイルに時間がかかることがあります)
 2. テキストエリアを**クリック**してフォーカスを当てる
 3. テキストを入力
 
@@ -454,7 +454,7 @@ Tauri アプリ内で **Ctrl+Shift+I** を押すとデベロッパーツール�
 - **WindowView.tsx** - ウィンドウ 1 つ (CodeMirror 6。本文を出すだけで、編集は核にキーと文字を送る。IME の確定した文字と、マウスで押した位置も送る)
 - **Minibuffer.tsx** - ミニバッファ (メッセージ、入力と補完、履歴、`read-key` の問い)
 - **ModeLine.tsx** - モードライン (核が作った文を出す)
-- **ProjectTree.tsx** - 左のサイドバーの、プロジェクトのファイルのツリー (`F8`。ディレクトリは、開いたときに読む)
+- **ProjectTree.tsx** - 左のサイドバーの、プロジェクトのファイルのツリー (`F8`。ディレクトリは開いたときに読む)
 - **lib/session.ts**、**lib/docs.ts** - 核との通信 (入力を送る、frame と頼みを受ける) と、バッファの本文 (変更だけを当てる)
 - **lib/theme.ts** - 色とフォント (CSS の変数。背景が暗いと `data-background-mode="dark"` にして、暗い背景の色分けを使う)
 

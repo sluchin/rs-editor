@@ -11,7 +11,7 @@ import '../styles/Minibuffer.css'
 /** メッセージを出している状態. */
 interface MinibufferMessageState {
   mode: 'message'
-  /** メッセージ (空なら, 既定のメッセージ). */
+  /** メッセージ (空なら既定のメッセージ). */
   text: string
 }
 
@@ -22,13 +22,13 @@ export interface MinibufferInputState {
   prompt: string
   /** 入力. */
   input: string
-  /** Tab で補完する候補 (無ければ, 補完しない). */
+  /** Tab で補完する候補 (無ければ補完しない). */
   completions?: readonly string[]
   /** Tab で補完する関数 (ファイルの名前など, 候補を入力から探すとき. `completions` より先に使う). */
   complete?: (input: string) => Promise<Completion>
   /** M-p と M-n で出す, 入力の履歴 (新しい順). */
   history?: readonly string[]
-  /** 出している履歴の位置 (1 から数える. 0 なら, 入力していた文字). */
+  /** 出している履歴の位置 (1 から数える. 0 なら入力していた文字). */
   historyPos?: number
   /** 履歴を出す前に, 入力していた文字. */
   historySaved?: string
@@ -58,7 +58,7 @@ interface MinibufferProps {
   onInputChange: (value: string, state: MinibufferInputState) => void
   /** Enter で入力を確定したときに呼びます. */
   onSubmit: (value: string) => void
-  /** C-g (`abort-minibuffers`), C-] (`abort-recursive-edit`) か Escape で, やめたときに呼びます. */
+  /** C-g (`abort-minibuffers`), C-] (`abort-recursive-edit`) か Escape でやめたときに呼びます. */
   onCancel: () => void
   /** 問いに答えたキー (Emacs の書き方. `y`, `SPC`, `C-g` など). */
   onQueryKey: (key: string) => void
@@ -113,7 +113,7 @@ export default function Minibuffer({
   if (state.mode === 'query') {
     /**
      * 問いに答えたキーを, Emacs の書き方で返します (C-g も. やめるかは, エディタが決める).
-     * 修飾キーだけなら, 次のキーを待ちます. 日本語の変換中のキーは, IME に任せます.
+     * 修飾キーだけなら次のキーを待ちます. 日本語の変換中のキーは, IME に任せます.
      *
      * @param e - キーのイベント.
      */

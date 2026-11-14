@@ -37,7 +37,7 @@ fn collect_breaks_the_cycles_that_cannot_be_reached() {
             env: env.clone(),
         }))
     };
-    // 環境と手続きの輪 (一番外側から, たどれない)
+    // 環境と手続きの輪 (一番外側からたどれない)
     let lost = global.child();
     lost.define("f", lambda(&lost));
     let lost_alive = lost.alive_probe();

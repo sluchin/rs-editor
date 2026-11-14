@@ -55,7 +55,7 @@ fn resolve(machine: &Machine, function: Value) -> Result<(Value, Option<String>)
     }
 }
 
-/// docstring を, `help-language` の言語に訳します (翻訳が無いか, RAW なら, そのまま).
+/// docstring を, `help-language` の言語に訳します (翻訳が無いか, RAW ならそのまま).
 ///
 /// # Arguments
 ///

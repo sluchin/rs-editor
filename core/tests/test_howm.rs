@@ -166,7 +166,7 @@ fn test_create_and_menu() {
     ev.eval_with("(insert \"買い物\")", &editor).unwrap();
     fs::write(&file, editor.text()).unwrap();
 
-    // メニュー (無ければ, 既定のメニューを書く)
+    // メニュー (無ければ既定のメニューを書く)
     ev.run_command("howm", &editor).unwrap();
     assert_eq!(editor.name(), "*howmM:%menu%*");
     let menu = editor.text();
@@ -221,7 +221,7 @@ fn test_create_and_menu() {
     assert_eq!(editor.name(), "*howmM:%menu%*");
     assert_eq!(editor.message(), "No action here");
 
-    // キーで, メニューを開く前のバッファから新しいメモを作る (同じ秒でも, 別のファイル)
+    // キーで, メニューを開く前のバッファから新しいメモを作る (同じ秒でも別のファイル)
     ev.run_command("howm-menu-key-c", &editor).unwrap();
     let new = editor.buffer().file.unwrap();
     assert_ne!(new, file);
@@ -874,7 +874,7 @@ fn test_dup_and_kill_ring() {
         ]
     );
     assert_eq!(editor.message(), "*scratch*");
-    // 複製: カーソルのメモ (題の行から, 次の題の行の前まで)
+    // 複製: カーソルのメモ (題の行から次の題の行の前まで)
     open(&ev, &editor, &memo);
     editor.move_to("本文B");
     ev.run_command("howm-dup", &editor).unwrap();
@@ -961,7 +961,7 @@ fn test_occur_around_and_walk() {
         .unwrap();
     ev.run_command("howm-list-around", &editor).unwrap();
     assert_eq!(editor.current_line(), "c | c");
-    // 酔歩: メモなら, リンクを探す. 一覧なら, ランダムな行を開く. リンクが無ければ, ランダムなメモ
+    // 酔歩: メモならリンクを探す. 一覧ならランダムな行を開く. リンクが無ければ, ランダムなメモ
     open(&ev, &editor, &a);
     ev.run_command("howm-random-walk", &editor).unwrap();
     assert_eq!(editor.name(), "*howmS*");
@@ -1061,7 +1061,7 @@ fn test_find_file_and_after_save_hooks() {
     let other = tempdir().unwrap();
     let text = write_memo(other.path(), "x.txt", "<<< alpha\n");
     let png = write_memo(dir.path(), "2026/10/a.png", "");
-    // C-x C-f で開いたメモは, メモのバッファにする (メモでなければ, 何もしない)
+    // C-x C-f で開いたメモは, メモのバッファにする (メモでなければ何もしない)
     for (path, howm) in [(&memo, true), (&text, false), (&png, false)] {
         ev.eval_with(
             &format!("(find-file {:?}) (run-hooks 'find-file-hook)", path),

@@ -1,4 +1,4 @@
-//! メジャーモードの情報 (`core/src/mode.rs`) と、ファイルの変数、`auto-mode-alist` と `set-auto-mode` のテスト.
+//! メジャーモードの情報 (`core/src/mode.rs`) と, ファイルの変数, `auto-mode-alist` と `set-auto-mode` のテスト.
 
 use rseditor_core::editor::Editor;
 use rseditor_core::mode::{file_variables, FileVariables};
@@ -30,7 +30,7 @@ fn setup() -> (Evaluator, EditorHost<NoUi>) {
     (ev, host)
 }
 
-/// ファイルを訪れたバッファにして、`set-auto-mode` で、モードを決める.
+/// ファイルを訪れたバッファにして, `set-auto-mode` でモードを決める.
 fn visit(ev: &Evaluator, host: &EditorHost<NoUi>, file: &str, text: &str) {
     host.editor().current_buffer_mut().load(text);
     ev.eval_with(
@@ -54,7 +54,7 @@ fn test_file_variables() {
             tab_width: Some(4),
         }
     );
-    // 名前だけなら、モード. `nil` は偽
+    // 名前だけならモード. `nil` は偽
     assert_eq!(
         file_variables("-*- lisp-data -*-", "").mode.as_deref(),
         Some("lisp-data")
@@ -63,7 +63,7 @@ fn test_file_variables() {
         file_variables("-*- lexical-binding: nil -*-", "").lexical_binding,
         Some(false)
     );
-    // `#!` の行なら、2 行目
+    // `#!` の行なら, 2 行目
     assert_eq!(
         file_variables("#!/usr/bin/env guile", ";; -*- tab-width: 2 -*-").tab_width,
         Some(2)
@@ -72,7 +72,7 @@ fn test_file_variables() {
         file_variables("#!/bin/sh", "-*- c -*-").mode.as_deref(),
         Some("c")
     );
-    // 印が無い、閉じない、知らない変数、タブの幅が数でないか 0 から始まる
+    // 印が無い, 閉じない, 知らない変数, タブの幅が数でないか 0 から始まる
     assert_eq!(file_variables("plain", ""), FileVariables::default());
     assert_eq!(file_variables("-*- mode: c", ""), FileVariables::default());
     assert_eq!(
@@ -83,7 +83,7 @@ fn test_file_variables() {
         file_variables("-*- tab-width: 0 -*-", ""),
         FileVariables::default()
     );
-    // `:` の無い項目は、キーだけ
+    // `:` の無い項目は, キーだけ
     assert_eq!(
         file_variables("-*- a: 1; b -*-", ""),
         FileVariables::default()
@@ -94,7 +94,7 @@ fn test_file_variables() {
 fn test_mode_info_names() {
     let (ev, host) = setup();
     let name = |host: &EditorHost<NoUi>| host.editor().current_buffer().mode_info().name;
-    // `*scratch*` は Lisp Interaction で、括弧は Scheme で読む
+    // `*scratch*` は Lisp Interaction で, 括弧は Scheme で読む
     let info = host.editor().current_buffer().mode_info();
     assert_eq!(
         (
@@ -120,7 +120,7 @@ fn test_mode_info_names() {
         ev.eval_with(command, &host).unwrap();
         assert_eq!(name(&host), expected, "{command}");
     }
-    // Lisp の方言のモードだけが、括弧の読み方を持つ
+    // Lisp の方言のモードだけが, 括弧の読み方を持つ
     ev.eval_with("(emacs-lisp-mode)", &host).unwrap();
     assert_eq!(
         host.editor().current_buffer().mode_info().language,
@@ -149,7 +149,7 @@ fn test_mode_info_of_special_buffers_and_file_variables() {
         .unwrap();
         assert_eq!(info(&host).name, expected);
     }
-    // ファイルの変数 (字句の束縛、字下げ、タブの幅) は、ファイルを訪れたバッファだけ
+    // ファイルの変数 (字句の束縛, 字下げ, タブの幅) は, ファイルを訪れたバッファだけ
     ev.eval_with(r#"(set-buffer (generate-new-buffer "f.el"))"#, &host)
         .unwrap();
     visit(
@@ -198,7 +198,7 @@ fn test_set_auto_mode_uses_the_alist_and_the_file_variable() {
         visit(&ev, &host, file, "");
         assert_eq!(name(&host), expected, "{file}");
     }
-    // 1 行目の `mode:` は、ファイルの名前より先
+    // 1 行目の `mode:` は, ファイルの名前より先
     for (first, expected) in [
         ("-*- mode: emacs-lisp -*-", "ELisp/d"),
         ("-*- mode: lisp-data -*-", "Lisp-Data"),
@@ -206,13 +206,13 @@ fn test_set_auto_mode_uses_the_alist_and_the_file_variable() {
         ("-*- mode: c -*-", "C"),
         ("-*- mode: c++ -*-", "C++"),
         ("-*- mode: fundamental -*-", "Fundamental"),
-        // 知らないモードは、ファイルの名前で決める
+        // 知らないモードは, ファイルの名前で決める
         ("-*- mode: unknown -*-", "Text"),
     ] {
         visit(&ev, &host, "/tmp/a.txt", first);
         assert_eq!(name(&host), expected, "{first}");
     }
-    // ファイルの無いバッファは、Fundamental
+    // ファイルの無いバッファは, Fundamental
     ev.eval_with("(files--set-buffer-file-name #f) (set-auto-mode)", &host)
         .unwrap();
     assert_eq!(name(&host), "Fundamental");

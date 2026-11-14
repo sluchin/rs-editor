@@ -7,7 +7,7 @@ use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::parser::Parser;
 use rseditor_core::scheme::value::Value;
 
-/// 評価して, 結果を返す.
+/// 評価して結果を返す.
 ///
 /// # Arguments
 ///
@@ -20,7 +20,7 @@ fn eval(code: &str) -> String {
     Evaluator::new().eval(code).unwrap()
 }
 
-/// 評価して, 失敗の内容を返す.
+/// 評価して失敗の内容を返す.
 ///
 /// # Arguments
 ///
@@ -851,7 +851,7 @@ fn test_builds_and_walks_long_lists() {
 
 #[test]
 fn test_documentation() {
-    // 手続きの docstring (本体の始めの文字列. 本体が文字列だけなら, 値)
+    // 手続きの docstring (本体の始めの文字列. 本体が文字列だけなら値)
     assert_eq!(
         eval(
             "(define (f x) \"Add 1 to X.\" (+ x 1)) (define (g) \"value\") (define h (lambda () 1)) \
@@ -886,7 +886,7 @@ fn test_documentation() {
 
 #[test]
 fn test_boundp_and_symbol_value() {
-    // 手続きも, 変数も, 名前があれば boundp. 値は symbol-value
+    // 手続きも, 変数も名前があれば boundp. 値は symbol-value
     assert_eq!(
         eval("(define v 3) (list (boundp 'v) (boundp 'car) (boundp 'nothing) (symbol-value 'v))"),
         "v\n(#t #t #f 3)"

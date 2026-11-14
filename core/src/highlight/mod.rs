@@ -1,8 +1,8 @@
-//! シンタックスハイライト: 本文を字句に分けて、範囲と種類を返します.
+//! シンタックスハイライト: 本文を字句に分けて範囲と種類を返します.
 //!
-//! 核は、色を知りません. 「どこからどこまでが、どの種類か」だけを返し、色への割り当ては、画面 (Tauri) と
-//! ターミナル (ncurses) が、それぞれ行います. 種類は、Emacs の font-lock の face に当たります.
-//! 手本は、Emacs 30 の `c-mode` です (`tests/c-highlight/` で、Emacs の結果と比べる).
+//! 核は, 色を知りません. 「どこからどこまでが, どの種類か」だけを返し, 色への割り当ては, 画面 (Tauri) と
+//! ターミナル (ncurses) が, それぞれ行います. 種類は, Emacs の font-lock の face に当たります.
+//! 手本は, Emacs 30 の `c-mode` です (`tests/c-highlight/` で Emacs の結果と比べる).
 
 mod decl;
 mod elisp_keywords;
@@ -14,12 +14,12 @@ mod typescript;
 
 pub use lang::{Language, LanguageSpec};
 
-/// 字句の種類 (括弧内は、Emacs の face).
+/// 字句の種類 (括弧内は, Emacs の face).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
     /// コメントの本文 (`font-lock-comment-face`).
     Comment,
-    /// コメントの区切り (`font-lock-comment-delimiter-face`). `/*` と `//` の後の空白、`*/` の前の空白を含む.
+    /// コメントの区切り (`font-lock-comment-delimiter-face`). `/*` と `//` の後の空白, `*/` の前の空白を含む.
     CommentDelimiter,
     /// ドキュメントのコメント `/** ... */` の全体 (`font-lock-doc-face`).
     DocComment,
@@ -33,15 +33,15 @@ pub enum TokenKind {
     Constant,
     /// プリプロセッサの指示 (`font-lock-preprocessor-face`).
     Preprocessor,
-    /// 数値 (Emacs の `c-mode` は、色を付けない).
+    /// 数値 (Emacs の `c-mode` は, 色を付けない).
     Number,
-    /// 関数の名前 (`font-lock-function-name-face`). 宣言と定義の関数、関数ポインタの変数、関数のような `#define` の名前.
+    /// 関数の名前 (`font-lock-function-name-face`). 宣言と定義の関数, 関数ポインタの変数, 関数のような `#define` の名前.
     FunctionName,
-    /// 変数の名前 (`font-lock-variable-name-face`). 宣言の変数、引数、構造体のメンバー、列挙子、`#define` の名前.
+    /// 変数の名前 (`font-lock-variable-name-face`). 宣言の変数, 引数, 構造体のメンバー, 列挙子, `#define` の名前.
     VariableName,
     /// 組み込みの名前 (`font-lock-builtin-face`). Lisp の `:key`.
     Builtin,
-    /// 警告 (`font-lock-warning-face`). Emacs Lisp の `error` の形、要らない `\`、閉じた括弧の後ろに続く引数.
+    /// 警告 (`font-lock-warning-face`). Emacs Lisp の `error` の形, 要らない `\`, 閉じた括弧の後ろに続く引数.
     Warning,
     /// 正規表現のグループ (`font-lock-regexp-grouping-backslash` と `-construct`). Emacs Lisp の文字列の中の `\(` など.
     RegexpGroup,
@@ -75,7 +75,7 @@ impl TokenKind {
         TokenKind::DocValue,
     ];
 
-    /// 画面に渡す名前 (CSS のクラス名と、Lisp の記号に使う).
+    /// 画面に渡す名前 (CSS のクラス名と, Lisp の記号に使う).
     pub fn name(self) -> &'static str {
         match self {
             TokenKind::Comment => "comment",
@@ -99,7 +99,7 @@ impl TokenKind {
     }
 }
 
-/// 本文の範囲 (文字の位置. `start` から `end` の前まで) と、その種類.
+/// 本文の範囲 (文字の位置. `start` から `end` の前まで) と, その種類.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     /// 始まり.
@@ -119,7 +119,7 @@ pub struct Span {
 ///
 /// # Returns
 ///
-/// 範囲の並び (始まりの順. 重ならない). 色の付かない文字は、含まない.
+/// 範囲の並び (始まりの順. 重ならない). 色の付かない文字は, 含まない.
 pub fn tokenize(language: Language, text: &str) -> Vec<Span> {
     let Some(spec) = language.spec() else {
         match language {
@@ -143,19 +143,19 @@ pub fn tokenize(language: Language, text: &str) -> Vec<Span> {
         tokens: Vec::new(),
     };
     lexer.run();
-    // 宣言の名前 (字句だけでは決まらない) は、コードの語と記号の並びから決める
+    // 宣言の名前 (字句だけでは決まらない) は, コードの語と記号の並びから決める
     let names = decl::declarations(lexer.spec, &chars, &lexer.tokens);
     lexer.spans.extend(names);
     lexer.spans.sort_by_key(|span| span.start);
     lexer.spans
 }
 
-/// コードの字句の種類 (宣言の名前を決めるために、字句解析器が覚える).
+/// コードの字句の種類 (宣言の名前を決めるために, 字句解析器が覚える).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Class {
     /// 語 (キーワードと識別子).
     Word,
-    /// 数値、文字列、文字定数 (中身は見ない).
+    /// 数値, 文字列, 文字定数 (中身は見ない).
     Literal,
     /// 記号 1 文字.
     Punct,
@@ -186,7 +186,7 @@ struct Lexer<'a> {
     tokens: Vec<Tok>,
 }
 
-/// 語の文字か (Emacs の `c-symbol`: 英数字、`_`、`$`).
+/// 語の文字か (Emacs の `c-symbol`: 英数字, `_`, `$`).
 fn is_word(c: char) -> bool {
     c.is_alphanumeric() || c == '_' || c == '$'
 }
@@ -209,7 +209,7 @@ impl Lexer<'_> {
         }
     }
 
-    /// `from` から、空白を読み飛ばした位置.
+    /// `from` から, 空白を読み飛ばした位置.
     fn skip_blanks(&self, from: usize) -> usize {
         let mut i = from;
         while is_blank(self.at(i)) {
@@ -222,7 +222,7 @@ impl Lexer<'_> {
     fn run(&mut self) {
         // 行の始まりか (空白だけを読んだあとも).
         let mut line_start = true;
-        // 今の行の始まりの位置 (指示の色は、行頭の空白から).
+        // 今の行の始まりの位置 (指示の色は, 行頭の空白から).
         let mut line_begin = 0;
         // プリプロセッサの指示の中か (行の終わりまで. `\` で続く).
         let mut directive: Option<Directive> = None;
@@ -237,7 +237,7 @@ impl Lexer<'_> {
                 continue;
             }
             if c == '\\' && next == '\n' {
-                // 行の継続: 次の行は、指示の続き (指示の始まりではない)
+                // 行の継続: 次の行は, 指示の続き (指示の始まりではない)
                 self.pos += 2;
                 line_start = false;
                 continue;
@@ -288,17 +288,17 @@ impl Lexer<'_> {
                 });
             }
             if let Some(Directive::Message) = directive {
-                // #error と #warning の、行の終わりまでの本文
+                // #error と #warning の, 行の終わりまでの本文
                 self.message_text();
                 directive = None;
             }
         }
     }
 
-    /// `/* ... */` を読みます. `/**` で始まれば、全体がドキュメントのコメント.
+    /// `/* ... */` を読みます. `/**` で始まれば, 全体がドキュメントのコメント.
     ///
-    /// 区切りは、Emacs に合わせます. 始まりは、`/*` と、続く `*` (最後の `*` が `*/` の一部なら除く) と、続く空白.
-    /// 終わりは、`*/` と、その前の空白. 本文が空なら、全体が区切り.
+    /// 区切りは, Emacs に合わせます. 始まりは, `/*` と, 続く `*` (最後の `*` が `*/` の一部なら除く) と, 続く空白.
+    /// 終わりは, `*/` と, その前の空白. 本文が空なら全体が区切り.
     fn block_comment(&mut self) {
         let start = self.pos;
         let doc = self.at(start + 2) == '*' && !matches!(self.at(start + 3), '/' | '*');
@@ -332,7 +332,7 @@ impl Lexer<'_> {
         self.push(body_end, end, TokenKind::CommentDelimiter);
     }
 
-    /// `//` から、行の終わりまで (`\` で続く行を含む) 読みます.
+    /// `//` から, 行の終わりまで (`\` で続く行を含む) 読みます.
     fn line_comment(&mut self) {
         let start = self.pos;
         let mut i = start;
@@ -353,8 +353,8 @@ impl Lexer<'_> {
         self.push(body_start, end, TokenKind::Comment);
     }
 
-    /// 文字列と文字定数 (`quote` で閉じる) を読みます. `\` の次の文字は、読み飛ばす. 閉じないまま行が終われば、そこまで
-    /// (その引用符は、含めない).
+    /// 文字列と文字定数 (`quote` で閉じる) を読みます. `\` の次の文字は, 読み飛ばす. 閉じないまま行が終われば, そこまで
+    /// (その引用符は, 含めない).
     fn quoted(&mut self, quote: char) {
         let start = self.pos;
         let mut i = start + 1;
@@ -372,7 +372,7 @@ impl Lexer<'_> {
             }
         }
         self.pos = i.min(self.chars.len());
-        // 閉じない文字列の、始まりの引用符は、Emacs では警告の色 (文字列の色ではない)
+        // 閉じない文字列の, 始まりの引用符は, Emacs では警告の色 (文字列の色ではない)
         self.push(
             if closed { start } else { start + 1 },
             self.pos,
@@ -380,11 +380,11 @@ impl Lexer<'_> {
         );
     }
 
-    /// `#` から、指示の名前までを読みます.
+    /// `#` から, 指示の名前までを読みます.
     ///
     /// # Arguments
     ///
-    /// * `line_begin` - 行の始まりの位置 (色は、行頭の空白から付ける).
+    /// * `line_begin` - 行の始まりの位置 (色は, 行頭の空白から付ける).
     ///
     /// # Returns
     ///
@@ -412,7 +412,7 @@ impl Lexer<'_> {
         })
     }
 
-    /// `#include <...>` の `<...>` を、文字列として読みます (行の中で閉じなければ、`<` だけ読み飛ばす).
+    /// `#include <...>` の `<...>` を, 文字列として読みます (行の中で閉じなければ, `<` だけ読み飛ばす).
     fn header_name(&mut self) {
         let start = self.pos;
         let mut i = start + 1;
@@ -427,7 +427,7 @@ impl Lexer<'_> {
         }
     }
 
-    /// `#error` と `#warning` の、行の終わりまでの本文を、文字列として読みます.
+    /// `#error` と `#warning` の, 行の終わりまでの本文を, 文字列として読みます.
     fn message_text(&mut self) {
         let start = self.skip_blanks(self.pos);
         let mut end = start;
@@ -441,8 +441,8 @@ impl Lexer<'_> {
         self.pos = end;
     }
 
-    /// 生の文字列 `R"x(...)x"` の、`"` の位置から読みます. 色が付くのは、`(` から `)` まで (引用符と区切りの `x` は除く).
-    /// 終わりが無ければ、`(` の次から本文の終わりまで.
+    /// 生の文字列 `R"x(...)x"` の, `"` の位置から読みます. 色が付くのは, `(` から `)` まで (引用符と区切りの `x` は除く).
+    /// 終わりが無ければ, `(` の次から本文の終わりまで.
     ///
     /// # Arguments
     ///
@@ -454,7 +454,7 @@ impl Lexer<'_> {
     fn raw_string(&mut self, quote: usize) -> bool {
         let mut open = quote + 1;
         while self.at(open) != '(' {
-            // 区切りは 16 文字まで. 空白、括弧、`\`、引用符は使えない
+            // 区切りは 16 文字まで. 空白, 括弧, `\`, 引用符は使えない
             let c = self.at(open);
             if open - quote > 16
                 || c == '\0'
@@ -485,7 +485,7 @@ impl Lexer<'_> {
         true
     }
 
-    /// 数値 (`0x1F`、`1.5e-3`、`10UL`) を読みます.
+    /// 数値 (`0x1F`, `1.5e-3`, `10UL`) を読みます.
     fn number(&mut self) {
         let start = self.pos;
         let mut i = start;
@@ -509,12 +509,12 @@ impl Lexer<'_> {
         self.push(start, i, TokenKind::Number);
     }
 
-    /// 語を読んで、キーワード、型、定数なら、その種類にします.
+    /// 語を読んで, キーワード, 型, 定数ならその種類にします.
     ///
-    /// 生の文字列だったときは、真を返します (数値や文字列と同じく、中身を見ない字句).
+    /// 生の文字列だったときは, 真を返します (数値や文字列と同じく, 中身を見ない字句).
     ///
-    /// `#if` と `#elif` の行の `defined` は、指示の色です. Emacs は、`_` で区切った部分にも色を付けるので (`__off64_t_defined` の
-    /// 終わりの `defined`)、同じにします.
+    /// `#if` と `#elif` の行の `defined` は, 指示の色です. Emacs は, `_` で区切った部分にも色を付けるので (`__off64_t_defined` の
+    /// 終わりの `defined`), 同じにします.
     fn word(&mut self, directive: Option<Directive>) -> bool {
         let start = self.pos;
         let mut end = start;
@@ -551,10 +551,10 @@ impl Lexer<'_> {
         false
     }
 
-    /// `#define` の次の名前と、関数のような形 (`F(a, b)`) の引数の名前を読みます.
+    /// `#define` の次の名前と, 関数のような形 (`F(a, b)`) の引数の名前を読みます.
     ///
-    /// 名前が関数のような形 (名前の直後に `(`) なら関数の名前、そうでなければ変数の名前の色です (Emacs に合わせる).
-    /// 名前がキーワードなら、何もしません.
+    /// 名前が関数のような形 (名前の直後に `(`) なら関数の名前, そうでなければ変数の名前の色です (Emacs に合わせる).
+    /// 名前がキーワードなら何もしません.
     fn define_names(&mut self) {
         let start = self.skip_blanks(self.pos);
         let mut end = start;
@@ -587,7 +587,7 @@ impl Lexer<'_> {
         self.pos = i + usize::from(self.at(i) == ')');
     }
 
-    /// `from` から `to` の前までが、名前 (数字で始まらず、キーワードでもない語) か.
+    /// `from` から `to` の前までが, 名前 (数字で始まらずキーワードでもない語) か.
     fn is_name(&self, from: usize, to: usize) -> bool {
         let word: String = self.chars[from..to].iter().collect();
         from < to && !self.at(from).is_ascii_digit() && !self.spec.is_keyword(&word)

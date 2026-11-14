@@ -274,7 +274,7 @@ describe('Minibuffer Component', () => {
     fireEvent.keyDown(input, { key: 'g', ctrlKey: true })
 
     expect(onCancel).toHaveBeenCalled()
-    // C-] (abort-recursive-edit) でも, やめる. Ctrl の無い ] は, 入力
+    // C-] (abort-recursive-edit) でもやめる. Ctrl の無い ] は, 入力
     fireEvent.keyDown(input, { key: ']', ctrlKey: true })
     expect(onCancel).toHaveBeenCalledTimes(2)
     fireEvent.keyDown(input, { key: ']' })
@@ -352,7 +352,7 @@ describe('Minibuffer Component (履歴を戻る)', () => {
 })
 
 describe('Minibuffer Component (既定の値と履歴の検索)', () => {
-  /** 入力欄を描いて, キーを送る道具を返す. */
+  /** 入力欄を描いてキーを送る道具を返す. */
   function setup(initial: MinibufferInputState) {
     let state = initial
     const onInputChange = vi.fn((value: string, next: MinibufferInputState) => {

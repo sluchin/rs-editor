@@ -80,7 +80,7 @@ export interface BufferFrame {
   directory: string | null
   /** 強調する正規表現. */
   highlights: HighlightFrame[]
-  /** シンタックスハイライトの字句 (言語があるバッファで、ウィンドウに出しているものだけ). */
+  /** シンタックスハイライトの字句 (言語があるバッファで, ウィンドウに出しているものだけ). */
   tokens: TokenFrame[]
   /** メジャーモードの情報 (核が決める). */
   mode: MajorMode
@@ -158,7 +158,7 @@ export function listenFrames(handler: (frame: Frame) => void): Promise<UnlistenF
 /**
  * エディタからの頼みを受けて, 答えます. 答えが Promise なら, 終わるのを待って答えます.
  *
- * @param handler - 頼みに答える関数 (失敗したら, 投げる).
+ * @param handler - 頼みに答える関数 (失敗したら投げる).
  * @returns 受けるのをやめる関数.
  */
 export function listenRequests(

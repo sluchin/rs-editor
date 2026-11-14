@@ -15,7 +15,7 @@ pub enum Value {
     Nil,
     /// 真偽値 (`#t` / `#f`).
     Boolean(bool),
-    /// 数 (整数も小数も, 浮動小数点数で持つ).
+    /// 数 (整数も小数も浮動小数点数で持つ).
     Number(f64),
     /// 記号 (変数の名前など).
     Symbol(String),
@@ -31,7 +31,7 @@ pub enum Value {
 
 /// リストの要素を入れる配列 (リストどうしで共有する). 前に空きを持ち, `cons` は, 空きに要素を置きます.
 ///
-/// - `front` より後ろのマスは, 値が入っていて, もう変えない.
+/// - `front` より後ろのマスは, 値が入っていてもう変えない.
 /// - `front` より前のマスは, 空き. `cons` は, 比較交換で `front` を 1 つ前へ動かして, 空きを 1 マス取ってから, 値を入れる.
 ///   取れるのは, リストの始めが `front` の所にあるとき (同じ配列に, まだ誰も前へ足していないとき) だけ.
 struct Block {
@@ -105,7 +105,7 @@ impl List {
     ///
     /// # Returns
     ///
-    /// 残りのリスト. 空のリストなら, 空のリスト.
+    /// 残りのリスト. 空のリストなら空のリスト.
     pub fn tail(&self) -> List {
         self.drop_front(1)
     }
@@ -114,7 +114,7 @@ impl List {
     ///
     /// # Arguments
     ///
-    /// * `n` - 除く数 (長さを超えたら, 空のリスト).
+    /// * `n` - 除く数 (長さを超えたら空のリスト).
     ///
     /// # Returns
     ///
@@ -149,7 +149,7 @@ impl List {
                 )
                 .is_ok()
         {
-            // SAFETY: 比較交換で, このマスを取った (ほかには, 誰も書かず, 読まない)
+            // SAFETY: 比較交換で, このマスを取った (ほかには, 誰も書かず読まない)
             unsafe { (*block.slots[self.start - 1].get()).write(head) };
             return List {
                 block: block.clone(),
@@ -175,7 +175,7 @@ impl std::ops::Deref for List {
 
     fn deref(&self) -> &[Value] {
         let slots = &self.block.slots[self.start..];
-        // SAFETY: start より後ろのマスには, 値が入っていて, もう変えない.
+        // SAFETY: start より後ろのマスには, 値が入っていてもう変えない.
         // UnsafeCell<MaybeUninit<Value>> と Value は, 同じ並び
         unsafe { std::slice::from_raw_parts(slots.as_ptr().cast::<Value>(), slots.len()) }
     }
@@ -235,7 +235,7 @@ pub struct Lambda {
 }
 
 impl Lambda {
-    /// docstring (本体の始めの文字列. 本体が文字列だけなら, それは値で, docstring でない. Emacs と同じ).
+    /// docstring (本体の始めの文字列. 本体が文字列だけなら, それは値で docstring でない. Emacs と同じ).
     ///
     /// # Returns
     ///

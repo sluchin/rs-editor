@@ -20,7 +20,7 @@ impl Host for FakeUi {
     }
 }
 
-/// 基本の編集のコマンドを読んだ、評価器とホスト.
+/// 基本の編集のコマンドを読んだ, 評価器とホスト.
 fn setup() -> (Evaluator, EditorHost<FakeUi>) {
     let ev = Evaluator::new();
     let host = EditorHost::new(Editor::new(), FakeUi);
@@ -44,7 +44,7 @@ fn state(host: &EditorHost<FakeUi>) -> (usize, Option<usize>) {
     (buffer.point(), buffer.mark())
 }
 
-/// 結果を、表の形にする.
+/// 結果を, 表の形にする.
 fn outcome(host: &EditorHost<FakeUi>, result: Result<String, String>) -> Json {
     let (point, mark) = state(host);
     match result {
@@ -101,7 +101,7 @@ fn test_against_emacs() {
     );
 }
 
-/// 位置で目標の桁を決めてから、先頭で next-line を 2 回, previous-line を 1 回.
+/// 位置で目標の桁を決めてから, 先頭で next-line を 2 回, previous-line を 1 回.
 fn goal_column(ev: &Evaluator, host: &EditorHost<FakeUi>, text: &str, pos: usize) -> Json {
     let run = |code: &str| ev.eval_with(&format!("(set! last-command #f) {code}"), host);
     let mut points = Vec::new();
@@ -111,7 +111,7 @@ fn goal_column(ev: &Evaluator, host: &EditorHost<FakeUi>, text: &str, pos: usize
             .into_iter()
             .enumerate()
         {
-            // 続けて動かすので、前のコマンドは、動いたコマンド
+            // 続けて動かすので, 前のコマンドは, 動いたコマンド
             ev.eval_with(
                 &format!(
                     "(set! last-command {}) {step}",

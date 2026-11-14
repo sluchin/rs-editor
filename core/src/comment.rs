@@ -55,7 +55,7 @@ fn trailing_column(
     }
 }
 
-/// 行の, 桁の位置を返します (字下げの中で, 桁に届く始めの位置).
+/// 行の, 桁の位置を返します (字下げの中で桁に届く始めの位置).
 fn index_at_column(text: &[char], col: usize, tab_width: usize) -> usize {
     let mut i = 0;
     while column_at(text, i, tab_width) < col {
@@ -66,7 +66,7 @@ fn index_at_column(text: &[char], col: usize, tab_width: usize) -> usize {
 
 /// 行 `n` (1 から) の, `c` から始まるコメントを, Emacs の `comment-indent` のように置き直して, コメントの文字の後ろ
 /// (`;` の並びと, 続く空白の後) へ動きます. 行だけのコメントは, 式と同じ字下げに, `;` 1 つの式の後ろのコメントは,
-/// `comment_column` (式がそれより長ければ, 空白 1 つの後) にします. `;;` 以上の式の後ろのコメントは, 動かしません.
+/// `comment_column` (式がそれより長ければ空白 1 つの後) にします. `;;` 以上の式の後ろのコメントは, 動かしません.
 fn move_to_comment(
     lines: &[Vec<char>],
     n: usize,
@@ -178,7 +178,7 @@ pub fn comment_region(
     }
 }
 
-/// コメントを付けるか, コメントへ動きます (Emacs の `comment-dwim`). `mark` が `pos` と違えば, リージョンを変えます.
+/// コメントを付けるか, コメントへ動きます (Emacs の `comment-dwim`). `mark` が `pos` と違えばリージョンを変えます.
 /// コメントの書き方が無い (Lisp でない) 場合は, 知らせる文字を返します.
 pub fn comment_dwim(
     lines: &[Vec<char>],
@@ -226,7 +226,7 @@ pub fn comment_dwim(
         });
     }
     // 式の後ろは, 行の終わり (後ろの空白も残す. Emacs の `comment-indent`) から, comment-column
-    // (行がそれより長ければ, 空白 1 つの後) に `;` を入れる
+    // (行がそれより長ければ空白 1 つの後) に `;` を入れる
     let code = text.len();
     let col = column_at(text, code, config.tab_width);
     let column = trailing_column(lines, &found, n, comment_column, config);

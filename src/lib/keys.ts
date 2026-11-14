@@ -2,7 +2,7 @@
  * 押したキーの名前. 画面は, キーを Emacs の書き方 (`C-x`, `M-f`, `RET`) にして, エディタ (Rust) に送ります.
  */
 
-/** 修飾キー (これだけを押しても, キーとして送らない). */
+/** 修飾キー (これだけを押してもキーとして送らない). */
 export const MODIFIER_KEYS = ['Control', 'Alt', 'Shift', 'Meta']
 
 /** CodeMirror のキーの名前と, Emacs のキーの名前. */

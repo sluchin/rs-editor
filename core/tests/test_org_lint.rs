@@ -58,7 +58,7 @@ fn run(ev: &Evaluator, editor: &FakeEditor, code: &str) -> String {
         .unwrap_or_else(|e| panic!("{}: {}", code, e))
 }
 
-/// 評価して, 失敗の内容を返す.
+/// 評価して失敗の内容を返す.
 ///
 /// # Arguments
 ///

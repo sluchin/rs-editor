@@ -53,7 +53,7 @@ pub struct FakeEditor {
     pub displayed: Mutex<Vec<(String, Option<usize>)>>,
     /// command で動かしたコマンドの名前.
     pub commands: Mutex<Vec<String>>,
-    /// 訪れてから、ファイルが外で書き換わったことにするか (`verify-visited-file-modtime` が偽を返す).
+    /// 訪れてから, ファイルが外で書き換わったことにするか (`verify-visited-file-modtime` が偽を返す).
     pub file_changed: Mutex<bool>,
     /// push-mark で置いたマークの位置.
     pub marks: Mutex<Vec<usize>>,
@@ -153,7 +153,7 @@ impl FakeEditor {
         f(buffers.get_mut(&current).unwrap())
     }
 
-    /// バッファを出す (無ければ, 作る).
+    /// バッファを出す (無ければ作る).
     ///
     /// # Arguments
     ///
@@ -168,7 +168,7 @@ impl FakeEditor {
         *self.current.lock().unwrap() = name.to_string();
     }
 
-    /// 名前のバッファ (省けば, 出しているバッファ) の名前を返す.
+    /// 名前のバッファ (省けば出しているバッファ) の名前を返す.
     ///
     /// # Arguments
     ///
@@ -181,7 +181,7 @@ impl FakeEditor {
         args.first().map_or_else(|| self.name(), text)
     }
 
-    /// ファイルのバッファを作る (あれば, その名前を返す).
+    /// ファイルのバッファを作る (あればその名前を返す).
     ///
     /// # Arguments
     ///
@@ -475,7 +475,7 @@ impl Host for FakeEditor {
                 Value::Nil
             }
             "set-syntax-dialect" | "set-major-mode-name" | "set-tab-bar" => Value::Nil,
-            // 偽のエディタのファイルには、ファイルの変数が無い
+            // 偽のエディタのファイルには, ファイルの変数が無い
             "file-local-mode" => Value::Boolean(false),
             "rename-buffer" => {
                 // 同じ名前があれば, 番号を付ける

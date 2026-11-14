@@ -1,17 +1,17 @@
 #!/bin/sh
-# emacs-typescript/typescript-mode の font-lock と、rs-editor の TypeScript のシンタックスハイライト (core/src/highlight/typescript.rs) を、
-# 同じファイルで動かし、結果を比べる.
+# emacs-typescript/typescript-mode の font-lock と, rs-editor の TypeScript のシンタックスハイライト (core/src/highlight/typescript.rs) を,
+# 同じファイルで動かし, 結果を比べる.
 #
 # 使い方: tests/ts-highlight/run.sh [-v] [試験の名前の一部...]
-#   -v  成功したものも、結果を出す
-#   -u  Emacs の結果を、expected/NAME.txt に書き直す (core/tests/test_highlight_typescript.rs の期待値. Emacs が無くても試験できるように、入れておく)
+#   -v  成功したものも, 結果を出す
+#   -u  Emacs の結果を, expected/NAME.txt に書き直す (core/tests/test_highlight_typescript.rs の期待値. Emacs が無くても試験できるように, 入れておく)
 # 環境変数:
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   TS_MODE_DIR  typescript-mode の置き場所 (git clone https://github.com/emacs-typescript/typescript-mode. 必須)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
-# 試験は cases/NAME.ts. 比べるのは、範囲 (始まりと終わり) と種類
-# (dump.el と、tests/c-highlight/dump.scm が、同じ形で出す).
+# 試験は cases/NAME.ts. 比べるのは, 範囲 (始まりと終わり) と種類
+# (dump.el と, tests/c-highlight/dump.scm が, 同じ形で出す).
 set -u
 LC_ALL=C
 export LC_ALL

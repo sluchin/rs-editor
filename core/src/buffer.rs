@@ -131,11 +131,11 @@ pub struct Buffer {
     backed_up: bool,
     /// 最後に自動保存した本文の版.
     auto_saved_version: u64,
-    /// 訪れたとき、または最後に保存したときの、ファイルの更新時刻 (Emacs の `visited-file-modtime`. 無ければ `None`).
+    /// 訪れたとき, または最後に保存したときの, ファイルの更新時刻 (Emacs の `visited-file-modtime`. 無ければ `None`).
     visited_modtime: Option<std::time::SystemTime>,
-    /// 外で書き換わったファイルを、書き換えてよいと答えたか (保存、読み直し、訪れ直しで偽に戻る).
+    /// 外で書き換わったファイルを, 書き換えてよいと答えたか (保存, 読み直し, 訪れ直しで偽に戻る).
     supersession_ok: bool,
-    /// 字句の範囲の覚え (本文の版, 言語, 結果). 本文を書き換えると、版が変わって、使わなくなる.
+    /// 字句の範囲の覚え (本文の版, 言語, 結果). 本文を書き換えると, 版が変わって使わなくなる.
     token_cache: std::cell::RefCell<Option<TokenCache>>,
 }
 
@@ -237,12 +237,12 @@ impl Buffer {
         self.auto_saved_version
     }
 
-    /// 訪れたとき、または最後に保存したときの、ファイルの更新時刻.
+    /// 訪れたとき, または最後に保存したときの, ファイルの更新時刻.
     pub fn visited_modtime(&self) -> Option<std::time::SystemTime> {
         self.visited_modtime
     }
 
-    /// ファイルの更新時刻を覚えます (`None` なら、覚えていないことにする).
+    /// ファイルの更新時刻を覚えます (`None` なら, 覚えていないことにする).
     pub fn set_visited_modtime(&mut self, modtime: Option<std::time::SystemTime>) {
         self.visited_modtime = modtime;
         self.supersession_ok = false;
@@ -324,7 +324,7 @@ impl Buffer {
         &self.highlights
     }
 
-    /// 強調する正規表現を足します (同じ正規表現があれば, 置き換える).
+    /// 強調する正規表現を足します (同じ正規表現があれば置き換える).
     pub fn add_highlight(&mut self, highlight: Highlight) {
         self.highlights.retain(|h| h.regexp != highlight.regexp);
         self.highlights.push(highlight);
@@ -410,7 +410,7 @@ impl Buffer {
         self.mode_name = Some(name.to_string());
     }
 
-    /// シンタックスハイライトの言語 (`major-mode` が `c-mode` なら C、`lisp-interaction-mode` なら Scheme. 構文の方言が Lisp なら、その Lisp. 無ければ `None`).
+    /// シンタックスハイライトの言語 (`major-mode` が `c-mode` なら C, `lisp-interaction-mode` なら Scheme. 構文の方言が Lisp なら, その Lisp. 無ければ `None`).
     pub fn highlight_language(&self) -> Option<crate::highlight::Language> {
         use crate::highlight::Language;
         self.mode_name
@@ -423,7 +423,7 @@ impl Buffer {
             })
     }
 
-    /// 本文の字句の範囲 (言語が無ければ空). 本文が変わるまでは、覚えた結果を返す.
+    /// 本文の字句の範囲 (言語が無ければ空). 本文が変わるまでは, 覚えた結果を返す.
     pub fn token_spans(&self) -> std::sync::Arc<Vec<crate::highlight::Span>> {
         let Some(language) = self.highlight_language() else {
             return std::sync::Arc::default();
@@ -499,7 +499,7 @@ impl Buffer {
                 vec![Value::Symbol(format!("#<buffer {}>", self.name))],
             ));
         }
-        // 書き換えていないバッファを、初めて書き換えるとき、訪れてからファイルが外で書き換わっていれば、知らせる
+        // 書き換えていないバッファを, 初めて書き換えるとき, 訪れてからファイルが外で書き換わっていれば, 知らせる
         if !self.modified && !self.supersession_ok {
             if let Some(path) = self.changed_on_disk() {
                 return Err(Error::new(
@@ -514,8 +514,8 @@ impl Buffer {
         Ok(())
     }
 
-    /// 訪れているファイルが、訪れてから (最後に保存してから) 外で書き換わっていれば、そのパス.
-    /// ファイルが無いとき、更新時刻を覚えていないときは、`None`.
+    /// 訪れているファイルが, 訪れてから (最後に保存してから) 外で書き換わっていれば, そのパス.
+    /// ファイルが無いとき, 更新時刻を覚えていないときは, `None`.
     pub fn changed_on_disk(&self) -> Option<&str> {
         let path = self.file.as_deref()?;
         let recorded = self.visited_modtime?;
@@ -523,7 +523,7 @@ impl Buffer {
         (now != recorded).then_some(path)
     }
 
-    /// 外で書き換わったファイルを、書き換えてよいと答えたことにします (保存、読み直しなどで、忘れる).
+    /// 外で書き換わったファイルを, 書き換えてよいと答えたことにします (保存, 読み直しなどで忘れる).
     pub fn allow_supersession(&mut self) {
         self.supersession_ok = true;
     }
@@ -605,7 +605,7 @@ impl Buffer {
         self.saved_restrictions.len() - 1
     }
 
-    /// 覚えた絞り込みに戻して, 覚えたものを解きます. 番号が合わなければ, 何もしない.
+    /// 覚えた絞り込みに戻して, 覚えたものを解きます. 番号が合わなければ何もしない.
     pub fn restore_restriction(&mut self, id: usize) {
         let Some(slot) = self.saved_restrictions.get_mut(id) else {
             return;
@@ -642,7 +642,7 @@ impl Buffer {
         self.point
     }
 
-    /// カーソルを置きます (バッファの外なら, 端に置く).
+    /// カーソルを置きます (バッファの外なら端に置く).
     pub fn set_point(&mut self, pos: usize) {
         self.point = pos.clamp(self.begv(), self.zv());
     }
@@ -670,7 +670,7 @@ impl Buffer {
         self.line_of(self.begv())
     }
 
-    /// 行 (0 から数える) の文字. 終わりの改行は含めない. 行が無ければ空. 絞り込んでいれば, 見える範囲だけ.
+    /// 行 (0 から数える) の文字. 終わりの改行は含めない. 行が無ければ空. 絞り込んでいれば見える範囲だけ.
     pub fn line_text(&self, line: usize) -> String {
         if line >= self.line_count() {
             return String::new();
@@ -742,7 +742,7 @@ impl Buffer {
         self.text.char_to_line(pos)
     }
 
-    /// 行の始めの位置 (番号が行の数以上なら, バッファの終わり).
+    /// 行の始めの位置 (番号が行の数以上ならバッファの終わり).
     fn line_start(&self, line: usize) -> usize {
         if line >= self.text.len_lines() {
             self.len()
@@ -814,7 +814,7 @@ impl Buffer {
         n - moved
     }
 
-    /// 位置以降で, 最初の改行の位置.
+    /// 位置以降で最初の改行の位置.
     fn next_newline(&self, pos: usize) -> Option<usize> {
         let line = self.line_of(pos);
         let end = self.line_start(line + 1);
@@ -825,7 +825,7 @@ impl Buffer {
         }
     }
 
-    /// カーソルの桁 (Emacs の `current-column`). タブは `TAB_WIDTH` の倍数まで, 幅の広い文字は 2.
+    /// カーソルの桁 (Emacs の `current-column`). タブは `TAB_WIDTH` の倍数まで幅の広い文字は 2.
     pub fn current_column(&self) -> usize {
         self.column_of(self.point)
     }
@@ -925,7 +925,7 @@ impl Buffer {
         }
     }
 
-    /// 区切りの直後の変更の前に、区切りでのカーソルを履歴に覚えます (変更の所と同じなら, 要らない).
+    /// 区切りの直後の変更の前に, 区切りでのカーソルを履歴に覚えます (変更の所と同じなら要らない).
     fn record_point(&mut self, beginning: usize) {
         let at_boundary = matches!(self.undo.last(), None | Some(UndoEntry::Boundary));
         if let (true, Some(point)) = (at_boundary, self.point_at_boundary) {
@@ -935,7 +935,7 @@ impl Buffer {
         }
     }
 
-    /// 履歴に, 入れた文字を記録します (続けて入れたら, 1 つにまとめる).
+    /// 履歴に, 入れた文字を記録します (続けて入れたら 1 つにまとめる).
     fn record_insert(&mut self, pos: usize, len: usize) {
         if let Some(UndoEntry::Insert { pos: last, len: n }) = self.undo.last_mut() {
             if *last + *n == pos {
@@ -1068,7 +1068,7 @@ impl Buffer {
     }
 
     /// 位置を覚えるマーカーを作ります (Emacs の `point-marker`). 本文を書き換えると, 位置を追う
-    /// (入れた所と同じ位置なら, 動かない. 消した範囲の中なら, 消した所の始め).
+    /// (入れた所と同じ位置なら, 動かない. 消した範囲の中なら消した所の始め).
     ///
     /// # Returns
     ///
@@ -1127,7 +1127,7 @@ impl Buffer {
         self.mark = Some(pos.min(self.len()));
     }
 
-    /// マークを使う状態にします (Emacs の `activate-mark`). マークが無ければ, 何もしない.
+    /// マークを使う状態にします (Emacs の `activate-mark`). マークが無ければ何もしない.
     pub fn activate_mark(&mut self) {
         self.mark_active = self.mark.is_some();
     }
@@ -1169,7 +1169,7 @@ impl Buffer {
     }
 
     /// マークの履歴の先頭を, マークにします (Emacs の `pop-mark`). 今のマークは履歴の最後に回す.
-    /// 履歴が空なら, 何もしない. マークは使わない状態になる.
+    /// 履歴が空なら何もしない. マークは使わない状態になる.
     pub fn pop_mark(&mut self) {
         if self.mark_ring.is_empty() {
             return;
@@ -1230,7 +1230,7 @@ impl Buffer {
 
     /// 元に戻すまとまりの区切りを入れます (Emacs の `undo-boundary`). 履歴が空か, 既に区切りなら入れない.
     pub fn undo_boundary(&mut self) {
-        // 区切りでのカーソルは、履歴が空でも覚える
+        // 区切りでのカーソルは, 履歴が空でも覚える
         self.point_at_boundary = Some(self.point);
         if !matches!(self.undo.last(), None | Some(UndoEntry::Boundary)) {
             self.undo.push(UndoEntry::Boundary);

@@ -417,7 +417,7 @@ fn test_xref_identifier_at_point_and_prompt() {
         )),
         "\"defs.scm\""
     );
-    // 記号が無ければ, 読む (空なら, 既定も無いので失敗)
+    // 記号が無ければ, 読む (空なら既定も無いので失敗)
     assert_eq!(
         eval_with(
             &["beta-cmd"],

@@ -68,7 +68,7 @@ export default function ProjectTree({
   onOpenFile,
   focusSignal = 0,
 }: ProjectTreeProps) {
-  // 読んだディレクトリの中の名前 (読めなければ, 理由)
+  // 読んだディレクトリの中の名前 (読めなければ理由)
   const [entries, setEntries] = useState<Record<string, string[] | { error: string }>>({})
   // 開いているディレクトリ (根は, いつも開く)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())

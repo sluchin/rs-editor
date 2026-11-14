@@ -1,6 +1,6 @@
 //! 評価器から, エディタ (画面) を動かす窓口.
 //!
-//! 評価は Rust で行うので, エディタの操作 (`insert`, `point` など) は, 画面に頼んで, 返事を待ちます.
+//! 評価は Rust で行うので, エディタの操作 (`insert`, `point` など) は, 画面に頼んで返事を待ちます.
 //! アプリでは, [`Bridge`] が, 頼みを画面へ送って (Tauri のイベント), 返事 (Tauri のコマンド) を待ちます.
 
 use crate::error::Error;
@@ -14,7 +14,7 @@ use serde::Serialize;
 use crate::scheme::value::Value;
 use crate::sync::LockExt;
 
-/// ミニバッファの入力 (`read-string`) を待つ長さ (人が入力するので, 長くする).
+/// ミニバッファの入力 (`read-string`) を待つ長さ (人が入力するので長くする).
 pub const READ_TIMEOUT: Duration = Duration::from_secs(60 * 60);
 
 /// エディタ. 操作の名前と引数を受け取って, 結果を返します.
@@ -52,13 +52,13 @@ pub struct EditorRequest {
     pub args: Vec<serde_json::Value>,
 }
 
-/// 画面に頼んで, 返事を待つ仕組み.
+/// 画面に頼んで返事を待つ仕組み.
 pub struct Bridge {
     /// 次の頼みに付ける番号.
     next_id: AtomicU64,
     /// 返事を待っている頼み (番号と, 返事を渡す先).
     pending: Mutex<HashMap<u64, mpsc::Sender<Result<Value, String>>>>,
-    /// 返事を待つ長さ (過ぎたら, 失敗にする. `read-string` は [`READ_TIMEOUT`]).
+    /// 返事を待つ長さ (過ぎたら失敗にする. `read-string` は [`READ_TIMEOUT`]).
     timeout: Duration,
 }
 
@@ -67,7 +67,7 @@ impl Bridge {
     ///
     /// # Arguments
     ///
-    /// * `timeout` - 返事を待つ長さ (過ぎたら, 失敗にする).
+    /// * `timeout` - 返事を待つ長さ (過ぎたら失敗にする).
     ///
     /// # Returns
     ///
@@ -80,7 +80,7 @@ impl Bridge {
         }
     }
 
-    /// 画面に頼んで, 返事を待ちます.
+    /// 画面に頼んで返事を待ちます.
     ///
     /// # Arguments
     ///

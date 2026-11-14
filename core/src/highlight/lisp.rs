@@ -1,11 +1,11 @@
-//! Lisp (Scheme と Emacs Lisp) のシンタックスハイライト. Emacs 30 の scheme-mode と emacs-lisp-mode の font-lock と同じ所に、
-//! 同じ色を付けます (Emacs の `scheme-font-lock-keywords-2` と `lisp-el-font-lock-keywords-2` の決まりを、字句ごとに読み替えたもの).
+//! Lisp (Scheme と Emacs Lisp) のシンタックスハイライト. Emacs 30 の scheme-mode と emacs-lisp-mode の font-lock と同じ所に,
+//! 同じ色を付けます (Emacs の `scheme-font-lock-keywords-2` と `lisp-el-font-lock-keywords-2` の決まりを, 字句ごとに読み替えたもの).
 //!
-//! 色を付けるのは、コメント、文字列、`(` の直後の特別な形 (`define`、`defun`、`if` など)、特別な形で定義する名前、
-//! `:key` などの印です (`car` などの関数や、数には付けない). Emacs Lisp では、文字列の中の正規表現の括弧、要らない `\`、
-//! 閉じた括弧の後ろに続く引数 (見落としやすい) にも、色を付けます.
+//! 色を付けるのは, コメント, 文字列, `(` の直後の特別な形 (`define`, `defun`, `if` など), 特別な形で定義する名前,
+//! `:key` などの印です (`car` などの関数や, 数には付けない). Emacs Lisp では, 文字列の中の正規表現の括弧, 要らない `\`,
+//! 閉じた括弧の後ろに続く引数 (見落としやすい) にも色を付けます.
 //!
-//! 解析は、行ごとに、字句を 1 つずつ読みます (状態は、行をまたいで覚える). 字句は、行をまたがない.
+//! 解析は, 行ごとに, 字句を 1 つずつ読みます (状態は, 行をまたいで覚える). 字句は, 行をまたがない.
 
 use std::collections::VecDeque;
 
@@ -21,23 +21,23 @@ pub(super) enum Dialect {
     Elisp,
 }
 
-/// 特別な形の後で、色を付ける名前を待つ.
+/// 特別な形の後で色を付ける名前を待つ.
 #[derive(Debug, Clone, Copy)]
 struct Pending {
-    /// 名前の色 (`None` なら、色を付けない).
+    /// 名前の色 (`None` なら色を付けない).
     kind: Option<TokenKind>,
     /// `(` の後の名前の色.
     in_paren: Option<TokenKind>,
-    /// 名前の前に、飛ばせる `(` の数.
+    /// 名前の前に, 飛ばせる `(` の数.
     parens: usize,
 }
 
-/// `(` の直後の名前の色と、その後で待つ名前.
+/// `(` の直後の名前の色と, その後で待つ名前.
 #[derive(Debug, Clone, Copy)]
 struct Head {
-    /// 名前の色 (特別な形か、警告).
+    /// 名前の色 (特別な形か, 警告).
     face: TokenKind,
-    /// その後で、色を付ける名前を待つなら、その決まり.
+    /// その後で, 色を付ける名前を待つなら, その決まり.
     next: Option<Pending>,
 }
 
@@ -65,19 +65,19 @@ struct State {
     queue: VecDeque<(usize, TokenKind)>,
     /// `#| |#` のコメントの深さ (入れ子にできる).
     comment_depth: usize,
-    /// `#;` でコメントにした式の、括弧の深さ (コメントでなければ `None`).
+    /// `#;` でコメントにした式の, 括弧の深さ (コメントでなければ `None`).
     datum: Option<i64>,
     /// 直前の字句が `(` なら真.
     after_paren: bool,
     /// 直前の字句が `'` なら真.
     after_quote: bool,
-    /// 特別な形の後で、色を付ける名前を待っているなら、その決まり.
+    /// 特別な形の後で, 色を付ける名前を待っているなら, その決まり.
     pending: Option<Pending>,
     /// 開いているリスト (外から順に).
     stack: Vec<Frame>,
-    /// 行の始めからの、括弧の深さ.
+    /// 行の始めからの, 括弧の深さ.
     line_depth: i64,
-    /// 閉じた括弧の後ろに続く引数の警告 (Emacs Lisp). 0: 無し、1: 次の空白でない字句から、2: 警告している. 行ごとに戻す.
+    /// 閉じた括弧の後ろに続く引数の警告 (Emacs Lisp). 0: 無し, 1: 次の空白でない字句から, 2: 警告している. 行ごとに戻す.
     hidden_arg: u8,
 }
 
@@ -118,14 +118,14 @@ impl Stream<'_> {
         self.pos > from
     }
 
-    /// 次の文字が `c` なら、読みます.
+    /// 次の文字が `c` なら読みます.
     fn eat(&mut self, c: char) -> bool {
         let found = !self.eol() && self.at(self.pos) == c;
         self.pos += usize::from(found);
         found
     }
 
-    /// 次が `s` なら、読みます.
+    /// 次が `s` なら読みます.
     fn eat_str(&mut self, s: &str) -> bool {
         let found = s
             .chars()
@@ -154,14 +154,14 @@ impl Stream<'_> {
         }
     }
 
-    /// 読んでいる字句が、空白だけか.
+    /// 読んでいる字句が, 空白だけか.
     fn current_is_space(&self) -> bool {
         self.line[self.start..self.pos]
             .iter()
             .all(|c| c.is_whitespace())
     }
 
-    /// 空白を飛ばして、行の終わりか `;` か閉じ括弧が続くか (進めない).
+    /// 空白を飛ばして, 行の終わりか `;` か閉じ括弧が続くか (進めない).
     fn rest_is_closing(&self) -> bool {
         let mut i = self.pos;
         while i < self.line.len() && self.line[i].is_whitespace() {
@@ -176,12 +176,12 @@ fn is_space(c: char) -> bool {
     c.is_whitespace() || c == '\u{a0}'
 }
 
-/// 名前 (シンボル、数、`#t` など) の文字.
+/// 名前 (シンボル, 数, `#t` など) の文字.
 fn is_word(c: char) -> bool {
     !c.is_whitespace() && !matches!(c, '(' | ')' | '[' | ']' | '"' | ';' | '\'' | '`' | ',')
 }
 
-/// Scheme で、`(` の直後でキーワードの色にする名前 (Emacs の `scheme-font-lock-keywords-2`).
+/// Scheme で, `(` の直後でキーワードの色にする名前 (Emacs の `scheme-font-lock-keywords-2`).
 const SCHEME_KEYWORDS: &[&str] = &[
     "and",
     "begin",
@@ -235,7 +235,7 @@ const SCHEME_KEYWORDS: &[&str] = &[
     "λ",
 ];
 
-/// Emacs Lisp の定義の形と、定義する名前の色 (Emacs の `lisp-define-type`).
+/// Emacs Lisp の定義の形と, 定義する名前の色 (Emacs の `lisp-define-type`).
 const ELISP_DEFINITIONS: &[(&str, TokenKind)] = &[
     ("cl-defgeneric", TokenKind::FunctionName),
     ("cl-defmacro", TokenKind::FunctionName),
@@ -273,10 +273,10 @@ const ELISP_DEFINITIONS: &[(&str, TokenKind)] = &[
     ("ert-deftest", TokenKind::FunctionName),
 ];
 
-/// Emacs Lisp で、後ろの名前を定数の色にする形.
+/// Emacs Lisp で, 後ろの名前を定数の色にする形.
 const ELISP_FEATURES: &[&str] = &["catch", "featurep", "provide", "require", "throw"];
 
-/// Emacs Lisp で、警告の色にする形.
+/// Emacs Lisp で警告の色にする形.
 const ELISP_WARNINGS: &[&str] = &[
     "cl-assert",
     "cl-check-type",
@@ -286,7 +286,7 @@ const ELISP_WARNINGS: &[&str] = &[
     "warn",
 ];
 
-/// Emacs Lisp で、1 つ目の引数が束縛のリストの形.
+/// Emacs Lisp で, 1 つ目の引数が束縛のリストの形.
 const ELISP_LETS: &[&str] = &[
     "let",
     "let*",
@@ -309,8 +309,8 @@ fn pending(kind: Option<TokenKind>, in_paren: Option<TokenKind>, parens: usize) 
     }
 }
 
-/// Scheme の `define` の仲間の、定義する名前の色 (`define` と `define-public` などは関数、`define-syntax` と `define-macro`
-/// は変数、`define-class` などは型).
+/// Scheme の `define` の仲間の, 定義する名前の色 (`define` と `define-public` などは関数, `define-syntax` と `define-macro`
+/// は変数, `define-class` などは型).
 fn scheme_define(word: &str) -> Option<TokenKind> {
     let rest = word.strip_prefix("define")?;
     let rest = rest.strip_prefix('*').unwrap_or(rest);
@@ -330,7 +330,7 @@ impl Dialect {
     /// # Arguments
     ///
     /// * `word` - 名前.
-    /// * `funcall` - 関数を呼ぶ所 (引用したリストや、引数のリストでない) なら真.
+    /// * `funcall` - 関数を呼ぶ所 (引用したリストや, 引数のリストでない) なら真.
     fn head(self, word: &str, funcall: bool) -> Option<Head> {
         let keyword = |next| {
             Some(Head {
@@ -341,11 +341,11 @@ impl Dialect {
         match self {
             Dialect::Scheme => {
                 if let Some(kind) = scheme_define(word) {
-                    // `(define ((f a) b)` のように、前の `(` は幾つでも飛ばす
+                    // `(define ((f a) b)` のように, 前の `(` は幾つでも飛ばす
                     return keyword(Some(pending(Some(kind), Some(kind), usize::MAX)));
                 }
                 match word {
-                    // 名前付きの let の名前は、関数の色
+                    // 名前付きの let の名前は, 関数の色
                     "let" => keyword(Some(pending(Some(TokenKind::FunctionName), None, 0))),
                     "library" => keyword(Some(pending(
                         Some(TokenKind::Type),
@@ -360,7 +360,7 @@ impl Dialect {
             }
             Dialect::Elisp => {
                 if let Some((_, kind)) = ELISP_DEFINITIONS.iter().find(|(name, _)| *name == word) {
-                    // 関数の名前は、`(` の後なら色を付けない (変数と型は付ける)
+                    // 関数の名前は, `(` の後なら色を付けない (変数と型は付ける)
                     let in_paren = (*kind != TokenKind::FunctionName).then_some(*kind);
                     return keyword(Some(pending(Some(*kind), in_paren, 1)));
                 }
@@ -373,7 +373,7 @@ impl Dialect {
                         next: None,
                     });
                 }
-                // マクロとスペシャルフォームは、関数を呼ぶ所だけ
+                // マクロとスペシャルフォームは, 関数を呼ぶ所だけ
                 (funcall && ELISP_KEYWORDS.binary_search(&word).is_ok())
                     .then(|| keyword(None))
                     .flatten()
@@ -401,7 +401,7 @@ impl Dialect {
     }
 }
 
-/// 文字列とコメントの中の、シンボルの名前の長さ (`\` で始まる 2 文字も含む). 後ろに `look` のどれかが続く、最も長いもの.
+/// 文字列とコメントの中の, シンボルの名前の長さ (`\` で始まる 2 文字も含む). 後ろに `look` のどれかが続く, 最も長いもの.
 fn symbol_before(line: &[char], from: usize, look: &[char]) -> Option<usize> {
     let mut ends = Vec::new();
     let mut i = from;
@@ -427,20 +427,20 @@ fn symbol_before(line: &[char], from: usize, look: &[char]) -> Option<usize> {
         .map(|end| end - from)
 }
 
-/// 文字列とコメントの中で、色を分ける所の、部分ごとの長さと種類 (`None` は、文字列かコメントのまま).
+/// 文字列とコメントの中で, 色を分ける所の, 部分ごとの長さと種類 (`None` は, 文字列かコメントのまま).
 type Groups = Vec<(usize, Option<TokenKind>)>;
 
-/// 文字列の中の、色を分ける所の決まりの数. 決まりは、上から順に試す (`span_groups`).
+/// 文字列の中の, 色を分ける所の決まりの数. 決まりは, 上から順に試す (`span_groups`).
 const STRING_RULES: usize = 7;
 
-/// コメントの中で、色を分ける決まり (`` `name' ``) の番号.
+/// コメントの中で, 色を分ける決まり (`` `name' ``) の番号.
 const COMMENT_RULE: usize = 5;
 
-/// 位置 `pos` から、色を分ける決まり `rule` に合うか見ます.
+/// 位置 `pos` から, 色を分ける決まり `rule` に合うか見ます.
 ///
-/// 決まり: 0 `\\\\` (正規表現の `\` そのもの)、1 正規表現のグループ `\\(` `\\(?:` `\\(?1:` `\\|` `\\)`、
-/// 2 コマンドのキー `\\[command]`、3 キーマップ `\\<map>` `\\{map}`、4 `\\=`、5 `` `name' `` と `‘name’`、
-/// 6 要らない `\` (`\.` などは、`.` と同じ. Emacs 30 で、ASCII の文字ごとに確かめたもの).
+/// 決まり: 0 `\\\\` (正規表現の `\` そのもの), 1 正規表現のグループ `\\(` `\\(?:` `\\(?1:` `\\|` `\\)`,
+/// 2 コマンドのキー `\\[command]`, 3 キーマップ `\\<map>` `\\{map}`, 4 `\\=`, 5 `` `name' `` と `‘name’`,
+/// 6 要らない `\` (`\.` などは, `.` と同じ. Emacs 30 で, ASCII の文字ごとに確かめたもの).
 fn span_groups(line: &[char], pos: usize, rule: usize) -> Option<Groups> {
     let at = |i: usize| line.get(pos + i).copied().unwrap_or('\0');
     match rule {
@@ -501,19 +501,19 @@ fn span_groups(line: &[char], pos: usize, rule: usize) -> Option<Groups> {
     }
 }
 
-/// 続けて読む字句を、1 つ読みます.
+/// 続けて読む字句を, 1 つ読みます.
 fn read_queued(stream: &mut Stream, state: &mut State) -> Option<TokenKind> {
     let (len, kind) = state.queue.pop_front()?;
     stream.pos += len;
     Some(kind)
 }
 
-/// 文字列かコメントの中で、色を分ける所なら、そこで字句を分けます. 字句の始まりなら、分けた字句を続けて読む字句にします.
+/// 文字列かコメントの中で, 色を分ける所ならそこで字句を分けます. 字句の始まりなら, 分けた字句を続けて読む字句にします.
 ///
 /// # Arguments
 ///
 /// * `rules` - 試す決まりの番号.
-/// * `default` - 文字列かコメントの、字句の種類.
+/// * `default` - 文字列かコメントの, 字句の種類.
 ///
 /// # Returns
 ///
@@ -524,7 +524,7 @@ fn at_span(
     rules: std::ops::Range<usize>,
     default: TokenKind,
 ) -> bool {
-    // 行の始めの `\(` は、Emacs が括弧を見誤らないための `\` (要るもの)
+    // 行の始めの `\(` は, Emacs が括弧を見誤らないための `\` (要るもの)
     let rules = if stream.pos == 0 {
         rules.start..rules.end - 1
     } else {
@@ -546,7 +546,7 @@ fn at_span(
     false
 }
 
-/// 文字列を、閉じる `"` か、行の終わりまで読みます.
+/// 文字列を, 閉じる `"` か, 行の終わりまで読みます.
 fn read_string(stream: &mut Stream, state: &mut State, dialect: Dialect) -> TokenKind {
     while !stream.eol() {
         if dialect == Dialect::Elisp && at_span(stream, state, 0..STRING_RULES, TokenKind::String) {
@@ -564,7 +564,7 @@ fn read_string(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Toke
     TokenKind::String
 }
 
-/// `;` のコメントを、行の終わりまで読みます.
+/// `;` のコメントを, 行の終わりまで読みます.
 fn read_line_comment(stream: &mut Stream, state: &mut State, dialect: Dialect) -> TokenKind {
     while !stream.eol() {
         if dialect == Dialect::Elisp
@@ -583,7 +583,7 @@ fn read_line_comment(stream: &mut Stream, state: &mut State, dialect: Dialect) -
     TokenKind::Comment
 }
 
-/// `#| |#` のコメントを、閉じるところか、行の終わりまで読みます.
+/// `#| |#` のコメントを, 閉じるところか, 行の終わりまで読みます.
 fn read_block_comment(stream: &mut Stream, state: &mut State) -> TokenKind {
     while !stream.eol() {
         if stream.eat_str("|#") {
@@ -600,7 +600,7 @@ fn read_block_comment(stream: &mut Stream, state: &mut State) -> TokenKind {
     TokenKind::Comment
 }
 
-/// `#;` でコメントにした式を、1 つの字句ずつ読みます. 式が終わったら、コメントを終えます.
+/// `#;` でコメントにした式を, 1 つの字句ずつ読みます. 式が終わったらコメントを終えます.
 fn read_datum_comment(stream: &mut Stream, state: &mut State) -> TokenKind {
     if stream.eat_space() {
         return TokenKind::Comment;
@@ -612,13 +612,13 @@ fn read_datum_comment(stream: &mut Stream, state: &mut State) -> TokenKind {
     } else if ch == ')' || ch == ']' {
         state.datum = Some(depth - 1);
     } else if ch == '"' {
-        // 閉じる `"` まで (同じ行に無ければ、行の終わりまで)
+        // 閉じる `"` まで (同じ行に無ければ行の終わりまで)
         if !stream.skip_to('"') {
             stream.pos = stream.line.len();
         }
         stream.next();
     } else if matches!(ch, '\'' | '`' | ',') {
-        // 引用の印は、後ろの式と合わせて 1 つ
+        // 引用の印は, 後ろの式と合わせて 1 つ
         return TokenKind::Comment;
     } else {
         stream.eat_word();
@@ -629,7 +629,7 @@ fn read_datum_comment(stream: &mut Stream, state: &mut State) -> TokenKind {
     TokenKind::Comment
 }
 
-/// 開いているリストに、要素を 1 つ足します.
+/// 開いているリストに, 要素を 1 つ足します.
 fn add_element(state: &mut State, word: Option<&str>) {
     if let Some(top) = state.stack.last_mut() {
         if top.count == 0 {
@@ -639,8 +639,8 @@ fn add_element(state: &mut State, word: Option<&str>) {
     }
 }
 
-/// `(` を開きます. Emacs Lisp では、関数を呼ぶリストかを決めます (Emacs の `lisp--el-funcall-position-p`.
-/// `'(` と、`let` の束縛は、関数を呼ばない).
+/// `(` を開きます. Emacs Lisp では, 関数を呼ぶリストかを決めます (Emacs の `lisp--el-funcall-position-p`.
+/// `'(` と, `let` の束縛は, 関数を呼ばない).
 fn open_list(state: &mut State, quoted: bool) {
     let parent = state.stack.last();
     let funcall = !quoted && !parent.is_some_and(|p| p.bindings);
@@ -719,7 +719,7 @@ fn read_token(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Optio
     if ch == ')' || ch == ']' {
         state.stack.pop();
         state.line_depth -= 1;
-        // 前の行で開いた括弧を閉じて、後ろに引数が続くなら、警告する (`;` のコメントと、閉じる括弧は除く)
+        // 前の行で開いた括弧を閉じて, 後ろに引数が続くなら, 警告する (`;` のコメントと, 閉じる括弧は除く)
         if !scheme && state.line_depth < 0 && state.hidden_arg == 0 && !stream.rest_is_closing() {
             state.hidden_arg = 1;
         }
@@ -727,20 +727,20 @@ fn read_token(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Optio
     }
     if ch == '\'' {
         state.after_quote = true;
-        // Emacs Lisp の `(defalias 'f` は、`'` の後の名前を待つ
+        // Emacs Lisp の `(defalias 'f` は, `'` の後の名前を待つ
         if !scheme {
             state.pending = waiting;
         }
         return None;
     }
-    // `#'` は、後ろの式と合わせて 1 つ (`#'(lambda` は、関数を呼ぶリスト)
+    // `#'` は, 後ろの式と合わせて 1 つ (`#'(lambda` は, 関数を呼ぶリスト)
     if !scheme && ch == '#' && stream.eat('\'') {
         return None;
     }
     if !is_word(ch) {
         return None;
     }
-    // 文字 (Scheme の `#\(`、Emacs Lisp の `?(` と `?\(`) は、括弧も名前の文字にする
+    // 文字 (Scheme の `#\(`, Emacs Lisp の `?(` と `?\(`) は, 括弧も名前の文字にする
     if scheme && ch == '#' && stream.eat('\\') {
         stream.next();
     }
@@ -764,17 +764,17 @@ fn read_token(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Optio
     dialect.word(&word)
 }
 
-/// 字句を 1 つ読みます. 閉じた括弧の後ろに続く引数は、警告の色にします.
+/// 字句を 1 つ読みます. 閉じた括弧の後ろに続く引数は, 警告の色にします.
 fn token(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Option<TokenKind> {
     if stream.start == 0 {
-        // 特別な形の後の名前は、同じ行にあるときだけ
+        // 特別な形の後の名前は, 同じ行にあるときだけ
         state.pending = None;
         state.line_depth = 0;
         state.hidden_arg = 0;
     }
     let hidden = state.hidden_arg;
     let kind = read_token(stream, state, dialect);
-    // 警告は、括弧の後ろの、空白でない字句から、行の終わりまで
+    // 警告は, 括弧の後ろの, 空白でない字句から, 行の終わりまで
     if hidden == 0 || (hidden == 1 && stream.current_is_space()) {
         return kind;
     }
@@ -786,7 +786,7 @@ fn token(stream: &mut Stream, state: &mut State, dialect: Dialect) -> Option<Tok
 ///
 /// # Returns
 ///
-/// 範囲の並び (始まりの順. 重ならない. 行をまたがない. 続く同じ種類の範囲は、1 つにする).
+/// 範囲の並び (始まりの順. 重ならない. 行をまたがない. 続く同じ種類の範囲は, 1 つにする).
 pub(super) fn tokenize(dialect: Dialect, text: &str) -> Vec<Span> {
     let chars: Vec<char> = text.chars().collect();
     let mut state = State::default();

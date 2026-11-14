@@ -294,7 +294,7 @@ Make a backup first (`backup-buffer'), delete the auto save file after writing,
 and run `after-save-hook'.  If the buffer visits no file, read a file name."
   (cond ((not (buffer-file-name)) (files--write-file (read-file-name "Save file: ")))
         ((buffer-modified-p)
-         ;; 訪れてから (最後に保存してから) ファイルが外で書き換わっていれば、確かめる (Emacs と同じ)
+         ;; 訪れてから (最後に保存してから) ファイルが外で書き換わっていれば, 確かめる (Emacs と同じ)
          (unless (or (verify-visited-file-modtime)
                      (not (file-exists? (buffer-file-name)))
                      (yes-or-no-p (format "%s has changed since visited or saved.  Save anyway? "
@@ -377,7 +377,7 @@ Point stays at the same character, and the change can be undone."
                      (yes-or-no-p (if (buffer-modified-p)
                                       (format "Discard edits and reread from %s? " file)
                                       (format "Revert buffer from file %s? " file))))
-             ;; 先に更新時刻を覚える (書き換えるときの、外で書き換わったかの確かめを、通すため)
+             ;; 先に更新時刻を覚える (書き換えるときの, 外で書き換わったかの確かめを, 通すため)
              (set-visited-file-modtime)
              (files--set-buffer-text (read-file-string file) #f))
            (message "")))))

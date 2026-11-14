@@ -1,4 +1,4 @@
-//! テストで共有する、偽の画面.
+//! テストで共有する, 偽の画面.
 
 #![allow(dead_code)]
 
@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use rseditor_tui::app::App;
 use rseditor_tui::screen::{Frame, Screen};
 
-/// 偽の画面: 決めておいたキーを返し、描いた画面を覚える.
+/// 偽の画面: 決めておいたキーを返し, 描いた画面を覚える.
 pub struct FakeScreen {
     /// 画面の大きさ (行, 桁).
     pub size: (usize, usize),
@@ -51,7 +51,7 @@ impl Screen for FakeScreen {
     }
 }
 
-/// 偽の画面を使うエディタと、キーの入れ口、描いた画面.
+/// 偽の画面を使うエディタと, キーの入れ口, 描いた画面.
 pub struct Fixture {
     /// エディタ.
     pub app: App,
@@ -82,7 +82,7 @@ impl Fixture {
         })
     }
 
-    /// 12 行 30 桁の画面で、ファイルを開かずに作る.
+    /// 12 行 30 桁の画面で, ファイルを開かずに作る.
     pub fn new() -> Self {
         Self::sized(12, 30, &[]).unwrap()
     }

@@ -2,7 +2,7 @@
 //!
 //! `-q` (`--no-init-file`), `-Q` (`--quick`), `--no-splash`, `--debug-init`, `--chdir DIR`,
 //! `--init-directory DIR` を読みます. 値は `--chdir DIR` と `--chdir=DIR` の両方の書き方を受けます.
-//! 知らない引数は、Emacs と同じく、開くファイルとして扱います.
+//! 知らない引数は, Emacs と同じく, 開くファイルとして扱います.
 
 /// 起動の引数を読んだ結果.
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
@@ -11,7 +11,7 @@ pub struct Options {
     pub no_init_file: bool,
     /// 始めの画面を出さない (`--no-splash`, `-Q`, `--quick`).
     pub no_splash: bool,
-    /// 初期設定ファイルの失敗で、細かい知らせを出す (`--debug-init`).
+    /// 初期設定ファイルの失敗で, 細かい知らせを出す (`--debug-init`).
     pub debug_init: bool,
     /// 始めのディレクトリ (`--chdir`).
     pub chdir: Option<String>,

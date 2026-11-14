@@ -88,7 +88,7 @@ fn skip_after_sentence(v: &View, p: usize) -> usize {
     v.skip(p, " \u{a0}\t\n")
 }
 
-/// 位置で, 文の終わり (Emacs の `(sentence-end)`. `sentence-end-double-space` が `t`) が合えば, その終わり.
+/// 位置で, 文の終わり (Emacs の `(sentence-end)`. `sentence-end-double-space` が `t`) が合えばその終わり.
 fn sentence_end_match(v: &View, p: usize) -> Option<usize> {
     let c = v.at(p)?;
     if ".?!…‽".contains(c) {
@@ -141,7 +141,7 @@ fn bol(text: &[char], p: usize) -> usize {
     p
 }
 
-/// 次の行の始め (最後の行なら, 本文の終わり).
+/// 次の行の始め (最後の行なら本文の終わり).
 fn next_line(text: &[char], p: usize) -> usize {
     (p..text.len())
         .find(|&i| text[i] == '\n')
@@ -156,7 +156,7 @@ fn next_line(text: &[char], p: usize) -> usize {
 ///
 /// * `text` - 本文.
 /// * `pos` - 位置.
-/// * `count` - 越える数 (負なら, 前へ).
+/// * `count` - 越える数 (負なら前へ).
 /// * `dialect` - Lisp の方言.
 ///
 /// # Returns
@@ -208,7 +208,7 @@ pub fn forward_paragraph(text: &[char], pos: usize, count: i64, dialect: Dialect
         while p < max && sep(p) {
             p = next_line(text, p);
         }
-        // 前の行が空なら, その行へ. 空でなければ, 段落の始めへ
+        // 前の行が空ならその行へ. 空でなければ, 段落の始めへ
         let line_start = bol(text, p);
         let previous_end = line_start.saturating_sub(1);
         p = if previous_end > bol(text, previous_end) {
@@ -294,7 +294,7 @@ fn end_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> Result<
     }
 }
 
-/// 文を越えます (Emacs の `forward-sentence`). 段落の終わりも, 文の終わりです.
+/// 文を越えます (Emacs の `forward-sentence`). 段落の終わりも文の終わりです.
 ///
 /// 後ろへは, 文の終わり (後ろの空白の前) へ, 前へは, 文の始めへ動きます.
 ///
@@ -302,7 +302,7 @@ fn end_of_paragraph_text(text: &[char], pos: usize, dialect: Dialect) -> Result<
 ///
 /// * `text` - 本文.
 /// * `pos` - 位置.
-/// * `count` - 越える数 (負なら, 前へ).
+/// * `count` - 越える数 (負なら前へ).
 /// * `dialect` - Lisp の方言.
 ///
 /// # Returns

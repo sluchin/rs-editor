@@ -1,7 +1,7 @@
-//! メジャーモードの情報: モードラインに出す名前、括弧の読み方 (Lisp の方言)、字下げの決まり.
+//! メジャーモードの情報: モードラインに出す名前, 括弧の読み方 (Lisp の方言), 字下げの決まり.
 //!
-//! Tauri の画面と TUI が、同じ判定を使うため、核に置きます (ファイルの名前からモードを決めるのは、Lisp の `auto-mode-alist` と `set-auto-mode`).
-//! ファイルの変数 (1 行目の `-*- ... -*-`) は、Emacs と同じく、`mode`、`lexical-binding`、`indent-tabs-mode`、`tab-width` を読みます.
+//! Tauri の画面と TUI が, 同じ判定を使うため, 核に置きます (ファイルの名前からモードを決めるのは, Lisp の `auto-mode-alist` と `set-auto-mode`).
+//! ファイルの変数 (1 行目の `-*- ... -*-`) は, Emacs と同じく, `mode`, `lexical-binding`, `indent-tabs-mode`, `tab-width` を読みます.
 
 use serde::Serialize;
 
@@ -22,8 +22,8 @@ pub struct FileVariables {
     pub tab_width: Option<usize>,
 }
 
-/// 1 行目 (`#!` で始まれば 2 行目) の `-*- ... -*-` から、ファイルの変数を読みます.
-/// `-*- scheme -*-` のように、名前だけならメジャーモードです.
+/// 1 行目 (`#!` で始まれば 2 行目) の `-*- ... -*-` から, ファイルの変数を読みます.
+/// `-*- scheme -*-` のように, 名前だけならメジャーモードです.
 ///
 /// # Arguments
 ///
@@ -90,7 +90,7 @@ impl Buffer {
         let info = |name: &str, language: Option<&'static str>| ModeInfo {
             name: name.to_string(),
             language,
-            // Emacs の既定は、タブで字下げし、タブの幅は 8. ファイルの変数で変えられる
+            // Emacs の既定は, タブで字下げし, タブの幅は 8. ファイルの変数で変えられる
             indent_tabs: vars.indent_tabs_mode.unwrap_or(true),
             tab_width: vars.tab_width.unwrap_or(8),
         };

@@ -24,7 +24,7 @@ export async function listDirectory(path: string): Promise<string[]> {
 }
 
 /**
- * プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければ, そのディレクトリ) を返します.
+ * プロジェクトの根 (`.git` のある, 上のディレクトリ. 無ければそのディレクトリ) を返します.
  *
  * @param directory - ディレクトリ.
  * @returns プロジェクトの根.

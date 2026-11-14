@@ -106,7 +106,7 @@ fn remembers_definitions_between_evaluations() {
 #[test]
 fn condition_case_tells_the_kind_of_the_error() {
     let eval = Evaluator::new();
-    // (car e) は、エラーの種類. error はメッセージだけで、文の書き出しで種類は決まらない
+    // (car e) は, エラーの種類. error はメッセージだけで, 文の書き出しで種類は決まらない
     for (code, kind) in [
         ("(/ 1 0)", "arith-error"),
         ("(modulo 1 0)", "arith-error"),
@@ -123,7 +123,7 @@ fn condition_case_tells_the_kind_of_the_error() {
         let code = format!("(condition-case e {code} ((error quit) (car e)))");
         assert_eq!(eval.eval(&code).unwrap(), kind, "{code}");
     }
-    // 種類の名前の節と、変数が nil の節
+    // 種類の名前の節と, 変数が nil の節
     assert_eq!(
         eval.eval("(condition-case e (/ 1 0) (end-of-buffer 1) (arith-error 2))")
             .unwrap(),
@@ -142,7 +142,7 @@ fn condition_case_tells_the_kind_of_the_error() {
 #[test]
 fn condition_case_matches_the_error_conditions() {
     let eval = Evaluator::new();
-    // 親の種類でも受ける (file-missing は file-error で、user-error は error で)
+    // 親の種類でも受ける (file-missing は file-error で, user-error は error で)
     for (code, handler) in [
         ("(signal 'file-missing '(\"a\" \"b\" \"c\"))", "file-error"),
         ("(signal 'file-already-exists '(\"a\" \"c\"))", "file-error"),
@@ -157,7 +157,7 @@ fn condition_case_matches_the_error_conditions() {
         let code = format!("(condition-case e {code} ({handler} 'caught))");
         assert_eq!(eval.eval(&code).unwrap(), "caught", "{code}");
     }
-    // 受けないもの: quit は error で、知らない種類も error では受けない
+    // 受けないもの: quit は error で, 知らない種類も error では受けない
     for (code, handler) in [
         ("(signal 'quit '())", "error"),
         ("(signal 'whatever '(1))", "error"),
@@ -173,13 +173,13 @@ fn condition_case_matches_the_error_conditions() {
 #[test]
 fn signal_and_define_error() {
     let eval = Evaluator::new();
-    // signal の種類とデータは、そのまま condition-case の変数になる
+    // signal の種類とデータは, そのまま condition-case の変数になる
     assert_eq!(
         eval.eval("(condition-case e (signal 'my-error '(1 \"two\" three)) (t e))")
             .unwrap(),
         "(my-error 1 \"two\" three)"
     );
-    // 種類が偽 (nil) で (種類 . データ) を渡すと、投げ直せる
+    // 種類が偽 (nil) で (種類 . データ) を渡すと, 投げ直せる
     assert_eq!(
         eval.eval("(condition-case e (condition-case e2 (/ 1 0) (error (signal #f e2))) (arith-error 'again))")
             .unwrap(),
@@ -189,7 +189,7 @@ fn signal_and_define_error() {
         eval.eval("(signal 1 '())").unwrap_err(),
         "Wrong type argument: symbolp, 1"
     );
-    // define-error: 文と、親の種類
+    // define-error: 文と, 親の種類
     eval.eval("(define-error 'my-problem \"My problem\")")
         .unwrap();
     eval.eval("(define-error 'my-sub \"My sub\" 'my-problem)")
@@ -229,7 +229,7 @@ fn signal_and_define_error() {
         eval.eval("(define-error 1 2)").unwrap_err(),
         "define-error expects a name and a message"
     );
-    // error-message-string の種類の無いものは、そのまま
+    // error-message-string の種類の無いものは, そのまま
     assert_eq!(
         eval.eval("(error-message-string \"plain\")").unwrap(),
         "\"plain\""
@@ -243,7 +243,7 @@ fn signal_and_define_error() {
 #[test]
 fn condition_case_binds_the_emacs_data_of_each_kind() {
     let eval = Evaluator::new();
-    // (cdr e) は、種類ごとの Emacs のデータ. error-message-string は、それから文を作る
+    // (cdr e) は, 種類ごとの Emacs のデータ. error-message-string は, それから文を作る
     for (code, data, text) in [
         ("(error \"boom %d\" 3)", "(\"boom 3\")", "boom 3"),
         ("(signal 'end-of-buffer '())", "()", "End of buffer"),

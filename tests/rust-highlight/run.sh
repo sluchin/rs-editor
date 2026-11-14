@@ -1,16 +1,16 @@
 #!/bin/sh
-# rust-lang/rust-mode の font-lock と、rs-editor の Rust のシンタックスハイライト (core/src/highlight/rust.rs) を、
-# 同じファイルで動かし、結果を比べる.
+# rust-lang/rust-mode の font-lock と, rs-editor の Rust のシンタックスハイライト (core/src/highlight/rust.rs) を,
+# 同じファイルで動かし, 結果を比べる.
 #
 # 使い方: tests/rust-highlight/run.sh [-v] [試験の名前の一部...]
-#   -v  成功したものも、結果を出す
+#   -v  成功したものも, 結果を出す
 # 環境変数:
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RUST_MODE_DIR  rust-mode の置き場所 (git clone https://github.com/rust-lang/rust-mode. 必須)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
-# 試験は cases/NAME.rs. 比べるのは、範囲 (始まりと終わり) と種類
-# (dump.el と、tests/c-highlight/dump.scm が、同じ形で出す).
+# 試験は cases/NAME.rs. 比べるのは, 範囲 (始まりと終わり) と種類
+# (dump.el と, tests/c-highlight/dump.scm が, 同じ形で出す).
 set -u
 LC_ALL=C
 export LC_ALL

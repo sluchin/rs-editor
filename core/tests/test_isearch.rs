@@ -47,7 +47,7 @@ impl Host for FakeUi {
 /// 表の 1 行: 開始のコマンド, 本文, キー, 位置ごとの結果.
 type Row = (String, String, Vec<String>, Vec<Json>);
 
-/// 手順を動かして, 結果を表の形にする.
+/// 手順を動かして結果を表の形にする.
 fn run(ev: &Evaluator, host: &EditorHost<FakeUi>, row: &Row, pos: usize) -> Json {
     {
         let mut editor = host.editor();

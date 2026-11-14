@@ -31,7 +31,7 @@ const NAMED_COLORS: Record<string, [number, number, number]> = {
 
 /**
  * 色 (`#rgb`, `#rrggbb`, `rgb(r, g, b)`, 色の名前) を, 赤, 緑, 青にします.
- * 表にない色の名前は, 画面に色を置いて, 計算した色を読みます.
+ * 表にない色の名前は, 画面に色を置いて計算した色を読みます.
  *
  * @param color - 色.
  * @returns 赤, 緑, 青 (0 から 255). 読めなければ `null`.
@@ -98,8 +98,8 @@ export function setForegroundColor(root: HTMLElement, color: string) {
  * フォントを変えます.
  *
  * @param root - 画面の一番外側の要素.
- * @param family - ファミリー (`null` なら, 変えない).
- * @param size - 大きさ (ポイント. `null` なら, 変えない).
+ * @param family - ファミリー (`null` なら変えない).
+ * @param size - 大きさ (ポイント. `null` なら変えない).
  * @throws 大きさが正の数でないとき.
  */
 export function setFont(root: HTMLElement, family: string | null, size: number | null) {

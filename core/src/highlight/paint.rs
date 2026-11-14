@@ -1,11 +1,11 @@
-//! 文字ごとの種類を持つ塗り分け. Emacs の font-lock の規則 (先に付いた色を上書きするか) を、Rust と TypeScript で共有します.
+//! 文字ごとの種類を持つ塗り分け. Emacs の font-lock の規則 (先に付いた色を上書きするか) を, Rust と TypeScript で共有します.
 
 use super::{Span, TokenKind};
 
-/// 規則 1 つの、色を付け方 (font-lock の `override`).
+/// 規則 1 つの, 色を付け方 (font-lock の `override`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Fill {
-    /// 範囲に 1 文字でも色が付いていれば、付けない (`nil`).
+    /// 範囲に 1 文字でも色が付いていれば, 付けない (`nil`).
     Whole,
     /// 色の付いていない文字にだけ付ける (`keep`).
     Gaps,
@@ -19,14 +19,14 @@ pub(super) struct Painter {
     pub(super) chars: Vec<char>,
     /// 文字ごとの種類 (色が付かなければ `None`).
     pub(super) kinds: Vec<Option<TokenKind>>,
-    /// 文字の位置から、本文の中のバイトの位置へ (最後は、本文の長さ).
+    /// 文字の位置から, 本文の中のバイトの位置へ (最後は, 本文の長さ).
     pub(super) byte_of: Vec<usize>,
-    /// 本文の中のバイトの位置から、文字の位置へ (文字の途中のバイトは、その文字).
+    /// 本文の中のバイトの位置から, 文字の位置へ (文字の途中のバイトは, その文字).
     pub(super) char_of: Vec<usize>,
 }
 
 impl Painter {
-    /// 本文から作ります (色は、まだ無い).
+    /// 本文から作ります (色は, まだ無い).
     pub(super) fn new(text: &str) -> Painter {
         let chars: Vec<char> = text.chars().collect();
         let mut byte_of = Vec::with_capacity(chars.len() + 1);
@@ -50,7 +50,7 @@ impl Painter {
         self.chars.get(i).copied().unwrap_or('\0')
     }
 
-    /// `from` から `to` の前まで、`kind` にします (`None` は、色を消す. `Over` だけが使う).
+    /// `from` から `to` の前まで, `kind` にします (`None` は, 色を消す. `Over` だけが使う).
     pub(super) fn paint(&mut self, from: usize, to: usize, kind: Option<TokenKind>, fill: Fill) {
         let range = from..to.min(self.chars.len());
         match fill {
@@ -69,7 +69,7 @@ impl Painter {
         }
     }
 
-    /// 文字ごとの種類から、範囲の並びを作ります (改行で切る).
+    /// 文字ごとの種類から, 範囲の並びを作ります (改行で切る).
     pub(super) fn spans(&self) -> Vec<Span> {
         let mut spans: Vec<Span> = Vec::new();
         for (i, kind) in self.kinds.iter().enumerate() {

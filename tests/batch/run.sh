@@ -1,22 +1,22 @@
 #!/bin/sh
-# Emacs のバッチモードと rs-editor のバッチモードで同じ試験を動かし、結果を比べる.
+# Emacs のバッチモードと rs-editor のバッチモードで同じ試験を動かし, 結果を比べる.
 #
 # 使い方: tests/batch/run.sh [-e] [-k] [-v] [-l] [試験の名前の一部...]
-#   -e  標準エラー出力 (message など。標準出力とは別に比べる) も比べる (既定は標準出力と終了コードと作ったファイル)
+#   -e  標準エラー出力 (message など. 標準出力とは別に比べる) も比べる (既定は標準出力と終了コードと作ったファイル)
 #   -k  作業用のディレクトリを消さずに残す
-#   -v  失敗したときだけでなく、全ての出力を出す
+#   -v  失敗したときだけでなく, 全ての出力を出す
 #   -l  試験の一覧を出して終わる
 # 環境変数:
 #   EMACS      Emacs の実行ファイル (既定は emacs)
 #   RSEDITOR   rs-editor の実行ファイル (既定は target/debug/rseditor-tui. 無ければ cargo build する)
 #
 # 標準入力は cases/NAME.in (あれば). 無ければ空.
-# cases/NAME.sh (あれば) は、動かす前に、作業用のディレクトリで sh で動かす (実行できるファイルやシンボリックリンクを作るなど).
-# 試験は cases/NAME.el (Emacs Lisp) と cases/NAME.scm (Scheme) の対. どちらも空のディレクトリで動かし、
-#   標準出力、終了コード、動かした後のディレクトリのファイル (名前と中身) を比べる.
-# 動かす前に、作業用のディレクトリに次のファイルを置く.
-#   a.txt (old)、multi.txt (line1 line2 line3)、sub/ (空のディレクトリ)
-# 作業用のディレクトリの名前は、比べる前に @T@ に置き換える. Emacs 30 が標準出力に出す「Error: ...」の行は、比べない.
+# cases/NAME.sh (あれば) は, 動かす前に, 作業用のディレクトリで sh で動かす (実行できるファイルやシンボリックリンクを作るなど).
+# 試験は cases/NAME.el (Emacs Lisp) と cases/NAME.scm (Scheme) の対. どちらも空のディレクトリで動かし,
+#   標準出力, 終了コード, 動かした後のディレクトリのファイル (名前と中身) を比べる.
+# 動かす前に, 作業用のディレクトリに次のファイルを置く.
+#   a.txt (old), multi.txt (line1 line2 line3), sub/ (空のディレクトリ)
+# 作業用のディレクトリの名前は, 比べる前に @T@ に置き換える. Emacs 30 が標準出力に出す「Error: ...」の行は, 比べない.
 set -u
 # メッセージの言語をそろえる (Emacs はロケールでエラーの文を訳す)
 LC_ALL=C
@@ -48,15 +48,15 @@ if [ $# -gt 0 ]; then
 fi
 
 command -v "$EMACS" >/dev/null || { echo "emacs が見つかりません ($EMACS)" >&2; exit 2; }
-# 既定の実行ファイルは、いつも作り直す (カバレッジの計測が、計測つきのものに置き換えることがある)
+# 既定の実行ファイルは, いつも作り直す (カバレッジの計測が, 計測つきのものに置き換えることがある)
 if [ "$RSEDITOR" = "$root/target/debug/rseditor-tui" ]; then
   (cd "$root" && cargo build -q -p rseditor-tui) || exit 2
 fi
 [ -x "$RSEDITOR" ] || { echo "rseditor-tui が見つかりません ($RSEDITOR)" >&2; exit 2; }
-# 計測つきの実行ファイルが、作業用のディレクトリにファイルを書かないようにする
+# 計測つきの実行ファイルが, 作業用のディレクトリにファイルを書かないようにする
 LLVM_PROFILE_FILE=/dev/null
 export LLVM_PROFILE_FILE
-# Emacs は /tmp の下のファイルをバックアップしないので、リポジトリの target の下で動かす
+# Emacs は /tmp の下のファイルをバックアップしないので, リポジトリの target の下で動かす
 mkdir -p "$root/target"
 tmp=$(mktemp -d "$root/target/batch-test.XXXXXX")
 [ "$keep" = 1 ] && echo "作業用のディレクトリ: $tmp" >&2
@@ -77,7 +77,7 @@ run() {
   [ -n "${setup:-}" ] && (cd "$dir" && sh "$setup")
   (
     cd "$dir" || exit 2
-    # 標準出力と標準エラー出力は、別々に書く (Emacs は標準出力を溜めてから出すので、混ぜると順序が合わない)
+    # 標準出力と標準エラー出力は, 別々に書く (Emacs は標準出力を溜めてから出すので, 混ぜると順序が合わない)
     "$@" < "${input:-/dev/null}" 2> "$dir.err"
     echo "== status: $?"
     if [ "$stderr" = 1 ]; then
@@ -122,7 +122,7 @@ for name in $names; do
       run "$e" emacs_cmd --script "$case_dir/s.el"
       run "$r" rs_cmd --script "$case_dir/s.scm" ;;
     *)
-      # 標準入力は、cases/NAME.in があればそれ (無ければ空)
+      # 標準入力は, cases/NAME.in があればそれ (無ければ空)
       input=/dev/null
       [ -f "$here/cases/$name.in" ] && input="$here/cases/$name.in"
       setup=

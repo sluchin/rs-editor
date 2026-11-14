@@ -4,7 +4,7 @@ use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::parser::Parser;
 use rseditor_core::scheme::value::Value;
 
-/// 評価して, 結果を返す.
+/// 評価して結果を返す.
 ///
 /// # Arguments
 ///
@@ -17,7 +17,7 @@ fn eval(code: &str) -> String {
     Evaluator::new().eval(code).unwrap()
 }
 
-/// 評価して, 失敗の内容を返す.
+/// 評価して失敗の内容を返す.
 ///
 /// # Arguments
 ///
@@ -30,7 +30,7 @@ fn eval_err(code: &str) -> String {
     Evaluator::new().eval(code).unwrap_err().to_string()
 }
 
-/// 読み込んで, 式を返す.
+/// 読み込んで式を返す.
 ///
 /// # Arguments
 ///
@@ -43,7 +43,7 @@ fn parse(code: &str) -> Vec<Value> {
     Parser::new(code).parse().unwrap()
 }
 
-/// 読み込んで, 失敗の内容を返す.
+/// 読み込んで失敗の内容を返す.
 ///
 /// # Arguments
 ///
@@ -75,7 +75,7 @@ mod evaluator_edge_cases {
 
     #[test]
     fn test_arithmetic_with_large_numbers() {
-        // 大きな数でも, 整数として表示する.
+        // 大きな数でも整数として表示する.
         assert_eq!(eval("(+ 10000000000 10000000000)"), "20000000000");
     }
 
@@ -179,7 +179,7 @@ mod evaluator_edge_cases {
 
     #[test]
     fn test_mixed_numeric_types() {
-        // 整数と小数を混ぜても, 計算できる.
+        // 整数と小数を混ぜても計算できる.
         assert_eq!(eval("(+ 1 2.5 3)"), "6.5");
     }
 }

@@ -155,7 +155,7 @@ fn test_repeat_and_transient_keys() {
         "forward-char"
     );
     assert_eq!(globals.get("last-prefix-arg").unwrap().to_string(), "1");
-    // C-x z で繰り返し, z で, また繰り返す. ほかのキーは, いつもどおり
+    // C-x z で繰り返し, z でまた繰り返す. ほかのキーは, いつもどおり
     press(&mut commands, "C-x z z");
     assert_eq!(commands.host().editor().current_buffer().point(), 3);
     press(&mut commands, "C-b z");

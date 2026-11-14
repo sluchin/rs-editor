@@ -47,7 +47,7 @@ npm install
 ## 動作の確認
 
 ```bash
-npm run check          # 整形、Lint、テスト (CI と同じ)
+npm run check          # 整形, Lint, テスト (CI と同じ)
 npm run coverage       # カバレッジ (100% を保つ)
 npm run po:check       # docstring の翻訳の作り直し忘れ
 sh tools/emacs-commands/run.sh   # docs/functions.md の再生成
@@ -59,7 +59,7 @@ Emacs と比べるテストの期待値は、次で作り直します。
 OUT=core/tests/edit.json emacs -Q --batch -l tools/syntax/edit.el
 ```
 
-`cargo tarpaulin` は、既定の時間切れ (60 秒) だと足りません。`--timeout 1200` を付けます。
+`cargo tarpaulin` は既定の時間切れ (60 秒) だと足りません。`--timeout 1200` を付けます。
 
 ```bash
 cargo tarpaulin --workspace --skip-clean --engine llvm --timeout 1200

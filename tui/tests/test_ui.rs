@@ -1,9 +1,9 @@
-//! 画面の要る操作 (`ui`): ミニバッファの入力、補完、キーの問い、スクロールなどのテスト.
+//! 画面の要る操作 (`ui`): ミニバッファの入力, 補完, キーの問い, スクロールなどのテスト.
 
 mod common;
 use common::Fixture;
 
-/// 文字列を、キーの並び (空白で区切る) にする.
+/// 文字列を, キーの並び (空白で区切る) にする.
 fn keys_of(text: &str) -> String {
     text.chars()
         .map(|c| {
@@ -20,7 +20,7 @@ fn keys_of(text: &str) -> String {
 #[test]
 fn test_read_string_editing_keys() {
     let fx = Fixture::new();
-    // 初めの入力に、書き足し、動かし、消す
+    // 初めの入力に, 書き足し, 動かし, 消す
     fx.feed("a b c C-a X C-e Y C-b C-b Z C-f C-k RET");
     assert_eq!(
         fx.app.eval("(read-string \"Q: \" \"ini\")").unwrap(),
@@ -29,13 +29,13 @@ fn test_read_string_editing_keys() {
     // 後ろへ消す, 前へ消す, 行の先頭と終わり, 矢印, 文字でないキーは無視する
     fx.feed("a b c d e DEL <left> <left> C-d <delete> <home> <right> C-q <end> f RET");
     assert_eq!(fx.app.eval("(read-string \"Q: \")").unwrap(), "\"abf\"");
-    // 画面の最後の行に、問いと入力を出す
+    // 画面の最後の行に, 問いと入力を出す
     fx.feed("x y");
     let _ = fx.app.eval("(read-string \"Prompt: \")");
     let screen = fx.screen();
     assert_eq!(screen.last().unwrap(), "Prompt: xy");
     assert_eq!(fx.cursor(), (11, 10));
-    // C-g でやめる. 入力が終わっても、やめる
+    // C-g でやめる. 入力が終わっても, やめる
     fx.feed("a C-g");
     assert_eq!(fx.app.eval("(read-string \"Q: \")").unwrap_err(), "Quit");
     fx.feed("a");
@@ -74,7 +74,7 @@ fn test_completing_read() {
     fx.feed("b TAB RET");
     assert_eq!(fx.app.eval(ask).unwrap(), "\"banana\"");
     assert_eq!(fx.app.message(), "[Sole completion]");
-    // 共通の前の部分まで補い、候補を出す
+    // 共通の前の部分まで補い, 候補を出す
     fx.feed("a TAB RET");
     assert_eq!(fx.app.eval(ask).unwrap(), "\"ap\"");
     assert_eq!(fx.app.message(), "apple apricot");
@@ -82,10 +82,10 @@ fn test_completing_read() {
     fx.feed("z TAB RET");
     assert_eq!(fx.app.eval(ask).unwrap(), "\"z\"");
     assert_eq!(fx.app.message(), "[No match]");
-    // 補完しない入力では、何も変えない
+    // 補完しない入力では, 何も変えない
     fx.feed("q TAB RET");
     assert_eq!(fx.app.eval("(read-string \"Q: \")").unwrap(), "\"q\"");
-    // 候補に無い入力は、聞き直す
+    // 候補に無い入力は, 聞き直す
     fx.feed("z RET DEL a p p l e RET");
     let strict = "(completing-read \"Pick: \" '(\"apple\" \"apricot\") #f #t)";
     assert_eq!(fx.app.eval(strict).unwrap(), "\"apple\"");
@@ -123,7 +123,7 @@ fn test_file_name_completion() {
         format!("\"{base}/zz\"")
     );
     assert_eq!(fx.app.message(), "[No match]");
-    // ディレクトリの無い名前は、今のディレクトリから探す. 読めないディレクトリは、候補が無い
+    // ディレクトリの無い名前は, 今のディレクトリから探す. 読めないディレクトリは, 候補が無い
     assert_eq!(ask(&mut fx, "no-such-file-zz"), "\"no-such-file-zz\"");
     assert_eq!(ask(&mut fx, "/no-such-dir-zz/a"), "\"/no-such-dir-zz/a\"");
 }
@@ -162,11 +162,11 @@ fn test_kill_buffer_command() {
     let mut fx = Fixture::new();
     fx.feed(&format!("{} RET", keys_of(path.to_str().unwrap())));
     fx.press("C-x C-f");
-    // 既定は今のバッファ. 書き換えていなければ、すぐ消す
+    // 既定は今のバッファ. 書き換えていなければ, すぐ消す
     fx.feed("RET");
     fx.press("C-x k");
     assert_eq!(fx.app.host().editor().buffer_list(), vec!["*scratch*"]);
-    // 書き換えたファイルのバッファは、聞いてから消す. no なら、やめる
+    // 書き換えたファイルのバッファは, 聞いてから消す. no なら, やめる
     fx.feed(&format!("{} RET", keys_of(path.to_str().unwrap())));
     fx.press("C-x C-f");
     fx.press("x");
@@ -184,24 +184,24 @@ fn test_exit_flows() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("e.txt");
     std::fs::write(&path, "e").unwrap();
-    // 変更が無ければ、すぐ終わる
+    // 変更が無ければ, すぐ終わる
     let mut fx = Fixture::sized(12, 30, &[path.to_str().unwrap().to_string()]).unwrap();
     fx.press("C-x C-c");
     assert!(fx.app.quit());
-    // 変更があれば保存するか聞く. y で保存して、終わる
+    // 変更があれば保存するか聞く. y で保存して, 終わる
     let mut fx = Fixture::sized(12, 30, &[path.to_str().unwrap().to_string()]).unwrap();
     fx.press("x");
     fx.feed("y");
     fx.press("C-x C-c");
     assert!(fx.app.quit());
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "xe\n");
-    // 保存せずに、終わらない
+    // 保存せずに, 終わらない
     let mut fx = Fixture::sized(12, 30, &[path.to_str().unwrap().to_string()]).unwrap();
     fx.press("x");
     fx.feed("n n o RET");
     fx.press("C-x C-c");
     assert!(!fx.app.quit());
-    // 保存せずに、終わる
+    // 保存せずに, 終わる
     fx.feed("n y e s RET");
     fx.press("C-x C-c");
     assert!(fx.app.quit());
@@ -248,7 +248,7 @@ fn test_scrolling() {
     fx.app.draw();
     let screen = fx.screen();
     assert_eq!(screen[0], "l01");
-    // 最後まで進むと、エラー
+    // 最後まで進むと, エラー
     fx.press("M->");
     fx.press("C-v");
     assert_eq!(fx.app.message(), "End of buffer");

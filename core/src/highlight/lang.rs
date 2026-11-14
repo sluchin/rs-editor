@@ -1,7 +1,7 @@
-//! 言語ごとの字句の表. 字句解析器 (`mod.rs`) は、言語によらず 1 つで、違いはここのデータだけです.
+//! 言語ごとの字句の表. 字句解析器 (`mod.rs`) は, 言語によらず 1 つで, 違いはここのデータだけです.
 //!
-//! 語は、Emacs 30 の cc-mode (`c-keywords-regexp`、`c-primitive-type-key`、`c-constant-key`) から取りました.
-//! 表は、二分探索のために、辞書順に並べます.
+//! 語は, Emacs 30 の cc-mode (`c-keywords-regexp`, `c-primitive-type-key`, `c-constant-key`) から取りました.
+//! 表は, 二分探索のために, 辞書順に並べます.
 
 /// 言語.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -23,7 +23,7 @@ pub enum Language {
 /// 言語の字句の表.
 #[derive(Debug)]
 pub struct LanguageSpec {
-    /// キーワード (型と定数を含む. 型と定数は、それぞれの表を先に引く).
+    /// キーワード (型と定数を含む. 型と定数は, それぞれの表を先に引く).
     pub keywords: &'static [&'static str],
     /// 組み込みの型の名前.
     pub types: &'static [&'static str],
@@ -218,7 +218,7 @@ static CPP: LanguageSpec = LanguageSpec {
 };
 
 impl Language {
-    /// 言語の字句の表 (Lisp は、表を使わないので `None`).
+    /// 言語の字句の表 (Lisp は, 表を使わないので `None`).
     pub fn spec(self) -> Option<&'static LanguageSpec> {
         match self {
             Language::C => Some(&C),
@@ -227,14 +227,14 @@ impl Language {
         }
     }
 
-    /// `major-mode` の名前から、言語を決めます (C、C++、Rust、TypeScript、`lisp-interaction-mode` の Scheme. それ以外は `None`. Lisp の他のモードは、構文の方言で決まる).
+    /// `major-mode` の名前から, 言語を決めます (C, C++, Rust, TypeScript, `lisp-interaction-mode` の Scheme. それ以外は `None`. Lisp の他のモードは, 構文の方言で決まる).
     pub fn from_mode_name(name: &str) -> Option<Language> {
         match name {
             "c-mode" => Some(Language::C),
             "c++-mode" => Some(Language::Cpp),
             "rust-mode" => Some(Language::Rust),
             "typescript-mode" => Some(Language::TypeScript),
-            // `*scratch*` は、Scheme を評価する
+            // `*scratch*` は, Scheme を評価する
             "lisp-interaction-mode" => Some(Language::Scheme),
             _ => None,
         }

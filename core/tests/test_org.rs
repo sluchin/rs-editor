@@ -49,7 +49,7 @@ fn run(ev: &Evaluator, editor: &FakeEditor, code: &str) -> String {
         .unwrap_or_else(|e| panic!("{}: {}", code, e))
 }
 
-/// 評価して, 失敗の内容を返す.
+/// 評価して失敗の内容を返す.
 ///
 /// # Arguments
 ///
@@ -256,7 +256,7 @@ fn test_cycle() {
     assert!(folded(&editor).is_empty());
     run(&ev, &editor, "(org-cycle)");
     assert_eq!(editor.message(), "FOLDED");
-    // カーソルを動かすと, 続けて押したことにならない (CHILDREN の後でも, 閉じる)
+    // カーソルを動かすと, 続けて押したことにならない (CHILDREN の後でも閉じる)
     run(&ev, &editor, "(org-cycle) (goto-char 2) (org-cycle)");
     assert_eq!(editor.message(), "FOLDED");
     // 子の無い見出し, 空の見出し
@@ -315,7 +315,7 @@ fn test_insert_heading() {
         ("* a\n|text\n", "(org-meta-return)", "* a\n* |text\n"),
         ("* a\nte|xt\n", "(org-meta-return)", "* a\nte\n* |xt\n"),
         ("|text\n", "(org-meta-return)", "* |text\n"),
-        // TODO の見出し (前が済みなら, 始めの状態)
+        // TODO の見出し (前が済みなら始めの状態)
         ("* WAIT a|\n", "(set! org-todo-keywords '((sequence \"TODO\" \"WAIT\" \"DONE\"))) (org-insert-todo-heading)", "* WAIT a\n* WAIT |\n"),
         ("* DONE a|\n", "(org-insert-todo-heading)", "* DONE a\n* TODO |\n"),
         // 木の後
@@ -603,7 +603,7 @@ fn test_checkboxes_and_statistics() {
             "* a [1/2] [50%]\n- [X] x|\n- [ ] y\n",
         ),
         ("- [X] x|\n", "(org-toggle-checkbox)", "- [ ] x|\n"),
-        // 子が全て済みなら, 親も済み. 一部なら [-]
+        // 子が全て済みなら親も済み. 一部なら [-]
         (
             "- [ ] p [/]\n  - [ ] a|\n  - [X] b\n",
             "(org-toggle-checkbox)",
@@ -873,7 +873,7 @@ fn test_priority_and_tags() {
         editor.prompts.lock().unwrap().last().unwrap(),
         "Tags (a b): "
     );
-    // 長い題なら, 空白 1 つ. 正の桁なら, その桁から
+    // 長い題なら空白 1 つ. 正の桁なら, その桁から
     let long = "a".repeat(80);
     assert_eq!(
         edit(
@@ -1542,7 +1542,7 @@ fn test_agenda() {
     run(&ev, &editor, "(org-agenda-switch-to)");
     assert_eq!(editor.name(), file);
     assert_eq!(editor.current_line(), "* [#A] Today :x:y:");
-    // t (状態を変えて, 作り直す. 書き換えたバッファから読む)
+    // t (状態を変えて作り直す. 書き換えたバッファから読む)
     run(&ev, &editor, "(switch-to-buffer \"*Org Agenda*\") (goto-char 1) (org-agenda-next-line) (org-agenda-next-line) (org-agenda-next-line) (org-agenda-next-line) (org-agenda-previous-line) (org-agenda-todo)");
     assert_eq!(editor.name(), "*Org Agenda*");
     assert!(
@@ -1622,7 +1622,7 @@ fn test_agenda() {
         fail(&ev, &editor, "(org-agenda)"),
         "Invalid agenda command: z"
     );
-    // q (消して, 前のバッファへ)
+    // q (消して前のバッファへ)
     run(&ev, &editor, "(org-agenda-quit)");
     assert_eq!(editor.name(), "*scratch*");
     assert!(!run(&ev, &editor, "(buffer-list)").contains("Org Agenda"));

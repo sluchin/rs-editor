@@ -7,7 +7,7 @@
 (fresh "a a a a")
 (execute-kbd-macro (kbd "M-% a RET b RET y e x RET n y q"))
 (show "e")
-;; E: 大文字と小文字を、そのまま使う
+;; E: 大文字と小文字を, そのまま使う
 (fresh "A A")
 (execute-kbd-macro (kbd "M-% a RET b RET E C RET y"))
 (show "E")

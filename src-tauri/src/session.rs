@@ -48,8 +48,8 @@ pub trait Front: Send + Sync {
     /// 画面が失敗を返したとき (`C-g` でやめたときは `Quit`).
     fn request(&self, op: &str, args: Vec<Value>) -> Result<Value, Error>;
 
-    /// 画面で `C-g` を押したか (押していれば、押したことを忘れて `true`).
-    /// 入力の列で `C-g` が順番を待っている間も、キーボードマクロの繰り返しを止めるため.
+    /// 画面で `C-g` を押したか (押していれば, 押したことを忘れて `true`).
+    /// 入力の列で `C-g` が順番を待っている間も, キーボードマクロの繰り返しを止めるため.
     fn interrupted(&self) -> bool;
 }
 
@@ -151,7 +151,7 @@ impl<F: Front> SessionUi<F> {
         self.state.lock_recover()
     }
 
-    /// 描く内容を作って, 画面に送ります.
+    /// 描く内容を作って画面に送ります.
     pub fn send_frame(&self) {
         let frame = {
             let mut editor = self.editor.lock_recover();
@@ -214,7 +214,7 @@ impl<F: Front> SessionUi<F> {
         self.front.interrupted();
     }
 
-    /// 打ったことにするキーが残っている間に `C-g` を押したら、マクロを止めて `None` を返します.
+    /// 打ったことにするキーが残っている間に `C-g` を押したら, マクロを止めて `None` を返します.
     fn pop_macro_key(&self) -> Option<String> {
         let mut state = self.state();
         if (!state.macro_keys.is_empty() || !state.macro_loop.is_empty())
@@ -235,7 +235,7 @@ impl<F: Front> SessionUi<F> {
     }
 }
 
-/// *Messages* の終わりに 1 行書きます (無ければ, 読み取り専用で作る).
+/// *Messages* の終わりに 1 行書きます (無ければ読み取り専用で作る).
 pub fn append_message(editor: &mut Editor, message: &str) {
     let buffer = editor.get_buffer_create(MESSAGES_BUFFER);
     buffer.set_read_only(false);
@@ -262,7 +262,7 @@ impl<F: Front> Host for SessionUi<F> {
                 self.send_frame();
                 self.front.request(op, args)
             }
-            // キーを 1 つ読む (マクロの中なら, マクロのキー). C-g は, 許されていなければ, やめる
+            // キーを 1 つ読む (マクロの中ならマクロのキー). C-g は, 許されていなければ, やめる
             "read-key" => {
                 let allow_quit = text(&args, 1) == "allow-quit";
                 let from_macro = if self.state().executing_macro {
@@ -450,14 +450,14 @@ impl<F: Front> Session<F> {
         global.define("init-file-debug", Value::Boolean(options.debug_init));
     }
 
-    /// 起動の引数のファイルを開きます (最後のファイルが、出ているバッファになる. Emacs と同じ).
+    /// 起動の引数のファイルを開きます (最後のファイルが, 出ているバッファになる. Emacs と同じ).
     pub fn open_files(&mut self, files: &[String]) {
         for file in files {
             let _ = self.eval(&format!("(find-file {})", Value::String(file.clone())));
         }
     }
 
-    /// 初期設定ファイルを読みます (`user-init-file` にする). 無ければ, 何もしません.
+    /// 初期設定ファイルを読みます (`user-init-file` にする). 無ければ何もしません.
     /// 失敗したら, エコー領域と `*Warnings*` に出します (Emacs と同じ).
     pub fn load_init(&mut self, path: Option<&Path>) {
         let Some(path) = path.filter(|p| p.exists()) else {
@@ -500,7 +500,7 @@ impl<F: Front> Session<F> {
         }
     }
 
-    /// ウィンドウを選び, カーソルを動かします (マウスで押した所. `anchor` が違えば, そこから選ぶ).
+    /// ウィンドウを選び, カーソルを動かします (マウスで押した所. `anchor` が違えばそこから選ぶ).
     fn point(&mut self, window: usize, pos: usize, anchor: Option<usize>) {
         let mut editor = self.host().editor();
         if editor.select_window(window).is_ok() {
@@ -514,7 +514,7 @@ impl<F: Front> Session<F> {
         }
     }
 
-    /// 入力を 1 つ処理して, 描く内容を送ります.
+    /// 入力を 1 つ処理して描く内容を送ります.
     pub fn handle(&mut self, input: Input) {
         match input {
             Input::Key { key } => {
@@ -551,7 +551,7 @@ impl<F: Front> Session<F> {
 
     /// キーを 1 つ処理します (キーボードマクロを覚えているなら, 覚える).
     fn key(&mut self, key: &str) {
-        // `C-g` の順番が来たので、押したことを忘れる (マクロを止めたあとも、残さない)
+        // `C-g` の順番が来たので, 押したことを忘れる (マクロを止めたあとも残さない)
         if key == "C-g" {
             self.host().ui().clear_interrupt();
         }
@@ -573,8 +573,8 @@ impl<F: Front> Session<F> {
 /// 入力が無いまま, 自動保存するまでの時間 (Emacs の `auto-save-timeout`).
 pub const AUTO_SAVE_TIMEOUT: Duration = rseditor_core::files::AUTO_SAVE_TIMEOUT;
 
-/// 画面のエディタを動かします: 作って, 起動の引数を当て, 初期設定ファイルを読み, 引数のファイルを開き, 描いてから, 入力を順に処理します.
-/// 入力が `auto_save_timeout` の間無ければ, 自動保存します. 入力の送り手が無くなったら, 終わります.
+/// 画面のエディタを動かします: 作って, 起動の引数を当て, 初期設定ファイルを読み, 引数のファイルを開き, 描いてから入力を順に処理します.
+/// 入力が `auto_save_timeout` の間無ければ自動保存します. 入力の送り手が無くなったら, 終わります.
 ///
 /// # Errors
 ///

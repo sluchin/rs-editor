@@ -23,7 +23,7 @@ pub struct TauriFront {
     app: AppHandle,
     /// 返事を待つ仕組み.
     bridge: Arc<Bridge>,
-    /// `C-g` を押したのに、まだ処理していないか (`Inputs` と同じもの).
+    /// `C-g` を押したのに, まだ処理していないか (`Inputs` と同じもの).
     interrupt: Arc<AtomicBool>,
 }
 
@@ -47,11 +47,11 @@ impl Front for TauriFront {
     }
 }
 
-/// エディタのスレッドへの入力の送り口 (初めの入力で, スレッドを作る).
+/// エディタのスレッドへの入力の送り口 (初めの入力でスレッドを作る).
 #[derive(Default)]
 pub struct Inputs(
     Mutex<Option<mpsc::Sender<Input>>>,
-    /// `C-g` を受けたとき、順番を待たずに知らせる旗 (キーボードマクロの繰り返しを止める).
+    /// `C-g` を受けたとき, 順番を待たずに知らせる旗 (キーボードマクロの繰り返しを止める).
     Arc<AtomicBool>,
 );
 
@@ -68,7 +68,7 @@ pub fn session_input(
     bridge: State<'_, Arc<Bridge>>,
     inputs: State<'_, Inputs>,
 ) -> Result<(), String> {
-    // `C-g` は、前のキーを処理している間（繰り返すマクロなど）にも、エディタに知らせる
+    // `C-g` は, 前のキーを処理している間 (繰り返すマクロなど) にも, エディタに知らせる
     if matches!(&input, Input::Key { key } if key == "C-g") {
         inputs.1.store(true, Ordering::SeqCst);
     }

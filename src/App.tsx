@@ -53,18 +53,18 @@ interface Question {
   reject: (error: Error) => void
 }
 
-/** 色付けの, 前に作ったもの (同じなら, 同じ配列にして, 引き直さない). */
+/** 色付けの, 前に作ったもの (同じなら, 同じ配列にして引き直さない). */
 const highlightCache = new Map<string, Highlight[]>()
 
-/** バッファごとの、前の字句 (同じ内容なら、同じ配列を返すため). */
+/** バッファごとの, 前の字句 (同じ内容なら同じ配列を返すため). */
 const previousTokens = new Map<string, readonly Token[]>()
 
 /**
- * 字句が前と同じなら、前の配列を返します (画面の色付けを、引き直さないため).
+ * 字句が前と同じなら, 前の配列を返します (画面の色付けを, 引き直さないため).
  *
  * @param name - バッファの名前.
  * @param tokens - 描く内容の字句.
- * @returns 字句 (同じ内容なら、同じ配列).
+ * @returns 字句 (同じ内容なら同じ配列).
  */
 function stableTokens(name: string, tokens: readonly Token[]): readonly Token[] {
   const previous = previousTokens.get(name)
@@ -85,7 +85,7 @@ function stableTokens(name: string, tokens: readonly Token[]): readonly Token[] 
  * 描く内容の色付けを, ウィンドウの色付けにします.
  *
  * @param highlights - 描く内容の色付け.
- * @returns 色付け (同じ内容なら, 同じ配列).
+ * @returns 色付け (同じ内容なら同じ配列).
  */
 function toHighlights(highlights: readonly HighlightFrame[]): Highlight[] {
   const key = JSON.stringify(highlights)
@@ -160,7 +160,7 @@ function App() {
   /**
    * バッファの既定のディレクトリ (後ろに `/` を付ける).
    *
-   * @param b - バッファ (無ければ, ホームディレクトリ).
+   * @param b - バッファ (無ければホームディレクトリ).
    * @returns ディレクトリ.
    */
   const defaultDirectory = (b: BufferFrame | undefined): string => {
@@ -190,7 +190,7 @@ function App() {
   /**
    * 選んでいるウィンドウを返します.
    *
-   * @returns ウィンドウ (無ければ, 失敗).
+   * @returns ウィンドウ (無ければ失敗).
    */
   const selectedView = (): WindowHandle => {
     const view = views.current.get(frame.selected)
@@ -351,7 +351,7 @@ function App() {
       listenRequests((op, args) => latestPerform.current(op, args)),
     ]).then((unlistens) => {
       stops.push(...unlistens)
-      // 受け始める前に, 画面を閉じた (開発版の StrictMode では, 1 度閉じて, 開き直す)
+      // 受け始める前に, 画面を閉じた (開発版の StrictMode では, 1 度閉じて開き直す)
       if (stopped) stops.forEach((stop) => stop())
       else void sendInput({ kind: 'redraw' })
     })

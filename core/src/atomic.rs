@@ -7,7 +7,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-/// シンボリックリンクを, たどる数の上限 (輪になったリンクで, 終わるように. Linux の `ELOOP` と同じ).
+/// シンボリックリンクを, たどる数の上限 (輪になったリンクで終わるように. Linux の `ELOOP` と同じ).
 const MAX_LINKS: usize = 40;
 
 /// 一時ファイルの名前に付ける, 書くたびに増やす番号 (同じプロセスで, 同時に書いても重ならないように).
@@ -46,14 +46,14 @@ pub fn write_atomic(path: &Path, content: &[u8]) -> io::Result<()> {
         let _ = std::fs::remove_file(&temp);
         return result;
     }
-    // 名前の変更も, ディスクに書き出す (できなくても, 書いたことにする)
+    // 名前の変更も, ディスクに書き出す (できなくても書いたことにする)
     if let Some(dir) = target.parent() {
         let _ = File::open(dir).and_then(|dir| dir.sync_all());
     }
     Ok(())
 }
 
-/// シンボリックリンクを, リンクでないパスまでたどります (指す先が無くても, そのパスを返す).
+/// シンボリックリンクを, リンクでないパスまでたどります (指す先が無くてもそのパスを返す).
 ///
 /// # Arguments
 ///

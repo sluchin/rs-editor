@@ -14,7 +14,7 @@ use tempfile::tempdir;
 mod common;
 use common::FakeEditor;
 
-/// 評価して, 結果を返す.
+/// 評価して結果を返す.
 ///
 /// # Arguments
 ///
@@ -27,7 +27,7 @@ fn eval(code: &str) -> String {
     Evaluator::new().eval(code).unwrap()
 }
 
-/// 評価して, 失敗の内容を返す.
+/// 評価して失敗の内容を返す.
 ///
 /// # Arguments
 ///
@@ -136,7 +136,7 @@ fn test_files() {
     fs::write(dir.path().join("a/c.md"), "").unwrap();
     fs::create_dir_all(dir.path().join(".git")).unwrap();
     fs::write(dir.path().join(".git/h.txt"), "").unwrap();
-    // ディレクトリへのシンボリックリンクは, たどらない (輪になっていても, 終わる)
+    // ディレクトリへのシンボリックリンクは, たどらない (輪になっていても終わる)
     std::os::unix::fs::symlink(dir.path(), dir.path().join("a/loop")).unwrap();
     let listed = ev
         .eval(&format!(
@@ -229,7 +229,7 @@ fn test_expand_file_name() {
     assert_eq!(expand_file_name("a", base, &home), base.join("a"));
     assert_eq!(expand_file_name("/abs", base, &home), Path::new("/abs"));
     assert_eq!(expand_file_name("a", Path::new("."), &home), Path::new("a"));
-    // `.` と `..` は除く (根より上には行かない. 相対の基なら, 残す)
+    // `.` と `..` は除く (根より上には行かない. 相対の基なら残す)
     assert_eq!(
         expand_file_name("./a/../b/.", base, &home),
         Path::new("/base/b")
@@ -542,7 +542,7 @@ fn test_zgrep_reads_inside_the_gz_files() {
         quoted(&plain),
         quoted(&broken)
     );
-    // 展開して探す. 普通のファイルは、そのまま. 展開できない .gz は、飛ばす
+    // 展開して探す. 普通のファイルは, そのまま. 展開できない .gz は, 飛ばす
     assert_eq!(
         eval(&format!("(rust-zgrep \"foo\" {files})")),
         format!(
@@ -551,7 +551,7 @@ fn test_zgrep_reads_inside_the_gz_files() {
             quoted(&plain)
         )
     );
-    // rust-grep は、展開しない (バイト列が UTF-8 でないので、飛ばす)
+    // rust-grep は, 展開しない (バイト列が UTF-8 でないので, 飛ばす)
     assert_eq!(
         eval(&format!("(rust-grep \"foo\" {files})")),
         format!(

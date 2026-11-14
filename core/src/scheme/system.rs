@@ -67,10 +67,10 @@ pub const DEFAULT_BROWSER: &str = if cfg!(target_os = "macos") {
 /// `load-path` の始めの値 (Emacs の `~/.emacs.d` のように, `~/.rseditor.d` に Lisp のファイルを置く).
 pub const DEFAULT_LOAD_PATH: &[&str] = &["~/.rseditor.d/lisp", "~/.rseditor.d"];
 
-/// Lisp のファイルの拡張子 (`load` で, 省ける).
+/// Lisp のファイルの拡張子 (`load` で省ける).
 pub const LISP_SUFFIX: &str = ".scm";
 
-/// 正規表現を覚えておく数 (超えたら, 全て忘れる).
+/// 正規表現を覚えておく数 (超えたら全て忘れる).
 const REGEXP_CACHE_SIZE: usize = 64;
 
 thread_local! {
@@ -188,7 +188,7 @@ pub(crate) fn call(
             })()
         }
         "directory-files" => {
-            // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真なら, ディレクトリを付ける. MATCH は正規表現
+            // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真ならディレクトリを付ける. MATCH は正規表現
             if !(1..=3).contains(&args.len()) {
                 return Some(Err("directory-files expects 1 to 3 arguments"
                     .to_string()
@@ -507,7 +507,7 @@ fn load_file(machine: &mut Machine, path: &Path) -> Result<Value, Error> {
     Ok(Value::Boolean(true))
 }
 
-/// 引数のパス (と, 相対パスの基のディレクトリ) から, 絶対パスを作ります.
+/// 引数のパス (と, 相対パスの基のディレクトリ) から絶対パスを作ります.
 ///
 /// # Arguments
 ///
@@ -611,7 +611,7 @@ pub fn directory_listing(program: &str, path: &Path) -> Result<String, Error> {
 ///
 /// # Arguments
 ///
-/// * `dir` - ディレクトリ (読めなければ, 何もしない).
+/// * `dir` - ディレクトリ (読めなければ何もしない).
 /// * `pattern` - ファイルの名前の正規表現.
 /// * `files` - 集めたファイルのパスを, 入れる先.
 fn collect_files(dir: &Path, pattern: &Regex, files: &mut Vec<String>) {
@@ -639,7 +639,7 @@ fn collect_files(dir: &Path, pattern: &Regex, files: &mut Vec<String>) {
 ///
 /// # Arguments
 ///
-/// * `dir` - ディレクトリ (読めなければ, 何もしない).
+/// * `dir` - ディレクトリ (読めなければ何もしない).
 /// * `files` - 集めたファイルのパスを, 入れる先.
 fn collect_grep_files(dir: &Path, files: &mut Vec<String>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
@@ -961,7 +961,7 @@ pub fn run_shell(
 ///
 /// # Returns
 ///
-/// 動かせなければ, 失敗の内容.
+/// 動かせなければ失敗の内容.
 pub fn browse_url(program: &str, url: &str) -> Result<(), Error> {
     let mut child = std::process::Command::new(program)
         .arg(url)

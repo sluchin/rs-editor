@@ -931,7 +931,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             Ok(Value::String(read_input(machine, name, host_args)?))
         }
         "execute-kbd-macro" => {
-            // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら, 失敗するまで) 打ったことにする. 打つのは, 画面
+            // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら失敗するまで) 打ったことにする. 打つのは, 画面
             let [keys, rest @ ..] = args.as_slice() else {
                 return Err("execute-kbd-macro expects 1 or 2 arguments"
                     .to_string()
@@ -1018,7 +1018,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
 /// # Arguments
 ///
 /// * `machine` - 評価 (比べる手続きを呼ぶ).
-/// * `less` - 比べる手続き (1 つ目が前なら, 真を返す).
+/// * `less` - 比べる手続き (1 つ目が前なら真を返す).
 /// * `items` - リストの要素.
 ///
 /// # Returns
@@ -1037,7 +1037,7 @@ fn merge_sort(
     let mut right = merge_sort(machine, less, right)?.into_iter().peekable();
     let mut merged = Vec::new();
     while let (Some(a), Some(b)) = (left.peek(), right.peek()) {
-        // 右が左より前のときだけ, 右を先にする (同じなら, 元の順)
+        // 右が左より前のときだけ, 右を先にする (同じなら元の順)
         if machine
             .apply(less.clone(), vec![b.clone(), a.clone()])?
             .is_true()
@@ -1056,7 +1056,7 @@ fn merge_sort(
 ///
 /// # Arguments
 ///
-/// * `font` - フォントの名前 (最後の `-` の後が数なら, 大きさ).
+/// * `font` - フォントの名前 (最後の `-` の後が数なら大きさ).
 ///
 /// # Returns
 ///
@@ -1075,8 +1075,8 @@ pub fn parse_font(font: &str) -> (String, Option<f64>) {
 /// # Arguments
 ///
 /// * `machine` - 評価 (エディタに頼む).
-/// * `family` - ファミリー (空なら, 変えない).
-/// * `size` - 大きさ (ポイント. `None` なら, 変えない).
+/// * `family` - ファミリー (空なら変えない).
+/// * `size` - 大きさ (ポイント. `None` なら変えない).
 ///
 /// # Returns
 ///
@@ -1204,7 +1204,7 @@ pub fn string_width(s: &str) -> usize {
 /// - COLLECTION は, 文字列, 記号, リスト (`car` を候補にする. alist) のリスト.
 /// - PREDICATE が non-nil なら, 候補の要素を渡して, 真のものだけを候補にする.
 /// - REQUIRE-MATCH が non-nil なら, 候補に無い入力は, 聞き直す (空の入力は, 認める).
-/// - 入力が空で, DEF (文字列か, 文字列のリスト. リストなら最初) があれば, DEF を返す.
+/// - 入力が空で, DEF (文字列か, 文字列のリスト. リストなら最初) があれば DEF を返す.
 ///
 /// # Arguments
 ///
@@ -1391,7 +1391,7 @@ fn optional_string(name: &str, v: Option<&Value>) -> Result<String, Error> {
     }
 }
 
-/// 既定の値の引数 (Emacs の DEFAULT-VALUE, DEF) を返します. 文字列のリストなら, 最初.
+/// 既定の値の引数 (Emacs の DEFAULT-VALUE, DEF) を返します. 文字列のリストなら最初.
 ///
 /// # Arguments
 ///
@@ -1411,7 +1411,7 @@ fn default_value(name: &str, v: Option<&Value>) -> Result<Option<String>, Error>
     }
 }
 
-/// 入力が空で, 既定の値があれば, 既定の値を返します.
+/// 入力が空で, 既定の値があれば既定の値を返します.
 ///
 /// # Arguments
 ///
@@ -1428,7 +1428,7 @@ fn or_default(input: String, default: Option<String>) -> String {
     }
 }
 
-/// 引数の数を確かめて, 配列にします.
+/// 引数の数を確かめて配列にします.
 ///
 /// # Arguments
 ///

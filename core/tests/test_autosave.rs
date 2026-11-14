@@ -261,7 +261,7 @@ fn test_note_key_asks_for_an_auto_save_every_interval() {
         assert!(!note_key(&mut editor));
     }
     assert!(note_key(&mut editor));
-    // 自動保存すると、数え直す
+    // 自動保存すると, 数え直す
     auto_save(&mut editor);
     assert_eq!(editor.keys_since_auto_save, 0);
     assert!(!note_key(&mut editor));

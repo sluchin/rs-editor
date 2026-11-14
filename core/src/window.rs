@@ -83,7 +83,7 @@ impl Layout {
     ///
     /// # Arguments
     ///
-    /// * `id` - 分けるウィンドウ (無ければ, 分けない).
+    /// * `id` - 分けるウィンドウ (無ければ分けない).
     /// * `new_id` - 新しいウィンドウ.
     /// * `direction` - 分ける向き.
     pub fn split(self, id: usize, new_id: usize, direction: Direction) -> Layout {

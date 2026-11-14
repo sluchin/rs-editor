@@ -1,5 +1,5 @@
 //! C のシンタックスハイライト (`core/src/highlight`) のテスト.
-//! 期待値は、Emacs 30 の `c-mode` の font-lock の結果 (`tests/c-highlight/` で、同じ入力を Emacs と比べる).
+//! 期待値は, Emacs 30 の `c-mode` の font-lock の結果 (`tests/c-highlight/` で, 同じ入力を Emacs と比べる).
 
 use std::sync::Arc;
 
@@ -10,7 +10,7 @@ use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::host::Host;
 use rseditor_core::scheme::value::Value;
 
-/// 字句に分けて、(本文の中の文字列, 種類の名前) の並びにする.
+/// 字句に分けて, (本文の中の文字列, 種類の名前) の並びにする.
 fn lex(text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
     tokenize(Language::C, text)
@@ -32,7 +32,7 @@ fn test_tables_are_sorted_for_binary_search() {
         for table in [spec.keywords, spec.types, spec.constants] {
             assert!(table.windows(2).all(|w| w[0] < w[1]), "{table:?}");
         }
-        // 型と定数は、キーワードでもある
+        // 型と定数は, キーワードでもある
         for word in spec.types.iter().chain(spec.constants) {
             assert!(spec.is_keyword(word), "{word}");
         }
@@ -99,11 +99,11 @@ fn test_keywords_types_and_constants() {
             ("unsigned", "type"),
         ])
     );
-    // 語の一部では、色を付けない. `$` は語の文字
+    // 語の一部では, 色を付けない. `$` は語の文字
     assert_eq!(lex("integer int_x $if if$"), vec![]);
 }
 
-/// C++ として字句に分けて、(本文の中の文字列, 種類の名前) の並びにする.
+/// C++ として字句に分けて, (本文の中の文字列, 種類の名前) の並びにする.
 fn lex_cpp(text: &str) -> Vec<(String, &'static str)> {
     let chars: Vec<char> = text.chars().collect();
     tokenize(Language::Cpp, text)
@@ -129,7 +129,7 @@ fn test_cpp_keywords_types_and_constants() {
             ("not_eq", "keyword"),
         ])
     );
-    // C では、C++ のキーワードではない
+    // C では, C++ のキーワードではない
     assert_eq!(lex("class bool nullptr"), vec![]);
 }
 
@@ -146,14 +146,14 @@ fn test_cpp_raw_strings() {
             ("(f)", "string"),
         ])
     );
-    // 行をまたぐ. `)` の後が区切りと引用符でなければ、終わりではない
+    // 行をまたぐ. `)` の後が区切りと引用符でなければ, 終わりではない
     assert_eq!(
         lex_cpp("R\"x(l1\n)y\" l2)x\" int"),
         tokens(&[("(l1\n)y\" l2)", "string"), ("int", "type")])
     );
-    // 閉じなければ、`(` の次から本文の終わりまで
+    // 閉じなければ, `(` の次から本文の終わりまで
     assert_eq!(lex_cpp("R\"(open\nint"), tokens(&[("open\nint", "string")]));
-    // 区切りが正しくなければ、普通の文字列
+    // 区切りが正しくなければ, 普通の文字列
     assert_eq!(
         lex_cpp("R\"a b(x)a b\""),
         tokens(&[("\"a b(x)a b\"", "string")])
@@ -174,9 +174,9 @@ fn test_cpp_raw_strings() {
         lex_cpp("R\"abcdefghijklmnop(x)abcdefghijklmnop\"")[0].0,
         "(x)"
     );
-    // R の後が引用符でなければ、ただの語. 別の語の後ろの R も
+    // R の後が引用符でなければ, ただの語. 別の語の後ろの R も
     assert_eq!(lex_cpp("R + FR\"x\""), tokens(&[("\"x\"", "string")]));
-    // C では、生の文字列ではない
+    // C では, 生の文字列ではない
     assert_eq!(lex("R\"(x)\""), tokens(&[("\"(x)\"", "string")]));
 }
 
@@ -190,12 +190,12 @@ fn test_cpp_digit_separators() {
             ("'a'", "string"),
         ])
     );
-    // 区切りは、数字の間だけ
+    // 区切りは, 数字の間だけ
     assert_eq!(
         lex_cpp("1' x"),
         tokens(&[("1", "number"), (" x", "string")])
     );
-    // C では、区切りではない
+    // C では, 区切りではない
     assert_eq!(lex("1'0"), tokens(&[("1", "number"), ("0", "string")]));
 }
 
@@ -212,7 +212,7 @@ fn test_numbers() {
             ("1", "number"),
         ])
     );
-    // 指数の符号でない + と - は、数値の終わり
+    // 指数の符号でない + と - は, 数値の終わり
     assert_eq!(lex("1+2"), tokens(&[("1", "number"), ("2", "number")]));
 }
 
@@ -227,14 +227,14 @@ fn test_strings_and_characters() {
             (r#""w""#, "string"),
         ])
     );
-    // 行の継続で、文字列は次の行へ続く
+    // 行の継続で, 文字列は次の行へ続く
     assert_eq!(lex("\"a\\\nb\" x"), tokens(&[("\"a\\\nb\"", "string")]));
-    // 閉じない文字列は、行の終わりまで (始まりの引用符は含めない)
+    // 閉じない文字列は, 行の終わりまで (始まりの引用符は含めない)
     assert_eq!(
         lex("\"abc\nint"),
         tokens(&[("abc", "string"), ("int", "type")])
     );
-    // 本文の終わりで閉じない文字列と、終わりの \
+    // 本文の終わりで閉じない文字列と, 終わりの \
     assert_eq!(lex("\"abc"), tokens(&[("abc", "string")]));
     assert_eq!(lex("\"abc\\"), tokens(&[("abc\\", "string")]));
 }
@@ -257,11 +257,11 @@ fn test_block_comments() {
             ("*/", "comment-delimiter")
         ])
     );
-    // 本文が空なら、全体が区切り
+    // 本文が空なら, 全体が区切り
     assert_eq!(lex("/**/"), tokens(&[("/**/", "comment-delimiter")]));
     assert_eq!(lex("/*   */"), tokens(&[("/*   */", "comment-delimiter")]));
     assert_eq!(lex("/*****/"), tokens(&[("/*****/", "comment-delimiter")]));
-    // 始まりの * は区切り. 終わりの * は、本文
+    // 始まりの * は区切り. 終わりの * は, 本文
     assert_eq!(
         lex("/*** x ***/"),
         tokens(&[
@@ -270,20 +270,20 @@ fn test_block_comments() {
             ("*/", "comment-delimiter")
         ])
     );
-    // /** のドキュメントのコメントは、全体
+    // /** のドキュメントのコメントは, 全体
     assert_eq!(
         lex("/** x */ int"),
         tokens(&[("/** x */", "doc"), ("int", "type")])
     );
-    // /*** は、ドキュメントではない
+    // /*** は, ドキュメントではない
     assert_eq!(lex("/*** x */")[0].1, "comment-delimiter");
-    // 閉じないコメントは、本文の終わりまで
+    // 閉じないコメントは, 本文の終わりまで
     assert_eq!(
         lex("/* open"),
         tokens(&[("/* ", "comment-delimiter"), ("open", "comment")])
     );
     assert_eq!(lex("/** open"), tokens(&[("/** open", "doc")]));
-    // コメントの中は、字句に分けない
+    // コメントの中は, 字句に分けない
     assert_eq!(lex("/* int \"x\" // y */").len(), 3);
 }
 
@@ -307,7 +307,7 @@ fn test_line_comments() {
     );
     // 本文が空
     assert_eq!(lex("//\nx"), tokens(&[("//", "comment-delimiter")]));
-    // 行の継続で、次の行もコメント
+    // 行の継続で, 次の行もコメント
     assert_eq!(
         lex("// a \\\nb\nint"),
         tokens(&[
@@ -329,7 +329,7 @@ fn test_preprocessor_directives() {
             ("\"c.h\"", "string"),
         ])
     );
-    // 行頭の空白も、指示の色
+    // 行頭の空白も, 指示の色
     assert_eq!(
         lex("  # define X 1"),
         tokens(&[
@@ -343,11 +343,11 @@ fn test_preprocessor_directives() {
         lex("#include <abc\nint"),
         tokens(&[("#include", "preprocessor"), ("int", "type")])
     );
-    // 行の途中の # は、指示ではない
+    // 行の途中の # は, 指示ではない
     assert_eq!(lex("x # y"), vec![]);
     // 名前の無い #
     assert_eq!(lex("#\nint"), tokens(&[("int", "type")]));
-    // 行の継続で、指示は続く. 次の行の先頭の # は、指示ではない
+    // 行の継続で指示は続く. 次の行の先頭の # は, 指示ではない
     assert_eq!(
         lex("#define A \\\n  # B\nint"),
         tokens(&[
@@ -356,7 +356,7 @@ fn test_preprocessor_directives() {
             ("int", "type")
         ])
     );
-    // 指示は、行の終わりで終わる (次の行の < は、#include の < ではない)
+    // 指示は, 行の終わりで終わる (次の行の < は, #include の < ではない)
     assert_eq!(
         lex("#include <a>\nx < y"),
         tokens(&[("#include", "preprocessor"), ("<a>", "string")])
@@ -365,7 +365,7 @@ fn test_preprocessor_directives() {
 
 #[test]
 fn test_conditions_and_messages() {
-    // defined は、#if と #elif の行だけ. 語の中の `_` で区切った部分も (Emacs と同じ)
+    // defined は, #if と #elif の行だけ. 語の中の `_` で区切った部分も (Emacs と同じ)
     assert_eq!(
         lex("#if defined A && !defined_x\n#elif a_defined\n#ifdef defined\n"),
         tokens(&[
@@ -377,7 +377,7 @@ fn test_conditions_and_messages() {
             ("#ifdef", "preprocessor"),
         ])
     );
-    // #error と #warning の本文は、文字列 (前後の空白を除く)
+    // #error と #warning の本文は, 文字列 (前後の空白を除く)
     assert_eq!(
         lex("#error  stop here \t\r\n#warning x\nint"),
         tokens(&[
@@ -402,7 +402,7 @@ fn test_conditions_and_messages() {
 
 #[test]
 fn test_spans_use_character_positions() {
-    // 日本語の文字は、1 文字として数える
+    // 日本語の文字は, 1 文字として数える
     let spans = tokenize(Language::C, "/* あ */ int");
     assert_eq!(
         spans.last(),
@@ -441,7 +441,7 @@ fn setup(text: &str) -> (Evaluator, EditorHost<NoUi>) {
 #[test]
 fn test_buffer_spans_follow_the_major_mode_and_the_text() {
     let (ev, host) = setup("int x;");
-    // text-mode では、色が付かない
+    // text-mode では, 色が付かない
     ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host.editor().current_buffer().token_spans().is_empty());
     assert_eq!(host.editor().current_buffer().highlight_language(), None);
@@ -452,23 +452,23 @@ fn test_buffer_spans_follow_the_major_mode_and_the_text() {
     );
     let first = host.editor().current_buffer().token_spans();
     assert_eq!(first.len(), 2);
-    // 本文が同じなら、同じ結果を使い回す
+    // 本文が同じなら, 同じ結果を使い回す
     let again = host.editor().current_buffer().token_spans();
     assert!(Arc::ptr_eq(&first, &again));
-    // 本文を書き換えると、作り直す
+    // 本文を書き換えると, 作り直す
     ev.eval_with(r#"(goto-char (point-max)) (insert " char c;")"#, &host)
         .unwrap();
     let edited = host.editor().current_buffer().token_spans();
     assert!(!Arc::ptr_eq(&first, &edited));
     assert_eq!(edited.len(), 4);
-    // C++ に替えると、C++ の表を使う
+    // C++ に替えると, C++ の表を使う
     ev.eval_with("(c++-mode)", &host).unwrap();
     assert_eq!(
         host.editor().current_buffer().highlight_language(),
         Some(Language::Cpp)
     );
     assert_eq!(host.editor().current_buffer().token_spans().len(), 4);
-    // 別のモードに替えると、色が付かない
+    // 別のモードに替えると, 色が付かない
     ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host.editor().current_buffer().token_spans().is_empty());
 }
@@ -519,7 +519,7 @@ fn test_set_auto_mode_chooses_c_mode_for_c_files() {
 #[test]
 fn test_line_token_spans_are_clipped_to_the_line() {
     let (ev, host) = setup("int a; /* x\ny */ char b;\n");
-    // 言語が無ければ、空
+    // 言語が無ければ, 空
     ev.eval_with("(text-mode)", &host).unwrap();
     assert!(host
         .editor()
@@ -530,7 +530,7 @@ fn test_line_token_spans_are_clipped_to_the_line() {
     let editor = host.editor();
     let buffer = editor.current_buffer();
     use rseditor_core::highlight::TokenKind::*;
-    // 行の中の位置. 複数行のコメントは、行の終わりと始めで切る (本文は 1 行目が 'x'、2 行目が 'y')
+    // 行の中の位置. 複数行のコメントは, 行の終わりと始めで切る (本文は 1 行目が 'x', 2 行目が 'y')
     assert_eq!(
         buffer.line_token_spans(0),
         vec![
@@ -549,7 +549,7 @@ fn test_line_token_spans_are_clipped_to_the_line() {
             (10, 11, VariableName)
         ]
     );
-    // 最後の空の行と、本文の外の行
+    // 最後の空の行と, 本文の外の行
     assert!(buffer.line_token_spans(2).is_empty());
     assert!(buffer.line_token_spans(9).is_empty());
 }

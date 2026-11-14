@@ -1,7 +1,7 @@
-//! Emacs Lisp で、`(` の直後でキーワードの色にする名前 (Emacs 30 の `emacs -Q` で、マクロとスペシャルフォームの名前).
+//! Emacs Lisp で, `(` の直後でキーワードの色にする名前 (Emacs 30 の `emacs -Q` で, マクロとスペシャルフォームの名前).
 //!
-//! 作り方: `emacs -Q --batch` で、`mapatoms` から `special-form-p` か `macrop` の名前を集める (バッククォートは除く).
-//! 二分探索のために、辞書順に並べる.
+//! 作り方: `emacs -Q --batch` で, `mapatoms` から `special-form-p` か `macrop` の名前を集める (バッククォートは除く).
+//! 二分探索のために, 辞書順に並べる.
 
 /// マクロとスペシャルフォームの名前.
 pub(super) const ELISP_KEYWORDS: &[&str] = &[

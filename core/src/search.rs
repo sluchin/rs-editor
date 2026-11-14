@@ -98,7 +98,7 @@ pub fn translate(pattern: &str, dialect: Dialect) -> Result<String, Error> {
                         let class = class_of_designator(class)
                             .ok_or_else(|| invalid("Unsupported syntax class"))?;
                         let set = class_chars(dialect, class);
-                        // 文字が 1 つも無い構文は、どれにも合わない (`\S` なら, どれにも合う)
+                        // 文字が 1 つも無い構文は, どれにも合わない (`\S` ならどれにも合う)
                         if set.is_empty() {
                             out.push_str(if n == 'S' { "(?s:.)" } else { "(?!)" });
                         } else {
@@ -298,7 +298,7 @@ impl Pattern {
         )
     }
 
-    /// 文字列の中の, 合った所の範囲 (文字の位置). `group` が 0 でなければ, その括弧の範囲.
+    /// 文字列の中の, 合った所の範囲 (文字の位置). `group` が 0 でなければその括弧の範囲.
     pub fn spans(&self, text: &str, group: usize) -> Vec<(usize, usize)> {
         let char_at = |byte: usize| text[..byte].chars().count();
         self.regex
@@ -472,7 +472,7 @@ impl Buffer {
         Some(self.point)
     }
 
-    /// カーソルの所から合うか (Emacs の `looking-at`). 合えば, 合った所を覚える.
+    /// カーソルの所から合うか (Emacs の `looking-at`). 合えば合った所を覚える.
     pub fn looking_at(&mut self, pattern: &Pattern) -> bool {
         let haystack = self.text.to_string();
         let from = self.text.char_to_byte(self.point);
@@ -487,12 +487,12 @@ impl Buffer {
     }
 }
 
-/// `skip-chars-forward` の文字の集まり: 範囲 (`a-z`), 文字, `[:alpha:]` などの文字クラス. 先頭の `^` は、補集合.
+/// `skip-chars-forward` の文字の集まり: 範囲 (`a-z`), 文字, `[:alpha:]` などの文字クラス. 先頭の `^` は, 補集合.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharSet {
     /// 補集合か.
     negate: bool,
-    /// 範囲 (一文字は、始めと終わりが同じ).
+    /// 範囲 (一文字は, 始めと終わりが同じ).
     ranges: Vec<(char, char)>,
     /// 文字クラスの名前.
     classes: Vec<String>,
@@ -515,7 +515,7 @@ impl CharSet {
             ranges: Vec::new(),
             classes: Vec::new(),
         };
-        // 一文字を読む (`\` は、次の文字をそのまま. 最後の `\` は、文字そのもの)
+        // 一文字を読む (`\` は, 次の文字をそのまま. 最後の `\` は, 文字そのもの)
         let read = |i: &mut usize| -> Option<char> {
             let c = *chars.get(*i)?;
             *i += 1;

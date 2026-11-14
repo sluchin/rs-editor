@@ -1,4 +1,4 @@
-//! ncurses の画面. 端末を相手にするので、自動のテストはしない (カバレッジから除く).
+//! ncurses の画面. 端末を相手にするので, 自動のテストはしない (カバレッジから除く).
 
 use ncurses::*;
 
@@ -8,7 +8,7 @@ use crate::screen::{token_pair, token_style, Frame, Screen};
 
 /// ncurses の画面.
 pub struct NcursesScreen {
-    /// 色を使えるか (端末が色に対応していて、色の対を作れたか).
+    /// 色を使えるか (端末が色に対応していて, 色の対を作れたか).
     colors: bool,
     /// 端末が使える色の数.
     palette: i32,
@@ -31,17 +31,17 @@ impl NcursesScreen {
         }
     }
 
-    /// 字句の種類ごとの色の対を作ります (対の番号は、`token_pair`).
+    /// 字句の種類ごとの色の対を作ります (対の番号は, `token_pair`).
     ///
     /// # Returns
     ///
-    /// 色を使えるか (端末が色に対応していなければ、偽).
+    /// 色を使えるか (端末が色に対応していなければ, 偽).
     fn start_colors() -> bool {
         if !has_colors() {
             return false;
         }
         start_color();
-        // 端末の背景の色を、そのまま使う
+        // 端末の背景の色を, そのまま使う
         use_default_colors();
         let palette = COLORS();
         for kind in TokenKind::ALL {
@@ -57,7 +57,7 @@ impl NcursesScreen {
         endwin();
     }
 
-    /// 1 つのキーを、Emacs の書き方にします.
+    /// 1 つのキーを, Emacs の書き方にします.
     fn describe(code: WchResult) -> Option<String> {
         match code {
             WchResult::KeyCode(code) => Some(
@@ -169,7 +169,7 @@ impl Screen for NcursesScreen {
         timeout(-1);
         match code {
             Some(WchResult::Char(7)) => true,
-            // ほかのキーは、次に読めるように戻す
+            // ほかのキーは, 次に読めるように戻す
             Some(WchResult::Char(code)) => {
                 unget_wch(code);
                 false
@@ -189,7 +189,7 @@ impl Screen for NcursesScreen {
             if key.is_empty() {
                 continue;
             }
-            // ESC に続く文字は、Meta を付けたキー
+            // ESC に続く文字は, Meta を付けたキー
             if key == "ESC" {
                 timeout(25);
                 let next = get_wch();

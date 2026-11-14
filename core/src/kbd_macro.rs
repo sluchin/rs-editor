@@ -38,7 +38,7 @@ impl KbdMacro {
         Ok(())
     }
 
-    /// マクロを覚え終えます (Emacs の `end-kbd-macro`). 終えるコマンドのキーは、マクロに入れない.
+    /// マクロを覚え終えます (Emacs の `end-kbd-macro`). 終えるコマンドのキーは, マクロに入れない.
     ///
     /// # Errors
     ///
@@ -53,7 +53,7 @@ impl KbdMacro {
         Ok(())
     }
 
-    /// 覚えているところなら, キーを覚えます.
+    /// 覚えているところならキーを覚えます.
     pub fn record(&mut self, key: &str) {
         if self.defining {
             self.current.push(key.to_string());

@@ -1,7 +1,7 @@
 //! 画面の要る操作 (`message`, `read-string`, `completing-read`, `read-key` など) を受ける [`Host`].
 //!
-//! 評価器は、別のスレッドでコマンドを動かし、画面の要る操作で止まって、キーが来るのを待ちます。
-//! ここでは、その場で画面を描き、キーを読んで,答えを返します。
+//! 評価器は, 別のスレッドでコマンドを動かし, 画面の要る操作で止まって, キーが来るのを待ちます.
+//! ここでは, その場で画面を描き, キーを読んで,答えを返します.
 
 use rseditor_core::error::Error;
 use std::collections::{BTreeMap, VecDeque};
@@ -25,7 +25,7 @@ pub struct UiState {
     pub screen: Box<dyn Screen>,
     /// エコー領域の文字.
     pub message: String,
-    /// ウィンドウごとの、画面の一番上の行.
+    /// ウィンドウごとの, 画面の一番上の行.
     pub tops: BTreeMap<usize, usize>,
     /// 終わるか (`kill-emacs`).
     pub quit: bool,
@@ -51,7 +51,7 @@ const RECENT_KEYS_MAX: usize = 300;
 impl UiState {
     /// 打ったことにするキーを 1 つ取ります (繰り返すマクロは, 尽きたら始めから).
     pub fn pop_macro_key(&mut self) -> Option<String> {
-        // 打ったことにするキーが残っている間は、キーを押したか確かめる (`C-g` で止める. Emacs は `quit`)
+        // 打ったことにするキーが残っている間は, キーを押したか確かめる (`C-g` で止める. Emacs は `quit`)
         if (!self.macro_keys.is_empty() || !self.macro_loop.is_empty()) && self.screen.interrupted()
         {
             self.stop_macro();
@@ -74,7 +74,7 @@ impl UiState {
     }
 }
 
-/// キーが来るまで, `timeout` の間だけ待ちます. 打ったことにするキー (キーボードマクロ) があれば, 待たない.
+/// キーが来るまで, `timeout` の間だけ待ちます. 打ったことにするキー (キーボードマクロ) があれば待たない.
 ///
 /// # Returns
 ///
@@ -84,7 +84,7 @@ pub fn wait_key(state: &Mutex<UiState>, timeout: std::time::Duration) -> bool {
     !state.macro_keys.is_empty() || !state.macro_loop.is_empty() || state.screen.wait_key(timeout)
 }
 
-/// キーを 1 つ読みます. キーボードマクロを動かしているなら, そのキー. なければ, 画面から読みます.
+/// キーを 1 つ読みます. キーボードマクロを動かしているなら, そのキー. なければ画面から読みます.
 ///
 /// # Returns
 ///
@@ -141,7 +141,7 @@ impl UiHost {
         self.state.lock_recover()
     }
 
-    /// 画面を描きます. 入力を読んでいるときは、ミニバッファを出す.
+    /// 画面を描きます. 入力を読んでいるときは, ミニバッファを出す.
     fn draw(&self, minibuffer: Option<&Minibuffer>) {
         let mut editor = self.editor.lock_recover();
         let mut state = self.state();
@@ -161,7 +161,7 @@ impl UiHost {
         state.screen.draw(&frame);
     }
 
-    /// キーを読みます. 入力が終わっていたら、失敗にする.
+    /// キーを読みます. 入力が終わっていたら失敗にする.
     fn read_key(&self) -> Result<String, Error> {
         let (key, from_screen) = next_key(&self.state).ok_or_else(|| Error::bare("quit"))?;
         if from_screen {
@@ -292,7 +292,7 @@ impl UiHost {
     }
 }
 
-/// 共通の前の部分 (`items` は、空でない).
+/// 共通の前の部分 (`items` は, 空でない).
 fn common_prefix(items: &[String]) -> String {
     let mut prefix: Vec<char> = items[0].chars().collect();
     for item in &items[1..] {
@@ -310,7 +310,7 @@ fn common_prefix(items: &[String]) -> String {
 ///
 /// # Returns
 ///
-/// 補完した入力と、エコー領域に出す文字.
+/// 補完した入力と, エコー領域に出す文字.
 fn complete(input: &str, completion: &Completion) -> (String, String) {
     let candidates: Vec<String> = match completion {
         Completion::None => return (input.to_string(), String::new()),

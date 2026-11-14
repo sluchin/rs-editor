@@ -30,7 +30,7 @@ impl Host for FakeUi {
     }
 }
 
-/// 引数を、Scheme の式の文字にする.
+/// 引数を, Scheme の式の文字にする.
 fn scheme_arg(arg: &Json) -> String {
     match arg {
         Json::Null => "#f".to_string(),
@@ -50,7 +50,7 @@ fn scheme_arg(arg: &Json) -> String {
     }
 }
 
-/// 手順を動かして、結果を表の形にする.
+/// 手順を動かして結果を表の形にする.
 fn run(
     ev: &Evaluator,
     host: &EditorHost<FakeUi>,

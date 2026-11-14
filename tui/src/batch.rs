@@ -1,13 +1,13 @@
-//! バッチモード (`rseditor-tui --batch`): Emacs の `emacs --batch` と同じく、画面を使わずに、引数の順に動かす.
+//! バッチモード (`rseditor-tui --batch`): Emacs の `emacs --batch` と同じく, 画面を使わずに, 引数の順に動かす.
 //!
 //! 引数は左から順に処理する.
 //!
-//! - `-l FILE`、`--load FILE`、`--script FILE`: ファイルを読む.
-//! - `--eval EXPR`、`--eval=EXPR`: 式を評価する.
-//! - `-f FUNC`、`--funcall FUNC`: 引数の無い関数 (コマンド) を呼ぶ.
+//! - `-l FILE`, `--load FILE`, `--script FILE`: ファイルを読む.
+//! - `--eval EXPR`, `--eval=EXPR`: 式を評価する.
+//! - `-f FUNC`, `--funcall FUNC`: 引数の無い関数 (コマンド) を呼ぶ.
 //! - `FILE`: ファイルを訪れる (`find-file`).
 //!
-//! `princ` などは標準出力に、`message` は標準エラー出力に書く. `(kill-emacs N)` で終了コード N (既定は 0)、
+//! `princ` などは標準出力に, `message` は標準エラー出力に書く. `(kill-emacs N)` で終了コード N (既定は 0),
 //! 捕まえなかったエラーは標準エラー出力に出して終了コード 255 で終わる.
 
 use rseditor_core::error::Error;
@@ -39,7 +39,7 @@ pub struct Io {
     pub input: Box<dyn BufRead + Send>,
 }
 
-/// 画面の代わりに、標準入出力で答えるもの.
+/// 画面の代わりに, 標準入出力で答えるもの.
 struct BatchUi {
     /// 標準出力 (ベル).
     out: Mutex<Box<dyn Write + Send>>,
@@ -47,13 +47,13 @@ struct BatchUi {
     err: Mutex<Box<dyn Write + Send>>,
     /// 標準入力.
     input: Mutex<Box<dyn BufRead + Send>>,
-    /// 標準出力に書いた後で、まだ改行を出していないか (Emacs は、次の `message` の前に、標準エラー出力に改行を出す).
+    /// 標準出力に書いた後で, まだ改行を出していないか (Emacs は, 次の `message` の前に, 標準エラー出力に改行を出す).
     need_newline: Arc<AtomicBool>,
     /// `kill-emacs` の終了コード.
     exit: Arc<Mutex<Option<i32>>>,
     /// 打ったことにするキー (`execute-kbd-macro`. `read-key` などが先に読む).
     keys: Mutex<VecDeque<String>>,
-    /// キーのコマンドが失敗したか (失敗したら, 後のキーは捨てる).
+    /// キーのコマンドが失敗したか (失敗したら後のキーは捨てる).
     stopped: AtomicBool,
     /// キーのコマンドが失敗したときの, エラーの文.
     error: Mutex<Option<String>>,
@@ -81,7 +81,7 @@ impl LoopUi for BatchUi {
     fn set_display(&self, _truncate_lines: bool, _selective_display: Option<usize>) {}
 }
 
-/// `execute-kbd-macro` の引数 (キーの名前の並び, または文字列) を、キーの名前の並びにする.
+/// `execute-kbd-macro` の引数 (キーの名前の並び, または文字列) を, キーの名前の並びにする.
 fn key_names(keys: Option<&Value>) -> Vec<String> {
     match keys {
         Some(Value::List(items)) => items
@@ -96,7 +96,7 @@ fn key_names(keys: Option<&Value>) -> Vec<String> {
     }
 }
 
-/// 1 文字を、キーの名前にする (制御文字は `C-a` など).
+/// 1 文字を, キーの名前にする (制御文字は `C-a` など).
 fn char_key(c: char) -> String {
     match c {
         '\r' => "RET".to_string(),
@@ -110,7 +110,7 @@ fn char_key(c: char) -> String {
 }
 
 impl BatchUi {
-    /// 標準入力から読む前に、プロンプトを標準出力に出す (Emacs と同じ).
+    /// 標準入力から読む前に, プロンプトを標準出力に出す (Emacs と同じ).
     fn show_prompt(&self, args: &[Value]) {
         if let Some(Value::String(prompt)) = args.first() {
             if !prompt.is_empty() {
@@ -122,7 +122,7 @@ impl BatchUi {
         }
     }
 
-    /// 打ったことにするキーを、改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
+    /// 打ったことにするキーを, 改行 (`RET`) まで読んで文字列にする. キーが無ければ `None`.
     /// 始めの文字 `initial` の後ろに足す. `M-p`, `M-n` は, 履歴 `history` をたどる (画面のミニバッファと同じ).
     fn read_typed_line(&self, initial: &str, history: &HistoryArgs) -> Option<String> {
         let mut keys = self.keys.lock_recover();
@@ -281,7 +281,7 @@ impl Host for BatchUi {
                     _ => 0,
                 };
                 *self.exit.lock_recover() = Some(code);
-                // 後ろを評価しないために、失敗にする (呼んだ側が、終了コードを見分ける)
+                // 後ろを評価しないために, 失敗にする (呼んだ側が, 終了コードを見分ける)
                 Err("kill-emacs".to_string().into())
             }
             "editor-command-names" => Ok(Value::List(Vec::new().into())),
@@ -331,11 +331,11 @@ enum Step {
     Load(String),
 }
 
-/// 引数を、動かす順の手順にする.
+/// 引数を, 動かす順の手順にする.
 ///
 /// # Errors
 ///
-/// 知らない引数のとき、引数が足りないとき.
+/// 知らない引数のとき, 引数が足りないとき.
 fn parse(args: &[String]) -> Result<Vec<Step>, String> {
     let mut steps = Vec::new();
     let mut args = args.iter();
@@ -420,7 +420,7 @@ pub fn run(args: &[String], io: Io) -> i32 {
         let _ = out.flush();
     }));
     let evaluator = Evaluator::new();
-    // 相対パスは、起動したディレクトリから (Emacs の default-directory)
+    // 相対パスは, 起動したディレクトリから (Emacs の default-directory)
     if let Ok(dir) = std::env::current_dir() {
         evaluator.set_default_directory(dir);
     }

@@ -16,9 +16,9 @@ fn test_lock_recover_works_after_a_thread_panicked_holding_the_lock() {
         })
     };
     assert!(thread.join().is_err());
-    // 普通のロックは、以後ずっと失敗する
+    // 普通のロックは, 以後ずっと失敗する
     assert!(shared.lock().is_err());
-    // こちらは、続けられる (途中までの更新は残る)
+    // こちらは, 続けられる (途中までの更新は残る)
     assert_eq!(*shared.lock_recover(), vec![1, 2]);
     shared.lock_recover().push(3);
     assert_eq!(*shared.lock_recover(), vec![1, 2, 3]);

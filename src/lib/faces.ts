@@ -1,6 +1,6 @@
 /**
  * 正規表現に合う所の色付け (Lisp の `highlight-regexp`). face を渡すと, その face の色にします
- * (org-mode の見出しの色など). face が無ければ, 下線を引きます.
+ * (org-mode の見出しの色など). face が無ければ下線を引きます.
  */
 
 import { type Range } from '@codemirror/state'
@@ -17,7 +17,7 @@ import {
 export interface Highlight {
   /** 正規表現 (JavaScript の書き方. 行ごとに合わせる). */
   regexp: string
-  /** face の名前 (`org-level-1` など. CSS の `cm-face-<名前>`). 無ければ, 下線. */
+  /** face の名前 (`org-level-1` など. CSS の `cm-face-<名前>`). 無ければ下線. */
   face?: string
   /** 色付けする括弧の番号 (0 は, 合った所の全体). */
   group?: number
@@ -32,7 +32,7 @@ const faceMarks = new Map<string, Decoration>()
 /**
  * face の印を返します.
  *
- * @param face - face の名前 (無ければ, 下線).
+ * @param face - face の名前 (無ければ下線).
  * @returns 印.
  */
 function faceMark(face: string | undefined): Decoration {
@@ -71,7 +71,7 @@ function decorator({ regexp, face, group = 0 }: Highlight): MatchDecorator {
  * 正規表現に合う所を色付けする拡張を作ります.
  *
  * @param highlights - 色付けする所 (後のものを上に重ねる).
- * @returns 拡張. 無ければ, 空.
+ * @returns 拡張. 無ければ空.
  */
 export function regexpHighlighting(highlights: readonly Highlight[]) {
   return highlights.map((highlight) => {
@@ -101,7 +101,7 @@ export interface Token {
   kind: string
 }
 
-/** 種類の印 (同じ種類は、同じ印を使う). */
+/** 種類の印 (同じ種類は, 同じ印を使う). */
 const tokenMarks = new Map<string, Decoration>()
 
 /**
@@ -120,12 +120,12 @@ function tokenMark(kind: string): Decoration {
 }
 
 /**
- * 核が返したシンタックスハイライトの字句を、色にする拡張を作ります (C, C++, Scheme, Emacs Lisp).
+ * 核が返したシンタックスハイライトの字句を, 色にする拡張を作ります (C, C++, Scheme, Emacs Lisp).
  *
- * 本文より先へ出る範囲は、飛ばします (本文と字句は同じ描く内容で届くが、反映の順で、一瞬ずれるため).
+ * 本文より先へ出る範囲は, 飛ばします (本文と字句は同じ描く内容で届くが, 反映の順で一瞬ずれるため).
  *
  * @param tokens - 字句.
- * @returns 拡張. 字句が無ければ、空.
+ * @returns 拡張. 字句が無ければ空.
  */
 export function tokenHighlighting(tokens: readonly Token[]) {
   if (tokens.length === 0) return []
