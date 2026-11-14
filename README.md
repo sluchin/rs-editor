@@ -121,6 +121,8 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `target/release/` に出力されます。
 
+Linux では、`.deb` パッケージも `target/release/bundle/deb/` に作られます (`sudo apt install ./target/release/bundle/deb/*.deb`)。タグ (`v*.*.*`) を push すると、GitHub Actions の Release が、同じ `.deb` を Artifacts (`rseditor-linux`) に出します。
+
 ### 画面 (Tauri) とエディタの核
 
 エディタの本体 (バッファ、ウィンドウ、キーの割り当て、コマンド) は、Rust の核 (`core/`) と Lisp (`lisp/`) にあります。画面は、核が描く内容 (frame) を CodeMirror で出し、キーと文字を核に送るだけです (設計は `docs/core_migration.md`)。ターミナルのアプリ (`tui/`) と同じ核を使うので、キーとコマンドは画面とターミナルで同じです。

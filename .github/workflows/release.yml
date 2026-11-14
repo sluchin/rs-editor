@@ -13,10 +13,13 @@ jobs:
         include:
           - os: ubuntu-26.04
             name: linux
+            build_args: ""
           - os: windows-latest
             name: windows
+            build_args: "-- --no-bundle"
           - os: macos-latest
             name: macos
+            build_args: "-- --no-bundle"
 
     runs-on: ${{ matrix.os }}
 
@@ -58,7 +61,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build Tauri app
-        run: npm run tauri:build
+        run: npm run tauri:build ${{ matrix.build_args }}
 
       - name: Upload bundle artifacts
         uses: actions/upload-artifact@v7
