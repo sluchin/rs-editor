@@ -121,7 +121,7 @@ npm run tauri:build
 
 ビルドされたアプリケーションは `target/release/` に出力されます。
 
-Linux では、`.deb` パッケージも `target/release/bundle/deb/` に作られます (`sudo apt install ./target/release/bundle/deb/*.deb`)。タグ (`v*.*.*`) を push すると、GitHub Actions の Release が、同じ `.deb` を Artifacts (`rseditor-linux`) に出します。
+Linux では、`.deb` / `.rpm` / `.AppImage` も `target/release/bundle/` に作られます (`sudo apt install ./target/release/bundle/deb/*.deb`)。タグ (`v*.*.*`) を push すると、GitHub Actions の Release が、Linux・Windows・macOS のパッケージ (deb / rpm / AppImage / msi / exe / dmg と、Windows のポータブル版 zip) をビルドして、GitHub Releases のドラフトにアップロードします。Actions の「Release」を手動で実行すると、アップロードせずに、Artifacts からダウンロードできます。
 
 ### 画面 (Tauri) とエディタの核
 
