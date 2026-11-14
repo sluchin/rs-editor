@@ -14,6 +14,10 @@ use tempfile::tempdir;
 #[derive(Default)]
 struct Ui {
     messages: Mutex<Vec<String>>,
+    /// 描き直した回数 (`redisplay`).
+    redisplays: Mutex<usize>,
+    /// `C-g` を押したことにする描き直しの回数 (0 なら, 押さない).
+    quit_after: Mutex<usize>,
 }
 
 impl Host for Ui {
@@ -24,6 +28,16 @@ impl Host for Ui {
                 Ok(Value::Nil)
             }
             ("local-set-key", _) => Ok(Value::Nil),
+            ("redisplay", _) => {
+                *self.redisplays.lock().unwrap() += 1;
+                Ok(Value::Nil)
+            }
+            ("quit-requested-p", _) => {
+                let quit_after = *self.quit_after.lock().unwrap();
+                Ok(Value::Boolean(
+                    quit_after > 0 && *self.redisplays.lock().unwrap() >= quit_after,
+                ))
+            }
             _ => Err(format!("ui: {op}").into()),
         }
     }
@@ -239,6 +253,51 @@ fn test_rgrep_reads_the_wildcard_and_directory_interactively() {
 }
 
 #[test]
+fn test_zrgrep_searches_inside_gz_files() {
+    use std::io::Write;
+    let (_dir, path) = project();
+    let mut encoder = flate2::write::GzEncoder::new(
+        fs::File::create(format!("{path}/z.txt.gz")).unwrap(),
+        flate2::Compression::default(),
+    );
+    encoder.write_all(b"zipped foo\n").unwrap();
+    encoder.finish().unwrap();
+    let (text, messages) = run(&[
+        &format!("(zrgrep \"foo\" \"*.gz *.txt\" \"{path}\")"),
+        GREP_TEXT,
+    ]);
+    assert!(text.contains("zgrep (built-in)"), "{text}");
+    assert!(text.contains("z.txt.gz:1:zipped foo"), "{text}");
+    assert!(text.contains("a.txt:2:bar foo"), "{text}");
+    assert_eq!(messages, vec!["Grep finished with 4 matches found"]);
+    // もう一度, 同じ種類で探す
+    let (text, _) = run(&[
+        &format!("(zrgrep \"foo\" \"*.gz\" \"{path}\")"),
+        "(grep-again)",
+        GREP_TEXT,
+    ]);
+    assert!(text.contains("z.txt.gz:1:zipped foo"), "{text}");
+    // 聞く
+    let (result, _) = run(&["(zrgrep \"foo\")"]);
+    assert!(result.starts_with("error:"), "{result}");
+}
+
+#[test]
+fn test_find_grep_searches_all_files() {
+    let (_dir, path) = project();
+    let (text, messages) = run(&[&format!("(find-grep \"foo\" \"{path}\")"), GREP_TEXT]);
+    assert!(
+        text.contains("find . -type f -exec grep (built-in) -nH -e foo {} +"),
+        "{text}"
+    );
+    assert!(text.contains("a.txt:2:bar foo"), "{text}");
+    assert!(text.contains("sub/b.txt:2:foo"), "{text}");
+    assert_eq!(messages, vec!["Grep finished with 3 matches found"]);
+    let (result, _) = run(&["(find-grep \"foo\")"]);
+    assert!(result.starts_with("error:"), "{result}");
+}
+
+#[test]
 fn test_grep_again_runs_the_last_search() {
     let (_dir, path) = project();
     let (result, _) = run(&["(grep-again)"]);
@@ -254,4 +313,50 @@ fn test_grep_again_runs_the_last_search() {
         messages.last().unwrap(),
         "Grep finished with 3 matches found"
     );
+}
+
+/// 1 回に探すファイルを 1 つにして, 描き直しの回数と, 中断の様子を調べる.
+fn run_batched(quit_after: usize, code: &str) -> (String, usize) {
+    let (_dir, path) = project();
+    let ev = Evaluator::new();
+    let ui = Ui::default();
+    *ui.quit_after.lock().unwrap() = quit_after;
+    let host = EditorHost::new(Editor::new(), ui);
+    for source in [
+        include_str!("../../lisp/simple.scm"),
+        include_str!("../../lisp/compile.scm"),
+    ] {
+        ev.eval_with(source, &host).unwrap();
+    }
+    ev.eval_with("(set! grep--batch-size 1)", &host).unwrap();
+    ev.eval_with(&format!("(grep \"foo\" \"{path}\")"), &host)
+        .unwrap();
+    let text = ev.eval_with(code, &host).unwrap();
+    let redisplays = *host.ui().redisplays.lock().unwrap();
+    (text, redisplays)
+}
+
+#[test]
+fn test_grep_shows_the_matches_batch_by_batch() {
+    // 2 つのファイルを 1 つずつ探す: 描き直しは, 最後の 1 つの前に 1 回だけ
+    let (text, redisplays) = run_batched(0, "(with-current-buffer \"*grep*\" (buffer-string))");
+    assert_eq!(redisplays, 1);
+    assert!(text.contains("a.txt:1:foo"));
+    assert!(text.contains("sub/b.txt:2:foo"));
+    assert!(text.contains("Grep finished with 3 matches found at "));
+}
+
+#[test]
+fn test_grep_stops_when_c_g_is_pressed() {
+    let (text, redisplays) = run_batched(1, "(with-current-buffer \"*grep*\" (buffer-string))");
+    assert_eq!(redisplays, 1);
+    assert!(text.contains("a.txt:2:bar foo"));
+    assert!(!text.contains("sub/b.txt"));
+    assert!(text.contains("Grep interrupted with 2 matches found at "));
+}
+
+#[test]
+fn test_kill_compilation_reports_that_nothing_runs() {
+    let (result, _) = run(&["(kill-compilation)"]);
+    assert_eq!(result, "error: The *grep* process is not running");
 }

@@ -970,14 +970,44 @@ msgid "Return the files below DIRECTORY, not those in .git, target, or node_modu
 msgstr "DIRECTORY の下のファイルを返す (.git, target, node_modules の中は除く)."
 
 #: lisp/compile.scm
-msgctxt "function:grep--show"
-msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window; return the buffer name."
-msgstr "HITS ((FILE LINE TEXT) ...) を *grep* バッファに入れて, 別の窓に出す. バッファの名前を返す."
+msgctxt "variable:grep--batch-size"
+msgid "Number of files `rgrep' and the others search before they show the matches found so far."
+msgstr "`rgrep` などが, 見つけた分を出すまでに探すファイルの数."
+
+#: lisp/compile.scm
+msgctxt "function:grep--match-text"
+msgid "Return how many matches COUNT is, as text."
+msgstr "一致の数 COUNT を, 文にして返す."
+
+#: lisp/compile.scm
+msgctxt "function:grep--command-line"
+msgid "Return the command line that the header of *grep* shows for a search of PATTERN of KIND (grep, zgrep or find)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--begin"
+msgid "Make the *grep* buffer with its header for a search of PATTERN of KIND in DIRECTORY, and show it; return the buffer name."
+msgstr "DIRECTORY の中で, KIND (grep, zgrep, find) の PATTERN の検索をする, 見出しのある *grep* バッファを作って出す. バッファの名前を返す."
+
+#: lisp/compile.scm
+msgctxt "function:grep--append"
+msgid "Append HITS ((FILE LINE TEXT) ...) to the end of the *grep* buffer; return the position where they end."
+msgstr "HITS ((FILE LINE TEXT) ...) を *grep* バッファの終わりに足す. 終わりの位置を返す."
+
+#: lisp/compile.scm
+msgctxt "function:grep--finish"
+msgid "Write the last line of the *grep* buffer: how the search of DIRECTORY ended, with COUNT matches found."
+msgstr "*grep* バッファの最後の行を書く: DIRECTORY の探索がどう終わったか. 見つけた一致の数 COUNT つき."
+
+#: lisp/compile.scm
+msgctxt "function:grep--batches"
+msgid "Split the list FILES into lists of at most SIZE files."
+msgstr "リスト FILES を, 多くても SIZE 個ずつのリストに分ける."
 
 #: lisp/compile.scm
 msgctxt "variable:grep--last"
-msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'."
-msgstr "最後の検索の引数 (PATTERN DIRECTORY GLOB RECURSIVE)。`grep-again' が使う。"
+msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE KIND), for `grep-again'."
+msgstr "最後の検索の引数 (PATTERN DIRECTORY GLOB RECURSIVE KIND). `grep-again' が使う."
 
 #: lisp/compile.scm
 msgctxt "function:grep--glob->regexp"
@@ -996,8 +1026,23 @@ msgstr "DIRECTORY の下の FILES のうち、GLOB (空白で区切ったワイ�
 
 #: lisp/compile.scm
 msgctxt "function:grep--run"
-msgid "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
-msgstr "GLOB に合うファイルから PATTERN を探し (DIR とその下。RECURSIVE が偽なら DIR の直下だけ)、*grep* に出す。"
+msgid ""
+"Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*.\n"
+"The optional KIND is grep (the default), zgrep (also search inside the .gz files) or find (the header shows find's command line).\n"
+"The matches are shown as the search goes on; C-g stops it."
+msgstr ""
+"GLOB に合うファイルから PATTERN を探し (DIR とその下. RECURSIVE が偽なら DIR の直下だけ), *grep* に出す.\n"
+"省略できる KIND は, grep (既定), zgrep (.gz のファイルの中も探す), find (見出しに find のコマンドラインを出す).\n"
+"探しながら一致を出す. C-g で止まる."
+
+#: lisp/compile.scm
+msgctxt "function:kill-compilation"
+msgid ""
+"Stop the running search or compilation.\n"
+"A search of `grep' and the others runs inside the command, so C-g stops it; this reports that none is running."
+msgstr ""
+"動いている探索かコンパイルを止める.\n"
+"`grep` などの探索はコマンドの中で動くので, 止めるには C-g を押す. 動いていなければ, 動いていないと知らせる."
 
 #: lisp/compile.scm
 msgctxt "function:grep"
@@ -1020,6 +1065,24 @@ msgstr ""
 "対話的に呼ぶと、正規表現、ファイル名のワイルドカード (空白で区切る)、ディレクトリを聞く。"
 
 #: lisp/compile.scm
+msgctxt "function:zrgrep"
+msgid ""
+"Search the files matching GLOB below a directory, and inside the .gz files among them, for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+"ディレクトリの下の GLOB に合うファイルと, その中の .gz のファイルの中から, 正規表現に合う行を探す.\n"
+"対話的に呼ぶと, 正規表現, ファイル名のワイルドカード (空白で区切る), ディレクトリを聞く."
+
+#: lisp/compile.scm
+msgctxt "function:find-grep"
+msgid ""
+"Search all the files below a directory for lines that match a regexp, like `find . -type f -exec grep -nH -e REGEXP {} +'.\n"
+"Interactively, read the regexp and the directory."
+msgstr ""
+"`find . -type f -exec grep -nH -e REGEXP {} +' のように, ディレクトリの下のすべてのファイルから, 正規表現に合う行を探す.\n"
+"対話的に呼ぶと, 正規表現とディレクトリを聞く."
+
+#: lisp/compile.scm
 msgctxt "function:lgrep"
 msgid ""
 "Search the files matching GLOB in a directory (not below it) for lines that match a regexp.\n"
@@ -1030,8 +1093,8 @@ msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:grep-again"
-msgid "Run the last grep, rgrep or lgrep again."
-msgstr "最後の grep、rgrep、lgrep をもう一度行う。"
+msgid "Run the last grep, rgrep, lgrep, zrgrep or find-grep again."
+msgstr "最後の grep, rgrep, lgrep, zrgrep, find-grep をもう一度行う."
 
 #: lisp/dabbrev.scm
 msgctxt "variable:dabbrev-backward-only"

@@ -684,3 +684,19 @@ fn test_debug_init_shows_the_failing_forms() {
         "plain"
     );
 }
+
+#[test]
+fn test_redisplay_draws_and_quit_requested_reads_c_g() {
+    let (mut session, front) = setup();
+    let before = front.frames.lock().unwrap().len();
+    assert_eq!(session.eval("(redisplay)").unwrap(), "nil");
+    // `redisplay` と, `eval` が終わりに描く分
+    assert_eq!(front.frames.lock().unwrap().len(), before + 2);
+    // C-g を押していなければ偽. 押していれば真で, 押したことは忘れる
+    assert_eq!(session.eval("(quit-requested-p)").unwrap(), "#f");
+    front
+        .interrupt
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    assert_eq!(session.eval("(quit-requested-p)").unwrap(), "#t");
+    assert_eq!(session.eval("(quit-requested-p)").unwrap(), "#f");
+}

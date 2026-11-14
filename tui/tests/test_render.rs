@@ -236,6 +236,12 @@ fn test_host_operations_of_the_terminal() {
     fx.press("C-x 2");
     assert_eq!(fx.app.eval("(window-body-height)").unwrap(), "5");
     let _ = list;
+    // 描き直し, `C-g` を押したか (押していなければ偽. 押していれば真で, 押したことは忘れる)
+    assert_eq!(fx.app.eval("(redisplay)").unwrap(), "nil");
+    assert_eq!(fx.app.eval("(quit-requested-p)").unwrap(), "#f");
+    fx.keys.lock().unwrap().push_back("C-g".to_string());
+    assert_eq!(fx.app.eval("(quit-requested-p)").unwrap(), "#t");
+    assert_eq!(fx.app.eval("(quit-requested-p)").unwrap(), "#f");
     // 中央に置く
     fx.press("C-x 1 C-l");
     assert_eq!(fx.app.message(), "");

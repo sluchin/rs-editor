@@ -226,6 +226,12 @@ fn test_screen_operations_are_ignored_or_refused() {
         "",
     );
     assert_eq!((status, out.as_str()), (0, "(nil nil)"));
+    // バッチは, 描かず, `C-g` も押されない
+    let (status, out, _) = batch(
+        &["--eval", "(princ (list (redisplay) (quit-requested-p)))"],
+        "",
+    );
+    assert_eq!((status, out.as_str()), (0, "(nil nil)"));
     let (status, _, err) = batch(&["--eval", "(recenter)"], "");
     assert_eq!(status, ERROR_STATUS);
     assert_eq!(err, "The batch mode does not support recenter\n");

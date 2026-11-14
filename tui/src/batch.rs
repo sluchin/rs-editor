@@ -216,6 +216,9 @@ impl BatchUi {
 impl Host for BatchUi {
     fn call(&self, op: &str, args: Vec<Value>) -> Result<Value, Error> {
         match op {
+            // バッチには描く画面が無く, `C-g` も押されない
+            "redisplay" => Ok(Value::Nil),
+            "quit-requested-p" => Ok(Value::Boolean(false)),
             "message" => {
                 if let Some(Value::String(text)) = args.first() {
                     let mut err = self.err.lock_recover();

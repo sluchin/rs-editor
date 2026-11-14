@@ -152,7 +152,11 @@ S 式は、Emacs 30 の構文表（Fundamental モード、emacs-lisp-mode, sche
 | `M-x grep` | grep | 正規表現とディレクトリを聞き、ディレクトリの下（深くまで）のファイルから探して、結果を `*grep*` バッファに出す（外のコマンドは使わない） |
 | `M-x rgrep` | rgrep | 正規表現、ファイル名の形（`*.ts *.tsx` のように空白で区切る。`*` と `?` が使える）、ディレクトリを聞き、下（深くまで）のファイルから探す |
 | `M-x lgrep` | lgrep | `rgrep` と同じ聞き方で、そのディレクトリの直下のファイルだけから探す |
-| `g` （`*grep*`） | grep-again | 最後の `grep` `rgrep` `lgrep` をもう一度行う |
+| `M-x zrgrep` | zrgrep | `rgrep` と同じ聞き方で、名前が `.gz` で終わるファイルは、gzip を展開して探す（`.bz2` や `.xz` は探さない） |
+| `M-x find-grep` | find-grep | 正規表現とディレクトリを聞き、下のすべてのファイルから探す（`find . -type f -exec grep -nH -e 正規表現 {} +` と同じ。`find` は動かさない） |
+| `g` （`*grep*`） | grep-again | 最後の `grep` `rgrep` `lgrep` `zrgrep` `find-grep` をもう一度行う |
+| `C-c C-k` （`*grep*`） | kill-compilation | 探しているものを止める。探すのはコマンドの中で動くので、止めるには `C-g` を押す。動いていなければ、動いていないと知らせる |
+| `C-g` （`rgrep` などの途中） | （中断） | 50 ファイルごとに、見つけた分を `*grep*` に出して描き直す。そのとき `C-g` を押していれば、そこまでで止めて、`Grep interrupted ...` と出す |
 | `n` / `p` （`*grep*`） | next-error-no-select / previous-error-no-select | 次・前の合った行のファイルを、ほかのウィンドウに出す（カーソルは動かさない） |
 | `M-n` / `M-p` / `TAB` / `S-TAB` （`*grep*`） | compilation-next-error / compilation-previous-error | 次・前の合った行へ動く |
 | `M-{` / `M-}` （`*grep*`） | compilation-previous-file / compilation-next-file | 前・次のファイルの合った行へ動く |

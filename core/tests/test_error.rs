@@ -183,3 +183,27 @@ fn test_open_input_file() {
     assert_eq!(other.kind(), "file-error");
     assert_eq!(other.message(), "Opening input file: disk, /z");
 }
+
+#[test]
+fn test_evaluator_keeps_the_failing_forms_while_init_file_debug_is_true() {
+    use rseditor_core::scheme::evaluator::Evaluator;
+    let ev = Evaluator::new();
+    // 普通は, 跡を残さない
+    let error = ev.eval("(car 1)").unwrap_err();
+    assert!(error.trace().is_empty());
+    // `init-file-debug` が真なら, 内側の式から外側へ残す (末尾の呼び出しで置き換わった式も)
+    ev.eval("(define init-file-debug #t) (define (f) (car 1)) (define (g) (list (f)))")
+        .unwrap();
+    let error = ev.eval("(g)").unwrap_err();
+    assert_eq!(error.trace(), ["(car 1)", "(f)", "(list (f))", "(g)"]);
+    // 長い式は, 切る
+    let long = format!("(car {})", "1 ".repeat(200));
+    let error = ev.eval(&long).unwrap_err();
+    let first = &error.trace()[0];
+    assert!(first.ends_with("..."), "{first}");
+    assert_eq!(first.chars().count(), 203);
+    // 跡は 30 個まで
+    ev.eval("(define (deep n) (if (= n 0) (car 1) (list (deep (- n 1)))))")
+        .unwrap();
+    assert_eq!(ev.eval("(deep 50)").unwrap_err().trace().len(), 30);
+}

@@ -451,6 +451,12 @@ impl Host for UiHost {
                 Ok(Value::Nil)
             }
             "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
+            // 長い仕事の途中で, 画面を描き直し, `C-g` を押したか確かめる (押したことは忘れる)
+            "redisplay" => {
+                self.draw(None);
+                Ok(Value::Nil)
+            }
+            "quit-requested-p" => Ok(Value::Boolean(self.state().screen.interrupted())),
             "window-body-height" => {
                 let editor = self.editor.lock_recover();
                 let state = self.state();

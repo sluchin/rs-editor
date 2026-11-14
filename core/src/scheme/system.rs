@@ -50,6 +50,7 @@ pub const NAMES: &[&str] = &[
     "regexp-match-positions",
     "regexp-quote",
     "rust-grep",
+    "rust-zgrep",
     "browse-url",
     "call-shell-command",
 ];
@@ -325,7 +326,9 @@ pub(crate) fn call(
         "regexp-quote" => fixed::<1>(name, args)
             .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
         "rust-grep" => fixed::<2>(name, args)
-            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files)),
+            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files, false)),
+        "rust-zgrep" => fixed::<2>(name, args)
+            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files, true)),
         // 環境変数の値. 無ければ #f
         "getenv" => {
             fixed::<1>(name, args).and_then(|[variable]| {
@@ -844,11 +847,18 @@ fn regexp_match(name: &str, args: &[Value]) -> Result<Value, Error> {
 /// * `name` - 手続きの名前 (失敗の内容に書く).
 /// * `pattern` - 正規表現.
 /// * `files` - ファイルのパスのリスト (`expand-file-name` と同じく読む. 読めないファイルは, 飛ばす).
+/// * `decompress` - 真なら, 名前が `.gz` で終わるファイルを, gzip として展開して探す (`rust-zgrep`).
 ///
 /// # Returns
 ///
 /// 合った行ごとの `(パス 行の番号 行)` のリスト (ファイルの順, 行の順. 行の番号は 1 から).
-fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result<Value, Error> {
+fn grep(
+    machine: &Machine,
+    name: &str,
+    pattern: &Value,
+    files: &Value,
+    decompress: bool,
+) -> Result<Value, Error> {
     let regex = regexp(string(name, pattern)?)?;
     let Value::List(files) = files else {
         return Err(format!("{name} expects a list of files").into());
@@ -856,7 +866,7 @@ fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result
     let mut found = Vec::new();
     for file in files.iter() {
         let path = string(name, file)?;
-        let Ok(text) = std::fs::read_to_string(machine.expand_file_name(path)) else {
+        let Some(text) = read_for_grep(&machine.expand_file_name(path), decompress) else {
             continue;
         };
         for (i, line) in text.lines().enumerate() {
@@ -873,6 +883,28 @@ fn grep(machine: &Machine, name: &str, pattern: &Value, files: &Value) -> Result
         }
     }
     Ok(Value::List(found.into()))
+}
+
+/// `grep` が探すファイルを, 文字列に読みます.
+///
+/// # Arguments
+///
+/// * `path` - ファイルのパス.
+/// * `decompress` - 真なら, 名前が `.gz` で終わるファイルを, gzip として展開する.
+///
+/// # Returns
+///
+/// 本文. 読めない (展開できない, UTF-8 でない) ときは `None`.
+fn read_for_grep(path: &str, decompress: bool) -> Option<String> {
+    if decompress && path.ends_with(".gz") {
+        let mut text = String::new();
+        let file = std::fs::File::open(path).ok()?;
+        std::io::Read::read_to_string(&mut flate2::read::MultiGzDecoder::new(file), &mut text)
+            .ok()?;
+        Some(text)
+    } else {
+        std::fs::read_to_string(path).ok()
+    }
 }
 
 /// シェル (`sh -c`) でコマンドを動かし, 標準出力とエラーの出力を混ぜて集めます.

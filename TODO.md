@@ -271,7 +271,8 @@
 - [x] `multi-occur`、`multi-occur-in-matching-buffers` (`lisp/replace.scm`)。Emacs と同じく、後のバッファを先に出し、一致が無ければ `*Occur*` を消す。
 - [x] `grep` (Phase 15. 外のコマンドを使わず、エディタが探す)。
 - [x] `rgrep` と `lgrep` (探すファイルの名前の形 (`*.ts` など) を聞く)。
-- [ ] `zrgrep`、`find-grep`。
+- [x] `zrgrep` (`.gz` を展開して探す。`.bz2` / `.xz` は未対応)、`find-grep` (`find` は動かさず、下のすべてのファイルから探す)。
+- [x] grep: 探しながら出す (50 ファイルごとに `*grep*` に足して描き直す)、`C-g` で止める (`quit-requested-p` と `redisplay`)、`C-c C-k` (kill-compilation)。外のプロセスで探すのではないので、本当の非同期ではない (止めるのは、次の描き直しのとき)。
 - [x] `M-s h r` / `M-s h l` / `M-s h p` / `M-s h .` / `M-s h u` (highlight-regexp など): 強調。
 - [x] query-replace の中の `^` (前へ戻る), `,` (置き換えて、止まる), `e` / `E` (置き換える文字を直す), `C-r` / `C-w` (再帰編集),
       `u` / `U` (置き換えを戻す), `?` (説明), `C-l`、`C-v` / `M-v`。ほかのキーは、置き換えを終えて、普通のキーとして動かす。
@@ -722,7 +723,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。残りは `C-h t` と、`*Help*` のリンクの色付けとクリック (Phase 14, 18)。小。
 - [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了 (画面のアプリだけ)。残りは、ターミナルと `debug-on-error` (Phase 16)。小。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
-- [ ] grep: `rgrep` / `lgrep` と `*grep*` の中のキーは完了。残りは、探しながら出す、止める (Phase 12, 14, 15)。中。
+- [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
 - [ ] ツリー (サイドバー): 今のファイルまで開くことと、キーで動かすことは完了。残りは、幅を変える、ファイルの作成・名前の変更・削除など (Phase 15)。小。
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。残りは、rectangle-mark-mode の矩形の強調など (Phase 14)。小。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。

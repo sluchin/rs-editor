@@ -646,6 +646,9 @@ impl Host for FakeEditor {
                 return Err(format!("{op} is not supported").into())
             }
             "widen" => Value::Nil,
+            // 偽のエディタは, 描き直さず, `C-g` も押されない
+            "redisplay" => Value::Nil,
+            "quit-requested-p" => Value::Boolean(false),
             // 偽のエディタのウィンドウは, 専用にしない
             "window-dedicated-p" => Value::Boolean(false),
             "push-mark" => {

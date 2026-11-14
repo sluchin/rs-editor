@@ -522,6 +522,47 @@ fn test_grep() {
 }
 
 #[test]
+fn test_zgrep_reads_inside_the_gz_files() {
+    use std::io::Write;
+    let dir = tempdir().unwrap();
+    let gz = dir.path().join("a.txt.gz");
+    let mut encoder = flate2::write::GzEncoder::new(
+        fs::File::create(&gz).unwrap(),
+        flate2::Compression::default(),
+    );
+    encoder.write_all(b"one\nfoo zipped\n").unwrap();
+    encoder.finish().unwrap();
+    let plain = dir.path().join("b.txt");
+    fs::write(&plain, "foo plain\n").unwrap();
+    let broken = dir.path().join("c.gz");
+    fs::write(&broken, "not gzip foo\n").unwrap();
+    let files = format!(
+        "(list {} {} {})",
+        quoted(&gz),
+        quoted(&plain),
+        quoted(&broken)
+    );
+    // 展開して探す. 普通のファイルは、そのまま. 展開できない .gz は、飛ばす
+    assert_eq!(
+        eval(&format!("(rust-zgrep \"foo\" {files})")),
+        format!(
+            "(({} 2 \"foo zipped\") ({} 1 \"foo plain\"))",
+            quoted(&gz),
+            quoted(&plain)
+        )
+    );
+    // rust-grep は、展開しない (バイト列が UTF-8 でないので、飛ばす)
+    assert_eq!(
+        eval(&format!("(rust-grep \"foo\" {files})")),
+        format!(
+            "(({} 1 \"foo plain\") ({} 1 \"not gzip foo\"))",
+            quoted(&plain),
+            quoted(&broken)
+        )
+    );
+}
+
+#[test]
 fn test_strings() {
     assert_eq!(eval_err("(error \"Bad %s: %d\" \"x\" 3)"), "Bad x: 3");
     assert_eq!(eval_err("(user-error \"Stop\")"), "Stop");

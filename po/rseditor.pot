@@ -806,13 +806,43 @@ msgid "Return the files below DIRECTORY, not those in .git, target, or node_modu
 msgstr ""
 
 #: lisp/compile.scm
-msgctxt "function:grep--show"
-msgid "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window; return the buffer name."
+msgctxt "variable:grep--batch-size"
+msgid "Number of files `rgrep' and the others search before they show the matches found so far."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--match-text"
+msgid "Return how many matches COUNT is, as text."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--command-line"
+msgid "Return the command line that the header of *grep* shows for a search of PATTERN of KIND (grep, zgrep or find)."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--begin"
+msgid "Make the *grep* buffer with its header for a search of PATTERN of KIND in DIRECTORY, and show it; return the buffer name."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--append"
+msgid "Append HITS ((FILE LINE TEXT) ...) to the end of the *grep* buffer; return the position where they end."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--finish"
+msgid "Write the last line of the *grep* buffer: how the search of DIRECTORY ended, with COUNT matches found."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:grep--batches"
+msgid "Split the list FILES into lists of at most SIZE files."
 msgstr ""
 
 #: lisp/compile.scm
 msgctxt "variable:grep--last"
-msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'."
+msgid "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE KIND), for `grep-again'."
 msgstr ""
 
 #: lisp/compile.scm
@@ -832,7 +862,17 @@ msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:grep--run"
-msgid "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
+msgid ""
+"Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*.\n"
+"The optional KIND is grep (the default), zgrep (also search inside the .gz files) or find (the header shows find's command line).\n"
+"The matches are shown as the search goes on; C-g stops it."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:kill-compilation"
+msgid ""
+"Stop the running search or compilation.\n"
+"A search of `grep' and the others runs inside the command, so C-g stops it; this reports that none is running."
 msgstr ""
 
 #: lisp/compile.scm
@@ -851,6 +891,20 @@ msgid ""
 msgstr ""
 
 #: lisp/compile.scm
+msgctxt "function:zrgrep"
+msgid ""
+"Search the files matching GLOB below a directory, and inside the .gz files among them, for lines that match a regexp.\n"
+"Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+msgstr ""
+
+#: lisp/compile.scm
+msgctxt "function:find-grep"
+msgid ""
+"Search all the files below a directory for lines that match a regexp, like `find . -type f -exec grep -nH -e REGEXP {} +'.\n"
+"Interactively, read the regexp and the directory."
+msgstr ""
+
+#: lisp/compile.scm
 msgctxt "function:lgrep"
 msgid ""
 "Search the files matching GLOB in a directory (not below it) for lines that match a regexp.\n"
@@ -859,7 +913,7 @@ msgstr ""
 
 #: lisp/compile.scm
 msgctxt "function:grep-again"
-msgid "Run the last grep, rgrep or lgrep again."
+msgid "Run the last grep, rgrep, lgrep, zrgrep or find-grep again."
 msgstr ""
 
 #: lisp/dabbrev.scm

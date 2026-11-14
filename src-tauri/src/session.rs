@@ -314,6 +314,12 @@ impl<F: Front> Host for SessionUi<F> {
                 Ok(Value::Nil)
             }
             "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
+            // 長い仕事の途中で, 画面を描き直し, `C-g` を押したか確かめる (押したことは忘れる)
+            "redisplay" => {
+                self.send_frame();
+                Ok(Value::Nil)
+            }
+            "quit-requested-p" => Ok(Value::Boolean(self.front.interrupted())),
             "window-body-height" => Ok(Value::Number(self.body_height() as f64)),
             "move-to-window-line" => self.move_to_window_line(args.first()),
             "where-is-internal" => Ok(strings(
@@ -458,10 +464,8 @@ impl<F: Front> Session<F> {
             return;
         };
         log::info!("Loading {}", path.display());
-        let options_debug = matches!(
-            self.commands.evaluator().global().get("init-file-debug"),
-            Some(Value::Boolean(true))
-        );
+        let debug = self.commands.evaluator().global().get("init-file-debug");
+        let options_debug = debug.is_some_and(|value| value.is_non_nil());
         self.commands.evaluator().global().define(
             "user-init-file",
             Value::String(path.to_string_lossy().into_owned()),

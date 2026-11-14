@@ -406,43 +406,76 @@ move to the messages of another file, g runs the compilation again, and q quits 
 (define (grep--time)
   (format-time-string "%a %b %e %H:%M:%S %Y"))
 
-(define (grep--show directory pattern hits)
-  "Show HITS ((FILE LINE TEXT) ...) in the *grep* buffer, in another window; return the buffer name."
-  (let ((start 1)
-        (end 1)
-        (count (length hits)))
-    (with-current-buffer (get-buffer-create "*grep*")
-      (set-buffer-read-only #f)
-      (erase-buffer)
-      (insert (format "-*- mode: grep; default-directory: \"%s\" -*-\n" (grep--home-name directory)))
-      (insert (format "Grep started at %s\n\n" (grep--time)))
-      (insert (format "grep (built-in) -r -e %s .\n" pattern))
-      (set! start (point))
-      (for-each (lambda (hit)
-                  (insert (format "%s:%d:%s\n" (car hit) (cadr hit) (caddr hit))))
-                hits)
-      (set! end (point))
-      (insert (format "\nGrep finished with %s found at %s\n"
-                      (cond ((= count 0) "no matches") ((= count 1) "1 match") (else (format "%d matches" count)))
-                      (grep--time)))
-      (goto-char (point-min))
-      (set-buffer-modified-p #f)
-      (set-buffer-read-only #t)
-      (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
-                '(("RET" compile-goto-error) ("C-o" compilation-display-error)
-                  ("n" next-error-no-select) ("p" previous-error-no-select)
-                  ("M-n" compilation-next-error) ("M-p" compilation-previous-error)
-                  ("TAB" compilation-next-error) ("S-TAB" compilation-previous-error)
-                  ("M-{" compilation-previous-file) ("M-}" compilation-next-file)
-                  ("g" grep-again) ("q" quit-window)
-                  ("SPC" scroll-up-command) ("DEL" scroll-down-command)
-                  ("<" beginning-of-buffer) (">" end-of-buffer))))
-    (compile--set-source "*grep*" directory start end)
-    (display-buffer "*grep*")
-    "*grep*"))
+(define grep--batch-size 50
+  "Number of files `rgrep' and the others search before they show the matches found so far.")
+
+(define (grep--match-text count)
+  "Return how many matches COUNT is, as text."
+  (cond ((= count 0) "no matches") ((= count 1) "1 match") (else (format "%d matches" count))))
+
+(define (grep--command-line pattern kind)
+  "Return the command line that the header of *grep* shows for a search of PATTERN of KIND (grep, zgrep or find)."
+  (cond ((eq? kind 'zgrep) (format "zgrep (built-in) -r -e %s ." pattern))
+        ((eq? kind 'find) (format "find . -type f -exec grep (built-in) -nH -e %s {} +" pattern))
+        (else (format "grep (built-in) -r -e %s ." pattern))))
+
+(define (grep--begin directory pattern kind)
+  "Make the *grep* buffer with its header for a search of PATTERN of KIND in DIRECTORY, and show it; return the buffer name."
+  (with-current-buffer (get-buffer-create "*grep*")
+    (set-buffer-read-only #f)
+    (erase-buffer)
+    (insert (format "-*- mode: grep; default-directory: \"%s\" -*-\n" (grep--home-name directory)))
+    (insert (format "Grep started at %s\n\n" (grep--time)))
+    (insert (grep--command-line pattern kind) "\n")
+    (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)
+    (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
+              '(("RET" compile-goto-error) ("C-o" compilation-display-error)
+                ("n" next-error-no-select) ("p" previous-error-no-select)
+                ("M-n" compilation-next-error) ("M-p" compilation-previous-error)
+                ("TAB" compilation-next-error) ("S-TAB" compilation-previous-error)
+                ("M-{" compilation-previous-file) ("M-}" compilation-next-file)
+                ("g" grep-again) ("q" quit-window) ("C-c C-k" kill-compilation)
+                ("SPC" scroll-up-command) ("DEL" scroll-down-command)
+                ("<" beginning-of-buffer) (">" end-of-buffer))))
+  (display-buffer "*grep*")
+  "*grep*")
+
+(define (grep--append hits)
+  "Append HITS ((FILE LINE TEXT) ...) to the end of the *grep* buffer; return the position where they end."
+  (with-current-buffer "*grep*"
+    (set-buffer-read-only #f)
+    (goto-char (point-max))
+    (for-each (lambda (hit)
+                (insert (format "%s:%d:%s\n" (car hit) (cadr hit) (caddr hit))))
+              hits)
+    (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)
+    (point)))
+
+(define (grep--finish directory count interrupted)
+  "Write the last line of the *grep* buffer: how the search of DIRECTORY ended, with COUNT matches found."
+  (with-current-buffer "*grep*"
+    (set-buffer-read-only #f)
+    (goto-char (point-max))
+    (insert (if interrupted
+                (format "\nGrep interrupted with %s found at %s\n" (grep--match-text count) (grep--time))
+                (format "\nGrep finished with %s found at %s\n" (grep--match-text count) (grep--time))))
+    (goto-char (point-min))
+    (set-buffer-modified-p #f)
+    (set-buffer-read-only #t)))
+
+(define (grep--batches files size)
+  "Split the list FILES into lists of at most SIZE files."
+  (if (null? files)
+      '()
+      (let loop ((rest files) (batch '()) (n 0) (done '()))
+        (cond ((null? rest) (reverse (if (null? batch) done (cons (reverse batch) done))))
+              ((= n size) (loop rest '() 0 (cons (reverse batch) done)))
+              (else (loop (cdr rest) (cons (car rest) batch) (+ n 1) done))))))
 
 (define grep--last #f
-  "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE), for `grep-again'.")
+  "The arguments of the last search, (PATTERN DIRECTORY GLOB RECURSIVE KIND), for `grep-again'.")
 
 (define (grep--glob->regexp glob)
   "Return a regexp that matches a file name matching the shell wildcard GLOB (* ? and literal characters)."
@@ -475,21 +508,48 @@ move to the messages of another file, g runs the compilation again, and q quits 
                      (grep--glob-match globs (file-name-nondirectory file)))))
             files)))
 
-(define (grep--run pattern dir glob recursive)
-  "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*."
+(define (grep--run pattern dir glob recursive . rest)
+  "Search for PATTERN in the files matching GLOB in DIR (and below, if RECURSIVE), and show them in *grep*.
+The optional KIND is grep (the default), zgrep (also search inside the .gz files) or find (the header shows find's command line).
+The matches are shown as the search goes on; C-g stops it."
   (let* ((directory (let ((expanded (expand-file-name dir)))
                       (if (string-suffix? "/" expanded) expanded (string-append expanded "/"))))
-         (hits (map (lambda (hit)
-                      (list (substring (car hit) (string-length directory) (string-length (car hit)))
-                            (cadr hit)
-                            (caddr hit)))
-                    (rust-grep pattern
-                               (grep--select (grep--files directory) directory glob recursive)))))
-    (set! grep--last (list pattern dir glob recursive))
-    (grep--show directory pattern hits)
-    (message (format "Grep finished with %s found"
-                     (cond ((null? hits) "no matches") ((null? (cdr hits)) "1 match") (else (format "%d matches" (length hits))))))
+         (files (grep--select (grep--files directory) directory glob recursive))
+         (kind (if (pair? rest) (car rest) 'grep))
+         (search (if (eq? kind 'zgrep) rust-zgrep rust-grep))
+         (start #f)
+         (end #f)
+         (count 0)
+         (interrupted #f))
+    (set! grep--last (list pattern dir glob recursive kind))
+    (grep--begin directory pattern kind)
+    (with-current-buffer "*grep*" (set! start (point-max)))
+    (set! end start)
+    (compile--set-source "*grep*" directory start end)
+    (let loop ((batches (grep--batches files grep--batch-size)))
+      (unless (or (null? batches) interrupted)
+        (let ((hits (map (lambda (hit)
+                           (list (substring (car hit) (string-length directory) (string-length (car hit)))
+                                 (cadr hit)
+                                 (caddr hit)))
+                         (search pattern (car batches)))))
+          (set! count (+ count (length hits)))
+          (unless (null? hits)
+            (set! end (grep--append hits))
+            (compile--set-source "*grep*" directory start end))
+          (when (pair? (cdr batches))
+            (redisplay)
+            (when (quit-requested-p) (set! interrupted #t)))
+          (loop (cdr batches)))))
+    (grep--finish directory count interrupted)
+    (message (format "Grep %s with %s found"
+                     (if interrupted "interrupted" "finished") (grep--match-text count)))
     #f))
+
+(define-command (kill-compilation . args)
+  "Stop the running search or compilation.
+A search of `grep' and the others runs inside the command, so C-g stops it; this reports that none is running."
+  (error "The *grep* process is not running"))
 
 (define-command (grep . args)
   "Search the files below a directory for lines that match a regexp.
@@ -513,6 +573,27 @@ Interactively, read the regexp, the file name wildcards (separated by spaces) an
                   (read-file-name "Base directory: " (compile--default-directory)))))
     (grep--run pattern dir glob #t)))
 
+(define-command (zrgrep . args)
+  "Search the files matching GLOB below a directory, and inside the .gz files among them, for lines that match a regexp.
+Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
+  (let* ((pattern (if (pair? args) (car args) (read-string "Search for (regexp): ")))
+         (glob (if (and (pair? args) (pair? (cdr args)))
+                   (cadr args)
+                   (read-string "Files (wildcards): " "*")))
+         (dir (if (and (pair? args) (pair? (cdr args)) (pair? (cddr args)))
+                  (caddr args)
+                  (read-file-name "Base directory: " (compile--default-directory)))))
+    (grep--run pattern dir glob #t 'zgrep)))
+
+(define-command (find-grep . args)
+  "Search all the files below a directory for lines that match a regexp, like `find . -type f -exec grep -nH -e REGEXP {} +'.
+Interactively, read the regexp and the directory."
+  (let* ((pattern (if (pair? args) (car args) (read-string "Run find-grep (regexp): ")))
+         (dir (if (and (pair? args) (pair? (cdr args)))
+                  (cadr args)
+                  (read-file-name "In directory: " (compile--default-directory)))))
+    (grep--run pattern dir "*" #t 'find)))
+
 (define-command (lgrep . args)
   "Search the files matching GLOB in a directory (not below it) for lines that match a regexp.
 Interactively, read the regexp, the file name wildcards (separated by spaces) and the directory."
@@ -526,7 +607,7 @@ Interactively, read the regexp, the file name wildcards (separated by spaces) an
     (grep--run pattern dir glob #f)))
 
 (define-command (grep-again . args)
-  "Run the last grep, rgrep or lgrep again."
+  "Run the last grep, rgrep, lgrep, zrgrep or find-grep again."
   (if grep--last
       (apply grep--run grep--last)
       (error "No grep to run again")))

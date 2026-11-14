@@ -2647,6 +2647,7 @@ dependencies = [
  "chrono",
  "dirs",
  "fancy-regex",
+ "flate2",
  "log",
  "regex",
  "ropey",

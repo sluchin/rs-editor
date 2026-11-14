@@ -569,10 +569,8 @@ impl<'a> Machine<'a> {
 
     /// `init-file-debug` が真なら, 失敗した式を, エラーの呼び出しの跡に足します (長い式は切る).
     fn trace_failure(&self, error: &mut Error, expr: &Value) {
-        if !matches!(
-            self.evaluator.global().get("init-file-debug"),
-            Some(Value::Boolean(true))
-        ) {
+        let debug = self.evaluator.global().get("init-file-debug");
+        if !debug.is_some_and(|value| value.is_non_nil()) {
             return;
         }
         let mut text = builtins::print_string(expr, true);
