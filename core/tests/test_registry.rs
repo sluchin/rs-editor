@@ -59,6 +59,11 @@ fn test_registry_has_the_migrated_procedures_and_defines_them() {
         "forward-char",
         "re-search-forward",
         "gui-selection-value",
+        "load",
+        "file-exists?",
+        "file-directory?",
+        "regexp-match",
+        "call-shell-command",
     ] {
         assert!(names.contains(&name), "{name} is not registered");
     }

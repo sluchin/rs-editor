@@ -7,7 +7,6 @@ use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
 use crate::scheme::registry::registry;
-use crate::scheme::system;
 use crate::scheme::value::Value;
 
 /// 組み込みの手続きの名前.
@@ -1005,8 +1004,7 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
         }
-        _ => system::call(machine, name, args)
-            .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name).into())),
+        _ => Err(format!("Unknown procedure: {}", name).into()),
     }
 }
 

@@ -13,6 +13,7 @@ use crate::scheme::ert;
 use crate::scheme::evaluator::Machine;
 use crate::scheme::help;
 use crate::scheme::hooks;
+use crate::scheme::system;
 use crate::scheme::value::Value;
 
 /// 組み込みの手続きの関数の型. 評価と, 呼ばれた名前と, 引数を受け取ります.
@@ -99,6 +100,7 @@ pub fn registry() -> &'static Registry {
         ert::register(&mut registry);
         help::register(&mut registry);
         hooks::register(&mut registry);
+        system::register(&mut registry);
         registry
     })
 }

@@ -13,47 +13,12 @@ use chrono::{Local, NaiveDate, NaiveDateTime, TimeZone};
 use regex::Regex;
 
 use crate::atomic::write_atomic;
+use crate::register;
 use crate::scheme::builtins::{fixed, index, number, string};
 use crate::scheme::evaluator::Machine;
 use crate::scheme::parser::Parser;
+use crate::scheme::registry::Registry;
 use crate::scheme::value::Value;
-
-/// 組み込みの手続きの名前 (ファイル, 時刻, 正規表現).
-pub const NAMES: &[&str] = &[
-    "load",
-    "require",
-    "provide",
-    "featurep",
-    "expand-file-name",
-    "file-exists?",
-    "file-directory?",
-    "read-file-string",
-    "write-file-string",
-    "make-directory",
-    "make-temp-file",
-    "delete-file",
-    "copy-file",
-    "rename-file",
-    "directory-files",
-    "delete-directory",
-    "directory-files-recursively",
-    "grep-files",
-    "directory-listing",
-    "file-modification-time",
-    "file-newer-than-file-p",
-    "current-time",
-    "format-time-string",
-    "date-to-time",
-    "random",
-    "getenv",
-    "regexp-match",
-    "regexp-match-positions",
-    "regexp-quote",
-    "rust-grep",
-    "rust-zgrep",
-    "browse-url",
-    "call-shell-command",
-];
 
 /// URL を開くプログラムの既定 (Lisp の `browse-url-generic-program` の始めの値).
 pub const DEFAULT_BROWSER: &str = if cfg!(target_os = "macos") {
@@ -78,298 +43,769 @@ thread_local! {
     static REGEXPS: std::cell::RefCell<HashMap<String, Regex>> = std::cell::RefCell::new(HashMap::new());
 }
 
-/// 組み込みの手続き (ファイル, 時刻, 正規表現) を呼びます.
+/// 組み込みの手続き (ファイル, 時刻, 正規表現) を登録します.
 ///
 /// # Arguments
 ///
-/// * `machine` - 評価 (`load` で使う).
+/// * `registry` - 登録先の表.
+pub fn register(registry: &mut Registry) {
+    register!(
+        registry,
+        "load" => sys_load,
+        "require" => require,
+        "provide" => sys_provide,
+        "featurep" => sys_featurep,
+        "expand-file-name" => sys_expand_file_name,
+        "file-exists?" => sys_file_exists_and_file_directory,
+        "file-directory?" => sys_file_exists_and_file_directory,
+        "read-file-string" => sys_read_file_string,
+        "write-file-string" => sys_write_file_string,
+        "make-directory" => sys_make_directory,
+        "directory-listing" => sys_directory_listing,
+        "make-temp-file" => sys_make_temp_file,
+        "delete-file" => sys_delete_file,
+        "rename-file" => sys_rename_file,
+        "directory-files" => sys_directory_files,
+        "copy-file" => sys_copy_file,
+        "delete-directory" => sys_delete_directory,
+        "directory-files-recursively" => sys_directory_files_recursively,
+        "grep-files" => sys_grep_files,
+        "file-modification-time" => sys_file_modification_time,
+        "file-newer-than-file-p" => sys_file_newer_than_file_p,
+        "current-time" => sys_current_time,
+        "format-time-string" => sys_format_time_string,
+        "date-to-time" => sys_date_to_time,
+        "random" => sys_random,
+        "regexp-match" => sys_regexp_match_and_regexp_match_positions,
+        "regexp-match-positions" => sys_regexp_match_and_regexp_match_positions,
+        "regexp-quote" => sys_regexp_quote,
+        "rust-grep" => sys_rust_grep,
+        "rust-zgrep" => sys_rust_zgrep,
+        "getenv" => sys_getenv,
+        "browse-url" => sys_browse_url,
+        "call-shell-command" => sys_call_shell_command,
+    );
+}
+
+/// `(load FILE)`: Lisp のファイルを探して読み込みます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
 /// * `name` - 手続きの名前.
 /// * `args` - 引数.
 ///
 /// # Returns
 ///
-/// 結果, または失敗の内容. この手続きでなければ `None`.
-pub(crate) fn call(
+/// 結果, または失敗の内容.
+fn sys_load(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[file]| {
+        let file = string(name, &file)?;
+        let path = locate_library(machine, file)?;
+        load_file(machine, &path)
+    })
+}
+
+/// `(provide FEATURE)`: 機能を提供済みにします.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_provide(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[feature]| match feature {
+        Value::Symbol(feature) => {
+            machine.evaluator.provide(&feature);
+            Ok(Value::Symbol(feature))
+        }
+        _ => Err("provide expects a symbol".to_string().into()),
+    })
+}
+
+/// `(featurep FEATURE)`: 機能が提供済みかを調べます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_featurep(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[feature]| match feature {
+        Value::Symbol(feature) => Ok(Value::Boolean(machine.evaluator.featurep(&feature))),
+        _ => Err("featurep expects a symbol".to_string().into()),
+    })
+}
+
+/// `(expand-file-name NAME [DIR])`: ファイルの名前を, 絶対パスにします (`~` も展開する).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_expand_file_name(
     machine: &mut Machine,
     name: &str,
     args: Vec<Value>,
-) -> Option<Result<Value, Error>> {
-    let result = match name {
-        "load" => fixed::<1>(name, args).and_then(|[file]| {
-            let file = string(name, &file)?;
-            let path = locate_library(machine, file)?;
-            load_file(machine, &path)
-        }),
-        "require" => require(machine, name, args),
-        "provide" => fixed::<1>(name, args).and_then(|[feature]| match feature {
-            Value::Symbol(feature) => {
-                machine.evaluator.provide(&feature);
-                Ok(Value::Symbol(feature))
-            }
-            _ => Err("provide expects a symbol".to_string().into()),
-        }),
-        "featurep" => fixed::<1>(name, args).and_then(|[feature]| match feature {
-            Value::Symbol(feature) => Ok(Value::Boolean(machine.evaluator.featurep(&feature))),
-            _ => Err("featurep expects a symbol".to_string().into()),
-        }),
-        "expand-file-name" => {
-            if !(1..=2).contains(&args.len()) {
-                return Some(Err("expand-file-name expects 1 or 2 arguments"
-                    .to_string()
-                    .into()));
-            }
-            expand_args(machine, name, &args).map(|path| Value::String(path_string(&path)))
+) -> Result<Value, Error> {
+    if !(1..=2).contains(&args.len()) {
+        return Err("expand-file-name expects 1 or 2 arguments"
+            .to_string()
+            .into());
+    }
+    expand_args(machine, name, &args).map(|path| Value::String(path_string(&path)))
+}
+
+/// `(file-exists? PATH)` / `(file-directory? PATH)`: ファイルがあるか, ディレクトリかを調べます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_file_exists_and_file_directory(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        Ok(Value::Boolean(if name == "file-exists?" {
+            path.exists()
+        } else {
+            path.is_dir()
+        }))
+    })
+}
+
+/// `(read-file-string PATH)`: ファイルの中身を文字列で返します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_read_file_string(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        std::fs::read_to_string(&path)
+            .map(Value::String)
+            .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
+    })
+}
+
+/// `(write-file-string PATH TEXT)`: 文字列をファイルに書きます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_write_file_string(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<2>(name, args).and_then(|[path, text]| {
+        let path = expand_args(machine, name, &[path])?;
+        let text = string(name, &text)?;
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)
+                .map_err(|e| Error::from(format!("{}: {}", dir.display(), e)))?;
         }
-        "file-exists?" | "file-directory?" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            Ok(Value::Boolean(if name == "file-exists?" {
-                path.exists()
-            } else {
-                path.is_dir()
-            }))
-        }),
-        "read-file-string" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            std::fs::read_to_string(&path)
-                .map(Value::String)
-                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
-        }),
-        "write-file-string" => fixed::<2>(name, args).and_then(|[path, text]| {
-            let path = expand_args(machine, name, &[path])?;
-            let text = string(name, &text)?;
-            if let Some(dir) = path.parent() {
-                std::fs::create_dir_all(dir)
-                    .map_err(|e| Error::from(format!("{}: {}", dir.display(), e)))?;
-            }
-            write_atomic(&path, text.as_bytes())
-                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
-            Ok(Value::Nil)
-        }),
-        "make-directory" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            std::fs::create_dir_all(&path)
-                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
-            Ok(Value::Nil)
-        }),
-        "directory-listing" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            directory_listing("ls", &path).map(Value::String)
-        }),
-        "make-temp-file" => make_temp_file(name, &args),
-        "delete-file" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            std::fs::remove_file(&path)
-                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
-            Ok(Value::Nil)
-        }),
-        "rename-file" => {
-            // (rename-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
-            let (from, to, ok) = match args.as_slice() {
-                [from, to] => (from, to, false),
-                [from, to, ok] => (from, to, ok.is_true()),
-                _ => {
-                    return Some(Err("rename-file expects 2 or 3 arguments"
-                        .to_string()
-                        .into()))
-                }
-            };
-            (|| {
-                let from = expand_args(machine, name, std::slice::from_ref(from))?;
-                let to = expand_args(machine, name, std::slice::from_ref(to))?;
-                if !ok && to.exists() {
-                    return Err(Error::strings(
-                        "file-already-exists",
-                        &["File already exists", &to.display().to_string()],
-                    ));
-                }
-                std::fs::rename(&from, &to)
-                    .map(|()| Value::Nil)
-                    .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
-            })()
-        }
-        "directory-files" => {
-            // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真ならディレクトリを付ける. MATCH は正規表現
-            if !(1..=3).contains(&args.len()) {
-                return Some(Err("directory-files expects 1 to 3 arguments"
-                    .to_string()
-                    .into()));
-            }
-            (|| {
-                let dir = expand_args(machine, name, &args[..1])?;
-                let full = args.get(1).is_some_and(Value::is_true);
-                let pattern = match args.get(2) {
-                    Some(Value::String(pattern)) => Some(
-                        regex::Regex::new(pattern)
-                            .map_err(|e| Error::strings("invalid-regexp", &[&e.to_string()]))?,
-                    ),
-                    _ => None,
-                };
-                let entries = std::fs::read_dir(&dir).map_err(|e| {
-                    Error::from(format!("Opening directory: {}, {}", e, dir.display()))
-                })?;
-                let mut names = vec![".".to_string(), "..".to_string()];
-                names.extend(
-                    entries
-                        .filter_map(Result::ok)
-                        .map(|entry| entry.file_name().to_string_lossy().into_owned()),
-                );
-                names.sort();
-                Ok(Value::List(
-                    names
-                        .into_iter()
-                        .filter(|name| pattern.as_ref().is_none_or(|re| re.is_match(name)))
-                        .map(|name| {
-                            Value::String(if full {
-                                path_string(&dir.join(&name))
-                            } else {
-                                name
-                            })
-                        })
-                        .collect(),
-                ))
-            })()
-        }
-        "copy-file" => {
-            // (copy-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
-            let (from, to, ok) = match args.as_slice() {
-                [from, to] => (from, to, false),
-                [from, to, ok] => (from, to, ok.is_true()),
-                _ => return Some(Err("copy-file expects 2 or 3 arguments".to_string().into())),
-            };
-            (|| {
-                let from = expand_args(machine, name, std::slice::from_ref(from))?;
-                let to = expand_args(machine, name, std::slice::from_ref(to))?;
-                if !ok && to.exists() {
-                    return Err(Error::strings(
-                        "file-already-exists",
-                        &["File already exists", &to.display().to_string()],
-                    ));
-                }
-                std::fs::copy(&from, &to)
-                    .map(|_| Value::Nil)
-                    .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
-            })()
-        }
-        "delete-directory" => {
-            // 2 つ目の引数が真なら, 中身ごと消す
-            let (path, recursive) = match args.as_slice() {
-                [path] => (path, false),
-                [path, recursive] => (path, recursive.is_true()),
-                _ => {
-                    return Some(Err("delete-directory expects 1 or 2 arguments"
-                        .to_string()
-                        .into()))
-                }
-            };
-            let path = match expand_args(machine, name, std::slice::from_ref(path)) {
-                Ok(path) => path,
-                Err(e) => return Some(Err(e)),
-            };
-            let removed = if recursive {
-                std::fs::remove_dir_all(&path)
-            } else {
-                std::fs::remove_dir(&path)
-            };
-            removed
-                .map(|_| Value::Nil)
-                .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
-        }
-        "directory-files-recursively" => fixed::<2>(name, args).and_then(|[dir, pattern]| {
-            let dir = expand_args(machine, name, &[dir])?;
-            let pattern = regexp(string(name, &pattern)?)?;
-            let mut files = Vec::new();
-            collect_files(&dir, &pattern, &mut files);
-            files.sort();
-            Ok(Value::List(files.into_iter().map(Value::String).collect()))
-        }),
-        "grep-files" => fixed::<1>(name, args).and_then(|args| {
-            // (grep-files DIR): DIR の下の, 探すファイル (`.` で始まるもの, node_modules と target の下は, 探さない)
-            let dir = expand_args(machine, name, &args)?;
-            let mut files = Vec::new();
-            collect_grep_files(&dir, &mut files);
-            files.sort();
-            Ok(Value::List(files.into_iter().map(Value::String).collect()))
-        }),
-        "file-modification-time" => fixed::<1>(name, args).and_then(|args| {
-            let path = expand_args(machine, name, &args)?;
-            Ok(match std::fs::metadata(&path).and_then(|m| m.modified()) {
-                Ok(time) => Value::Number(seconds(time)),
-                Err(_) => Value::Boolean(false),
-            })
-        }),
-        "file-newer-than-file-p" => fixed::<2>(name, args).and_then(|[a, b]| {
-            // FILE1 が FILE2 より新しければ真 (FILE1 だけがあるときも真. FILE1 が無ければ偽)
-            let a = expand_args(machine, name, &[a])?;
-            let b = expand_args(machine, name, &[b])?;
-            let time =
-                |path: &std::path::Path| std::fs::metadata(path).and_then(|m| m.modified()).ok();
-            Ok(Value::Boolean(match (time(&a), time(&b)) {
-                (Some(a), Some(b)) => a > b,
-                (a, _) => a.is_some(),
-            }))
-        }),
-        "current-time" => fixed::<0>(name, args).map(|_| Value::Number(seconds(SystemTime::now()))),
-        "format-time-string" => format_time_string(name, &args),
-        "date-to-time" => fixed::<1>(name, args)
-            .and_then(|[date]| date_to_time(string(name, &date)?).map(Value::Number)),
-        "random" => fixed::<1>(name, args).and_then(|[limit]| {
-            let limit = number(name, &limit)?;
-            if limit < 1.0 || limit.fract() != 0.0 {
-                return Err("random expects a positive integer".to_string().into());
-            }
-            let random = std::collections::hash_map::RandomState::new()
-                .build_hasher()
-                .finish();
-            Ok(Value::Number((random % limit as u64) as f64))
-        }),
-        "regexp-match" | "regexp-match-positions" => regexp_match(name, &args),
-        "regexp-quote" => fixed::<1>(name, args)
-            .and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?)))),
-        "rust-grep" => fixed::<2>(name, args)
-            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files, false)),
-        "rust-zgrep" => fixed::<2>(name, args)
-            .and_then(|[pattern, files]| grep(machine, name, &pattern, &files, true)),
-        // 環境変数の値. 無ければ #f
-        "getenv" => {
-            fixed::<1>(name, args).and_then(|[variable]| {
-                Ok(std::env::var(string(name, &variable)?)
-                    .map_or(Value::Boolean(false), Value::String))
-            })
-        }
-        "browse-url" => fixed::<1>(name, args).and_then(|[url]| {
-            let url = string(name, &url)?.to_string();
-            let program = match machine.evaluator.global().get("browse-url-generic-program") {
-                Some(Value::String(program)) => program,
-                _ => {
-                    return Err("browse-url-generic-program must be a program"
-                        .to_string()
-                        .into())
-                }
-            };
-            browse_url(&program, &url)?;
-            Ok(Value::Nil)
-        }),
-        // (call-shell-command COMMAND INPUT DIRECTORY): シェルで COMMAND を動かし, (終了コード 出力) を返す.
-        // INPUT (文字列, 無ければ #f) は標準入力に, DIRECTORY (無ければ #f) は動かす所. エラーの出力も, 出力に混ぜる
-        "call-shell-command" => fixed::<3>(name, args).and_then(|[command, input, dir]| {
-            let optional = |value: &Value| match value {
-                Value::String(s) => Some(s.clone()),
-                _ => None,
-            };
-            let (code, output) = run_shell(
-                string(name, &command)?,
-                optional(&input).as_deref(),
-                optional(&dir).as_deref(),
-            )?;
-            Ok(Value::List(
-                vec![Value::Number(f64::from(code)), Value::String(output)]
-                    .into_iter()
-                    .collect(),
-            ))
-        }),
-        _ => return None,
+        write_atomic(&path, text.as_bytes())
+            .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
+        Ok(Value::Nil)
+    })
+}
+
+/// `(make-directory PATH)`: ディレクトリを (親も含めて) 作ります.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_make_directory(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        std::fs::create_dir_all(&path)
+            .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
+        Ok(Value::Nil)
+    })
+}
+
+/// `(directory-listing DIR)`: ディレクトリの一覧 (`ls` の出力) を返します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_directory_listing(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        directory_listing("ls", &path).map(Value::String)
+    })
+}
+
+/// `(make-temp-file PREFIX [DIR-FLAG])`: 一時ファイル (かディレクトリ) を作って, パスを返します.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_make_temp_file(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    make_temp_file(name, &args)
+}
+
+/// `(delete-file PATH)`: ファイルを消します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_delete_file(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        std::fs::remove_file(&path)
+            .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))?;
+        Ok(Value::Nil)
+    })
+}
+
+/// `(rename-file FILE NEWNAME [OK-IF-ALREADY-EXISTS])`: ファイルの名前を変えます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_rename_file(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (rename-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
+    let (from, to, ok) = match args.as_slice() {
+        [from, to] => (from, to, false),
+        [from, to, ok] => (from, to, ok.is_true()),
+        _ => return Err("rename-file expects 2 or 3 arguments".to_string().into()),
     };
-    Some(result)
+    (|| {
+        let from = expand_args(machine, name, std::slice::from_ref(from))?;
+        let to = expand_args(machine, name, std::slice::from_ref(to))?;
+        if !ok && to.exists() {
+            return Err(Error::strings(
+                "file-already-exists",
+                &["File already exists", &to.display().to_string()],
+            ));
+        }
+        std::fs::rename(&from, &to)
+            .map(|()| Value::Nil)
+            .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
+    })()
+}
+
+/// `(directory-files DIR [FULL MATCH])`: ディレクトリの中の名前の並びを返します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_directory_files(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (directory-files DIR [FULL MATCH]): 名前の並び (. と .. を含み, 名前の順). FULL が真ならディレクトリを付ける. MATCH は正規表現
+    if !(1..=3).contains(&args.len()) {
+        return Err("directory-files expects 1 to 3 arguments"
+            .to_string()
+            .into());
+    }
+    (|| {
+        let dir = expand_args(machine, name, &args[..1])?;
+        let full = args.get(1).is_some_and(Value::is_true);
+        let pattern = match args.get(2) {
+            Some(Value::String(pattern)) => Some(
+                regex::Regex::new(pattern)
+                    .map_err(|e| Error::strings("invalid-regexp", &[&e.to_string()]))?,
+            ),
+            _ => None,
+        };
+        let entries = std::fs::read_dir(&dir)
+            .map_err(|e| Error::from(format!("Opening directory: {}, {}", e, dir.display())))?;
+        let mut names = vec![".".to_string(), "..".to_string()];
+        names.extend(
+            entries
+                .filter_map(Result::ok)
+                .map(|entry| entry.file_name().to_string_lossy().into_owned()),
+        );
+        names.sort();
+        Ok(Value::List(
+            names
+                .into_iter()
+                .filter(|name| pattern.as_ref().is_none_or(|re| re.is_match(name)))
+                .map(|name| {
+                    Value::String(if full {
+                        path_string(&dir.join(&name))
+                    } else {
+                        name
+                    })
+                })
+                .collect(),
+        ))
+    })()
+}
+
+/// `(copy-file FILE NEWNAME [OK-IF-ALREADY-EXISTS])`: ファイルを写します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_copy_file(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (copy-file FILE NEWNAME [OK-IF-ALREADY-EXISTS]): 3 つ目が偽なら, 既にあるファイルは置き換えない
+    let (from, to, ok) = match args.as_slice() {
+        [from, to] => (from, to, false),
+        [from, to, ok] => (from, to, ok.is_true()),
+        _ => return Err("copy-file expects 2 or 3 arguments".to_string().into()),
+    };
+    (|| {
+        let from = expand_args(machine, name, std::slice::from_ref(from))?;
+        let to = expand_args(machine, name, std::slice::from_ref(to))?;
+        if !ok && to.exists() {
+            return Err(Error::strings(
+                "file-already-exists",
+                &["File already exists", &to.display().to_string()],
+            ));
+        }
+        std::fs::copy(&from, &to)
+            .map(|_| Value::Nil)
+            .map_err(|e| Error::from(format!("{}: {}", from.display(), e)))
+    })()
+}
+
+/// `(delete-directory PATH [RECURSIVE])`: ディレクトリを消します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_delete_directory(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // 2 つ目の引数が真なら, 中身ごと消す
+    let (path, recursive) = match args.as_slice() {
+        [path] => (path, false),
+        [path, recursive] => (path, recursive.is_true()),
+        _ => {
+            return Err("delete-directory expects 1 or 2 arguments"
+                .to_string()
+                .into())
+        }
+    };
+    let path = expand_args(machine, name, std::slice::from_ref(path))?;
+    let removed = if recursive {
+        std::fs::remove_dir_all(&path)
+    } else {
+        std::fs::remove_dir(&path)
+    };
+    removed
+        .map(|_| Value::Nil)
+        .map_err(|e| Error::from(format!("{}: {}", path.display(), e)))
+}
+
+/// `(directory-files-recursively DIR PATTERN)`: ディレクトリの下の, 正規表現に合うファイルを, 深くまで探します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_directory_files_recursively(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<2>(name, args).and_then(|[dir, pattern]| {
+        let dir = expand_args(machine, name, &[dir])?;
+        let pattern = regexp(string(name, &pattern)?)?;
+        let mut files = Vec::new();
+        collect_files(&dir, &pattern, &mut files);
+        files.sort();
+        Ok(Value::List(files.into_iter().map(Value::String).collect()))
+    })
+}
+
+/// `(grep-files DIR)`: ディレクトリの下の, 探す対象のファイルの並びを返します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_grep_files(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        // (grep-files DIR): DIR の下の, 探すファイル (`.` で始まるもの, node_modules と target の下は, 探さない)
+        let dir = expand_args(machine, name, &args)?;
+        let mut files = Vec::new();
+        collect_grep_files(&dir, &mut files);
+        files.sort();
+        Ok(Value::List(files.into_iter().map(Value::String).collect()))
+    })
+}
+
+/// `(file-modification-time PATH)`: ファイルの更新時刻 (秒) を返します. 無ければ `#f`.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_file_modification_time(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|args| {
+        let path = expand_args(machine, name, &args)?;
+        Ok(match std::fs::metadata(&path).and_then(|m| m.modified()) {
+            Ok(time) => Value::Number(seconds(time)),
+            Err(_) => Value::Boolean(false),
+        })
+    })
+}
+
+/// `(file-newer-than-file-p FILE1 FILE2)`: FILE1 が FILE2 より新しいかを調べます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_file_newer_than_file_p(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<2>(name, args).and_then(|[a, b]| {
+        // FILE1 が FILE2 より新しければ真 (FILE1 だけがあるときも真. FILE1 が無ければ偽)
+        let a = expand_args(machine, name, &[a])?;
+        let b = expand_args(machine, name, &[b])?;
+        let time = |path: &std::path::Path| std::fs::metadata(path).and_then(|m| m.modified()).ok();
+        Ok(Value::Boolean(match (time(&a), time(&b)) {
+            (Some(a), Some(b)) => a > b,
+            (a, _) => a.is_some(),
+        }))
+    })
+}
+
+/// `(current-time)`: 今の時刻 (UNIX 時刻の秒) を返します.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_current_time(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<0>(name, args).map(|_| Value::Number(seconds(SystemTime::now())))
+}
+
+/// `(format-time-string FORMAT [TIME])`: 時刻を, 書式にしたがって文字列にします.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_format_time_string(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    format_time_string(name, &args)
+}
+
+/// `(date-to-time STRING)`: 日付の文字列を, 時刻 (秒) にします.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_date_to_time(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[date]| date_to_time(string(name, &date)?).map(Value::Number))
+}
+
+/// `(random LIMIT)`: 0 以上 LIMIT 未満の整数の乱数を返します (LIMIT は正の整数).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_random(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[limit]| {
+        let limit = number(name, &limit)?;
+        if limit < 1.0 || limit.fract() != 0.0 {
+            return Err("random expects a positive integer".to_string().into());
+        }
+        let random = std::collections::hash_map::RandomState::new()
+            .build_hasher()
+            .finish();
+        Ok(Value::Number((random % limit as u64) as f64))
+    })
+}
+
+/// `(regexp-match REGEXP STRING [START])` / `(regexp-match-positions ...)`: 正規表現で探して, 合った部分 (か, その位置) を返します.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_regexp_match_and_regexp_match_positions(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    regexp_match(name, &args)
+}
+
+/// `(regexp-quote STRING)`: 正規表現の特別な文字を, 逃がします.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_regexp_quote(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[text]| Ok(Value::String(regex::escape(string(name, &text)?))))
+}
+
+/// `(rust-grep PATTERN FILES)`: ファイルの中から, 正規表現に合う行を探します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_rust_grep(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<2>(name, args).and_then(|[pattern, files]| grep(machine, name, &pattern, &files, false))
+}
+
+/// `(rust-zgrep PATTERN FILES)`: `.gz` のファイルは展開して, 正規表現に合う行を探します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_rust_zgrep(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<2>(name, args).and_then(|[pattern, files]| grep(machine, name, &pattern, &files, true))
+}
+
+/// `(getenv NAME)`: 環境変数の値を返します. 無ければ `#f`.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_getenv(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 環境変数の値. 無ければ #f
+    fixed::<1>(name, args).and_then(|[variable]| {
+        Ok(std::env::var(string(name, &variable)?).map_or(Value::Boolean(false), Value::String))
+    })
+}
+
+/// `(browse-url URL)`: URL を, 外のプログラムで開きます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_browse_url(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<1>(name, args).and_then(|[url]| {
+        let url = string(name, &url)?.to_string();
+        let program = match machine.evaluator.global().get("browse-url-generic-program") {
+            Some(Value::String(program)) => program,
+            _ => {
+                return Err("browse-url-generic-program must be a program"
+                    .to_string()
+                    .into())
+            }
+        };
+        browse_url(&program, &url)?;
+        Ok(Value::Nil)
+    })
+}
+
+/// `(call-shell-command COMMAND INPUT DIRECTORY)`: シェルでコマンドを動かし, (終了コード 出力) を返します.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn sys_call_shell_command(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (call-shell-command COMMAND INPUT DIRECTORY): シェルで COMMAND を動かし, (終了コード 出力) を返す.
+    // INPUT (文字列, 無ければ #f) は標準入力に, DIRECTORY (無ければ #f) は動かす所. エラーの出力も, 出力に混ぜる
+    fixed::<3>(name, args).and_then(|[command, input, dir]| {
+        let optional = |value: &Value| match value {
+            Value::String(s) => Some(s.clone()),
+            _ => None,
+        };
+        let (code, output) = run_shell(
+            string(name, &command)?,
+            optional(&input).as_deref(),
+            optional(&dir).as_deref(),
+        )?;
+        Ok(Value::List(
+            vec![Value::Number(f64::from(code)), Value::String(output)]
+                .into_iter()
+                .collect(),
+        ))
+    })
 }
 
 /// `load` で読むファイルを探します (Emacs の `load` と同じく, 拡張子 ([`LISP_SUFFIX`]) は省ける).

@@ -90,7 +90,7 @@ impl Evaluator {
     /// 評価器.
     pub fn new() -> Self {
         let global = Env::new();
-        for name in builtins::NAMES.iter().chain(system::NAMES) {
+        for name in builtins::NAMES {
             global.define(name, Value::Function(name.to_string()));
         }
         for name in registry().names() {
