@@ -3,156 +3,157 @@
 //! エディタの位置は, Emacs と同じく 1 から数えます (`point-min` は 1).
 
 use crate::error::Error;
+use crate::register;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
-use crate::scheme::registry::registry;
+use crate::scheme::registry::{registry, Registry};
 use crate::scheme::value::Value;
 
-/// 組み込みの手続きの名前.
-pub const NAMES: &[&str] = &[
-    // 数
-    "+",
-    "-",
-    "*",
-    "/",
-    "=",
-    "<",
-    ">",
-    "<=",
-    ">=",
-    "abs",
-    "min",
-    "max",
-    "quotient",
-    "remainder",
-    "modulo",
-    "number?",
-    "integer?",
-    "zero?",
-    // 真偽と比較
-    "not",
-    "boolean?",
-    "eq?",
-    "eqv?",
-    "equal?",
-    "eq",
-    "equal",
-    "symbol?",
-    "string?",
-    "procedure?",
-    // リスト
-    "car",
-    "cdr",
-    "caar",
-    "cadr",
-    "cdar",
-    "cddr",
-    "caddr",
-    "cons",
-    "list",
-    "length",
-    "append",
-    "reverse",
-    "list-ref",
-    "null?",
-    "null",
-    "pair?",
-    "list?",
-    "map",
-    "for-each",
-    "filter",
-    "apply",
-    "read",
-    "eval",
-    "assoc",
-    "member",
-    "sort",
-    // 文字列
-    "string-length",
-    "string-append",
-    "substring",
-    "string=?",
-    "string=",
-    "string<?",
-    "string-upcase",
-    "string-downcase",
-    "number->string",
-    "string->number",
-    "symbol->string",
-    "string->symbol",
-    "format",
-    "error",
-    "user-error",
-    "error-message-string",
-    "signal",
-    "define-error",
-    "scan-error-reason",
-    "string-search",
-    "string-prefix?",
-    "string-suffix?",
-    "string-trim",
-    "string-join",
-    "split-string",
-    "string-width",
-    "string-to-char",
-    "char-to-string",
-    "string->utf8",
-    "even?",
-    "odd?",
-    // エディタ
-    "point",
-    "point-min",
-    "point-max",
-    "goto-char",
-    "insert",
-    "delete-region",
-    "buffer-string",
-    "buffer-substring",
-    "buffer-name",
-    "message",
-    "princ",
-    "prin1",
-    "print",
-    "terpri",
-    "call-interactively",
-    "command-execute",
-    "global-set-key",
-    "local-set-key",
-    "set-buffer-directory",
-    "pop-to-buffer-same-window",
-    "buffer-file-name",
-    "set-buffer-modified-p",
-    "read-string",
-    "read-file-name",
-    "read-key",
-    "execute-kbd-macro",
-    "write-region",
-    "files--set-buffer-text",
-    "buffer-list",
-    "buffer-modified-p",
-    "kill-buffer",
-    "kill-new",
-    "completing-read",
-    "display-buffer",
-    "insert-file-contents",
-    "highlight-regexp",
-    "unhighlight-regexp",
-    "outline-flag-region",
-    "outline-invisible-p",
-    "set-background-color",
-    "set-foreground-color",
-    "ding",
-    "set-frame-font",
-    "set-face-attribute",
-    // ヘルプ (ほかは help.rs)
-    "where-is-internal",
-    "editor-command-names",
-    // キーの割り当てと最近のキー (ターミナルのアプリが答える)
-    "key-binding",
-    "all-key-bindings",
-    "recent-keys",
-];
+/// 組み込みの手続き (数, 真偽, リスト, 文字列, エディタの操作) を登録します.
+///
+/// # Arguments
+///
+/// * `registry` - 登録先の表.
+pub fn register(registry: &mut Registry) {
+    register!(
+        registry,
+        "+" => bi_plus,
+        "*" => bi_times,
+        "-" => bi_minus,
+        "/" => bi_divide,
+        "=" => bi_compare,
+        "<" => bi_compare,
+        ">" => bi_compare,
+        "<=" => bi_compare,
+        ">=" => bi_compare,
+        "abs" => bi_abs,
+        "min" => bi_min_and_max,
+        "max" => bi_min_and_max,
+        "quotient" => bi_quotient_and_remainder,
+        "remainder" => bi_quotient_and_remainder,
+        "modulo" => bi_quotient_and_remainder,
+        "number?" => bi_number_and_integer,
+        "integer?" => bi_number_and_integer,
+        "zero?" => bi_number_and_integer,
+        "not" => bi_not_and_null,
+        "null" => bi_not_and_null,
+        "boolean?" => bi_not_and_null,
+        "symbol?" => bi_not_and_null,
+        "string?" => bi_not_and_null,
+        "procedure?" => bi_not_and_null,
+        "null?" => bi_not_and_null,
+        "pair?" => bi_not_and_null,
+        "list?" => bi_not_and_null,
+        "eq?" => bi_eq_and_eqv,
+        "eqv?" => bi_eq_and_eqv,
+        "equal?" => bi_eq_and_eqv,
+        "eq" => bi_eq_and_eqv,
+        "equal" => bi_eq_and_eqv,
+        "car" => bi_car_and_cdr,
+        "cdr" => bi_car_and_cdr,
+        "caar" => bi_caar_and_cadr,
+        "cadr" => bi_caar_and_cadr,
+        "cdar" => bi_caar_and_cadr,
+        "cddr" => bi_caar_and_cadr,
+        "caddr" => bi_caar_and_cadr,
+        "cons" => bi_cons,
+        "list" => bi_list,
+        "length" => bi_length,
+        "append" => bi_append,
+        "reverse" => bi_reverse,
+        "list-ref" => bi_list_ref,
+        "map" => bi_map_and_for_each,
+        "for-each" => bi_map_and_for_each,
+        "filter" => bi_filter,
+        "read" => bi_read,
+        "eval" => bi_eval,
+        "apply" => bi_apply,
+        "assoc" => bi_assoc,
+        "sort" => bi_sort,
+        "member" => bi_member,
+        "string-width" => bi_string_width,
+        "string-to-char" => bi_string_to_char,
+        "char-to-string" => bi_char_to_string,
+        "string->utf8" => bi_string_utf8,
+        "even?" => bi_even_and_odd,
+        "odd?" => bi_even_and_odd,
+        "string-length" => bi_string_length,
+        "string-append" => bi_string_append,
+        "substring" => bi_substring,
+        "string=?" => bi_string_and_string,
+        "string=" => bi_string_and_string,
+        "string<?" => bi_string_and_string,
+        "string-upcase" => bi_string_upcase_and_string_downcase,
+        "string-downcase" => bi_string_upcase_and_string_downcase,
+        "number->string" => bi_number_string,
+        "string->number" => bi_string_number,
+        "symbol->string" => bi_symbol_string,
+        "string->symbol" => bi_string_symbol,
+        "format" => bi_format,
+        "error" => bi_error,
+        "user-error" => bi_user_error,
+        "signal" => bi_signal,
+        "define-error" => bi_define_error,
+        "scan-error-reason" => bi_scan_error_reason_and_error_message_string,
+        "error-message-string" => bi_scan_error_reason_and_error_message_string,
+        "string-search" => bi_string_search,
+        "string-prefix?" => bi_string_prefix_and_string_suffix,
+        "string-suffix?" => bi_string_prefix_and_string_suffix,
+        "string-trim" => bi_string_trim,
+        "string-join" => bi_string_join,
+        "split-string" => bi_split_string,
+        "point" => bi_point_and_buffer_name,
+        "point-min" => bi_point_and_buffer_name,
+        "point-max" => bi_point_and_buffer_name,
+        "buffer-string" => bi_point_and_buffer_name,
+        "buffer-name" => bi_point_and_buffer_name,
+        "goto-char" => bi_goto_char,
+        "delete-region" => bi_delete_region_and_buffer_substring,
+        "buffer-substring" => bi_delete_region_and_buffer_substring,
+        "insert" => bi_insert,
+        "message" => bi_message,
+        "terpri" => bi_terpri,
+        "princ" => bi_princ_and_prin1,
+        "prin1" => bi_princ_and_prin1,
+        "print" => bi_princ_and_prin1,
+        "call-interactively" => bi_call_interactively_and_command_execute,
+        "command-execute" => bi_call_interactively_and_command_execute,
+        "global-set-key" => bi_global_set_key,
+        "local-set-key" => bi_local_set_key,
+        "set-buffer-directory" => bi_set_buffer_directory,
+        "pop-to-buffer-same-window" => bi_pop_to_buffer_same_window_and_set_background_color,
+        "set-background-color" => bi_pop_to_buffer_same_window_and_set_background_color,
+        "set-foreground-color" => bi_pop_to_buffer_same_window_and_set_background_color,
+        "buffer-file-name" => bi_buffer_file_name,
+        "buffer-modified-p" => bi_buffer_modified_p_and_kill_buffer,
+        "kill-buffer" => bi_buffer_modified_p_and_kill_buffer,
+        "buffer-list" => bi_buffer_list,
+        "kill-new" => bi_kill_new,
+        "highlight-regexp" => bi_highlight_regexp,
+        "outline-flag-region" => bi_outline_flag_region,
+        "outline-invisible-p" => bi_outline_invisible_p,
+        "unhighlight-regexp" => bi_unhighlight_regexp,
+        "completing-read" => bi_completing_read,
+        "display-buffer" => bi_display_buffer,
+        "insert-file-contents" => bi_insert_file_contents,
+        "set-buffer-modified-p" => bi_set_buffer_modified_p,
+        "read-string" => bi_read_string,
+        "read-file-name" => bi_read_file_name,
+        "read-key" => bi_read_key,
+        "execute-kbd-macro" => bi_execute_kbd_macro,
+        "files--set-buffer-text" => bi_files_set_buffer_text,
+        "write-region" => bi_write_region,
+        "ding" => bi_ding,
+        "set-frame-font" => bi_set_frame_font,
+        "set-face-attribute" => bi_set_face_attribute,
+        "where-is-internal" => bi_where_is_internal,
+        "key-binding" => bi_key_binding,
+        "all-key-bindings" => bi_all_key_bindings_and_recent_keys,
+        "recent-keys" => bi_all_key_bindings_and_recent_keys,
+        "editor-command-names" => bi_editor_command_names,
+    );
+}
 
 /// 組み込みの手続きを呼びます.
 ///
@@ -166,846 +167,2038 @@ pub const NAMES: &[&str] = &[
 ///
 /// 結果, または失敗の内容.
 pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
-    // 登録表に移した手続きは, 表から引く. 残りは, 下の match
-    if let Some(function) = registry().get(name) {
-        return function(machine, name, args);
+    match registry().get(name) {
+        Some(function) => function(machine, name, args),
+        None => Err(format!("Unknown procedure: {}", name).into()),
     }
-    match name {
-        "+" => Ok(Value::Number(numbers(name, &args)?.iter().sum())),
-        "*" => Ok(Value::Number(numbers(name, &args)?.iter().product())),
-        "-" => {
-            let nums = numbers(name, &args)?;
-            match nums.split_first() {
-                None => Err("- expects at least one argument".to_string().into()),
-                Some((first, [])) => Ok(Value::Number(-first)),
-                Some((first, rest)) => Ok(Value::Number(rest.iter().fold(*first, |a, b| a - b))),
-            }
+}
+
+/// `(+ ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_plus(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    Ok(Value::Number(numbers(name, &args)?.iter().sum()))
+}
+
+/// `(* ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_times(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    Ok(Value::Number(numbers(name, &args)?.iter().product()))
+}
+
+/// `(- ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_minus(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let nums = numbers(name, &args)?;
+    match nums.split_first() {
+        None => Err("- expects at least one argument".to_string().into()),
+        Some((first, [])) => Ok(Value::Number(-first)),
+        Some((first, rest)) => Ok(Value::Number(rest.iter().fold(*first, |a, b| a - b))),
+    }
+}
+
+/// `(/ ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_divide(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    if args.len() < 2 {
+        return Err("/ expects at least two arguments".to_string().into());
+    }
+    let nums = numbers(name, &args)?;
+    if nums[1..].contains(&0.0) {
+        return Err(Error::bare("arith-error"));
+    }
+    Ok(Value::Number(nums[1..].iter().fold(nums[0], |a, b| a / b)))
+}
+
+/// `(= ...)` / `(< ...)` / `(> ...)` / `(<= ...)` / `(>= ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_compare(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let nums = numbers(name, &args)?;
+    if nums.is_empty() {
+        return Err(format!("{} expects at least one argument", name).into());
+    }
+    let holds = |a: f64, b: f64| match name {
+        "=" => a == b,
+        "<" => a < b,
+        ">" => a > b,
+        "<=" => a <= b,
+        _ => a >= b,
+    };
+    Ok(Value::Boolean(nums.windows(2).all(|w| holds(w[0], w[1]))))
+}
+
+/// `(abs ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_abs(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [n] = fixed::<1>(name, args)?;
+    Ok(Value::Number(number(name, &n)?.abs()))
+}
+
+/// `(min ...)` / `(max ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_min_and_max(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let nums = numbers(name, &args)?;
+    let pick = if name == "min" { f64::min } else { f64::max };
+    match nums.split_first() {
+        None => Err(format!("{} expects at least one argument", name).into()),
+        Some((first, rest)) => Ok(Value::Number(rest.iter().copied().fold(*first, pick))),
+    }
+}
+
+/// `(quotient ...)` / `(remainder ...)` / `(modulo ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_quotient_and_remainder(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [a, b] = fixed::<2>(name, args)?;
+    let (a, b) = (number(name, &a)?, number(name, &b)?);
+    if b == 0.0 {
+        return Err(Error::bare("arith-error"));
+    }
+    Ok(Value::Number(match name {
+        "quotient" => (a / b).trunc(),
+        "remainder" => a % b,
+        _ => a - b * (a / b).floor(),
+    }))
+}
+
+/// `(number? ...)` / `(integer? ...)` / `(zero? ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_number_and_integer(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [v] = fixed::<1>(name, args)?;
+    Ok(Value::Boolean(match (name, &v) {
+        ("number?", v) => matches!(v, Value::Number(_)),
+        ("integer?", v) => matches!(v, Value::Number(n) if n.fract() == 0.0),
+        (_, v) => number(name, v)? == 0.0,
+    }))
+}
+
+/// `(not ...)` / `(null ...)` / `(boolean? ...)` / `(symbol? ...)` / `(string? ...)` / `(procedure? ...)` / `(null? ...)` / `(pair? ...)` / `(list? ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_not_and_null(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v] = fixed::<1>(name, args)?;
+    Ok(Value::Boolean(match name {
+        "not" => !v.is_true(),
+        // Emacs の null: nil (偽と空のリスト) だけ真
+        "null" => !v.is_non_nil(),
+        "boolean?" => matches!(v, Value::Boolean(_)),
+        "symbol?" => matches!(v, Value::Symbol(_)),
+        "string?" => matches!(v, Value::String(_)),
+        "procedure?" => matches!(v, Value::Function(_) | Value::Lambda(_)),
+        "null?" => matches!(&v, Value::List(items) if items.is_empty()),
+        "pair?" => matches!(&v, Value::List(items) if !items.is_empty()),
+        _ => matches!(v, Value::List(_)),
+    }))
+}
+
+/// `(eq? ...)` / `(eqv? ...)` / `(equal? ...)` / `(eq ...)` / `(equal ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_eq_and_eqv(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // eq と equal は, Emacs Lisp の名前 (ERT のテストで使う)
+    let [a, b] = fixed::<2>(name, args)?;
+    Ok(Value::Boolean(a == b))
+}
+
+/// `(car ...)` / `(cdr ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_car_and_cdr(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v] = fixed::<1>(name, args)?;
+    match v {
+        Value::List(items) if !items.is_empty() => Ok(if name == "car" {
+            items[0].clone()
+        } else {
+            // 配列は写さない (cdr でたどるループが, 長さの 2 乗にならないように)
+            Value::List(items.tail())
+        }),
+        // Emacs と同じく, 空のリスト (と nil) の car と cdr は nil
+        Value::List(_) | Value::Boolean(false) | Value::Nil => Ok(if name == "car" {
+            Value::Boolean(false)
+        } else {
+            Value::List(Vec::new().into())
+        }),
+        other => Err(wrong_type("listp", &other)),
+    }
+}
+
+/// `(caar ...)` / `(cadr ...)` / `(cdar ...)` / `(cddr ...)` / `(caddr ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_caar_and_cadr(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v] = fixed::<1>(name, args)?;
+    // 名前の a と d を, 後ろから順に, car と cdr にする
+    name[1..name.len() - 1]
+        .chars()
+        .rev()
+        .try_fold(v, |v, c| {
+            call(machine, if c == 'a' { "car" } else { "cdr" }, vec![v])
+        })
+        .map_err(|_| format!("{} expects a list with enough elements", name).into())
+}
+
+/// `(cons ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_cons(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [head, tail] = fixed::<2>(name, args)?;
+    match tail {
+        // 配列の前の空きに置く (前へ足していくループが, 長さの 2 乗にならないように)
+        Value::List(items) => Ok(Value::List(items.cons(head))),
+        _ => Err("cons expects a list as the second argument"
+            .to_string()
+            .into()),
+    }
+}
+
+/// `(list ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_list(_machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    Ok(Value::List(args.into()))
+}
+
+/// `(length ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_length(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // リストの要素の数. Emacs と同じく, 文字列なら文字の数
+    let [v] = fixed::<1>(name, args)?;
+    if let Value::String(text) = &v {
+        return Ok(Value::Number(text.chars().count() as f64));
+    }
+    Ok(Value::Number(list(name, &v)?.len() as f64))
+}
+
+/// `(append ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_append(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let mut result = Vec::new();
+    for v in &args {
+        result.extend(list(name, v)?.iter().cloned());
+    }
+    Ok(Value::List(result.into()))
+}
+
+/// `(reverse ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_reverse(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v] = fixed::<1>(name, args)?;
+    Ok(Value::List(list(name, &v)?.iter().rev().cloned().collect()))
+}
+
+/// `(list-ref ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_list_ref(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v, k] = fixed::<2>(name, args)?;
+    let index = index(name, &k)?;
+    list(name, &v)?
+        .get(index)
+        .cloned()
+        .ok_or_else(|| Error::args_out_of_range(vec![v.clone(), k.clone()]))
+}
+
+/// `(map ...)` / `(for-each ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_map_and_for_each(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let Some((procedure, lists)) = args.split_first() else {
+        return Err(format!("{} expects a procedure and lists", name).into());
+    };
+    let lists = lists
+        .iter()
+        .map(|v| list(name, v))
+        .collect::<Result<Vec<_>, _>>()?;
+    if lists.is_empty() {
+        return Err(format!("{} expects a procedure and lists", name).into());
+    }
+    let count = lists.iter().map(|l| l.len()).min().unwrap_or(0);
+    let mut results = Vec::new();
+    for i in 0..count {
+        let call_args = lists.iter().map(|l| l[i].clone()).collect();
+        results.push(machine.apply(procedure.clone(), call_args)?);
+    }
+    Ok(if name == "map" {
+        Value::List(results.into())
+    } else {
+        Value::Nil
+    })
+}
+
+/// `(filter ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_filter(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [procedure, v] = fixed::<2>(name, args)?;
+    let mut results = Vec::new();
+    for item in list(name, &v)? {
+        if machine
+            .apply(procedure.clone(), vec![item.clone()])?
+            .is_true()
+        {
+            results.push(item.clone());
         }
-        "/" => {
-            if args.len() < 2 {
-                return Err("/ expects at least two arguments".to_string().into());
-            }
-            let nums = numbers(name, &args)?;
-            if nums[1..].contains(&0.0) {
-                return Err(Error::bare("arith-error"));
-            }
-            Ok(Value::Number(nums[1..].iter().fold(nums[0], |a, b| a / b)))
-        }
-        "=" | "<" | ">" | "<=" | ">=" => {
-            let nums = numbers(name, &args)?;
-            if nums.is_empty() {
-                return Err(format!("{} expects at least one argument", name).into());
-            }
-            let holds = |a: f64, b: f64| match name {
-                "=" => a == b,
-                "<" => a < b,
-                ">" => a > b,
-                "<=" => a <= b,
-                _ => a >= b,
-            };
-            Ok(Value::Boolean(nums.windows(2).all(|w| holds(w[0], w[1]))))
-        }
-        "abs" => {
-            let [n] = fixed::<1>(name, args)?;
-            Ok(Value::Number(number(name, &n)?.abs()))
-        }
-        "min" | "max" => {
-            let nums = numbers(name, &args)?;
-            let pick = if name == "min" { f64::min } else { f64::max };
-            match nums.split_first() {
-                None => Err(format!("{} expects at least one argument", name).into()),
-                Some((first, rest)) => Ok(Value::Number(rest.iter().copied().fold(*first, pick))),
-            }
-        }
-        "quotient" | "remainder" | "modulo" => {
-            let [a, b] = fixed::<2>(name, args)?;
-            let (a, b) = (number(name, &a)?, number(name, &b)?);
-            if b == 0.0 {
-                return Err(Error::bare("arith-error"));
-            }
-            Ok(Value::Number(match name {
-                "quotient" => (a / b).trunc(),
-                "remainder" => a % b,
-                _ => a - b * (a / b).floor(),
-            }))
-        }
-        "number?" | "integer?" | "zero?" => {
-            let [v] = fixed::<1>(name, args)?;
-            Ok(Value::Boolean(match (name, &v) {
-                ("number?", v) => matches!(v, Value::Number(_)),
-                ("integer?", v) => matches!(v, Value::Number(n) if n.fract() == 0.0),
-                (_, v) => number(name, v)? == 0.0,
-            }))
-        }
-        "not" | "null" | "boolean?" | "symbol?" | "string?" | "procedure?" | "null?" | "pair?"
-        | "list?" => {
-            let [v] = fixed::<1>(name, args)?;
-            Ok(Value::Boolean(match name {
-                "not" => !v.is_true(),
-                // Emacs の null: nil (偽と空のリスト) だけ真
-                "null" => !v.is_non_nil(),
-                "boolean?" => matches!(v, Value::Boolean(_)),
-                "symbol?" => matches!(v, Value::Symbol(_)),
-                "string?" => matches!(v, Value::String(_)),
-                "procedure?" => matches!(v, Value::Function(_) | Value::Lambda(_)),
-                "null?" => matches!(&v, Value::List(items) if items.is_empty()),
-                "pair?" => matches!(&v, Value::List(items) if !items.is_empty()),
-                _ => matches!(v, Value::List(_)),
-            }))
-        }
-        // eq と equal は, Emacs Lisp の名前 (ERT のテストで使う)
-        "eq?" | "eqv?" | "equal?" | "eq" | "equal" => {
-            let [a, b] = fixed::<2>(name, args)?;
-            Ok(Value::Boolean(a == b))
-        }
-        "car" | "cdr" => {
-            let [v] = fixed::<1>(name, args)?;
-            match v {
-                Value::List(items) if !items.is_empty() => Ok(if name == "car" {
-                    items[0].clone()
-                } else {
-                    // 配列は写さない (cdr でたどるループが, 長さの 2 乗にならないように)
-                    Value::List(items.tail())
-                }),
-                // Emacs と同じく, 空のリスト (と nil) の car と cdr は nil
-                Value::List(_) | Value::Boolean(false) | Value::Nil => Ok(if name == "car" {
-                    Value::Boolean(false)
-                } else {
-                    Value::List(Vec::new().into())
-                }),
-                other => Err(wrong_type("listp", &other)),
-            }
-        }
-        "caar" | "cadr" | "cdar" | "cddr" | "caddr" => {
-            let [v] = fixed::<1>(name, args)?;
-            // 名前の a と d を, 後ろから順に, car と cdr にする
-            name[1..name.len() - 1]
-                .chars()
-                .rev()
-                .try_fold(v, |v, c| {
-                    call(machine, if c == 'a' { "car" } else { "cdr" }, vec![v])
-                })
-                .map_err(|_| format!("{} expects a list with enough elements", name).into())
-        }
-        "cons" => {
-            let [head, tail] = fixed::<2>(name, args)?;
-            match tail {
-                // 配列の前の空きに置く (前へ足していくループが, 長さの 2 乗にならないように)
-                Value::List(items) => Ok(Value::List(items.cons(head))),
-                _ => Err("cons expects a list as the second argument"
-                    .to_string()
-                    .into()),
-            }
-        }
-        "list" => Ok(Value::List(args.into())),
-        "length" => {
-            // リストの要素の数. Emacs と同じく, 文字列なら文字の数
-            let [v] = fixed::<1>(name, args)?;
-            if let Value::String(text) = &v {
-                return Ok(Value::Number(text.chars().count() as f64));
-            }
-            Ok(Value::Number(list(name, &v)?.len() as f64))
-        }
-        "append" => {
-            let mut result = Vec::new();
-            for v in &args {
-                result.extend(list(name, v)?.iter().cloned());
-            }
-            Ok(Value::List(result.into()))
-        }
-        "reverse" => {
-            let [v] = fixed::<1>(name, args)?;
-            Ok(Value::List(list(name, &v)?.iter().rev().cloned().collect()))
-        }
-        "list-ref" => {
-            let [v, k] = fixed::<2>(name, args)?;
-            let index = index(name, &k)?;
-            list(name, &v)?
-                .get(index)
-                .cloned()
-                .ok_or_else(|| Error::args_out_of_range(vec![v.clone(), k.clone()]))
-        }
-        "map" | "for-each" => {
-            let Some((procedure, lists)) = args.split_first() else {
-                return Err(format!("{} expects a procedure and lists", name).into());
-            };
-            let lists = lists
-                .iter()
-                .map(|v| list(name, v))
-                .collect::<Result<Vec<_>, _>>()?;
-            if lists.is_empty() {
-                return Err(format!("{} expects a procedure and lists", name).into());
-            }
-            let count = lists.iter().map(|l| l.len()).min().unwrap_or(0);
-            let mut results = Vec::new();
-            for i in 0..count {
-                let call_args = lists.iter().map(|l| l[i].clone()).collect();
-                results.push(machine.apply(procedure.clone(), call_args)?);
-            }
-            Ok(if name == "map" {
-                Value::List(results.into())
-            } else {
-                Value::Nil
-            })
-        }
-        "filter" => {
-            let [procedure, v] = fixed::<2>(name, args)?;
-            let mut results = Vec::new();
-            for item in list(name, &v)? {
-                if machine
-                    .apply(procedure.clone(), vec![item.clone()])?
-                    .is_true()
-                {
-                    results.push(item.clone());
+    }
+    Ok(Value::List(results.into()))
+}
+
+/// `(read ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_read(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 文字列の始めの式を読む (Emacs の, 文字列を渡した read)
+    let [text] = fixed::<1>(name, args)?;
+    Parser::new(string(name, &text)?)
+        .parse_first()?
+        .ok_or_else(|| Error::bare("end-of-file"))
+}
+
+/// `(eval ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_eval(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 一番外側の環境で評価する
+    let [expr] = fixed::<1>(name, args)?;
+    let global = machine.evaluator.global().clone();
+    machine.eval(&expr, &global)
+}
+
+/// `(apply ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_apply(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let Some((procedure, rest)) = args.split_first() else {
+        return Err("apply expects a procedure and a list".to_string().into());
+    };
+    let Some((last, init)) = rest.split_last() else {
+        return Err("apply expects a procedure and a list".to_string().into());
+    };
+    let mut call_args = init.to_vec();
+    call_args.extend(list(name, last)?.iter().cloned());
+    machine.apply(procedure.clone(), call_args)
+}
+
+/// `(assoc ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_assoc(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [key, v] = fixed::<2>(name, args)?;
+    for item in list(name, &v)? {
+        match item {
+            Value::List(pair) if !pair.is_empty() => {
+                if pair[0] == key {
+                    return Ok(item.clone());
                 }
             }
-            Ok(Value::List(results.into()))
+            _ => return Err("assoc expects a list of lists".to_string().into()),
         }
-        "read" => {
-            // 文字列の始めの式を読む (Emacs の, 文字列を渡した read)
-            let [text] = fixed::<1>(name, args)?;
-            Parser::new(string(name, &text)?)
-                .parse_first()?
-                .ok_or_else(|| Error::bare("end-of-file"))
+    }
+    Ok(Value::Boolean(false))
+}
+
+/// `(sort ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_sort(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [v, procedure] = fixed::<2>(name, args)?;
+    let items = list(name, &v)?.to_vec();
+    Ok(Value::List(merge_sort(machine, &procedure, items)?.into()))
+}
+
+/// `(member ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_member(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [key, v] = fixed::<2>(name, args)?;
+    let Value::List(items) = v else {
+        return Err(wrong_type(list_predicate(name), &v));
+    };
+    Ok(match items.iter().position(|item| *item == key) {
+        Some(i) => Value::List(items.drop_front(i)),
+        None => Value::Boolean(false),
+    })
+}
+
+/// `(string-width ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_width(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [s] = fixed::<1>(name, args)?;
+    Ok(Value::Number(string_width(string(name, &s)?) as f64))
+}
+
+/// `(string-to-char ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_to_char(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 最初の文字の番号 (空の文字列は 0. Emacs と同じ)
+    let [s] = fixed::<1>(name, args)?;
+    Ok(Value::Number(
+        string(name, &s)?.chars().next().map_or(0, |c| c as u32) as f64,
+    ))
+}
+
+/// `(char-to-string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_char_to_string(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [code] = fixed::<1>(name, args)?;
+    let code = number(name, &code)?;
+    char::from_u32(code as u32)
+        .map(|c| Value::String(c.to_string()))
+        .ok_or_else(|| format!("{name}: invalid character {code}").into())
+}
+
+/// `(string->utf8 ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_utf8(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // UTF-8 のバイト (数のリスト)
+    let [s] = fixed::<1>(name, args)?;
+    Ok(Value::List(
+        string(name, &s)?
+            .bytes()
+            .map(|b| Value::Number(f64::from(b)))
+            .collect(),
+    ))
+}
+
+/// `(even? ...)` / `(odd? ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_even_and_odd(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [n] = fixed::<1>(name, args)?;
+    let n = number(name, &n)?;
+    if n.fract() != 0.0 {
+        return Err(format!("{name} expects an integer").into());
+    }
+    Ok(Value::Boolean((n as i64 % 2 == 0) == (name == "even?")))
+}
+
+/// `(string-length ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_length(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [s] = fixed::<1>(name, args)?;
+    Ok(Value::Number(string(name, &s)?.chars().count() as f64))
+}
+
+/// `(string-append ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_append(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let mut result = String::new();
+    for v in &args {
+        result.push_str(string(name, v)?);
+    }
+    Ok(Value::String(result))
+}
+
+/// `(substring ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_substring(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    if !(2..=3).contains(&args.len()) {
+        return Err("substring expects 2 or 3 arguments".to_string().into());
+    }
+    let chars: Vec<char> = string(name, &args[0])?.chars().collect();
+    let start = index(name, &args[1])?;
+    let end = match args.get(2) {
+        Some(end) => index(name, end)?,
+        None => chars.len(),
+    };
+    if start > end || end > chars.len() {
+        let end = args.get(2).cloned().unwrap_or(Value::Nil);
+        return Err(Error::args_out_of_range(vec![
+            args[0].clone(),
+            args[1].clone(),
+            end,
+        ]));
+    }
+    Ok(Value::String(chars[start..end].iter().collect()))
+}
+
+/// `(string=? ...)` / `(string= ...)` / `(string<? ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_and_string(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [a, b] = fixed::<2>(name, args)?;
+    let (a, b) = (string(name, &a)?, string(name, &b)?);
+    Ok(Value::Boolean(if name != "string<?" {
+        a == b
+    } else {
+        a < b
+    }))
+}
+
+/// `(string-upcase ...)` / `(string-downcase ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_upcase_and_string_downcase(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [s] = fixed::<1>(name, args)?;
+    let s = string(name, &s)?;
+    Ok(Value::String(if name == "string-upcase" {
+        s.to_uppercase()
+    } else {
+        s.to_lowercase()
+    }))
+}
+
+/// `(number->string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_number_string(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [n] = fixed::<1>(name, args)?;
+    Ok(Value::String(Value::Number(number(name, &n)?).to_string()))
+}
+
+/// `(string->number ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_number(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (string->number STRING [RADIX]): RADIX が 10 でなければ, 整数として読む (R7RS)
+    if args.is_empty() || args.len() > 2 {
+        return Err("string->number expects 1 or 2 arguments".to_string().into());
+    }
+    let text = string(name, &args[0])?.trim().to_string();
+    let radix = match args.get(1) {
+        Some(radix) => number(name, radix)? as u32,
+        None => 10,
+    };
+    if !(2..=36).contains(&radix) {
+        return Err(format!("string->number: bad radix {radix}").into());
+    }
+    let parsed = if radix == 10 {
+        text.parse::<f64>().ok()
+    } else {
+        i64::from_str_radix(&text, radix).ok().map(|n| n as f64)
+    };
+    Ok(parsed.map_or(Value::Boolean(false), Value::Number))
+}
+
+/// `(symbol->string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_symbol_string(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    match fixed::<1>(name, args)? {
+        [Value::Symbol(s)] => Ok(Value::String(s)),
+        _ => Err("symbol->string expects a symbol".to_string().into()),
+    }
+}
+
+/// `(string->symbol ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_symbol(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [s] = fixed::<1>(name, args)?;
+    Ok(Value::Symbol(string(name, &s)?.to_string()))
+}
+
+/// `(format ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_format(_machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    Ok(Value::String(format(&args)?))
+}
+
+/// `(error ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_error(_machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (error "書式" 引数...): Emacs と同じく, 書式で作った文字を, 失敗の内容にする
+    Err(Error::plain(format(&args)?))
+}
+
+/// `(user-error ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_user_error(machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    Err(machine.make_error("user-error", vec![Value::String(format(&args)?)]))
+}
+
+/// `(signal ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_signal(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (signal ERROR-SYMBOL DATA): 種類とデータのエラーを投げる. 種類が nil なら, DATA を (種類 . データ) として投げ直す
+    let [kind, data] = fixed::<2>(name, args)?;
+    let items = error_items(&data);
+    Err(match kind {
+        Value::Symbol(kind) => machine.make_error(&kind, items),
+        // 種類が nil で, データが (種類 . データ) なら, 投げ直し
+        nil if !nil.is_non_nil() && !items.is_empty() => {
+            machine.make_error(&items[0].to_display(), items[1..].to_vec())
         }
-        "eval" => {
-            // 一番外側の環境で評価する
-            let [expr] = fixed::<1>(name, args)?;
-            let global = machine.evaluator.global().clone();
-            machine.eval(&expr, &global)
-        }
-        "apply" => {
-            let Some((procedure, rest)) = args.split_first() else {
-                return Err("apply expects a procedure and a list".to_string().into());
+        other => return Err(wrong_type("symbolp", &other)),
+    })
+}
+
+/// `(define-error ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_define_error(machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (define-error NAME MESSAGE [PARENT]): 新しい種類を決める. PARENT (記号か記号のリスト) の条件も受ける
+    let (Some(Value::Symbol(kind)), Some(Value::String(description))) = (args.first(), args.get(1))
+    else {
+        return Err("define-error expects a name and a message".into());
+    };
+    let parents = match args.get(2) {
+        Some(Value::Symbol(parent)) => vec![parent.clone()],
+        Some(Value::List(items)) => items.iter().map(Value::to_display).collect(),
+        _ => vec!["error".to_string()],
+    };
+    let mut conditions = vec![kind.clone()];
+    for parent in &parents {
+        let known = machine.make_error(parent, Vec::new());
+        conditions.extend(known.conditions().iter().cloned());
+    }
+    conditions.dedup();
+    machine
+        .evaluator
+        .define_error(kind, conditions, description);
+    Ok(Value::Symbol(kind.clone()))
+}
+
+/// `(scan-error-reason ...)` / `(error-message-string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_scan_error_reason_and_error_message_string(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (condition-case の変数の) (種類 . データ) から, メッセージを取り出す
+    let [value] = fixed::<1>(name, args)?;
+    let (message, reason) = match &value {
+        Value::List(items) if !items.is_empty() => {
+            let error = machine.make_error(&items[0].to_display(), items[1..].to_vec());
+            // scan-error の最初のデータが理由. 他の失敗は, そのメッセージ
+            let reason = match (error.kind(), error.data().first()) {
+                ("scan-error", Some(reason)) => reason.to_display(),
+                _ => error.message().to_string(),
             };
-            let Some((last, init)) = rest.split_last() else {
-                return Err("apply expects a procedure and a list".to_string().into());
-            };
-            let mut call_args = init.to_vec();
-            call_args.extend(list(name, last)?.iter().cloned());
-            machine.apply(procedure.clone(), call_args)
+            (error.message().to_string(), reason)
         }
-        "assoc" => {
-            let [key, v] = fixed::<2>(name, args)?;
-            for item in list(name, &v)? {
-                match item {
-                    Value::List(pair) if !pair.is_empty() => {
-                        if pair[0] == key {
-                            return Ok(item.clone());
-                        }
-                    }
-                    _ => return Err("assoc expects a list of lists".to_string().into()),
-                }
-            }
-            Ok(Value::Boolean(false))
+        other => (other.to_display(), other.to_display()),
+    };
+    Ok(Value::String(if name == "error-message-string" {
+        message
+    } else {
+        reason
+    }))
+}
+
+/// `(string-search ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_search(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    if !(2..=3).contains(&args.len()) {
+        return Err("string-search expects 2 or 3 arguments".to_string().into());
+    }
+    let needle = string(name, &args[0])?;
+    let haystack = string(name, &args[1])?;
+    let chars: Vec<char> = haystack.chars().collect();
+    // 始めが範囲の外なら, Emacs と同じく (args-out-of-range START)
+    let start = match args.get(2) {
+        Some(Value::Number(n)) if *n < 0.0 || *n > chars.len() as f64 => {
+            return Err(Error::args_out_of_range(vec![args[2].clone()]));
         }
-        "sort" => {
-            let [v, procedure] = fixed::<2>(name, args)?;
-            let items = list(name, &v)?.to_vec();
-            Ok(Value::List(merge_sort(machine, &procedure, items)?.into()))
-        }
-        "member" => {
-            let [key, v] = fixed::<2>(name, args)?;
-            let Value::List(items) = v else {
-                return Err(wrong_type(list_predicate(name), &v));
-            };
-            Ok(match items.iter().position(|item| *item == key) {
-                Some(i) => Value::List(items.drop_front(i)),
-                None => Value::Boolean(false),
-            })
-        }
-        "string-width" => {
-            let [s] = fixed::<1>(name, args)?;
-            Ok(Value::Number(string_width(string(name, &s)?) as f64))
-        }
-        "string-to-char" => {
-            // 最初の文字の番号 (空の文字列は 0. Emacs と同じ)
-            let [s] = fixed::<1>(name, args)?;
-            Ok(Value::Number(
-                string(name, &s)?.chars().next().map_or(0, |c| c as u32) as f64,
-            ))
-        }
-        "char-to-string" => {
-            let [code] = fixed::<1>(name, args)?;
-            let code = number(name, &code)?;
-            char::from_u32(code as u32)
-                .map(|c| Value::String(c.to_string()))
-                .ok_or_else(|| format!("{name}: invalid character {code}").into())
-        }
-        "string->utf8" => {
-            // UTF-8 のバイト (数のリスト)
-            let [s] = fixed::<1>(name, args)?;
-            Ok(Value::List(
-                string(name, &s)?
-                    .bytes()
-                    .map(|b| Value::Number(f64::from(b)))
-                    .collect(),
-            ))
-        }
-        "even?" | "odd?" => {
-            let [n] = fixed::<1>(name, args)?;
-            let n = number(name, &n)?;
-            if n.fract() != 0.0 {
-                return Err(format!("{name} expects an integer").into());
-            }
-            Ok(Value::Boolean((n as i64 % 2 == 0) == (name == "even?")))
-        }
-        "string-length" => {
-            let [s] = fixed::<1>(name, args)?;
-            Ok(Value::Number(string(name, &s)?.chars().count() as f64))
-        }
-        "string-append" => {
-            let mut result = String::new();
-            for v in &args {
-                result.push_str(string(name, v)?);
-            }
-            Ok(Value::String(result))
-        }
-        "substring" => {
-            if !(2..=3).contains(&args.len()) {
-                return Err("substring expects 2 or 3 arguments".to_string().into());
-            }
-            let chars: Vec<char> = string(name, &args[0])?.chars().collect();
-            let start = index(name, &args[1])?;
-            let end = match args.get(2) {
-                Some(end) => index(name, end)?,
-                None => chars.len(),
-            };
-            if start > end || end > chars.len() {
-                let end = args.get(2).cloned().unwrap_or(Value::Nil);
-                return Err(Error::args_out_of_range(vec![
-                    args[0].clone(),
-                    args[1].clone(),
-                    end,
-                ]));
-            }
-            Ok(Value::String(chars[start..end].iter().collect()))
-        }
-        "string=?" | "string=" | "string<?" => {
-            let [a, b] = fixed::<2>(name, args)?;
-            let (a, b) = (string(name, &a)?, string(name, &b)?);
-            Ok(Value::Boolean(if name != "string<?" {
-                a == b
-            } else {
-                a < b
-            }))
-        }
-        "string-upcase" | "string-downcase" => {
-            let [s] = fixed::<1>(name, args)?;
-            let s = string(name, &s)?;
-            Ok(Value::String(if name == "string-upcase" {
-                s.to_uppercase()
-            } else {
-                s.to_lowercase()
-            }))
-        }
-        "number->string" => {
-            let [n] = fixed::<1>(name, args)?;
-            Ok(Value::String(Value::Number(number(name, &n)?).to_string()))
-        }
-        "string->number" => {
-            // (string->number STRING [RADIX]): RADIX が 10 でなければ, 整数として読む (R7RS)
-            if args.is_empty() || args.len() > 2 {
-                return Err("string->number expects 1 or 2 arguments".to_string().into());
-            }
-            let text = string(name, &args[0])?.trim().to_string();
-            let radix = match args.get(1) {
-                Some(radix) => number(name, radix)? as u32,
-                None => 10,
-            };
-            if !(2..=36).contains(&radix) {
-                return Err(format!("string->number: bad radix {radix}").into());
-            }
-            let parsed = if radix == 10 {
-                text.parse::<f64>().ok()
-            } else {
-                i64::from_str_radix(&text, radix).ok().map(|n| n as f64)
-            };
-            Ok(parsed.map_or(Value::Boolean(false), Value::Number))
-        }
-        "symbol->string" => match fixed::<1>(name, args)? {
-            [Value::Symbol(s)] => Ok(Value::String(s)),
-            _ => Err("symbol->string expects a symbol".to_string().into()),
-        },
-        "string->symbol" => {
-            let [s] = fixed::<1>(name, args)?;
-            Ok(Value::Symbol(string(name, &s)?.to_string()))
-        }
-        "format" => Ok(Value::String(format(&args)?)),
-        // (error "書式" 引数...): Emacs と同じく, 書式で作った文字を, 失敗の内容にする
-        "error" => Err(Error::plain(format(&args)?)),
-        "user-error" => Err(machine.make_error("user-error", vec![Value::String(format(&args)?)])),
-        // (signal ERROR-SYMBOL DATA): 種類とデータのエラーを投げる. 種類が nil なら, DATA を (種類 . データ) として投げ直す
-        "signal" => {
-            let [kind, data] = fixed::<2>(name, args)?;
-            let items = error_items(&data);
-            Err(match kind {
-                Value::Symbol(kind) => machine.make_error(&kind, items),
-                // 種類が nil で, データが (種類 . データ) なら, 投げ直し
-                nil if !nil.is_non_nil() && !items.is_empty() => {
-                    machine.make_error(&items[0].to_display(), items[1..].to_vec())
-                }
-                other => return Err(wrong_type("symbolp", &other)),
-            })
-        }
-        // (define-error NAME MESSAGE [PARENT]): 新しい種類を決める. PARENT (記号か記号のリスト) の条件も受ける
-        "define-error" => {
-            let (Some(Value::Symbol(kind)), Some(Value::String(description))) =
-                (args.first(), args.get(1))
-            else {
-                return Err("define-error expects a name and a message".into());
-            };
-            let parents = match args.get(2) {
-                Some(Value::Symbol(parent)) => vec![parent.clone()],
-                Some(Value::List(items)) => items.iter().map(Value::to_display).collect(),
-                _ => vec!["error".to_string()],
-            };
-            let mut conditions = vec![kind.clone()];
-            for parent in &parents {
-                let known = machine.make_error(parent, Vec::new());
-                conditions.extend(known.conditions().iter().cloned());
-            }
-            conditions.dedup();
-            machine
-                .evaluator
-                .define_error(kind, conditions, description);
-            Ok(Value::Symbol(kind.clone()))
-        }
-        "scan-error-reason" | "error-message-string" => {
-            // (condition-case の変数の) (種類 . データ) から, メッセージを取り出す
-            let [value] = fixed::<1>(name, args)?;
-            let (message, reason) = match &value {
-                Value::List(items) if !items.is_empty() => {
-                    let error = machine.make_error(&items[0].to_display(), items[1..].to_vec());
-                    // scan-error の最初のデータが理由. 他の失敗は, そのメッセージ
-                    let reason = match (error.kind(), error.data().first()) {
-                        ("scan-error", Some(reason)) => reason.to_display(),
-                        _ => error.message().to_string(),
-                    };
-                    (error.message().to_string(), reason)
-                }
-                other => (other.to_display(), other.to_display()),
-            };
-            Ok(Value::String(if name == "error-message-string" {
-                message
-            } else {
-                reason
-            }))
-        }
-        "string-search" => {
-            if !(2..=3).contains(&args.len()) {
-                return Err("string-search expects 2 or 3 arguments".to_string().into());
-            }
-            let needle = string(name, &args[0])?;
-            let haystack = string(name, &args[1])?;
-            let chars: Vec<char> = haystack.chars().collect();
-            // 始めが範囲の外なら, Emacs と同じく (args-out-of-range START)
-            let start = match args.get(2) {
-                Some(Value::Number(n)) if *n < 0.0 || *n > chars.len() as f64 => {
-                    return Err(Error::args_out_of_range(vec![args[2].clone()]));
-                }
-                Some(start) => index(name, start)?,
-                None => 0,
-            };
-            let rest: String = chars[start..].iter().collect();
-            Ok(match rest.find(needle) {
-                Some(found) => Value::Number((start + rest[..found].chars().count()) as f64),
-                None => Value::Boolean(false),
-            })
-        }
-        "string-prefix?" | "string-suffix?" => {
-            let [affix, text] = fixed::<2>(name, args)?;
-            let (affix, text) = (string(name, &affix)?, string(name, &text)?);
-            Ok(Value::Boolean(if name == "string-prefix?" {
-                text.starts_with(affix)
-            } else {
-                text.ends_with(affix)
-            }))
-        }
-        "string-trim" => {
-            let [text] = fixed::<1>(name, args)?;
-            Ok(Value::String(string(name, &text)?.trim().to_string()))
-        }
-        "string-join" => {
-            let (items, separator) = match args.as_slice() {
-                [items] => (items, ""),
-                [items, separator] => (items, string(name, separator)?),
-                _ => return Err("string-join expects 1 or 2 arguments".to_string().into()),
-            };
-            let items = list(name, items)?
-                .iter()
-                .map(|item| string(name, item))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(Value::String(items.join(separator)))
-        }
-        "split-string" => {
-            let pieces: Vec<String> = match args.as_slice() {
-                [text] => string(name, text)?
-                    .split_whitespace()
-                    .map(str::to_string)
-                    .collect(),
-                [text, separator] => {
-                    let separator = string(name, separator)?;
-                    if separator.is_empty() {
-                        return Err("split-string expects a non-empty separator"
-                            .to_string()
-                            .into());
-                    }
-                    string(name, text)?
-                        .split(separator)
-                        .map(str::to_string)
-                        .collect()
-                }
-                _ => return Err("split-string expects 1 or 2 arguments".to_string().into()),
-            };
-            Ok(Value::List(pieces.into_iter().map(Value::String).collect()))
-        }
-        // (buffer-name BUFFER): バッファの名前 (バッファは名前で表すので, 生きているバッファなら, 同じ名前. 無ければ #f)
-        "buffer-name" if !args.is_empty() => {
-            let [buffer] = fixed::<1>(name, args)?;
-            let buffer = Value::String(string(name, &buffer)?.to_string());
-            Ok(match machine.host.call("buffer-list", vec![])? {
-                Value::List(names) if names.contains(&buffer) => buffer,
-                _ => Value::Boolean(false),
-            })
-        }
-        "point" | "point-min" | "point-max" | "buffer-string" | "buffer-name" => {
-            fixed::<0>(name, args)?;
-            machine.host.call(name, vec![])
-        }
-        "goto-char" => {
-            let [pos] = fixed::<1>(name, args)?;
-            number(name, &pos)?;
-            machine.host.call(name, vec![pos])
-        }
-        "delete-region" | "buffer-substring" => {
-            let [from, to] = fixed::<2>(name, args)?;
-            number(name, &from)?;
-            number(name, &to)?;
-            machine.host.call(name, vec![from, to])
-        }
-        "insert" => {
-            for v in &args {
-                string(name, v)?;
-            }
-            machine.host.call(name, args)?;
-            Ok(Value::Nil)
-        }
-        "message" => {
-            let text = format(&args)?;
-            machine.evaluator.log_message(&text);
-            machine.host.call(name, vec![Value::String(text.clone())])?;
-            Ok(Value::String(text))
-        }
-        "terpri" => {
-            fixed::<0>(name, args)?;
-            write_output(machine, "\n")?;
-            Ok(Value::Boolean(true))
-        }
-        "princ" | "prin1" | "print" => {
-            let [value] = fixed::<1>(name, args)?;
-            let text = print_string(&value, name != "princ");
-            write_output(
-                machine,
-                &if name == "print" {
-                    format!("\n{text}\n")
-                } else {
-                    text
-                },
-            )?;
-            Ok(value)
-        }
-        "call-interactively" | "command-execute" => match fixed::<1>(name, args)? {
-            [Value::Symbol(command) | Value::String(command)] => machine.call_command(&command),
-            _ => Err(format!("{} expects a command name", name).into()),
-        },
-        "global-set-key" => match fixed::<2>(name, args)? {
-            [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
-                let key = keys::to_codemirror(&key)?;
-                machine.evaluator.set_key(KeyBinding {
-                    key,
-                    command: command.clone(),
-                });
-                Ok(Value::Symbol(command))
-            }
-            _ => Err("global-set-key expects a key and a command name"
-                .to_string()
-                .into()),
-        },
-        "local-set-key" => match fixed::<2>(name, args)? {
-            [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
-                let key = keys::to_codemirror(&key)?;
-                machine.host.call(
-                    name,
-                    vec![Value::String(key), Value::String(command.clone())],
-                )?;
-                Ok(Value::Symbol(command))
-            }
-            _ => Err("local-set-key expects a key and a command name"
-                .to_string()
-                .into()),
-        },
-        "set-buffer-directory" => {
-            // (set-buffer-directory DIR): 今のバッファの `default-directory` を DIR にする (dired が使う)
-            let [dir] = fixed::<1>(name, args)?;
-            let dir = string(name, &dir)?.to_string();
-            machine.host.call(name, vec![Value::String(dir)])?;
-            Ok(Value::Nil)
-        }
-        "pop-to-buffer-same-window" | "set-background-color" | "set-foreground-color" => {
-            let [text] = fixed::<1>(name, args)?;
-            string(name, &text)?;
-            machine.host.call(name, vec![text])?;
-            Ok(Value::Nil)
-        }
-        "buffer-file-name" => {
-            // バッファの名前を省くと, 今のバッファ
-            let args = optional_buffer(name, args)?;
-            Ok(match machine.host.call(name, args)? {
-                Value::String(path) => Value::String(path),
-                _ => Value::Boolean(false),
-            })
-        }
-        "buffer-modified-p" | "kill-buffer" => {
-            let args = optional_buffer(name, args)?;
-            Ok(Value::Boolean(machine.host.call(name, args)?.is_true()))
-        }
-        "buffer-list" => {
-            fixed::<0>(name, args)?;
-            machine.host.call(name, vec![])
-        }
-        "kill-new" => {
-            let [text] = fixed::<1>(name, args)?;
-            string(name, &text)?;
-            machine.host.call(name, vec![text])?;
-            Ok(Value::Nil)
-        }
-        "highlight-regexp" => {
-            // (highlight-regexp REGEXP [FACE [SUBEXP [JS]]]): FACE は記号か文字列, SUBEXP は括弧の番号,
-            // JS が non-nil なら, REGEXP は Emacs の書き方でなく, 画面の JavaScript と同じ書き方
-            if args.is_empty() || args.len() > 4 {
-                return Err("highlight-regexp expects 1 to 4 arguments"
+        Some(start) => index(name, start)?,
+        None => 0,
+    };
+    let rest: String = chars[start..].iter().collect();
+    Ok(match rest.find(needle) {
+        Some(found) => Value::Number((start + rest[..found].chars().count()) as f64),
+        None => Value::Boolean(false),
+    })
+}
+
+/// `(string-prefix? ...)` / `(string-suffix? ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_prefix_and_string_suffix(
+    _machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [affix, text] = fixed::<2>(name, args)?;
+    let (affix, text) = (string(name, &affix)?, string(name, &text)?);
+    Ok(Value::Boolean(if name == "string-prefix?" {
+        text.starts_with(affix)
+    } else {
+        text.ends_with(affix)
+    }))
+}
+
+/// `(string-trim ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_trim(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [text] = fixed::<1>(name, args)?;
+    Ok(Value::String(string(name, &text)?.trim().to_string()))
+}
+
+/// `(string-join ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_string_join(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let (items, separator) = match args.as_slice() {
+        [items] => (items, ""),
+        [items, separator] => (items, string(name, separator)?),
+        _ => return Err("string-join expects 1 or 2 arguments".to_string().into()),
+    };
+    let items = list(name, items)?
+        .iter()
+        .map(|item| string(name, item))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(Value::String(items.join(separator)))
+}
+
+/// `(split-string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `_machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_split_string(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let pieces: Vec<String> = match args.as_slice() {
+        [text] => string(name, text)?
+            .split_whitespace()
+            .map(str::to_string)
+            .collect(),
+        [text, separator] => {
+            let separator = string(name, separator)?;
+            if separator.is_empty() {
+                return Err("split-string expects a non-empty separator"
                     .to_string()
                     .into());
             }
-            let regexp = string(name, &args[0])?.to_string();
-            let face = match args.get(1) {
-                Some(Value::Symbol(face)) | Some(Value::String(face)) => {
-                    Value::String(face.clone())
-                }
-                Some(v) if v.is_non_nil() => {
-                    return Err(format!("highlight-regexp: invalid face {}", v).into())
-                }
-                _ => Value::Nil,
-            };
-            let group = match args.get(2) {
-                Some(v) if v.is_non_nil() => Value::Number(index(name, v)? as f64),
-                _ => Value::Nil,
-            };
-            let mut call_args = vec![Value::String(regexp), face, group];
-            if let Some(js) = args.get(3) {
-                call_args.push(Value::Boolean(js.is_non_nil()));
-            }
-            machine.host.call(name, call_args)?;
-            Ok(Value::Nil)
+            string(name, text)?
+                .split(separator)
+                .map(str::to_string)
+                .collect()
         }
-        "outline-flag-region" => {
-            // (outline-flag-region FROM TO FLAG): FLAG が non-nil なら隠す, nil なら出す
-            let [from, to, flag] = fixed::<3>(name, args)?;
-            number(name, &from)?;
-            number(name, &to)?;
-            machine
-                .host
-                .call(name, vec![from, to, Value::Boolean(flag.is_non_nil())])?;
-            Ok(Value::Nil)
+        _ => return Err("split-string expects 1 or 2 arguments".to_string().into()),
+    };
+    Ok(Value::List(pieces.into_iter().map(Value::String).collect()))
+}
+
+/// `(point ...)` / `(point-min ...)` / `(point-max ...)` / `(buffer-string ...)` / `(buffer-name ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_point_and_buffer_name(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (buffer-name BUFFER): バッファの名前 (バッファは名前で表すので, 生きているバッファなら, 同じ名前. 無ければ #f)
+    if name == "buffer-name" && !args.is_empty() {
+        let [buffer] = fixed::<1>(name, args)?;
+        let buffer = Value::String(string(name, &buffer)?.to_string());
+        return Ok(match machine.host.call("buffer-list", vec![])? {
+            Value::List(names) if names.contains(&buffer) => buffer,
+            _ => Value::Boolean(false),
+        });
+    }
+    fixed::<0>(name, args)?;
+    machine.host.call(name, vec![])
+}
+
+/// `(goto-char ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_goto_char(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [pos] = fixed::<1>(name, args)?;
+    number(name, &pos)?;
+    machine.host.call(name, vec![pos])
+}
+
+/// `(delete-region ...)` / `(buffer-substring ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_delete_region_and_buffer_substring(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [from, to] = fixed::<2>(name, args)?;
+    number(name, &from)?;
+    number(name, &to)?;
+    machine.host.call(name, vec![from, to])
+}
+
+/// `(insert ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_insert(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    for v in &args {
+        string(name, v)?;
+    }
+    machine.host.call(name, args)?;
+    Ok(Value::Nil)
+}
+
+/// `(message ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_message(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let text = format(&args)?;
+    machine.evaluator.log_message(&text);
+    machine.host.call(name, vec![Value::String(text.clone())])?;
+    Ok(Value::String(text))
+}
+
+/// `(terpri ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_terpri(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<0>(name, args)?;
+    write_output(machine, "\n")?;
+    Ok(Value::Boolean(true))
+}
+
+/// `(princ ...)` / `(prin1 ...)` / `(print ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_princ_and_prin1(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [value] = fixed::<1>(name, args)?;
+    let text = print_string(&value, name != "princ");
+    write_output(
+        machine,
+        &if name == "print" {
+            format!("\n{text}\n")
+        } else {
+            text
+        },
+    )?;
+    Ok(value)
+}
+
+/// `(call-interactively ...)` / `(command-execute ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_call_interactively_and_command_execute(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    match fixed::<1>(name, args)? {
+        [Value::Symbol(command) | Value::String(command)] => machine.call_command(&command),
+        _ => Err(format!("{} expects a command name", name).into()),
+    }
+}
+
+/// `(global-set-key ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_global_set_key(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    match fixed::<2>(name, args)? {
+        [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
+            let key = keys::to_codemirror(&key)?;
+            machine.evaluator.set_key(KeyBinding {
+                key,
+                command: command.clone(),
+            });
+            Ok(Value::Symbol(command))
         }
-        "outline-invisible-p" => {
-            // 省くと, カーソルの位置
-            let pos = match args.as_slice() {
-                [] => machine.host.call("point", vec![])?,
-                [pos] => {
-                    number(name, pos)?;
-                    pos.clone()
-                }
-                _ => {
-                    return Err("outline-invisible-p expects 0 or 1 arguments"
-                        .to_string()
-                        .into())
-                }
-            };
-            machine.host.call(name, vec![pos])
-        }
-        "unhighlight-regexp" => {
-            // #t なら, 全て消す
-            let [regexp] = fixed::<1>(name, args)?;
-            match regexp {
-                Value::String(_) | Value::Boolean(true) => machine.host.call(name, vec![regexp])?,
-                _ => {
-                    return Err("unhighlight-regexp expects a regexp or #t"
-                        .to_string()
-                        .into())
-                }
-            };
-            Ok(Value::Nil)
-        }
-        "completing-read" => completing_read(machine, args),
-        "display-buffer" => {
-            // 行 (1 から) を渡すと, そのウィンドウのカーソルを, その行に置く
-            let args = match args.as_slice() {
-                [buffer] => vec![Value::String(string(name, buffer)?.to_string())],
-                [buffer, line] => {
-                    number(name, line)?;
-                    vec![
-                        Value::String(string(name, buffer)?.to_string()),
-                        line.clone(),
-                    ]
-                }
-                _ => return Err("display-buffer expects 1 or 2 arguments".to_string().into()),
-            };
-            machine.host.call(name, args)?;
-            Ok(Value::Nil)
-        }
-        "insert-file-contents" => {
-            // (insert-file-contents FILENAME [VISIT]): ファイルの名前は, 広げてから渡す
-            let (path, rest) = match args.as_slice() {
-                [path, rest @ ..] if rest.len() <= 1 => (path, rest),
-                _ => {
-                    return Err("insert-file-contents expects 1 or 2 arguments"
-                        .to_string()
-                        .into())
-                }
-            };
-            let path = Value::String(machine.expand_file_name(string(name, path)?));
+        _ => Err("global-set-key expects a key and a command name"
+            .to_string()
+            .into()),
+    }
+}
+
+/// `(local-set-key ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_local_set_key(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    match fixed::<2>(name, args)? {
+        [Value::String(key), Value::Symbol(command) | Value::String(command)] => {
+            let key = keys::to_codemirror(&key)?;
             machine.host.call(
                 name,
-                std::iter::once(path).chain(rest.iter().cloned()).collect(),
-            )
+                vec![Value::String(key), Value::String(command.clone())],
+            )?;
+            Ok(Value::Symbol(command))
         }
-        "set-buffer-modified-p" => {
-            let [flag] = fixed::<1>(name, args)?;
-            machine
-                .host
-                .call(name, vec![Value::Boolean(flag.is_true())])?;
-            Ok(flag)
-        }
-        "read-string" => {
-            // (read-string PROMPT [INITIAL-INPUT [HISTORY [DEFAULT-VALUE]]])
-            if args.is_empty() || args.len() > 5 {
-                return Err("read-string expects 1 to 5 arguments".to_string().into());
-            }
-            let prompt = string(name, &args[0])?;
-            let initial = optional_string(name, args.get(1))?;
-            let default = default_value(name, args.get(3))?;
-            let extra = history_arguments(machine, name, args.get(2), args.get(3), "minibuffer")?;
-            let input = read_input_with(machine, name, vec![prompt.to_string(), initial], extra)?;
-            Ok(Value::String(or_default(input, default)))
-        }
-        "read-file-name" => {
-            // (read-file-name PROMPT [DIR [DEFAULT-FILENAME [MUSTMATCH [INITIAL [PREDICATE]]]]])
-            // DIR を省くと, 画面が今のバッファのディレクトリを入れる. 入力を変えなければ, DEFAULT-FILENAME
-            if args.is_empty() || args.len() > 6 {
-                return Err("read-file-name expects 1 to 6 arguments".to_string().into());
-            }
-            let prompt = string(name, &args[0])?;
-            let dir = optional_string(name, args.get(1))?;
-            let default = default_value(name, args.get(2))?;
-            let extra = history_arguments(machine, name, None, args.get(2), "file-name-history")?;
-            let input =
-                read_input_with(machine, name, vec![prompt.to_string(), dir.clone()], extra)?;
-            Ok(Value::String(match default {
-                Some(default) if input.is_empty() || input == dir => default,
-                _ => input,
-            }))
-        }
-        "read-key" => {
-            // (read-key [PROMPT [ALLOW-QUIT]]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの).
-            // ALLOW-QUIT が真なら, C-g も, 失敗にせず, キー ("C-g") として返す (isearch が使う)
-            if args.len() > 2 {
-                return Err("read-key expects 0 to 2 arguments".to_string().into());
-            }
-            let prompt = optional_string(name, args.first())?;
-            let mut host_args = vec![prompt];
-            if args.get(1).is_some_and(Value::is_non_nil) {
-                host_args.push("allow-quit".to_string());
-            }
-            Ok(Value::String(read_input(machine, name, host_args)?))
-        }
-        "execute-kbd-macro" => {
-            // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら失敗するまで) 打ったことにする. 打つのは, 画面
-            let [keys, rest @ ..] = args.as_slice() else {
-                return Err("execute-kbd-macro expects 1 or 2 arguments"
-                    .to_string()
-                    .into());
-            };
-            let count = match rest {
-                [] => Value::Number(1.0),
-                [count] => count.clone(),
-                _ => {
-                    return Err("execute-kbd-macro expects 1 or 2 arguments"
-                        .to_string()
-                        .into())
-                }
-            };
-            machine.host.call(name, vec![keys.clone(), count])?;
-            Ok(Value::Nil)
-        }
-        "files--set-buffer-text" => {
-            // (files--set-buffer-text TEXT MODIFIED): 今のバッファの本文を置き換える (カーソルは同じ文字の所に残り, 元に戻せる)
-            let [text, modified] = fixed::<2>(name, args)?;
-            string(name, &text)?;
-            machine
-                .host
-                .call(name, vec![text, Value::Boolean(modified.is_true())])?;
-            Ok(Value::Nil)
-        }
-        "write-region" => {
-            // (write-region START END FILENAME [APPEND VISIT]): ファイルの名前 (と, VISIT の文字列) は, 広げてから渡す
-            if !(3..=5).contains(&args.len()) {
-                return Err("write-region expects 3 to 5 arguments".to_string().into());
-            }
-            let mut args = args;
-            args[2] = Value::String(machine.expand_file_name(string(name, &args[2])?));
-            if let Some(Value::String(visit)) = args.get(4) {
-                args[4] = Value::String(machine.expand_file_name(visit));
-            }
-            machine.host.call(name, args)
-        }
-        "ding" => {
-            // (ding): ベルを鳴らす. 鳴らせない画面なら, 何もしない
-            let _ = machine.host.call(name, vec![]);
-            Ok(Value::Nil)
-        }
-        "set-frame-font" => {
-            let [font] = fixed::<1>(name, args)?;
-            let (family, size) = parse_font(string(name, &font)?);
-            set_font(machine, family, size)
-        }
-        "set-face-attribute" => set_face_attribute(machine, args),
-        "where-is-internal" => {
-            // 割り当てたキー (Emacs の書き方. 画面のキーと, Lisp のキー)
-            let [command] = fixed::<1>(name, args)?;
-            let Value::Symbol(command) = command else {
-                return Err("where-is-internal expects a symbol".to_string().into());
-            };
-            machine.host.call(name, vec![Value::String(command)])
-        }
-        "key-binding" => {
-            // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
-            let [keys] = fixed::<1>(name, args)?;
-            string(name, &keys)?;
-            machine.host.call(name, vec![keys])
-        }
-        "all-key-bindings" | "recent-keys" => {
-            fixed::<0>(name, args)?;
-            machine.host.call(name, vec![])
-        }
-        "editor-command-names" => {
-            // 画面 (TypeScript) で書いたコマンドの名前
-            fixed::<0>(name, args)?;
-            machine.host.call(name, vec![])
-        }
-        _ => Err(format!("Unknown procedure: {}", name).into()),
+        _ => Err("local-set-key expects a key and a command name"
+            .to_string()
+            .into()),
     }
+}
+
+/// `(set-buffer-directory ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_set_buffer_directory(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (set-buffer-directory DIR): 今のバッファの `default-directory` を DIR にする (dired が使う)
+    let [dir] = fixed::<1>(name, args)?;
+    let dir = string(name, &dir)?.to_string();
+    machine.host.call(name, vec![Value::String(dir)])?;
+    Ok(Value::Nil)
+}
+
+/// `(pop-to-buffer-same-window ...)` / `(set-background-color ...)` / `(set-foreground-color ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_pop_to_buffer_same_window_and_set_background_color(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [text] = fixed::<1>(name, args)?;
+    string(name, &text)?;
+    machine.host.call(name, vec![text])?;
+    Ok(Value::Nil)
+}
+
+/// `(buffer-file-name ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_buffer_file_name(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // バッファの名前を省くと, 今のバッファ
+    let args = optional_buffer(name, args)?;
+    Ok(match machine.host.call(name, args)? {
+        Value::String(path) => Value::String(path),
+        _ => Value::Boolean(false),
+    })
+}
+
+/// `(buffer-modified-p ...)` / `(kill-buffer ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_buffer_modified_p_and_kill_buffer(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let args = optional_buffer(name, args)?;
+    Ok(Value::Boolean(machine.host.call(name, args)?.is_true()))
+}
+
+/// `(buffer-list ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_buffer_list(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<0>(name, args)?;
+    machine.host.call(name, vec![])
+}
+
+/// `(kill-new ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_kill_new(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [text] = fixed::<1>(name, args)?;
+    string(name, &text)?;
+    machine.host.call(name, vec![text])?;
+    Ok(Value::Nil)
+}
+
+/// `(highlight-regexp ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_highlight_regexp(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (highlight-regexp REGEXP [FACE [SUBEXP [JS]]]): FACE は記号か文字列, SUBEXP は括弧の番号,
+    // JS が non-nil なら, REGEXP は Emacs の書き方でなく, 画面の JavaScript と同じ書き方
+    if args.is_empty() || args.len() > 4 {
+        return Err("highlight-regexp expects 1 to 4 arguments"
+            .to_string()
+            .into());
+    }
+    let regexp = string(name, &args[0])?.to_string();
+    let face = match args.get(1) {
+        Some(Value::Symbol(face)) | Some(Value::String(face)) => Value::String(face.clone()),
+        Some(v) if v.is_non_nil() => {
+            return Err(format!("highlight-regexp: invalid face {}", v).into())
+        }
+        _ => Value::Nil,
+    };
+    let group = match args.get(2) {
+        Some(v) if v.is_non_nil() => Value::Number(index(name, v)? as f64),
+        _ => Value::Nil,
+    };
+    let mut call_args = vec![Value::String(regexp), face, group];
+    if let Some(js) = args.get(3) {
+        call_args.push(Value::Boolean(js.is_non_nil()));
+    }
+    machine.host.call(name, call_args)?;
+    Ok(Value::Nil)
+}
+
+/// `(outline-flag-region ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_outline_flag_region(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (outline-flag-region FROM TO FLAG): FLAG が non-nil なら隠す, nil なら出す
+    let [from, to, flag] = fixed::<3>(name, args)?;
+    number(name, &from)?;
+    number(name, &to)?;
+    machine
+        .host
+        .call(name, vec![from, to, Value::Boolean(flag.is_non_nil())])?;
+    Ok(Value::Nil)
+}
+
+/// `(outline-invisible-p ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_outline_invisible_p(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // 省くと, カーソルの位置
+    let pos = match args.as_slice() {
+        [] => machine.host.call("point", vec![])?,
+        [pos] => {
+            number(name, pos)?;
+            pos.clone()
+        }
+        _ => {
+            return Err("outline-invisible-p expects 0 or 1 arguments"
+                .to_string()
+                .into())
+        }
+    };
+    machine.host.call(name, vec![pos])
+}
+
+/// `(unhighlight-regexp ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_unhighlight_regexp(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // #t なら, 全て消す
+    let [regexp] = fixed::<1>(name, args)?;
+    match regexp {
+        Value::String(_) | Value::Boolean(true) => machine.host.call(name, vec![regexp])?,
+        _ => {
+            return Err("unhighlight-regexp expects a regexp or #t"
+                .to_string()
+                .into())
+        }
+    };
+    Ok(Value::Nil)
+}
+
+/// `(completing-read ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_completing_read(
+    machine: &mut Machine,
+    _name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    completing_read(machine, args)
+}
+
+/// `(display-buffer ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_display_buffer(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 行 (1 から) を渡すと, そのウィンドウのカーソルを, その行に置く
+    let args = match args.as_slice() {
+        [buffer] => vec![Value::String(string(name, buffer)?.to_string())],
+        [buffer, line] => {
+            number(name, line)?;
+            vec![
+                Value::String(string(name, buffer)?.to_string()),
+                line.clone(),
+            ]
+        }
+        _ => return Err("display-buffer expects 1 or 2 arguments".to_string().into()),
+    };
+    machine.host.call(name, args)?;
+    Ok(Value::Nil)
+}
+
+/// `(insert-file-contents ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_insert_file_contents(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (insert-file-contents FILENAME [VISIT]): ファイルの名前は, 広げてから渡す
+    let (path, rest) = match args.as_slice() {
+        [path, rest @ ..] if rest.len() <= 1 => (path, rest),
+        _ => {
+            return Err("insert-file-contents expects 1 or 2 arguments"
+                .to_string()
+                .into())
+        }
+    };
+    let path = Value::String(machine.expand_file_name(string(name, path)?));
+    machine.host.call(
+        name,
+        std::iter::once(path).chain(rest.iter().cloned()).collect(),
+    )
+}
+
+/// `(set-buffer-modified-p ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_set_buffer_modified_p(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [flag] = fixed::<1>(name, args)?;
+    machine
+        .host
+        .call(name, vec![Value::Boolean(flag.is_true())])?;
+    Ok(flag)
+}
+
+/// `(read-string ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_read_string(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (read-string PROMPT [INITIAL-INPUT [HISTORY [DEFAULT-VALUE]]])
+    if args.is_empty() || args.len() > 5 {
+        return Err("read-string expects 1 to 5 arguments".to_string().into());
+    }
+    let prompt = string(name, &args[0])?;
+    let initial = optional_string(name, args.get(1))?;
+    let default = default_value(name, args.get(3))?;
+    let extra = history_arguments(machine, name, args.get(2), args.get(3), "minibuffer")?;
+    let input = read_input_with(machine, name, vec![prompt.to_string(), initial], extra)?;
+    Ok(Value::String(or_default(input, default)))
+}
+
+/// `(read-file-name ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_read_file_name(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (read-file-name PROMPT [DIR [DEFAULT-FILENAME [MUSTMATCH [INITIAL [PREDICATE]]]]])
+    // DIR を省くと, 画面が今のバッファのディレクトリを入れる. 入力を変えなければ, DEFAULT-FILENAME
+    if args.is_empty() || args.len() > 6 {
+        return Err("read-file-name expects 1 to 6 arguments".to_string().into());
+    }
+    let prompt = string(name, &args[0])?;
+    let dir = optional_string(name, args.get(1))?;
+    let default = default_value(name, args.get(2))?;
+    let extra = history_arguments(machine, name, None, args.get(2), "file-name-history")?;
+    let input = read_input_with(machine, name, vec![prompt.to_string(), dir.clone()], extra)?;
+    Ok(Value::String(match default {
+        Some(default) if input.is_empty() || input == dir => default,
+        _ => input,
+    }))
+}
+
+/// `(read-key ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_read_key(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (read-key [PROMPT [ALLOW-QUIT]]): 1 つのキーを読む ("y", " ", "Enter" など. キーの名前は, 画面のもの).
+    // ALLOW-QUIT が真なら, C-g も, 失敗にせず, キー ("C-g") として返す (isearch が使う)
+    if args.len() > 2 {
+        return Err("read-key expects 0 to 2 arguments".to_string().into());
+    }
+    let prompt = optional_string(name, args.first())?;
+    let mut host_args = vec![prompt];
+    if args.get(1).is_some_and(Value::is_non_nil) {
+        host_args.push("allow-quit".to_string());
+    }
+    Ok(Value::String(read_input(machine, name, host_args)?))
+}
+
+/// `(execute-kbd-macro ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_execute_kbd_macro(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (execute-kbd-macro KEYS [COUNT]): キーの並びを, COUNT 回 (0 なら失敗するまで) 打ったことにする. 打つのは, 画面
+    let [keys, rest @ ..] = args.as_slice() else {
+        return Err("execute-kbd-macro expects 1 or 2 arguments"
+            .to_string()
+            .into());
+    };
+    let count = match rest {
+        [] => Value::Number(1.0),
+        [count] => count.clone(),
+        _ => {
+            return Err("execute-kbd-macro expects 1 or 2 arguments"
+                .to_string()
+                .into())
+        }
+    };
+    machine.host.call(name, vec![keys.clone(), count])?;
+    Ok(Value::Nil)
+}
+
+/// `(files--set-buffer-text ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_files_set_buffer_text(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // (files--set-buffer-text TEXT MODIFIED): 今のバッファの本文を置き換える (カーソルは同じ文字の所に残り, 元に戻せる)
+    let [text, modified] = fixed::<2>(name, args)?;
+    string(name, &text)?;
+    machine
+        .host
+        .call(name, vec![text, Value::Boolean(modified.is_true())])?;
+    Ok(Value::Nil)
+}
+
+/// `(write-region ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_write_region(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // (write-region START END FILENAME [APPEND VISIT]): ファイルの名前 (と, VISIT の文字列) は, 広げてから渡す
+    if !(3..=5).contains(&args.len()) {
+        return Err("write-region expects 3 to 5 arguments".to_string().into());
+    }
+    let mut args = args;
+    args[2] = Value::String(machine.expand_file_name(string(name, &args[2])?));
+    if let Some(Value::String(visit)) = args.get(4) {
+        args[4] = Value::String(machine.expand_file_name(visit));
+    }
+    machine.host.call(name, args)
+}
+
+/// `(ding ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `_args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_ding(machine: &mut Machine, name: &str, _args: Vec<Value>) -> Result<Value, Error> {
+    // (ding): ベルを鳴らす. 鳴らせない画面なら, 何もしない
+    let _ = machine.host.call(name, vec![]);
+    Ok(Value::Nil)
+}
+
+/// `(set-frame-font ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_set_frame_font(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [font] = fixed::<1>(name, args)?;
+    let (family, size) = parse_font(string(name, &font)?);
+    set_font(machine, family, size)
+}
+
+/// `(set-face-attribute ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `_name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_set_face_attribute(
+    machine: &mut Machine,
+    _name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    set_face_attribute(machine, args)
+}
+
+/// `(where-is-internal ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_where_is_internal(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // 割り当てたキー (Emacs の書き方. 画面のキーと, Lisp のキー)
+    let [command] = fixed::<1>(name, args)?;
+    let Value::Symbol(command) = command else {
+        return Err("where-is-internal expects a symbol".to_string().into());
+    };
+    machine.host.call(name, vec![Value::String(command)])
+}
+
+/// `(key-binding ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_key_binding(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // キーの並び ("C-x C-f") の割り当て: コマンドの名前, 続きがあれば #t, 無ければ #f
+    let [keys] = fixed::<1>(name, args)?;
+    string(name, &keys)?;
+    machine.host.call(name, vec![keys])
+}
+
+/// `(all-key-bindings ...)` / `(recent-keys ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_all_key_bindings_and_recent_keys(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    fixed::<0>(name, args)?;
+    machine.host.call(name, vec![])
+}
+
+/// `(editor-command-names ...)`: 組み込みの手続きです (動きは本体を見る).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数.
+///
+/// # Returns
+///
+/// 結果, または失敗の内容.
+fn bi_editor_command_names(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    // 画面 (TypeScript) で書いたコマンドの名前
+    fixed::<0>(name, args)?;
+    machine.host.call(name, vec![])
 }
 
 /// リストを, 安定に並べ替えます (マージソート).

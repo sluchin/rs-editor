@@ -2,12 +2,12 @@
 //!
 //! 手続きは, 名前と関数の組を, モジュールごとの `register` で 1 か所に書きます (`register!`).
 //! 名前の一覧と呼び出しの割り当ては, この表から作るので, 手続きを足すときに直す場所は, 1 つです.
-//! 全ての手続きを移すまでは, 移していない手続きの名前と呼び出しは, 従来のまま (`builtins::NAMES` と `builtins::call`) です.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::error::Error;
+use crate::scheme::builtins;
 use crate::scheme::editor_ops;
 use crate::scheme::ert;
 use crate::scheme::evaluator::Machine;
@@ -96,6 +96,7 @@ pub fn registry() -> &'static Registry {
     static REGISTRY: OnceLock<Registry> = OnceLock::new();
     REGISTRY.get_or_init(|| {
         let mut registry = Registry::new();
+        builtins::register(&mut registry);
         editor_ops::register(&mut registry);
         ert::register(&mut registry);
         help::register(&mut registry);
