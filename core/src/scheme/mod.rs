@@ -13,5 +13,6 @@ pub mod keys;
 pub mod loadup;
 pub mod parser;
 pub mod po;
+pub mod registry;
 pub mod system;
 pub mod value;

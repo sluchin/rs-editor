@@ -7,9 +7,9 @@ use crate::scheme::editor_ops;
 use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::help;
-use crate::scheme::hooks;
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
+use crate::scheme::registry::registry;
 use crate::scheme::system;
 use crate::scheme::value::Value;
 
@@ -170,6 +170,10 @@ pub const NAMES: &[&str] = &[
 ///
 /// 結果, または失敗の内容.
 pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    // 登録表に移した手続きは, 表から引く. 残りは, 下の match
+    if let Some(function) = registry().get(name) {
+        return function(machine, name, args);
+    }
     match name {
         "+" => Ok(Value::Number(numbers(name, &args)?.iter().sum())),
         "*" => Ok(Value::Number(numbers(name, &args)?.iter().product())),
@@ -1006,7 +1010,6 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             machine.host.call(name, vec![])
         }
         _ if editor_ops::NAMES.contains(&name) => editor_ops::call(machine, name, args),
-        _ if hooks::NAMES.contains(&name) => hooks::call(machine, name, args),
         _ if help::NAMES.contains(&name) => help::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name).into())),

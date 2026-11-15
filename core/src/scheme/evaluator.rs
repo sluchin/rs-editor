@@ -24,6 +24,7 @@ use crate::scheme::loadup;
 /// `message` の記録の行数の上限.
 const MESSAGE_LOG_MAX: usize = 1000;
 use crate::scheme::parser::Parser;
+use crate::scheme::registry::registry;
 use crate::scheme::system;
 use crate::scheme::value::{Lambda, Value};
 use crate::sync::LockExt;
@@ -95,10 +96,12 @@ impl Evaluator {
             .iter()
             .chain(system::NAMES)
             .chain(ert::NAMES)
-            .chain(hooks::NAMES)
             .chain(help::NAMES)
             .chain(editor_ops::NAMES)
         {
+            global.define(name, Value::Function(name.to_string()));
+        }
+        for name in registry().names() {
             global.define(name, Value::Function(name.to_string()));
         }
         // load と require が, ファイルを探すディレクトリ

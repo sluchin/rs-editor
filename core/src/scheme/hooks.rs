@@ -5,13 +5,12 @@
 //! `lisp/files.scm` の `find-file-noselect` と `basic-save-buffer` が, そのバッファで, フックを実行します ([`EDITOR_HOOKS`]).
 
 use crate::error::Error;
+use crate::register;
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;
 use crate::scheme::evaluator::Machine;
+use crate::scheme::registry::Registry;
 use crate::scheme::value::Value;
-
-/// フックの組み込みの手続きの名前.
-pub const NAMES: &[&str] = &["add-hook", "remove-hook", "run-hooks", "run-hook-with-args"];
 
 /// エディタが実行するフック (評価器は, 始めに空のリストで定義する).
 pub const EDITOR_HOOKS: &[&str] = &["find-file-hook", "after-save-hook"];
@@ -78,67 +77,110 @@ fn run(machine: &mut Machine, hook: &str, args: &[Value]) -> Result<(), Error> {
     Ok(())
 }
 
-/// フックの組み込みの手続きを呼びます.
+/// フックの組み込みの手続きを登録します.
+///
+/// # Arguments
+///
+/// * `registry` - 登録先の表.
+pub fn register(registry: &mut Registry) {
+    register!(
+        registry,
+        "add-hook" => add_hook,
+        "remove-hook" => remove_hook,
+        "run-hooks" => run_hooks,
+        "run-hook-with-args" => run_hook_with_args,
+    );
+}
+
+/// `(add-hook 'hook f [append])`: 無ければ, 前 (append なら後ろ) に足します.
 ///
 /// # Arguments
 ///
 /// * `machine` - 評価.
-/// * `name` - 手続きの名前 ([`NAMES`] のどれか).
-/// * `args` - 引数.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (2 個から 4 個).
 ///
 /// # Returns
 ///
-/// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
-    match name {
-        // (add-hook 'hook f [append]): 無ければ, 前 (append なら後ろ) に足す
-        "add-hook" => {
-            let (hook, function, append) = match args.as_slice() {
-                [hook, function] => (hook, function, false),
-                [hook, function, append, ..] if args.len() <= 4 => {
-                    (hook, function, append.is_non_nil())
-                }
-                _ => return Err("add-hook expects 2 to 4 arguments".to_string().into()),
-            };
-            let hook = hook_name(name, hook)?;
-            let mut functions = functions(machine.evaluator.global(), &hook);
-            if !functions.contains(function) {
-                if append {
-                    functions.push(function.clone());
-                } else {
-                    functions.insert(0, function.clone());
-                }
-            }
-            machine
-                .evaluator
-                .global()
-                .define(&hook, Value::List(functions.into()));
-            Ok(Value::Nil)
-        }
-        "remove-hook" => {
-            let [hook, function] = fixed::<2>(name, args)?;
-            let hook = hook_name(name, &hook)?;
-            let mut functions = functions(machine.evaluator.global(), &hook);
-            functions.retain(|f| *f != function);
-            machine
-                .evaluator
-                .global()
-                .define(&hook, Value::List(functions.into()));
-            Ok(Value::Nil)
-        }
-        "run-hooks" => {
-            for hook in &args {
-                run(machine, &hook_name(name, hook)?, &[])?;
-            }
-            Ok(Value::Nil)
-        }
-        _ => {
-            // run-hook-with-args
-            let Some((hook, rest)) = args.split_first() else {
-                return Err("run-hook-with-args expects a hook".to_string().into());
-            };
-            run(machine, &hook_name(name, hook)?, rest)?;
-            Ok(Value::Nil)
+/// `()`. 引数が合わなければ [`Err`].
+fn add_hook(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let (hook, function, append) = match args.as_slice() {
+        [hook, function] => (hook, function, false),
+        [hook, function, append, ..] if args.len() <= 4 => (hook, function, append.is_non_nil()),
+        _ => return Err("add-hook expects 2 to 4 arguments".to_string().into()),
+    };
+    let hook = hook_name(name, hook)?;
+    let mut functions = functions(machine.evaluator.global(), &hook);
+    if !functions.contains(function) {
+        if append {
+            functions.push(function.clone());
+        } else {
+            functions.insert(0, function.clone());
         }
     }
+    machine
+        .evaluator
+        .global()
+        .define(&hook, Value::List(functions.into()));
+    Ok(Value::Nil)
+}
+
+/// `(remove-hook 'hook f)`: フックから手続きを外します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (2 個).
+///
+/// # Returns
+///
+/// `()`. 引数が合わなければ [`Err`].
+fn remove_hook(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [hook, function] = fixed::<2>(name, args)?;
+    let hook = hook_name(name, &hook)?;
+    let mut functions = functions(machine.evaluator.global(), &hook);
+    functions.retain(|f| *f != function);
+    machine
+        .evaluator
+        .global()
+        .define(&hook, Value::List(functions.into()));
+    Ok(Value::Nil)
+}
+
+/// `(run-hooks 'hook ...)`: フックの手続きを, 引数なしで, 順に呼びます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - フックの名前 (記号).
+///
+/// # Returns
+///
+/// `()`. 手続きが失敗すればその内容.
+fn run_hooks(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    for hook in &args {
+        run(machine, &hook_name(name, hook)?, &[])?;
+    }
+    Ok(Value::Nil)
+}
+
+/// `(run-hook-with-args 'hook arg ...)`: フックの手続きを, 引数つきで, 順に呼びます.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - フックの名前 (記号) と, 手続きに渡す引数.
+///
+/// # Returns
+///
+/// `()`. 手続きが失敗すればその内容.
+fn run_hook_with_args(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let Some((hook, rest)) = args.split_first() else {
+        return Err("run-hook-with-args expects a hook".to_string().into());
+    };
+    run(machine, &hook_name(name, hook)?, rest)?;
+    Ok(Value::Nil)
 }
