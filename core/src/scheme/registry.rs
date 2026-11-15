@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use crate::error::Error;
+use crate::scheme::ert;
 use crate::scheme::evaluator::Machine;
 use crate::scheme::hooks;
 use crate::scheme::value::Value;
@@ -92,6 +93,7 @@ pub fn registry() -> &'static Registry {
     static REGISTRY: OnceLock<Registry> = OnceLock::new();
     REGISTRY.get_or_init(|| {
         let mut registry = Registry::new();
+        ert::register(&mut registry);
         hooks::register(&mut registry);
         registry
     })

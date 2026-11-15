@@ -4,7 +4,6 @@
 
 use crate::error::Error;
 use crate::scheme::editor_ops;
-use crate::scheme::ert;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::help;
 use crate::scheme::keys;
@@ -985,7 +984,6 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             set_font(machine, family, size)
         }
         "set-face-attribute" => set_face_attribute(machine, args),
-        _ if ert::NAMES.contains(&name) => ert::call(machine, name, args),
         "where-is-internal" => {
             // 割り当てたキー (Emacs の書き方. 画面のキーと, Lisp のキー)
             let [command] = fixed::<1>(name, args)?;

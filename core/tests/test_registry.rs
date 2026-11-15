@@ -32,9 +32,21 @@ fn test_register_duplicate_name_panics() {
 }
 
 #[test]
-fn test_registry_has_hook_procedures_and_defines_them() {
+fn test_registry_has_the_migrated_procedures_and_defines_them() {
     let names: Vec<&str> = registry().names().collect();
-    for name in ["add-hook", "remove-hook", "run-hooks", "run-hook-with-args"] {
+    for name in [
+        "add-hook",
+        "remove-hook",
+        "run-hooks",
+        "run-hook-with-args",
+        "ert-run-tests-batch",
+        "ert-run-tests-batch-and-exit",
+        "ert-test-boundp",
+        "ert-delete-test",
+        "ert-delete-all-tests",
+        "ert-fail",
+        "ert-skip",
+    ] {
         assert!(names.contains(&name), "{name} is not registered");
     }
     // 評価器は, 表の手続きを定義し, 呼べる

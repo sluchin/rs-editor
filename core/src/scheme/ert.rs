@@ -11,23 +11,14 @@
 use crate::error::Error;
 use std::time::Instant;
 
+use crate::register;
 use crate::scheme::builtins::fixed;
 use crate::scheme::env::Env;
 use crate::scheme::evaluator::{handles, make_lambda, Machine};
 use crate::scheme::parser::Parser;
+use crate::scheme::registry::Registry;
 use crate::scheme::system;
 use crate::scheme::value::Value;
-
-/// テストを実行する組み込みの手続きの名前.
-pub const NAMES: &[&str] = &[
-    "ert-run-tests-batch",
-    "ert-run-tests-batch-and-exit",
-    "ert-test-boundp",
-    "ert-delete-test",
-    "ert-delete-all-tests",
-    "ert-fail",
-    "ert-skip",
-];
 
 /// 評価器を作るときに評価する, Scheme で書いたコマンド (`M-x ert`).
 pub const PRELUDE: &str = r#"
@@ -242,64 +233,117 @@ fn eval_shown(machine: &mut Machine, form: &Value, env: &Env) -> Result<(Value, 
     Ok((machine.eval(form, env)?, form.clone()))
 }
 
-/// ERT の組み込みの手続きを呼びます.
+/// ERT の組み込みの手続きを登録します.
+///
+/// # Arguments
+///
+/// * `registry` - 登録先の表.
+pub fn register(registry: &mut Registry) {
+    register!(
+        registry,
+        "ert-run-tests-batch" => run_tests_batch,
+        "ert-run-tests-batch-and-exit" => run_tests_batch,
+        "ert-test-boundp" => test_boundp_or_delete,
+        "ert-delete-test" => test_boundp_or_delete,
+        "ert-delete-all-tests" => delete_all_tests,
+        "ert-fail" => fail_or_skip,
+        "ert-skip" => fail_or_skip,
+    );
+}
+
+/// `(ert-run-tests-batch [選ぶもの])` と `(ert-run-tests-batch-and-exit [選ぶもの])`: テストを実行します.
 ///
 /// # Arguments
 ///
 /// * `machine` - 評価.
-/// * `name` - 手続きの名前 ([`NAMES`] のどれか).
-/// * `args` - 引数.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (選ぶもの. 無ければ全て).
 ///
 /// # Returns
 ///
-/// 結果, または失敗の内容.
-pub(crate) fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
-    match name {
-        "ert-run-tests-batch" | "ert-run-tests-batch-and-exit" => {
-            let selector = match args.as_slice() {
-                [] => Value::Boolean(true),
-                [selector] => selector.clone(),
-                _ => return Err(format!("{} expects 0 or 1 arguments", name).into()),
-            };
-            let (report, unexpected) = run_tests(machine, &selector)?;
-            if unexpected > 0 && name == "ert-run-tests-batch-and-exit" {
-                Err(report.into())
-            } else {
-                Ok(Value::String(report))
-            }
-        }
-        "ert-test-boundp" | "ert-delete-test" => {
-            let [test] = fixed::<1>(name, args)?;
-            let Value::Symbol(test) = test else {
-                return Err(format!("{} expects a test name", name).into());
-            };
-            let mut tests = machine.evaluator.tests();
-            let found = tests.iter().any(|t| t.name == test);
-            if name == "ert-delete-test" {
-                tests.retain(|t| t.name != test);
-            }
-            Ok(Value::Boolean(found))
-        }
-        "ert-delete-all-tests" => {
-            fixed::<0>(name, args)?;
-            machine.evaluator.tests().clear();
-            Ok(Value::Nil)
-        }
-        _ => {
-            // ert-fail と ert-skip
-            let [reason] = fixed::<1>(name, args)?;
-            let reason = match &reason {
-                Value::String(text) => text.clone(),
-                other => other.to_string(),
-            };
-            Err(format!(
-                "{}{}",
-                if name == "ert-fail" { FAILED } else { SKIPPED },
-                reason
-            )
-            .into())
-        }
+/// 報告. `-and-exit` で, 思ったとおりでない結果があれば, 報告を [`Err`] として返す.
+fn run_tests_batch(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let selector = match args.as_slice() {
+        [] => Value::Boolean(true),
+        [selector] => selector.clone(),
+        _ => return Err(format!("{} expects 0 or 1 arguments", name).into()),
+    };
+    let (report, unexpected) = run_tests(machine, &selector)?;
+    if unexpected > 0 && name == "ert-run-tests-batch-and-exit" {
+        Err(report.into())
+    } else {
+        Ok(Value::String(report))
     }
+}
+
+/// `(ert-test-boundp 名前)` と `(ert-delete-test 名前)`: テストがあるかを調べます (後者は消します).
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (テストの名前の記号).
+///
+/// # Returns
+///
+/// 消す前に, テストがあったか.
+fn test_boundp_or_delete(
+    machine: &mut Machine,
+    name: &str,
+    args: Vec<Value>,
+) -> Result<Value, Error> {
+    let [test] = fixed::<1>(name, args)?;
+    let Value::Symbol(test) = test else {
+        return Err(format!("{} expects a test name", name).into());
+    };
+    let mut tests = machine.evaluator.tests();
+    let found = tests.iter().any(|t| t.name == test);
+    if name == "ert-delete-test" {
+        tests.retain(|t| t.name != test);
+    }
+    Ok(Value::Boolean(found))
+}
+
+/// `(ert-delete-all-tests)`: 定義したテストを全て消します.
+///
+/// # Arguments
+///
+/// * `machine` - 評価.
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (無し).
+///
+/// # Returns
+///
+/// `()`.
+fn delete_all_tests(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    fixed::<0>(name, args)?;
+    machine.evaluator.tests().clear();
+    Ok(Value::Nil)
+}
+
+/// `(ert-fail 理由)` と `(ert-skip 理由)`: テストを失敗, または飛ばしたことにします.
+///
+/// # Arguments
+///
+/// * `_machine` - 評価 (使わない).
+/// * `name` - 手続きの名前.
+/// * `args` - 引数 (理由).
+///
+/// # Returns
+///
+/// いつも [`Err`] (評価を中断して, テストの結果にする).
+fn fail_or_skip(_machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error> {
+    let [reason] = fixed::<1>(name, args)?;
+    let reason = match &reason {
+        Value::String(text) => text.clone(),
+        other => other.to_string(),
+    };
+    Err(format!(
+        "{}{}",
+        if name == "ert-fail" { FAILED } else { SKIPPED },
+        reason
+    )
+    .into())
 }
 
 /// 選んだテストを実行して, 報告 (Emacs の `ert-run-tests-batch` と同じ形) を作ります.

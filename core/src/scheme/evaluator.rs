@@ -95,7 +95,6 @@ impl Evaluator {
         for name in builtins::NAMES
             .iter()
             .chain(system::NAMES)
-            .chain(ert::NAMES)
             .chain(help::NAMES)
             .chain(editor_ops::NAMES)
         {
