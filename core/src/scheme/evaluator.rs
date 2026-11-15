@@ -13,7 +13,6 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use serde::{Deserialize, Serialize};
 
 use crate::scheme::builtins;
-use crate::scheme::editor_ops;
 use crate::scheme::env::Env;
 use crate::scheme::ert::{self, ErtTest};
 use crate::scheme::hooks;
@@ -91,11 +90,7 @@ impl Evaluator {
     /// 評価器.
     pub fn new() -> Self {
         let global = Env::new();
-        for name in builtins::NAMES
-            .iter()
-            .chain(system::NAMES)
-            .chain(editor_ops::NAMES)
-        {
+        for name in builtins::NAMES.iter().chain(system::NAMES) {
             global.define(name, Value::Function(name.to_string()));
         }
         for name in registry().names() {

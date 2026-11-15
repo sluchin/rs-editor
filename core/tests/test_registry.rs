@@ -56,6 +56,9 @@ fn test_registry_has_the_migrated_procedures_and_defines_them() {
         "message-log",
         "symbol-file",
         "mapatoms",
+        "forward-char",
+        "re-search-forward",
+        "gui-selection-value",
     ] {
         assert!(names.contains(&name), "{name} is not registered");
     }

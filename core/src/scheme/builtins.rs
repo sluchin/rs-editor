@@ -3,7 +3,6 @@
 //! エディタの位置は, Emacs と同じく 1 から数えます (`point-min` は 1).
 
 use crate::error::Error;
-use crate::scheme::editor_ops;
 use crate::scheme::evaluator::{KeyBinding, Machine};
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
@@ -1006,7 +1005,6 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             fixed::<0>(name, args)?;
             machine.host.call(name, vec![])
         }
-        _ if editor_ops::NAMES.contains(&name) => editor_ops::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name).into())),
     }

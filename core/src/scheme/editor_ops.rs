@@ -5,6 +5,7 @@
 
 use crate::error::Error;
 use crate::scheme::evaluator::Machine;
+use crate::scheme::registry::Registry;
 use crate::scheme::value::Value;
 
 /// 引数の種類.
@@ -244,159 +245,16 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("gui-selection-value", &[], 0),
 ];
 
-/// 手続きの名前.
-pub const NAMES: &[&str] = &[
-    "erase-buffer",
-    "buffer-size",
-    "char-after",
-    "char-before",
-    "forward-char",
-    "backward-char",
-    "forward-line",
-    "line-beginning-position",
-    "line-end-position",
-    "bobp",
-    "eobp",
-    "bolp",
-    "eolp",
-    "delete-char",
-    "casify-region",
-    "insert-before-markers",
-    "current-column",
-    "move-to-column",
-    "match-beginning",
-    "match-end",
-    "match-data",
-    "match-string",
-    "string-match--op",
-    "set-match-data",
-    "highlighted-regexps",
-    "token-spans",
-    "match-substitute-replacement",
-    "replace-match",
-    "mark",
-    "set-mark",
-    "push-mark",
-    "set-mark-position",
-    "global-mark-pop",
-    "pop-mark",
-    "deactivate-mark",
-    "region-beginning",
-    "region-end",
-    "use-region-p",
-    "region-active-p",
-    "activate-mark",
-    "deactivate-mark-requested",
-    "set-deactivate-mark",
-    "point-marker",
-    "marker-position",
-    "marker-release",
-    "marker-set",
-    "narrow-to-region",
-    "widen",
-    "buffer-narrowed-p",
-    "restriction-save",
-    "restriction-restore",
-    "kill-append",
-    "kill-region",
-    "start-kbd-macro",
-    "end-kbd-macro",
-    "kbd-macro-last",
-    "kbd-macro-defining-p",
-    "kill-ring-length",
-    "current-kill",
-    "insert-for-yank",
-    "undo-boundary",
-    "buffer-undo-list",
-    "primitive-undo",
-    "set-buffer-undo-list",
-    "current-prefix-arg",
-    "set-current-prefix-arg",
-    "prefix-numeric-value",
-    "scan-lists",
-    "scan-sexps",
-    "syntax-ppss",
-    "char-syntax",
-    "syntax-class-at",
-    "forward-comment",
-    "backward-prefix-chars",
-    "up-list-position",
-    "beginning-of-defun-position",
-    "end-of-defun-position",
-    "mark-defun-range",
-    "forward-word-position",
-    "forward-paragraph-position",
-    "forward-sentence-position",
-    "indent-for-tab-op",
-    "indent-region-op",
-    "indent-sexp-op",
-    "newline-and-indent-op",
-    "plain-newline-and-indent-op",
-    "fill-paragraph-op",
-    "fill-text-op",
-    "comment-dwim-op",
-    "comment-region-op",
-    "syntax-dialect",
-    "set-syntax-dialect",
-    "major-mode-name",
-    "file-local-mode",
-    "set-major-mode-name",
-    "selected-window",
-    "window-list",
-    "split-window",
-    "split-root-window",
-    "window-balance",
-    "window-resize",
-    "window-total-height",
-    "window-total-width",
-    "window-edges",
-    "window-dedicated-p",
-    "set-window-dedicated-p",
-    "delete-window",
-    "delete-other-windows",
-    "set-tab-bar",
-    "current-window-configuration",
-    "set-window-configuration",
-    "other-window",
-    "select-window",
-    "set-window-buffer",
-    "window-buffer",
-    "get-buffer",
-    "get-buffer-create",
-    "generate-new-buffer",
-    "files--set-buffer-file-name",
-    "verify-visited-file-modtime",
-    "set-visited-file-modtime",
-    "files--buffer-backed-up-p",
-    "files--set-buffer-backed-up",
-    "do-auto-save",
-    "generate-new-buffer-name",
-    "rename-buffer",
-    "buffer-read-only",
-    "barf-if-buffer-read-only",
-    "set-buffer-read-only",
-    "set-buffer",
-    "current-buffer",
-    "search-forward",
-    "search-backward",
-    "re-search-forward",
-    "re-search-backward",
-    "looking-at",
-    "skip-chars-forward",
-    "skip-chars-backward",
-    "skip-syntax-forward",
-    "skip-syntax-backward",
-    "executing-kbd-macro-p",
-    "window-body-height",
-    "move-to-window-line",
-    "recenter",
-    "redisplay",
-    "quit-requested-p",
-    "kill-emacs",
-    "toggle-project-tree",
-    "gui-set-selection",
-    "gui-selection-value",
-];
+/// エディタの操作の手続きを登録します (名前は [`SPECS`] の全て).
+///
+/// # Arguments
+///
+/// * `registry` - 登録先の表.
+pub fn register(registry: &mut Registry) {
+    for (name, _, _) in SPECS {
+        registry.register(name, call);
+    }
+}
 
 /// 引数が決まりに合うか確かめます.
 fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<(), Error> {
@@ -437,15 +295,11 @@ fn check(name: &str, kinds: &[Kind], required: usize, args: &[Value]) -> Result<
 /// # Returns
 ///
 /// 結果, または失敗の内容.
-pub(crate) fn call(
-    machine: &mut Machine,
-    name: &str,
-    mut args: Vec<Value>,
-) -> Result<Value, Error> {
+fn call(machine: &mut Machine, name: &str, mut args: Vec<Value>) -> Result<Value, Error> {
     let (_, kinds, required) = SPECS
         .iter()
         .find(|(n, _, _)| *n == name)
-        .expect("a name in NAMES has a spec");
+        .expect("a registered name has a spec");
     check(name, kinds, *required, &args)?;
     // 探す手続きは, 大文字と小文字を区別しないか (`case-fold-search`. 始めは真) を, 最後の引数で渡す
     if name.contains("search") || name == "looking-at" {
