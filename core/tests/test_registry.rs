@@ -46,6 +46,16 @@ fn test_registry_has_the_migrated_procedures_and_defines_them() {
         "ert-delete-all-tests",
         "ert-fail",
         "ert-skip",
+        "documentation",
+        "documentation-property",
+        "help-function-arglist",
+        "commandp",
+        "fboundp",
+        "boundp",
+        "symbol-value",
+        "message-log",
+        "symbol-file",
+        "mapatoms",
     ] {
         assert!(names.contains(&name), "{name} is not registered");
     }

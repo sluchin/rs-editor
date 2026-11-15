@@ -16,7 +16,6 @@ use crate::scheme::builtins;
 use crate::scheme::editor_ops;
 use crate::scheme::env::Env;
 use crate::scheme::ert::{self, ErtTest};
-use crate::scheme::help;
 use crate::scheme::hooks;
 use crate::scheme::host::{Host, NoHost};
 use crate::scheme::loadup;
@@ -95,7 +94,6 @@ impl Evaluator {
         for name in builtins::NAMES
             .iter()
             .chain(system::NAMES)
-            .chain(help::NAMES)
             .chain(editor_ops::NAMES)
         {
             global.define(name, Value::Function(name.to_string()));

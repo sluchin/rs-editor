@@ -5,7 +5,6 @@
 use crate::error::Error;
 use crate::scheme::editor_ops;
 use crate::scheme::evaluator::{KeyBinding, Machine};
-use crate::scheme::help;
 use crate::scheme::keys;
 use crate::scheme::parser::Parser;
 use crate::scheme::registry::registry;
@@ -1008,7 +1007,6 @@ pub fn call(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value
             machine.host.call(name, vec![])
         }
         _ if editor_ops::NAMES.contains(&name) => editor_ops::call(machine, name, args),
-        _ if help::NAMES.contains(&name) => help::call(machine, name, args),
         _ => system::call(machine, name, args)
             .unwrap_or_else(|| Err(format!("Unknown procedure: {}", name).into())),
     }
