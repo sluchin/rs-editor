@@ -272,6 +272,7 @@ S 式は、Emacs 30 の構文表 (Fundamental モード、emacs-lisp-mode, schem
 | `C-h k` | describe-key | 次に押すキーのコマンドを、実行せずにミニバッファに出す |
 | `C-h b` | describe-bindings | キーの割り当ての一覧を `*Help*` バッファに出す (Lisp の割り当てを含む) |
 | `C-h m` | describe-mode | 今のメジャーモードの説明を `*Help*` バッファに出す |
+| `C-h t` | help-with-tutorial | 操作して覚えるチュートリアルを、バッファ `TUTORIAL` (日本語は `TUTORIAL.ja`) に出す (`lisp/tutorial.scm`)。言語は `help-language` で決め、前置引数 (`C-u C-h t`) があれば聞く。バッファはファイルではなく、書き換えても保存しない。もう一度押すと、書き換えた続きのバッファを選ぶ |
 | `C-h a` | apropos-command | 名前に入力した文字を含むコマンドを、キーと説明の最初の行つきで `*Help*` バッファに出す |
 | `C-h d` | apropos-documentation | 説明に入力した文字を含む関数とコマンドを `*Help*` バッファに出す |
 | `*Help*` の中 | help-go-back ほか | `l` 前の説明へ戻る、`r` 進む、`RET` 点の所の名前 (`名前'` の形か、記号) の説明を出す、`TAB` / `n` 次のリンク、`S-TAB` / `p` 前のリンク、`SPC` / `DEL` スクロール、`<` / `>` 先頭と末尾、`q` 閉じる |

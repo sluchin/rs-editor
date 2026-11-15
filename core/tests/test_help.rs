@@ -627,3 +627,61 @@ fn test_info_goto_emacs_nodes() {
     // 節が見つからなくても, 索引の項目の所に残る
     let _ = &path;
 }
+
+#[test]
+fn test_help_with_tutorial_uses_help_language() {
+    // 英語 (既定でない言語も, 英語)
+    let text = plain(&eval(&format!(
+        "(set! help-language \"en\") (help-with-tutorial) {}",
+        text_of("TUTORIAL")
+    )));
+    assert!(text.starts_with("RSEDITOR TUTORIAL\n"));
+    assert!(text.contains("C-x C-f   Visit a file"));
+    assert_eq!(
+        eval("(set! help-language \"fr\") (help-with-tutorial) (buffer-name)"),
+        "\"TUTORIAL\""
+    );
+    // 日本語
+    let ja = plain(&eval(&format!(
+        "(set! help-language \"ja\") (help-with-tutorial) {}",
+        text_of("TUTORIAL.ja")
+    )));
+    assert!(ja.starts_with("RSEDITOR チュートリアル\n"));
+    assert!(ja.contains("C-x C-f   ファイルを開く"));
+}
+
+#[test]
+fn test_help_with_tutorial_buffer_state() {
+    // 先頭に置き, 変更なしにする. 書き込める (練習で書き換える)
+    assert_eq!(
+        eval(
+            "(set! help-language \"en\") (help-with-tutorial) (list (point) (buffer-modified-p) \
+             (buffer-read-only))"
+        ),
+        "(1 #f #f)"
+    );
+    // もう一度呼ぶと, 書き換えた続きのバッファを選ぶ (作り直さない)
+    assert_eq!(
+        eval(
+            "(set! help-language \"en\") (help-with-tutorial) (insert \"X\") (switch-to-buffer \"other\") \
+             (help-with-tutorial) (list (buffer-name) (char-after 1))"
+        ),
+        "(\"TUTORIAL\" \"X\")"
+    );
+}
+
+#[test]
+fn test_help_with_tutorial_asks_language_with_argument() {
+    assert_eq!(
+        eval_with(&["Japanese"], "(help-with-tutorial #t) (buffer-name)").0,
+        "\"TUTORIAL.ja\""
+    );
+    assert_eq!(
+        eval_with(
+            &["English"],
+            "(set! help-language \"ja\") (help-with-tutorial #t) (buffer-name)"
+        )
+        .0,
+        "\"TUTORIAL\""
+    );
+}

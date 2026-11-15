@@ -8788,6 +8788,30 @@ msgctxt "function:tab-move"
 msgid "Move the current tab N places ahead (back if N is negative), wrapping around."
 msgstr ""
 
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--read-language"
+msgid "Read the language of the tutorial in the minibuffer; return \"en\" or \"ja\"."
+msgstr ""
+
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--text"
+msgid "Return the text of the tutorial in LANGUAGE (\"ja\", or English for any other)."
+msgstr ""
+
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--buffer-name"
+msgid "Return the name of the tutorial buffer for LANGUAGE."
+msgstr ""
+
+#: lisp/tutorial.scm
+msgctxt "function:help-with-tutorial"
+msgid ""
+"Select the learn-by-doing tutorial.\n"
+"The tutorial is in the language of `help-language' if it has one (\"ja\"), otherwise English.\n"
+"With a prefix argument, ask which language to use.\n"
+"If the tutorial buffer is already there, select it so that you can go on."
+msgstr ""
+
 #: lisp/uniquify.scm
 msgctxt "variable:uniquify-buffer-name-style"
 msgid ""

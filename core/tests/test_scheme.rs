@@ -537,6 +537,7 @@ fn test_define_command_and_global_set_key() {
             "help-quick-toggle",
             "search-forward-help-for-help",
             "describe-syntax",
+            "help-with-tutorial",
             "dired",
             "dired-other-window",
             "dired-jump",

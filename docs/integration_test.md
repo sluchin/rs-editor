@@ -101,6 +101,9 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-051 | 同上 | `C-h x` `grep` RET | `grep` の docstring が出る |
 | IT-052 | 同上 | `C-h s` | 構文表の説明が出る |
 | IT-053 | `*Help*` が出ている | `q` | `*Help*` の窓が閉じる |
+| IT-164 | 起動直後 | `C-h t` | バッファ `TUTORIAL` (`LANG` が日本語なら `TUTORIAL.ja`) が開き、先頭に `RSEDITOR TUTORIAL` (または `RSEDITOR チュートリアル`) と出る。バッファは変更なしで、文字を打てる |
+| IT-165 | IT-164 の後、チュートリアルで文字を打った | `C-x b` で別のバッファへ、`C-h t` | 打った文字が残る同じバッファに戻る (作り直さない) |
+| IT-166 | 起動直後 | `C-u C-h t`、`Japanese` RET | バッファ `TUTORIAL.ja` が開く |
 
 ### 4.6 `M-x grep` と `next-error`
 

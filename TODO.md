@@ -325,7 +325,7 @@
 - [x] `C-h m` (describe-mode)。今のメジャーモードの名前と docstring を出す (モードごとの説明やキーの一覧は、まだ)。
 - [x] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。検索語は、正規表現でなく、文字列として探す。
 - [x] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
-- [ ] `C-h t` (チュートリアル), `C-h q` (help-quick-toggle。今は `help-quit`)。
+- [x] `C-h t` (チュートリアル。本文は、Emacs の TUTORIAL でなく、このエディタのキーに合わせて書いた。英語と日本語。バッファはファイルではなく、Emacs の `~/.emacs.d/tutorial/` への保存と、続きの位置の復元は無い)。`C-h q` は、Emacs 30 でも `help-quit` で、`help-quick-toggle` は `C-h C-q` (同じ)。
 - [x] `*Help*` バッファの中のキー (`q`、`l`、`r`、`RET`、`TAB` / `S-TAB`、`SPC` / `DEL`)。リンクは、`名前'` の形の名前だけ (ボタンの色付けと、クリックはまだ)。
 
 ### ミニバッファと補完
@@ -671,7 +671,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ## Phase 22: 優先度つきの進め方
 
-各 Phase の未完了 (`- [ ]`) は 120 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
+各 Phase の未完了 (`- [ ]`) は 100 件ある。下に、優先度ごとにまとめた (この節の項目の数は含まない)。詳しい内容は、各 Phase の項目を見る (ここでは名前だけ)。
 決め方は、(1) 固まる・データを失う・落ちるものを先に、(2) 毎日の編集で Emacs と違って困るもの (`dotfiles/.emacs.el` で使っているキーを含む) を次に、(3) 使う場面が限られるものや、大きな機能を後に、とした。
 各項目の大きさは小 (1 コミット)、中 (数コミット)、大 (Phase 単位) の目安。
 
@@ -720,7 +720,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
-- [ ] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。残りは `C-h t` と、`*Help*` のリンクの色付けとクリック (Phase 14, 18)。小。
+- [ ] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。`C-h t` も完了。残りは、`*Help*` のリンクの色付けとクリック (Phase 14, 18)。小。
 - [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了 (画面のアプリだけ)。残りは、ターミナルと `debug-on-error` (Phase 16)。小。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。

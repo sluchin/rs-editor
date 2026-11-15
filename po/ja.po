@@ -10042,6 +10042,34 @@ msgctxt "function:tab-move"
 msgid "Move the current tab N places ahead (back if N is negative), wrapping around."
 msgstr "選んでいるタブを N 個先 (負なら戻る) に動かす。端まで行くと、反対側に回る。"
 
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--read-language"
+msgid "Read the language of the tutorial in the minibuffer; return \"en\" or \"ja\"."
+msgstr "チュートリアルの言語をミニバッファで読み、\"en\" か \"ja\" を返す。"
+
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--text"
+msgid "Return the text of the tutorial in LANGUAGE (\"ja\", or English for any other)."
+msgstr "言語 LANGUAGE のチュートリアルの本文を返す (\"ja\" なら日本語、ほかは英語)。"
+
+#: lisp/tutorial.scm
+msgctxt "function:tutorial--buffer-name"
+msgid "Return the name of the tutorial buffer for LANGUAGE."
+msgstr "言語 LANGUAGE のチュートリアルのバッファの名前を返す。"
+
+#: lisp/tutorial.scm
+msgctxt "function:help-with-tutorial"
+msgid ""
+"Select the learn-by-doing tutorial.\n"
+"The tutorial is in the language of `help-language' if it has one (\"ja\"), otherwise English.\n"
+"With a prefix argument, ask which language to use.\n"
+"If the tutorial buffer is already there, select it so that you can go on."
+msgstr ""
+"実際に操作して覚えるチュートリアルを選ぶ。\n"
+"`help-language' の言語 (\"ja\") のチュートリアルがあれば、それを出す。無ければ英語。\n"
+"前置引数があれば、言語を聞く。\n"
+"チュートリアルのバッファがすでにあれば、続きができるように、そのバッファを選ぶ。"
+
 #: lisp/uniquify.scm
 msgctxt "variable:uniquify-buffer-name-style"
 msgid ""

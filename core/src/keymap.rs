@@ -324,6 +324,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-h ?", "help-for-help"),
     ("C-h C-h", "help-for-help"),
     ("C-h q", "help-quit"),
+    ("C-h t", "help-with-tutorial"),
     ("C-h C-q", "help-quick-toggle"),
     ("C-h C-s", "search-forward-help-for-help"),
     ("C-h 4 s", "help-find-source"),
