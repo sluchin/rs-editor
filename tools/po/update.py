@@ -3,6 +3,7 @@
 
 使い方: update.py [--check]
 
+- core/src/scheme/builtin_docs.rs と emacs_docs.rs (組み込みの手続き (Rust) の docstring の表) の docstring も集める。
 - lisp/*.scm の `define` と `define-command` の docstring を集める
   (関数は, 引数の後の文字列 (本体が文字列だけなら, docstring でない). 変数は, `(define name value "doc")` の 3 つ目)。
 - msgctxt は `function:名前` か `variable:名前`, msgid は docstring (英語)。
@@ -95,6 +96,25 @@ def docstrings(path):
     return found
 
 
+RUST_ESCAPES = {'n': '\n', 't': '\t', '"': '"', '\\': '\\'}
+RUST_ENTRY = re.compile(r'^    \("((?:[^"\\]|\\.)*)", "((?:[^"\\]|\\.)*)"\),$', re.M)
+RUST_ESCAPE = re.compile(r'\\(u\{[0-9a-f]+\}|.)')
+
+
+def rust_unescape(text):
+    """Rust の文字列リテラルの中身."""
+    def one(m):
+        code = m.group(1)
+        return chr(int(code[2:-1], 16)) if code.startswith('u{') else RUST_ESCAPES[code]
+    return RUST_ESCAPE.sub(one, text)
+
+
+def rust_docstrings(path):
+    """Rust の表 (`("名前", "docstring"),` の並び) の [(msgctxt, msgid)]."""
+    return [(f'function:{rust_unescape(name)}', rust_unescape(doc))
+            for name, doc in RUST_ENTRY.findall(path.read_text())]
+
+
 # --- PO の読み書き ---
 
 def po_string(text):
@@ -174,6 +194,14 @@ def pot_entries():
         for ctxt, msgid in docstrings(path):
             entries.append({'comments': [f'#: {path.relative_to(ROOT)}'], 'flags': set(),
                             'ctxt': ctxt, 'id': msgid, 'str': ''})
+    # Lisp で定義し直した名前は, Lisp の docstring が表の docstring に勝つ (評価器の環境で, 後の定義が前の定義を隠す)
+    defined = {e['ctxt'] for e in entries}
+    for name in ('builtin_docs.rs', 'emacs_docs.rs'):
+        path = ROOT / 'core' / 'src' / 'scheme' / name
+        for ctxt, msgid in rust_docstrings(path):
+            if ctxt not in defined:
+                entries.append({'comments': [f'#: {path.relative_to(ROOT)}'], 'flags': set(),
+                                'ctxt': ctxt, 'id': msgid, 'str': ''})
     return entries
 
 

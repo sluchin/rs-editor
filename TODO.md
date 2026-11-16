@@ -563,7 +563,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `define`、`define-command` の docstring (引数の後の文字列。本体が文字列だけなら、docstring でなく値) を覚える。
       `(documentation 'name)` と、変数の docstring (Emacs の `defvar` の 3 つ目。 `documentation-property`) も。
 - [ ] `define-syntax` の docstring。
-- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (1, 2, 4 は完了。残りは 3 と、Emacs の docstring の見直し) (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
+- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (1 から 4 まで完了。残りは、Emacs の docstring のうち、rs-editor で動きが違うものの見直し) (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
       画面のコマンド (TypeScript) は、核に移した (`docs/core_migration.md`) ので、コマンドは全て Lisp の docstring を持つ。
       残るのは、Rust の組み込みの手続き (`car`、`insert`、`forward-char` など)。`C-h f` で調べると、`Not documented.` と出る。
       次の順で直す。
@@ -588,7 +588,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
   - [x] Lisp の docstring を集めて `po/rseditor.pot` を作り、各言語の PO に混ぜる道具 (`tools/po/update.py`。`npm run po:update`)。
     元の docstring が変わった翻訳は、`fuzzy` の印と、前の msgid (`#|`) を付ける。fuzzy の翻訳は出さず英語を出す。
     `npm run po:check` (`npm run check` で動く) で、作り直していない PO を見つける。
-  - [ ] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
+  - [x] Rust の組み込みの docstring も集める (上の「1 か所に書く」の後)。
   - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む)、名前と元の文から翻訳を引く。
     Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
   - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。

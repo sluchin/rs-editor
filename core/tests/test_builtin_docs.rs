@@ -2,6 +2,7 @@
 
 use rseditor_core::scheme::builtin_docs;
 use rseditor_core::scheme::emacs_docs;
+use rseditor_core::scheme::evaluator::Evaluator;
 use rseditor_core::scheme::registry::registry;
 
 #[test]
@@ -38,4 +39,20 @@ fn test_hand_written_docstring_wins_over_emacs() {
         Some("Return #t if the number N is zero.\n\n(zero? N)")
     );
     assert!(builtin_docs::lookup("no-such-procedure").is_none());
+}
+
+#[test]
+fn test_documentation_of_a_builtin_is_translated() {
+    let evaluator = Evaluator::new();
+    // 最後の式の値 (前の式の値は, 行ごとに並ぶ)
+    let last = |code: &str| {
+        let out = evaluator.eval(code).unwrap();
+        out.lines().last().unwrap().to_string()
+    };
+    let english = last("(set! help-language \"en\") (documentation 'zero?)");
+    assert!(english.starts_with("\"Return #t"), "{english}");
+    let raw = last("(set! help-language \"ja\") (documentation 'zero? #t)");
+    assert_eq!(raw, english);
+    let japanese = last("(documentation 'zero?)");
+    assert!(japanese.contains("数 N が 0 なら #t を返す."), "{japanese}");
 }
