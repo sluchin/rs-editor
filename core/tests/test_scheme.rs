@@ -856,9 +856,9 @@ fn test_documentation() {
     assert_eq!(
         eval(
             "(define (f x) \"Add 1 to X.\" (+ x 1)) (define (g) \"value\") (define h (lambda () 1)) \
-             (documentation 'f) (documentation f) (documentation 'g) (documentation 'h) (documentation 'car) (f 1)"
+             (documentation 'f) (documentation f) (documentation 'g) (documentation 'h) (f 1)"
         ),
-        "f\ng\nh\n\"Add 1 to X.\"\n\"Add 1 to X.\"\n#f\n#f\n#f\n2"
+        "f\ng\nh\n\"Add 1 to X.\"\n\"Add 1 to X.\"\n#f\n#f\n2"
     );
     // 変数の docstring (Emacs の defvar と同じく, 3 つ目)
     assert_eq!(

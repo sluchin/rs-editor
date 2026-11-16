@@ -563,7 +563,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `define`、`define-command` の docstring (引数の後の文字列。本体が文字列だけなら、docstring でなく値) を覚える。
       `(documentation 'name)` と、変数の docstring (Emacs の `defvar` の 3 つ目。 `documentation-property`) も。
 - [ ] `define-syntax` の docstring。
-- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
+- [ ] 組み込みの関数 (Rust) の docstring を、1 か所に書く (1, 2, 4 は完了。残りは 3 と、Emacs の docstring の見直し) (Emacs の C の `doc: /* ... */` と DOC ファイルに当たる)。
       画面のコマンド (TypeScript) は、核に移した (`docs/core_migration.md`) ので、コマンドは全て Lisp の docstring を持つ。
       残るのは、Rust の組み込みの手続き (`car`、`insert`、`forward-char` など)。`C-h f` で調べると、`Not documented.` と出る。
       次の順で直す。
@@ -571,7 +571,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
      Emacs にある関数は、Emacs の docstring を `emacs -Q --batch` で書き出して作る (`tools/emacs-commands/` に足す)。rs-editor で動きが違うものは、違いを 1 行足す。
   2. Lisp の `documentation` が、Lisp の docstring が無ければ、表の文を返す。`lisp/help-fns.scm` の `Not documented.` は、本当に docstring の無いものだけになる。
   3. `tools/po/update.py` が表も集め (`msgctxt` は `function:名前`)、`po/ja.po` に訳を足す。表の文も、Lisp の docstring と同じく `help-language` の訳で出る。
-  4. テスト: 組み込みの名前 (`builtins::NAMES` など) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
+  4. テスト: 組み込みの名前 (登録表 `registry()` の全ての名前) が全て表にあること (`core/tests/`)。無い名前を足すと失敗する。
 - [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`)、割り当てたキー (`where-is-internal`),
       引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
       候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。

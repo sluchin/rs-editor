@@ -93,8 +93,8 @@ fn test_describe_function_kinds() {
     );
     // 組み込みの手続き (Rust)
     assert_eq!(
-        describe(&ev, &editor, "car"),
-        "car is a built-in function.\n\nNot documented.\n"
+        describe(&ev, &editor, "zero?"),
+        "zero? is a built-in function.\n\nReturn #t if the number N is zero.\n\n(zero? N)\n"
     );
     // ファイルから読んでいない, Lisp の関数 (前の *Help* は, 書き直す)
     ev.eval("(define (f x . more) \"Do X.\" x) (define (g) 1)")
@@ -160,12 +160,16 @@ fn test_help_language_from_locale() {
 #[test]
 fn test_help_builtins() {
     let (ev, editor) = setup();
-    // documentation: 無名の手続きは, 訳さない. 組み込みの手続きは #f
+    // documentation: 無名の手続きは, 訳さない. 組み込みの手続きは, 表の docstring (無い名前は #f)
     assert_eq!(
         ev.eval("(documentation (lambda () \"Doc.\" 1))").unwrap(),
         "\"Doc.\""
     );
-    assert_eq!(ev.eval("(documentation car)").unwrap(), "#f");
+    assert_eq!(
+        ev.eval("(documentation zero?)").unwrap(),
+        "\"Return #t if the number N is zero.\\n\\n(zero? N)\""
+    );
+    assert!(ev.eval("(documentation 'car)").unwrap().starts_with('"'));
     assert_eq!(
         ev.eval("(documentation 'car 1 2)").unwrap_err(),
         "documentation expects 1 or 2 arguments"

@@ -1,8 +1,10 @@
 //! エディタを拡張する Scheme (Lisp) の処理系. 読み込み ([`parser`]), 評価 ([`evaluator`]), 組み込みの手続き ([`builtins`]) などからなります.
 
+pub mod builtin_docs;
 pub mod builtins;
 pub mod editor_host;
 pub mod editor_ops;
+pub mod emacs_docs;
 pub mod env;
 pub mod ert;
 pub mod evaluator;

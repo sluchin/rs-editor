@@ -5,6 +5,7 @@
 
 use crate::error::Error;
 use crate::register;
+use crate::scheme::builtin_docs;
 use crate::scheme::builtins::fixed;
 use crate::scheme::evaluator::Machine;
 use crate::scheme::po;
@@ -124,7 +125,10 @@ fn documentation(machine: &mut Machine, _name: &str, args: Vec<Value>) -> Result
                 translate(machine, name.map(|n| format!("function:{}", n)), doc, raw)
             }))
         }
-        (Value::Function(_), _) => Ok(Value::Boolean(false)),
+        (Value::Function(function), _) => Ok(builtin_docs::lookup(&function)
+            .map_or(Value::Boolean(false), |doc| {
+                translate(machine, Some(format!("function:{}", function)), doc, raw)
+            })),
         (other, _) => Err(format!("Invalid function: {}", other).into()),
     }
 }

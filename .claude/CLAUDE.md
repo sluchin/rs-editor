@@ -50,7 +50,8 @@ Tauri + React + Rust で構築された, Emacs のように使えるエディタ
 手続きは, 名前と関数の組を, モジュールごとの `register` に書く (`register!`。登録表は `core/src/scheme/registry.rs`)。数, リスト, 文字列, エディタの基本は `core/src/scheme/builtins.rs`, ファイルと時刻と正規表現は `system.rs`, フックは `hooks.rs`, ERT は `ert.rs`, ヘルプは `help.rs`, エディタの操作は `editor_ops.rs`:
 1. 関数 `fn name(machine: &mut Machine, name: &str, args: Vec<Value>) -> Result<Value, Error>` を書く (引数は `fixed`, `number`, `string` などで取り出す)。`Value` の結果か, エラーを返す。1 つの関数を複数の名前に使うときは, `name` で分ける
 2. そのモジュールの `register` に `"手続きの名前" => 関数,` を足す (評価器は, 起動のときに, 登録表の全ての名前を一番外側の環境に定義する。同じ名前を 2 回登録すると, 起動のときに失敗する)
-3. 特別な形 (引数を評価しないもの) は, `core/src/scheme/evaluator.rs` の `special_form()` に追加
+3. docstring (英語) を `core/src/scheme/builtin_docs.rs` の表に足す (名前の順。無いと `core/tests/test_builtin_docs.rs` が失敗する)。Emacs に同じ名前があって動きが同じなら, 表は要らない (`python3 tools/emacs-commands/builtin_docs.py` が `emacs_docs.rs` に書く。動きが違うときは, `builtin_docs.rs` に書く)
+4. 特別な形 (引数を評価しないもの) は, `core/src/scheme/evaluator.rs` の `special_form()` に追加
 
 ### UI の更新
 `src/` 内のコンポーネントを編集:
