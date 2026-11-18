@@ -104,6 +104,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-164 | 起動直後 | `C-h t` | バッファ `TUTORIAL` (`LANG` が日本語なら `TUTORIAL.ja`) が開き、先頭に `RSEDITOR TUTORIAL` (または `RSEDITOR チュートリアル`) と出る。バッファは変更なしで、文字を打てる |
 | IT-165 | IT-164 の後、チュートリアルで文字を打った | `C-x b` で別のバッファへ、`C-h t` | 打った文字が残る同じバッファに戻る (作り直さない) |
 | IT-166 | 起動直後 | `C-u C-h t`、`Japanese` RET | バッファ `TUTORIAL.ja` が開く |
+| IT-167 | `C-h f` `find-file` RET で、docstring に `名前'` の形でヘルプのある名前が出ている | `*Help*` を見て、その名前を押す | ヘルプのある名前は青い下線で描かれ、押すとその名前のヘルプに替わる。ヘルプの無い名前は、色が付かない。`TAB` と `RET` でも、同じ動きになる |
 
 ### 4.6 `M-x grep` と `next-error`
 

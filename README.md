@@ -354,7 +354,7 @@ Emacs の ERT と同じく、`ert-deftest`、`should`、`should-not`、`should-e
 
 ### ヘルプ (C-h f) と、翻訳
 
-`C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [po.md](https://github.com/sluchin/rs-editor/blob/main/docs/po.md) にあります。
+`C-h f` (`M-x describe-function`) で、関数とコマンドの説明を `*Help*` に出します (定義したファイル、割り当てたキー、引数の形、docstring)。`*Help*` の中の `名前'` は、ヘルプのあるものを、画面では青い下線で描き、押すとそのヘルプを出します (ターミナルでは下線で描き、`TAB` と `RET` で辿ります)。docstring は英語で書き、翻訳は `po/ja.po` (gettext の PO 形式) にあります。出す言語は変数 `help-language` で選びます (既定は環境変数 `LANG` から。`(set! help-language "en")` なら英語)。docstring を変えたら `npm run po:update` で PO を作り直し、Poedit などの翻訳の道具か、エディタで `msgstr` を直します (元の docstring が変わった翻訳は `fuzzy` になり、直すまで英語を出します)。手順は [po.md](https://github.com/sluchin/rs-editor/blob/main/docs/po.md) にあります。
 
 howm のテストは `tests/lisp/test_howm.scm` です。`npm run test:scheme` (`cargo test -p rseditor-core --test lisp_ert_test`) で、`tests/lisp/*.scm` を全て走らせます。
 

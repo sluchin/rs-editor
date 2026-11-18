@@ -200,7 +200,7 @@ export default function WindowView({
             event.preventDefault()
             return true
           },
-          mouseup: (_event, v) => {
+          mouseup: (event, v) => {
             const { anchor, head } = v.state.selection.main
             latest.current.onInput({
               kind: 'point',
@@ -208,6 +208,14 @@ export default function WindowView({
               pos: head,
               anchor: anchor === head ? null : anchor,
             })
+            // *Help* のリンクを押したら (ドラッグで選んだときは除く), そのリンクのヘルプを出す
+            if (
+              anchor === head &&
+              event.target instanceof Element &&
+              event.target.closest('.cm-face-help-link')
+            ) {
+              latest.current.onInput({ kind: 'command', name: 'help-follow' })
+            }
             return false
           },
         }),

@@ -2287,6 +2287,21 @@ msgid "Return true if the text NAME names a function or a variable that has help
 msgstr "文字列 NAME が, ヘルプのある関数か変数の名前なら真を返す."
 
 #: lisp/help-fns.scm
+msgctxt "function:help--link-names"
+msgid "Return the distinct names in TEXT that are quoted as `NAME' and have help, in order."
+msgstr "TEXT の中で `NAME' の形に引用された名前のうち、ヘルプのあるものを、重複なく、出てくる順に返す。"
+
+#: lisp/help-fns.scm
+msgctxt "function:help--regexp-quote"
+msgid "Return NAME as a regexp (Rust syntax) that matches only NAME."
+msgstr "NAME だけに合う正規表現 (Rust の書き方) を返す。"
+
+#: lisp/help-fns.scm
+msgctxt "function:help--highlight-links"
+msgid "Draw the links of TEXT (the names that have help) in the face `help-link'."
+msgstr "TEXT のリンク (ヘルプのある名前) を、face `help-link' で描く。"
+
+#: lisp/help-fns.scm
 msgctxt "function:help--put"
 msgid "Put TEXT in the *Help* buffer, and bind the keys of the buffer."
 msgstr "TEXT を *Help* バッファに入れ, バッファのキーを割り当てる."
@@ -2355,9 +2370,30 @@ msgid "Return the names of all commands, sorted."
 msgstr "全てのコマンドの名前を, 順に並べて返す."
 
 #: lisp/help.scm
+msgctxt "variable:help--symbol-delimiters"
+msgid "The characters (as strings) that end a symbol."
+msgstr "記号を終わらせる文字 (1 文字の文字列)。"
+
+#: lisp/help.scm
+msgctxt "function:help--symbol-at-point"
+msgid "Return the symbol at or next to point, or #f."
+msgstr "点の位置か、点のとなりにある記号を返す。無ければ #f を返す。"
+
+#: lisp/help.scm
 msgctxt "function:help--read-symbol"
-msgid "Read a symbol with PROMPT, completing in NAMES."
-msgstr "PROMPT で記号を読む (NAMES から補完する)."
+msgid ""
+"Read a symbol with PROMPT (without the colon), completing in NAMES.\n"
+"The default is the symbol at point, if (VALID? symbol) is true for it.\n"
+"Like Emacs, the prompt shows the default: \"Describe function (default car): \"."
+msgstr ""
+"PROMPT (コロンを除いたもの) で記号を読む。NAMES から補完する。\n"
+"点の位置に記号があり、(VALID? 記号) が真なら、それを既定にする。\n"
+"Emacs と同じく、問いに既定を出す: \"Describe function (default car): \"。"
+
+#: lisp/help.scm
+msgctxt "function:help--command-p"
+msgid "Return true if SYMBOL names a command, in Lisp or built in."
+msgstr "SYMBOL が、Lisp か組み込みのコマンドの名前なら真を返す。"
 
 #: lisp/help.scm
 msgctxt "function:help-variable-text"

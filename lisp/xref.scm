@@ -169,7 +169,7 @@ They are listed in the *xref* buffer as NAME (FILE)."
   "Switch to the source of the function whose description is shown in *Help*, in another window.
 Interactively, read the function name in the minibuffer."
   (let ((function (if (null? args)
-                      (help--read-symbol "Find source of function: " (help-function-names))
+                      (help--read-symbol "Find source of function" (help-function-names) fboundp)
                       (car args))))
     (xref--goto-definition (symbol->string function) #t)))
 

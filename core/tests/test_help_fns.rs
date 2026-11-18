@@ -414,6 +414,20 @@ mod help_keys {
     }
 
     #[test]
+    fn test_help_draws_links_in_the_link_face() {
+        let (ev, host) = setup();
+        let run = |code: &str| eval(&ev, &host, code);
+        run("(define (helper) \"Help for HELPER.\" 1) (define (ready?) \"Help for READY?.\" 1)");
+        run("(help-show \"See `helper' and `ready?' and `helper' and `nothing'.\")");
+        let regexps = || run("(with-current-buffer \"*Help*\" (highlighted-regexps))");
+        // ヘルプのある名前だけを, 重複なく, 正規表現の記号を避けて 1 つにまとめる
+        assert_eq!(regexps(), "(\"`(helper|ready\\\\?)'\")");
+        // 別の文を出すと, 前のリンクは消える
+        run("(help-show \"No links here.\")");
+        assert_eq!(regexps(), "()");
+    }
+
+    #[test]
     fn test_help_follow_and_links() {
         let (ev, host) = setup();
         let run = |code: &str| eval(&ev, &host, code);
@@ -452,4 +466,85 @@ mod help_keys {
         in_help("(goto-char (point-max))");
         assert_eq!(in_help("(help-follow)"), "error: No symbol here");
     }
+}
+
+#[test]
+fn test_describe_function_defaults_to_the_symbol_at_point() {
+    let (ev, editor) = setup();
+    editor.with_buffer(|b| {
+        b.text = "(car x)".chars().collect();
+        b.point = 3;
+    });
+    // 空の入力は, カーソルの所の関数 (car) になり, 問いに既定を出す
+    editor.answers.lock().unwrap().push(String::new());
+    ev.run_command("describe-function", &editor).unwrap();
+    assert_eq!(
+        *editor.prompts.lock().unwrap(),
+        vec!["Describe function (default car): "]
+    );
+    let help: String = editor.buffers.lock().unwrap()["*Help*"]
+        .text
+        .iter()
+        .collect();
+    assert!(help.starts_with("car is a built-in function"), "{}", help);
+}
+
+#[test]
+fn test_describe_function_has_no_default_for_an_unknown_symbol() {
+    let (ev, editor) = setup();
+    editor.with_buffer(|b| {
+        b.text = "no-such-name".chars().collect();
+        b.point = 3;
+    });
+    editor.answers.lock().unwrap().push("car".to_string());
+    ev.run_command("describe-function", &editor).unwrap();
+    assert_eq!(*editor.prompts.lock().unwrap(), vec!["Describe function: "]);
+}
+
+#[test]
+fn test_describe_defaults_follow_the_kind_of_the_symbol_at_point() {
+    let (ev, editor) = setup();
+    // 記号の直後 (点が末尾の外) でも, その記号が既定になる
+    editor.with_buffer(|b| {
+        b.text = "help-language".chars().collect();
+        b.point = 14;
+    });
+    // 変数 (C-h v) と, 記号 (C-h o) は, 変数も既定にする. 関数 (C-h f) と, コマンド (C-h x) は, しない
+    for (command, prompt) in [
+        (
+            "describe-variable",
+            "Describe variable (default help-language): ",
+        ),
+        (
+            "describe-symbol",
+            "Describe symbol (default help-language): ",
+        ),
+    ] {
+        editor.prompts.lock().unwrap().clear();
+        editor.answers.lock().unwrap().push(String::new());
+        ev.run_command(command, &editor).unwrap();
+        assert_eq!(*editor.prompts.lock().unwrap(), vec![prompt], "{}", command);
+    }
+    for (command, prompt) in [
+        ("describe-function", "Describe function: "),
+        ("describe-command", "Describe command: "),
+    ] {
+        editor.prompts.lock().unwrap().clear();
+        editor
+            .answers
+            .lock()
+            .unwrap()
+            .push("describe-function".to_string());
+        ev.run_command(command, &editor).unwrap();
+        assert_eq!(*editor.prompts.lock().unwrap(), vec![prompt], "{}", command);
+    }
+    // 空のバッファでは, 既定が無い
+    editor.with_buffer(|b| {
+        b.text.clear();
+        b.point = 1;
+    });
+    editor.prompts.lock().unwrap().clear();
+    editor.answers.lock().unwrap().push("car".to_string());
+    ev.run_command("describe-function", &editor).unwrap();
+    assert_eq!(*editor.prompts.lock().unwrap(), vec!["Describe function: "]);
 }

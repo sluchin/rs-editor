@@ -88,7 +88,7 @@ show that manual."
   (info--goto-index-entry
    (symbol->string (if (pair? args)
                        (car args)
-                       (help--read-symbol "Find documentation for command: " (help--command-names))))))
+                       (help--read-symbol "Find documentation for command" (help--command-names) help--command-p)))))
 
 (define-command (Info-goto-emacs-key-command-node . args)
   "Go to the node in the Emacs manual which describes the command bound to KEY.

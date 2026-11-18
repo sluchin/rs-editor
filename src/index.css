@@ -30,6 +30,8 @@
   --org-table: #0000ff;
   --org-date: #a020f0;
   --org-link: #3a5fcd;
+  /* *Help* のリンク (Emacs の link face と同じ色) */
+  --help-link: #3a5fcd;
   --org-shadow: #7f7f7f;
   --org-scheduled: #006400;
   --org-scheduled-previously: #b22222;
@@ -57,6 +59,7 @@
   --org-table: #87cefa;
   --org-date: #00ffff;
   --org-link: #00ffff;
+  --help-link: #00ffff;
   --org-shadow: #b3b3b3;
   --org-scheduled: #98fb98;
   --org-scheduled-previously: #ff7f24;

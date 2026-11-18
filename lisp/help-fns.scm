@@ -103,6 +103,39 @@ For example, \"(find-file &rest ARGS)\"."
   (let ((symbol (string->symbol name)))
     (or (fboundp symbol) (boundp symbol))))
 
+(define (help--link-names text)
+  "Return the distinct names in TEXT that are quoted as `NAME' and have help, in order."
+  (let loop ((from 0) (names '()))
+    (let ((m (regexp-match-positions help--link-regexp text from)))
+      (if (not m)
+          (reverse names)
+          (let ((name (substring text (car (cadr m)) (cadr (cadr m)))))
+            (loop (cadr (car m))
+                  (if (and (help--link-p name) (not (member name names)))
+                      (cons name names)
+                      names)))))))
+
+(define (help--regexp-quote name)
+  "Return NAME as a regexp (Rust syntax) that matches only NAME."
+  (let loop ((i 0) (quoted ""))
+    (if (>= i (string-length name))
+        quoted
+        (let ((c (substring name i (+ i 1))))
+          (loop (+ i 1)
+                (string-append quoted
+                               (if (member c '("\\" "." "+" "*" "?" "(" ")" "|" "[" "]" "{" "}" "^" "$"))
+                                   (string-append "\\" c)
+                                   c)))))))
+
+(define (help--highlight-links text)
+  "Draw the links of TEXT (the names that have help) in the face `help-link'."
+  (unhighlight-regexp #t)
+  (let ((names (help--link-names text)))
+    (unless (null? names)
+      (highlight-regexp
+       (string-append "`(" (string-join (map help--regexp-quote names) "|") ")'")
+       "help-link" 1 #t))))
+
 (define (help--put text)
   "Put TEXT in the *Help* buffer, and bind the keys of the buffer."
   (let ((buffer (buffer-name)))
@@ -113,6 +146,7 @@ For example, \"(find-file &rest ARGS)\"."
     (goto-char (point-min))
     (set-buffer-modified-p #f)
     (set-buffer-read-only #t)
+    (help--highlight-links text)
     (for-each (lambda (binding) (local-set-key (car binding) (cadr binding)))
               '(("q" quit-window) ("l" help-go-back) ("r" help-go-forward)
                 ("RET" help-follow) ("TAB" help-next-link) ("S-TAB" help-previous-link)
@@ -212,8 +246,7 @@ The text before it is remembered, so that `help-go-back' can show it again."
   "Display the full documentation of FUNCTION (a symbol).
 Interactively, read FUNCTION in the minibuffer with completion."
   (let ((function (if (null? args)
-                      (string->symbol (completing-read "Describe function: "
-                                                       (help-function-names) #f #t))
+                      (help--read-symbol "Describe function" (help-function-names) fboundp)
                       (car args))))
     (help-show (help-function-text function))))
 

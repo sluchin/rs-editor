@@ -159,6 +159,12 @@
   text-decoration: underline;
 }
 
+.code-editor-container .cm-face-help-link {
+  color: var(--help-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .code-editor-container .cm-face-org-link {
   color: var(--org-link);
   text-decoration: underline;

@@ -16,9 +16,42 @@
   "Return the names of all commands, sorted."
   (filter (lambda (name) (commandp (string->symbol name))) (help-function-names)))
 
-(define (help--read-symbol prompt names)
-  "Read a symbol with PROMPT, completing in NAMES."
-  (string->symbol (completing-read prompt names #f #t)))
+(define help--symbol-delimiters '(" " "\t" "\n" "(" ")" "[" "]" "\"" "'" "`" "," ";")
+  "The characters (as strings) that end a symbol.")
+
+(define (help--symbol-at-point)
+  "Return the symbol at or next to point, or #f."
+  (let* ((text (buffer-string))
+         (size (string-length text))
+         (symbol-char? (lambda (i)
+                         (and (>= i 0) (< i size)
+                              (not (member (substring text i (+ i 1)) help--symbol-delimiters)))))
+         (at (- (point) 1)))
+    (if (and (not (symbol-char? at)) (symbol-char? (- at 1)))
+        (set! at (- at 1)))
+    (if (not (symbol-char? at))
+        #f
+        (let loop ((start at))
+          (if (symbol-char? (- start 1))
+              (loop (- start 1))
+              (let scan ((end at))
+                (if (symbol-char? (+ end 1))
+                    (scan (+ end 1))
+                    (string->symbol (substring text start (+ end 1))))))))))
+
+(define (help--read-symbol prompt names valid?)
+  "Read a symbol with PROMPT (without the colon), completing in NAMES.
+The default is the symbol at point, if (VALID? symbol) is true for it.
+Like Emacs, the prompt shows the default: \"Describe function (default car): \"."
+  (let* ((at (help--symbol-at-point))
+         (default (and at (valid? at) (symbol->string at))))
+    (string->symbol
+     (completing-read (if default (format "%s (default %s): " prompt default) (format "%s: " prompt))
+                      names #f #t #f #f default))))
+
+(define (help--command-p symbol)
+  "Return true if SYMBOL names a command, in Lisp or built in."
+  (or (commandp symbol) (member (symbol->string symbol) (editor-command-names))))
 
 (define (help-variable-text variable)
   "Return the text of the help of VARIABLE (a symbol)."
@@ -35,7 +68,7 @@
   "Display the full documentation of VARIABLE (a symbol).
 Interactively, read VARIABLE in the minibuffer with completion."
   (let ((variable (if (null? args)
-                      (help--read-symbol "Describe variable: " (help--variable-names))
+                      (help--read-symbol "Describe variable" (help--variable-names) boundp)
                       (car args))))
     (if (not (boundp variable))
         (error (format "%s is void as a variable" variable)))
@@ -100,7 +133,7 @@ Interactively, read PATTERN in the minibuffer."
   "Display the full documentation of COMMAND (a symbol).
 Interactively, read COMMAND in the minibuffer with completion."
   (let ((command (if (null? args)
-                     (help--read-symbol "Describe command: " (help--command-names))
+                     (help--read-symbol "Describe command" (help--command-names) help--command-p)
                      (car args))))
     (help-show (help-function-text command))
     #f))
@@ -110,10 +143,11 @@ Interactively, read COMMAND in the minibuffer with completion."
 Show the function and the variable of that name, if there are any.
 Interactively, read SYMBOL in the minibuffer with completion."
   (let* ((symbol (if (null? args)
-                     (help--read-symbol "Describe symbol: "
+                     (help--read-symbol "Describe symbol"
                                         (sort (help-unique (append (help-function-names)
                                                                     (help--variable-names)))
-                                              string<?))
+                                              string<?)
+                                        (lambda (symbol) (or (fboundp symbol) (boundp symbol))))
                      (car args)))
          (function (fboundp symbol))
          (variable (and (boundp symbol) (not function))))
@@ -175,7 +209,7 @@ Interactively, read the key sequence after the prompt."
   "Print message listing the key sequences that invoke the command DEFINITION.
 Interactively, read the command name in the minibuffer with completion."
   (let* ((command (if (null? args)
-                      (help--read-symbol "Where is command: " (help--command-names))
+                      (help--read-symbol "Where is command" (help--command-names) help--command-p)
                       (car args)))
          (keys (where-is-internal command)))
     (if (null? keys)

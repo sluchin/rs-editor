@@ -326,7 +326,7 @@
 - [x] `C-h a` / `C-h d` (apropos-command / apropos-documentation)。検索語は、正規表現でなく、文字列として探す。
 - [x] `C-h l` (view-lossage. 押したキーの履歴), `C-h e` (view-echo-area-messages. `*Messages*` バッファ)。
 - [x] `C-h t` (チュートリアル。本文は、Emacs の TUTORIAL でなく、このエディタのキーに合わせて書いた。英語と日本語。バッファはファイルではなく、Emacs の `~/.emacs.d/tutorial/` への保存と、続きの位置の復元は無い)。`C-h q` は、Emacs 30 でも `help-quit` で、`help-quick-toggle` は `C-h C-q` (同じ)。
-- [x] `*Help*` バッファの中のキー (`q`、`l`、`r`、`RET`、`TAB` / `S-TAB`、`SPC` / `DEL`)。リンクは、`名前'` の形の名前だけ (ボタンの色付けと、クリックはまだ)。
+- [x] `*Help*` バッファの中のキー (`q`、`l`、`r`、`RET`、`TAB` / `S-TAB`、`SPC` / `DEL`)。リンクは、`名前'` の形の名前のうち、ヘルプのあるものだけ。画面 (Tauri) では青い下線で描き、押すとそのヘルプを出す。ターミナルでは下線で描く (クリックは無い)。
 
 ### ミニバッファと補完
 
@@ -575,7 +575,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `C-h f` (describe-function. `lisp/help-fns.scm`): `*Help*` を、ほかのウィンドウに出す。定義したファイル (`symbol-file`)、割り当てたキー (`where-is-internal`),
       引数の形 (`help-function-arglist`。`(find-file &rest ARGS)`), docstring (無ければ `Not documented.`)。
       候補は、Lisp と Rust の関数 (`mapatoms`、`fboundp`)。
-- [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。カーソルの所の名前を既定にする。
+- [ ] `C-h v` / `C-h o` / `C-h x`。`*Help*` の、定義したファイルへのリンク、`q` で閉じる。
+      (カーソルの所の名前を既定にするのは済み。問いに `(default NAME)` を出す。)
       docstring の中の `\\[command]` (キー) と `` `name' `` (リンク) は、Emacs と同じく置き換える。
       引数の形は、Emacs の書き方 (`&optional`) にする (今は、残りの引数で受けて `&rest ARGS`)。
 - [x] `lisp/howm.scm` の `;;` の説明を、docstring (英語) に書き直す (元の日本語は、`po/ja.po` の翻訳にした)。
@@ -720,7 +721,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
-- [ ] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。`C-h t` も完了。残りは、`*Help*` のリンクの色付けとクリック (Phase 14, 18)。小。
+- [x] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。`C-h t` も完了。`*Help*` のリンクの色付けとクリックも完了 (Phase 14, 18)。
 - [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了 (画面のアプリだけ)。残りは、ターミナルと `debug-on-error` (Phase 16)。小。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。

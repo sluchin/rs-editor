@@ -169,6 +169,26 @@ describe('WindowView', () => {
     expect(onInput).toHaveBeenLastCalledWith({ kind: 'point', window: 1, pos: 4, anchor: 1 })
   })
 
+  it('*Help* のリンク (help-link の face) を押すと, カーソルを移してから help-follow を送ること', () => {
+    const { editor, onInput } = setup({ highlights: [{ regexp: 'foo', face: 'help-link' }] })
+    const content = editor().contentDOM
+    const link = content.querySelector('.cm-face-help-link') as Element
+    expect(link).not.toBeNull()
+    act(() => editor().dispatch({ selection: { anchor: 2 } }))
+    fireEvent.mouseUp(link)
+    expect(onInput.mock.calls.slice(-2)).toEqual([
+      [{ kind: 'point', window: 1, pos: 2, anchor: null }],
+      [{ kind: 'command', name: 'help-follow' }],
+    ])
+    // ドラッグで選んだときと, リンクでない所を押したときは, 送らない
+    onInput.mockClear()
+    act(() => editor().dispatch({ selection: { anchor: 1, head: 3 } }))
+    fireEvent.mouseUp(link)
+    act(() => editor().dispatch({ selection: { anchor: 6 } }))
+    fireEvent.mouseUp(content)
+    expect(onInput.mock.calls.map(([input]) => input.kind)).toEqual(['point', 'point'])
+  })
+
   it('画面からの操作 (真ん中に出す, 一番上の行, 見えている行の数, 本文) に答えること', () => {
     const { editor, handle } = setup()
     act(() => handle.current?.recenter())

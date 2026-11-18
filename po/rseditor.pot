@@ -1916,6 +1916,21 @@ msgid "Return true if the text NAME names a function or a variable that has help
 msgstr ""
 
 #: lisp/help-fns.scm
+msgctxt "function:help--link-names"
+msgid "Return the distinct names in TEXT that are quoted as `NAME' and have help, in order."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--regexp-quote"
+msgid "Return NAME as a regexp (Rust syntax) that matches only NAME."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help--highlight-links"
+msgid "Draw the links of TEXT (the names that have help) in the face `help-link'."
+msgstr ""
+
+#: lisp/help-fns.scm
 msgctxt "function:help--put"
 msgid "Put TEXT in the *Help* buffer, and bind the keys of the buffer."
 msgstr ""
@@ -1980,8 +1995,26 @@ msgid "Return the names of all commands, sorted."
 msgstr ""
 
 #: lisp/help.scm
+msgctxt "variable:help--symbol-delimiters"
+msgid "The characters (as strings) that end a symbol."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:help--symbol-at-point"
+msgid "Return the symbol at or next to point, or #f."
+msgstr ""
+
+#: lisp/help.scm
 msgctxt "function:help--read-symbol"
-msgid "Read a symbol with PROMPT, completing in NAMES."
+msgid ""
+"Read a symbol with PROMPT (without the colon), completing in NAMES.\n"
+"The default is the symbol at point, if (VALID? symbol) is true for it.\n"
+"Like Emacs, the prompt shows the default: \"Describe function (default car): \"."
+msgstr ""
+
+#: lisp/help.scm
+msgctxt "function:help--command-p"
+msgid "Return true if SYMBOL names a command, in Lisp or built in."
 msgstr ""
 
 #: lisp/help.scm
