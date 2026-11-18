@@ -433,3 +433,26 @@ fn test_winner_keys() {
         .unwrap();
     assert_eq!(message(commands), "Winner mode enabled");
 }
+
+#[test]
+fn test_debug_on_error_shows_the_backtrace_buffer() {
+    let commands = setup();
+    commands
+        .eval("(define (f) (car 1)) (define-command (boom) (f))")
+        .unwrap();
+    // 既定では, エコー領域だけ
+    commands.execute("boom");
+    assert!(commands.host().editor().get_buffer("*Backtrace*").is_none());
+    // toggle-debug-on-error で, 失敗した式を `*Backtrace*` に出す
+    commands.execute("toggle-debug-on-error");
+    assert_eq!(message(&commands), "Debug on Error enabled globally");
+    assert!(commands.variable("debug-on-error").is_non_nil());
+    commands.execute("boom");
+    let editor = commands.host().editor();
+    let backtrace = editor.get_buffer("*Backtrace*").unwrap().text();
+    assert!(backtrace.contains("Backtrace:"), "{backtrace}");
+    assert!(backtrace.contains("(f)"), "{backtrace}");
+    drop(editor);
+    commands.execute("toggle-debug-on-error");
+    assert_eq!(message(&commands), "Debug on Error disabled globally");
+}

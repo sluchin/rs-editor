@@ -101,6 +101,17 @@ a debug warning is only added to the buffer, the other levels also show it in an
       (display-buffer "*Warnings*"))
     #f))
 
+(define (debug--show-backtrace text)
+  "Show TEXT, an error and the forms that were being evaluated, in the `*Backtrace*' buffer.
+The command loop calls this when a command fails and `debug-on-error' is non-nil."
+  (with-current-buffer (get-buffer-create "*Backtrace*")
+    (erase-buffer)
+    (insert text "\n")
+    (goto-char (point-min))
+    (set-buffer-modified-p #f))
+  (display-buffer "*Backtrace*")
+  #f)
+
 (define (concat . strings)
   "Concatenate all the argument strings and make the result a new string."
   (apply string-append strings))

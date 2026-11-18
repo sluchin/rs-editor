@@ -7534,6 +7534,13 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
+msgctxt "function:toggle-debug-on-error"
+msgid ""
+"Toggle `debug-on-error'.\n"
+"When it is non-nil, a command that fails shows the error and the forms being evaluated in the `*Backtrace*' buffer."
+msgstr ""
+
+#: lisp/simple.scm
 msgctxt "function:set-selective-display"
 msgid ""
 "Set selective-display to the argument; clear it if there is none.\n"
@@ -8682,6 +8689,13 @@ msgid ""
 "TYPE is a symbol or a list of symbols that says what the warning is about.\n"
 "MESSAGE is the text.  The optional LEVEL (a symbol: debug, warning or error) is warning by default;\n"
 "a debug warning is only added to the buffer, the other levels also show it in another window."
+msgstr ""
+
+#: lisp/subr.scm
+msgctxt "function:debug--show-backtrace"
+msgid ""
+"Show TEXT, an error and the forms that were being evaluated, in the `*Backtrace*' buffer.\n"
+"The command loop calls this when a command fails and `debug-on-error' is non-nil."
 msgstr ""
 
 #: lisp/subr.scm

@@ -1599,6 +1599,12 @@ With a positive argument, truncate; with zero or a negative one, wrap."
     (set! truncate-lines (if (not arg) (not truncate-lines) (> (prefix-numeric-value arg) 0)))
     (message (format "Truncate long lines %s" (if truncate-lines "enabled" "disabled")))))
 
+(define-command (toggle-debug-on-error . args)
+  "Toggle `debug-on-error'.
+When it is non-nil, a command that fails shows the error and the forms being evaluated in the `*Backtrace*' buffer."
+  (set! debug-on-error (not debug-on-error))
+  (message (format "Debug on Error %s globally" (if debug-on-error "enabled" "disabled"))))
+
 (define-command (set-selective-display . args)
   "Set selective-display to the argument; clear it if there is none.
 When it is a number, lines indented by that many columns or more are not displayed."

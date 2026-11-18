@@ -8548,6 +8548,15 @@ msgstr ""
 "引数が正なら切り, 0 か負なら折り返す."
 
 #: lisp/simple.scm
+msgctxt "function:toggle-debug-on-error"
+msgid ""
+"Toggle `debug-on-error'.\n"
+"When it is non-nil, a command that fails shows the error and the forms being evaluated in the `*Backtrace*' buffer."
+msgstr ""
+"`debug-on-error' を切り替えます。\n"
+"真のとき、失敗したコマンドは、エラーと、評価していた式を `*Backtrace*' バッファに出します。"
+
+#: lisp/simple.scm
 msgctxt "function:set-selective-display"
 msgid ""
 "Set selective-display to the argument; clear it if there is none.\n"
@@ -9936,6 +9945,15 @@ msgstr ""
 "TYPE は警告の種類を表すシンボル (またはシンボルのリスト). MESSAGE は文.\n"
 "省いてもよい LEVEL (debug, warning, error のシンボル)の既定は warning.\n"
 "debug はバッファに書くだけで, ほかのレベルは別の窓にも出す."
+
+#: lisp/subr.scm
+msgctxt "function:debug--show-backtrace"
+msgid ""
+"Show TEXT, an error and the forms that were being evaluated, in the `*Backtrace*' buffer.\n"
+"The command loop calls this when a command fails and `debug-on-error' is non-nil."
+msgstr ""
+"TEXT (エラーと、評価していた式) を `*Backtrace*' バッファに出します。\n"
+"コマンドが失敗し、`debug-on-error' が真のとき、コマンドループが呼びます。"
 
 #: lisp/subr.scm
 msgctxt "function:concat"

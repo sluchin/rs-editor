@@ -354,6 +354,11 @@ impl<U: Host + LoopUi> CommandLoop<U> {
             // マクロは, 失敗したところで止める
             self.host.ui().stop_macro();
             self.say(&error);
+            // `debug-on-error` が真なら, 失敗した式の跡を `*Backtrace*` に出す
+            if self.variable("debug-on-error").is_non_nil() && !error.trace().is_empty() {
+                let text = crate::startup::init_error_text(&error, true);
+                let _ = self.eval(&format!("(debug--show-backtrace {})", Value::String(text)));
+            }
         }
         // 区切りのための呼び出しは, 失敗しない
         let _ = self.host.call("undo-boundary", vec![]);

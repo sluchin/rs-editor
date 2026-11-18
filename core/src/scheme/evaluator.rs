@@ -119,6 +119,8 @@ impl Evaluator {
         );
         // `--debug-init` で起動したか (Emacs の init-file-debug)
         global.define("init-file-debug", Value::Boolean(false));
+        // 失敗したコマンドの跡を `*Backtrace*` に出すか (Emacs の debug-on-error)
+        global.define("debug-on-error", Value::Boolean(false));
         // エディタが実行するフック (find-file-hook, after-save-hook)
         for hook in hooks::EDITOR_HOOKS {
             global.define(hook, Value::List(Vec::new().into()));
@@ -559,10 +561,11 @@ impl<'a> Machine<'a> {
         result
     }
 
-    /// `init-file-debug` が真なら, 失敗した式を, エラーの呼び出しの跡に足します (長い式は切る).
+    /// `init-file-debug` か `debug-on-error` が真なら, 失敗した式を, エラーの呼び出しの跡に足します (長い式は切る).
     fn trace_failure(&self, error: &mut Error, expr: &Value) {
-        let debug = self.evaluator.global().get("init-file-debug");
-        if !debug.is_some_and(|value| value.is_non_nil()) {
+        let global = self.evaluator.global();
+        let on = |name: &str| global.get(name).is_some_and(|value| value.is_non_nil());
+        if !on("init-file-debug") && !on("debug-on-error") {
             return;
         }
         let mut text = builtins::print_string(expr, true);
