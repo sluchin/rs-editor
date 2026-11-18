@@ -32,3 +32,32 @@ export async function listDirectory(path: string): Promise<string[]> {
 export async function projectRoot(directory: string): Promise<string> {
   return await invoke<string>('project_root', { directory })
 }
+
+/**
+ * ファイルかディレクトリを作ります (同じ名前があれば失敗する).
+ *
+ * @param path - 作るパス.
+ * @param directory - ディレクトリを作るなら真, 空のファイルを作るなら偽.
+ */
+export async function createPath(path: string, directory: boolean): Promise<void> {
+  await invoke('create_path', { path, directory })
+}
+
+/**
+ * ファイルかディレクトリの名前を変えます (変え先に同じ名前があれば失敗する).
+ *
+ * @param from - 今のパス.
+ * @param to - 変えたあとのパス.
+ */
+export async function renamePath(from: string, to: string): Promise<void> {
+  await invoke('rename_path', { from, to })
+}
+
+/**
+ * ファイルか, ディレクトリ (中身ごと) を消します.
+ *
+ * @param path - 消すパス.
+ */
+export async function deletePath(path: string): Promise<void> {
+  await invoke('delete_path', { path })
+}

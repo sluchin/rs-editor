@@ -16,7 +16,14 @@ import TabBar from './components/TabBar'
 import { completeFileName } from './lib/complete'
 import { type DocEntry, DocStore } from './lib/docs'
 import type { Highlight, Token } from './lib/faces'
-import { getHomeDir, listDirectory, projectRoot } from './lib/fileOps'
+import {
+  createPath,
+  deletePath,
+  getHomeDir,
+  listDirectory,
+  projectRoot,
+  renamePath,
+} from './lib/fileOps'
 import { HISTORY_LENGTH, addToHistory } from './lib/history'
 import { emacsKey } from './lib/keys'
 import { fileDirectory } from './lib/paths'
@@ -469,6 +476,9 @@ function App() {
             currentFile={selectedBuffer?.file ?? null}
             listDirectory={listDirectory}
             onOpenFile={(path) => send({ kind: 'find-file', path })}
+            createPath={createPath}
+            renamePath={renamePath}
+            deletePath={deletePath}
             focusSignal={treeFocus}
           />
         )}

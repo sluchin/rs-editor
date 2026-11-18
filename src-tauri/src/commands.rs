@@ -86,6 +86,67 @@ pub fn list_directory(path: String) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
+/// ファイルかディレクトリを作ります (サイドバーのツリーから). 同じ名前があれば失敗します.
+///
+/// # Arguments
+///
+/// * `path` - 作るパス (上のディレクトリは, あること).
+/// * `directory` - ディレクトリを作るなら真, 空のファイルを作るなら偽.
+///
+/// # Returns
+///
+/// 作れなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn create_path(path: String, directory: bool) -> Result<(), String> {
+    if directory {
+        std::fs::create_dir(&path)
+    } else {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .map(|_| ())
+    }
+    .map_err(|e| format!("{path}: {e}"))
+}
+
+/// ファイルかディレクトリの名前を変えます (サイドバーのツリーから). 変え先に同じ名前があれば失敗します (上書きしない).
+///
+/// # Arguments
+///
+/// * `from` - 今のパス.
+/// * `to` - 変えたあとのパス.
+///
+/// # Returns
+///
+/// 変えられなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn rename_path(from: String, to: String) -> Result<(), String> {
+    if std::fs::symlink_metadata(&to).is_ok() {
+        return Err(format!("{to}: File exists"));
+    }
+    std::fs::rename(&from, &to).map_err(|e| format!("{from}: {e}"))
+}
+
+/// ファイルか, ディレクトリ (中身ごと) を消します (サイドバーのツリーから. 確かめるのは画面の側).
+///
+/// # Arguments
+///
+/// * `path` - 消すパス. シンボリックリンクは, リンクだけを消す.
+///
+/// # Returns
+///
+/// 消せなければ, 理由の文字列の [`Err`].
+#[tauri::command]
+pub fn delete_path(path: String) -> Result<(), String> {
+    let result = match std::fs::symlink_metadata(&path) {
+        Ok(meta) if meta.is_dir() => std::fs::remove_dir_all(&path),
+        Ok(_) => std::fs::remove_file(&path),
+        Err(e) => Err(e),
+    };
+    result.map_err(|e| format!("{path}: {e}"))
+}
+
 /// ホームディレクトリを返します (Unix は環境変数 `HOME`, 無ければ passwd. Windows はユーザーのプロファイル).
 ///
 /// # Returns

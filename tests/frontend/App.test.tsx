@@ -19,6 +19,9 @@ vi.mock('@/lib/fileOps', () => ({
   getHomeDir: vi.fn(),
   listDirectory: vi.fn(),
   projectRoot: vi.fn(),
+  createPath: vi.fn(),
+  renamePath: vi.fn(),
+  deletePath: vi.fn(),
 }))
 
 const mocked = vi.mocked(fileOps)

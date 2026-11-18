@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getHomeDir, listDirectory, projectRoot } from '@/lib/fileOps'
+import {
+  createPath,
+  deletePath,
+  getHomeDir,
+  listDirectory,
+  projectRoot,
+  renamePath,
+} from '@/lib/fileOps'
 import * as tauri from '@tauri-apps/api/core'
 
 vi.mock('@tauri-apps/api/core')
@@ -27,5 +34,15 @@ describe('fileOps', () => {
     vi.mocked(tauri.invoke).mockResolvedValueOnce('/proj')
     expect(await projectRoot('/proj/src')).toBe('/proj')
     expect(tauri.invoke).toHaveBeenCalledWith('project_root', { directory: '/proj/src' })
+  })
+
+  it('ファイルの作成, 名前の変更, 削除を Tauri に頼むこと', async () => {
+    vi.mocked(tauri.invoke).mockResolvedValue(undefined)
+    await createPath('/p/a.txt', false)
+    expect(tauri.invoke).toHaveBeenCalledWith('create_path', { path: '/p/a.txt', directory: false })
+    await renamePath('/p/a.txt', '/p/b.txt')
+    expect(tauri.invoke).toHaveBeenCalledWith('rename_path', { from: '/p/a.txt', to: '/p/b.txt' })
+    await deletePath('/p/b.txt')
+    expect(tauri.invoke).toHaveBeenCalledWith('delete_path', { path: '/p/b.txt' })
   })
 })

@@ -36,6 +36,9 @@ pub fn run() {
             commands::editor_reply,
             front::session_input,
             commands::list_directory,
+            commands::create_path,
+            commands::rename_path,
+            commands::delete_path,
             commands::home_dir,
             commands::project_root
         ])

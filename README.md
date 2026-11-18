@@ -16,7 +16,7 @@
 - 🗂️ **Org mode** - Emacs の Org mode (org 9.7.11) の Scheme 版 (`lisp/org.scm`)。`(require 'org)` で読み、`.org` のファイルを開くと Org mode になる (「Org mode」)
 - 🔍 **M-x grep** - 外のコマンドを使わずエディタ (Rust) がディレクトリの下を探す。結果は `*grep*` バッファに出し、`RET` でその行を開く。`M-g n` / `M-g p` で次・前へ
 - 🎨 **色付け** - C、C++、Rust、TypeScript、Scheme、Emacs Lisp を、Emacs の font-lock と同じ範囲で色付けする (核の `core/src/highlight/`。画面とターミナルのアプリで同じ。設計は [c_highlight_design.md](docs/c_highlight_design.md))。メジャーモードは、ファイルの名前と 1 行目の `-*- mode: NAME -*-` で決まる
-- 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す
+- 🌲 **プロジェクトのツリー** - VS Code のように、左のサイドバーにプロジェクト (`.git` のある所) のファイルのツリーを出す。`F8` (`M-x project-tree`) で出すか消す。`F9` (`M-x project-tree-focus`) でキーを移すと、`n` / `p` で動き、`a` (ファイル) / `A` (ディレクトリ) で作り、`r` で名前を変え、`d` と `y` で消し、`{` / `}` で幅を変える (右の端を引いても変わる)
 - 💬 **評価** - カーソルの前の S 式 (`C-x C-e`) や、ミニバッファに入力した式 (`M-:`) を評価する
 - 📊 **出力表示** - 評価結果とエラーメッセージを表示
 

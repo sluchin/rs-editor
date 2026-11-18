@@ -8,6 +8,13 @@ const tree: Record<string, string[]> = {
   '/p/src/': ['main.rs'],
 }
 
+/** ファイルの作成, 名前の変更, 削除の偽物. */
+const ops = {
+  createPath: vi.fn(async () => {}),
+  renamePath: vi.fn(async () => {}),
+  deletePath: vi.fn(async () => {}),
+}
+
 describe('ProjectTree', () => {
   it('今のファイルが深くにあれば, そこまでのディレクトリを開き, 見える所へ動かすこと', async () => {
     const deep: Record<string, string[]> = {
@@ -20,6 +27,7 @@ describe('ProjectTree', () => {
     Element.prototype.scrollIntoView = scrolled
     const view = render(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile="/p/z.txt"
         listDirectory={listDirectory}
@@ -32,6 +40,7 @@ describe('ProjectTree', () => {
     // 別の場所のファイルに切り替わると, そこまで開く
     view.rerender(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile="/p/a/b/f.rs"
         listDirectory={listDirectory}
@@ -43,6 +52,7 @@ describe('ProjectTree', () => {
     // 根の外のファイルでは, 何もしない
     view.rerender(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile="/q/x.rs"
         listDirectory={listDirectory}
@@ -55,6 +65,7 @@ describe('ProjectTree', () => {
     delete Element.prototype.scrollIntoView
     view.rerender(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile="/p/a/b/f.rs"
         listDirectory={listDirectory}
@@ -73,6 +84,7 @@ describe('ProjectTree', () => {
     const onOpenFile = vi.fn()
     const view = render(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile="/p/README.md"
         listDirectory={listDirectory}
@@ -111,6 +123,7 @@ describe('ProjectTree', () => {
     // 読めないディレクトリは, 理由を出す
     view.rerender(
       <ProjectTree
+        {...ops}
         root="/none/"
         currentFile={null}
         listDirectory={listDirectory}
@@ -133,6 +146,7 @@ describe('ProjectTree', () => {
     const onOpenFile = vi.fn()
     const view = render(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile={null}
         listDirectory={listDirectory}
@@ -154,6 +168,7 @@ describe('ProjectTree', () => {
     press('b')
     view.rerender(
       <ProjectTree
+        {...ops}
         root="/p"
         currentFile={null}
         listDirectory={listDirectory}
@@ -233,5 +248,195 @@ describe('ProjectTree', () => {
       expect(view.container.querySelectorAll('.project-tree-item').length).toBe(0),
     )
     press('n')
+  })
+
+  /** 根に README.md と src/ (中に main.rs) がある, 木を出す. */
+  const setup = async () => {
+    const listDirectory = vi.fn(async (path: string) => tree[path] ?? [])
+    tree['/p/'] = ['.git/', 'src/', 'README.md']
+    const onOpenFile = vi.fn()
+    const view = render(
+      <ProjectTree
+        {...ops}
+        root="/p"
+        currentFile={null}
+        listDirectory={listDirectory}
+        onOpenFile={onOpenFile}
+        focusSignal={1}
+      />,
+    )
+    await vi.waitFor(() =>
+      expect(view.container.querySelectorAll('.project-tree-item').length).toBe(2),
+    )
+    const box = view.container.querySelector('.project-tree') as HTMLElement
+    const press = (key: string) => fireEvent.keyDown(box, { key })
+    const input = () =>
+      view.container.querySelector('.project-tree-prompt input') as HTMLInputElement
+    const type = (text: string) => fireEvent.change(input(), { target: { value: text } })
+    const notice = () => view.container.querySelector('.project-tree-error')?.textContent
+    return { view, box, press, input, type, notice, onOpenFile, listDirectory }
+  }
+
+  it('幅を, 右の端を引くか { と } で変え, 限りの中に収めること', async () => {
+    const { view, press, box } = await setup()
+    expect(box.style.flexBasis).toBe('240px')
+    press('{')
+    expect(box.style.flexBasis).toBe('220px')
+    press('}')
+    press('}')
+    expect(box.style.flexBasis).toBe('260px')
+    const resizer = view.container.querySelector('.project-tree-resizer') as HTMLElement
+    fireEvent.mouseDown(resizer, { clientX: 260 })
+    fireEvent.mouseMove(document, { clientX: 300 })
+    expect(box.style.flexBasis).toBe('300px')
+    fireEvent.mouseMove(document, { clientX: 5000 })
+    expect(box.style.flexBasis).toBe('600px')
+    fireEvent.mouseMove(document, { clientX: -5000 })
+    expect(box.style.flexBasis).toBe('120px')
+    // 離したあとは, 動かない
+    fireEvent.mouseUp(document)
+    fireEvent.mouseMove(document, { clientX: 400 })
+    expect(box.style.flexBasis).toBe('120px')
+  })
+
+  it('a と A で, 選んだ行の所に, ファイルとディレクトリを作ること', async () => {
+    const { view, press, input, type, onOpenFile, notice, box } = await setup()
+    // 行が無ければ, 根に作る. 作ったファイルは, 開く
+    press('a')
+    expect(view.container.querySelector('.project-tree-prompt')?.textContent).toContain('New file')
+    type(' new.txt ')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() => expect(ops.createPath).toHaveBeenCalledWith('/p/new.txt', false))
+    await vi.waitFor(() => expect(onOpenFile).toHaveBeenCalledWith('/p/new.txt'))
+    expect(document.activeElement).toBe(box)
+    // ディレクトリの行では, その中に作る. 開いて見せる
+    press('<')
+    press('A')
+    expect(view.container.querySelector('.project-tree-prompt')?.textContent).toContain(
+      'New directory',
+    )
+    type('sub')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() => expect(ops.createPath).toHaveBeenCalledWith('/p/src/sub', true))
+    await vi.waitFor(() => expect(view.container.textContent).toContain('main.rs'))
+    expect(onOpenFile).toHaveBeenCalledTimes(1)
+    // ファイルの行では, その親に作る
+    await act(async () => {})
+    press('<')
+    press('n')
+    press('a')
+    type('x.rs')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() => expect(ops.createPath).toHaveBeenCalledWith('/p/src/x.rs', false))
+    // 名前が空, `/` を含むときは, 作らずに知らせる. ほかのキーは, 欄に任せる
+    const before = ops.createPath.mock.calls.length
+    press('a')
+    fireEvent.keyDown(input(), { key: 'x' })
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    expect(notice()).toBeUndefined()
+    press('a')
+    type('a/b')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    expect(notice()).toBe('Invalid name: a/b')
+    expect(ops.createPath).toHaveBeenCalledTimes(before)
+    // 失敗は, 知らせに出す. 次のキーで消える
+    ops.createPath.mockRejectedValueOnce(new Error('exists'))
+    press('a')
+    type('dup')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() => expect(notice()).toBe('Error: exists'))
+    press('n')
+    expect(notice()).toBeUndefined()
+    // ヘッダーの + でも, 根に作れる. Escape と C-g でやめる
+    fireEvent.click(view.container.querySelector('[title="New File"]') as HTMLElement)
+    expect(input()).not.toBeNull()
+    fireEvent.keyDown(input(), { key: 'Escape' })
+    expect(view.container.querySelector('.project-tree-prompt')).toBeNull()
+    press('a')
+    fireEvent.keyDown(input(), { key: 'g', ctrlKey: true })
+    expect(view.container.querySelector('.project-tree-prompt')).toBeNull()
+  })
+
+  it('r で名前を変え, d と y で消し, ほかのキーでやめること', async () => {
+    const { view, press, input, type, notice, listDirectory } = await setup()
+    // 行が無いときは, 何も起きない
+    press('r')
+    press('d')
+    expect(view.container.querySelector('.project-tree-prompt')).toBeNull()
+    press('<')
+    press('n')
+    // 今の名前から始める
+    press('r')
+    expect(input().value).toBe('README.md')
+    type('NOTES.md')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() =>
+      expect(ops.renamePath).toHaveBeenCalledWith('/p/README.md', '/p/NOTES.md'),
+    )
+    await vi.waitFor(() => expect(listDirectory).toHaveBeenCalledTimes(2))
+    await act(async () => {})
+    // 子のファイルは, 親の中で変える
+    press('<')
+    press('f')
+    await vi.waitFor(() => expect(view.container.textContent).toContain('main.rs'))
+    press('n')
+    press('r')
+    type('lib.rs')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() =>
+      expect(ops.renamePath).toHaveBeenCalledWith('/p/src/main.rs', '/p/src/lib.rs'),
+    )
+    // 失敗は知らせに出す (名前を変えた行は, 偽の一覧に無いので, 選び直す)
+    await act(async () => {})
+    press('<')
+    press('n')
+    ops.renamePath.mockRejectedValueOnce(new Error('exists'))
+    press('r')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    await vi.waitFor(() => expect(notice()).toBe('Error: exists'))
+    // 消す: y だけが消す
+    press('d')
+    expect(view.container.querySelector('.project-tree-prompt')?.textContent).toBe(
+      'Delete main.rs? (y/n)',
+    )
+    press('n')
+    expect(ops.deletePath).not.toHaveBeenCalled()
+    expect(view.container.querySelector('.project-tree-prompt')).toBeNull()
+    press('d')
+    press('y')
+    await vi.waitFor(() => expect(ops.deletePath).toHaveBeenCalledWith('/p/src/main.rs'))
+    // 根の直下を消すと, 行は無くなる (偽の一覧は変わらないので, README.md まで動かす)
+    await act(async () => {})
+    press('<')
+    press('n')
+    press('n')
+    press('d')
+    press('y')
+    await vi.waitFor(() => expect(ops.deletePath).toHaveBeenCalledWith('/p/README.md'))
+  })
+
+  it('根が / のときも, 直下のファイルの名前を変え, 欄を押せること', async () => {
+    const listDirectory = vi.fn(async () => ['a.txt'])
+    const view = render(
+      <ProjectTree
+        {...ops}
+        root="/"
+        currentFile={null}
+        listDirectory={listDirectory}
+        onOpenFile={vi.fn()}
+        focusSignal={1}
+      />,
+    )
+    await vi.waitFor(() => expect(view.container.textContent).toContain('a.txt'))
+    const box = view.container.querySelector('.project-tree') as HTMLElement
+    fireEvent.keyDown(box, { key: '<' })
+    fireEvent.keyDown(box, { key: 'r' })
+    const input = view.container.querySelector('.project-tree-prompt input') as HTMLElement
+    // 欄を押すときは, フォーカスを奪わない (押した動きを止めない)
+    expect(fireEvent.mouseDown(input)).toBe(true)
+    fireEvent.change(input, { target: { value: 'b.txt' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await vi.waitFor(() => expect(ops.renamePath).toHaveBeenCalledWith('/a.txt', '/b.txt'))
+    await vi.waitFor(() => expect(listDirectory).toHaveBeenCalledTimes(2))
   })
 })

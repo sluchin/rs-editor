@@ -1,5 +1,6 @@
 /* サイドバーの, プロジェクトのツリー (VS Code のエクスプローラーのように, 左に出す) */
 .project-tree {
+  position: relative;
   flex: 0 0 240px;
   display: flex;
   flex-direction: column;
@@ -28,7 +29,8 @@
   white-space: nowrap;
 }
 
-.project-tree-refresh {
+.project-tree-refresh,
+.project-tree-add {
   border: none;
   background: none;
   color: inherit;
@@ -75,4 +77,33 @@
 .project-tree-error {
   color: #cc0000;
   white-space: nowrap;
+}
+
+/* 名前を聞く欄 (作る, 名前を変える) と, 消すかの確かめ */
+.project-tree-prompt {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.project-tree-prompt input {
+  flex: 1;
+  min-width: 0;
+  margin-left: 4px;
+  font: inherit;
+  color: inherit;
+  background: var(--background);
+  border: 1px solid #999999;
+}
+
+/* 右の端を引いて, 幅を変える */
+.project-tree-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
 }

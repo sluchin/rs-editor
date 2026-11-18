@@ -5,7 +5,8 @@ use std::fs;
 use tempfile::tempdir;
 
 use rseditor::commands::{
-    choose_init_file, home_dir, init_file_candidates, init_file_path, list_directory, project_root,
+    choose_init_file, create_path, delete_path, home_dir, init_file_candidates, init_file_path,
+    list_directory, project_root, rename_path,
 };
 
 #[test]
@@ -86,4 +87,37 @@ fn test_choose_init_file_follows_the_startup_options() {
         choose_init_file(&options, default),
         Some(dir.path().join("init.scm"))
     );
+}
+
+#[test]
+fn test_create_rename_and_delete_paths() {
+    let dir = tempdir().unwrap();
+    let at = |name: &str| dir.path().join(name).to_string_lossy().into_owned();
+    // 作る: 空のファイルと, ディレクトリ. 同じ名前があれば失敗する
+    create_path(at("a.txt"), false).unwrap();
+    create_path(at("d"), true).unwrap();
+    assert_eq!(fs::read_to_string(at("a.txt")).unwrap(), "");
+    assert!(dir.path().join("d").is_dir());
+    assert!(create_path(at("a.txt"), false)
+        .unwrap_err()
+        .contains("a.txt"));
+    assert!(create_path(at("d"), true).is_err());
+    assert!(create_path(at("none/x"), false).is_err());
+    // 名前を変える: 上書きしない
+    fs::write(at("a.txt"), "A").unwrap();
+    rename_path(at("a.txt"), at("b.txt")).unwrap();
+    assert_eq!(fs::read_to_string(at("b.txt")).unwrap(), "A");
+    assert!(rename_path(at("b.txt"), at("d"))
+        .unwrap_err()
+        .contains("exists"));
+    assert!(rename_path(at("none"), at("c"))
+        .unwrap_err()
+        .contains("none"));
+    // 消す: ファイル, 中身のあるディレクトリ. 無ければ失敗する
+    fs::write(dir.path().join("d/inner.txt"), "").unwrap();
+    delete_path(at("b.txt")).unwrap();
+    delete_path(at("d")).unwrap();
+    assert!(!dir.path().join("b.txt").exists());
+    assert!(!dir.path().join("d").exists());
+    assert!(delete_path(at("d")).unwrap_err().contains('d'));
 }

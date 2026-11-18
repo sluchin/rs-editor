@@ -2,6 +2,7 @@
  * サイドバーの, プロジェクトのファイルのツリー (VS Code のエクスプローラーのように, 左に出す).
  *
  * ディレクトリは, 開いたときに読みます (開くたびに読み直す). `.git` は出しません.
+ * 右の端を引くか, `{` と `}` で, 幅を変えます. `a` (ファイル), `A` (ディレクトリ), `r`, `d` で, 作る, 名前を変える, 消す.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -9,6 +10,22 @@ import '../styles/ProjectTree.css'
 
 /** 出さない名前. */
 const HIDDEN_NAMES = ['.git/']
+
+/** 幅の初めの値と, 小さい方と大きい方の限り, `{` と `}` で変える量 (px). */
+const DEFAULT_WIDTH = 240
+const MIN_WIDTH = 120
+const MAX_WIDTH = 600
+const WIDTH_STEP = 20
+
+/** 名前を聞いている (または, 消すかを確かめている) とき. */
+interface Prompt {
+  /** 作るファイル, 作るディレクトリ, 名前の変更, 削除. */
+  kind: 'file' | 'directory' | 'rename' | 'delete'
+  /** 作る先のディレクトリ (作るとき), 対象のパス (名前の変更と削除). */
+  path: string
+  /** 入力している名前. */
+  text: string
+}
 
 /** プロジェクトのツリーの引数. */
 interface ProjectTreeProps {
@@ -20,6 +37,12 @@ interface ProjectTreeProps {
   listDirectory: (path: string) => Promise<string[]>
   /** ファイルを選んだときに呼びます. */
   onOpenFile: (path: string) => void
+  /** ファイルかディレクトリを作る (同じ名前があれば失敗する). */
+  createPath: (path: string, directory: boolean) => Promise<void>
+  /** 名前を変える (変え先に同じ名前があれば失敗する). */
+  renamePath: (from: string, to: string) => Promise<void>
+  /** ファイルか, ディレクトリ (中身ごと) を消す. */
+  deletePath: (path: string) => Promise<void>
   /** 増えるたびに, キーで動かすために, フォーカスをツリーへ移す. */
   focusSignal?: number
 }
@@ -46,6 +69,16 @@ function joinPath(dir: string, name: string): string {
 }
 
 /**
+ * パスの 1 つ上のディレクトリを返します (`/` の直下なら `/`).
+ *
+ * @param path - パス.
+ * @returns 親のディレクトリ.
+ */
+function parentOf(path: string): string {
+  return path.slice(0, path.lastIndexOf('/')) || '/'
+}
+
+/**
  * パスの最後の名前を返します.
  *
  * @param path - パス.
@@ -66,12 +99,20 @@ export default function ProjectTree({
   currentFile,
   listDirectory,
   onOpenFile,
+  createPath,
+  renamePath,
+  deletePath,
   focusSignal = 0,
 }: ProjectTreeProps) {
   // 読んだディレクトリの中の名前 (読めなければ理由)
   const [entries, setEntries] = useState<Record<string, string[] | { error: string }>>({})
   // 開いているディレクトリ (根は, いつも開く)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  // 幅 (px)
+  const [width, setWidth] = useState(DEFAULT_WIDTH)
+  // 名前を聞いているとき, 失敗の知らせ
+  const [prompt, setPrompt] = useState<Prompt | null>(null)
+  const [notice, setNotice] = useState('')
 
   /**
    * ディレクトリを読みます.
@@ -155,11 +196,21 @@ export default function ProjectTree({
    * @param event - キー.
    */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    // 名前を入力しているあいだは, 入力の欄が受ける
+    if (event.target instanceof HTMLInputElement) return
     // エディタへ渡すキー (C-x など) は, ここで止めない
     const rows = visibleRows(root)
     const index = rows.findIndex((r) => r.path === cursor)
     const row = rows[index] as VisibleRow | undefined
     if (event.altKey || event.metaKey) return
+    // 消すかの確かめ: `y` だけが消す. ほかのキーは, やめる
+    if (prompt?.kind === 'delete') {
+      if (event.key === 'y') void remove(prompt.path)
+      setPrompt(null)
+      event.preventDefault()
+      return
+    }
+    setNotice('')
     const key = event.ctrlKey ? `C-${event.key}` : event.key
     const move = (to: number) => {
       if (rows.length > 0) setCursor(rows[Math.max(0, Math.min(rows.length - 1, to))].path)
@@ -207,6 +258,22 @@ export default function ProjectTree({
       case 'g':
         refresh()
         break
+      case 'a':
+      case 'A':
+        startCreate(key === 'A', row)
+        break
+      case 'r':
+        if (row) setPrompt({ kind: 'rename', path: row.path, text: baseName(row.path) })
+        break
+      case 'd':
+        if (row) setPrompt({ kind: 'delete', path: row.path, text: '' })
+        break
+      case '{':
+        resize(width - WIDTH_STEP)
+        break
+      case '}':
+        resize(width + WIDTH_STEP)
+        break
       case 'q':
       case 'Escape':
       case 'C-g':
@@ -217,6 +284,99 @@ export default function ProjectTree({
     }
     event.preventDefault()
   }
+
+  /**
+   * 幅を変えます (限りの中で).
+   *
+   * @param next - 新しい幅 (px).
+   */
+  const resize = (next: number) => setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, next)))
+
+  /**
+   * 右の端を引いて, 幅を変えます.
+   *
+   * @param event - 押したマウス.
+   */
+  const startResize = (event: React.MouseEvent) => {
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = width
+    const move = (e: MouseEvent) => resize(startWidth + e.clientX - startX)
+    const stop = () => {
+      document.removeEventListener('mousemove', move)
+      document.removeEventListener('mouseup', stop)
+    }
+    document.addEventListener('mousemove', move)
+    document.addEventListener('mouseup', stop)
+  }
+
+  /**
+   * 作る名前を聞き始めます. 作る先は, 行がディレクトリならその中, ファイルならその親, 行が無ければ根.
+   *
+   * @param directory - ディレクトリを作るなら真.
+   * @param row - カーソルの行.
+   */
+  const startCreate = (directory: boolean, row: VisibleRow | undefined) => {
+    const dir = row ? (row.isDirectory ? row.path : row.parent) : root
+    setNotice('')
+    setPrompt({ kind: directory ? 'directory' : 'file', path: dir, text: '' })
+  }
+
+  /**
+   * 失敗を知らせに出して, フォーカスをツリーへ戻します.
+   *
+   * @param action - 頼むこと.
+   */
+  const attempt = async (action: () => Promise<void>) => {
+    try {
+      await action()
+    } catch (err) {
+      setNotice(String(err))
+    }
+    container.current?.focus()
+  }
+
+  /**
+   * 聞いた名前で, 作るか, 名前を変えます.
+   */
+  const submit = (prompt: Prompt) => {
+    const name = prompt.text.trim()
+    setPrompt(null)
+    if (name === '' || name.includes('/')) {
+      setNotice(name === '' ? '' : `Invalid name: ${name}`)
+      container.current?.focus()
+      return
+    }
+    void attempt(async () => {
+      if (prompt.kind === 'rename') {
+        const parent = parentOf(prompt.path)
+        const to = joinPath(parent, name)
+        await renamePath(prompt.path, to)
+        await load(parent)
+        setCursor(to)
+        return
+      }
+      const path = joinPath(prompt.path, name)
+      await createPath(path, prompt.kind === 'directory')
+      setExpanded((prev) => new Set([...prev, prompt.path]))
+      await load(prompt.path)
+      setCursor(path)
+      if (prompt.kind === 'file') onOpenFile(path)
+    })
+  }
+
+  /**
+   * 消します.
+   *
+   * @param path - 消すパス.
+   */
+  const remove = (path: string) =>
+    attempt(async () => {
+      const parent = parentOf(path)
+      await deletePath(path)
+      await load(parent)
+      setCursor(parent === root ? null : parent)
+    })
 
   /**
    * ディレクトリを開くか, 閉じます. 開くときは, 読み直します.
@@ -292,20 +452,59 @@ export default function ProjectTree({
       aria-label="Project"
       tabIndex={-1}
       ref={container}
+      style={{ flexBasis: width }}
       onKeyDown={handleKeyDown}
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={(e) => {
+        if (!(e.target instanceof HTMLInputElement)) e.preventDefault()
+      }}
     >
       <div className="project-tree-header">
         <span className="project-tree-title" title={root}>
           {baseName(root).toUpperCase()}
         </span>
-        <button className="project-tree-refresh" title="Refresh" onClick={refresh}>
-          ↻
-        </button>
+        <span>
+          <button
+            className="project-tree-add"
+            title="New File"
+            onClick={() => startCreate(false, undefined)}
+          >
+            +
+          </button>
+          <button className="project-tree-refresh" title="Refresh" onClick={refresh}>
+            ↻
+          </button>
+        </span>
       </div>
       <div className="project-tree-body" ref={body}>
         {renderDirectory(root, 0)}
       </div>
+      {prompt?.kind === 'delete' && (
+        <div className="project-tree-prompt">Delete {baseName(prompt.path)}? (y/n)</div>
+      )}
+      {prompt && prompt.kind !== 'delete' && (
+        <label className="project-tree-prompt">
+          {prompt.kind === 'rename'
+            ? 'Rename to: '
+            : prompt.kind === 'directory'
+              ? 'New directory: '
+              : 'New file: '}
+          <input
+            autoFocus
+            value={prompt.text}
+            onChange={(e) => setPrompt({ ...prompt, text: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submit(prompt)
+              else if (e.key === 'Escape' || (e.ctrlKey && e.key === 'g')) {
+                setPrompt(null)
+                container.current?.focus()
+              } else return
+              e.preventDefault()
+            }}
+          />
+        </label>
+      )}
+      {notice && <div className="project-tree-error">{notice}</div>}
+      <div className="project-tree-resizer" onMouseDown={startResize} />
     </div>
   )
 }
