@@ -31,8 +31,18 @@ fn main() {
         }
     }
     let screen = NcursesScreen::start();
-    let result = App::new(Box::new(screen), &options.files);
-    let outcome = result.map(|mut app| app.run());
+    let init_file = rseditor_core::startup::choose_init_file(
+        &options,
+        rseditor_core::startup::init_file_path(),
+    );
+    let result = App::new(Box::new(screen), &[]).and_then(|mut app| {
+        app.apply_startup(&options);
+        app.load_init(init_file.as_deref());
+        app.open_files(&options.files)?;
+        app.run();
+        Ok(())
+    });
+    let outcome = result;
     NcursesScreen::stop();
     if let Err(error) = outcome {
         eprintln!("rseditor-tui: {error}");

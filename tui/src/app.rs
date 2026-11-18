@@ -56,15 +56,36 @@ impl App {
         let host = EditorHost::shared(editor, ui);
         let commands = CommandLoop::new(host, Evaluator::new(), keymap)?;
         let app = App { commands, state };
-        // 最後のファイルを出す (Emacs と同じ)
+        app.open_files(files)?;
+        Ok(app)
+    }
+
+    /// 起動の引数のファイルを開きます (最後のファイルを出す. Emacs と同じ).
+    ///
+    /// # Errors
+    ///
+    /// 開けなかったとき.
+    pub fn open_files(&self, files: &[String]) -> Result<(), Error> {
         for file in files {
             // Lisp の find-file-noselect (find-file-hook を動かす)
-            app.eval(&format!(
+            self.eval(&format!(
                 "(pop-to-buffer-same-window (find-file-noselect {}))",
                 Value::String(file.clone())
             ))?;
         }
-        Ok(app)
+        Ok(())
+    }
+
+    /// 起動の引数を当てます (`--chdir`, `--init-directory`, `--debug-init`). 初期設定ファイルを読む前に呼びます.
+    pub fn apply_startup(&self, options: &rseditor_core::startup::Options) {
+        rseditor_core::startup::apply_options(&self.commands, options);
+    }
+
+    /// 初期設定ファイルを読みます. 失敗したら, `*Warnings*` とエコー領域に出します.
+    pub fn load_init(&self, path: Option<&std::path::Path>) {
+        if let Some(error) = rseditor_core::startup::load_init(&self.commands, path) {
+            self.state.lock_recover().message = error;
+        }
     }
 
     /// Scheme を評価します (初期設定ファイルを読むときなど).

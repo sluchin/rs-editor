@@ -430,24 +430,9 @@ impl<F: Front> Session<F> {
         result
     }
 
-    /// 起動の引数を当てます: 始めのディレクトリ (`--chdir`), `user-emacs-directory` (`--init-directory`),
-    /// `init-file-debug` (`--debug-init`). 初期設定ファイルを読む前に呼びます.
+    /// 起動の引数を当てます (`rseditor_core::startup::apply_options`). 初期設定ファイルを読む前に呼びます.
     pub fn apply_startup(&mut self, options: &Options) {
-        let global = self.commands.evaluator().global();
-        if let Some(dir) = &options.chdir {
-            self.commands
-                .evaluator()
-                .set_default_directory(std::path::PathBuf::from(dir));
-        }
-        if let Some(dir) = &options.init_directory {
-            let dir = if dir.ends_with('/') {
-                dir.clone()
-            } else {
-                format!("{dir}/")
-            };
-            global.define("user-emacs-directory", Value::String(dir));
-        }
-        global.define("init-file-debug", Value::Boolean(options.debug_init));
+        rseditor_core::startup::apply_options(&self.commands, options);
     }
 
     /// 起動の引数のファイルを開きます (最後のファイルが, 出ているバッファになる. Emacs と同じ).
@@ -460,34 +445,9 @@ impl<F: Front> Session<F> {
     /// 初期設定ファイルを読みます (`user-init-file` にする). 無ければ何もしません.
     /// 失敗したら, エコー領域と `*Warnings*` に出します (Emacs と同じ).
     pub fn load_init(&mut self, path: Option<&Path>) {
-        let Some(path) = path.filter(|p| p.exists()) else {
-            return;
-        };
-        log::info!("Loading {}", path.display());
-        let debug = self.commands.evaluator().global().get("init-file-debug");
-        let options_debug = debug.is_some_and(|value| value.is_non_nil());
-        self.commands.evaluator().global().define(
-            "user-init-file",
-            Value::String(path.to_string_lossy().into_owned()),
-        );
-        let outcome = std::fs::read_to_string(path)
-            .map_err(|e| e.to_string())
-            .and_then(|code| {
-                self.commands
-                    .eval(&code)
-                    .map_err(|e| init_error_text(&e, options_debug))
-            });
-        if let Err(error) = outcome {
-            log::warn!("Could not load {}: {}", path.display(), error);
-            let error = format!("{}: {}", path.display(), error);
-            let warning = format!("An error occurred while loading the init file: {error}");
-            let _ = self.commands.eval(&format!(
-                "(display-warning 'initialization {} 'error)",
-                Value::String(warning)
-            ));
+        if let Some(error) = rseditor_core::startup::load_init(&self.commands, path) {
             self.host().ui().show_message(&error);
         }
-        self.commands.sync_lisp_keys();
     }
 
     /// 書き換えたファイルのバッファを, 自動保存のファイル (`#名前#`) に書きます (Emacs の `do-auto-save`).
@@ -600,25 +560,4 @@ pub fn run<F: Front>(
     }
 }
 
-/// 初期設定ファイルの失敗を, 文にします. `--debug-init` (`debug` が真) なら, 失敗した式を内側から並べます
-/// (Emacs の `debug-on-error` の, バックトレースに当たる).
-///
-/// # Arguments
-///
-/// * `error` - 失敗.
-/// * `debug` - 呼び出しの跡を付けるか.
-///
-/// # Returns
-///
-/// 失敗の文 (跡があれば, 改行して `Backtrace:` と式を続ける).
-pub fn init_error_text(error: &rseditor_core::error::Error, debug: bool) -> String {
-    let mut text = error.to_string();
-    if debug && !error.trace().is_empty() {
-        text.push_str("\nBacktrace:");
-        for form in error.trace() {
-            text.push_str("\n  ");
-            text.push_str(form);
-        }
-    }
-    text
-}
+pub use rseditor_core::startup::init_error_text;

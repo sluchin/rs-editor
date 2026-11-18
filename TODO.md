@@ -513,7 +513,7 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを�
 - [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
 - [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` はまだ変えない)。
 - [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
-- [x] `--debug-init`: 初期設定ファイルの失敗で、`*Warnings*` に `Backtrace:` と、失敗した式 (内側から外側へ、最大 30 個、長い式は 200 文字で切る) を出す。変数 `init-file-debug` が `#t` のとき、評価器がエラーに式を足す (`core/src/error.rs` の `trace`)。画面 (Tauri) だけ。ターミナルは、初期設定ファイルを読む処理がまだ無い。`debug-on-error` に当たる変数は、まだ。
+- [x] `--debug-init`: 初期設定ファイルの失敗で、`*Warnings*` に `Backtrace:` と、失敗した式 (内側から外側へ、最大 30 個、長い式は 200 文字で切る) を出す。変数 `init-file-debug` が `#t` のとき、評価器がエラーに式を足す (`core/src/error.rs` の `trace`)。画面 (Tauri) もターミナルも、同じ処理 (`core/src/startup.rs` の `apply_options` と `load_init`) で、初期設定ファイルを読む (ターミナルは、失敗をエコー領域に出す)。`debug-on-error` に当たる変数は、まだ。
 - [x] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
 - [x] `--no-splash`: 受ける (始めの画面がまだ無いので何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
 - [ ] `--no-desktop`: 前のバッファと窓 (Emacs の `desktop-save-mode`) を戻さない。先に、戻す機能を作る。
@@ -722,7 +722,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
 - [x] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。`C-h t` も完了。`*Help*` のリンクの色付けとクリックも完了 (Phase 14, 18)。
-- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了 (画面のアプリだけ)。残りは、ターミナルと `debug-on-error` (Phase 16)。小。
+- [ ] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了。ターミナルも、初期設定ファイルを読む。残りは `debug-on-error` (Phase 16)。小。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
 - [ ] ツリー (サイドバー): 今のファイルまで開くことと、キーで動かすことは完了。残りは、幅を変える、ファイルの作成・名前の変更・削除など (Phase 15)。小。

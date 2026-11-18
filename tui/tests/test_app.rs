@@ -1827,3 +1827,38 @@ fn test_dired_buffer_is_read_only_and_has_its_own_keys() {
         fx.app.message()
     );
 }
+
+#[test]
+fn test_startup_options_and_the_init_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let init = dir.path().join("init.scm");
+    std::fs::write(&init, "(global-set-key \"C-c z\" 'end-of-buffer)").unwrap();
+    let fx = Fixture::new();
+    fx.app.apply_startup(&rseditor_core::startup::Options {
+        debug_init: true,
+        ..Default::default()
+    });
+    assert_eq!(fx.app.eval("init-file-debug").unwrap(), "#t");
+    // 無い設定ファイルは, 読まない
+    fx.app.load_init(None);
+    fx.app.load_init(Some(&dir.path().join("none.scm")));
+    assert_eq!(fx.app.message(), "");
+    fx.app.load_init(Some(&init));
+    assert_eq!(
+        fx.app.eval("(key-binding \"C-c z\")").unwrap(),
+        "\"end-of-buffer\""
+    );
+    assert_eq!(fx.app.message(), "");
+    // 失敗は, エコー領域に出す (--debug-init なら, 失敗した式を続ける)
+    std::fs::write(&init, "(car 1)").unwrap();
+    fx.app.load_init(Some(&init));
+    assert!(fx.app.message().contains("init.scm"));
+    assert!(fx.app.message().contains("Backtrace:"));
+    // 引数のファイルを開く
+    let file = dir.path().join("a.txt");
+    std::fs::write(&file, "A").unwrap();
+    fx.app
+        .open_files(&[file.to_string_lossy().into_owned()])
+        .unwrap();
+    assert_eq!(fx.app.eval("(buffer-string)").unwrap(), "\"A\"");
+}
