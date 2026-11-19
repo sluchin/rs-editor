@@ -108,6 +108,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x C-u", "upcase-region"),
     ("C-x C-l", "downcase-region"),
     ("M-g g", "goto-line"),
+    ("M-g i", "imenu"),
     ("M-g M-g", "goto-line"),
     ("M-g n", "next-error"),
     ("M-g M-n", "next-error"),

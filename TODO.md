@@ -215,7 +215,7 @@
 - [x] `M-g n` / `M-g p` / `` C-x ` `` (next-error / previous-error): `M-x grep` の結果の次・前へ (Phase 15)。
 - [x] `next-error` で、`occur` と `multi-occur` の結果も使う (Emacs の `occur-next-error` と同じく、一致の始めと終わりを越えて動く)。
 - [ ] `*grep*` の中の、今の行の印 (`=>`) と強調。
-- [ ] `M-g i` (imenu): 定義の一覧から選んで移る。
+- [x] `M-g i` (imenu): 定義の一覧から選んで移る (Scheme、Emacs Lisp、C、C++、Rust、TypeScript、Org の行を正規表現で読む。構文木は使わない。メニューバー、`imenu-add-to-menubar`、`C-u` は無い)。
 - [ ] `C-M-l` (reposition-window), `C-x <` / `C-x >` (scroll-left / scroll-right): 画面の位置。
 - [x] `C-x C-@` (pop-global-mark)。
 - [x] `C-u C-SPC` (前のマークへ戻る。 mark-ring): マークの履歴 (`tests/batch/cases/61-repeat`)。
@@ -346,8 +346,8 @@
 
 - [x] `M-.` / `M-,` / `M-?` / `C-M-.` (xref-find-definitions など): 定義へ移る。
 - [x] `C-M-x` (eval-defun), `eval-buffer`、`eval-region`、`load-file`、`C-u C-x C-e` (結果を本文に入れる)。メジャーモードのキー (`keymap::mode_keymap`) で、`lisp-interaction-mode` と `scheme-mode` の `C-M-x`。値の整数の書き方 (`7 (#o7, #x7, ?\C-g)`) は無い。
-- [ ] `ielm` (Lisp の対話の画面)。`*scratch*` での `C-j` (eval-print-last-sexp) は完了。
-- [ ] `eldoc-mode` (関数の引数をミニバッファに出す)。`check-parens` は完了。
+- [x] `ielm` (Lisp の対話の画面: `*ielm*` のプロンプト (`ELISP>`) の後で `RET` が評価し、`M-p` / `M-n` が履歴をたどる。補完と複数行の入力は無い)。`*scratch*` での `C-j` (eval-print-last-sexp) は完了。
+- [x] `eldoc-mode` (Lisp のモードで、関数の呼び出しの中にカーソルがあると、引数の一覧を出す。Emacs と違い、初めは切れていて、待たずに出す)。`check-parens` は完了。
 
 ### モードとそのほか
 
@@ -355,7 +355,7 @@
 - [ ] `C-x C-+` / `C-x C--` / `C-x C-0` (text-scale-adjust), `C-x C-M-+` (global-text-scale-adjust): 文字の大きさ。
 - [x] `delete-selection-mode` (文字, `RET`, `DEL`, `C-d`, `C-y` が選んだ範囲を置き換える)。
 - [x] `electric-pair-mode` (`(` `[` `{` `"` の対を入れ、閉じる文字は越える。選んだ範囲を囲むことは無い)、`electric-indent-mode` (既定で有効)、`show-paren-mode` (既定で有効) の設定。
-- [ ] `prog-mode`。
+- [x] `prog-mode`。
 - [ ] `shell`, `eshell`, `term`。
 - [x] `compile`、`recompile` (`lisp/compile.scm`)。`*compilation*` (compilation-mode) の中の `RET`、`C-c C-c`、`C-o`、`n`、`p`、`M-n`、`M-p`、
       `TAB`、`S-TAB`、`M-{`、`M-}`、`g`、`q`。`next-error` も、その結果をたどる。違い: コマンドは、終わるまで待つ (Emacs は裏で動かす。
@@ -731,8 +731,8 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
 - [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) と 1 つずつ動かすことは、残り (Phase 14)。
-- [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。
-- [ ] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。残りは、ほかのメジャーモードの切り替え (Phase 14)。
+- [x] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。
+- [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
 - [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。`dotfiles` で使っているので、使う頻度で上げる。大。
 - [ ] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。中。

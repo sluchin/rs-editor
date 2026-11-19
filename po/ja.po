@@ -1773,6 +1773,56 @@ msgstr ""
 "今の Dired バッファにキーを割り当てる. 他の文字は `undefined' にし, 数字と `-' は\n"
 "前置引数にする (Emacs の `suppress-keymap' と同じ)."
 
+#: lisp/eldoc.scm
+msgctxt "variable:eldoc--on"
+msgid "True while `eldoc-mode' is on."
+msgstr "eldoc-mode が入っているあいだ真."
+
+#: lisp/eldoc.scm
+msgctxt "variable:eldoc--last"
+msgid "The text that eldoc showed last, so that it is not shown again and again."
+msgstr "eldoc が最後に出した文字 (同じものを何度も出さないために覚える)."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--lisp-buffer-p"
+msgid "Return true if the current buffer is in a Lisp mode."
+msgstr "今のバッファが Lisp のモードなら真を返す."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--function-at-point"
+msgid "Return the symbol of the function that the call around point calls, or #f."
+msgstr "点のまわりの呼び出しが呼ぶ関数の記号を返す. 無ければ偽."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--usage"
+msgid "Return the usage line (the last line of the documentation, such as \"(car LIST)\") of FUNCTION, or #f."
+msgstr "FUNCTION の使い方の行 (説明の最後の行. `(car LIST)' のようなもの) を返す. 無ければ偽."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--string"
+msgid ""
+"Return the text for eldoc at point (the arguments of the function being called), or #f.\n"
+"A Lisp function shows its arguments; a built-in one shows the usage line of its documentation."
+msgstr ""
+"点の所の eldoc の文字 (呼んでいる関数の引数) を返す. 無ければ偽.\n"
+"Lisp の関数は引数を出し, 組み込みの手続きは, 説明の最後の使い方の行を出す."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--post-command"
+msgid "Show the arguments of the function at point in the echo area, for `eldoc-mode'."
+msgstr "eldoc-mode のために, 点の所の関数の引数を, エコー領域に出す."
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc-mode"
+msgid ""
+"Toggle Eldoc mode: in a Lisp buffer, show the arguments of the function at point in the echo area.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"Unlike Emacs, it is off at first, and the text shows right after a command."
+msgstr ""
+"Eldoc モードを切り替える: Lisp のバッファで, 点の所の関数の引数を, エコー領域に出す.\n"
+"引数が正なら入れ, 0 か負なら切る.\n"
+"Emacs と違い, 初めは切れていて, コマンドの直後に出す."
+
 #: lisp/files.scm
 msgctxt "variable:auto-mode-alist"
 msgid ""
@@ -4108,6 +4158,92 @@ msgstr "メニューの, KEYWORD に合うメモを返す (%here% 用)"
 msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
 msgstr "メニューの, 今の日時を返す (%here% 用)"
+
+#: lisp/ielm.scm
+msgctxt "variable:ielm-prompt"
+msgid "Prompt used in the *ielm* buffer."
+msgstr "*ielm* バッファで使う, 入力を促す文字."
+
+#: lisp/ielm.scm
+msgctxt "variable:ielm-history"
+msgid "The expressions that were sent, the newest first."
+msgstr "送った式 (新しい順)."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--insert-prompt"
+msgid "Insert the prompt at the end of the buffer."
+msgstr "バッファの終わりに, 入力を促す文字を入れる."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--input"
+msgid "Return the text after the last prompt."
+msgstr "最後の入力を促す文字の後の文字を返す."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--evaluate"
+msgid "Evaluate the expression INPUT, and return its value as a string (or the message of the error)."
+msgstr "式 INPUT を評価して, 値を文字列で返す (失敗なら, その知らせ)."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-return"
+msgid ""
+"Evaluate the expression after the last prompt, print the value, and show a new prompt.\n"
+"Ignores an empty input."
+msgstr ""
+"最後の入力を促す文字の後の式を評価し, 値を書いて, 新しい入力を促す文字を出す.\n"
+"入力が空なら, 何も評価しない."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--replace-input"
+msgid "Replace the text after the last prompt with TEXT."
+msgstr "最後の入力を促す文字の後の文字を, TEXT に置き換える."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-previous-input"
+msgid "Replace the input with the previous expression of the history."
+msgstr "入力を, 履歴の前の式に置き換える."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-next-input"
+msgid "Replace the input with the next expression of the history."
+msgstr "入力を, 履歴の次の式に置き換える."
+
+#: lisp/ielm.scm
+msgctxt "function:ielm"
+msgid ""
+"Interactively evaluate Lisp expressions in the *ielm* buffer.\n"
+"Type an expression after the prompt and RET to evaluate it.  M-p and M-n go through the previous inputs."
+msgstr ""
+"*ielm* バッファで, Lisp の式を対話的に評価する.\n"
+"入力を促す文字の後に式を書いて RET を押すと評価する. M-p と M-n で, 前の入力をたどる."
+
+#: lisp/imenu.scm
+msgctxt "variable:imenu-expressions"
+msgid ""
+"List of (MODE-NAME REGEXP GROUP) that find the definitions of a buffer for `imenu'.\n"
+"MODE-NAME is the major mode (`major-mode-name'); GROUP is the group of REGEXP that is the name."
+msgstr ""
+"`imenu' が, バッファの定義を見つける (モード名 正規表現 グループ) の一覧.\n"
+"モード名は, メジャーモード (`major-mode-name'). グループは, 名前になる正規表現のグループ."
+
+#: lisp/imenu.scm
+msgctxt "function:imenu--expression"
+msgid "Return the (REGEXP GROUP) that finds the definitions of the current buffer, or #f."
+msgstr "今のバッファの定義を見つける (正規表現 グループ) を返す. 無ければ偽."
+
+#: lisp/imenu.scm
+msgctxt "function:imenu--index"
+msgid "Return the definitions of the current buffer as a list of (NAME POSITION), in buffer order."
+msgstr "今のバッファの定義を, (名前 位置) の一覧で, バッファの順に返す."
+
+#: lisp/imenu.scm
+msgctxt "function:imenu"
+msgid ""
+"Jump to a definition in the buffer: choose one of the names found, by completion.\n"
+"Called from Lisp with a NAME, jump to the first definition of that name."
+msgstr ""
+"バッファの定義に移る: 見つけた名前から, 補完で選ぶ.\n"
+"Lisp から NAME を渡すと, その名前の最初の定義に移る."
 
 #: lisp/info.scm
 msgctxt "variable:Info-directory-list"
@@ -10043,6 +10179,11 @@ msgstr "Scheme のコードを編集するメジャーモード."
 msgctxt "function:text-mode"
 msgid "Major mode for editing text written for humans to read."
 msgstr "人が読む文章を編集するメジャーモード."
+
+#: lisp/simple.scm
+msgctxt "function:prog-mode"
+msgid "Major mode for editing programming language source code."
+msgstr "プログラムのソースを編集するメジャーモード."
 
 #: lisp/simple.scm
 msgctxt "function:c-mode"

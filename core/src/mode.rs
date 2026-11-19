@@ -136,6 +136,7 @@ impl Buffer {
             "typescript-mode" => "TypeScript",
             "org-mode" => "Org",
             "text-mode" => "Text",
+            "prog-mode" => "Prog",
             _ => "Fundamental",
         };
         info(name, language)

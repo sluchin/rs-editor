@@ -1511,6 +1511,51 @@ msgid ""
 "and `-' make a prefix argument (like Emacs's `suppress-keymap')."
 msgstr ""
 
+#: lisp/eldoc.scm
+msgctxt "variable:eldoc--on"
+msgid "True while `eldoc-mode' is on."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "variable:eldoc--last"
+msgid "The text that eldoc showed last, so that it is not shown again and again."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--lisp-buffer-p"
+msgid "Return true if the current buffer is in a Lisp mode."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--function-at-point"
+msgid "Return the symbol of the function that the call around point calls, or #f."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--usage"
+msgid "Return the usage line (the last line of the documentation, such as \"(car LIST)\") of FUNCTION, or #f."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--string"
+msgid ""
+"Return the text for eldoc at point (the arguments of the function being called), or #f.\n"
+"A Lisp function shows its arguments; a built-in one shows the usage line of its documentation."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc--post-command"
+msgid "Show the arguments of the function at point in the echo area, for `eldoc-mode'."
+msgstr ""
+
+#: lisp/eldoc.scm
+msgctxt "function:eldoc-mode"
+msgid ""
+"Toggle Eldoc mode: in a Lisp buffer, show the arguments of the function at point in the echo area.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"Unlike Emacs, it is off at first, and the text shows right after a command."
+msgstr ""
+
 #: lisp/files.scm
 msgctxt "variable:auto-mode-alist"
 msgid ""
@@ -3652,6 +3697,84 @@ msgstr ""
 #: lisp/howm.scm
 msgctxt "function:howm-menu-last-update"
 msgid "Return the current date and time for the menu, for %here%."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "variable:ielm-prompt"
+msgid "Prompt used in the *ielm* buffer."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "variable:ielm-history"
+msgid "The expressions that were sent, the newest first."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--insert-prompt"
+msgid "Insert the prompt at the end of the buffer."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--input"
+msgid "Return the text after the last prompt."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--evaluate"
+msgid "Evaluate the expression INPUT, and return its value as a string (or the message of the error)."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-return"
+msgid ""
+"Evaluate the expression after the last prompt, print the value, and show a new prompt.\n"
+"Ignores an empty input."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm--replace-input"
+msgid "Replace the text after the last prompt with TEXT."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-previous-input"
+msgid "Replace the input with the previous expression of the history."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm-next-input"
+msgid "Replace the input with the next expression of the history."
+msgstr ""
+
+#: lisp/ielm.scm
+msgctxt "function:ielm"
+msgid ""
+"Interactively evaluate Lisp expressions in the *ielm* buffer.\n"
+"Type an expression after the prompt and RET to evaluate it.  M-p and M-n go through the previous inputs."
+msgstr ""
+
+#: lisp/imenu.scm
+msgctxt "variable:imenu-expressions"
+msgid ""
+"List of (MODE-NAME REGEXP GROUP) that find the definitions of a buffer for `imenu'.\n"
+"MODE-NAME is the major mode (`major-mode-name'); GROUP is the group of REGEXP that is the name."
+msgstr ""
+
+#: lisp/imenu.scm
+msgctxt "function:imenu--expression"
+msgid "Return the (REGEXP GROUP) that finds the definitions of the current buffer, or #f."
+msgstr ""
+
+#: lisp/imenu.scm
+msgctxt "function:imenu--index"
+msgid "Return the definitions of the current buffer as a list of (NAME POSITION), in buffer order."
+msgstr ""
+
+#: lisp/imenu.scm
+msgctxt "function:imenu"
+msgid ""
+"Jump to a definition in the buffer: choose one of the names found, by completion.\n"
+"Called from Lisp with a NAME, jump to the first definition of that name."
 msgstr ""
 
 #: lisp/info.scm
@@ -8800,6 +8923,11 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:text-mode"
 msgid "Major mode for editing text written for humans to read."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:prog-mode"
+msgid "Major mode for editing programming language source code."
 msgstr ""
 
 #: lisp/simple.scm
