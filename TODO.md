@@ -353,7 +353,8 @@
 
 - [ ] `<insert>` (overwrite-mode), `auto-fill-mode`, `display-line-numbers-mode`, `visual-line-mode`, `column-number-mode`, `hl-line-mode`。
 - [ ] `C-x C-+` / `C-x C--` / `C-x C-0` (text-scale-adjust), `C-x C-M-+` (global-text-scale-adjust): 文字の大きさ。
-- [ ] `delete-selection-mode`、`electric-pair-mode`、`electric-indent-mode` (既定で有効。 `RET` で字下げする、は実装済み), `show-paren-mode` の設定。
+- [x] `delete-selection-mode` (文字, `RET`, `DEL`, `C-d`, `C-y` が選んだ範囲を置き換える)。
+- [ ] `electric-pair-mode`、`electric-indent-mode` (既定で有効。 `RET` で字下げする、は実装済み), `show-paren-mode` の設定。
 - [ ] `prog-mode`。
 - [ ] `shell`, `eshell`, `term`。
 - [x] `compile`、`recompile` (`lisp/compile.scm`)。`*compilation*` (compilation-mode) の中の `RET`、`C-c C-c`、`C-o`、`n`、`p`、`M-n`、`M-p`、

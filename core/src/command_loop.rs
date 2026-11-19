@@ -289,6 +289,12 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         self.take_prefix();
         let count = prefix_numeric_value(self.host.editor().prefix_arg).max(1);
         let text = text.repeat(count as usize);
+        if matches!(self.variable("delete-selection--on"), Value::Boolean(true)) {
+            // delete-selection-mode: 打った文字は, 選んでいる範囲を置き換える
+            let _ = self
+                .evaluator
+                .eval_with("(delete-selection--before-insert)", &self.host);
+        }
         self.evaluator
             .global()
             .define("this-command", symbol("self-insert-command"));

@@ -346,11 +346,30 @@ Interactively, COLUMN is the numeric prefix argument, or read in the minibuffer.
       (set! reached column))
     reached))
 
+(define delete-selection--on #f
+  "True while `delete-selection-mode' is on.")
+
+(define (delete-selection--active-p)
+  "Return true if an active, non-empty region should be replaced by what the command inserts."
+  (and delete-selection--on (region-active-p) (mark) (not (= (point) (mark)))
+       (not (rectangle-mark-p))))
+
+(define (delete-selection--delete)
+  "Delete the active region for `delete-selection-mode', and return true if there was one."
+  (and (delete-selection--active-p)
+       (begin (delete-region (region-beginning) (region-end))
+              #t)))
+
+(define (delete-selection--before-insert)
+  "Delete the active region before a typed character is inserted (`delete-selection-mode')."
+  (delete-selection--delete))
+
 (define-command (newline . args)
   "Insert N newlines.  N is the prefix argument, or 1.
 Signal an error if N is negative."
   (let ((n (simple--arg args)))
     (if (< n 0) (error "Repetition argument has to be non-negative"))
+    (if (and simple--interactive (null? args)) (delete-selection--delete))
     (if (and simple--interactive (null? args) (= n 1))
         ;; キーから 1 つ入れるときは, electric-indent-mode のように字下げする
         (newline-and-indent-op indent-tabs-mode)
@@ -584,12 +603,14 @@ Optional second arg KILLFLAG non-nil means to kill (save in kill ring) instead o
 Interactively, N is the prefix argument, and KILLFLAG is true if there is a prefix argument."
   (let ((n (simple--arg args))
         (kill (if (and (pair? args) (pair? (cdr args))) (cadr args) (and (null? args) (current-prefix-arg)))))
+    (if (and simple--interactive (not kill) (delete-selection--delete))
+        #f
     (if kill
         (let ((target (+ (point) n)))
           (if (or (< target (point-min)) (> target (point-max)))
               (signal 'args-out-of-range (list (string->symbol (format "#<buffer %s>" (buffer-name))) (point) target))
               (simple--kill (point) target)))
-        (simple--delete-char n))
+        (simple--delete-char n)))
     #f))
 
 (define-command (delete-forward-char . args)
@@ -1149,7 +1170,9 @@ In `rectangle-mark-mode', insert the last killed rectangle at the upper left cor
 rectangle instead, like `yank-rectangle'."
   (if (simple--rectangle-region-p)
       (simple--yank-rectangle)
-      (simple--yank args)))
+      (begin
+        (delete-selection--delete)
+        (simple--yank args))))
 
 (define (simple--yank args)
   "Yank the kill ring for `yank', with ARGS."
@@ -2803,6 +2826,19 @@ with zero or a negative argument, make it writable."
     (set-buffer-read-only on)
     (if interactive
         (message (if on "Read-Only mode enabled in current buffer" "Read-Only mode disabled in current buffer")))
+    on))
+
+(define-command (delete-selection-mode . args)
+  "Toggle Delete Selection mode.
+With no argument (or `toggle'), toggle it.  With a positive argument, turn it on; with zero or
+a negative argument, turn it off.
+When on, typing text, RET, DEL, C-d or C-y replaces the active region instead of leaving it."
+  (let* ((interactive (null? args))
+         (mode (simple--mode-arg args))
+         (on (if (eq? mode 'toggle) (not delete-selection--on) (= mode 1))))
+    (set! delete-selection--on on)
+    (if interactive
+        (message (if on "Delete Selection mode enabled" "Delete Selection mode disabled")))
     on))
 
 ;;; Builtins of Emacs (C) and small helpers

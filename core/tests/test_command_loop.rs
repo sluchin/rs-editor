@@ -456,3 +456,65 @@ fn test_debug_on_error_shows_the_backtrace_buffer() {
     commands.execute("toggle-debug-on-error");
     assert_eq!(message(&commands), "Debug on Error disabled globally");
 }
+
+#[test]
+fn test_delete_selection_mode_replaces_the_active_region() {
+    let mut commands = setup();
+    let eval = |commands: &CommandLoop<Ui>, code: &str| {
+        commands
+            .evaluator()
+            .eval_with(code, commands.host())
+            .unwrap();
+    };
+    let select = |commands: &CommandLoop<Ui>| {
+        eval(
+            commands,
+            "(goto-char 2) (push-mark (point)) (activate-mark) (goto-char 4)",
+        );
+    };
+    press(&mut commands, "a b c d e");
+    // 切っているあいだは, 選んだ範囲を残して, 後ろに入れる
+    select(&commands);
+    commands.self_insert("X");
+    assert_eq!(text(&commands), "abcXde");
+    // 入れると, 選んだ範囲を置き換える
+    eval(&commands, "(delete-selection-mode 1)");
+    select(&commands);
+    commands.self_insert("Y");
+    assert_eq!(text(&commands), "aYXde");
+    // RET, DEL, C-d, C-y も同じ
+    select(&commands);
+    press(&mut commands, "RET");
+    assert_eq!(text(&commands), "a\nde");
+    eval(
+        &commands,
+        "(goto-char 2) (push-mark (point)) (activate-mark) (goto-char 4)",
+    );
+    press(&mut commands, "DEL");
+    assert_eq!(text(&commands), "ae");
+    eval(
+        &commands,
+        "(kill-new \"ZZ\") (goto-char 1) (push-mark (point)) (activate-mark) (goto-char 2)",
+    );
+    press(&mut commands, "C-y");
+    assert_eq!(text(&commands), "ZZe");
+    eval(
+        &commands,
+        "(goto-char 1) (push-mark (point)) (activate-mark) (goto-char 3)",
+    );
+    press(&mut commands, "C-d");
+    assert_eq!(text(&commands), "e");
+    // 範囲が無ければ, 普通に動く. 切ると, 範囲は残る
+    press(&mut commands, "C-a C-d");
+    assert_eq!(text(&commands), "");
+    eval(&commands, "(delete-selection-mode 0)");
+    assert_eq!(
+        commands
+            .evaluator()
+            .global()
+            .get("delete-selection--on")
+            .unwrap()
+            .to_string(),
+        "#f"
+    );
+}

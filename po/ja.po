@@ -7645,6 +7645,26 @@ msgstr ""
 "対話的には, COLUMN は数の前置引数か, ミニバッファで聞く数."
 
 #: lisp/simple.scm
+msgctxt "variable:delete-selection--on"
+msgid "True while `delete-selection-mode' is on."
+msgstr "\"delete-selection-mode が入っているあいだ真."
+
+#: lisp/simple.scm
+msgctxt "function:delete-selection--active-p"
+msgid "Return true if an active, non-empty region should be replaced by what the command inserts."
+msgstr "選んでいる空でない範囲を, コマンドが入れるものと置き換えるなら真を返す."
+
+#: lisp/simple.scm
+msgctxt "function:delete-selection--delete"
+msgid "Delete the active region for `delete-selection-mode', and return true if there was one."
+msgstr "delete-selection-mode のために, 選んでいる範囲を消す. 範囲があれば真を返す."
+
+#: lisp/simple.scm
+msgctxt "function:delete-selection--before-insert"
+msgid "Delete the active region before a typed character is inserted (`delete-selection-mode')."
+msgstr "文字を入れる前に, 選んでいる範囲を消す (delete-selection-mode)."
+
+#: lisp/simple.scm
 msgctxt "function:newline"
 msgid ""
 "Insert N newlines.  N is the prefix argument, or 1.\n"
@@ -9489,6 +9509,18 @@ msgstr ""
 "今のバッファを読み取り専用にするかを変える.\n"
 "引数が無い (か `toggle') なら, 切り替える. 正の引数なら読み取り専用に,\n"
 "0 か負の引数なら書き込めるようにする."
+
+#: lisp/simple.scm
+msgctxt "function:delete-selection-mode"
+msgid ""
+"Toggle Delete Selection mode.\n"
+"With no argument (or `toggle'), toggle it.  With a positive argument, turn it on; with zero or\n"
+"a negative argument, turn it off.\n"
+"When on, typing text, RET, DEL, C-d or C-y replaces the active region instead of leaving it."
+msgstr ""
+"Delete Selection モードを切り替える.\n"
+"引数が無い (または `toggle') ときは切り替え, 正なら入れ, 0 か負なら切る.\n"
+"入れると, 文字, RET, DEL, C-d, C-y が, 選んでいる範囲を残さず置き換える."
 
 #: lisp/simple.scm
 msgctxt "function:beginning-of-line"
