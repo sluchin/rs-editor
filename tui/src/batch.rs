@@ -259,6 +259,8 @@ impl Host for BatchUi {
                     }
                 }
             }
+            // バッチモードには, 聞く相手が居ないので, 続ける
+            "kbd-macro--ask" => Ok(Value::Boolean(true)),
             "execute-kbd-macro" => {
                 let count = match args.get(1) {
                     Some(Value::Number(n)) => *n as usize,

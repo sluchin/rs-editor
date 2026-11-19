@@ -256,3 +256,21 @@ fn test_scrolling() {
     fx.press("<prior>");
     assert_eq!(fx.app.message(), "Beginning of buffer");
 }
+
+#[test]
+fn test_kbd_macro_ask_reads_the_keyboard_and_stops_the_macro() {
+    let fx = Fixture::new();
+    fx.feed("y");
+    assert_eq!(fx.app.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#t");
+    fx.feed("SPC");
+    assert_eq!(fx.app.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#t");
+    assert_eq!(fx.screen().last().unwrap(), "Go?");
+    // それ以外のキーは, マクロを止める
+    fx.feed("n");
+    assert_eq!(fx.app.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#f");
+    // 入力が終わっていれば, やめる
+    assert_eq!(
+        fx.app.eval("(kbd-macro--ask \"Go? \")").unwrap_err(),
+        "Quit"
+    );
+}

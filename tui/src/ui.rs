@@ -451,6 +451,25 @@ impl Host for UiHost {
                 Ok(Value::Nil)
             }
             "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
+            // マクロの途中で, 続けるか聞く (キーは, マクロからでなく, 画面から読む). `y` と SPC 以外は, マクロを止める
+            "kbd-macro--ask" => {
+                self.state().message = String::new();
+                self.draw(Some(&Minibuffer {
+                    prompt: &text(&args, 0),
+                    input: "",
+                    cursor: 0,
+                }));
+                let key = self
+                    .state()
+                    .screen
+                    .read_key()
+                    .ok_or_else(|| Error::bare("quit"))?;
+                let go = key == "y" || key == "SPC";
+                if !go {
+                    self.state().stop_macro();
+                }
+                Ok(Value::Boolean(go))
+            }
             // 長い仕事の途中で, 画面を描き直し, `C-g` を押したか確かめる (押したことは忘れる)
             "redisplay" => {
                 self.draw(None);

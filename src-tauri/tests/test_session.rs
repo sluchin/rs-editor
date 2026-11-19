@@ -700,3 +700,28 @@ fn test_redisplay_draws_and_quit_requested_reads_c_g() {
     assert_eq!(session.eval("(quit-requested-p)").unwrap(), "#t");
     assert_eq!(session.eval("(quit-requested-p)").unwrap(), "#f");
 }
+
+#[test]
+fn test_kbd_macro_query_reads_the_keyboard_and_stops_the_macro() {
+    let (mut session, front) = setup();
+    let answer = |key: &str| {
+        front
+            .answers
+            .lock()
+            .unwrap()
+            .push_back(Value::String(key.into()))
+    };
+    // y と SPC は, マクロを続ける (キーは, マクロからでなく, 画面から読む)
+    answer("y");
+    assert_eq!(session.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#t");
+    answer("SPC");
+    assert_eq!(session.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#t");
+    // それ以外は, 残りのマクロを捨てる
+    session
+        .eval("(execute-kbd-macro '(\"a\" \"b\" \"c\"))")
+        .unwrap();
+    answer("n");
+    assert_eq!(session.eval("(kbd-macro--ask \"Go? \")").unwrap(), "#f");
+    key(&mut session, "x");
+    assert!(text(&session).ends_with("buffer.\nx"));
+}

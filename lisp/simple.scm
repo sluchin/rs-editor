@@ -995,6 +995,7 @@ counter is set to it.  With C-u, append to the last macro and keep the counter."
     (if (kbd-macro-defining-p)
         (message "Already defining keyboard macro.")
         (begin
+          (if (not (pair? arg)) (kmacro--push-last))
           (if (not (pair? arg))
               (begin (set! kmacro-last-counter kmacro-counter)
                      (set! kmacro-counter (if arg (prefix-numeric-value arg) 0))))

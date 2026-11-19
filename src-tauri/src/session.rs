@@ -314,6 +314,16 @@ impl<F: Front> Host for SessionUi<F> {
                 Ok(Value::Nil)
             }
             "executing-kbd-macro-p" => Ok(Value::Boolean(self.state().executing_macro)),
+            // マクロの途中で, 続けるか聞く (キーは, マクロからでなく, 画面から読む). `y` と SPC 以外は, マクロを止める
+            "kbd-macro--ask" => {
+                self.send_frame();
+                let key = text(&[self.front.request("read-key", args)?], 0);
+                let go = key == "y" || key == "SPC";
+                if !go {
+                    self.stop_macro();
+                }
+                Ok(Value::Boolean(go))
+            }
             // 長い仕事の途中で, 画面を描き直し, `C-g` を押したか確かめる (押したことは忘れる)
             "redisplay" => {
                 self.send_frame();

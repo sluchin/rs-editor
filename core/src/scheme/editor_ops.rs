@@ -240,6 +240,7 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("skip-syntax-forward", &[Kind::Text, Kind::Number], 1),
     ("skip-syntax-backward", &[Kind::Text, Kind::Number], 1),
     ("executing-kbd-macro-p", &[], 0),
+    ("kbd-macro--ask", &[Kind::Text], 1),
     ("window-body-height", &[], 0),
     ("move-to-window-line", &[Kind::Number], 0),
     ("recenter", &[], 0),

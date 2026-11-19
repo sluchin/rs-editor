@@ -316,9 +316,9 @@
 
 ### 前置引数とキーボードマクロ
 
-- [ ] `C-x C-k ...` (kmacro): マクロの環 (`C-x C-k C-n` など)、数え上げ (`C-x C-k TAB`、`C-x C-k C-c`),
-      キーに割り当てる (`C-x C-k b`)、直す (`C-x C-k RET`、`C-x C-k e`), 1 つずつ動かす (`C-x C-k SPC`)。
-- [ ] `C-x C-k r` (apply-macro-to-region-lines), `C-x q` (kbd-macro-query)。
+- [x] `C-x C-k ...` (kmacro): マクロの環 (`C-x C-k C-n` / `C-p` / `C-t` / `C-d` / `C-l` / `C-v`)、数え上げ (`C-x C-k C-c` / `C-a` / `C-f`)、キーに割り当てる (`C-x C-k b`)。
+- [ ] kmacro の残り: マクロを直す (`C-x C-k RET`、`C-x C-k e` の edit-kbd-macro)、1 つずつ動かす (`C-x C-k SPC`)、`C-u C-x q` の再帰編集。
+- [x] `C-x C-k r` (apply-macro-to-region-lines: 行ごとに `C-a`、マクロ、`C-n` を打つ。行が増えたり減ったりするマクロでは、Emacs とずれる)、`C-x q` (kbd-macro-query: マクロの途中で聞く。`y` と SPC で続け、ほかのキーでマクロを止める。Emacs の `n` / DEL (その回だけ飛ばす) は、止める)。
 
 ### ヘルプ
 
@@ -730,7 +730,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除は完了。残りは、外からの変更の読み直し、根を選ぶコマンドなど (Phase 15)。小。
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
-- [ ] キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 14)。中。
+- [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) と 1 つずつ動かすことは、残り (Phase 14)。
 - [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。
 - [ ] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。残りは、ほかのメジャーモードの切り替え (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。

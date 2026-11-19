@@ -4370,6 +4370,122 @@ msgstr ""
 "点の近くにあるシンボルを前向きにインクリメンタルサーチする.\n"
 "普通のインクリメンタルサーチと同じだが, 点にあるシンボルを検索の文字列の初めに加え, シンボルの検索にする."
 
+#: lisp/kmacro.scm
+msgctxt "variable:kmacro-ring"
+msgid "The keyboard macros before the last one, the newest first.  Each is (KEYS COUNTER FORMAT)."
+msgstr "今のマクロの前のキーボードマクロ (新しい順). それぞれ (キー 数え上げ 書式)."
+
+#: lisp/kmacro.scm
+msgctxt "variable:kmacro-ring-max"
+msgid "Maximum number of keyboard macros to save in the macro ring."
+msgstr "マクロの環に覚えるキーボードマクロの最大数."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--head"
+msgid "Return the last keyboard macro as (KEYS COUNTER FORMAT)."
+msgstr "最後のキーボードマクロを (キー 数え上げ 書式) で返す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--install"
+msgid "Make ENTRY, a (KEYS COUNTER FORMAT), the last keyboard macro."
+msgstr "ENTRY (キー 数え上げ 書式) を, 最後のキーボードマクロにする."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--take"
+msgid "Return the first COUNT elements of ITEMS."
+msgstr "ITEMS の先頭の COUNT 個を返す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--push-last"
+msgid "Put the last keyboard macro on the ring before a new one is defined."
+msgstr "新しいマクロを覚える前に, 最後のキーボードマクロを環に入れる."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--check-ring"
+msgid "Signal an error if there is no other keyboard macro."
+msgstr "ほかのキーボードマクロが無ければ, エラーにする."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-cycle-ring-next"
+msgid "Move to the next keyboard macro in the ring: the last macro goes to the end of the ring."
+msgstr "環の次のキーボードマクロに替える: 今のマクロは, 環の終わりに行く."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-cycle-ring-previous"
+msgid "Move to the previous keyboard macro in the ring: the last macro goes to the front of the ring."
+msgstr "環の前のキーボードマクロに替える: 今のマクロは, 環の始めに行く."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-swap-ring"
+msgid "Swap the first two keyboard macros: the last macro and the one after it in the ring."
+msgstr "最初の 2 つのキーボードマクロ (今のマクロと, 環の先頭) を入れ替える."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-delete-ring-head"
+msgid "Delete the last keyboard macro; the next one in the ring becomes the last."
+msgstr "今のキーボードマクロを消す. 環の次のマクロが, 今のマクロになる."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-call-ring-2nd"
+msgid ""
+"Call the second keyboard macro of the ring (the one after the last), without changing the ring.\n"
+"A prefix argument serves as a repeat count; zero means repeat until error."
+msgstr ""
+"環の 2 番目 (今のマクロの次) のキーボードマクロを, 環を変えずに動かす.\n"
+"前置引数は繰り返しの数. 0 なら, 失敗するまで繰り返す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--describe"
+msgid "Return the keys of the last keyboard macro as one string."
+msgstr "最後のキーボードマクロのキーを, 1 つの文字列にして返す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-view-macro"
+msgid "Show the keys of the last keyboard macro in the echo area."
+msgstr "最後のキーボードマクロのキーを, エコー領域に出す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-set-counter"
+msgid "Set the keyboard macro counter to the number (the prefix argument, or asked for)."
+msgstr "キーボードマクロの数え上げを, 数 (前置引数, または聞いたもの) にする."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-add-counter"
+msgid "Add the prefix argument (or the number asked for) to the keyboard macro counter."
+msgstr "キーボードマクロの数え上げに, 前置引数 (または聞いた数) を足す."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-set-format"
+msgid "Set the format of the keyboard macro counter (a format string with %d; empty means %d)."
+msgstr "キーボードマクロの数え上げの書式 (%d を含む文字列. 空なら %d) を決める."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-bind-to-key"
+msgid "Bind the last keyboard macro to a key (the argument, or asked for), for all buffers."
+msgstr "最後のキーボードマクロを, 全てのバッファで, キー (引数, または聞いたもの) に割り当てる."
+
+#: lisp/kmacro.scm
+msgctxt "function:apply-macro-to-region-lines"
+msgid ""
+"Run the last keyboard macro on each line of the region (from the beginning of the line).\n"
+"The macro runs after the command, one line after another, from the first line down."
+msgstr ""
+"領域の各行 (行の始めから) に, 最後のキーボードマクロを動かす.\n"
+"マクロは, このコマンドの後で, 最初の行から順に動く."
+
+#: lisp/kmacro.scm
+msgctxt "function:kbd-macro-query"
+msgid ""
+"Query user during kbd macro execution.\n"
+"While a keyboard macro is being defined, this only records the key; when the macro runs, it asks\n"
+"whether to go on: `y' or SPC goes on, any other key stops the macro.\n"
+"With a prefix argument while defining, Emacs enters a recursive edit; that is not supported here."
+msgstr ""
+"キーボードマクロの実行中に, 利用者に聞く.\n"
+"マクロを覚えているあいだは, キーを覚えるだけ. 動かしているときは, 続けるか聞く:\n"
+"`y' か SPC なら続け, ほかのキーならマクロを止める.\n"
+"覚えているあいだの前置引数は, Emacs では再帰編集に入るが, ここでは使えない."
+
 #: lisp/minibuffer.scm
 msgctxt "variable:completion-at-point-functions"
 msgid ""
@@ -11629,6 +11745,19 @@ msgstr ""
 "OBJECT が整数なら #t を返す.\n"
 "\n"
 "(integer? OBJECT)"
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:kbd-macro--ask"
+msgid ""
+"Ask whether the keyboard macro being executed goes on, reading a key from the keyboard (not from the macro).\n"
+"Return #t for `y' or SPC; any other key stops the macro and returns #f.\n"
+"\n"
+"(kbd-macro--ask PROMPT)"
+msgstr ""
+"動かしているキーボードマクロを続けるかを, キーボード (マクロではなく) からキーを読んで聞く。\n"
+"`y' か SPC なら #t を返し、ほかのキーならマクロを止めて #f を返します。\n"
+"\n"
+"(kbd-macro--ask PROMPT)"
 
 #: core/src/scheme/builtin_docs.rs
 msgctxt "function:kbd-macro-defining-p"

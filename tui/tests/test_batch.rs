@@ -506,3 +506,10 @@ fn test_recursive_edit_runs_the_keys_until_exit() {
     );
     assert_eq!(out_of(code, ""), "(X az No recursive edit is in progress)");
 }
+
+#[test]
+fn test_kbd_macro_ask_goes_on_in_batch_mode() {
+    let (status, out, _) = batch(&["--eval", "(princ (kbd-macro--ask \"Go? \"))"], "");
+    assert_eq!(status, 0);
+    assert_eq!(out, "t");
+}

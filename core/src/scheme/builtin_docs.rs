@@ -76,6 +76,7 @@ pub static DOCS: &[(&str, &str)] = &[
     ("indent-region-op", "Internal helper of `indent-region'.\n\n(indent-region-op START END INDENT-TABS-MODE)"),
     ("indent-sexp-op", "Internal helper of `indent-sexp'.\n\n(indent-sexp-op INDENT-TABS-MODE)"),
     ("integer?", "Return #t if OBJECT is an integer.\n\n(integer? OBJECT)"),
+    ("kbd-macro--ask", "Ask whether the keyboard macro being executed goes on, reading a key from the keyboard (not from the macro).\nReturn #t for `y' or SPC; any other key stops the macro and returns #f.\n\n(kbd-macro--ask PROMPT)"),
     ("kbd-macro-defining-p", "Return #t while a keyboard macro is being defined.\n\n(kbd-macro-defining-p)"),
     ("kbd-macro-last", "Return the keys of the last keyboard macro.\n\n(kbd-macro-last)"),
     ("kill-ring-length", "Return the number of entries in the kill ring.\n\n(kill-ring-length)"),

@@ -3891,6 +3891,114 @@ msgid ""
 "is added to the search string initially, as a symbol search."
 msgstr ""
 
+#: lisp/kmacro.scm
+msgctxt "variable:kmacro-ring"
+msgid "The keyboard macros before the last one, the newest first.  Each is (KEYS COUNTER FORMAT)."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "variable:kmacro-ring-max"
+msgid "Maximum number of keyboard macros to save in the macro ring."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--head"
+msgid "Return the last keyboard macro as (KEYS COUNTER FORMAT)."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--install"
+msgid "Make ENTRY, a (KEYS COUNTER FORMAT), the last keyboard macro."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--take"
+msgid "Return the first COUNT elements of ITEMS."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--push-last"
+msgid "Put the last keyboard macro on the ring before a new one is defined."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--check-ring"
+msgid "Signal an error if there is no other keyboard macro."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-cycle-ring-next"
+msgid "Move to the next keyboard macro in the ring: the last macro goes to the end of the ring."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-cycle-ring-previous"
+msgid "Move to the previous keyboard macro in the ring: the last macro goes to the front of the ring."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-swap-ring"
+msgid "Swap the first two keyboard macros: the last macro and the one after it in the ring."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-delete-ring-head"
+msgid "Delete the last keyboard macro; the next one in the ring becomes the last."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-call-ring-2nd"
+msgid ""
+"Call the second keyboard macro of the ring (the one after the last), without changing the ring.\n"
+"A prefix argument serves as a repeat count; zero means repeat until error."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--describe"
+msgid "Return the keys of the last keyboard macro as one string."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-view-macro"
+msgid "Show the keys of the last keyboard macro in the echo area."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-set-counter"
+msgid "Set the keyboard macro counter to the number (the prefix argument, or asked for)."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-add-counter"
+msgid "Add the prefix argument (or the number asked for) to the keyboard macro counter."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-set-format"
+msgid "Set the format of the keyboard macro counter (a format string with %d; empty means %d)."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-bind-to-key"
+msgid "Bind the last keyboard macro to a key (the argument, or asked for), for all buffers."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:apply-macro-to-region-lines"
+msgid ""
+"Run the last keyboard macro on each line of the region (from the beginning of the line).\n"
+"The macro runs after the command, one line after another, from the first line down."
+msgstr ""
+
+#: lisp/kmacro.scm
+msgctxt "function:kbd-macro-query"
+msgid ""
+"Query user during kbd macro execution.\n"
+"While a keyboard macro is being defined, this only records the key; when the macro runs, it asks\n"
+"whether to go on: `y' or SPC goes on, any other key stops the macro.\n"
+"With a prefix argument while defining, Emacs enters a recursive edit; that is not supported here."
+msgstr ""
+
 #: lisp/minibuffer.scm
 msgctxt "variable:completion-at-point-functions"
 msgid ""
@@ -10084,6 +10192,15 @@ msgid ""
 "Return #t if OBJECT is an integer.\n"
 "\n"
 "(integer? OBJECT)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:kbd-macro--ask"
+msgid ""
+"Ask whether the keyboard macro being executed goes on, reading a key from the keyboard (not from the macro).\n"
+"Return #t for `y' or SPC; any other key stops the macro and returns #f.\n"
+"\n"
+"(kbd-macro--ask PROMPT)"
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
