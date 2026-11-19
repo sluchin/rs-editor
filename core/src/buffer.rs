@@ -85,6 +85,8 @@ pub struct Buffer {
     mark: Option<usize>,
     /// マークを使うか (Emacs の `mark-active`).
     mark_active: bool,
+    /// 領域を矩形として扱うか (Emacs の `rectangle-mark-mode`. マークを使わなくなると, 偽に戻る).
+    rectangle_mark: bool,
     /// マークの履歴 (新しいものが先).
     mark_ring: Vec<usize>,
     /// 書き換えたか.
@@ -174,6 +176,7 @@ impl Buffer {
             point: 0,
             mark: None,
             mark_active: false,
+            rectangle_mark: false,
             mark_ring: Vec::new(),
             modified: false,
             file: None,
@@ -357,6 +360,7 @@ impl Buffer {
         self.point = 0;
         self.mark = None;
         self.mark_active = false;
+        self.rectangle_mark = false;
         self.mark_ring.clear();
         self.modified = false;
         self.undo.clear();
@@ -1150,6 +1154,49 @@ impl Buffer {
     /// マークを使わない状態にします (Emacs の `deactivate-mark`). マークの位置は残す.
     pub fn deactivate_mark(&mut self) {
         self.mark_active = false;
+        self.rectangle_mark = false;
+    }
+
+    /// 領域を矩形として扱っているか (Emacs の `rectangle-mark-mode`).
+    pub fn rectangle_mark(&self) -> bool {
+        self.rectangle_mark
+    }
+
+    /// 領域を矩形として扱うかを決めます.
+    pub fn set_rectangle_mark(&mut self, on: bool) {
+        self.rectangle_mark = on;
+    }
+
+    /// 矩形の領域 (カーソルとマークを角にする) の, 行ごとの範囲を返します (文字の位置. 桁は `current-column` と同じ数え方).
+    /// 矩形の領域でなければ空. 矩形に届かない短い行と, 幅の無い矩形は出さない.
+    pub fn rectangle_spans(&self) -> Vec<(usize, usize)> {
+        let Some(mark) = self
+            .mark
+            .filter(|_| self.mark_active && self.rectangle_mark)
+        else {
+            return Vec::new();
+        };
+        let (a, b) = (self.column_of(mark), self.column_of(self.point));
+        let (left, right) = (a.min(b), a.max(b));
+        let first = self.line_of(mark.min(self.point));
+        let last = self.line_of(mark.max(self.point));
+        (first..=last)
+            .filter_map(|line| {
+                let mut pos = self.line_start(line);
+                let (mut column, mut from) = (0, None);
+                while let Some(c) = self.char_after(pos).filter(|c| *c != '\n') {
+                    if from.is_none() && column >= left {
+                        from = Some(pos);
+                    }
+                    if column >= right {
+                        break;
+                    }
+                    column = Self::advance_column(column, c);
+                    pos += 1;
+                }
+                from.filter(|from| *from < pos).map(|from| (from, pos))
+            })
+            .collect()
     }
 
     /// 今のマークを履歴に入れて, 新しいマークを置きます (Emacs の `push-mark`).

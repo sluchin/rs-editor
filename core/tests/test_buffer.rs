@@ -460,3 +460,48 @@ fn test_read_only() {
     buffer.insert_at(0, "x").unwrap();
     assert_eq!(buffer.text(), "xabc");
 }
+
+#[test]
+fn test_rectangle_spans_follow_the_columns_of_point_and_mark() {
+    let mut buffer = Buffer::new("r");
+    buffer.insert("abcd\nef\nghijk\n\tx\n");
+    // 矩形でなければ, 空
+    buffer.set_point(0);
+    buffer.push_mark(12, true);
+    assert!(buffer.rectangle_spans().is_empty());
+    // 1 行目の 2 桁から, 3 行目の 3 桁まで. 2 行目は短く, 桁に届かないので出さない
+    buffer.set_point(2);
+    buffer.push_mark(11, true);
+    buffer.set_rectangle_mark(true);
+    assert!(buffer.rectangle_mark());
+    assert_eq!(buffer.rectangle_spans(), vec![(2, 3), (10, 11)]);
+    // 逆の角でも同じ
+    buffer.set_point(11);
+    buffer.set_mark(2);
+    assert_eq!(buffer.rectangle_spans(), vec![(2, 3), (10, 11)]);
+    // 行の終わりまでしか無い行は, ある所まで
+    buffer.set_point(1);
+    buffer.set_mark(11);
+    assert_eq!(buffer.rectangle_spans(), vec![(1, 3), (6, 7), (9, 11)]);
+    // 幅が無ければ, 出さない
+    buffer.set_point(2);
+    buffer.set_mark(10);
+    assert!(buffer.rectangle_spans().is_empty());
+    // タブは, 桁を 8 まで進める (タブの行は, タブと x が 0 桁から 9 桁に入る)
+    buffer.set_point(14);
+    buffer.set_mark(16);
+    assert_eq!(buffer.rectangle_spans(), vec![(14, 16)]);
+    // 右の桁がタブの中なら, タブまで含める
+    buffer.set_point(14);
+    buffer.set_mark(3);
+    assert_eq!(buffer.rectangle_spans().last(), Some(&(14, 15)));
+    // マークを使わなくなると, 矩形も終わる
+    buffer.deactivate_mark();
+    assert!(!buffer.rectangle_mark());
+    assert!(buffer.rectangle_spans().is_empty());
+    // マークが無ければ, 空
+    buffer.set_rectangle_mark(true);
+    buffer.load("x");
+    assert!(!buffer.rectangle_mark());
+    assert!(buffer.rectangle_spans().is_empty());
+}

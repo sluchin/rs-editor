@@ -817,16 +817,13 @@ If the previous command was a kill, append the text to its kill."
     (set! this-command 'kill-region)
     (set-deactivate-mark #t)))
 
-(define rectangle-mark-mode--on #f
-  "Non-nil while the region is a rectangle; see `rectangle-mark-mode'.")
-
 (define (simple--rectangle-region-p)
   "Return true if the active region is a rectangle."
-  (and rectangle-mark-mode--on (region-active-p)))
+  (and (rectangle-mark-p) (region-active-p)))
 
 (define (simple--rectangle-done)
   "Leave `rectangle-mark-mode' after a command used the rectangle."
-  (set! rectangle-mark-mode--on #f)
+  (set-rectangle-mark #f)
   (set-deactivate-mark #t))
 
 (define-command (kill-region . args)

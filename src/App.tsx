@@ -506,6 +506,7 @@ function App() {
                   entry={entry}
                   point={w.point}
                   mark={w.mark}
+                  rectangle={w.rectangle}
                   active={active}
                   asking={question !== null}
                   mode={mode}

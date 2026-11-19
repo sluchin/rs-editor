@@ -7945,11 +7945,6 @@ msgstr ""
 "前のコマンドも kill だったなら, その kill に足す."
 
 #: lisp/simple.scm
-msgctxt "variable:rectangle-mark-mode--on"
-msgid "Non-nil while the region is a rectangle; see `rectangle-mark-mode'."
-msgstr "領域が矩形である間は non-nil.  `rectangle-mark-mode' を見よ."
-
-#: lisp/simple.scm
 msgctxt "function:simple--rectangle-region-p"
 msgid "Return true if the active region is a rectangle."
 msgstr "有効な領域が矩形なら真を返す."
@@ -11713,6 +11708,17 @@ msgstr ""
 "(read-file-string FILENAME)"
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:rectangle-mark-p"
+msgid ""
+"Return #t if the region is a rectangle (`rectangle-mark-mode').\n"
+"\n"
+"(rectangle-mark-p)"
+msgstr ""
+"領域が矩形なら #t を返します (`rectangle-mark-mode')。\n"
+"\n"
+"(rectangle-mark-p)"
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:regexp-match"
 msgid ""
 "Match the regular expression REGEXP against STRING and return the matched strings, or #f.\n"
@@ -11876,6 +11882,17 @@ msgstr ""
 "マークの位置を POSITION にする.\n"
 "\n"
 "(set-mark-position POSITION)"
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-rectangle-mark"
+msgid ""
+"Treat the region as a rectangle (VALUE true) or as ordinary text (VALUE false).\n"
+"\n"
+"(set-rectangle-mark VALUE)"
+msgstr ""
+"領域を矩形として扱います (VALUE が真)。偽なら、普通の領域として扱います。\n"
+"\n"
+"(set-rectangle-mark VALUE)"
 
 #: core/src/scheme/builtin_docs.rs
 msgctxt "function:set-syntax-dialect"

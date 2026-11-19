@@ -36,6 +36,11 @@
   background: rgba(38, 110, 199, 0.35);
 }
 
+/* 矩形の領域 (rectangle-mark-mode). 領域の選択と同じ色 */
+.code-editor-container .cm-rectangle-region {
+  background: rgba(38, 110, 199, 0.35);
+}
+
 .code-editor-container .cm-cursor {
   border-left: 2px solid var(--foreground);
 }

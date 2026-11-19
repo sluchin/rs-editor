@@ -17,7 +17,13 @@ import { EditorView, drawSelection } from '@codemirror/view'
 import { codeFolding, foldEffect, foldedRanges, unfoldEffect } from '@codemirror/language'
 import { controlChars } from '../lib/controlChars'
 import type { DocEntry } from '../lib/docs'
-import { type Highlight, regexpHighlighting, type Token, tokenHighlighting } from '../lib/faces'
+import {
+  type Highlight,
+  rectangleHighlighting,
+  regexpHighlighting,
+  type Token,
+  tokenHighlighting,
+} from '../lib/faces'
 import { emacsKey } from '../lib/keys'
 import { dialectConfig } from '../lib/lispParser'
 import type { MajorMode } from '../lib/session'
@@ -65,6 +71,8 @@ interface WindowViewProps {
   point: number
   /** リージョンの端 (無ければ `null`). */
   mark: number | null
+  /** 矩形の領域の, 行ごとの範囲 (始まり, 終わり). 矩形でなければ空. */
+  rectangle: readonly (readonly [number, number])[]
   /** 選んでいるウィンドウなら `true` (フォーカスを取る). */
   active: boolean
   /** ミニバッファで聞いているあいだは `true` (フォーカスを取らない). */
@@ -116,6 +124,7 @@ export default function WindowView({
   entry,
   point,
   mark,
+  rectangle,
   active,
   asking,
   mode,
@@ -162,7 +171,11 @@ export default function WindowView({
         controlChars(),
         folding,
         language.current.of(languageExtension()),
-        underline.current.of([regexpHighlighting(highlights), tokenHighlighting(tokens)]),
+        underline.current.of([
+          regexpHighlighting(highlights),
+          tokenHighlighting(tokens),
+          rectangleHighlighting(rectangle),
+        ]),
         // 本文はエディタが持つ. 日本語の変換中の文字のほかは, 自分で書き換えない
         EditorState.transactionFilter.of((tr) =>
           !tr.docChanged || tr.annotation(remote) || tr.isUserEvent('input.type.compose') ? tr : [],
@@ -294,7 +307,8 @@ export default function WindowView({
     }
     const length = v.state.doc.length
     const head = Math.min(point, length)
-    const anchor = Math.min(mark ?? point, length)
+    // 矩形の領域は, 領域の選択を使わず, 行ごとの範囲で出す
+    const anchor = rectangle.length > 0 ? head : Math.min(mark ?? point, length)
     const selection = v.state.selection.main
     if (changed || selection.head !== head || selection.anchor !== anchor) {
       v.dispatch({
@@ -313,15 +327,17 @@ export default function WindowView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode.language, mode.tab_width, mode.indent_tabs, bufferName])
 
-  // 色付けが変わったら, 引き直す
+  // 色付けが変わったら, 引き直す (矩形は, 内容が同じなら引き直さない)
+  const rectangleKey = JSON.stringify(rectangle)
   useEffect(() => {
     ;(view.current as EditorView).dispatch({
       effects: underline.current.reconfigure([
         regexpHighlighting(highlights),
         tokenHighlighting(tokens),
+        rectangleHighlighting(JSON.parse(rectangleKey) as [number, number][]),
       ]),
     })
-  }, [highlights, tokens])
+  }, [highlights, tokens, rectangleKey])
 
   // 選んでいるウィンドウに, フォーカスを移す (ミニバッファで聞いているあいだは, 移さない)
   useEffect(() => {

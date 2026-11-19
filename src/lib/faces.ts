@@ -141,3 +141,23 @@ export function tokenHighlighting(tokens: readonly Token[]) {
     return built.set
   })
 }
+
+/** 矩形の領域 (`rectangle-mark-mode`) の印. */
+const rectangleMark = Decoration.mark({ class: 'cm-rectangle-region' })
+
+/**
+ * 矩形の領域を強調します (行ごとの範囲に背景を付ける). 本文より先へ出る範囲は, 飛ばします.
+ *
+ * @param spans - 行ごとの範囲 (始まり, 終わり. UTF-16 の位置).
+ * @returns 拡張. 範囲が無ければ空.
+ */
+export function rectangleHighlighting(spans: readonly (readonly [number, number])[]) {
+  if (spans.length === 0) return []
+  return EditorView.decorations.of((view) => {
+    const length = view.state.doc.length
+    const ranges = spans
+      .filter(([from, to]) => from < to && to <= length)
+      .map(([from, to]) => rectangleMark.range(from, to))
+    return Decoration.set(ranges, true)
+  })
+}

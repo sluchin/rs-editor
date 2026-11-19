@@ -155,7 +155,7 @@ Return it as a list of strings, one for each line of the rectangle."
                         start end)
     (reverse lines)))
 
-;; rectangle-mark-mode は, 領域を矩形として扱う (印を付けて, `C-w` と `M-w` が矩形を切る・写す). 矩形の強調は, まだ出さない.
+;; rectangle-mark-mode は, 領域を矩形として扱う (印を付けて, `C-w` と `M-w` が矩形を切る・写す).
 (define-command (rectangle-mark-mode . args)
   "Toggle the region as a rectangle.
 With a positive argument, turn it on; with zero or a negative one, turn it off.
@@ -168,10 +168,10 @@ Turning it on without an active region sets the mark at point."
            (unless (region-active-p)
              (push-mark (point))
              (activate-mark))
-           (set! rectangle-mark-mode--on #t)
+           (set-rectangle-mark #t)
            (message "Rectangle mark mode enabled"))
           (else
-           (set! rectangle-mark-mode--on #f)
+           (set-rectangle-mark #f)
            (deactivate-mark)
            (message "Rectangle mark mode disabled")))
     #f))

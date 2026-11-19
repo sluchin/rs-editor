@@ -79,6 +79,8 @@ const SPECS: &[(&str, &[Kind], usize)] = &[
     ("use-region-p", &[], 0),
     ("region-active-p", &[], 0),
     ("activate-mark", &[], 0),
+    ("rectangle-mark-p", &[], 0),
+    ("set-rectangle-mark", &[Kind::Any], 1),
     ("deactivate-mark-requested", &[], 0),
     ("set-deactivate-mark", &[Kind::Any], 1),
     ("point-marker", &[], 0),

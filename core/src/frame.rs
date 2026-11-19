@@ -31,6 +31,8 @@ pub struct WindowFrame {
     pub point: usize,
     /// リージョンの端 (マークを使っているときだけ. UTF-16 の位置).
     pub mark: Option<usize>,
+    /// 矩形の領域の, 行ごとの範囲 (`rectangle-mark-mode`. UTF-16 の位置. 矩形でなければ空).
+    pub rectangle: Vec<(usize, usize)>,
 }
 
 /// 強調する正規表現 (Lisp の `highlight-regexp`).
@@ -185,6 +187,11 @@ impl FrameBuilder {
                     height: r.height,
                     point: utf16(buffer.point()),
                     mark: buffer.mark().filter(|_| buffer.mark_active()).map(utf16),
+                    rectangle: buffer
+                        .rectangle_spans()
+                        .into_iter()
+                        .map(|(from, to)| (utf16(from), utf16(to)))
+                        .collect(),
                     buffer: name,
                 }
             })

@@ -38,6 +38,8 @@ export interface WindowFrame {
   point: number
   /** リージョンの端 (マークを使っているときだけ). */
   mark: number | null
+  /** 矩形の領域 (`rectangle-mark-mode`) の, 行ごとの範囲 (始まり, 終わり. UTF-16 の位置). 矩形でなければ空. */
+  rectangle: [number, number][]
 }
 
 /** 強調する正規表現 (Lisp の `highlight-regexp`). */

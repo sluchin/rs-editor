@@ -129,6 +129,11 @@ fn test_frame_of_windows_marks_and_hidden_buffers() {
     assert_eq!(frame.windows.len(), 2);
     assert_eq!(frame.windows[1].left, 50.0);
     assert_eq!(frame.windows[1].mark, Some(0));
+    assert!(frame.windows[1].rectangle.is_empty());
+    // 矩形の領域は, 行ごとの範囲 (UTF-16 の位置) で送る
+    let b = editor.get_buffer_mut("other").unwrap();
+    b.set_rectangle_mark(true);
+    assert_eq!(frames.build(&mut editor, "").windows[1].rectangle, [(0, 2)]);
     assert_eq!(frame.buffers[1].text.as_deref(), Some("ab"));
     // 消したバッファは忘れ, 同じ名前で作り直すと, 全体を送る
     editor.kill_buffer("other").unwrap();

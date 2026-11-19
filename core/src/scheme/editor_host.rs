@@ -1295,6 +1295,11 @@ impl<U: Host> EditorHost<U> {
                 b.activate_mark();
                 Value::Nil
             }
+            "rectangle-mark-p" => Value::Boolean(b.rectangle_mark()),
+            "set-rectangle-mark" => {
+                b.set_rectangle_mark(args.first().is_some_and(Value::is_non_nil));
+                Value::Nil
+            }
             "deactivate-mark-requested" => Value::Boolean(b.deactivate_requested()),
             "set-deactivate-mark" => {
                 b.set_deactivate_requested(args.first().is_some_and(Value::is_non_nil));

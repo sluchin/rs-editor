@@ -56,6 +56,7 @@ const win = (fields: Partial<WindowFrame> = {}): WindowFrame => ({
   buffer: '*scratch*',
   point: 0,
   mark: null,
+  rectangle: [],
   ...fields,
 })
 

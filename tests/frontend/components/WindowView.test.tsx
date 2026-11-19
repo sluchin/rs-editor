@@ -43,6 +43,7 @@ function setup(props: Partial<Parameters<typeof WindowView>[0]> = {}) {
     entry: entryOf('(foo bar)\nline 2'),
     point: 0,
     mark: null,
+    rectangle: [],
     active: true,
     asking: false,
     mode: SCHEME,
@@ -74,6 +75,32 @@ describe('WindowView', () => {
     // 本文より先の位置は, 終わりにする
     rerender({ point: 99, mark: null })
     expect(editor().state.selection.main.head).toBe(16)
+  })
+
+  it('矩形の領域は, 行ごとの範囲に印を付け, 選択はカーソルだけにすること', () => {
+    const { view, editor, rerender } = setup({ point: 5, mark: 1 })
+    expect(view.container.querySelector('.cm-rectangle-region')).toBeNull()
+    expect(editor().state.selection.main.anchor).toBe(1)
+    rerender({
+      point: 14,
+      mark: 1,
+      rectangle: [
+        [1, 3],
+        [10, 12],
+        [10, 99],
+        [4, 4],
+      ],
+    })
+    const marks = [...view.container.querySelectorAll('.cm-rectangle-region')].map(
+      (e) => e.textContent,
+    )
+    expect(marks).toEqual(['fo', 'li'])
+    expect(editor().state.selection.main.anchor).toBe(14)
+    expect(editor().state.selection.main.head).toBe(14)
+    // 矩形が無くなれば, 印も消え, 領域の選択に戻る
+    rerender({ point: 5, mark: 1, rectangle: [] })
+    expect(view.container.querySelector('.cm-rectangle-region')).toBeNull()
+    expect(editor().state.selection.main.anchor).toBe(1)
   })
 
   it('前の本文からの変更は, そのまま当て, ほかの本文は, 違う所だけ置き換えること', () => {

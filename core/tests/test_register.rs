@@ -131,14 +131,14 @@ fn test_rectangle_mark_mode_kills_and_saves_the_rectangle() {
     // 切る: 2 列目の 1 文字, 3 行 (消すのを頼むだけなので, 領域はまだ生きている)
     assert_eq!(
         eval(&format!(
-            "{setup} (rectangle-mark-mode) (kill-region) (list (buffer-string) killed-rectangle rectangle-mark-mode--on (region-active-p))"
+            "{setup} (rectangle-mark-mode) (kill-region) (list (buffer-string) killed-rectangle (rectangle-mark-p) (region-active-p))"
         )),
         "(\"acd\\negh\\nikl\\n\" (\"b\" \"f\" \"j\") #f #t)"
     );
     // 写す: 本文は変わらない
     assert_eq!(
         eval(&format!(
-            "{setup} (rectangle-mark-mode) (kill-ring-save) (list (buffer-string) killed-rectangle rectangle-mark-mode--on)"
+            "{setup} (rectangle-mark-mode) (kill-ring-save) (list (buffer-string) killed-rectangle (rectangle-mark-p))"
         )),
         "(\"abcd\\nefgh\\nijkl\\n\" (\"b\" \"f\" \"j\") #f)"
     );
@@ -152,12 +152,12 @@ fn test_rectangle_mark_mode_kills_and_saves_the_rectangle() {
     // もう一度で切る. 領域が無ければ, 印を付けて入る
     assert_eq!(
         eval(&format!(
-            "{setup} (rectangle-mark-mode) (rectangle-mark-mode) rectangle-mark-mode--on"
+            "{setup} (rectangle-mark-mode) (rectangle-mark-mode) (rectangle-mark-p)"
         )),
         "#f"
     );
     assert_eq!(
-        eval("(rectangle-mark-mode) (list rectangle-mark-mode--on (region-active-p))"),
+        eval("(rectangle-mark-mode) (list (rectangle-mark-p) (region-active-p))"),
         "(#t #t)"
     );
 }

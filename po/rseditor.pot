@@ -7025,11 +7025,6 @@ msgid ""
 msgstr ""
 
 #: lisp/simple.scm
-msgctxt "variable:rectangle-mark-mode--on"
-msgid "Non-nil while the region is a rectangle; see `rectangle-mark-mode'."
-msgstr ""
-
-#: lisp/simple.scm
 msgctxt "function:simple--rectangle-region-p"
 msgid "Return true if the active region is a rectangle."
 msgstr ""
@@ -10114,6 +10109,14 @@ msgid ""
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:rectangle-mark-p"
+msgid ""
+"Return #t if the region is a rectangle (`rectangle-mark-mode').\n"
+"\n"
+"(rectangle-mark-p)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:regexp-match"
 msgid ""
 "Match the regular expression REGEXP against STRING and return the matched strings, or #f.\n"
@@ -10231,6 +10234,14 @@ msgid ""
 "Set the position of the mark to POSITION.\n"
 "\n"
 "(set-mark-position POSITION)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-rectangle-mark"
+msgid ""
+"Treat the region as a rectangle (VALUE true) or as ordinary text (VALUE false).\n"
+"\n"
+"(set-rectangle-mark VALUE)"
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
