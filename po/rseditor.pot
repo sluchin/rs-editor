@@ -9743,6 +9743,13 @@ msgid ""
 "g reads again, and q or C-g returns to the editor."
 msgstr ""
 
+#: lisp/window.scm
+msgctxt "function:project-tree-set-root"
+msgid ""
+"Show the project tree in the side bar with DIRECTORY as its root.\n"
+"Interactively, read DIRECTORY in the minibuffer; the default is the directory of the current buffer."
+msgstr ""
+
 #: lisp/winner.scm
 msgctxt "variable:winner--on"
 msgid "True if Winner mode is enabled (`winner-mode' of Emacs; here the name is the command)."
@@ -10848,8 +10855,9 @@ msgstr ""
 msgctxt "function:toggle-project-tree"
 msgid ""
 "Show or hide the project tree of the screen.\n"
+"With the symbol focus, show it and move the focus to it; with a directory name, show the tree of that directory.\n"
 "\n"
-"(toggle-project-tree)"
+"(toggle-project-tree [focus-or-directory])"
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs

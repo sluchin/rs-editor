@@ -432,6 +432,15 @@ In the tree, n and p move, RET opens, f and b open and close a directory,
 g reads again, and q or C-g returns to the editor."
   (toggle-project-tree 'focus))
 
+(define-command (project-tree-set-root . args)
+  "Show the project tree in the side bar with DIRECTORY as its root.
+Interactively, read DIRECTORY in the minibuffer; the default is the directory of the current buffer."
+  (let ((directory (if (null? args)
+                       (read-file-name "Tree root: " (compile--default-directory))
+                       (car args))))
+    (toggle-project-tree directory)
+    #f))
+
 (provide 'window)
 
 ;;; window.scm ends here

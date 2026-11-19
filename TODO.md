@@ -497,7 +497,7 @@
 - [x] ツリー: 今のファイルまで開く (VS Code の Reveal。ファイルを切り替えるたびに、そこまでのディレクトリを開き、見える所へ動かす)。
 - [x] ツリー: キーで動かす (`F9` か `M-x project-tree-focus` でフォーカスを移し、`n`、`p`、`RET`、`f`、`b`、`g`、`q`)。
 - [x] ツリー: 幅を変える (右の端を引く、`{` と `}`)、ファイルとディレクトリを作る (`a`、`A`)、名前を変える (`r`)、消す (`d` のあと `y`)。ヘッダーの `+` でも作れる。
-- [ ] ツリー: ファイルが外から変わったら読み直す、根を選ぶコマンド、起動のときに出す設定 (今は、初期設定ファイルで `(call-interactively 'project-tree)`)、幅を覚える。
+- [x] ツリー: 窓にフォーカスが戻ったら読み直す (ファイルの監視はしない)、根を選ぶコマンド (`M-x project-tree-set-root`)、前に出していたツリーを起動のときに同じ根で出す (出しているか、根、幅を localStorage に覚える)。
 - [x] `*grep*` の中のキー: `n` / `p`, `g` (探し直す), `TAB` / `S-TAB`, `M-{` / `M-}`, `q`。
 - [ ] `*grep*` の `C-c C-k` (止める)。
 - [ ] grep: 探しているあいだに、見つけた行を順に出す (今は終わってから出す)。止める (`C-c C-k`)。
@@ -727,7 +727,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了。ターミナルも、初期設定ファイルを読む。`debug-on-error` も完了。残りは、`--no-site-file`、`--no-site-lisp`、`--user`、`--no-desktop` (先の機能が要る。P3 に近い)。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
-- [ ] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除は完了。残りは、外からの変更の読み直し、根を選ぶコマンドなど (Phase 15)。小。
+- [x] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除、読み直し、根を選ぶコマンド、起動のときの復元、幅を覚えること (Phase 15)。
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
 - [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) と 1 つずつ動かすことは、残り (Phase 14)。

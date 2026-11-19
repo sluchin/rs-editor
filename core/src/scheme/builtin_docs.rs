@@ -141,7 +141,7 @@ pub static DOCS: &[(&str, &str)] = &[
     ("symbol?", "Return #t if OBJECT is a symbol.\n\n(symbol? OBJECT)"),
     ("syntax-class-at", "Return the syntax class of the character at POSITION.\n\n(syntax-class-at POSITION)"),
     ("syntax-dialect", "Return the syntax dialect of the current buffer.\n\n(syntax-dialect)"),
-    ("toggle-project-tree", "Show or hide the project tree of the screen.\n\n(toggle-project-tree)"),
+    ("toggle-project-tree", "Show or hide the project tree of the screen.\nWith the symbol focus, show it and move the focus to it; with a directory name, show the tree of that directory.\n\n(toggle-project-tree [focus-or-directory])"),
     ("token-spans", "Return the syntax highlighting spans of the current buffer.\n\n(token-spans)"),
     ("up-list-position", "Return the position that `up-list' moves to from POSITION by N levels.\n\n(up-list-position POSITION N)"),
     ("window-balance", "Make all the windows of the frame the same size.\n\n(window-balance)"),

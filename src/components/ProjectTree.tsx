@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { loadTreeWidth, saveTreeWidth } from '../lib/treeState'
 import '../styles/ProjectTree.css'
 
 /** 出さない名前. */
@@ -109,7 +110,9 @@ export default function ProjectTree({
   // 開いているディレクトリ (根は, いつも開く)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   // 幅 (px)
-  const [width, setWidth] = useState(DEFAULT_WIDTH)
+  const [width, setWidth] = useState(() =>
+    Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, loadTreeWidth() ?? DEFAULT_WIDTH)),
+  )
   // 名前を聞いているとき, 失敗の知らせ
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [notice, setNotice] = useState('')
@@ -290,7 +293,11 @@ export default function ProjectTree({
    *
    * @param next - 新しい幅 (px).
    */
-  const resize = (next: number) => setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, next)))
+  const resize = (next: number) => {
+    const limited = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, next))
+    setWidth(limited)
+    saveTreeWidth(limited)
+  }
 
   /**
    * 右の端を引いて, 幅を変えます.
@@ -400,6 +407,15 @@ export default function ProjectTree({
   const refresh = () => {
     for (const dir of [root, ...expanded]) void load(dir)
   }
+
+  // 窓へ戻ったとき (外のコマンドやほかのアプリがファイルを変えたかもしれない) に, 読み直す
+  const refreshRef = useRef(refresh)
+  refreshRef.current = refresh
+  useEffect(() => {
+    const onFocus = () => refreshRef.current()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
 
   /**
    * ディレクトリの中を描きます.

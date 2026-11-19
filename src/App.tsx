@@ -12,6 +12,7 @@ import Minibuffer, {
   type MinibufferState,
 } from './components/Minibuffer'
 import ProjectTree from './components/ProjectTree'
+import { loadTreeRoot, saveTreeRoot } from './lib/treeState'
 import TabBar from './components/TabBar'
 import { completeFileName } from './lib/complete'
 import { type DocEntry, DocStore } from './lib/docs'
@@ -151,7 +152,9 @@ function App() {
   const [question, setQuestion] = useState<Question | null>(null)
   const [inputState, setInputState] = useState<MinibufferInputState | null>(null)
   const [histories, setHistories] = useState<Record<string, string[]>>({})
-  const [treeRoot, setTreeRoot] = useState<string | null>(null)
+  // 前に出していたツリーは, 起動のときに, 同じ根で出す
+  const [treeRoot, setTreeRoot] = useState<string | null>(loadTreeRoot)
+  useEffect(() => saveTreeRoot(treeRoot), [treeRoot])
   // ツリーへフォーカスを移す頼みの数 (増えるたびに移す)
   const [treeFocus, setTreeFocus] = useState(0)
   const views = useRef(new Map<number, WindowHandle>())
@@ -303,6 +306,11 @@ function App() {
       case 'toggle-project-tree': {
         // 'focus なら, 消さずに, ツリーへフォーカスを移す
         const focus = args[0] === 'focus'
+        // ディレクトリが渡されたら, それを根にして出す
+        if (typeof args[0] === 'string' && !focus) {
+          setTreeRoot(args[0].replace(/\/+$/, '') || '/')
+          return null
+        }
         if (treeRoot !== null) {
           if (focus) setTreeFocus((n) => n + 1)
           else setTreeRoot(null)

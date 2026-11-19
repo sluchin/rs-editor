@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, fireEvent, render } from '@testing-library/react'
 import ProjectTree from '@/components/ProjectTree'
 
@@ -16,6 +16,8 @@ const ops = {
 }
 
 describe('ProjectTree', () => {
+  beforeEach(() => localStorage.clear())
+
   it('今のファイルが深くにあれば, そこまでのディレクトリを開き, 見える所へ動かすこと', async () => {
     const deep: Record<string, string[]> = {
       '/p/': ['a/', 'z.txt'],
@@ -437,6 +439,33 @@ describe('ProjectTree', () => {
     fireEvent.change(input, { target: { value: 'b.txt' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     await vi.waitFor(() => expect(ops.renamePath).toHaveBeenCalledWith('/a.txt', '/b.txt'))
+    await vi.waitFor(() => expect(listDirectory).toHaveBeenCalledTimes(2))
+  })
+
+  it('幅を覚えて, 次に出すときに使うこと', async () => {
+    const { press, view } = await setup()
+    press('}')
+    expect(localStorage.getItem('rseditor.projectTree.width')).toBe('260')
+    view.unmount()
+    const again = await setup()
+    expect(again.box.style.flexBasis).toBe('260px')
+  })
+
+  it('窓にフォーカスが戻ったら, 読み直すこと', async () => {
+    const listDirectory = vi.fn(async (path: string) => tree[path] ?? [])
+    render(
+      <ProjectTree
+        {...ops}
+        root="/p"
+        currentFile={null}
+        listDirectory={listDirectory}
+        onOpenFile={vi.fn()}
+      />,
+    )
+    await vi.waitFor(() => expect(listDirectory).toHaveBeenCalledTimes(1))
+    act(() => {
+      window.dispatchEvent(new Event('focus'))
+    })
     await vi.waitFor(() => expect(listDirectory).toHaveBeenCalledTimes(2))
   })
 })

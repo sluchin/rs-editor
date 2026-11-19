@@ -471,6 +471,7 @@ fn test_define_command_and_global_set_key() {
             "move-to-window-line-top-bottom",
             "project-tree",
             "project-tree-focus",
+            "project-tree-set-root",
             "find-file",
             "find-file-other-window",
             "find-alternate-file",

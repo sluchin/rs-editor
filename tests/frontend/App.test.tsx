@@ -185,6 +185,7 @@ const minibufferInput = (view: ReturnType<typeof render>) =>
   view.container.querySelector('.minibuffer input') as HTMLInputElement
 
 beforeEach(() => {
+  localStorage.clear()
   vi.clearAllMocks()
   mockedInvoke.mockResolvedValue(undefined)
   mockedListen.mockResolvedValue(unlisten)
@@ -507,6 +508,21 @@ describe('App (画面だけの操作)', () => {
     mocked.projectRoot.mockResolvedValue('/')
     await request('toggle-project-tree')
     expect(view.container.querySelector('.project-tree-title')?.textContent).toBe('/')
+    // ディレクトリを渡すと, それを根にする (後ろの / は取る. / だけなら /)
+    await request('toggle-project-tree', ['/work/x/'])
+    expect(view.container.querySelector('.project-tree-title')?.textContent).toBe('X')
+    expect(localStorage.getItem('rseditor.projectTree.root')).toBe('/work/x')
+    await request('toggle-project-tree', ['/'])
+    expect(localStorage.getItem('rseditor.projectTree.root')).toBe('/')
+    // 消すと, 覚えているのも消える
+    await request('toggle-project-tree')
+    expect(localStorage.getItem('rseditor.projectTree.root')).toBeNull()
+  })
+
+  it('前に出していたツリーを, 起動のときに出すこと', async () => {
+    localStorage.setItem('rseditor.projectTree.root', '/proj')
+    const view = await setup()
+    expect(view.container.querySelector('.project-tree')).not.toBeNull()
   })
 
   it('窓を閉じるときはエディタに聞き, kill-emacs で閉じること', async () => {

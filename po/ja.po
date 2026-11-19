@@ -11140,6 +11140,15 @@ msgstr ""
 "木の中では, n と p で動き, RET で開き, f と b でディレクトリを開け閉めし,\n"
 "g で読み直し, q か C-g でエディタへ戻る."
 
+#: lisp/window.scm
+msgctxt "function:project-tree-set-root"
+msgid ""
+"Show the project tree in the side bar with DIRECTORY as its root.\n"
+"Interactively, read DIRECTORY in the minibuffer; the default is the directory of the current buffer."
+msgstr ""
+"DIRECTORY を根にして, サイドバーにプロジェクトのツリーを出す.\n"
+"対話的には, DIRECTORY をミニバッファで読む. 初めの値は, 今のバッファのディレクトリ."
+
 #: lisp/winner.scm
 msgctxt "variable:winner--on"
 msgid "True if Winner mode is enabled (`winner-mode' of Emacs; here the name is the command)."
@@ -12610,12 +12619,14 @@ msgstr ""
 msgctxt "function:toggle-project-tree"
 msgid ""
 "Show or hide the project tree of the screen.\n"
+"With the symbol focus, show it and move the focus to it; with a directory name, show the tree of that directory.\n"
 "\n"
-"(toggle-project-tree)"
+"(toggle-project-tree [focus-or-directory])"
 msgstr ""
 "画面のプロジェクトのツリーを出す, または隠す.\n"
+"記号 focus を渡すと, 出して, フォーカスを移す. ディレクトリの名前を渡すと, そのディレクトリのツリーを出す.\n"
 "\n"
-"(toggle-project-tree)"
+"(toggle-project-tree [focus-or-directory])"
 
 #: core/src/scheme/builtin_docs.rs
 msgctxt "function:token-spans"
