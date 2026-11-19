@@ -82,6 +82,8 @@ pub struct BufferFrame {
     pub tokens: Vec<TokenFrame>,
     /// メジャーモードの情報 (モードラインの名前, Lisp の方言, 字下げ).
     pub mode: ModeInfo,
+    /// 効いている副モード (`visual-line`, `display-line-numbers`, `hl-line`, `line-number`, `column-number`, `overwrite`, `auto-fill`).
+    pub minor_modes: Vec<String>,
 }
 
 /// 描く内容.
@@ -132,6 +134,7 @@ impl FrameBuilder {
             .filter_map(|w| editor.window_buffer(w).map(str::to_string))
             .collect();
         let names = editor.buffer_list();
+        let global_modes = editor.global_modes();
         // 消したバッファは, 忘れる
         self.sent.retain(|name| names.contains(name));
         let mut buffers = Vec::new();
@@ -156,6 +159,13 @@ impl FrameBuilder {
                 directory: buffer.directory().map(str::to_string),
                 highlights: buffer.highlights().iter().map(highlight_frame).collect(),
                 mode: buffer.mode_info(),
+                minor_modes: {
+                    let mut modes = buffer.minor_modes();
+                    modes.extend(global_modes.iter().cloned());
+                    modes.sort();
+                    modes.dedup();
+                    modes
+                },
                 tokens: if shown.contains(name) {
                     buffer
                         .token_spans()

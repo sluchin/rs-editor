@@ -289,19 +289,17 @@ impl<U: Host + LoopUi> CommandLoop<U> {
         self.take_prefix();
         let count = prefix_numeric_value(self.host.editor().prefix_arg).max(1);
         let text = text.repeat(count as usize);
-        if matches!(self.variable("delete-selection--on"), Value::Boolean(true)) {
-            // delete-selection-mode: 打った文字は, 選んでいる範囲を置き換える
-            let _ = self
-                .evaluator
-                .eval_with("(delete-selection--before-insert)", &self.host);
-        }
-        self.evaluator
-            .global()
-            .define("this-command", symbol("self-insert-command"));
+        let globals = self.evaluator.global();
+        globals.define("this-command", symbol("self-insert-command"));
+        globals.define("last-command-event", Value::String(text.clone()));
+        globals.define("self-insert-text", Value::String(text.clone()));
+        // 入れる前 (delete-selection-mode, overwrite-mode) と, 入れた後 (electric-pair-mode, auto-fill-mode) のフック
+        self.run_command_hook("pre-self-insert-hook");
         let outcome = self
             .host
             .call("insert", vec![Value::String(text)])
             .map(|_| ());
+        self.run_command_hook("post-self-insert-hook");
         self.finish("self-insert-command", outcome);
     }
 

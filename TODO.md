@@ -351,10 +351,10 @@
 
 ### モードとそのほか
 
-- [ ] `<insert>` (overwrite-mode), `auto-fill-mode`, `display-line-numbers-mode`, `visual-line-mode`, `column-number-mode`, `hl-line-mode`。
+- [x] `<insert>` (overwrite-mode), `auto-fill-mode`, `display-line-numbers-mode`, `visual-line-mode`, `column-number-mode`, `line-number-mode`, `hl-line-mode` と、`global-*-mode`。バッファごとのモードはバッファが覚え (`set-buffer-minor-mode`)、全体のモードはエディタが覚える (`set-global-minor-mode`)。画面 (Tauri) は、行番号、現在行、折り返し、括弧の強調、モードラインの行と桁を描く。ターミナルは、モードラインの行だけ従う。`visual-line-mode` の、見た目の行での移動 (`C-n` `C-a` など) は無い。
 - [ ] `C-x C-+` / `C-x C--` / `C-x C-0` (text-scale-adjust), `C-x C-M-+` (global-text-scale-adjust): 文字の大きさ。
 - [x] `delete-selection-mode` (文字, `RET`, `DEL`, `C-d`, `C-y` が選んだ範囲を置き換える)。
-- [ ] `electric-pair-mode`、`electric-indent-mode` (既定で有効。 `RET` で字下げする、は実装済み), `show-paren-mode` の設定。
+- [x] `electric-pair-mode` (`(` `[` `{` `"` の対を入れ、閉じる文字は越える。選んだ範囲を囲むことは無い)、`electric-indent-mode` (既定で有効)、`show-paren-mode` (既定で有効) の設定。
 - [ ] `prog-mode`。
 - [ ] `shell`, `eshell`, `term`。
 - [x] `compile`、`recompile` (`lisp/compile.scm`)。`*compilation*` (compilation-mode) の中の `RET`、`C-c C-c`、`C-o`、`n`、`p`、`M-n`、`M-p`、
@@ -732,7 +732,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
 - [ ] キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 14)。中。
 - [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。
-- [ ] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、ほかのメジャーモードの切り替え (Phase 14)。中。
+- [ ] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。残りは、ほかのメジャーモードの切り替え (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
 - [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。`dotfiles` で使っているので、使う頻度で上げる。大。
 - [ ] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。中。

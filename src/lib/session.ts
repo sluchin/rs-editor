@@ -86,6 +86,8 @@ export interface BufferFrame {
   tokens: TokenFrame[]
   /** メジャーモードの情報 (核が決める). */
   mode: MajorMode
+  /** 効いている副モード (`visual-line`, `display-line-numbers`, `hl-line`, `show-paren`, `line-number`, `column-number` など). */
+  minor_modes: string[]
 }
 
 /** メジャーモード (バッファの種類). モードラインに出す名前と, 括弧の読み方と字下げを決めます. */

@@ -554,6 +554,21 @@ impl<U: Host> EditorHost<U> {
                     .set_read_only(args.first().is_some_and(Value::is_true));
                 Value::Nil
             }
+            "buffer-minor-mode-p" => {
+                Value::Boolean(ed.current_buffer().minor_mode(name(op, args, 0)?))
+            }
+            "set-buffer-minor-mode" => {
+                let mode = name(op, args, 0)?.to_string();
+                ed.current_buffer_mut()
+                    .set_minor_mode(&mode, args.get(1).is_some_and(Value::is_non_nil));
+                Value::Nil
+            }
+            "global-minor-mode-p" => Value::Boolean(ed.global_mode(name(op, args, 0)?)),
+            "set-global-minor-mode" => {
+                let mode = name(op, args, 0)?.to_string();
+                ed.set_global_mode(&mode, args.get(1).is_some_and(Value::is_non_nil));
+                Value::Nil
+            }
             "generate-new-buffer" => Value::String(ed.generate_new_buffer(text(op, args, 0)?)),
             "set-buffer" => {
                 let name = text(op, args, 0)?;

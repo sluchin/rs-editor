@@ -65,6 +65,18 @@ fn test_scrolling_keeps_the_cursor_visible() {
 }
 
 #[test]
+fn test_line_number_mode_off_hides_the_line_in_the_mode_line() {
+    let mut fx = Fixture::new();
+    fx.press("a");
+    fx.app
+        .eval("(line-number-mode 0)")
+        .expect("turn the line number off");
+    fx.app.draw();
+    let screen = fx.screen();
+    assert!(screen[10].starts_with("-:**-  *scratch*   (Lisp"));
+}
+
+#[test]
 fn test_mode_line_and_echo_area() {
     let mut fx = Fixture::new();
     fx.press("a");

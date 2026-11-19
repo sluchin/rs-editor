@@ -155,12 +155,17 @@ fn cursor_cell(buffer: &Buffer, width: usize) -> (usize, usize) {
     }
 }
 
-/// モードラインの文字.
-fn mode_line(buffer: &Buffer, width: usize) -> String {
+/// モードラインの文字 (`line-number-mode` が入っていれば, 行を出す).
+fn mode_line(buffer: &Buffer, line_number: bool, width: usize) -> String {
     let flag = if buffer.modified() { "**" } else { "--" };
     let mode = buffer.mode_info().name;
     let line = buffer.line_of_position(buffer.point()) + 1;
-    let text = format!("-:{flag}-  {}   L{line}   ({mode}) ", buffer.name());
+    let place = if line_number {
+        format!("L{line}   ")
+    } else {
+        String::new()
+    };
+    let text = format!("-:{flag}-  {}   {place}({mode}) ", buffer.name());
     let used: usize = text.chars().map(char_width).sum();
     format!("{text}{}", "-".repeat(width.saturating_sub(used)))
 }
@@ -291,7 +296,11 @@ pub fn render_with(
             }
             line += 1;
         }
-        for (x, ch) in mode_line(buffer, width).chars().take(width).enumerate() {
+        for (x, ch) in mode_line(buffer, editor.global_mode("line-number"), width)
+            .chars()
+            .take(width)
+            .enumerate()
+        {
             frame.cells[y1 - 1][x0 + x] = Cell {
                 ch,
                 reverse: true,

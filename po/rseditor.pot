@@ -3946,6 +3946,112 @@ msgid ""
 "Complete with the names defined in the Scheme evaluator."
 msgstr ""
 
+#: lisp/modes.scm
+msgctxt "function:modes--command"
+msgid ""
+"Turn the minor mode NAME on or off for ARGS, like a minor mode command, and return whether it is on.\n"
+"GLOBAL true means that it is a mode of all buffers.  LABEL is the name shown in the message."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:visual-line-mode"
+msgid ""
+"Toggle visual line mode in the current buffer: long lines wrap at the window edge.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:global-visual-line-mode"
+msgid "Toggle Visual-Line mode in all buffers."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:display-line-numbers-mode"
+msgid "Toggle the display of line numbers in the current buffer."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:global-display-line-numbers-mode"
+msgid "Toggle the display of line numbers in all buffers."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:hl-line-mode"
+msgid "Toggle the highlight of the line at point in the current buffer."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:global-hl-line-mode"
+msgid "Toggle the highlight of the line at point in all buffers."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:line-number-mode"
+msgid "Toggle the line number in the mode line."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:column-number-mode"
+msgid "Toggle the column number in the mode line."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:show-paren-mode"
+msgid "Toggle the highlight of the parenthesis that matches the one at point."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:overwrite-mode"
+msgid "Toggle Overwrite mode in the current buffer: a typed character replaces the one after point."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:overwrite--before-insert"
+msgid "Delete the characters that a typed character replaces, for `overwrite-mode'."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:electric-indent-mode"
+msgid "Toggle indentation of the new line when RET is typed (on by default)."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "variable:electric-pair-pairs"
+msgid "List of the pairs that `electric-pair-mode' inserts: (OPENING CLOSING)."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:electric-pair-mode"
+msgid ""
+"Toggle inserting the closing parenthesis or quote when the opening one is typed.\n"
+"Typing the closing character when it is already after point moves over it."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:electric-pair--after-insert"
+msgid "Insert the closing character of a typed opening one, or skip over a typed closing one."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill-mode"
+msgid "Toggle Auto Fill mode in the current buffer: a space typed past the fill column breaks the line."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill--break-position"
+msgid "Return where to break the line that point (HERE, after a typed space) has made too long, or false."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:do-auto-fill"
+msgid "Break the current line at a space so that it fits in `fill-column', if it is too long."
+msgstr ""
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill--after-insert"
+msgid "Fill the line after a space is typed, for `auto-fill-mode'."
+msgstr ""
+
 #: lisp/org-lint.scm
 msgctxt "function:org-lint-add-checker"
 msgid ""
@@ -9613,6 +9719,14 @@ msgid ""
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:buffer-minor-mode-p"
+msgid ""
+"Return #t if the minor mode NAME (a symbol such as `overwrite') is on in the current buffer.\n"
+"\n"
+"(buffer-minor-mode-p NAME)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:buffer-read-only"
 msgid ""
 "Return #t if the current buffer is read-only.\n"
@@ -9906,6 +10020,14 @@ msgid ""
 "Pop the global mark ring and return the entry.\n"
 "\n"
 "(global-mark-pop)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:global-minor-mode-p"
+msgid ""
+"Return #t if the minor mode NAME is on in all buffers (`line-number', `column-number', `hl-line' and so on).\n"
+"\n"
+"(global-minor-mode-p NAME)"
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
@@ -10245,6 +10367,15 @@ msgid ""
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-buffer-minor-mode"
+msgid ""
+"Turn the minor mode NAME on (VALUE true) or off (VALUE false) in the current buffer only.\n"
+"The screen shows `visual-line', `display-line-numbers' and `hl-line'.\n"
+"\n"
+"(set-buffer-minor-mode NAME VALUE)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:set-buffer-read-only"
 msgid ""
 "Make the current buffer read-only (VALUE true) or writable (VALUE false).\n"
@@ -10274,6 +10405,14 @@ msgid ""
 "Ask (VALUE true) or cancel (VALUE false) the deactivation of the mark after the command.\n"
 "\n"
 "(set-deactivate-mark VALUE)"
+msgstr ""
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-global-minor-mode"
+msgid ""
+"Turn the minor mode NAME on (VALUE true) or off (VALUE false) in all buffers.\n"
+"\n"
+"(set-global-minor-mode NAME VALUE)"
 msgstr ""
 
 #: core/src/scheme/builtin_docs.rs

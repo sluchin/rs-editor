@@ -13,7 +13,7 @@ import {
   type StateEffect,
   type Text,
 } from '@codemirror/state'
-import { EditorView, drawSelection } from '@codemirror/view'
+import { EditorView, drawSelection, highlightActiveLine, lineNumbers } from '@codemirror/view'
 import { codeFolding, foldEffect, foldedRanges, unfoldEffect } from '@codemirror/language'
 import { controlChars } from '../lib/controlChars'
 import type { DocEntry } from '../lib/docs'
@@ -79,6 +79,8 @@ interface WindowViewProps {
   asking: boolean
   /** メジャーモード. */
   mode: MajorMode
+  /** 効いている副モード (行番号, 現在行の強調, 折り返し, 括弧の強調を決める). */
+  minorModes: readonly string[]
   /** 色付けする所. */
   highlights: readonly Highlight[]
   /** シンタックスハイライトの字句 (核が返す). */
@@ -128,6 +130,7 @@ export default function WindowView({
   active,
   asking,
   mode,
+  minorModes,
   highlights,
   tokens,
   onInput,
@@ -140,6 +143,7 @@ export default function WindowView({
   const shown = useRef(bufferName)
   const language = useRef(new Compartment())
   const underline = useRef(new Compartment())
+  const display = useRef(new Compartment())
   const latest = useRef({ onInput, windowId, entry })
 
   useEffect(() => {
@@ -157,6 +161,19 @@ export default function WindowView({
   ]
 
   /**
+   * 見た目の副モード (行番号, 現在行の強調, 折り返し, 括弧の強調) の拡張を作ります.
+   *
+   * @param modes - 効いている副モード.
+   * @returns 拡張.
+   */
+  const displayExtension = (modes: readonly string[]): Extension => [
+    modes.includes('show-paren') ? showParen() : [],
+    modes.includes('display-line-numbers') ? lineNumbers() : [],
+    modes.includes('hl-line') ? highlightActiveLine() : [],
+    modes.includes('visual-line') ? EditorView.lineWrapping : [],
+  ]
+
+  /**
    * バッファの状態を作ります.
    *
    * @param doc - 本文.
@@ -167,7 +184,7 @@ export default function WindowView({
       doc,
       extensions: [
         drawSelection(),
-        showParen(),
+        display.current.of(displayExtension(minorModes)),
         controlChars(),
         folding,
         language.current.of(languageExtension()),
@@ -326,6 +343,14 @@ export default function WindowView({
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode.language, mode.tab_width, mode.indent_tabs, bufferName])
+
+  // 副モードが変わったら, 見た目を合わせ直す
+  const modesKey = minorModes.join(',')
+  useEffect(() => {
+    ;(view.current as EditorView).dispatch({
+      effects: display.current.reconfigure(displayExtension(modesKey.split(','))),
+    })
+  }, [modesKey, bufferName])
 
   // 色付けが変わったら, 引き直す (矩形は, 内容が同じなら引き直さない)
   const rectangleKey = JSON.stringify(rectangle)

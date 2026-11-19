@@ -7,6 +7,7 @@
 use crate::error::Error;
 use crate::scheme::value::Value;
 use ropey::Rope;
+use std::collections::BTreeSet;
 
 use crate::scheme::builtins::char_width;
 use crate::syntax::Dialect;
@@ -87,6 +88,8 @@ pub struct Buffer {
     mark_active: bool,
     /// 領域を矩形として扱うか (Emacs の `rectangle-mark-mode`. マークを使わなくなると, 偽に戻る).
     rectangle_mark: bool,
+    /// バッファだけで入れている副モード (`visual-line`, `overwrite` など).
+    minor_modes: BTreeSet<String>,
     /// マークの履歴 (新しいものが先).
     mark_ring: Vec<usize>,
     /// 書き換えたか.
@@ -177,6 +180,7 @@ impl Buffer {
             mark: None,
             mark_active: false,
             rectangle_mark: false,
+            minor_modes: BTreeSet::new(),
             mark_ring: Vec::new(),
             modified: false,
             file: None,
@@ -1155,6 +1159,25 @@ impl Buffer {
     pub fn deactivate_mark(&mut self) {
         self.mark_active = false;
         self.rectangle_mark = false;
+    }
+
+    /// バッファだけの副モードが入っているか.
+    pub fn minor_mode(&self, name: &str) -> bool {
+        self.minor_modes.contains(name)
+    }
+
+    /// バッファだけの副モードを入れる・切る.
+    pub fn set_minor_mode(&mut self, name: &str, on: bool) {
+        if on {
+            self.minor_modes.insert(name.to_string());
+        } else {
+            self.minor_modes.remove(name);
+        }
+    }
+
+    /// バッファだけで入れている副モードの名前 (名前の順).
+    pub fn minor_modes(&self) -> Vec<String> {
+        self.minor_modes.iter().cloned().collect()
     }
 
     /// 領域を矩形として扱っているか (Emacs の `rectangle-mark-mode`).

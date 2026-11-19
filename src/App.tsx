@@ -510,6 +510,7 @@ function App() {
                   active={active}
                   asking={question !== null}
                   mode={mode}
+                  minorModes={b.minor_modes}
                   highlights={toHighlights(b.highlights)}
                   tokens={stableTokens(b.name, b.tokens)}
                   onInput={send}
@@ -524,6 +525,8 @@ function App() {
                   readOnly={b.read_only}
                   cursor={{ line: line.number, column: w.point - line.from + 1 }}
                   mode={mode.name}
+                  lineNumber={b.minor_modes.includes('line-number')}
+                  columnNumber={b.minor_modes.includes('column-number')}
                   bufferCount={frame.buffers.length}
                   currentBufferIndex={frame.buffers.indexOf(b) + 1}
                   active={active}

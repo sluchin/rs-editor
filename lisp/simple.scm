@@ -370,7 +370,7 @@ Signal an error if N is negative."
   (let ((n (simple--arg args)))
     (if (< n 0) (error "Repetition argument has to be non-negative"))
     (if (and simple--interactive (null? args)) (delete-selection--delete))
-    (if (and simple--interactive (null? args) (= n 1))
+    (if (and simple--interactive (null? args) (= n 1) (global-minor-mode-p 'electric-indent))
         ;; キーから 1 つ入れるときは, electric-indent-mode のように字下げする
         (newline-and-indent-op indent-tabs-mode)
         (let loop ((n n))
@@ -2837,6 +2837,9 @@ When on, typing text, RET, DEL, C-d or C-y replaces the active region instead of
          (mode (simple--mode-arg args))
          (on (if (eq? mode 'toggle) (not delete-selection--on) (= mode 1))))
     (set! delete-selection--on on)
+    (if on
+        (add-hook 'pre-self-insert-hook 'delete-selection--before-insert)
+        (remove-hook 'pre-self-insert-hook 'delete-selection--before-insert))
     (if interactive
         (message (if on "Delete Selection mode enabled" "Delete Selection mode disabled")))
     on))

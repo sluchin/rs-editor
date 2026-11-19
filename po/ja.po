@@ -982,7 +982,7 @@ msgstr "一致の数 COUNT を, 文にして返す."
 #: lisp/compile.scm
 msgctxt "function:grep--command-line"
 msgid "Return the command line that the header of *grep* shows for a search of PATTERN of KIND (grep, zgrep or find)."
-msgstr ""
+msgstr "*grep* の見出しに出す, KIND (grep, zgrep, find) の PATTERN を探すコマンドラインを返す."
 
 #: lisp/compile.scm
 msgctxt "function:grep--begin"
@@ -4434,6 +4434,118 @@ msgid ""
 msgstr ""
 "ポイントの前の記号を補完する.\n"
 "Scheme の評価器で定義されている名前で補完する."
+
+#: lisp/modes.scm
+msgctxt "function:modes--command"
+msgid ""
+"Turn the minor mode NAME on or off for ARGS, like a minor mode command, and return whether it is on.\n"
+"GLOBAL true means that it is a mode of all buffers.  LABEL is the name shown in the message."
+msgstr ""
+"ARGS に従って, 副モード NAME を入れる・切る (副モードのコマンドと同じ). 入っていれば真を返す.\n"
+"GLOBAL が真なら, 全てのバッファのモード. LABEL は, 知らせに出す名前."
+
+#: lisp/modes.scm
+msgctxt "function:visual-line-mode"
+msgid ""
+"Toggle visual line mode in the current buffer: long lines wrap at the window edge.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off."
+msgstr ""
+"今のバッファで, 見た目の行のモードを切り替える: 長い行は, ウィンドウの端で折り返す.\n"
+"引数が正なら入れ, 0 か負なら切る."
+
+#: lisp/modes.scm
+msgctxt "function:global-visual-line-mode"
+msgid "Toggle Visual-Line mode in all buffers."
+msgstr "全てのバッファで, 見た目の行のモードを切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:display-line-numbers-mode"
+msgid "Toggle the display of line numbers in the current buffer."
+msgstr "今のバッファで, 行番号の表示を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:global-display-line-numbers-mode"
+msgid "Toggle the display of line numbers in all buffers."
+msgstr "全てのバッファで, 行番号の表示を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:hl-line-mode"
+msgid "Toggle the highlight of the line at point in the current buffer."
+msgstr "今のバッファで, 点のある行の強調を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:global-hl-line-mode"
+msgid "Toggle the highlight of the line at point in all buffers."
+msgstr "全てのバッファで, 点のある行の強調を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:line-number-mode"
+msgid "Toggle the line number in the mode line."
+msgstr "モードラインの行番号を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:column-number-mode"
+msgid "Toggle the column number in the mode line."
+msgstr "モードラインの桁の番号を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:show-paren-mode"
+msgid "Toggle the highlight of the parenthesis that matches the one at point."
+msgstr "点の所の括弧と対になる括弧の強調を切り替える."
+
+#: lisp/modes.scm
+msgctxt "function:overwrite-mode"
+msgid "Toggle Overwrite mode in the current buffer: a typed character replaces the one after point."
+msgstr "今のバッファで, 上書きのモードを切り替える: 打った文字は, 点の後ろの文字を置き換える."
+
+#: lisp/modes.scm
+msgctxt "function:overwrite--before-insert"
+msgid "Delete the characters that a typed character replaces, for `overwrite-mode'."
+msgstr "`overwrite-mode' のために, 打った文字が置き換える文字を消す."
+
+#: lisp/modes.scm
+msgctxt "function:electric-indent-mode"
+msgid "Toggle indentation of the new line when RET is typed (on by default)."
+msgstr "RET を打ったときの, 新しい行の字下げを切り替える (初めは入っている)."
+
+#: lisp/modes.scm
+msgctxt "variable:electric-pair-pairs"
+msgid "List of the pairs that `electric-pair-mode' inserts: (OPENING CLOSING)."
+msgstr "`electric-pair-mode' が入れる対の一覧: (開く 閉じる)."
+
+#: lisp/modes.scm
+msgctxt "function:electric-pair-mode"
+msgid ""
+"Toggle inserting the closing parenthesis or quote when the opening one is typed.\n"
+"Typing the closing character when it is already after point moves over it."
+msgstr ""
+"開く括弧や引用符を打つと, 閉じるものも入れる, ことを切り替える.\n"
+"閉じる文字が点の後ろにあるときに打つと, それを越える."
+
+#: lisp/modes.scm
+msgctxt "function:electric-pair--after-insert"
+msgid "Insert the closing character of a typed opening one, or skip over a typed closing one."
+msgstr "打った開く文字の閉じる文字を入れる. 打った閉じる文字は, 越える."
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill-mode"
+msgid "Toggle Auto Fill mode in the current buffer: a space typed past the fill column breaks the line."
+msgstr "今のバッファで, 自動の折り返しを切り替える: 行の幅を越えて空白を打つと, 行を折る."
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill--break-position"
+msgid "Return where to break the line that point (HERE, after a typed space) has made too long, or false."
+msgstr "空白を打った点 (HERE) で長くなった行を, 折る位置を返す. 折れなければ偽."
+
+#: lisp/modes.scm
+msgctxt "function:do-auto-fill"
+msgid "Break the current line at a space so that it fits in `fill-column', if it is too long."
+msgstr "今の行が `fill-column' を越えていれば, 空白の所で折って, 収める."
+
+#: lisp/modes.scm
+msgctxt "function:auto-fill--after-insert"
+msgid "Fill the line after a space is typed, for `auto-fill-mode'."
+msgstr "`auto-fill-mode' のために, 空白を打ったあとで行を折る."
 
 #: lisp/org-lint.scm
 msgctxt "function:org-lint-add-checker"
@@ -11013,6 +11125,17 @@ msgstr ""
 "(boolean? OBJECT)"
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:buffer-minor-mode-p"
+msgid ""
+"Return #t if the minor mode NAME (a symbol such as `overwrite') is on in the current buffer.\n"
+"\n"
+"(buffer-minor-mode-p NAME)"
+msgstr ""
+"今のバッファで副モード NAME (`overwrite' のような記号) が入っていれば #t を返します。\n"
+"\n"
+"(buffer-minor-mode-p NAME)"
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:buffer-read-only"
 msgid ""
 "Return #t if the current buffer is read-only.\n"
@@ -11418,6 +11541,17 @@ msgstr ""
 "グローバルマークリングから 1 つ取り出して, その項目を返す.\n"
 "\n"
 "(global-mark-pop)"
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:global-minor-mode-p"
+msgid ""
+"Return #t if the minor mode NAME is on in all buffers (`line-number', `column-number', `hl-line' and so on).\n"
+"\n"
+"(global-minor-mode-p NAME)"
+msgstr ""
+"全てのバッファで副モード NAME (`line-number'、`column-number'、`hl-line' など) が入っていれば #t を返します。\n"
+"\n"
+"(global-minor-mode-p NAME)"
 
 #: core/src/scheme/builtin_docs.rs
 msgctxt "function:grep-files"
@@ -11882,6 +12016,19 @@ msgstr ""
 "(set-buffer-directory DIRECTORY)"
 
 #: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-buffer-minor-mode"
+msgid ""
+"Turn the minor mode NAME on (VALUE true) or off (VALUE false) in the current buffer only.\n"
+"The screen shows `visual-line', `display-line-numbers' and `hl-line'.\n"
+"\n"
+"(set-buffer-minor-mode NAME VALUE)"
+msgstr ""
+"今のバッファだけで、副モード NAME を入れる (VALUE が真) か、切ります (VALUE が偽)。\n"
+"画面は、`visual-line'、`display-line-numbers'、`hl-line' を見せます。\n"
+"\n"
+"(set-buffer-minor-mode NAME VALUE)"
+
+#: core/src/scheme/builtin_docs.rs
 msgctxt "function:set-buffer-read-only"
 msgid ""
 "Make the current buffer read-only (VALUE true) or writable (VALUE false).\n"
@@ -11924,6 +12071,17 @@ msgstr ""
 "コマンドの後のマークの解除を求める (VALUE が真) か, 取り消す (VALUE が偽).\n"
 "\n"
 "(set-deactivate-mark VALUE)"
+
+#: core/src/scheme/builtin_docs.rs
+msgctxt "function:set-global-minor-mode"
+msgid ""
+"Turn the minor mode NAME on (VALUE true) or off (VALUE false) in all buffers.\n"
+"\n"
+"(set-global-minor-mode NAME VALUE)"
+msgstr ""
+"全てのバッファで、副モード NAME を入れる (VALUE が真) か、切ります (VALUE が偽)。\n"
+"\n"
+"(set-global-minor-mode NAME VALUE)"
 
 #: core/src/scheme/builtin_docs.rs
 msgctxt "function:set-major-mode-name"

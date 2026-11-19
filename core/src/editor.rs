@@ -4,7 +4,7 @@
 //! `select-window`, `set-window-buffer`, `kill-buffer`, `prefix-numeric-value` など) を持ちます.
 //! バッファは名前で引きます (名前は重ならない). 画面にもターミナルにも頼みません.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::buffer::{Buffer, Groups};
 use crate::kbd_macro::KbdMacro;
@@ -68,6 +68,8 @@ pub struct Editor {
     pub string_match: Option<(Groups, u64)>,
     /// バッファに専用のウィンドウ (Emacs の `window-dedicated-p`). 値は `t` (強く専用) か, 記号の名前.
     pub dedicated: BTreeMap<usize, String>,
+    /// 全てのバッファで入れている副モード (`line-number`, `column-number`, `global-hl-line` の `hl-line` など).
+    global_modes: BTreeSet<String>,
 }
 
 /// ウィンドウの設定: 分け方と, ウィンドウごとのバッファと, 選んでいるウィンドウ.
@@ -114,7 +116,35 @@ impl Editor {
             tab_bar: (Vec::new(), 0),
             string_match: None,
             dedicated: BTreeMap::new(),
+            global_modes: BTreeSet::from(
+                [
+                    "line-number",
+                    "column-number",
+                    "electric-indent",
+                    "show-paren",
+                ]
+                .map(str::to_string),
+            ),
         }
+    }
+
+    /// 全てのバッファの副モードが入っているか.
+    pub fn global_mode(&self, name: &str) -> bool {
+        self.global_modes.contains(name)
+    }
+
+    /// 全てのバッファの副モードを入れる・切る.
+    pub fn set_global_mode(&mut self, name: &str, on: bool) {
+        if on {
+            self.global_modes.insert(name.to_string());
+        } else {
+            self.global_modes.remove(name);
+        }
+    }
+
+    /// 全てのバッファの副モードの名前 (名前の順).
+    pub fn global_modes(&self) -> Vec<String> {
+        self.global_modes.iter().cloned().collect()
     }
 
     /// 直前に合った所 (Emacs の `match-data`. 全体で 1 つ): 文字列を探した結果と, バッファごとの結果のうち, 一番新しいもの.

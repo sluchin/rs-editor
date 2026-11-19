@@ -78,6 +78,7 @@ const buf = (name: string, fields: Partial<BufferFrame> = {}): BufferFrame => ({
   directory: null,
   highlights: [],
   tokens: [],
+  minor_modes: [],
   mode:
     name === '*scratch*'
       ? { name: 'Lisp Interaction', language: 'scheme', indent_tabs: true, tab_width: 8 }

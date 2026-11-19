@@ -47,6 +47,7 @@ function setup(props: Partial<Parameters<typeof WindowView>[0]> = {}) {
     active: true,
     asking: false,
     mode: SCHEME,
+    minorModes: ['show-paren'],
     highlights: NONE,
     tokens: [],
     onInput,
@@ -75,6 +76,26 @@ describe('WindowView', () => {
     // 本文より先の位置は, 終わりにする
     rerender({ point: 99, mark: null })
     expect(editor().state.selection.main.head).toBe(16)
+  })
+
+  it('副モードで, 行番号と現在行の強調と折り返しと括弧の強調を, 入れたり切ったりすること', async () => {
+    const { view, editor, rerender } = setup({ point: 0 })
+    const has = (selector: string) => view.container.querySelector(selector) !== null
+    editor().focus()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(has('.cm-lineNumbers')).toBe(false)
+    expect(has('.cm-activeLine')).toBe(false)
+    expect(editor().contentDOM.classList.contains('cm-lineWrapping')).toBe(false)
+    expect(has('.cm-show-paren-match')).toBe(true)
+
+    rerender({ minorModes: ['display-line-numbers', 'hl-line', 'visual-line'] })
+    expect(has('.cm-lineNumbers')).toBe(true)
+    expect(has('.cm-activeLine')).toBe(true)
+    expect(editor().contentDOM.classList.contains('cm-lineWrapping')).toBe(true)
+    expect(has('.cm-show-paren-match')).toBe(false)
+
+    rerender({ minorModes: [] })
+    expect(has('.cm-lineNumbers')).toBe(false)
   })
 
   it('矩形の領域は, 行ごとの範囲に印を付け, 選択はカーソルだけにすること', () => {

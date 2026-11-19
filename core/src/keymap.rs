@@ -176,6 +176,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x z", "repeat"),
     ("C-<insert>", "kill-ring-save"),
     ("S-<insert>", "yank"),
+    ("<insert>", "overwrite-mode"),
     ("S-<delete>", "kill-region"),
     ("C-x ESC ESC", "repeat-complex-command"),
     ("C-x M-ESC", "repeat-complex-command"),

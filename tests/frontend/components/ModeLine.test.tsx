@@ -28,6 +28,28 @@ describe('ModeLine Component', () => {
     expect(container.textContent).toContain('test.scm')
   })
 
+  it('shows the line and the column only when their modes are on', () => {
+    const cursorInfo: CursorInfo = { line: 3, column: 4 }
+    const { container, rerender } = render(
+      <ModeLine bufferName="m" modified={false} cursor={cursorInfo} />,
+    )
+    expect(container.textContent).toContain('All L3 C4 (')
+    rerender(<ModeLine bufferName="m" modified={false} cursor={cursorInfo} columnNumber={false} />)
+    expect(container.textContent).toContain('All L3 (')
+    rerender(<ModeLine bufferName="m" modified={false} cursor={cursorInfo} lineNumber={false} />)
+    expect(container.textContent).toContain('All C4 (')
+    rerender(
+      <ModeLine
+        bufferName="m"
+        modified={false}
+        cursor={cursorInfo}
+        lineNumber={false}
+        columnNumber={false}
+      />,
+    )
+    expect(container.textContent).toContain('All (')
+  })
+
   it('displays the read-only indicator', () => {
     const cursorInfo: CursorInfo = { line: 1, column: 0 }
     const { container, rerender } = render(

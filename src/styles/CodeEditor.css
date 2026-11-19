@@ -251,3 +251,16 @@
 .code-editor-container .cm-tok-doc-value {
   color: var(--typescript-jsdoc-value);
 }
+
+/* 現在行の強調 (hl-line-mode. Emacs の hl-line の face に近い) */
+.code-editor-container .cm-activeLine {
+  background: rgba(128, 128, 128, 0.15);
+}
+
+/* 行番号 (display-line-numbers-mode) */
+.code-editor-container .cm-gutters {
+  background: var(--background);
+  color: var(--foreground);
+  border-right: none;
+  opacity: 0.6;
+}
