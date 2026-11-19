@@ -161,3 +161,41 @@ fn test_rectangle_mark_mode_kills_and_saves_the_rectangle() {
         "(#t #t)"
     );
 }
+
+#[test]
+fn test_rectangle_mark_mode_keys_act_on_the_rectangle() {
+    let setup = "(insert \"abcd\\nefgh\\nijkl\\n\") (goto-char 2) (push-mark (point)) (activate-mark) (goto-char 13) (rectangle-mark-mode) ";
+    // C-o: 矩形を空白にして, 右へずらす
+    assert_eq!(
+        eval(&format!(
+            "{setup} (open-line) (list (buffer-string) (rectangle-mark-p))"
+        )),
+        "(\"a bcd\\ne fgh\\ni jkl\\n\" #f)"
+    );
+    // C-y: 消した矩形を, 矩形の左上に貼る
+    assert_eq!(
+        eval(&format!(
+            "(set! killed-rectangle '(\"X\" \"Y\" \"Z\")) {setup} (yank) (list (buffer-string) (rectangle-mark-p))"
+        )),
+        "(\"aXbcd\\neYfgh\\niZjkl\\n\" #f)"
+    );
+    // C-x C-x: 同じ矩形のまま, カーソルとマークが, 同じ行の反対の角へ動く
+    assert_eq!(
+        eval(&format!(
+            "{setup} (exchange-point-and-mark) (list (point) (mark) (rectangle-mark-p) (region-active-p))"
+        )),
+        "(12 3 #t #t)"
+    );
+    // 引数があれば, 普通に入れ替える
+    assert_eq!(
+        eval(&format!(
+            "{setup} (exchange-point-and-mark 1) (list (point) (mark))"
+        )),
+        "(2 13)"
+    );
+    // 矩形でなければ, 普通の動き
+    assert_eq!(
+        eval("(insert \"ab\") (open-line) (list (buffer-string) (point))"),
+        "(\"ab\\n\" 3)"
+    );
+}

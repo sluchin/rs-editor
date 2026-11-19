@@ -6782,7 +6782,9 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:open-line"
-msgid "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
+msgid ""
+"Insert N newlines and leave point before them.  N is the prefix argument, or 1.\n"
+"In `rectangle-mark-mode', blank out the rectangle instead, like `open-rectangle'."
 msgstr ""
 
 #: lisp/simple.scm
@@ -7027,6 +7029,11 @@ msgstr ""
 #: lisp/simple.scm
 msgctxt "function:simple--rectangle-region-p"
 msgid "Return true if the active region is a rectangle."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--yank-rectangle"
+msgid "Insert the last killed rectangle at the upper left corner of the active rectangle."
 msgstr ""
 
 #: lisp/simple.scm
@@ -7275,7 +7282,14 @@ msgctxt "function:yank"
 msgid ""
 "Insert the most recent kill at point, and leave the mark at the start of the text.\n"
 "With a plain prefix argument (C-u), leave point at the start and the mark at the end.\n"
-"With a number N, insert the Nth most recent kill; with -, the second most recent."
+"With a number N, insert the Nth most recent kill; with -, the second most recent.\n"
+"In `rectangle-mark-mode', insert the last killed rectangle at the upper left corner of the\n"
+"rectangle instead, like `yank-rectangle'."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--yank"
+msgid "Yank the kill ring for `yank', with ARGS."
 msgstr ""
 
 #: lisp/simple.scm
@@ -7313,7 +7327,8 @@ msgctxt "function:transpose-chars"
 msgid ""
 "Interchange the characters around point, and move point forward over them.\n"
 "At the end of a line, the previous two characters are interchanged.\n"
-"With argument N, drag the character before point forward over N other characters."
+"With argument N, drag the character before point forward over N other characters.\n"
+"In `rectangle-mark-mode', replace the rectangle contents with a string, like `string-rectangle'."
 msgstr ""
 
 #: lisp/simple.scm
@@ -7374,7 +7389,19 @@ msgstr ""
 msgctxt "function:exchange-point-and-mark"
 msgid ""
 "Put the mark where point is now, and point where the mark is now.\n"
-"The mark is activated, unless there is an argument (which deactivates it)."
+"The mark is activated, unless there is an argument (which deactivates it).\n"
+"In `rectangle-mark-mode', move point and the mark to the other pair of corners, on their own lines,\n"
+"so that the rectangle stays the same; with an argument, exchange them as usual."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--rotate-rectangle"
+msgid "Move point to the column of the mark, and the mark (at OLD) to the column of point."
+msgstr ""
+
+#: lisp/simple.scm
+msgctxt "function:simple--exchange-activation"
+msgid "Set the activation of the mark after `exchange-point-and-mark' with ARG."
 msgstr ""
 
 #: lisp/simple.scm

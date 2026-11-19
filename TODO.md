@@ -251,7 +251,7 @@
 - [x] `M-h` (mark-paragraph)。
 - [x] `C-x SPC` (rectangle-mark-mode): 矩形を選ぶ。`C-w` と `M-w` が矩形を切る・写す。
 - [x] rectangle-mark-mode: 矩形の強調 (画面 (Tauri) は、行ごとの範囲に背景を付ける。ターミナルは、通常の領域も強調しないので、出さない)。
-- [ ] rectangle-mark-mode の続き: `C-y` で矩形を貼る、`C-o` / `C-t`、`C-x C-x` で角を回す。
+- [x] rectangle-mark-mode: `C-y` (矩形の左上に、消した矩形を貼る)、`C-o` (open-rectangle)、`C-t` (string-rectangle)、`C-x C-x` (同じ行の反対の角へ動く)。
 - [x] `C-x r c` (clear-rectangle), `C-x r d` (delete-rectangle), `C-x r o` (open-rectangle),
       `C-x r M-w` (copy-rectangle-as-kill), `C-x r N` (rectangle-number-lines)。
 - [x] `C-x r SPC` / `C-x r j` (point-to-register / jump-to-register): 位置のレジスタ。
@@ -391,7 +391,7 @@
 | [x] | `C-i` | self-insert-command | 1432 | タブを入れる |
 | [x] | `M-g` | goto-line | 1443 | |
 | [~] | `C-c ;` | comment-or-uncomment-region | 1446 | `M-;` (comment-dwim) のリージョンの働きとして有る。コマンドとしては無い |
-| [~] | `C-<return>` / `C-x j` | cua-set-rectangle-mark | 2666, 2667 | `C-x SPC` (rectangle-mark-mode) で矩形を選び、`C-w` と `M-w` で切る・写す。強調は有る (画面のみ)。`C-<return>` は無い。`C-x r k` などは有る |
+| [~] | `C-<return>` / `C-x j` | cua-set-rectangle-mark | 2666, 2667 | `C-x SPC` (rectangle-mark-mode) で矩形を選び、`C-w` と `M-w` で切る・写す。強調は有る (画面のみ)。矩形の中の `C-y` / `C-o` / `C-t` / `C-x C-x` も有る。`C-<return>` は無い。`C-x r k` などは有る |
 | [ ] | `C-c C-m` | mark-symbol | 2978 | |
 | [~] | `C-c C-w` | mark-word* | 2979 | `M-@` (mark-word) は有る |
 | [ ] | `C-c C-s` | mark-string | 2980 | |
@@ -727,7 +727,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
 - [ ] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除は完了。残りは、外からの変更の読み直し、根を選ぶコマンドなど (Phase 15)。小。
-- [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調も完了。残りは、`C-y` で矩形を貼る、`C-o` / `C-t`、`C-x C-x` (Phase 14)。小。
+- [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
 - [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
 - [ ] キーボードマクロ: `C-x C-k ...` (環、数え上げ)、`C-x C-k r`、`C-x q` (Phase 14)。中。
 - [ ] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。中〜大。

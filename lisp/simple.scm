@@ -360,11 +360,14 @@ Signal an error if N is negative."
             (loop (- n 1)))))))
 
 (define-command (open-line . args)
-  "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
-  (let ((n (simple--arg args))
-        (location (point)))
-    (newline n)
-    (goto-char location)))
+  "Insert N newlines and leave point before them.  N is the prefix argument, or 1.
+In `rectangle-mark-mode', blank out the rectangle instead, like `open-rectangle'."
+  (if (simple--rectangle-region-p)
+      (begin (open-rectangle) (simple--rectangle-done))
+      (let ((n (simple--arg args))
+            (location (point)))
+        (newline n)
+        (goto-char location))))
 
 (define-command (split-line . args)
   "Split the current line, moving the part beyond point to a new line below.
@@ -821,6 +824,15 @@ If the previous command was a kill, append the text to its kill."
   "Return true if the active region is a rectangle."
   (and (rectangle-mark-p) (region-active-p)))
 
+(define (simple--yank-rectangle)
+  "Insert the last killed rectangle at the upper left corner of the active rectangle."
+  (let* ((column (min (current-column) (save-excursion (goto-char (mark)) (current-column))))
+         (top (min (point) (mark))))
+    (simple--rectangle-done)
+    (goto-char top)
+    (move-to-column column #t)
+    (yank-rectangle)))
+
 (define (simple--rectangle-done)
   "Leave `rectangle-mark-mode' after a command used the rectangle."
   (set-rectangle-mark #f)
@@ -1132,7 +1144,15 @@ Interactively, it takes effect after this command."
 (define-command (yank . args)
   "Insert the most recent kill at point, and leave the mark at the start of the text.
 With a plain prefix argument (C-u), leave point at the start and the mark at the end.
-With a number N, insert the Nth most recent kill; with -, the second most recent."
+With a number N, insert the Nth most recent kill; with -, the second most recent.
+In `rectangle-mark-mode', insert the last killed rectangle at the upper left corner of the
+rectangle instead, like `yank-rectangle'."
+  (if (simple--rectangle-region-p)
+      (simple--yank-rectangle)
+      (simple--yank args)))
+
+(define (simple--yank args)
+  "Yank the kill ring for `yank', with ARGS."
   (let ((arg (simple--raw-arg args)))
     (set! this-command #t)
     (push-mark (point))
@@ -1238,10 +1258,14 @@ Interactively, read the name of BUFFER in the minibuffer."
 (define-command (transpose-chars . args)
   "Interchange the characters around point, and move point forward over them.
 At the end of a line, the previous two characters are interchanged.
-With argument N, drag the character before point forward over N other characters."
-  (when (and (eolp) (not (bobp)))
-    (backward-char 1))
-  (simple--transpose forward-char (simple--arg args)))
+With argument N, drag the character before point forward over N other characters.
+In `rectangle-mark-mode', replace the rectangle contents with a string, like `string-rectangle'."
+  (if (simple--rectangle-region-p)
+      (begin (string-rectangle) (simple--rectangle-done))
+      (begin
+        (when (and (eolp) (not (bobp)))
+          (backward-char 1))
+        (simple--transpose forward-char (simple--arg args)))))
 
 (define-command (transpose-words . args)
   "Interchange the words around point, and move point over the second.
@@ -1354,15 +1378,38 @@ Repeated, it activates or deactivates the mark."
 
 (define-command (exchange-point-and-mark . args)
   "Put the mark where point is now, and point where the mark is now.
-The mark is activated, unless there is an argument (which deactivates it)."
+The mark is activated, unless there is an argument (which deactivates it).
+In `rectangle-mark-mode', move point and the mark to the other pair of corners, on their own lines,
+so that the rectangle stays the same; with an argument, exchange them as usual."
   (let ((arg (simple--raw-arg args))
         (old (mark)))
     (if (not old) (error "No mark set in this buffer"))
-    (set-mark (point))
+    (if (and (not arg) (simple--rectangle-region-p))
+        (simple--rotate-rectangle old)
+        (begin
+          (set-mark (point))
+          (goto-char old)
+          (simple--exchange-activation arg)))))
+
+(define (simple--rotate-rectangle old)
+  "Move point to the column of the mark, and the mark (at OLD) to the column of point."
+  (let* ((point-column (current-column))
+         (mark-column (save-excursion (goto-char old) (current-column)))
+         (here (point-marker)))
     (goto-char old)
-    (if (not (eq? (and arg #t) (not (region-active-p))))
-        (deactivate-mark)
-        (activate-mark))))
+    (move-to-column point-column #t)
+    (let ((new-mark (point-marker)))
+      (goto-char (marker-position here))
+      (move-to-column mark-column #t)
+      (set-mark (marker-position new-mark))
+      (marker-release new-mark))
+    (marker-release here)))
+
+(define (simple--exchange-activation arg)
+  "Set the activation of the mark after `exchange-point-and-mark' with ARG."
+  (if (not (eq? (and arg #t) (not (region-active-p))))
+      (deactivate-mark)
+      (activate-mark)))
 
 (define-command (mark-whole-buffer . args)
   "Put point at the beginning and the mark at the end of the buffer."

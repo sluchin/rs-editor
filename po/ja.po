@@ -7655,8 +7655,12 @@ msgstr ""
 
 #: lisp/simple.scm
 msgctxt "function:open-line"
-msgid "Insert N newlines and leave point before them.  N is the prefix argument, or 1."
-msgstr "改行を N 個入れて, 点は改行の前に置く. N は前置引数, または 1."
+msgid ""
+"Insert N newlines and leave point before them.  N is the prefix argument, or 1.\n"
+"In `rectangle-mark-mode', blank out the rectangle instead, like `open-rectangle'."
+msgstr ""
+"改行を N 個入れて, 点は改行の前に置く. N は前置引数, または 1.\n"
+"矩形選択モードでは, 代わりに `open-rectangle` のように矩形を空白にする."
 
 #: lisp/simple.scm
 msgctxt "function:split-line"
@@ -7948,6 +7952,11 @@ msgstr ""
 msgctxt "function:simple--rectangle-region-p"
 msgid "Return true if the active region is a rectangle."
 msgstr "有効な領域が矩形なら真を返す."
+
+#: lisp/simple.scm
+msgctxt "function:simple--yank-rectangle"
+msgid "Insert the last killed rectangle at the upper left corner of the active rectangle."
+msgstr "矩形選択の左上に, 最後に消した矩形を入れる."
 
 #: lisp/simple.scm
 msgctxt "function:simple--rectangle-done"
@@ -8249,11 +8258,19 @@ msgctxt "function:yank"
 msgid ""
 "Insert the most recent kill at point, and leave the mark at the start of the text.\n"
 "With a plain prefix argument (C-u), leave point at the start and the mark at the end.\n"
-"With a number N, insert the Nth most recent kill; with -, the second most recent."
+"With a number N, insert the Nth most recent kill; with -, the second most recent.\n"
+"In `rectangle-mark-mode', insert the last killed rectangle at the upper left corner of the\n"
+"rectangle instead, like `yank-rectangle'."
 msgstr ""
 "一番新しい kill を点の所に入れ, マークを入れた本文の始めに置く.\n"
 "C-u なら, 点を始めに, マークを終わりに置く.\n"
-"数 N なら N 番目に新しい kill を, - なら 2 番目に新しい kill を入れる."
+"数 N なら N 番目に新しい kill を, - なら 2 番目に新しい kill を入れる.\n"
+"矩形選択モードでは, 代わりに `yank-rectangle` のように, 最後に消した矩形を矩形の左上に入れる."
+
+#: lisp/simple.scm
+msgctxt "function:simple--yank"
+msgid "Yank the kill ring for `yank', with ARGS."
+msgstr "`yank' の本体. ARGS は引数."
 
 #: lisp/simple.scm
 msgctxt "function:yank-pop"
@@ -8295,11 +8312,13 @@ msgctxt "function:transpose-chars"
 msgid ""
 "Interchange the characters around point, and move point forward over them.\n"
 "At the end of a line, the previous two characters are interchanged.\n"
-"With argument N, drag the character before point forward over N other characters."
+"With argument N, drag the character before point forward over N other characters.\n"
+"In `rectangle-mark-mode', replace the rectangle contents with a string, like `string-rectangle'."
 msgstr ""
 "点の前後の文字を入れ替えて, 点をその先に動かす.\n"
 "行の終わりでは, 前の 2 文字を入れ替える.\n"
-"引数 N があれば, 点の前の文字を N 文字先へ動かす."
+"引数 N があれば, 点の前の文字を N 文字先へ動かす.\n"
+"矩形選択モードでは, 代わりに `string-rectangle` のように矩形の中身を文字列に置き換える."
 
 #: lisp/simple.scm
 msgctxt "function:transpose-words"
@@ -8372,10 +8391,23 @@ msgstr ""
 msgctxt "function:exchange-point-and-mark"
 msgid ""
 "Put the mark where point is now, and point where the mark is now.\n"
-"The mark is activated, unless there is an argument (which deactivates it)."
+"The mark is activated, unless there is an argument (which deactivates it).\n"
+"In `rectangle-mark-mode', move point and the mark to the other pair of corners, on their own lines,\n"
+"so that the rectangle stays the same; with an argument, exchange them as usual."
 msgstr ""
 "マークを今の点に置き, 点を今のマークの所に置く.\n"
-"引数が無ければマークを使う状態にし, あれば使わない状態にする."
+"引数が無ければマークを使う状態にし, あれば使わない状態にする.\n"
+"矩形選択モードでは, 矩形を変えずに, 点とマークを, それぞれの行の反対側の角へ動かす. 引数があれば, 普通に入れ替える."
+
+#: lisp/simple.scm
+msgctxt "function:simple--rotate-rectangle"
+msgid "Move point to the column of the mark, and the mark (at OLD) to the column of point."
+msgstr "点をマークの桁へ, OLD にあるマークを点の桁へ動かす."
+
+#: lisp/simple.scm
+msgctxt "function:simple--exchange-activation"
+msgid "Set the activation of the mark after `exchange-point-and-mark' with ARG."
+msgstr "`exchange-point-and-mark' のあとで, ARG に従ってマークを使う状態にするかを決める."
 
 #: lisp/simple.scm
 msgctxt "function:mark-whole-buffer"
