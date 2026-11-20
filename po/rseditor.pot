@@ -9222,6 +9222,164 @@ msgctxt "function:string-match-p"
 msgid "Like `string-match', but do not change the match data."
 msgstr ""
 
+#: lisp/skk.scm
+msgctxt "variable:skk-jisyo"
+msgid "File of the dictionary of the user.  A word that is registered is added to it."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk-large-jisyo"
+msgid ""
+"File of the large dictionary (SKK-JISYO.L), or #f to use the first one that exists of\n"
+"/usr/share/skk/SKK-JISYO.L, ~/.skk/SKK-JISYO.L and ~/SKK-JISYO.L."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--mode"
+msgid "The state of the input: hiragana, katakana or latin."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--pending"
+msgid "The number of letters before point that are typed romaji not yet turned into kana."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--phase"
+msgid "none, preedit (after ▽: the reading is being typed) or convert (after ▼: a candidate is shown)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--start"
+msgid "The position after ▽ or ▼, where the reading or the candidate starts."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--reading"
+msgid "The reading that is being converted."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--candidates"
+msgid "The candidates of the reading."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--index"
+msgid "The position in `skk--candidates' of the candidate that is shown."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--dictionary"
+msgid "The text of the dictionaries, or #f before it is read."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--rows"
+msgid "Rows of the romaji table: (CONSONANT A I U E O)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--youon"
+msgid "Romaji that make a small ya, yu, yo and e with a vowel: (PREFIX KANA)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "variable:skk--table"
+msgid "The romaji table: a list of (ROMAJI KANA)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--katakana"
+msgid "Return TEXT with the hiragana turned into katakana."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--romaji-prefix?"
+msgid "Return true if some romaji of the table starts with the string KEY."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--output"
+msgid ""
+"Return KANA as it is typed in the present state: katakana in the katakana state,\n"
+"except in a reading after ▽, which is always hiragana (the dictionaries hold hiragana readings)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--replace"
+msgid "Replace the text from FROM to TO with TEXT, leaving point after it."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--convert"
+msgid ""
+"Turn the romaji before point into kana.  CH is the letter just typed; it is before point,\n"
+"and the `skk--pending' letters before it are typed romaji."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--read-dictionary"
+msgid "Read the dictionaries into `skk--dictionary' (one string, with a newline before each line)."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--candidates-of"
+msgid "Return the candidates of READING in the dictionaries, in order."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--register"
+msgid "Add WORD as a candidate of READING to the dictionary of the user."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--valid-p"
+msgid "Return true if the state of the conversion still agrees with the buffer."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--commit"
+msgid "Accept the text of the conversion: remove the mark ▽ or ▼."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--show-candidate"
+msgid "Show the candidate `skk--index' after ▼."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--start-conversion"
+msgid "Look up the reading between ▽ and point, and show the first candidate after ▼."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk--after-insert"
+msgid "Turn the typed letter into kana, and handle ▽ and ▼, for `skk-mode'."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk-kakutei"
+msgid ""
+"Accept the conversion that is going on; in the latin state, go to the hiragana state;\n"
+"otherwise insert a newline."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk-return"
+msgid "Accept the conversion that is going on, and insert a newline."
+msgstr ""
+
+#: lisp/skk.scm
+msgctxt "function:skk-mode"
+msgid ""
+"Toggle SKK, a Japanese input method, in the current buffer.\n"
+"Type romaji for hiragana (a capital letter starts a reading, SPC converts it, x goes back to the previous candidate),\n"
+"l for the latin state, q to switch between hiragana and katakana, and C-j to accept a conversion\n"
+"(in the latin state, to go to the hiragana state).  The dictionaries are `skk-jisyo' and `skk-large-jisyo'.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off."
+msgstr ""
+
 #: lisp/sort.scm
 msgctxt "function:sort--split-lines"
 msgid "Return the lines of TEXT (without their newlines).  A final newline does not start a new line."

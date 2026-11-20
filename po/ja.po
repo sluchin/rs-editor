@@ -10504,6 +10504,175 @@ msgctxt "function:string-match-p"
 msgid "Like `string-match', but do not change the match data."
 msgstr "`string-match' と同じだが, マッチデータを変えない."
 
+#: lisp/skk.scm
+msgctxt "variable:skk-jisyo"
+msgid "File of the dictionary of the user.  A word that is registered is added to it."
+msgstr "利用者の辞書のファイル. 登録した語は, ここに書く."
+
+#: lisp/skk.scm
+msgctxt "variable:skk-large-jisyo"
+msgid ""
+"File of the large dictionary (SKK-JISYO.L), or #f to use the first one that exists of\n"
+"/usr/share/skk/SKK-JISYO.L, ~/.skk/SKK-JISYO.L and ~/SKK-JISYO.L."
+msgstr "大きな辞書 (SKK-JISYO.L) のファイル. #f なら, /usr/share/skk/SKK-JISYO.L, ~/.skk/SKK-JISYO.L, ~/SKK-JISYO.L の初めにあるものを使う."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--mode"
+msgid "The state of the input: hiragana, katakana or latin."
+msgstr "入力の状態: hiragana, katakana, latin のどれか."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--pending"
+msgid "The number of letters before point that are typed romaji not yet turned into kana."
+msgstr "点の前にある, まだかなにしていない, 打ったローマ字の文字数."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--phase"
+msgid "none, preedit (after ▽: the reading is being typed) or convert (after ▼: a candidate is shown)."
+msgstr "none, preedit (▽ の後: 読みを打っている), convert (▼ の後: 候補を出している) のどれか."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--start"
+msgid "The position after ▽ or ▼, where the reading or the candidate starts."
+msgstr "▽ か ▼ の後の位置. 読みか候補が始まる所."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--reading"
+msgid "The reading that is being converted."
+msgstr "変換している読み."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--candidates"
+msgid "The candidates of the reading."
+msgstr "読みの候補."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--index"
+msgid "The position in `skk--candidates' of the candidate that is shown."
+msgstr "出している候補の, `skk--candidates' での位置."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--dictionary"
+msgid "The text of the dictionaries, or #f before it is read."
+msgstr "辞書の中身. 読む前は #f."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--rows"
+msgid "Rows of the romaji table: (CONSONANT A I U E O)."
+msgstr "ローマ字の表の行: (子音 A I U E O)."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--youon"
+msgid "Romaji that make a small ya, yu, yo and e with a vowel: (PREFIX KANA)."
+msgstr "母音と合わせて, 小さい や, ゆ, よ, え を作るローマ字: (前の部分 かな)."
+
+#: lisp/skk.scm
+msgctxt "variable:skk--table"
+msgid "The romaji table: a list of (ROMAJI KANA)."
+msgstr "ローマ字の表: (ローマ字 かな) の一覧."
+
+#: lisp/skk.scm
+msgctxt "function:skk--katakana"
+msgid "Return TEXT with the hiragana turned into katakana."
+msgstr "TEXT のひらがなを, カタカナにして返す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--romaji-prefix?"
+msgid "Return true if some romaji of the table starts with the string KEY."
+msgstr "表のローマ字のどれかが, 文字列 KEY で始まるなら真を返す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--output"
+msgid ""
+"Return KANA as it is typed in the present state: katakana in the katakana state,\n"
+"except in a reading after ▽, which is always hiragana (the dictionaries hold hiragana readings)."
+msgstr ""
+"今の状態で打ったかなとして, KANA を返す: カタカナの状態ならカタカナにする.\n"
+"ただし, ▽ の後の読みは, いつもひらがな (辞書の読みはひらがなだから)."
+
+#: lisp/skk.scm
+msgctxt "function:skk--replace"
+msgid "Replace the text from FROM to TO with TEXT, leaving point after it."
+msgstr "FROM から TO までの文字を TEXT に置き換え, 点をその後ろに置く."
+
+#: lisp/skk.scm
+msgctxt "function:skk--convert"
+msgid ""
+"Turn the romaji before point into kana.  CH is the letter just typed; it is before point,\n"
+"and the `skk--pending' letters before it are typed romaji."
+msgstr ""
+"点の前のローマ字を, かなにする. CH は, 打ったばかりの文字で, 点の前にある.\n"
+"その前にある `skk--pending' 個の文字は, 打ったローマ字."
+
+#: lisp/skk.scm
+msgctxt "function:skk--read-dictionary"
+msgid "Read the dictionaries into `skk--dictionary' (one string, with a newline before each line)."
+msgstr "辞書を `skk--dictionary' に読む (1 つの文字列で, 各行の前に改行を付ける)."
+
+#: lisp/skk.scm
+msgctxt "function:skk--candidates-of"
+msgid "Return the candidates of READING in the dictionaries, in order."
+msgstr "辞書にある READING の候補を, 順に返す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--register"
+msgid "Add WORD as a candidate of READING to the dictionary of the user."
+msgstr "利用者の辞書に, READING の候補として WORD を足す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--valid-p"
+msgid "Return true if the state of the conversion still agrees with the buffer."
+msgstr "変換の状態が, バッファと合っていれば真を返す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--commit"
+msgid "Accept the text of the conversion: remove the mark ▽ or ▼."
+msgstr "変換の文字を確定する: 印の ▽ か ▼ を消す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--show-candidate"
+msgid "Show the candidate `skk--index' after ▼."
+msgstr "▼ の後に, 候補 `skk--index' を出す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--start-conversion"
+msgid "Look up the reading between ▽ and point, and show the first candidate after ▼."
+msgstr "▽ から点までの読みを辞書で引き, ▼ の後に最初の候補を出す."
+
+#: lisp/skk.scm
+msgctxt "function:skk--after-insert"
+msgid "Turn the typed letter into kana, and handle ▽ and ▼, for `skk-mode'."
+msgstr "`skk-mode' のために, 打った文字をかなにし, ▽ と ▼ を扱う."
+
+#: lisp/skk.scm
+msgctxt "function:skk-kakutei"
+msgid ""
+"Accept the conversion that is going on; in the latin state, go to the hiragana state;\n"
+"otherwise insert a newline."
+msgstr ""
+"進んでいる変換を確定する. 英数の状態では, ひらがなの状態にする.\n"
+"そうでなければ, 改行を入れる."
+
+#: lisp/skk.scm
+msgctxt "function:skk-return"
+msgid "Accept the conversion that is going on, and insert a newline."
+msgstr "進んでいる変換を確定して, 改行を入れる."
+
+#: lisp/skk.scm
+msgctxt "function:skk-mode"
+msgid ""
+"Toggle SKK, a Japanese input method, in the current buffer.\n"
+"Type romaji for hiragana (a capital letter starts a reading, SPC converts it, x goes back to the previous candidate),\n"
+"l for the latin state, q to switch between hiragana and katakana, and C-j to accept a conversion\n"
+"(in the latin state, to go to the hiragana state).  The dictionaries are `skk-jisyo' and `skk-large-jisyo'.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off."
+msgstr ""
+"今のバッファで, 日本語入力の SKK を切り替える.\n"
+"ローマ字でひらがなを打つ (大文字で読みを始め, SPC で変換し, x で前の候補へ戻る).\n"
+"l で英数の状態, q でひらがなとカタカナの切り替え, C-j で変換の確定 (英数の状態では, ひらがなの状態へ).\n"
+"辞書は `skk-jisyo' と `skk-large-jisyo'.\n"
+"引数が正なら入れ, 0 か負なら切る."
+
 #: lisp/sort.scm
 msgctxt "function:sort--split-lines"
 msgid "Return the lines of TEXT (without their newlines).  A final newline does not start a new line."

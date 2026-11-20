@@ -62,6 +62,7 @@ pub const EDITOR_FILES: &[(&str, &str)] = &[
         "lisp/markdown.scm",
         include_str!("../../../lisp/markdown.scm"),
     ),
+    ("lisp/skk.scm", include_str!("../../../lisp/skk.scm")),
     ("lisp/kmacro.scm", include_str!("../../../lisp/kmacro.scm")),
     (
         "lisp/tab-bar.scm",

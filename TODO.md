@@ -412,7 +412,7 @@
 | [ ] | `<f11>` | resize-frame-interactively | 763 | |
 | [ ] | `<f2>` | toggle-debug-on-error | 1262 | |
 | [ ] | `C-^` | global-whitespace-mode | 1403 | |
-| [ ] | `C-\` | skk-mode | 1415, 3784 | 先に nil にして、後で skk-mode |
+| [x] | `C-\` | skk-mode | 1415, 3784 | 先に nil にして、後で skk-mode |
 | [ ] | `C-c C-l` | toggle-truncate-lines | 1418 | |
 | [x] | `C-c C-g` | (message nil) | 1421 | エコー領域を消す。`C-g` で消える |
 | [ ] | `<f10>` | other-window-or-split | 1440 | `C-x o` と `C-x 2` は有る |
@@ -631,7 +631,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 ### 編集のモード
 
 - [x] paredit: `M-x paredit-mode` (`lisp/paredit.scm`)。`(` `)` `"` `DEL` `C-d` `C-k`、`C-)` `C-}` `C-(` `C-{` (取り込む、出す)、`M-s` (splice)、`M-r` (raise)、`M-(` (wrap)。`C-u` の数引数、`paredit-forward-up` などの移動、`M-?`、コメントと文字列の細かい扱いは無い。
-- [ ] skk-mode: 日本語入力 (SKK)。dotfiles では `C-\` に割り当てている (下の「dotfiles/.emacs.el の global-map の関数」)。
+- [x] skk-mode: 日本語入力 (SKK) (`lisp/skk.scm`)。`C-\` で入れる。ローマ字でひらがな、`q` でカタカナ、`l` で英数、大文字で読みを始めて `SPC` で変換 (`x` で前の候補)、`C-j` で確定、辞書に無ければ聞いて登録する。辞書は `skk-jisyo` (`~/.skk-jisyo`) と `skk-large-jisyo` (SKK-JISYO.L。無ければ、利用者の辞書だけ)。送り仮名、全角英数、略語、補完、数値変換、学習は無い。
 - [x] markdown-mode (`lisp/markdown.scm`): `.md` `.markdown` `.mdown` を開くと入る。見出し、強調、コード、リンク、リスト、引用に色を付ける (行ごと。コードのブロックの中は見ない)。`C-c C-n` / `C-c C-p` / `C-c C-f` / `C-c C-b` / `C-c C-u` (見出しの移動)、`C-c C--` / `C-c C-=` (見出しのレベル)、`M-g i` (imenu)。表、脚注、折りたたみ、プレビューは無い。
 
 ### Org mode
@@ -734,7 +734,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。
 - [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
-- [ ] 日本語入力 (skk-mode) (Phase 21。paredit と markdown-mode は完了)。`dotfiles` で使っているので、使う頻度で上げる。大。
+- [x] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。skk-mode は、送り仮名などの残りがある。
 - [x] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。
 - [x] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。画面のコマンドは全て移した。
 
