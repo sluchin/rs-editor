@@ -156,3 +156,40 @@ With a prefix argument while defining, Emacs enters a recursive edit; that is no
          (if (current-prefix-arg) (error "A recursive edit is not supported")))
         (else (error "Not defining or executing kbd macro")))
   #f)
+
+(define kmacro--edit-header
+  ";; Keyboard Macro Editor.  Press C-c C-c to finish; the keys are in the notation of `kbd'.\n;; Comment lines start with `;;'.\n\nMacro:\n\n"
+  "The text before the keys in the *Edit Macro* buffer.")
+
+(define-command (kmacro-edit-macro . args)
+  "Edit the last keyboard macro in the *Edit Macro* buffer: its keys are text, such as `C-x C-f foo RET'.
+Press C-c C-c in the buffer to make the text the last keyboard macro."
+  (unless last-kbd-macro (error "No keyboard macro defined"))
+  (switch-to-buffer "*Edit Macro*")
+  (erase-buffer)
+  (insert kmacro--edit-header (string-join last-kbd-macro " ") "\n")
+  (goto-char (point-max))
+  (local-set-key "C-c C-c" 'kmacro-edit-finish)
+  (message "Press C-c C-c to finish editing the macro")
+  #f)
+
+(define-command (edit-kbd-macro . args)
+  "Edit a keyboard macro: the last one (`kmacro-edit-macro'); named macros are not supported."
+  (kmacro-edit-macro))
+
+(define (kmacro--edited-keys)
+  "Return the keys of the text of the *Edit Macro* buffer, without the comment lines and the label."
+  (let ((lines (filter (lambda (line)
+                         (not (or (string-prefix? ";;" line) (equal? line "Macro:"))))
+                       (split-string (buffer-string) "\n"))))
+    (kbd (string-join lines " "))))
+
+(define-command (kmacro-edit-finish . args)
+  "Make the text of the *Edit Macro* buffer the last keyboard macro, and close the buffer."
+  (unless (equal? (buffer-name) "*Edit Macro*")
+    (error "Not in the *Edit Macro* buffer"))
+  (let ((keys (kmacro--edited-keys)))
+    (set! last-kbd-macro (if (null? keys) #f keys))
+    (kill-buffer "*Edit Macro*")
+    (message (if last-kbd-macro "Macro changed" "Macro is empty"))
+    #f))
