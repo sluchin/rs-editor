@@ -1,7 +1,7 @@
 //! 起動の引数 (Emacs の Initial options).
 //!
 //! `-q` (`--no-init-file`), `-Q` (`--quick`), `--no-splash`, `--debug-init`, `--chdir DIR`,
-//! `--init-directory DIR` を読みます. 値は `--chdir DIR` と `--chdir=DIR` の両方の書き方を受けます.
+//! `--init-directory DIR`, `--no-site-file`, `--no-site-lisp` (`-nsl`), `--user USER` (`-u USER`) を読みます. 値は `--chdir DIR` と `--chdir=DIR` の両方の書き方を受けます.
 //! 知らない引数は, Emacs と同じく, 開くファイルとして扱います.
 
 use std::path::{Path, PathBuf};
@@ -23,6 +23,12 @@ pub struct Options {
     pub chdir: Option<String>,
     /// 初期設定ファイルを探すディレクトリ (`--init-directory`).
     pub init_directory: Option<String>,
+    /// 全ての利用者の初期設定 (`site-start.scm`) を読まない (`--no-site-file`, `-Q`, `--quick`).
+    pub no_site_file: bool,
+    /// 全ての利用者の Lisp のディレクトリを `load-path` に入れない (`--no-site-lisp`, `-nsl`, `-Q`, `--quick`).
+    pub no_site_lisp: bool,
+    /// ほかの利用者の初期設定ファイルを読む (`--user`, `-u`. 空の名前は, 今の利用者).
+    pub user: Option<String>,
     /// 開くファイル (引数の順).
     pub files: Vec<String>,
 }
@@ -45,7 +51,12 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
             "-Q" | "--quick" | "-quick" => {
                 options.no_init_file = true;
                 options.no_splash = true;
+                options.no_site_file = true;
+                options.no_site_lisp = true;
             }
+            "--no-site-file" | "-no-site-file" => options.no_site_file = true,
+            "--no-site-lisp" | "-no-site-lisp" | "-nsl" => options.no_site_lisp = true,
+            "--user" | "-user" | "-u" => options.user = Some(value(arg, rest.next())?),
             "--no-splash" | "-no-splash" => options.no_splash = true,
             "--debug-init" | "-debug-init" => options.debug_init = true,
             "--chdir" | "-chdir" => options.chdir = Some(value(arg, rest.next())?),
@@ -57,6 +68,8 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
                     options.chdir = Some(dir.to_string());
                 } else if let Some(dir) = other.strip_prefix("--init-directory=") {
                     options.init_directory = Some(dir.to_string());
+                } else if let Some(user) = other.strip_prefix("--user=") {
+                    options.user = Some(user.to_string());
                 } else {
                     options.files.push(other.to_string());
                 }
@@ -65,6 +78,9 @@ pub fn parse(args: &[String]) -> Result<Options, String> {
     }
     Ok(options)
 }
+
+/// 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`). `load-path` に入れ, `site-start.scm` を探す.
+pub const SITE_LISP_DIR: &str = "/usr/local/share/rseditor/site-lisp";
 
 /// 値を取る引数の値を返します.
 ///
@@ -116,6 +132,24 @@ pub fn init_file_path() -> Option<PathBuf> {
         .find(|path| path.exists())
 }
 
+/// 利用者のホームディレクトリを, パスワードファイル (`/etc/passwd` の形) から探します.
+///
+/// # Arguments
+///
+/// * `passwd` - パスワードファイルの中身.
+/// * `user` - 利用者の名前.
+///
+/// # Returns
+///
+/// ホームディレクトリ. 利用者が無いとき, 欄が足りないときは `None`.
+pub fn home_of(passwd: &str, user: &str) -> Option<PathBuf> {
+    passwd
+        .lines()
+        .map(|line| line.split(':').collect::<Vec<_>>())
+        .find(|fields| fields.first() == Some(&user))
+        .and_then(|fields| fields.get(5).map(PathBuf::from))
+}
+
 /// 起動の引数に従って, 読む初期設定ファイルを決めます.
 ///
 /// # Arguments
@@ -126,19 +160,30 @@ pub fn init_file_path() -> Option<PathBuf> {
 /// # Returns
 ///
 /// `-q` と `-Q` では `None`. `--init-directory` があれば, そのディレクトリの `init.scm` (無ければ `None`).
-/// どちらも無ければ `default`.
+/// `--user USER` があれば, USER のホームディレクトリの候補 ([`init_file_candidates`]) の初めにあるもの
+/// (利用者が無ければ `None`). どれも無ければ `default`.
 pub fn choose_init_file(options: &Options, default: Option<PathBuf>) -> Option<PathBuf> {
     if options.no_init_file {
         return None;
     }
-    match &options.init_directory {
-        Some(dir) => Some(Path::new(dir).join("init.scm")).filter(|path| path.exists()),
+    if let Some(dir) = &options.init_directory {
+        return Some(Path::new(dir).join("init.scm")).filter(|path| path.exists());
+    }
+    match options.user.as_deref().filter(|user| !user.is_empty()) {
+        Some(user) => {
+            let passwd = std::fs::read_to_string("/etc/passwd").unwrap_or_default();
+            let home = home_of(&passwd, user)?;
+            let config = home.join(".config");
+            init_file_candidates(Some(&home), Some(&config))
+                .into_iter()
+                .find(|path| path.exists())
+        }
         None => default,
     }
 }
 
 /// 起動の引数を当てます: 始めのディレクトリ (`--chdir`), `user-emacs-directory` (`--init-directory`),
-/// `init-file-debug` (`--debug-init`). 初期設定ファイルを読む前に呼びます.
+/// `init-file-debug` (`--debug-init`), `load-path` の `site-lisp` と `site-start.scm` (`--no-site-lisp`, `--no-site-file`). 初期設定ファイルを読む前に呼びます.
 ///
 /// # Arguments
 ///
@@ -160,6 +205,56 @@ pub fn apply_options<U: Host + LoopUi>(commands: &CommandLoop<U>, options: &Opti
         global.define("user-emacs-directory", Value::String(dir));
     }
     global.define("init-file-debug", Value::Boolean(options.debug_init));
+    if !options.no_site_lisp {
+        let mut path = match global.get("load-path") {
+            Some(Value::List(dirs)) => dirs.iter().cloned().collect::<Vec<_>>(),
+            _ => Vec::new(),
+        };
+        path.push(Value::String(SITE_LISP_DIR.to_string()));
+        global.define("load-path", Value::List(path.into()));
+    }
+    load_site_start(commands, options, Path::new(SITE_LISP_DIR));
+}
+
+/// 全ての利用者の初期設定 (`site-start.scm`) を読みます (Emacs の `site-start.el`).
+/// 初期設定ファイルより先に (`apply_options` から) 呼びます. 失敗は `*Warnings*` に出します. `--no-site-file` と `--no-site-lisp` では読みません
+/// (Emacs と同じく, `site-start.scm` は `site-lisp` から探す).
+///
+/// # Arguments
+///
+/// * `commands` - コマンドループ.
+/// * `options` - 起動の引数.
+/// * `dir` - `site-start.scm` を探すディレクトリ ([`SITE_LISP_DIR`]).
+///
+/// # Returns
+///
+/// 失敗の文 (`<path>: <内容>`). 読めたとき, ファイルが無いときは `None`.
+pub fn load_site_start<U: Host + LoopUi>(
+    commands: &CommandLoop<U>,
+    options: &Options,
+    dir: &Path,
+) -> Option<String> {
+    if options.no_site_file || options.no_site_lisp {
+        return None;
+    }
+    let path = dir.join("site-start.scm");
+    if !path.exists() {
+        return None;
+    }
+    log::info!("Loading {}", path.display());
+    let error = commands
+        .eval(&format!(
+            "(load {})",
+            Value::String(path.to_string_lossy().into_owned())
+        ))
+        .err()?;
+    let error = format!("{}: {}", path.display(), error);
+    let warning = format!("An error occurred while loading the site-start file: {error}");
+    let _ = commands.eval(&format!(
+        "(display-warning 'initialization {} 'error)",
+        Value::String(warning)
+    ));
+    Some(error)
 }
 
 /// 初期設定ファイルを読みます (`user-init-file` にする). 無ければ何もしません.

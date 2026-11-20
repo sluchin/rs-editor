@@ -122,6 +122,8 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-182 | `M-x ielm` | `(+ 1 2)` RET、`(car 5)` RET、`M-p` | `*ielm*` に出て、プロンプト (`ELISP>`) の後の式が評価されて、値が次の行に出る。失敗は `***` で始まる行に出る。`M-p` で、前の入力が戻る |
 | IT-183 | `F8` でツリーを出し、`{` で幅を変える | アプリを閉じて開き直す。ファイルを別のアプリで作ってから、このアプリの窓に戻る | 開き直すと、同じ根のツリーが同じ幅で出る。窓へ戻ると、作ったファイルがツリーに出る |
 | IT-184 | `M-x project-tree-set-root` | ディレクトリを入力して RET | そのディレクトリを根にしたツリーが出る |
+| IT-185 | `/usr/local/share/rseditor/site-lisp/site-start.scm` に `(define site-loaded 1)` を置く | `rseditor` と、`rseditor --no-site-file` と、`rseditor -Q` を、それぞれ起動して、`M-: site-loaded` | 引数なしでは `1` と出る。`--no-site-file` と `-Q` では、未定義のエラーになる |
+| IT-186 | ほかの利用者のホームに `.rseditor` がある | `rseditor --user その利用者` | その利用者の初期設定ファイルを読む (`user-init-file` で確かめる) |
 
 ### 4.6 `M-x grep` と `next-error`
 

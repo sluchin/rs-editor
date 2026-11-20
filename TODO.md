@@ -510,11 +510,11 @@ Emacs 30.2 の `emacs --help` の「Initialization options」と同じことを�
 - [x] 起動の引数を読む仕組み (`core/src/startup.rs` の `parse`。画面のアプリは `commands::startup_options`、ターミナルは `tui/src/main.rs`)。知らない引数は、Emacs と同じく、開くファイルとして扱う (Action options は別の項目)。画面のアプリも引数のファイルを開く。
       引数の値は、`--chdir DIR` と `--chdir=DIR` の両方の書き方を受ける。
 - [x] `--no-init-file`、`-q`: 初期設定ファイル (`~/.rseditor`、`~/.rseditor.d/init.scm`) を読まない。
-- [x] `--quick`、`-Q`: `-q --no-splash` と同じ (`--no-site-file`、`--no-site-lisp`、`--no-x-resources` は、まだ無い機能なので受けない)。
-- [ ] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。先に、rs-editor の `site-start.scm` (置く場所を決める) を読むようにする。
-- [ ] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (Emacs の `site-lisp`) を `load-path` に入れない。先に、その場所を決めて、`load-path` に入れるようにする。
+- [x] `--quick`、`-Q`: `-q --no-splash` と同じ (`--no-site-file`、`--no-site-lisp` も含む。`--no-x-resources` は、まだ無い機能なので受けない)。
+- [x] `--no-site-file`: 全ての利用者の初期設定 (Emacs の `site-start.el`) を読まない。`/usr/local/share/rseditor/site-lisp/site-start.scm` を、初期設定ファイルより先に読む (失敗は `*Warnings*` に出す)。
+- [x] `--no-site-lisp`、`-nsl`: 全ての利用者の Lisp のディレクトリ (`/usr/local/share/rseditor/site-lisp`) を `load-path` に入れない (`site-start.scm` も読まない)。
 - [x] `--init-directory=DIR`: 初期設定ファイルを、`~/.rseditor.d` の代わりに DIR の `init.scm` から探す (`user-emacs-directory` も DIR にする。`load-path` はまだ変えない)。
-- [ ] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor`) を読む。
+- [x] `--user USER`、`-u USER`: ほかの利用者の初期設定ファイル (`~USER/.rseditor` など。ホームは `/etc/passwd` から探す) を読む。名前が空なら、今の利用者。
 - [x] `--debug-init`: 初期設定ファイルの失敗で、`*Warnings*` に `Backtrace:` と、失敗した式 (内側から外側へ、最大 30 個、長い式は 200 文字で切る) を出す。変数 `init-file-debug` が `#t` のとき、評価器がエラーに式を足す (`core/src/error.rs` の `trace`)。画面 (Tauri) もターミナルも、同じ処理 (`core/src/startup.rs` の `apply_options` と `load_init`) で、初期設定ファイルを読む (ターミナルは、失敗をエコー領域に出す)。変数 `debug-on-error` (コマンド `toggle-debug-on-error`) が真のとき、失敗したコマンドの式を `*Backtrace*` に出す。
 - [x] `--chdir DIR`: 始めのディレクトリ (`default-directory`) を DIR にする。
 - [x] `--no-splash`: 受ける (始めの画面がまだ無いので何も変わらない)。始めの画面 (Emacs の `*GNU Emacs*`) を出さない。先に、始めの画面 (`inhibit-startup-screen` で消せる) を作る。
@@ -545,7 +545,7 @@ Emacs と同じく、組み込み (C に当たる Rust と、画面の TypeScrip
       バッファを出す組み込みは、Emacs と同じく `pop-to-buffer-same-window` にした (`switch-to-buffer` はコマンド)。
 - [x] `revert-buffer` (dired のときは `files--revert-dired` (`lisp/dired.scm`) で一覧を作り直す), `recover-this-file` (`make-auto-save-file-name`、`file-newer-than-file-p`) を Lisp に移した (`lisp/files.scm`)。
       組み込みに `files--set-buffer-text` (本文を置き換える。カーソルは同じ文字の所に残り、元に戻せる) を足した。
-- [ ] 続けて移すもの: `save-buffers-kill-terminal` など。
+- [x] 続けて移すもの: `save-buffers-kill-terminal` (`lisp/simple.scm`)。画面 (TypeScript) のコマンドは、全て Lisp か核に移した (`docs/core_migration.md`)。
       `kill-buffer` は、Emacs で C の関数なので組み込みのまま残す。
 - [ ] Lisp から使う組み込みの関数を足す (カーソル、文字、行、マーク、窓、バッファなど。 Emacs の C の関数に当たるもの)。
 - [ ] Emacs で Lisp で書いたコマンド (docs/functions.md の「エディタの基本のコマンド」) を、Lisp に移す。移したら、TypeScript の方は消す。
@@ -724,7 +724,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 ### P2: 便利だが、なくても困らない (P1 のあとに、よく使うものから)
 
 - [x] ヘルプ: `C-h m` / `a` / `d` と、`*Help*` の中のキーは完了。`C-h t` も完了。`*Help*` のリンクの色付けとクリックも完了 (Phase 14, 18)。
-- [x] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了。ターミナルも、初期設定ファイルを読む。`debug-on-error` も完了。残りは、`--no-site-file`、`--no-site-lisp`、`--user`、`--no-desktop` (先の機能が要る。P3 に近い)。
+- [x] 起動の引数: `--no-init-file` / `-q`、`--quick` / `-Q`、`--chdir`、`--init-directory`、`--no-splash` は完了。`--debug-init` の、止まった所の表示も完了。ターミナルも、初期設定ファイルを読む。`debug-on-error` も完了。`--no-site-file`、`--no-site-lisp`、`--user` も完了。残りは、`--no-desktop` (先の機能が要る。P3 に近い)。
 - [x] エラーの違い: `wrong-number-of-arguments`、`args-out-of-range` (Phase 21)。小。
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
 - [x] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除、読み直し、根を選ぶコマンド、起動のときの復元、幅を覚えること (Phase 15)。
@@ -736,13 +736,13 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
 - [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。`dotfiles` で使っているので、使う頻度で上げる。大。
 - [ ] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。中。
-- [ ] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。中〜大。
+- [x] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。画面のコマンドは全て移した。
 
 ### P3: 使う場面が限られる、または大きい (後回し)
 
 - [ ] バージョン管理 (`C-x v ...`)、`diff`、`ediff`、綴り (`ispell`、`flyspell`)、`calc`、`calendar`、メール、`eww` / w3m、`shell`、`eshell`、`term` (Phase 14, 21)。大。外のツールで足りる。
 - [ ] フレーム (`C-x 5 ...`)。タブ (`C-x t ...`) は画面 (Tauri) で完了。残り: `C-z`、2 段の表示 (`C-x 6 ...`)、`customize`、`desktop-save-mode`、`recover-session`、`recentf`、ファイルの錠 (Phase 14)。中〜大。
-- [ ] 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--user`、`--no-desktop`、`--dump-file` など (Phase 16)。先の機能 (server、`-nw`) を決めてから。
+- [ ] 起動の引数のうち、画面や作り方に関わるもの: `--daemon`、`-nw`、`--display`、`--terminal`、`--no-x-resources`、`--no-desktop`、`--dump-file` など (Phase 16)。先の機能 (server、`-nw`) を決めてから。
 - [ ] Scheme のインタプリタを、独立したクレートにする (Phase 21)。大。
 - [ ] 画面 (Tauri) の `*Messages*`、Web のページを見る機能 (Phase 21)。調べてから決める。
 - [ ] `npm audit` の警告 (`minimatch`、`katex`) は、直る版が出たら上げる (Phase 21)。待つ。
