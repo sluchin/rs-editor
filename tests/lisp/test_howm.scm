@@ -181,7 +181,7 @@
            (should (equal (buffer-string) "= <<< %menu%\nx[一覧] !呼ぶ\na | メモA\n"))
            (should-not (buffer-modified-p))
            ;; キーで, %| の中の %eval% を動かす
-           (howm-menu-key-!)
+           (howm-menu-key-!) ; scmlint:ignore (a command made when the menu is shown)
            (should (equal (howm-menu-items) '()))
            (howm-menu)
            (should (equal (howm-menu-items) (list (list 3 (string-append dir "/a.txt") 1)))))

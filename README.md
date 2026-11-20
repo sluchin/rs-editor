@@ -165,6 +165,9 @@ npm run format
 # Scheme (`lisp/*.scm` と `tests/lisp/*.scm`) だけ整形する
 npm run format:scheme
 
+# Scheme の誤り (定義していない名前、rs-editor の Scheme に無い書き方など) を見つける
+npm run lint:scheme
+
 # 整形済みかどうかチェック
 npm run format:check
 ```

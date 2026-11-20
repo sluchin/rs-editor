@@ -614,14 +614,15 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 `lisp/*.scm` と `tests/lisp/*.scm` の誤りを、動かす前に見つける道具 (Emacs の byte-compile の警告と `checkdoc` に当たる)。`npm run check` に入れる。
 
-- [ ] 定義していない名前 (変数と関数)、引数の数の違い (定義した関数と、組み込みの関数)。
-- [ ] 使っていない変数 (`let` と引数)、同じ名前の定義の重なり。
-- [ ] 変数と関数の名前のぶつかり (名前の場所が 1 つなので、同じ名前の変数と関数は後のものが前のものを消す。 org.scm の `org-agenda-files` で起きた)。
-- [ ] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)`、`cons` の 2 つ目がリストでない), `cond` の `=>`、      `format` の `%s`、`%S`、`%d`、`%%` 以外 (`%5d` など)、ベクタ、文字 (`#\a`)。
-- [ ] `'()` を偽として使った所 (`(if '() ...)` は真)。
-- [ ] docstring (Phase 18): コマンド (`define-command`) と、外から使う関数の docstring が無い所。Emacs の `checkdoc` の決まり (1 行目は文で終える、引数は大文字で書くなど)。
-- [ ] 翻訳 (Phase 18): `.pot` が docstring と合っているか、PO の翻訳の無いものと fuzzy (元の docstring が変わった) の翻訳。
-- [ ] 警告ごとに、止める書き方 (コメントか、ファイルの変数) を決める。
+- [x] 定義していない名前 (変数と関数。`lisp/*.scm` の定義と、評価器の全域の名前、核が実行のときに定義する変数 (`self-insert-text`、`major-mode`) を知っている名前にする)。引数の数の違いは、まだ見ない。
+- [ ] 使っていない変数 (`let` と引数)。
+- [x] 同じ名前の定義の重なり (変数と関数のぶつかりも、名前の場所が 1 つなので同じ指摘になる)。
+- [x] rs-editor の Scheme に無いものを使った所: ドット対 (`(a . b)` の式。引用の中は見ない)、`cond` の `=>`、`format` の `%s`、`%S`、`%d`、`%o`、`%x`、`%X`、`%%` (旗の `-` と `0`、幅は可) 以外、ベクタ、文字 (`#\a`)。
+- [x] `'()` を偽として使った所 (`(if '() ...)`、`when`、`unless` の条件に `'()` を直接書いた所だけ)。
+- [ ] docstring: コマンド (`define-command`) の docstring が無い所は見る (済)。外から使う関数と、Emacs の `checkdoc` の決まり (1 行目は文で終える、引数は大文字で書くなど) は、まだ見ない。
+- [x] 翻訳: `npm run po:check` が、`.pot` と docstring の食い違い、PO の翻訳の無いものと `fuzzy` を見つける (Phase 18)。
+- [x] 警告ごとに止める書き方: 行の中に `scmlint:ignore` と書く (コメントで)。
+- [x] `npm run lint:scheme` (`scmlint FILE...`、実装は `core/src/scmlint.rs`) を `npm run lint:all` (`npm run check`) に入れた。
 
 ## Phase 21: そのほかの機能
 

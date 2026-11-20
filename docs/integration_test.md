@@ -132,6 +132,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-192 | `C-\` で SKK を入れ、`k` `a` `q` `k` `a` `q` と打つ | `K` `a` `n` `j` `i` と打ち、`SPC` を 2 回、`x` を 1 回 | `かカ` と出る。`▽かんじ` が、`SPC` で `▼漢字` (辞書があれば) になり、2 回目で次の候補、`x` で前の候補に戻る。続けて文字を打つと確定する。辞書に無い読みは、ミニバッファで語を聞き、`~/.skk-jisyo` に書く |
 | IT-193 | `F3` `a` `b` `F4` でマクロを作る | `C-x C-k RET`、続けて `C-e x` を足して `C-c C-c`、`F4` | `*Edit Macro*` に `a b` が文で出る。`C-c C-c` でバッファが消え、`F4` で `a b C-e x` の動きをする |
 | IT-194 | `lisp/simple.scm` の字下げを乱す (例: `with-current-buffer` の本体を 1 桁にする) | `npm run format:scheme:check` を動かし、`npm run format:scheme` で直す | 乱したファイルの名前が出て、終了の符号は 1。`format:scheme` で字下げが 2 桁に戻り、再び `--check` が通る |
+| IT-195 | `lisp/` の `.scm` の関数に、定義していない名前の呼び出しを書き足す | `npm run lint:scheme` を動かす | `ファイル:行: undefined name: 名前` が出て、終了の符号は 1。その行の終わりに `; scmlint:ignore` を足すと出なくなる |
 
 ### 4.6 `M-x grep` と `next-error`
 

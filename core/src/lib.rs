@@ -26,6 +26,7 @@ pub mod paragraph;
 pub mod replace;
 pub mod scheme;
 pub mod scmfmt;
+pub mod scmlint;
 pub mod search;
 pub mod sexp;
 pub mod startup;

@@ -13,7 +13,7 @@
     "prelint": "vite build",
     "lint": "eslint src tests/frontend",
     "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
-    "lint:all": "npm run lint && npm run lint:rust && npm run po:check",
+    "lint:all": "npm run lint && npm run lint:rust && npm run lint:scheme && npm run po:check",
     "po:update": "python3 tools/po/update.py",
     "po:check": "python3 tools/po/update.py --check",
     "lint:fix": "eslint src tests/frontend --fix",
@@ -43,6 +43,7 @@
     "doc": "npm run doc:fe && npm run doc:be && npm run doc:index",
     "format:scheme": "cargo run -q -p rseditor-core --bin scmfmt -- lisp/*.scm tests/lisp/*.scm",
     "format:scheme:check": "cargo run -q -p rseditor-core --bin scmfmt -- --check lisp/*.scm tests/lisp/*.scm",
+    "lint:scheme": "cargo run -q -p rseditor-core --bin scmlint -- lisp/*.scm tests/lisp/*.scm",
     "format:markdown": "markdownlint-cli2 --fix",
     "format:markdown:check": "markdownlint-cli2"
   },
