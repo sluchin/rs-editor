@@ -318,7 +318,8 @@
 
 - [x] `C-x C-k ...` (kmacro): マクロの環 (`C-x C-k C-n` / `C-p` / `C-t` / `C-d` / `C-l` / `C-v`)、数え上げ (`C-x C-k C-c` / `C-a` / `C-f`)、キーに割り当てる (`C-x C-k b`)。
 - [x] マクロを直す: `C-x C-k e` (`edit-kbd-macro`)、`C-x C-k RET` (`kmacro-edit-macro`) が `*Edit Macro*` に最後のマクロのキーを文で出し、`C-c C-c` で確定する (名前のあるマクロと、キーの番号の指定は無い。`C-x C-k e` は、前は `kmacro-end-and-call-macro` だったが、Emacs に合わせた。同じ動きは `C-x e`)。
-- [ ] kmacro の残り: 1 つずつ動かす (`C-x C-k SPC`)、`C-u C-x q` の再帰編集。
+- [x] マクロを 1 つずつ動かす: `C-x C-k SPC` (`kmacro-step-edit-macro`) が、コマンドごとに聞く (SPC と `y` で実行、`n` で飛ばす、`!` で残りを全部、`q` と `C-g` で止める。Emacs のように、途中で直すことはできない)。
+- [ ] kmacro の残り: `C-u C-x q` の再帰編集 (入れ子のコマンドループが無いので、できない)。
 - [x] `C-x C-k r` (apply-macro-to-region-lines: 行ごとに `C-a`、マクロ、`C-n` を打つ。行が増えたり減ったりするマクロでは、Emacs とずれる)、`C-x q` (kbd-macro-query: マクロの途中で聞く。`y` と SPC で続け、ほかのキーでマクロを止める。Emacs の `n` / DEL (その回だけ飛ばす) は、止める)。
 
 ### ヘルプ
@@ -730,7 +731,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除、読み直し、根を選ぶコマンド、起動のときの復元、幅を覚えること (Phase 15)。
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
 - [x] 候補の一覧で選ぶ、補完のスタイル (Phase 14)。
-- [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) も完了。1 つずつ動かすことと `C-u C-x q` は、残り (Phase 14)。
+- [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) と、1 つずつ動かすことも完了。`C-u C-x q` は、残り (Phase 14)。
 - [x] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。
 - [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。

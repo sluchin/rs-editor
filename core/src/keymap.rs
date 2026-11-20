@@ -85,6 +85,7 @@ const DEFAULT: &[(&str, &str)] = &[
     ("C-x C-k C-i", "kmacro-insert-counter"),
     ("C-x C-k e", "edit-kbd-macro"),
     ("C-x C-k RET", "kmacro-edit-macro"),
+    ("C-x C-k SPC", "kmacro-step-edit-macro"),
     ("C-x C-k x", "kmacro-to-register"),
     ("C-x C-k C-n", "kmacro-cycle-ring-next"),
     ("C-x C-k C-p", "kmacro-cycle-ring-previous"),

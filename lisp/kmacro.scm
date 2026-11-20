@@ -193,3 +193,39 @@ Press C-c C-c in the buffer to make the text the last keyboard macro."
     (kill-buffer "*Edit Macro*")
     (message (if last-kbd-macro "Macro changed" "Macro is empty"))
     #f))
+
+(define (kmacro--commands keys)
+  "Split KEYS, a list of keys, into the key sequences of one command each.
+A sequence grows while the keymap says that it is only the beginning of a longer one."
+  (let loop ((rest keys) (current '()) (all '()))
+    (cond ((null? rest)
+           (reverse (if (null? current) all (cons current all))))
+          (else
+           (let* ((next (append current (list (car rest))))
+                  (binding (key-binding (string-join next " "))))
+             (if (and (equal? binding #t) (not (null? (cdr rest))))
+                 (loop (cdr rest) next all)
+                 (loop (cdr rest) '() (cons next all))))))))
+
+(define-command (kmacro-step-edit-macro . args)
+  "Run the last keyboard macro one command at a time, asking before each one.
+SPC or `y' runs the command, `n' skips it, `!' runs all the rest, and `q' or C-g stops."
+  (unless last-kbd-macro (error "No keyboard macro defined"))
+  (let loop ((steps (kmacro--commands last-kbd-macro)) (all #f))
+    (unless (null? steps)
+      (let* ((step (car steps))
+             (answer (if all
+                         "y"
+                         (read-key (string-append "Next: " (string-join step " ")
+                                                  "  (SPC run, n skip, ! rest, q stop) ")
+                                   #t))))
+        (cond ((or (equal? answer " ") (equal? answer "y"))
+               (execute-kbd-macro step 1)
+               (loop (cdr steps) all))
+              ((equal? answer "!")
+               (execute-kbd-macro step 1)
+               (loop (cdr steps) #t))
+              ((equal? answer "n")
+               (loop (cdr steps) all))
+              (else (message "Stepping stopped"))))))
+  #f)

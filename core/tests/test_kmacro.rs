@@ -19,6 +19,8 @@ struct Ui {
     executing: Mutex<bool>,
     /// 続けるかの問いの答え.
     answer: Mutex<bool>,
+    /// `read-key` が返すキー (先頭から).
+    keys: Mutex<Vec<String>>,
 }
 
 impl Host for Ui {
@@ -31,6 +33,16 @@ impl Host for Ui {
         }
         match op {
             "executing-kbd-macro-p" => Ok(Value::Boolean(*self.executing.lock().unwrap())),
+            "read-key" => {
+                let mut keys = self.keys.lock().unwrap();
+                // 答えが尽きたら, 止める
+                Ok(Value::String(if keys.is_empty() {
+                    "q".to_string()
+                } else {
+                    keys.remove(0)
+                }))
+            }
+            "key-binding" => Ok(Value::Boolean(args[0].to_string() == "\"C-x\"")),
             "kbd-macro--ask" => Ok(Value::Boolean(*self.answer.lock().unwrap())),
             _ => Ok(Value::Nil),
         }
@@ -223,4 +235,42 @@ fn test_kbd_macro_query() {
     *commands.host().ui().executing.lock().unwrap() = true;
     *commands.host().ui().answer.lock().unwrap() = true;
     eval(&commands, "(kbd-macro-query)");
+}
+
+#[test]
+fn test_step_edit_macro_asks_before_each_command() {
+    let commands = setup();
+    assert_eq!(
+        eval_error(&commands, "(kmacro-step-edit-macro)"),
+        "No keyboard macro defined"
+    );
+    // C-x C-f は 1 つのコマンド, a は自分を入れる 1 つのコマンド
+    assert_eq!(
+        eval(
+            &commands,
+            "(kmacro--commands '(\"C-a\" \"C-x\" \"C-f\" \"a\" \"C-x\"))"
+        ),
+        "((\"C-a\") (\"C-x\" \"C-f\") (\"a\") (\"C-x\"))"
+    );
+    let steps = |answers: &[&str]| {
+        eval(
+            &commands,
+            "(set! last-kbd-macro '(\"C-a\" \"a\" \"C-e\" \"b\"))",
+        );
+        let ui = commands.host().ui();
+        ui.executed.lock().unwrap().clear();
+        *ui.keys.lock().unwrap() = answers.iter().map(|k| (*k).to_string()).collect();
+        eval(&commands, "(kmacro-step-edit-macro)");
+        ui.executed
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(keys, _)| keys.clone())
+            .collect::<Vec<_>>()
+            .join(",")
+    };
+    assert_eq!(steps(&[" ", "n", "y", "q"]), "(\"C-a\"),(\"C-e\")");
+    assert_eq!(steps(&["n", "!"]), "(\"a\"),(\"C-e\"),(\"b\")");
+    // 答えが尽きると止まる
+    assert_eq!(steps(&[]), "");
 }

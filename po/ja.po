@@ -4673,6 +4673,24 @@ msgctxt "function:kmacro-edit-finish"
 msgid "Make the text of the *Edit Macro* buffer the last keyboard macro, and close the buffer."
 msgstr "*Edit Macro* バッファの文を最後のキーボードマクロにして, バッファを閉じる."
 
+#: lisp/kmacro.scm
+msgctxt "function:kmacro--commands"
+msgid ""
+"Split KEYS, a list of keys, into the key sequences of one command each.\n"
+"A sequence grows while the keymap says that it is only the beginning of a longer one."
+msgstr ""
+"KEYS (キーのリスト) を, 1 つのコマンドごとのキーの並びに分ける.\n"
+"キーマップが, もっと長い並びの始まりだけだと言う間は, 並びを伸ばす."
+
+#: lisp/kmacro.scm
+msgctxt "function:kmacro-step-edit-macro"
+msgid ""
+"Run the last keyboard macro one command at a time, asking before each one.\n"
+"SPC or `y' runs the command, `n' skips it, `!' runs all the rest, and `q' or C-g stops."
+msgstr ""
+"最後のキーボードマクロを, 1 コマンドずつ, 動かす前に聞きながら動かす.\n"
+"SPC か `y' で動かし, `n' で飛ばし, `!' で残りを全部動かし, `q' か C-g で止める."
+
 #: lisp/markdown.scm
 msgctxt "variable:markdown-font-lock-keywords"
 msgid "List of (REGEXP FACE GROUP) that `markdown-mode' highlights; REGEXP is in Rust syntax."
