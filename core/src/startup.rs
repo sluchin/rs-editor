@@ -206,12 +206,11 @@ pub fn apply_options<U: Host + LoopUi>(commands: &CommandLoop<U>, options: &Opti
     }
     global.define("init-file-debug", Value::Boolean(options.debug_init));
     if !options.no_site_lisp {
-        let mut path = match global.get("load-path") {
-            Some(Value::List(dirs)) => dirs.iter().cloned().collect::<Vec<_>>(),
-            _ => Vec::new(),
-        };
-        path.push(Value::String(SITE_LISP_DIR.to_string()));
-        global.define("load-path", Value::List(path.into()));
+        if let Some(Value::List(dirs)) = global.get("load-path") {
+            let mut path: Vec<Value> = dirs.iter().cloned().collect();
+            path.push(Value::String(SITE_LISP_DIR.to_string()));
+            global.define("load-path", Value::List(path.into()));
+        }
     }
     load_site_start(commands, options, Path::new(SITE_LISP_DIR));
 }

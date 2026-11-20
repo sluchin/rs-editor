@@ -64,5 +64,7 @@ describe('partial-completion', () => {
     expect(complete('f-f', several)).toEqual({ value: 'f-f', matches: ['fill-file', 'find-file'] })
     // 入力が空なら, 全て前方一致
     expect(complete('', ['a-b']).matches).toEqual(['a-b'])
+    // 候補が無く, 入力も空なら, 何もしない
+    expect(complete('', [])).toEqual({ value: '', matches: [] })
   })
 })
