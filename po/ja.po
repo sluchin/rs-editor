@@ -4644,6 +4644,96 @@ msgstr ""
 "`y' か SPC なら続け, ほかのキーならマクロを止める.\n"
 "覚えているあいだの前置引数は, Emacs では再帰編集に入るが, ここでは使えない."
 
+#: lisp/markdown.scm
+msgctxt "variable:markdown-font-lock-keywords"
+msgid "List of (REGEXP FACE GROUP) that `markdown-mode' highlights; REGEXP is in Rust syntax."
+msgstr "`markdown-mode' が色を付ける (正規表現 face グループ) の一覧. 正規表現は Rust の書き方."
+
+#: lisp/markdown.scm
+msgctxt "variable:markdown-mode-keys"
+msgid "List of (KEY COMMAND) that `markdown-mode' binds in the buffer."
+msgstr "`markdown-mode' がバッファに割り当てる (キー コマンド) の一覧."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--level-at-line"
+msgid "Return the level (1 to 6) of the heading on the current line, or #f if the line is not a heading."
+msgstr "今の行が見出しなら, そのレベル (1 から 6) を返す. 見出しでなければ偽."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--find-heading"
+msgid ""
+"Move by lines (STEP is 1 or -1) to the first heading whose level ACCEPT takes, and return its level.\n"
+"Signal an error, and keep point, if there is no such heading."
+msgstr ""
+"STEP (1 か -1) の向きに行ごとに進み, ACCEPT がレベルを受ける最初の見出しへ動いて, そのレベルを返す.\n"
+"無ければ, 点を動かさずに失敗する."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--current-level"
+msgid "Return the level of the heading that holds point (on its line or above), or #f."
+msgstr "点のある見出し (その行か, 上の行) のレベルを返す. 無ければ偽."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-next"
+msgid "Move to the next heading line."
+msgstr "次の見出しの行へ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-previous"
+msgid "Move to the previous heading line."
+msgstr "前の見出しの行へ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-up"
+msgid "Move to the heading of the section that holds this one (a heading of a smaller level)."
+msgstr "この節を含む節の見出し (レベルの小さい見出し) へ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--same-level"
+msgid "Move to the next (STEP 1) or previous (-1) heading of the same level, within the same section."
+msgstr "同じ節の中で, 次 (STEP が 1) か前 (-1) の, 同じレベルの見出しへ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-forward-same-level"
+msgid "Move to the next heading of the same level, within the same section."
+msgstr "同じ節の中で, 次の同じレベルの見出しへ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-backward-same-level"
+msgid "Move to the previous heading of the same level, within the same section."
+msgstr "同じ節の中で, 前の同じレベルの見出しへ動く."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-promote"
+msgid "Make the heading on this line one level higher (one `#' fewer)."
+msgstr "この行の見出しを 1 つ上のレベルにする (`#' を 1 つ減らす)."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-demote"
+msgid "Make the heading on this line one level lower (one `#' more)."
+msgstr "この行の見出しを 1 つ下のレベルにする (`#' を 1 つ増やす)."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-fontify"
+msgid "Highlight the buffer."
+msgstr "バッファに色を付ける."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-mode"
+msgid ""
+"Major mode for editing Markdown: headings, emphasis, code, links, lists and quotes are highlighted.\n"
+"C-c C-n and C-c C-p move between headings, C-c C-f and C-c C-b between headings of the same level,\n"
+"C-c C-u up to the parent heading, and C-c C-- and C-c C-= change the level of a heading."
+msgstr ""
+"Markdown を編集するメジャーモード: 見出し, 強調, コード, リンク, リスト, 引用に色を付ける.\n"
+"C-c C-n と C-c C-p で見出しの間を, C-c C-f と C-c C-b で同じレベルの見出しの間を,\n"
+"C-c C-u で親の見出しへ動き, C-c C-- と C-c C-= で見出しのレベルを変える."
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--find-file-hook"
+msgid "Turn on Markdown mode if the visited file is a Markdown file.  This is called from `find-file-hook'."
+msgstr "訪れたファイルが Markdown なら, Markdown モードにする. `find-file-hook' から呼ぶ."
+
 #: lisp/minibuffer.scm
 msgctxt "variable:completion-at-point-functions"
 msgid ""

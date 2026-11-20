@@ -116,6 +116,8 @@ fn test_mode_info_names() {
         ("(emacs-lisp-mode)", "ELisp/d"),
         ("(lisp-data-mode)", "Lisp-Data"),
         ("(set-major-mode-name 'org-mode)", "Org"),
+        ("(prog-mode)", "Prog"),
+        ("(set-major-mode-name 'markdown-mode)", "Markdown"),
     ] {
         ev.eval_with(command, &host).unwrap();
         assert_eq!(name(&host), expected, "{command}");

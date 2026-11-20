@@ -264,3 +264,42 @@
   border-right: none;
   opacity: 0.6;
 }
+
+/* Markdown mode の face (Lisp の highlight-regexp の face) */
+.code-editor-container .cm-face-markdown-header-1 {
+  color: var(--font-lock-function-name);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-markdown-header-2 {
+  color: var(--font-lock-variable-name);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-markdown-header-3 {
+  color: var(--font-lock-keyword);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-markdown-header-4,
+.code-editor-container .cm-face-markdown-header-5,
+.code-editor-container .cm-face-markdown-header-6 {
+  color: var(--font-lock-comment);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-markdown-inline-code,
+.code-editor-container .cm-face-markdown-code-fence,
+.code-editor-container .cm-face-markdown-blockquote,
+.code-editor-container .cm-face-markdown-hr {
+  color: var(--org-shadow);
+}
+
+.code-editor-container .cm-face-markdown-list {
+  color: var(--font-lock-keyword);
+  font-weight: bold;
+}
+
+.code-editor-container .cm-face-markdown-link {
+  text-decoration: underline;
+}

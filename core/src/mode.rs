@@ -137,6 +137,7 @@ impl Buffer {
             "org-mode" => "Org",
             "text-mode" => "Text",
             "prog-mode" => "Prog",
+            "markdown-mode" => "Markdown",
             _ => "Fundamental",
         };
         info(name, language)

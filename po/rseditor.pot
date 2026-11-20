@@ -4143,6 +4143,91 @@ msgid ""
 "With a prefix argument while defining, Emacs enters a recursive edit; that is not supported here."
 msgstr ""
 
+#: lisp/markdown.scm
+msgctxt "variable:markdown-font-lock-keywords"
+msgid "List of (REGEXP FACE GROUP) that `markdown-mode' highlights; REGEXP is in Rust syntax."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "variable:markdown-mode-keys"
+msgid "List of (KEY COMMAND) that `markdown-mode' binds in the buffer."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--level-at-line"
+msgid "Return the level (1 to 6) of the heading on the current line, or #f if the line is not a heading."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--find-heading"
+msgid ""
+"Move by lines (STEP is 1 or -1) to the first heading whose level ACCEPT takes, and return its level.\n"
+"Signal an error, and keep point, if there is no such heading."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--current-level"
+msgid "Return the level of the heading that holds point (on its line or above), or #f."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-next"
+msgid "Move to the next heading line."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-previous"
+msgid "Move to the previous heading line."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-outline-up"
+msgid "Move to the heading of the section that holds this one (a heading of a smaller level)."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--same-level"
+msgid "Move to the next (STEP 1) or previous (-1) heading of the same level, within the same section."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-forward-same-level"
+msgid "Move to the next heading of the same level, within the same section."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-backward-same-level"
+msgid "Move to the previous heading of the same level, within the same section."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-promote"
+msgid "Make the heading on this line one level higher (one `#' fewer)."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-demote"
+msgid "Make the heading on this line one level lower (one `#' more)."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-fontify"
+msgid "Highlight the buffer."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown-mode"
+msgid ""
+"Major mode for editing Markdown: headings, emphasis, code, links, lists and quotes are highlighted.\n"
+"C-c C-n and C-c C-p move between headings, C-c C-f and C-c C-b between headings of the same level,\n"
+"C-c C-u up to the parent heading, and C-c C-- and C-c C-= change the level of a heading."
+msgstr ""
+
+#: lisp/markdown.scm
+msgctxt "function:markdown--find-file-hook"
+msgid "Turn on Markdown mode if the visited file is a Markdown file.  This is called from `find-file-hook'."
+msgstr ""
+
 #: lisp/minibuffer.scm
 msgctxt "variable:completion-at-point-functions"
 msgid ""

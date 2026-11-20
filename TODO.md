@@ -632,7 +632,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 - [x] paredit: `M-x paredit-mode` (`lisp/paredit.scm`)。`(` `)` `"` `DEL` `C-d` `C-k`、`C-)` `C-}` `C-(` `C-{` (取り込む、出す)、`M-s` (splice)、`M-r` (raise)、`M-(` (wrap)。`C-u` の数引数、`paredit-forward-up` などの移動、`M-?`、コメントと文字列の細かい扱いは無い。
 - [ ] skk-mode: 日本語入力 (SKK)。dotfiles では `C-\` に割り当てている (下の「dotfiles/.emacs.el の global-map の関数」)。
-- [ ] markdown-mode: Markdown の色分けと、見出しの移動など。
+- [x] markdown-mode (`lisp/markdown.scm`): `.md` `.markdown` `.mdown` を開くと入る。見出し、強調、コード、リンク、リスト、引用に色を付ける (行ごと。コードのブロックの中は見ない)。`C-c C-n` / `C-c C-p` / `C-c C-f` / `C-c C-b` / `C-c C-u` (見出しの移動)、`C-c C--` / `C-c C-=` (見出しのレベル)、`M-g i` (imenu)。表、脚注、折りたたみ、プレビューは無い。
 
 ### Org mode
 
@@ -734,7 +734,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。
 - [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
-- [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode) (Phase 21。paredit は完了)。`dotfiles` で使っているので、使う頻度で上げる。大。
+- [ ] 日本語入力 (skk-mode) (Phase 21。paredit と markdown-mode は完了)。`dotfiles` で使っているので、使う頻度で上げる。大。
 - [x] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。
 - [x] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。画面のコマンドは全て移した。
 

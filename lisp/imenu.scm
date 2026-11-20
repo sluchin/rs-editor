@@ -12,6 +12,7 @@
     ("c++-mode" "^[A-Za-z_][A-Za-z0-9_:<> \t*&~]*[ \t*&]\\([A-Za-z_~][A-Za-z0-9_:~]*\\)[ \t]*([^;]*$" 1)
     ("rust-mode" "^[ \t]*\\(pub\\(([a-z]+)\\)?[ \t]+\\)?\\(async[ \t]+\\)?\\(unsafe[ \t]+\\)?\\(fn\\|struct\\|enum\\|trait\\|mod\\|type\\)[ \t]+\\([A-Za-z0-9_]+\\)" 6)
     ("typescript-mode" "^[ \t]*\\(export[ \t]+\\)?\\(default[ \t]+\\)?\\(async[ \t]+\\)?\\(function\\|class\\|interface\\|type\\|enum\\)[ \t]+\\([A-Za-z0-9_$]+\\)" 5)
+    ("markdown-mode" "^#\\{1,6\\}[ \t]+\\(.*\\)$" 1)
     ("org-mode" "^\\(\\*+\\)[ \t]+\\(.*\\)$" 2))
   "List of (MODE-NAME REGEXP GROUP) that find the definitions of a buffer for `imenu'.
 MODE-NAME is the major mode (`major-mode-name'); GROUP is the group of REGEXP that is the name.")
