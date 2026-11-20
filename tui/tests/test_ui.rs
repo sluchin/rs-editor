@@ -92,6 +92,24 @@ fn test_completing_read() {
 }
 
 #[test]
+fn test_completing_read_partial_completion() {
+    let fx = Fixture::new();
+    // 前方一致が無ければ, 単語の頭文字で探す (f-f は find-file)
+    let ask = "(completing-read \"Pick: \" '(\"find-file\" \"forward-char\" \"fill-file\"))";
+    fx.feed("f - c TAB RET");
+    assert_eq!(fx.app.eval(ask).unwrap(), "\"forward-char\"");
+    assert_eq!(fx.app.message(), "[Sole completion]");
+    // 複数に当たれば, 入力のまま候補を出す
+    fx.feed("f - f TAB RET");
+    assert_eq!(fx.app.eval(ask).unwrap(), "\"f-f\"");
+    assert_eq!(fx.app.message(), "find-file fill-file");
+    // 区切りが違えば, 当たらない
+    fx.feed("f _ f TAB RET");
+    assert_eq!(fx.app.eval(ask).unwrap(), "\"f_f\"");
+    assert_eq!(fx.app.message(), "[No match]");
+}
+
+#[test]
 fn test_file_name_completion() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("alpha.txt"), "").unwrap();

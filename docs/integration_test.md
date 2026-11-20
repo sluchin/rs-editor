@@ -124,6 +124,8 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-184 | `M-x project-tree-set-root` | ディレクトリを入力して RET | そのディレクトリを根にしたツリーが出る |
 | IT-185 | `/usr/local/share/rseditor/site-lisp/site-start.scm` に `(define site-loaded 1)` を置く | `rseditor` と、`rseditor --no-site-file` と、`rseditor -Q` を、それぞれ起動して、`M-: site-loaded` | 引数なしでは `1` と出る。`--no-site-file` と `-Q` では、未定義のエラーになる |
 | IT-186 | ほかの利用者のホームに `.rseditor` がある | `rseditor --user その利用者` | その利用者の初期設定ファイルを読む (`user-init-file` で確かめる) |
+| IT-187 | `M-x` に `kill` と入力して Tab を押し、候補の一覧を出す | `M-<down>` を 2 回、`M-<up>`、`RET` | 選んだ候補が反転して出る。`RET` で、その候補が入力に入り、一覧が消える (確定はしない)。もう一度 `RET` で実行する |
+| IT-188 | `M-x` に `f-f` と入力して Tab を押す | 結果を見る | `find-file` に補完される。複数に当たる入力 (`f-c` など) は、入力のまま一覧を出す |
 
 ### 4.6 `M-x grep` と `next-error`
 

@@ -54,3 +54,9 @@
   column-span: all;
   color: #666666;
 }
+
+/* M-<down> / M-<up> で選んだ候補 */
+.minibuffer-completion-selected {
+  background: #cfe3ff;
+  color: #000000;
+}

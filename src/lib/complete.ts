@@ -10,15 +10,41 @@ export interface Completion {
   matches: string[]
 }
 
+/** 単語を分ける文字 (`partial-completion` が, 入力の部分と候補の単語を対応させる). */
+const WORD_SEPARATOR = /([-_. /])/
+
+/**
+ * 入力が, 候補に `partial-completion` で当たるか (`f-f` が `find-file` に当たる).
+ * 入力と候補を, 区切りの文字 (`-` `_` `.` 空白 `/`) で分け, 区切りが同じで, 入力の各部分が候補の同じ位置の単語の前方であれば当たる.
+ *
+ * @param input - 入力.
+ * @param candidate - 候補.
+ * @returns 当たるなら `true`.
+ */
+export function partialMatch(input: string, candidate: string): boolean {
+  const wanted = input.split(WORD_SEPARATOR)
+  const actual = candidate.split(WORD_SEPARATOR)
+  return (
+    wanted.length === actual.length &&
+    wanted.every((part, i) => (i % 2 === 1 ? part === actual[i] : actual[i].startsWith(part)))
+  )
+}
+
 /**
  * 入力を, 前方一致する候補の, 共通する先頭の部分まで補完します.
+ * 前方一致する候補が無ければ, `partial-completion` (`f-f` が `find-file` に当たる) で探し,
+ * 1 つに決まれば, その候補まで補完します (複数なら入力のまま. 一覧に出す).
  *
  * @param input - 入力.
  * @param candidates - 候補.
- * @returns 補完した入力と, 前方一致する候補 (無ければ入力のまま).
+ * @returns 補完した入力と, 一致する候補 (無ければ入力のまま).
  */
 export function complete(input: string, candidates: readonly string[]): Completion {
-  const matches = [...new Set(candidates.filter((c) => c.startsWith(input)))].sort()
+  let matches = [...new Set(candidates.filter((c) => c.startsWith(input)))].sort()
+  if (matches.length === 0 && input !== '') {
+    matches = [...new Set(candidates.filter((c) => partialMatch(input, c)))].sort()
+    return { value: matches.length === 1 ? matches[0] : input, matches }
+  }
   if (matches.length === 0) return { value: input, matches }
   let prefix = matches[0]
   for (const match of matches) {

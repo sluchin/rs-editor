@@ -333,7 +333,7 @@
 
 - [x] `M-r` / `M-s` (previous-matching-history-element など): 入力の履歴を正規表現で探す (ターミナルと画面)。
 - [x] `M-n` の既定の値 (future history)。`read-string` と `read-file-name` の既定の値を出す。
-- [ ] `*Completions*` バッファで選ぶ (`M-v`、`M-<up>`、`M-<down>`、`RET`)。補完のスタイル (`partial-completion` の `f-f` など)。
+- [x] 候補の一覧で選ぶ (`M-<down>`、`M-<up>`、`M-v` で選び、`RET` で入力に入れる。画面のミニバッファだけ。ターミナルは、一覧が 1 行なので選べない)。補完のスタイル `partial-completion` (`f-f` が `find-file` に当たる。前方一致が無いときだけ使い、1 つに決まれば補完する。画面とターミナルの両方)。`*Completions*` のバッファそのもの (別の窓、`completion-styles` の変数) は無い。
 - [x] `yes-or-no-p` で、`yes` と `no` のほかの答えには、聞き直す (「Please answer yes or no.」)。今は、`no` とする。
 - [ ] `M-ESC ESC` (keyboard-escape-quit)。
 - [x] 再帰編集 (`recursive-edit`、`C-M-c`、`C-]`)。違い: コマンドループを入れ子に動かさず、キーを読んで、キーの並びの割り当てのコマンドを呼ぶ。
@@ -729,7 +729,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] grep: `rgrep` / `lgrep` / `zrgrep` / `find-grep`、`*grep*` の中のキー、探しながら出すこと、`C-g` で止めることは完了 (Phase 12, 14, 15)。
 - [x] ツリー (サイドバー): 今のファイルまで開くこと、キーで動かすこと、幅を変えること、ファイルの作成・名前の変更・削除、読み直し、根を選ぶコマンド、起動のときの復元、幅を覚えること (Phase 15)。
 - [ ] `C-x SPC` (rectangle-mark-mode)、`bookmark-delete` / `bookmark-rename`、`C-x C-k x` (kmacro-to-register) は完了。rectangle-mark-mode の矩形の強調、`C-y` / `C-o` / `C-t` / `C-x C-x` も完了 (Phase 14)。
-- [ ] `*Completions*` で選ぶ、補完のスタイル (Phase 14)。中。
+- [x] 候補の一覧で選ぶ、補完のスタイル (Phase 14)。
 - [x] キーボードマクロ: `C-x C-k ...` (環、数え上げ、キーへの割り当て)、`C-x C-k r`、`C-x q` は完了。直すこと (edit-kbd-macro) と 1 つずつ動かすことは、残り (Phase 14)。
 - [x] `imenu` (`M-g i`)、`eldoc-mode`、`ielm`、`eval-defun` などの評価 (Phase 14)。
 - [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。

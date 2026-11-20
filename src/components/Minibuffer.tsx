@@ -93,12 +93,18 @@ export default function Minibuffer({
   const inputRef = useRef<HTMLInputElement>(null)
   // Tab で補完したときの, 候補の一覧 (`[No match]` のときは null). 別の入力 (プロンプト) に移ったら, 出さない
   const inputKey = `${state.mode}:${state.mode === 'input' ? state.prompt : ''}`
-  const [completion, setCompletion] = useState<{ key: string; list: string[] | null }>({
-    key: '',
-    list: [],
-  })
+  const [completion, setCompletion] = useState<{
+    key: string
+    list: string[] | null
+    /** `M-<down>` / `M-<up>` で選んだ候補の位置 (選んでいなければ -1). */
+    selected: number
+    /** 候補を選ぶときに, 入力の前に残す部分 (ファイルの名前は, 最後の `/` まで). */
+    base: string
+  }>({ key: '', list: [], selected: -1, base: '' })
   const shown = completion.key === inputKey ? completion.list : []
-  const setShown = (list: string[] | null) => setCompletion({ key: inputKey, list })
+  const selected = completion.key === inputKey ? completion.selected : -1
+  const setShown = (list: string[] | null, base = '') =>
+    setCompletion({ key: inputKey, list, selected: -1, base })
   // 入力の後ろに出す知らせ (履歴の端). 入力を変えたら, 出さない
   const [note, setNote] = useState({ key: '', text: '' })
   const shownNote = note.key === inputKey ? note.text : ''
@@ -222,10 +228,32 @@ export default function Minibuffer({
         return
       }
 
+      // 候補の一覧を出しているとき: `M-<down>` `M-<up>` (`M-v` も) で選び, `RET` で入力に入れる
+      if (shown !== null && shown.length > 0) {
+        const move = e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'v')
+        if (move) {
+          e.preventDefault()
+          const next =
+            e.key === 'ArrowUp' || e.key === 'v'
+              ? (selected <= 0 ? shown.length : selected) - 1
+              : (selected + 1) % shown.length
+          setCompletion({ ...completion, selected: next })
+          return
+        }
+        if (e.key === 'Enter' && selected >= 0) {
+          e.preventDefault()
+          setCompletion({ ...completion, list: [], selected: -1 })
+          onInputChange(completion.base + shown[selected], state)
+          return
+        }
+      }
+
       if (e.key === 'Tab' && (state.complete || state.completions)) {
         e.preventDefault()
+        // ファイルの名前は, 最後の `/` の後ろだけを, 候補で置き換える
+        const base = state.complete ? state.input.slice(0, state.input.lastIndexOf('/') + 1) : ''
         const show = ({ value, matches }: Completion) => {
-          setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches)
+          setShown(matches.length === 0 ? null : matches.length === 1 ? [] : matches, base)
           onInputChange(value, state)
         }
         if (state.complete) {
@@ -272,8 +300,13 @@ export default function Minibuffer({
         {shown !== null && shown.length > 0 && (
           <div className="minibuffer-completions">
             <div className="minibuffer-completions-title">Possible completions:</div>
-            {shown.map((c) => (
-              <div key={c}>{c}</div>
+            {shown.map((c, i) => (
+              <div
+                key={c}
+                className={i === selected ? 'minibuffer-completion-selected' : undefined}
+              >
+                {c}
+              </div>
             ))}
           </div>
         )}

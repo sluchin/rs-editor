@@ -306,7 +306,43 @@ fn common_prefix(items: &[String]) -> String {
     prefix.into_iter().collect()
 }
 
-/// 入力を補完します.
+/// 単語を分ける文字 (`partial-completion`).
+const WORD_SEPARATORS: [char; 5] = ['-', '_', '.', ' ', '/'];
+
+/// 文字列を区切りの文字で分けます (区切りも, 1 つの要素として残す).
+fn split_words(text: &str) -> Vec<String> {
+    let mut parts = vec![String::new()];
+    for c in text.chars() {
+        if WORD_SEPARATORS.contains(&c) {
+            parts.push(c.to_string());
+            parts.push(String::new());
+        } else if let Some(last) = parts.last_mut() {
+            last.push(c);
+        }
+    }
+    parts
+}
+
+/// 入力が, 候補に `partial-completion` で当たるか (`f-f` が `find-file` に当たる).
+/// 区切りの文字で分けて, 区切りが同じで, 入力の各部分が候補の同じ位置の単語の前方なら当たる.
+fn partial_match(input: &str, candidate: &str) -> bool {
+    let wanted = split_words(input);
+    let actual = split_words(candidate);
+    wanted.len() == actual.len()
+        && wanted
+            .iter()
+            .zip(&actual)
+            .enumerate()
+            .all(|(i, (part, word))| {
+                if i % 2 == 1 {
+                    part == word
+                } else {
+                    word.starts_with(part.as_str())
+                }
+            })
+}
+
+/// 入力を補完します. 前方一致する候補が無ければ, `partial-completion` で探します.
 ///
 /// # Returns
 ///
@@ -314,11 +350,33 @@ fn common_prefix(items: &[String]) -> String {
 fn complete(input: &str, completion: &Completion) -> (String, String) {
     let candidates: Vec<String> = match completion {
         Completion::None => return (input.to_string(), String::new()),
-        Completion::Candidates(items) => items
-            .iter()
-            .filter(|c| c.starts_with(input))
-            .cloned()
-            .collect(),
+        Completion::Candidates(items) => {
+            let prefixed: Vec<String> = items
+                .iter()
+                .filter(|c| c.starts_with(input))
+                .cloned()
+                .collect();
+            if prefixed.is_empty() && !input.is_empty() {
+                let partial: Vec<String> = items
+                    .iter()
+                    .filter(|c| partial_match(input, c))
+                    .cloned()
+                    .collect();
+                if partial.len() != 1 {
+                    return match partial.len() {
+                        0 => (input.to_string(), "[No match]".to_string()),
+                        _ => {
+                            let shown: Vec<&str> =
+                                partial.iter().take(8).map(String::as_str).collect();
+                            (input.to_string(), shown.join(" "))
+                        }
+                    };
+                }
+                partial
+            } else {
+                prefixed
+            }
+        }
         Completion::Files => file_candidates(input),
     };
     match candidates.len() {

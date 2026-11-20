@@ -468,4 +468,72 @@ describe('Minibuffer Component (既定の値と履歴の検索)', () => {
     t.alt('p')
     expect(t.get().input).toBe('')
   })
+
+  it('一覧の候補を M-<down> / M-<up> / M-v で選び, RET で入力に入れること', () => {
+    let state: MinibufferState = {
+      mode: 'input',
+      prompt: 'M-x ',
+      input: 'kill',
+      completions: ['kill-line', 'kill-word', 'kill-region'],
+    }
+    const onInputChange = vi.fn((value: string) => {
+      state = { ...(state as MinibufferInputState), input: value }
+    })
+    const onSubmit = vi.fn()
+    const props = { onInputChange, onSubmit, onCancel: vi.fn(), onQueryKey: vi.fn() }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const input = () => view.container.querySelector('input') as HTMLInputElement
+    const press = (init: KeyboardEventInit) => {
+      fireEvent.keyDown(input(), init)
+      view.rerender(<Minibuffer state={state} {...props} />)
+    }
+    const selected = () =>
+      view.container.querySelector('.minibuffer-completion-selected')?.textContent ?? null
+    press({ key: 'Tab' })
+    expect(selected()).toBeNull()
+    // 選んでいなければ, RET は確定する
+    press({ key: 'ArrowDown', altKey: true })
+    expect(selected()).toBe('kill-line')
+    press({ key: 'ArrowDown', altKey: true })
+    expect(selected()).toBe('kill-region')
+    press({ key: 'ArrowDown', altKey: true })
+    expect(selected()).toBe('kill-word')
+    press({ key: 'ArrowDown', altKey: true })
+    expect(selected()).toBe('kill-line')
+    press({ key: 'ArrowUp', altKey: true })
+    expect(selected()).toBe('kill-word')
+    press({ key: 'ArrowUp', altKey: true })
+    expect(selected()).toBe('kill-region')
+    press({ key: 'v', altKey: true })
+    expect(selected()).toBe('kill-line')
+    press({ key: 'Enter' })
+    expect(onInputChange).toHaveBeenLastCalledWith('kill-line', expect.anything())
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(view.container.textContent).not.toContain('Possible completions:')
+    // 選んでいないときの RET は, 確定する
+    press({ key: 'Tab' })
+    press({ key: 'Enter' })
+    expect(onSubmit).toHaveBeenCalledWith('kill-line')
+  })
+
+  it('ファイルの名前は, 最後の / の後ろだけを選んだ候補で置き換えること', async () => {
+    let state: MinibufferState = {
+      mode: 'input',
+      prompt: 'Find file: ',
+      input: '/p/ab',
+      complete: async () => ({ value: '/p/ab', matches: ['abc.txt', 'abd.txt'] }),
+    }
+    const onInputChange = vi.fn((value: string) => {
+      state = { ...(state as MinibufferInputState), input: value }
+    })
+    const props = { onInputChange, onSubmit: vi.fn(), onCancel: vi.fn(), onQueryKey: vi.fn() }
+    const view = render(<Minibuffer state={state} {...props} />)
+    const input = () => view.container.querySelector('input') as HTMLInputElement
+    fireEvent.keyDown(input(), { key: 'Tab' })
+    await vi.waitFor(() => expect(view.container.textContent).toContain('abd.txt'))
+    fireEvent.keyDown(input(), { key: 'ArrowDown', altKey: true })
+    fireEvent.keyDown(input(), { key: 'ArrowDown', altKey: true })
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    expect(onInputChange).toHaveBeenLastCalledWith('/p/abd.txt', expect.anything())
+  })
 })
