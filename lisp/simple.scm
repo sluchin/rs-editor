@@ -605,12 +605,12 @@ Interactively, N is the prefix argument, and KILLFLAG is true if there is a pref
         (kill (if (and (pair? args) (pair? (cdr args))) (cadr args) (and (null? args) (current-prefix-arg)))))
     (if (and simple--interactive (not kill) (delete-selection--delete))
         #f
-    (if kill
-        (let ((target (+ (point) n)))
-          (if (or (< target (point-min)) (> target (point-max)))
-              (signal 'args-out-of-range (list (string->symbol (format "#<buffer %s>" (buffer-name))) (point) target))
-              (simple--kill (point) target)))
-        (simple--delete-char n)))
+        (if kill
+            (let ((target (+ (point) n)))
+              (if (or (< target (point-min)) (> target (point-max)))
+                  (signal 'args-out-of-range (list (string->symbol (format "#<buffer %s>" (buffer-name))) (point) target))
+                  (simple--kill (point) target)))
+            (simple--delete-char n)))
     #f))
 
 (define-command (delete-forward-char . args)

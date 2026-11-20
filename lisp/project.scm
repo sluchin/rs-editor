@@ -69,8 +69,8 @@ The arguments are MAYBE-PROMPT and DIRECTORY."
          (directory (if (and (pair? args) (pair? (cdr args)) (cadr args)) (cadr args) (project--default-directory)))
          (root (or project--override (project--find-root directory))))
     (cond (root
-           (project--remember root)
-           (list 'vc (if (file-exists? (string-append root ".git")) 'Git 'Hg) root))
+              (project--remember root)
+            (list 'vc (if (file-exists? (string-append root ".git")) 'Git 'Hg) root))
           (maybe-prompt
            (let ((dir (project--read-directory)))
              (project--remember dir)

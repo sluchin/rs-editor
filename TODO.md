@@ -605,12 +605,10 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 
 `lisp/*.scm` と `tests/lisp/*.scm` を、決まった形に揃える道具。エディタの `TAB` / `C-M-q` と同じ字下げにする。
 
-- [ ] 字下げの決まりを、エディタ (`src/lib/lispIndent.ts`、`lispIndentSpecs.ts`) と 1 つにする (Emacs の `lisp-indent-function` と `scheme-indent-function` の値)。
-      Rust で書くなら、決まりの表をファイル (JSON か Scheme) にして、両方から読む。
-- [ ] 整形の道具 (例: `cargo run --bin scmfmt -- FILE...`): 字下げを直し、行の終わりの空白、閉じ括弧だけの行、空行の重なりを消す。
-      コメント (`;`、`;;`、`;;;` の位置。 Emacs の決まり) と、文字列の中は変えない。長い行を分けるかははじめは変えない。
-- [ ] `--check` (直す所があれば失敗にする) を付け、`npm run format` と `npm run check` に入れる。
-- [ ] エディタの `M-x indent-region` と結果が同じことを、テストで確かめる。
+- [x] 字下げの決まりは、Rust の 1 か所 (`core/src/indent.rs` と `core/src/indent_specs.rs`) にある (画面の TypeScript に字下げの計算は無い)。Emacs の Scheme の表 (`SCHEME`) に無い、rs-editor の Lisp のフォーム (`with-current-buffer`、`unwind-protect`、`condition-case`、`save-excursion` など) は `SCHEME_EXTRA` に足し、`scmfmt` だけが使う (エディタの字下げは、`emacs -Q --batch` の scheme-mode と同じ結果を保つため、足さない)。
+- [x] 整形の道具 `scmfmt` (`cargo run -p rseditor-core --bin scmfmt -- FILE...`、実装は `core/src/scmfmt.rs`): 字下げを直し、行の終わりの空白、閉じ括弧だけの行 (前の行がコメントなら、そのまま)、空行の重なりを消す。文字列と `#| |#` の中は変えない。コメントの桁は、エディタの字下げと同じ (`;` 1 つは 40 桁)。長い行は分けない。
+- [x] `--check` (直す所のあるファイルを出して、1 を返す) を付け、`npm run format:scheme` を `npm run format` に、`npm run format:scheme:check` を `npm run format:check` (`npm run check`) に入れた。
+- [x] エディタの `M-x indent-region` と結果が同じことを、テストで確かめる (`core/tests/test_scmfmt.rs`)。
 
 ## Phase 20: Scheme の lint
 

@@ -13,6 +13,7 @@ fn config(dialect: Dialect) -> Config {
         dialect,
         indent_tabs: true,
         tab_width: 8,
+        project_forms: false,
     }
 }
 

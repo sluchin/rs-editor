@@ -411,7 +411,6 @@ Keys: SPC or y replaces, DEL or n skips, RET or q exits, . replaces and exits, ,
 See `query-replace' for the keys."
   (replace--command #t #t args))
 
-
 ;;; occur
 
 (define occur--targets '()
@@ -717,7 +716,6 @@ This is `next-single-property-change' (or `previous-...') of the property `occur
     (when (> n 0)
       (forward-line -1)
       (if (not (or (bobp) (occur--current-target))) (loop n) (loop (- n 1))))))
-
 
 ;;; hi-lock: highlight-regexp and the commands that use it
 

@@ -24,7 +24,7 @@
 (define (dired--text dir)
   "Return the text of the Dired buffer of DIR: the directory, then the `ls -al' lines indented by two spaces."
   (let ((lines (filter (lambda (line) (and (not (equal? line ""))
-                                            (not (string-prefix? "total " line))))
+                                           (not (string-prefix? "total " line))))
                        (split-string (directory-listing dir) "\n"))))
     (apply string-append
            (map (lambda (line) (string-append "  " line "\n"))

@@ -119,7 +119,6 @@
           (list (org-lint--start r) "Incorrect contents for PROPERTIES drawer")))
    (org-lint--records ast)))
 
-
 ;;; リンク
 
 ;; 角括弧のリンク "[[PATH][DESCRIPTION]]" の記録: (位置 PATH DESCRIPTION か #f 直後が "]" か)
@@ -140,8 +139,7 @@
 (define (org-lint--links ast)
   (apply append (map org-lint--links-of (org-lint--text-records ast))))
 
-(define org-lint--link-types '("file+sys" "file+emacs" "shell" "news" "mailto" "https" "http" "ftp" "help" "elisp" "id")
-  )
+(define org-lint--link-types '("file+sys" "file+emacs" "shell" "news" "mailto" "https" "http" "ftp" "help" "elisp" "id"))
 
 ;; リンクの種類と, 種類を除いた PATH: (種類 PATH 応用). 種類は custom-id, fuzzy, file, ほか
 (define (org-lint--link-type path)
@@ -281,7 +279,6 @@
             (list (car l)
                   (format "No closing ']' matches '[' in link description: %s" desc)))))
    (org-lint--links ast)))
-
 
 ;;; キーワード
 
@@ -552,7 +549,6 @@ and the list of categories."
    ((regexp-match "^[ \\t]*([-+]|[0-9]+[.)]|[A-Za-z][.)]|\\*)[ \\t]" text) 'item)
    (else 'paragraph)))
 
-
 ;;; 部品
 
 (define (org-lint--records ast) (cadr ast))
@@ -693,7 +689,7 @@ and the list of categories."
 (define (org-lint-duplicate-footnote-definition ast)
   (org-lint--collect-duplicates
    (org-lint--filter-map (lambda (r) (let ((l (org-lint--footnote-label r))) (and l (list l (org-lint--start r)))))
-               (org-lint--records-of ast 'footnote-definition))
+                         (org-lint--records-of ast 'footnote-definition))
    (lambda (key) (format "Duplicate footnote definition \"%s\"" key))))
 
 (define (org-lint--footnote-references ast)
@@ -721,17 +717,17 @@ and the list of categories."
          (defs (append (org-lint--filter-map org-lint--footnote-label (org-lint--records-of ast 'footnote-definition))
                        (org-lint--filter-map (lambda (x) (and (eq? (car x) 'inline) (cadr x))) refs))))
     (org-lint--filter-map (lambda (x)
-                  (and (eq? (car x) 'standard) (not (member (cadr x) defs))
-                       (list (caddr x) (format "Missing definition for footnote [%s]" (cadr x)))))
-                refs)))
+                            (and (eq? (car x) 'standard) (not (member (cadr x) defs))
+                                 (list (caddr x) (format "Missing definition for footnote [%s]" (cadr x)))))
+                          refs)))
 
 (define (org-lint-unreferenced-footnote-definition ast)
   (let ((labels (map cadr (org-lint--footnote-references ast))))
     (org-lint--filter-map (lambda (r)
-                  (let ((l (org-lint--footnote-label r)))
-                    (and l (not (member l labels))
-                         (list (org-lint--start r) (format "No reference for footnote definition [%s]" l)))))
-                (org-lint--records-of ast 'footnote-definition))))
+                            (let ((l (org-lint--footnote-label r)))
+                              (and l (not (member l labels))
+                                   (list (org-lint--start r) (format "No reference for footnote definition [%s]" l)))))
+                          (org-lint--records-of ast 'footnote-definition))))
 
 (define (org-lint-deprecated-export-blocks ast)
   (org-lint--filter-map
@@ -973,12 +969,12 @@ With a list of checker names (symbols) as the argument, run only those checkers 
 
 (define org-lint-unsupported-checkers
   '(suspicious-language-in-src-block combining-keywords-with-affiliated
-    invalid-babel-call-block wrong-header-argument wrong-header-value named-result empty-header-argument
-    invalid-coderef-link invalid-id-link unknown-options-item misspelled-export-option
-    invalid-macro-argument-and-template extraneous-element-in-footnote-section invalid-image-alignment
-    mismatched-planning-repeaters non-existent-bibliography
-    missing-print-bibliography invalid-cite-export-declaration incomplete-citation item-number
-    LaTeX-$ beamer-frame timestamp-syntax)
+                                     invalid-babel-call-block wrong-header-argument wrong-header-value named-result empty-header-argument
+                                     invalid-coderef-link invalid-id-link unknown-options-item misspelled-export-option
+                                     invalid-macro-argument-and-template extraneous-element-in-footnote-section invalid-image-alignment
+                                     mismatched-planning-repeaters non-existent-bibliography
+                                     missing-print-bibliography invalid-cite-export-declaration incomplete-citation item-number
+                                     LaTeX-$ beamer-frame timestamp-syntax)
   "Checkers of Emacs's org-lint that are not ported.
 They need the syntax tree (links, timestamps, items), the exporter, Babel, org-id or org-cite.")
 

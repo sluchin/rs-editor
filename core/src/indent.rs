@@ -8,7 +8,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::indent_specs::{lookup, Spec, ELISP, SCHEME};
+use crate::indent_specs::{lookup, Spec, ELISP, SCHEME, SCHEME_EXTRA};
 use crate::scheme::builtins::char_width;
 use crate::syntax::Dialect;
 
@@ -27,6 +27,8 @@ pub struct Config {
     pub indent_tabs: bool,
     /// タブの幅 (Emacs の `tab-width`).
     pub tab_width: usize,
+    /// rs-editor の Lisp のフォーム ([`SCHEME_EXTRA`]) も, Scheme の字下げに使うなら `true` (整形の道具 `scmfmt`).
+    pub project_forms: bool,
 }
 
 impl Config {
@@ -401,7 +403,8 @@ fn specform(count: usize, frame: &Frame, normal: usize) -> usize {
 }
 
 /// 行の, Lisp の字下げの桁を計算します (Emacs の `calculate-lisp-indent`). 変えないなら `None`.
-fn lisp_indent(parser: &LispParser, text: &[char], scheme: bool) -> Option<usize> {
+fn lisp_indent(parser: &LispParser, text: &[char], config: &Config) -> Option<usize> {
+    let scheme = config.scheme();
     let rest = &text[indent_length(text)..];
     // 文字列の中で始まる行と, `;;;` のコメントは, 変えない. `;` 1 つのコメントは, コメントの桁
     if (parser.in_string && !parser.comment_string) || starts_with(rest, 0, ";;;") {
@@ -437,7 +440,16 @@ fn lisp_indent(parser: &LispParser, text: &[char], scheme: bool) -> Option<usize
         };
     }
     let name = first.text.as_str();
-    let spec = lookup(if scheme { SCHEME } else { ELISP }, name);
+    let spec = if scheme {
+        lookup(SCHEME, name).or_else(|| {
+            config
+                .project_forms
+                .then(|| lookup(SCHEME_EXTRA, name))
+                .flatten()
+        })
+    } else {
+        lookup(ELISP, name)
+    };
     // 名前が def で始まるフォームを定義の形にするのは, Scheme だけ (Emacs 30 の Emacs Lisp は, 指定だけを見る)
     let def_name = scheme && spec.is_none() && name.chars().count() > 3 && name.starts_with("def");
     if spec == Some(Spec::Defun) || def_name {
@@ -518,7 +530,7 @@ pub fn indent_lines(lines: &[Vec<char>], options: IndentLines, config: &Config) 
         let mut text = lines[n - 1].clone();
         if (!text.is_empty() || options.empty_lines) && !(blank(&text) && options.skip_blank) {
             let col = match parser.as_ref() {
-                Some(p) => lisp_indent(p, &text, config.scheme()),
+                Some(p) => lisp_indent(p, &text, config),
                 None => Some(fundamental_indent(previous.as_deref(), tab)),
             };
             let length = indent_length(&text);
@@ -806,7 +818,7 @@ pub fn indent_sexp(lines: &[Vec<char>], pos: usize, end: usize, config: &Config)
     let mut line = first;
     let mut text = lines[first - 1].clone();
     // 今の行の, 字下げの桁 (Emacs の `calculate-lisp-indent`. コメントの行の `;;` で使う)
-    let mut pending = lisp_indent(&parser, &text, scheme);
+    let mut pending = lisp_indent(&parser, &text, config);
     // 変えた行の, 始めの空白の長さの差 (元の行の桁に直すのに使う)
     let mut lead_shift: i64 = 0;
     // 点が文字列の中なら, Emacs は, 点から読み始めるので, その文字列を最後の式と見ない (深さと, 要素の番号).
@@ -876,7 +888,7 @@ pub fn indent_sexp(lines: &[Vec<char>], pos: usize, end: usize, config: &Config)
         let original = &lines[next - 1];
         let length = indent_length(original);
         let code = original.get(length).copied();
-        let indent = lisp_indent(&parser, original, scheme);
+        let indent = lisp_indent(&parser, original, config);
         let mut next_text = original.clone();
         // 空白だけの行と, `;` で始まる行は, 字下げを変えない (コメントの行は, 上の `indent-for-comment` で)
         if code.is_some() && code != Some(';') {

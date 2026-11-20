@@ -1450,6 +1450,7 @@ impl<U: Host> EditorHost<U> {
                     dialect: b.dialect(),
                     indent_tabs: tabs,
                     tab_width: crate::buffer::TAB_WIDTH,
+                    project_forms: false,
                 };
                 let text = b.text();
                 let lines: Vec<Vec<char>> = text.split('\n').map(|l| l.chars().collect()).collect();
@@ -1513,6 +1514,7 @@ impl<U: Host> EditorHost<U> {
                     dialect: Dialect::Fundamental,
                     indent_tabs: args.get(4).is_some_and(Value::is_non_nil),
                     tab_width: crate::buffer::TAB_WIDTH,
+                    project_forms: false,
                 };
                 let chars: Vec<char> = b
                     .text()

@@ -159,8 +159,11 @@ npm run test:watch
 # ESLint の自動修正
 npm run lint:fix
 
-# コード整形 (Prettier)
+# コード整形 (Prettier、cargo fmt、Scheme の scmfmt、markdownlint)
 npm run format
+
+# Scheme (`lisp/*.scm` と `tests/lisp/*.scm`) だけ整形する
+npm run format:scheme
 
 # 整形済みかどうかチェック
 npm run format:check

@@ -317,3 +317,25 @@ pub const SCHEME: &[(&str, Spec)] = &[
     ("with-values", Spec::Args(1)),
     ("λ", Spec::Args(1)),
 ];
+
+/// rs-editor の Lisp (`lisp/*.scm`) が使う, Emacs の Scheme の表に無いフォームの字下げの指定.
+/// Scheme の表 ([`SCHEME`]) に無いときに引く (Emacs Lisp のマクロと同じ指定). 整形の道具 `scmfmt` だけが使う
+/// (エディタの字下げは, Emacs の `scheme-mode` と同じ結果にする). 名前順.
+pub const SCHEME_EXTRA: &[(&str, Spec)] = &[
+    ("catch", Spec::Args(1)),
+    ("condition-case", Spec::Args(2)),
+    ("dolist", Spec::Args(1)),
+    ("dotimes", Spec::Args(1)),
+    ("ert-deftest", Spec::Defun),
+    ("ignore-errors", Spec::Args(0)),
+    ("prog1", Spec::Args(1)),
+    ("progn", Spec::Args(0)),
+    ("save-excursion", Spec::Args(0)),
+    ("save-match-data", Spec::Args(0)),
+    ("save-restriction", Spec::Args(0)),
+    ("unwind-protect", Spec::Args(1)),
+    ("while", Spec::Args(1)),
+    ("with-current-buffer", Spec::Args(1)),
+    ("with-output-to-string", Spec::Args(0)),
+    ("with-temp-buffer", Spec::Args(0)),
+];

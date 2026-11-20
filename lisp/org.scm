@@ -853,15 +853,15 @@ Point moves with the text."
       (let* ((h (org-heading-line lines n))
              (stars (org-repeat "*" (+ 1 (if h (org-level (org-line lines h)) 0)))))
         (org-set-line-changed lines n
-                      (if item
-                          (string-append stars " "
-                                         (cond ((equal? (list-ref item 2) "[X]")
-                                                (string-append (car (org-done-keywords)) " "))
-                                               ((list-ref item 2)
-                                                (string-append (car (org-todo-keywords-1)) " "))
-                                               (else ""))
-                                         (list-ref item 3))
-                          (string-append stars " " (string-trim line)))))))))
+                              (if item
+                                  (string-append stars " "
+                                                 (cond ((equal? (list-ref item 2) "[X]")
+                                                        (string-append (car (org-done-keywords)) " "))
+                                                       ((list-ref item 2)
+                                                        (string-append (car (org-todo-keywords-1)) " "))
+                                                       (else ""))
+                                                 (list-ref item 3))
+                                  (string-append stars " " (string-trim line)))))))))
 
 ;;; 動く
 

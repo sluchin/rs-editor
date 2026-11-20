@@ -24,6 +24,7 @@ fn fill(dialect: Dialect, doc: &str, prefix: Option<&str>) -> String {
         dialect,
         indent_tabs: true,
         tab_width: 8,
+        project_forms: false,
     };
     let (next, cursor) = match fill_paragraph(&lines, at, &config, 70, prefix) {
         Some(plan) => (apply(&text, &plan), plan.cursor.unwrap()),
@@ -61,6 +62,7 @@ fn test_no_paragraph_and_unchanged_text() {
         dialect: Dialect::Fundamental,
         indent_tabs: true,
         tab_width: 8,
+        project_forms: false,
     };
     let lines = vec![vec![], vec![]];
     assert!(fill_paragraph(&lines, 0, &config, 70, None).is_none());

@@ -471,7 +471,6 @@ Actions controlled by variables `list-directory-brief-switches' and
     (display-buffer "*Directory*")
     #f))
 
-
 (define-command (recover-this-file)
   "Recover the visited file from its auto save file.
 Ask before replacing the buffer text. The buffer is marked as modified."

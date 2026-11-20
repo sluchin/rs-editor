@@ -145,7 +145,7 @@ Interactively, read SYMBOL in the minibuffer with completion."
   (let* ((symbol (if (null? args)
                      (help--read-symbol "Describe symbol"
                                         (sort (help-unique (append (help-function-names)
-                                                                    (help--variable-names)))
+                                                                   (help--variable-names)))
                                               string<?)
                                         (lambda (symbol) (or (fboundp symbol) (boundp symbol))))
                      (car args)))
@@ -174,9 +174,9 @@ Interactively, read SYMBOL in the minibuffer with completion."
   "Read keys with PROMPT until they make a complete key sequence; return it as a string such as \"C-x C-f\"."
   (let loop ((keys '()))
     (let* ((keys (append keys (list (help--key-name (read-key
-                                                      (if (null? keys)
-                                                          prompt
-                                                          (format "%s %s" prompt (string-join keys ""))))))))
+                                                     (if (null? keys)
+                                                         prompt
+                                                         (format "%s %s" prompt (string-join keys ""))))))))
            (joined (string-join keys " "))
            (binding (key-binding joined)))
       (if (eq? binding #t) (loop keys) joined))))

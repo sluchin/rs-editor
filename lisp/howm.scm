@@ -49,7 +49,7 @@ The default menu is written if the file does not exist.")
 (define howm-menu-random-num 10 "Number of random memos shown in the menu.")
 (define howm-menu-allow
   '(howm-menu-legend howm-menu-schedule howm-menu-todo howm-menu-reminder
-    howm-menu-recent howm-menu-random howm-menu-search howm-menu-last-update)
+                     howm-menu-recent howm-menu-random howm-menu-search howm-menu-last-update)
   "Procedures that %here% in the menu may call.")
 (define howm-view-title-header "=" "String that starts the title line of a memo.")
 (define howm-date-format "[%Y-%m-%d]" "Format of a date inserted into a memo.")
