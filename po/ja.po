@@ -2307,6 +2307,16 @@ msgid "Return the text of the help of FUNCTION (a symbol)."
 msgstr "FUNCTION (記号) のヘルプの文を返す"
 
 #: lisp/help-fns.scm
+msgctxt "variable:help--raw"
+msgid "True while *Help* shows the documentation as it is written (English), not translated."
+msgstr "真のあいだ, *Help* は docstring を, 訳さずに (英語で) 出す."
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--source"
+msgid "A function of no arguments that makes the text now shown in *Help* again, or #f."
+msgstr "今 *Help* に出している文をもう一度作る, 引数の無い関数. 無ければ偽."
+
+#: lisp/help-fns.scm
 msgctxt "variable:help--history"
 msgid "The texts shown in *Help* before the current one, the latest first."
 msgstr "*Help* に今の文の前に出した文. 新しい順."
@@ -2360,10 +2370,22 @@ msgstr "TEXT を *Help* バッファに入れ, バッファのキーを割り当
 msgctxt "function:help-show"
 msgid ""
 "Show TEXT in the *Help* buffer, in another window.\n"
-"The text before it is remembered, so that `help-go-back' can show it again."
+"The text before it is remembered, so that `help-go-back' can show it again.\n"
+"SOURCE, if given, is a function of no arguments that makes TEXT again; `help-toggle-original' uses it."
 msgstr ""
 "TEXT を *Help* バッファに入れ, ほかのウィンドウに出す.\n"
-"前の文は覚えておき, `help-go-back' でもう一度出せる."
+"前の文は覚えておき, `help-go-back' でもう一度出せる.\n"
+"SOURCE (引数の無い関数) を渡すと, TEXT をもう一度作るのに使う. `help-toggle-original' が使う."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-show-source"
+msgid "Show the text that the function SOURCE makes in *Help*, translated; `help-toggle-original' can show the original."
+msgstr "関数 SOURCE が作る文を, 訳して *Help* に出す. `help-toggle-original' で元の文を出せる."
+
+#: lisp/help-fns.scm
+msgctxt "function:help-toggle-original"
+msgid "Show the documentation in *Help* as it is written (English), or translated again."
+msgstr "*Help* の docstring を, 書いてある元の文 (英語) で出す. もう一度で, 訳した文に戻す."
 
 #: lisp/help-fns.scm
 msgctxt "function:help-go-back"

@@ -494,6 +494,7 @@ fn test_define_command_and_global_set_key() {
             "find-file-read-only-other-window",
             "list-directory",
             "recover-this-file",
+            "help-toggle-original",
             "help-go-back",
             "help-go-forward",
             "help-follow",

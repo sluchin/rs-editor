@@ -114,6 +114,60 @@ fn test_describe_function_kinds() {
 }
 
 #[test]
+fn test_help_toggle_original_shows_the_english_documentation() {
+    let (ev, editor) = setup();
+    ev.eval("(set! help-language \"ja\")").unwrap();
+    let text = || -> String {
+        editor.buffers.lock().unwrap()["*Help*"]
+            .text
+            .iter()
+            .collect()
+    };
+    let run = |code: &str| ev.eval_with(code, &editor);
+    // 出す前と, 元を作れないヘルプでは, 切り替えられない
+    assert_eq!(
+        run("(help-toggle-original)").unwrap_err().to_string(),
+        "No original text for this help"
+    );
+    run("(help-show \"plain text\")").unwrap();
+    assert_eq!(
+        run("(help-toggle-original)").unwrap_err().to_string(),
+        "No original text for this help"
+    );
+    // 関数のヘルプは, 訳した文から元の英語へ, もう一度で訳した文へ
+    run("(describe-function 'find-file)").unwrap();
+    assert!(text().contains("ファイル FILENAME を編集する."));
+    run("(help-toggle-original)").unwrap();
+    assert!(text().contains("Edit file FILENAME."));
+    run("(help-toggle-original)").unwrap();
+    assert!(text().contains("ファイル FILENAME を編集する."));
+    // 変数, コマンド, シンボルのヘルプも切り替えられる
+    run("(describe-variable 'help-language)").unwrap();
+    run("(help-toggle-original)").unwrap();
+    assert!(text().contains("Language of the docstrings shown in *Help*"));
+    run("(describe-command 'find-file)").unwrap();
+    run("(help-toggle-original)").unwrap();
+    assert!(text().contains("Edit file FILENAME."));
+    run("(describe-symbol 'find-file)").unwrap();
+    run("(help-toggle-original)").unwrap();
+    assert!(text().contains("Edit file FILENAME."));
+    // 履歴をたどると, 元に戻せない
+    run("(help-go-back)").unwrap();
+    assert_eq!(
+        run("(help-toggle-original)").unwrap_err().to_string(),
+        "No original text for this help"
+    );
+    run("(help-go-forward)").unwrap();
+    assert_eq!(
+        run("(help-toggle-original)").unwrap_err().to_string(),
+        "No original text for this help"
+    );
+    // 新しく出すと, 訳した文から
+    run("(describe-function 'find-file)").unwrap();
+    assert!(text().contains("ファイル FILENAME を編集する."));
+}
+
+#[test]
 fn test_describe_function_in_the_help_language() {
     let (ev, editor) = setup();
     ev.eval("(set! help-language \"ja\")").unwrap();

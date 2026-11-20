@@ -1931,6 +1931,16 @@ msgid "Return the text of the help of FUNCTION (a symbol)."
 msgstr ""
 
 #: lisp/help-fns.scm
+msgctxt "variable:help--raw"
+msgid "True while *Help* shows the documentation as it is written (English), not translated."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "variable:help--source"
+msgid "A function of no arguments that makes the text now shown in *Help* again, or #f."
+msgstr ""
+
+#: lisp/help-fns.scm
 msgctxt "variable:help--history"
 msgid "The texts shown in *Help* before the current one, the latest first."
 msgstr ""
@@ -1984,7 +1994,18 @@ msgstr ""
 msgctxt "function:help-show"
 msgid ""
 "Show TEXT in the *Help* buffer, in another window.\n"
-"The text before it is remembered, so that `help-go-back' can show it again."
+"The text before it is remembered, so that `help-go-back' can show it again.\n"
+"SOURCE, if given, is a function of no arguments that makes TEXT again; `help-toggle-original' uses it."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-show-source"
+msgid "Show the text that the function SOURCE makes in *Help*, translated; `help-toggle-original' can show the original."
+msgstr ""
+
+#: lisp/help-fns.scm
+msgctxt "function:help-toggle-original"
+msgid "Show the documentation in *Help* as it is written (English), or translated again."
 msgstr ""
 
 #: lisp/help-fns.scm

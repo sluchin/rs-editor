@@ -56,7 +56,7 @@ Like Emacs, the prompt shows the default: \"Describe function (default car): \".
 (define (help-variable-text variable)
   "Return the text of the help of VARIABLE (a symbol)."
   (let ((file (symbol-file variable))
-        (doc (documentation-property variable 'variable-documentation)))
+        (doc (documentation-property variable 'variable-documentation help--raw)))
     (string-append
      (format "%s is a variable%s.\n\n" variable
              (if file (format " defined in `%s'" (help-file-name-nondirectory file)) ""))
@@ -72,7 +72,7 @@ Interactively, read VARIABLE in the minibuffer with completion."
                       (car args))))
     (if (not (boundp variable))
         (error (format "%s is void as a variable" variable)))
-    (help-show (help-variable-text variable))
+    (help-show-source (lambda () (help-variable-text variable)))
     #f))
 
 (define (help--first-line text)
@@ -135,7 +135,7 @@ Interactively, read COMMAND in the minibuffer with completion."
   (let ((command (if (null? args)
                      (help--read-symbol "Describe command" (help--command-names) help--command-p)
                      (car args))))
-    (help-show (help-function-text command))
+    (help-show-source (lambda () (help-function-text command)))
     #f))
 
 (define-command (describe-symbol . args)
@@ -154,9 +154,11 @@ Interactively, read SYMBOL in the minibuffer with completion."
     (cond ((and (not function) (not variable))
            (error (format "I don't know anything about %s" symbol)))
           (else
-           (help-show (string-append (if function (help-function-text symbol) "")
-                                     (if (and function variable) "\n" "")
-                                     (if variable (help-variable-text symbol) "")))))
+           (let ((text (lambda ()
+                         (string-append (if function (help-function-text symbol) "")
+                                        (if (and function variable) "\n" "")
+                                        (if variable (help-variable-text symbol) "")))))
+             (help-show-source text))))
     #f))
 
 (define (help--key-name key)

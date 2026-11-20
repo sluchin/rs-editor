@@ -595,7 +595,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
   - [x] Rust で PO のファイルを読み (`core/src/scheme/po.rs`。ビルドのときに埋め込む)、名前と元の文から翻訳を引く。
     Lisp の `documentation` と `documentation-property` が、翻訳を返す (2 つ目 (3 つ目) の引数 RAW が真なら、元の英語)。
   - [x] 出す言語は、変数 `help-language` (既定は `LANG` から。 `"en"` なら元の文) で選ぶ。
-  - [ ] `*Help*` に、元の文 (英語) を見るボタンを付ける。
+  - [x] `*Help*` で `e` (`help-toggle-original`) を押すと、元の文 (英語) と訳した文を切り替える (`describe-function`、`describe-variable`、`describe-command`、`describe-symbol`。履歴をたどった後は、元を作れないので切り替えられない)。
   - 翻訳の無いものと、fuzzy の翻訳を、一覧にする (Phase 20 の lint の 1 つ)。Poedit などの翻訳の道具で直せることを、README に書く。
   - Rust のエラーの文 (`Cannot move column further` など) は、Emacs と同じく訳さない。
     画面の文 (メニュー、`message`) を訳すことになったら、複数形や語順を扱える Fluent (`fluent-rs`) と比べて決める。
@@ -735,7 +735,7 @@ Emacs の `C-h f` は、関数の前の `;;` のコメントでなく、docstrin
 - [x] モード: `auto-fill-mode`、`visual-line-mode`、`display-line-numbers-mode`、`hl-line-mode`、`electric-pair-mode`、`delete-selection-mode`、`overwrite-mode` は完了。`prog-mode` を足して、メジャーモードの切り替え (`M-x` の `*-mode`) も完了 (Phase 14)。
 - [ ] Scheme の整形 (`scmfmt`) と lint (Phase 19, 20)。大。コードを書くときの助けになる。先に、字下げの決まりをエディタと 1 つにする。
 - [ ] 日本語入力 (skk-mode)、Markdown (markdown-mode)、paredit (Phase 21)。`dotfiles` で使っているので、使う頻度で上げる。大。
-- [ ] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。中。
+- [x] ヘルプの多言語化の続き (Rust の組み込みの docstring を 1 か所に、`*Help*` の元の文を見るボタン) (Phase 18)。
 - [x] Phase 17 の続き (`save-buffers-kill-terminal` など、Emacs で Lisp のコマンドを Lisp に移す)。画面のコマンドは全て移した。
 
 ### P3: 使う場面が限られる、または大きい (後回し)

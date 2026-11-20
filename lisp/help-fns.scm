@@ -72,7 +72,7 @@ For example, \"(find-file &rest ARGS)\"."
 (define (help-function-text function)
   "Return the text of the help of FUNCTION (a symbol)."
   (let ((keys (where-is-internal function))
-        (doc (and (fboundp function) (documentation function))))
+        (doc (and (fboundp function) (documentation function help--raw))))
     (string-append
      (help-function-kind function)
      "\n\n"
@@ -82,6 +82,12 @@ For example, \"(find-file &rest ARGS)\"."
          "")
      (or doc "Not documented.")
      "\n")))
+
+(define help--raw #f
+  "True while *Help* shows the documentation as it is written (English), not translated.")
+
+(define help--source #f
+  "A function of no arguments that makes the text now shown in *Help* again, or #f.")
 
 (define help--history '()
   "The texts shown in *Help* before the current one, the latest first.")
@@ -151,22 +157,41 @@ For example, \"(find-file &rest ARGS)\"."
               '(("q" quit-window) ("l" help-go-back) ("r" help-go-forward)
                 ("RET" help-follow) ("TAB" help-next-link) ("S-TAB" help-previous-link)
                 ("n" help-next-link) ("p" help-previous-link)
-                ("SPC" scroll-up-command) ("DEL" scroll-down-command)
+                ("e" help-toggle-original) ("SPC" scroll-up-command) ("DEL" scroll-down-command)
                 ("<" beginning-of-buffer) (">" end-of-buffer)))
     (switch-to-buffer buffer)
     (display-buffer "*Help*" 1)))
 
-(define (help-show text)
+(define (help-show text . source)
   "Show TEXT in the *Help* buffer, in another window.
-The text before it is remembered, so that `help-go-back' can show it again."
+The text before it is remembered, so that `help-go-back' can show it again.
+SOURCE, if given, is a function of no arguments that makes TEXT again; `help-toggle-original' uses it."
+  (set! help--raw #f)
+  (set! help--source (and (pair? source) (car source)))
   (when (and help--current (not (equal? help--current text)))
     (set! help--history (cons help--current help--history)))
   (set! help--forward '())
   (set! help--current text)
   (help--put text))
 
+(define (help-show-source source)
+  "Show the text that the function SOURCE makes in *Help*, translated; `help-toggle-original' can show the original."
+  (set! help--raw #f)
+  (help-show (source) source))
+
+(define-command (help-toggle-original . args)
+  "Show the documentation in *Help* as it is written (English), or translated again."
+  (unless help--source
+    (error "No original text for this help"))
+  (set! help--raw (not help--raw))
+  (set! help--current (help--source))
+  (help--put help--current)
+  (message (if help--raw "Showing the original text" "Showing the translated text"))
+  #f)
+
 (define-command (help-go-back . args)
   "Go back to the previous help text in the *Help* buffer."
+  (set! help--source #f)
   (when (null? help--history)
     (error "No previous help"))
   (set! help--forward (cons help--current help--forward))
@@ -177,6 +202,7 @@ The text before it is remembered, so that `help-go-back' can show it again."
 
 (define-command (help-go-forward . args)
   "Go forward to the help text that `help-go-back' went back from."
+  (set! help--source #f)
   (when (null? help--forward)
     (error "No next help"))
   (set! help--history (cons help--current help--history))
@@ -248,7 +274,7 @@ Interactively, read FUNCTION in the minibuffer with completion."
   (let ((function (if (null? args)
                       (help--read-symbol "Describe function" (help-function-names) fboundp)
                       (car args))))
-    (help-show (help-function-text function))))
+    (help-show-source (lambda () (help-function-text function)))))
 
 (global-set-key "C-h f" 'describe-function)
 
