@@ -6794,6 +6794,145 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr "Org のバッファに移る."
 
+#: lisp/paredit.scm
+msgctxt "function:paredit--on"
+msgid "Return true if Paredit mode is on in the current buffer."
+msgstr "今のバッファで Paredit モードが入っていれば真を返す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--next"
+msgid "Return the character after point as a string, or \"\" at the end of the buffer."
+msgstr "点の後ろの文字を文字列で返す (バッファの終わりでは \"\")."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--prev"
+msgid "Return the character before point as a string, or \"\" at the start of the buffer."
+msgstr "点の前の文字を文字列で返す (バッファの始めでは \"\")."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--pair?"
+msgid "Return true if the strings OPEN and CLOSE are a pair of delimiters."
+msgstr "文字列 OPEN と CLOSE が, 対の区切りなら真を返す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--needs-space-before"
+msgid "Return true if a space is needed between the text before point and an opening delimiter."
+msgstr "点の前の文字と, 開く区切りの間に, 空白が要るなら真を返す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-open-round"
+msgid ""
+"Insert a balanced pair of parentheses and put point between them.\n"
+"Insert just a `(' in a string or a comment."
+msgstr ""
+"対の括弧を入れて, 間に点を置く.\n"
+"文字列とコメントの中では, `(' だけを入れる."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-close-round"
+msgid ""
+"Move past the closing parenthesis of the list at point, deleting the whitespace before it.\n"
+"Insert just a `)' in a string or a comment."
+msgstr ""
+"点のあるリストの閉じ括弧の後ろへ動き, その前の空白を消す.\n"
+"文字列とコメントの中では, `)' だけを入れる."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-doublequote"
+msgid "Insert a pair of double quotes, or in a string, a quoted double quote, or move past the closing one."
+msgstr "対の二重引用符を入れる. 文字列の中では, エスケープした二重引用符を入れるか, 閉じる引用符の後ろへ動く."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-delete"
+msgid ""
+"Delete the character after point; delete an empty pair of delimiters as a whole,\n"
+"and do not delete a delimiter of a pair that holds something."
+msgstr "点の後ろの文字を消す. 空の対の区切りは, 対ごと消し, 中身のある対の区切りは消さない."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-delete"
+msgid ""
+"Delete the character before point; delete an empty pair of delimiters as a whole,\n"
+"and move back over a delimiter of a pair that holds something."
+msgstr "点の前の文字を消す. 空の対の区切りは, 対ごと消し, 中身のある対の区切りは, 越えて戻る."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--kill-end"
+msgid ""
+"Return the position that `paredit-kill' kills up to: the end of the last whole S-expression\n"
+"that starts on the line (a sexp that spans lines is killed whole), or the end of the line."
+msgstr "`paredit-kill' が消す終わりの位置を返す: 行から始まる最後の S 式の終わり (行をまたぐ式は丸ごと), または行末."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-kill"
+msgid ""
+"Kill a line as if with `kill-line', but respect delimiters:\n"
+"kill the S-expressions up to the end of the line, and in a string, up to its end."
+msgstr ""
+"`kill-line' のように行を消すが, 区切りの対応を保つ:\n"
+"行末までの S 式を消し, 文字列の中では, その終わりまで消す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--enclosing"
+msgid "Return the start of the list around point (the position of its opening delimiter), or signal an error."
+msgstr "点のまわりのリストの始め (開く区切りの位置) を返す. 無ければ失敗する."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--close-of"
+msgid "Return the position of the closing delimiter of the list that starts at OPEN."
+msgstr "OPEN から始まるリストの, 閉じる区切りの位置を返す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-slurp-sexp"
+msgid "Add the S-expression after the list around point to the list: move its closing delimiter forward."
+msgstr "点のまわりのリストの後ろの S 式を, リストに入れる: 閉じる区切りを前へ動かす."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-barf-sexp"
+msgid "Remove the last S-expression of the list around point from the list: move its closing delimiter back."
+msgstr "点のまわりのリストの最後の S 式を, リストから出す: 閉じる区切りを後ろへ戻す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-slurp-sexp"
+msgid "Add the S-expression before the list around point to the list: move its opening delimiter back."
+msgstr "点のまわりのリストの前の S 式を, リストに入れる: 開く区切りを後ろへ戻す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-barf-sexp"
+msgid "Remove the first S-expression of the list around point from the list: move its opening delimiter forward."
+msgstr "点のまわりのリストの最初の S 式を, リストから出す: 開く区切りを前へ動かす."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-splice-sexp"
+msgid "Remove the delimiters of the list around point, keeping what is in it."
+msgstr "点のまわりのリストの区切りを取り, 中身を残す."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-raise-sexp"
+msgid "Replace the list around point with the S-expression at point."
+msgstr "点のまわりのリストを, 点の所の S 式で置き換える."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-wrap-round"
+msgid "Wrap the S-expression after point in a pair of parentheses; leave point after the open one."
+msgstr "点の後ろの S 式を, 対の括弧で囲む. 点は, 開く括弧の後ろに置く."
+
+#: lisp/paredit.scm
+msgctxt "variable:paredit--keys"
+msgid "List of (KEY COMMAND) that `paredit-mode' binds in the buffer."
+msgstr "`paredit-mode' がバッファに割り当てる (キー コマンド) の一覧."
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-mode"
+msgid ""
+"Toggle Paredit mode: keys that edit S-expressions and keep the delimiters balanced.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"The keys are bound in the buffer when the mode is first turned on, and do their usual work while it is off."
+msgstr ""
+"Paredit モードを切り替える: S 式を編集し, 区切りの対応を保つキー.\n"
+"引数が正なら入れ, 0 か負なら切る.\n"
+"キーは, 初めて入れたときにバッファに割り当て, 切っているあいだは, 元の動きをする."
+
 #: lisp/project.scm
 msgctxt "variable:project-vc-markers"
 msgid "The names whose presence in a directory makes the directory the root of a project."

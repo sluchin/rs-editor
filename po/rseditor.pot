@@ -6091,6 +6091,136 @@ msgctxt "function:org-switchb"
 msgid "Switch to an Org buffer."
 msgstr ""
 
+#: lisp/paredit.scm
+msgctxt "function:paredit--on"
+msgid "Return true if Paredit mode is on in the current buffer."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--next"
+msgid "Return the character after point as a string, or \"\" at the end of the buffer."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--prev"
+msgid "Return the character before point as a string, or \"\" at the start of the buffer."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--pair?"
+msgid "Return true if the strings OPEN and CLOSE are a pair of delimiters."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--needs-space-before"
+msgid "Return true if a space is needed between the text before point and an opening delimiter."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-open-round"
+msgid ""
+"Insert a balanced pair of parentheses and put point between them.\n"
+"Insert just a `(' in a string or a comment."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-close-round"
+msgid ""
+"Move past the closing parenthesis of the list at point, deleting the whitespace before it.\n"
+"Insert just a `)' in a string or a comment."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-doublequote"
+msgid "Insert a pair of double quotes, or in a string, a quoted double quote, or move past the closing one."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-delete"
+msgid ""
+"Delete the character after point; delete an empty pair of delimiters as a whole,\n"
+"and do not delete a delimiter of a pair that holds something."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-delete"
+msgid ""
+"Delete the character before point; delete an empty pair of delimiters as a whole,\n"
+"and move back over a delimiter of a pair that holds something."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--kill-end"
+msgid ""
+"Return the position that `paredit-kill' kills up to: the end of the last whole S-expression\n"
+"that starts on the line (a sexp that spans lines is killed whole), or the end of the line."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-kill"
+msgid ""
+"Kill a line as if with `kill-line', but respect delimiters:\n"
+"kill the S-expressions up to the end of the line, and in a string, up to its end."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--enclosing"
+msgid "Return the start of the list around point (the position of its opening delimiter), or signal an error."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit--close-of"
+msgid "Return the position of the closing delimiter of the list that starts at OPEN."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-slurp-sexp"
+msgid "Add the S-expression after the list around point to the list: move its closing delimiter forward."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-forward-barf-sexp"
+msgid "Remove the last S-expression of the list around point from the list: move its closing delimiter back."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-slurp-sexp"
+msgid "Add the S-expression before the list around point to the list: move its opening delimiter back."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-backward-barf-sexp"
+msgid "Remove the first S-expression of the list around point from the list: move its opening delimiter forward."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-splice-sexp"
+msgid "Remove the delimiters of the list around point, keeping what is in it."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-raise-sexp"
+msgid "Replace the list around point with the S-expression at point."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-wrap-round"
+msgid "Wrap the S-expression after point in a pair of parentheses; leave point after the open one."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "variable:paredit--keys"
+msgid "List of (KEY COMMAND) that `paredit-mode' binds in the buffer."
+msgstr ""
+
+#: lisp/paredit.scm
+msgctxt "function:paredit-mode"
+msgid ""
+"Toggle Paredit mode: keys that edit S-expressions and keep the delimiters balanced.\n"
+"With a positive argument, turn it on; with zero or a negative one, turn it off.\n"
+"The keys are bound in the buffer when the mode is first turned on, and do their usual work while it is off."
+msgstr ""
+
 #: lisp/project.scm
 msgctxt "variable:project-vc-markers"
 msgid "The names whose presence in a directory makes the directory the root of a project."
