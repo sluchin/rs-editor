@@ -551,8 +551,7 @@ up to the next shown heading (up to line LAST)."
 (define (org-cycle-local lines n)
   "Cycle the subtree of the heading at line N.
 The order is EMPTY ENTRY, CHILDREN, SUBTREE and FOLDED."
-  (let* ((level (org-level (org-line lines n)))
-         (last (org-subtree-end lines n))
+  (let* ((last (org-subtree-end lines n))
          (eoh (org-line-end lines n))
          (eos (org-fold-end lines last))
          (children (filter (lambda (h) (and (> (car h) n) (<= (car h) last))) (org-headings lines)))
@@ -1104,7 +1103,6 @@ If SUBTREE is true, change the children too."
          (n (org-current-line lines))
          (col (org-current-column lines))
          (i (or (and (org-parse-item (org-line lines n)) n) (error "Not at an item")))
-         (item (org-parse-item (org-line lines i)))
          (indent (org-indentation (org-line lines i)))
          (end (org-item-end lines i))
          (children (org-item-children lines i))

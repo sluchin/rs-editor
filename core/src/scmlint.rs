@@ -242,6 +242,24 @@ struct Source {
     ignored: HashSet<usize>,
 }
 
+/// 名前の表 1 つ (`let` の変数は, 使ったかを調べる).
+#[derive(Default)]
+struct Frame {
+    names: HashSet<String>,
+    used: HashSet<String>,
+    /// 使ったか調べる変数と, その行.
+    decls: Vec<(String, usize)>,
+}
+
+impl From<HashSet<String>> for Frame {
+    fn from(names: HashSet<String>) -> Self {
+        Frame {
+            names,
+            ..Frame::default()
+        }
+    }
+}
+
 struct Lint {
     known: HashSet<String>,
     findings: Vec<Finding>,
@@ -257,12 +275,30 @@ impl Lint {
         self.findings.push((self.file.clone(), line, message));
     }
 
-    fn bound(scope: &[HashSet<String>], name: &str) -> bool {
-        scope.iter().any(|s| s.contains(name))
+    /// 名前が束縛されているか (内側の表から探し, 見つけたら, 使ったと覚える).
+    fn bound(scope: &mut [Frame], name: &str) -> bool {
+        match scope.iter_mut().rev().find(|f| f.names.contains(name)) {
+            Some(frame) => {
+                frame.used.insert(name.to_string());
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// 表を捨てる. 使っていない `let` の変数を報告する (`_` で始まる名前は除く).
+    fn pop_scope(&mut self, scope: &mut Vec<Frame>) {
+        if let Some(frame) = scope.pop() {
+            for (name, line) in frame.decls {
+                if !name.starts_with('_') && !frame.used.contains(&name) {
+                    self.report(line, format!("unused variable: {name}"));
+                }
+            }
+        }
     }
 
     /// 名前を使う所.
-    fn use_name(&mut self, scope: &[HashSet<String>], name: &str, line: usize) {
+    fn use_name(&mut self, scope: &mut [Frame], name: &str, line: usize) {
         if name.starts_with("#\\") {
             self.report(line, "character literals are not supported".to_string());
         } else if name == "#(" {
@@ -279,14 +315,14 @@ impl Lint {
         }
     }
 
-    fn walk_all(&mut self, nodes: &[Node], scope: &mut Vec<HashSet<String>>) {
+    fn walk_all(&mut self, nodes: &[Node], scope: &mut Vec<Frame>) {
         for node in nodes {
             self.walk(node, scope);
         }
     }
 
     /// 本体 (内側の `define` は, 本体の中の名前).
-    fn body(&mut self, nodes: &[Node], scope: &mut Vec<HashSet<String>>) {
+    fn body(&mut self, nodes: &[Node], scope: &mut Vec<Frame>) {
         let mut local = HashSet::new();
         for node in nodes {
             if let Node::List(items, _) = node {
@@ -302,9 +338,9 @@ impl Lint {
                 }
             }
         }
-        scope.push(local);
+        scope.push(local.into());
         self.walk_all(nodes, scope);
-        scope.pop();
+        self.pop_scope(scope);
     }
 
     /// 引数の並びの名前 (`(a b . rest)` と `rest` も).
@@ -317,15 +353,15 @@ impl Lint {
             .collect()
     }
 
-    fn lambda(&mut self, params: Option<&Node>, body: &[Node], scope: &mut Vec<HashSet<String>>) {
+    fn lambda(&mut self, params: Option<&Node>, body: &[Node], scope: &mut Vec<Frame>) {
         let names = match params {
             Some(Node::List(items, _)) => Self::params(items),
             Some(Node::Atom(name, _)) => HashSet::from([name.clone()]),
             _ => HashSet::new(),
         };
-        scope.push(names);
+        scope.push(names.into());
         self.body(body, scope);
-        scope.pop();
+        self.pop_scope(scope);
     }
 
     /// `(let ((name init) ...) ...)` の束縛の並び: (名前, 初期値).
@@ -343,7 +379,31 @@ impl Lint {
             .collect()
     }
 
-    fn walk_quasi(&mut self, node: &Node, scope: &mut Vec<HashSet<String>>) {
+    /// `let` の束縛の変数と, その行 (使ったか調べる).
+    fn decls(specs: &[Node]) -> Vec<(String, usize)> {
+        specs
+            .iter()
+            .filter_map(|b| match b {
+                Node::List(pair, line) => pair
+                    .first()
+                    .and_then(Node::atom)
+                    .map(|n| (n.to_string(), *line)),
+                Node::Atom(name, line) => Some((name.clone(), *line)),
+                Node::Str(..) => None,
+            })
+            .collect()
+    }
+
+    /// `let` の表 (NAMES が束縛の名前. 使ったか調べる).
+    fn declared(names: HashSet<String>, specs: &[Node]) -> Frame {
+        Frame {
+            names,
+            decls: Self::decls(specs),
+            ..Frame::default()
+        }
+    }
+
+    fn walk_quasi(&mut self, node: &Node, scope: &mut Vec<Frame>) {
         if let Node::List(items, _) = node {
             if matches!(
                 items.first().and_then(Node::atom),
@@ -358,7 +418,7 @@ impl Lint {
         }
     }
 
-    fn walk(&mut self, node: &Node, scope: &mut Vec<HashSet<String>>) {
+    fn walk(&mut self, node: &Node, scope: &mut Vec<Frame>) {
         let (items, line) = match node {
             Node::Atom(name, line) => return self.use_name(scope, name, *line),
             Node::Str(..) => return,
@@ -412,12 +472,18 @@ impl Lint {
                 for (init, _) in &inits {
                     self.walk(init, scope);
                 }
-                scope.push(specs.into_iter().map(|(n, _)| n).collect());
+                scope.push(
+                    specs
+                        .into_iter()
+                        .map(|(n, _)| n)
+                        .collect::<HashSet<_>>()
+                        .into(),
+                );
                 for (_, steps) in &inits {
                     self.walk_all(steps, scope);
                 }
                 self.walk_all(args.get(1..).unwrap_or_default(), scope);
-                scope.pop();
+                self.pop_scope(scope);
             }
             "cond" => {
                 for clause in args {
@@ -463,13 +529,13 @@ impl Lint {
             "condition-case" => {
                 let var = args.first().and_then(Node::atom).unwrap_or("");
                 self.walk_all(args.get(1..2).unwrap_or_default(), scope);
-                scope.push(HashSet::from([var.to_string()]));
+                scope.push(HashSet::from([var.to_string()]).into());
                 for handler in args.get(2..).unwrap_or_default() {
                     if let Node::List(parts, _) = handler {
                         self.walk_all(&parts[1..], scope);
                     }
                 }
-                scope.pop();
+                self.pop_scope(scope);
             }
             "ert-deftest" => self.body(args.get(1..).unwrap_or_default(), scope),
             "if" | "when" | "unless" => {
@@ -498,7 +564,7 @@ impl Lint {
         }
     }
 
-    fn walk_let(&mut self, name: &str, args: &[Node], scope: &mut Vec<HashSet<String>>) {
+    fn walk_let(&mut self, name: &str, args: &[Node], scope: &mut Vec<Frame>) {
         let (label, rest) = match args.first() {
             Some(Node::Atom(label, _)) if name == "let" => (Some(label.clone()), &args[1..]),
             _ => (None, args),
@@ -510,23 +576,29 @@ impl Lint {
         let body = &rest[1..];
         match name {
             "let*" => {
-                scope.push(HashSet::new());
+                scope.push(Frame::default());
                 for (var, init) in &bindings {
                     if let Some(init) = init {
                         self.walk(init, scope);
                     }
-                    scope.last_mut().map(|s| s.insert(var.clone()));
+                    scope.last_mut().map(|s| s.names.insert(var.clone()));
+                }
+                if let Some(frame) = scope.last_mut() {
+                    frame.decls = Self::decls(specs);
                 }
                 self.body(body, scope);
-                scope.pop();
+                self.pop_scope(scope);
             }
             "letrec" | "letrec*" => {
-                scope.push(bindings.iter().map(|(n, _)| n.clone()).collect());
+                scope.push(Self::declared(
+                    bindings.iter().map(|(n, _)| n.clone()).collect(),
+                    specs,
+                ));
                 for init in bindings.iter().filter_map(|(_, i)| *i) {
                     self.walk(init, scope);
                 }
                 self.body(body, scope);
-                scope.pop();
+                self.pop_scope(scope);
             }
             _ => {
                 for init in bindings.iter().filter_map(|(_, i)| *i) {
@@ -534,9 +606,9 @@ impl Lint {
                 }
                 let mut names: HashSet<String> = bindings.into_iter().map(|(n, _)| n).collect();
                 names.extend(label);
-                scope.push(names);
+                scope.push(Self::declared(names, specs));
                 self.body(body, scope);
-                scope.pop();
+                self.pop_scope(scope);
             }
         }
     }
@@ -656,7 +728,7 @@ pub fn lint(files: &[(String, String)]) -> Vec<Finding> {
             findings: Vec::new(),
             file: source.name.clone(),
         };
-        let mut scope = vec![HashSet::new()];
+        let mut scope = vec![Frame::default()];
         lint.walk_all(&source.forms, &mut scope);
         findings.extend(lint.findings);
     }

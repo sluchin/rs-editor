@@ -154,3 +154,26 @@ fn test_run_prints_findings_and_codes() {
     assert_eq!(run(&["/no/such/file.scm".to_string()], &mut out), 2);
     assert_eq!(out, "/no/such/file.scm: cannot read\n");
 }
+
+#[test]
+fn test_lint_reports_unused_let_variables() {
+    let source = "(define (f x)
+  (let ((a 1) (b 2) (_c 3))
+    (+ a x))
+  (let* ((p 1) (q p) (r 2))
+    q)
+  (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+           (odd? (lambda (n) (if (= n 0) #f (even? (- n 1)))))
+           (z 1))
+    (even? 4))
+  (let loop ((i 0) j)
+    (if (< i 3) (loop (+ i 1) j) i)))";
+    assert_eq!(
+        check(source),
+        [
+            "2: unused variable: b",
+            "4: unused variable: r",
+            "8: unused variable: z",
+        ]
+    );
+}

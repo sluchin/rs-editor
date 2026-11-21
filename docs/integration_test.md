@@ -134,6 +134,7 @@ rs-editor の画面 (Tauri のアプリ) を、人が実際に操作して確か
 | IT-194 | `lisp/simple.scm` の字下げを乱す (例: `with-current-buffer` の本体を 1 桁にする) | `npm run format:scheme:check` を動かし、`npm run format:scheme` で直す | 乱したファイルの名前が出て、終了の符号は 1。`format:scheme` で字下げが 2 桁に戻り、再び `--check` が通る |
 | IT-195 | `lisp/` の `.scm` の関数に、定義していない名前の呼び出しを書き足す | `npm run lint:scheme` を動かす | `ファイル:行: undefined name: 名前` が出て、終了の符号は 1。その行の終わりに `; scmlint:ignore` を足すと出なくなる |
 | IT-196 | 3 コマンドのキーボードマクロ (`C-a` `C-k` `C-e` など) を作る | `C-x C-k SPC` を押し、SPC、`n`、`!` で答える | コマンドごとに `Next: C-k ...` と聞く。SPC で実行、`n` で飛ばし、`!` で残りを全部動かす。`q` で止まる |
+| IT-197 | `lisp/` の `.scm` の関数に、使わない `let` の変数 (`(let ((a 1)) 2)`) を書き足す | `npm run lint:scheme` を動かす | `ファイル:行: unused variable: a` が出て、終了の符号は 1。名前を `_a` にすると出なくなる |
 
 ### 4.6 `M-x grep` と `next-error`
 
